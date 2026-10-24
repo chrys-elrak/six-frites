@@ -3960,27 +3960,51 @@
                               },
                               "action": {
                                 "nullable": true,
-                                "type": "object",
-                                "properties": {
-                                  "type": {
-                                    "type": "string",
-                                    "enum": [
-                                      "auto_delete"
-                                    ]
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "auto_delete"
+                                        ]
+                                      },
+                                      "secs": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "secs"
+                                    ],
+                                    "additionalProperties": false
                                   },
-                                  "secs": {
-                                    "nullable": true,
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "theme"
+                                        ]
+                                      },
+                                      "theme": {
+                                        "nullable": true,
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "theme"
+                                    ],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": [
-                                  "type",
-                                  "secs"
                                 ],
-                                "additionalProperties": false,
-                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                               },
                               "createdAt": {
                                 "type": "string",
@@ -4074,6 +4098,11 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "theme": {
+                            "nullable": true,
+                            "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
+                            "type": "string"
+                          },
                           "scheduledCount": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -4102,6 +4131,7 @@
                           "muted",
                           "pinned",
                           "autoDeleteSecs",
+                          "theme",
                           "scheduledCount",
                           "lastActivityAt",
                           "createdAt"
@@ -4573,27 +4603,51 @@
                         },
                         "action": {
                           "nullable": true,
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "enum": [
-                                "auto_delete"
-                              ]
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "auto_delete"
+                                  ]
+                                },
+                                "secs": {
+                                  "nullable": true,
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "secs"
+                              ],
+                              "additionalProperties": false
                             },
-                            "secs": {
-                              "nullable": true,
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "theme"
+                                  ]
+                                },
+                                "theme": {
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "theme"
+                              ],
+                              "additionalProperties": false
                             }
-                          },
-                          "required": [
-                            "type",
-                            "secs"
                           ],
-                          "additionalProperties": false,
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                         },
                         "createdAt": {
                           "type": "string",
@@ -4687,6 +4741,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "theme": {
+                      "nullable": true,
+                      "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
+                      "type": "string"
+                    },
                     "scheduledCount": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -4715,6 +4774,7 @@
                     "muted",
                     "pinned",
                     "autoDeleteSecs",
+                    "theme",
                     "scheduledCount",
                     "lastActivityAt",
                     "createdAt"
@@ -4731,7 +4791,7 @@
         "tags": [
           "chats"
         ],
-        "description": "`archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` applies to both people: it posts a `service` message, and messages sent afterwards are deleted for everyone that long after sending.",
+        "description": "`archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` and `theme` apply to both people and each posts a `service` message: messages sent after an auto-delete change are deleted for everyone that long after sending, and `theme` sets the chat background (null for each person's default).",
         "requestBody": {
           "required": true,
           "content": {
@@ -4754,6 +4814,11 @@
                     "type": "integer",
                     "minimum": 3600,
                     "maximum": 31536000
+                  },
+                  "theme": {
+                    "description": "For both people: the chat background, a theme id or custom:#rrggbb. null goes back to each person's default.",
+                    "nullable": true,
+                    "type": "string"
                   }
                 }
               }
@@ -5201,27 +5266,51 @@
                         },
                         "action": {
                           "nullable": true,
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "enum": [
-                                "auto_delete"
-                              ]
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "auto_delete"
+                                  ]
+                                },
+                                "secs": {
+                                  "nullable": true,
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "secs"
+                              ],
+                              "additionalProperties": false
                             },
-                            "secs": {
-                              "nullable": true,
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "theme"
+                                  ]
+                                },
+                                "theme": {
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "theme"
+                              ],
+                              "additionalProperties": false
                             }
-                          },
-                          "required": [
-                            "type",
-                            "secs"
                           ],
-                          "additionalProperties": false,
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                         },
                         "createdAt": {
                           "type": "string",
@@ -5315,6 +5404,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "theme": {
+                      "nullable": true,
+                      "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
+                      "type": "string"
+                    },
                     "scheduledCount": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -5343,6 +5437,7 @@
                     "muted",
                     "pinned",
                     "autoDeleteSecs",
+                    "theme",
                     "scheduledCount",
                     "lastActivityAt",
                     "createdAt"
@@ -5831,27 +5926,51 @@
                     },
                     "action": {
                       "nullable": true,
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "auto_delete"
-                          ]
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
                         },
-                        "secs": {
-                          "nullable": true,
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
                         }
-                      },
-                      "required": [
-                        "type",
-                        "secs"
                       ],
-                      "additionalProperties": false,
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                     },
                     "createdAt": {
                       "type": "string",
@@ -6320,27 +6439,51 @@
                     },
                     "action": {
                       "nullable": true,
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "auto_delete"
-                          ]
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
                         },
-                        "secs": {
-                          "nullable": true,
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
                         }
-                      },
-                      "required": [
-                        "type",
-                        "secs"
                       ],
-                      "additionalProperties": false,
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                     },
                     "createdAt": {
                       "type": "string",
@@ -6799,27 +6942,51 @@
                     },
                     "action": {
                       "nullable": true,
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "auto_delete"
-                          ]
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
                         },
-                        "secs": {
-                          "nullable": true,
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
                         }
-                      },
-                      "required": [
-                        "type",
-                        "secs"
                       ],
-                      "additionalProperties": false,
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                     },
                     "createdAt": {
                       "type": "string",
@@ -7271,27 +7438,51 @@
                         },
                         "action": {
                           "nullable": true,
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "enum": [
-                                "auto_delete"
-                              ]
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "auto_delete"
+                                  ]
+                                },
+                                "secs": {
+                                  "nullable": true,
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "secs"
+                              ],
+                              "additionalProperties": false
                             },
-                            "secs": {
-                              "nullable": true,
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "theme"
+                                  ]
+                                },
+                                "theme": {
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "theme"
+                              ],
+                              "additionalProperties": false
                             }
-                          },
-                          "required": [
-                            "type",
-                            "secs"
                           ],
-                          "additionalProperties": false,
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                         },
                         "createdAt": {
                           "type": "string",
@@ -7754,27 +7945,51 @@
                     },
                     "action": {
                       "nullable": true,
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "auto_delete"
-                          ]
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
                         },
-                        "secs": {
-                          "nullable": true,
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
                         }
-                      },
-                      "required": [
-                        "type",
-                        "secs"
                       ],
-                      "additionalProperties": false,
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                     },
                     "createdAt": {
                       "type": "string",
@@ -8301,27 +8516,51 @@
                           },
                           "action": {
                             "nullable": true,
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "auto_delete"
-                                ]
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "auto_delete"
+                                    ]
+                                  },
+                                  "secs": {
+                                    "nullable": true,
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "secs"
+                                ],
+                                "additionalProperties": false
                               },
-                              "secs": {
-                                "nullable": true,
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "theme"
+                                    ]
+                                  },
+                                  "theme": {
+                                    "nullable": true,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "theme"
+                                ],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": [
-                              "type",
-                              "secs"
                             ],
-                            "additionalProperties": false,
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                           },
                           "createdAt": {
                             "type": "string",
@@ -8881,27 +9120,51 @@
                     },
                     "action": {
                       "nullable": true,
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "auto_delete"
-                          ]
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
                         },
-                        "secs": {
-                          "nullable": true,
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
                         }
-                      },
-                      "required": [
-                        "type",
-                        "secs"
                       ],
-                      "additionalProperties": false,
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                     },
                     "createdAt": {
                       "type": "string",
@@ -10469,27 +10732,51 @@
                     },
                     "action": {
                       "nullable": true,
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "auto_delete"
-                          ]
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
                         },
-                        "secs": {
-                          "nullable": true,
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
                         }
-                      },
-                      "required": [
-                        "type",
-                        "secs"
                       ],
-                      "additionalProperties": false,
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                     },
                     "createdAt": {
                       "type": "string",
@@ -11615,27 +11902,51 @@
                                   },
                                   "action": {
                                     "nullable": true,
-                                    "type": "object",
-                                    "properties": {
-                                      "type": {
-                                        "type": "string",
-                                        "enum": [
-                                          "auto_delete"
-                                        ]
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "auto_delete"
+                                            ]
+                                          },
+                                          "secs": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "secs"
+                                        ],
+                                        "additionalProperties": false
                                       },
-                                      "secs": {
-                                        "nullable": true,
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "theme"
+                                            ]
+                                          },
+                                          "theme": {
+                                            "nullable": true,
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "theme"
+                                        ],
+                                        "additionalProperties": false
                                       }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "secs"
                                     ],
-                                    "additionalProperties": false,
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                                   },
                                   "createdAt": {
                                     "type": "string",
@@ -12074,27 +12385,51 @@
                                   },
                                   "action": {
                                     "nullable": true,
-                                    "type": "object",
-                                    "properties": {
-                                      "type": {
-                                        "type": "string",
-                                        "enum": [
-                                          "auto_delete"
-                                        ]
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "auto_delete"
+                                            ]
+                                          },
+                                          "secs": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "secs"
+                                        ],
+                                        "additionalProperties": false
                                       },
-                                      "secs": {
-                                        "nullable": true,
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "theme"
+                                            ]
+                                          },
+                                          "theme": {
+                                            "nullable": true,
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "theme"
+                                        ],
+                                        "additionalProperties": false
                                       }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "secs"
                                     ],
-                                    "additionalProperties": false,
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                                   },
                                   "createdAt": {
                                     "type": "string",
@@ -12717,27 +13052,51 @@
                                       },
                                       "action": {
                                         "nullable": true,
-                                        "type": "object",
-                                        "properties": {
-                                          "type": {
-                                            "type": "string",
-                                            "enum": [
-                                              "auto_delete"
-                                            ]
+                                        "oneOf": [
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "auto_delete"
+                                                ]
+                                              },
+                                              "secs": {
+                                                "nullable": true,
+                                                "type": "integer",
+                                                "minimum": -9007199254740991,
+                                                "maximum": 9007199254740991
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "secs"
+                                            ],
+                                            "additionalProperties": false
                                           },
-                                          "secs": {
-                                            "nullable": true,
-                                            "type": "integer",
-                                            "minimum": -9007199254740991,
-                                            "maximum": 9007199254740991
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "theme"
+                                                ]
+                                              },
+                                              "theme": {
+                                                "nullable": true,
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "theme"
+                                            ],
+                                            "additionalProperties": false
                                           }
-                                        },
-                                        "required": [
-                                          "type",
-                                          "secs"
                                         ],
-                                        "additionalProperties": false,
-                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)"
                                       },
                                       "createdAt": {
                                         "type": "string",
@@ -12831,6 +13190,11 @@
                                     "minimum": -9007199254740991,
                                     "maximum": 9007199254740991
                                   },
+                                  "theme": {
+                                    "nullable": true,
+                                    "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
+                                    "type": "string"
+                                  },
                                   "scheduledCount": {
                                     "type": "integer",
                                     "minimum": -9007199254740991,
@@ -12859,6 +13223,7 @@
                                   "muted",
                                   "pinned",
                                   "autoDeleteSecs",
+                                  "theme",
                                   "scheduledCount",
                                   "lastActivityAt",
                                   "createdAt"

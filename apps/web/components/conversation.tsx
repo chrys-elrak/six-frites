@@ -14,6 +14,7 @@ import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { useSession } from "@/lib/session";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
+import { BubbleColors, ChatBackground } from "./chat-background";
 import { ChatMenu } from "./chat-menu";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
@@ -161,7 +162,13 @@ export function Conversation({ chatId }: { chatId: string }) {
         </header>
       )}
 
-      <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <ChatBackground themeId={c.theme} />
+        <BubbleColors themeId={c.theme} scope="chat-bubbles" />
+        <div className="chat-bubbles relative flex min-h-0 flex-1 flex-col">
+          <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
+        </div>
+      </div>
       {!selecting && (
         <Composer
           chatId={chatId}

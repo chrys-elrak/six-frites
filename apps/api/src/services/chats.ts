@@ -8,6 +8,7 @@ import {
   type ChatReadDTO,
   type DeleteScope,
   type MarkReadInput,
+  type ServiceAction,
   type UpdateChatInput,
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
@@ -78,6 +79,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     muted: me.muted,
     pinned: me.pinned,
     autoDeleteSecs: chat.autoDeleteSecs,
+    theme: chat.theme,
     scheduledCount,
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
@@ -206,10 +208,14 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
 }
 
 /**
- * Archive, mute and pin only change this member's view. The auto-delete timer is shared: changing it
- * posts a service message and updates the chat for everyone.
+ * Archive, mute and pin only change this member's view. The auto-delete timer and the background are
+ * shared: changing either posts a service message and updates the chat for everyone.
  */
-export async function updateChat(userId: string, chatId: string, { autoDeleteSecs, ...mine }: UpdateChatInput) {
+export async function updateChat(
+  userId: string,
+  chatId: string,
+  { autoDeleteSecs, theme, ...mine }: UpdateChatInput,
+) {
   return withEvents(async (tx, emit) => {
     await assertMember(tx, chatId, userId);
     if (Object.values(mine).some((v) => v !== undefined)) {
@@ -217,15 +223,25 @@ export async function updateChat(userId: string, chatId: string, { autoDeleteSec
     }
 
     const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
-    if (autoDeleteSecs === undefined || autoDeleteSecs === chat.autoDeleteSecs) {
+    const actions: ServiceAction[] = [];
+    if (autoDeleteSecs !== undefined && autoDeleteSecs !== chat.autoDeleteSecs) {
+      actions.push({ type: "auto_delete", secs: autoDeleteSecs });
+    }
+    if (theme !== undefined && theme !== chat.theme) actions.push({ type: "theme", theme });
+    if (!actions.length) {
       const dto = await getChat(userId, chatId, tx);
       emit(userId, "chat.updated", dto);
       return dto;
     }
 
-    await tx.chat.update({ where: { id: chatId }, data: { autoDeleteSecs } });
-    const action = { type: "auto_delete" as const, secs: autoDeleteSecs };
-    await createMessage(tx, emit, userId, chatId, { clientId: `auto-delete-${createId()}`, action });
+    await tx.chat.update({
+      where: { id: chatId },
+      data: { ...(autoDeleteSecs !== undefined && { autoDeleteSecs }), ...(theme !== undefined && { theme }) },
+    });
+    for (const action of actions) {
+      const clientId = `${action.type === "theme" ? "theme" : "auto-delete"}-${createId()}`;
+      await createMessage(tx, emit, userId, chatId, { clientId, action });
+    }
     const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
     for (const m of members) emit(m.userId, "chat.updated", await getChat(m.userId, chatId, tx));
     return getChat(userId, chatId, tx);

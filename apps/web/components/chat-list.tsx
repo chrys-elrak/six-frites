@@ -11,6 +11,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   Pin,
+  Palette,
   Timer,
 } from "lucide-react";
 import Link from "next/link";
@@ -61,7 +62,12 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   if (m.type === "service") {
     return (
       <span className="inline-flex items-center gap-1">
-        <Timer className="size-3.5 shrink-0" /> {serviceText(m)}
+        {m.action?.type === "theme" ? (
+          <Palette className="size-3.5 shrink-0" />
+        ) : (
+          <Timer className="size-3.5 shrink-0" />
+        )}{" "}
+        {serviceText(m)}
       </span>
     );
   }

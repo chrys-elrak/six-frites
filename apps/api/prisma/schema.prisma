@@ -132,6 +132,7 @@ model Chat {
   createdAt      DateTime @default(now())
   lastMessageAt  DateTime @default(now())
   autoDeleteSecs Int?
+  theme          String?
 
   members   ChatMember[]
   messages  Message[]

@@ -10,7 +10,7 @@ import {
   type ReplyPreview,
   type StickerDTO,
   type ViewMessageResult,
-  durationLabel,
+  serviceSentence,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -25,13 +25,13 @@ import {
   Film,
   Flame,
   Image as ImageIcon,
-  MessageCircle,
   Mic,
   MoreHorizontal,
   SmilePlus,
   Paperclip,
   RotateCcw,
   Sticker as StickerIcon,
+  Palette,
   Timer,
   Video,
   X,
@@ -215,12 +215,17 @@ function buildRows(
   return rows;
 }
 
-function Ticks({ delivery }: { delivery: Delivery }) {
+/** On a white-on-dark pill read ticks turn sky blue; inside a bubble they keep its text colour at full strength. */
+function Ticks({ delivery, pill = false }: { delivery: Delivery; pill?: boolean }) {
   if (delivery === "sending") return <Clock aria-label="Sending" className="size-3" />;
   if (delivery === "failed") return null;
   const label = { sent: "Sent", delivered: "Delivered", read: "Read" }[delivery];
   return (
-    <span aria-label={label} title={label} className={delivery === "read" ? "text-sky-700 dark:text-sky-300" : ""}>
+    <span
+      aria-label={label}
+      title={label}
+      className={delivery === "read" ? (pill ? "text-sky-300" : "") : pill ? "" : "opacity-70"}
+    >
       {delivery === "sent" ? (
         <Check className="size-3.5" strokeWidth={2.5} />
       ) : (
@@ -246,7 +251,7 @@ function Quote({
       type="button"
       onClick={onClick}
       className={`mb-1 block w-full rounded-lg border-l-4 px-2 py-1 text-left text-[13px] leading-snug ${
-        mine ? "border-brand-ink/40 bg-black/10" : "border-brand bg-stone-100 dark:bg-stone-700/60"
+        mine ? "border-brand-ink/40 bg-black/10" : "border-brand bg-black/5 dark:bg-white/10"
       }`}
     >
       <span className="block font-semibold">{name}</span>
@@ -495,7 +500,7 @@ function Bubble({
         ? "bg-transparent text-stone-500 ring-1 ring-inset ring-stone-300 dark:ring-stone-700"
         : mine
           ? "bg-brand text-brand-ink"
-          : "bg-white text-stone-900 ring-1 ring-inset ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
+          : "bg-(--bubble-their) text-(--bubble-their-ink) ring-1 ring-inset ring-stone-200 dark:ring-stone-700";
 
   return (
     <div
@@ -559,8 +564,8 @@ function Bubble({
               {sealed ? (
                 <div className="flex items-end gap-2">
                   <Sealed row={row} onOpen={onOpenEphemeral} />
-                  <span className="mb-1 flex shrink-0 items-center gap-1 text-[11px] leading-none opacity-70">
-                    {clockTime(row.createdAt)}
+                  <span className="mb-1 flex shrink-0 items-center gap-1 text-[11px] leading-none">
+                    <span className="opacity-70">{clockTime(row.createdAt)}</span>
                     {row.delivery && <Ticks delivery={row.delivery} />}
                   </span>
                 </div>
@@ -575,7 +580,7 @@ function Bubble({
                   </button>
                   <span className="flex items-center gap-1 rounded-full bg-stone-900/40 px-2 py-0.5 text-[11px] leading-none text-white">
                     {clockTime(row.createdAt)}
-                    {row.delivery && <Ticks delivery={row.delivery} />}
+                    {row.delivery && <Ticks delivery={row.delivery} pill />}
                   </span>
                 </div>
               ) : jumbo ? (
@@ -588,7 +593,7 @@ function Bubble({
                   <span className="flex items-center gap-1 rounded-full bg-stone-900/40 px-2 py-0.5 text-[11px] leading-none text-white">
                     {row.edited && <span>edited</span>}
                     {clockTime(row.createdAt)}
-                    {row.delivery && <Ticks delivery={row.delivery} />}
+                    {row.delivery && <Ticks delivery={row.delivery} pill />}
                   </span>
                 </div>
               ) : (
@@ -604,9 +609,9 @@ function Bubble({
                   ) : (
                     <MessageText row={row} selectable={selectable} />
                   )}
-                  <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none opacity-70">
-                    {row.edited && !row.deleted && <span>edited</span>}
-                    {clockTime(row.createdAt)}
+                  <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none">
+                    {row.edited && !row.deleted && <span className="opacity-70">edited</span>}
+                    <span className="opacity-70">{clockTime(row.createdAt)}</span>
                     {row.delivery && <Ticks delivery={row.delivery} />}
                   </span>
                 </p>
@@ -850,9 +855,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     return (
       <div className="flex min-h-0 flex-1 flex-col justify-end">
         {rows.length === 0 && (
-          <div className="flex flex-col items-center gap-2 pb-8 text-center text-sm text-stone-500">
-            <MessageCircle className="size-8 text-stone-400" strokeWidth={1.6} />
-            No messages yet. Say hello!
+          <div className="flex flex-col items-center pb-8 text-center text-sm">
+            <span className="rounded-full bg-black/25 px-4 py-1.5 text-white backdrop-blur-sm">
+              No messages yet. Say hello!
+            </span>
           </div>
         )}
         <VList
@@ -866,18 +872,19 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           {(row) =>
             row.kind === "day" ? (
               <div key={row.key} className="flex justify-center py-3">
-                <span className="rounded-full bg-stone-200/80 px-3 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                <span className="rounded-full bg-black/25 px-3 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
                   {row.label}
                 </span>
               </div>
             ) : row.kind === "service" ? (
               <div key={row.key} className="flex justify-center px-6 py-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-200/80 px-3 py-1 text-center text-xs text-stone-600 dark:bg-stone-800 dark:text-stone-300">
-                  <Timer className="size-3.5 shrink-0" />
-                  {nameOf(row.message.senderId)}{" "}
-                  {row.message.action?.secs
-                    ? `set messages to auto-delete after ${durationLabel(row.message.action.secs)}`
-                    : "turned off auto-delete"}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-center text-xs text-white backdrop-blur-sm">
+                  {row.message.action?.type === "theme" ? (
+                    <Palette className="size-3.5 shrink-0" />
+                  ) : (
+                    <Timer className="size-3.5 shrink-0" />
+                  )}
+                  {nameOf(row.message.senderId)} {serviceSentence(row.message)}
                 </span>
               </div>
             ) : (

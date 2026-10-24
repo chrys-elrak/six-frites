@@ -1,4 +1,5 @@
 import { type MessageDTO, maskSpoilers } from "./chats.js";
+import { chatTheme, customThemeColor } from "./chat-themes.js";
 
 const KIND_LABELS: Record<Exclude<MessageDTO["type"], "text" | "service">, string> = {
   image: "Photo",
@@ -34,8 +35,21 @@ export function reactionText(emoji: string, m: MessageDTO) {
 
 /** What a service message says, without the sender's name. */
 export function serviceText(m: Pick<MessageDTO, "action">) {
-  const secs = m.action?.secs;
-  return secs ? `Messages auto-delete after ${durationLabel(secs)}` : "Auto-delete turned off";
+  const a = m.action;
+  if (a?.type === "theme") return a.theme ? `Background: ${chatTheme(a.theme).name}` : "Background reset";
+  return a?.secs ? `Messages auto-delete after ${durationLabel(a.secs)}` : "Auto-delete turned off";
+}
+
+/** What a service message says after the sender's name, e.g. "changed the chat background to Ketchup". */
+export function serviceSentence(m: Pick<MessageDTO, "action">) {
+  const a = m.action;
+  if (a?.type === "theme") {
+    if (!a.theme) return "reset the chat background";
+    return customThemeColor(a.theme)
+      ? "set a custom chat background"
+      : `changed the chat background to ${chatTheme(a.theme).name}`;
+  }
+  return a?.secs ? `set messages to auto-delete after ${durationLabel(a.secs)}` : "turned off auto-delete";
 }
 
 /**

@@ -3,6 +3,7 @@
 import { LogOut } from "lucide-react";
 import { six } from "@/lib/six";
 import { AdminLink } from "./admin/admin-link";
+import { ChatBackgroundPicker } from "./chat-background";
 import { Devices } from "./devices";
 import { FindMe } from "./find-me";
 import { Invites, Referrals } from "./invites";
@@ -26,6 +27,7 @@ export function SettingsPanel() {
         <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4">
           <ProfileCard />
           <FindMe />
+          <ChatBackgroundPicker />
           <NotificationSettings />
           <Invites />
           <Referrals />

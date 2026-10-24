@@ -1830,12 +1830,16 @@ export interface paths {
                                         ephemeral: boolean;
                                         deleted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                    action: {
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                    action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
                                         secs: number | null;
-                                    } | null;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "theme";
+                                        theme: string | null;
+                                    }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -1859,6 +1863,8 @@ export interface paths {
                                 pinned: boolean;
                                 /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                 autoDeleteSecs: number | null;
+                                /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
+                                theme: string | null;
                                 /** @description Your scheduled messages waiting to be sent in this chat */
                                 scheduledCount: number;
                                 /** Format: date-time */
@@ -2011,12 +2017,16 @@ export interface paths {
                                     ephemeral: boolean;
                                     deleted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                action: {
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
                                     secs: number | null;
-                                } | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -2040,6 +2050,8 @@ export interface paths {
                             pinned: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
+                            /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
+                            theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
                             scheduledCount: number;
                             /** Format: date-time */
@@ -2085,7 +2097,7 @@ export interface paths {
         head?: never;
         /**
          * Archive, mute or pin a chat, or set its auto-delete timer
-         * @description `archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` applies to both people: it posts a `service` message, and messages sent afterwards are deleted for everyone that long after sending.
+         * @description `archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` and `theme` apply to both people and each posts a `service` message: messages sent after an auto-delete change are deleted for everyone that long after sending, and `theme` sets the chat background (null for each person's default).
          */
         patch: {
             parameters: {
@@ -2104,6 +2116,8 @@ export interface paths {
                         pinned?: boolean;
                         /** @description For both people: delete messages sent from now on this many seconds after sending. null turns it off. */
                         autoDeleteSecs?: number | null;
+                        /** @description For both people: the chat background, a theme id or custom:#rrggbb. null goes back to each person's default. */
+                        theme?: string | null;
                     };
                 };
             };
@@ -2220,12 +2234,16 @@ export interface paths {
                                     ephemeral: boolean;
                                     deleted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                action: {
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
                                     secs: number | null;
-                                } | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -2249,6 +2267,8 @@ export interface paths {
                             pinned: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
+                            /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
+                            theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
                             scheduledCount: number;
                             /** Format: date-time */
@@ -2393,12 +2413,16 @@ export interface paths {
                                 ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                            action: {
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
                                 secs: number | null;
-                            } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            }) | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2545,12 +2569,16 @@ export interface paths {
                                 ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                            action: {
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
                                 secs: number | null;
-                            } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            }) | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2697,12 +2725,16 @@ export interface paths {
                                 ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                            action: {
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
                                 secs: number | null;
-                            } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            }) | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2847,12 +2879,16 @@ export interface paths {
                                     ephemeral: boolean;
                                     deleted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                action: {
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
                                     secs: number | null;
-                                } | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -3003,12 +3039,16 @@ export interface paths {
                                 ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                            action: {
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
                                 secs: number | null;
-                            } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            }) | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -3195,12 +3235,16 @@ export interface paths {
                                     ephemeral: boolean;
                                     deleted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                action: {
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
                                     secs: number | null;
-                                } | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -3363,12 +3407,16 @@ export interface paths {
                                 ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                            action: {
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
                                 secs: number | null;
-                            } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            }) | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -3860,12 +3908,16 @@ export interface paths {
                                 ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                            action: {
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
                                 secs: number | null;
-                            } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            }) | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -4367,12 +4419,16 @@ export interface paths {
                                         ephemeral: boolean;
                                         deleted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                    action: {
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                    action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
                                         secs: number | null;
-                                    } | null;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "theme";
+                                        theme: string | null;
+                                    }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -4482,12 +4538,16 @@ export interface paths {
                                         ephemeral: boolean;
                                         deleted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                    action: {
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                    action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
                                         secs: number | null;
-                                    } | null;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "theme";
+                                        theme: string | null;
+                                    }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -4642,12 +4702,16 @@ export interface paths {
                                             ephemeral: boolean;
                                             deleted: boolean;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
-                                        action: {
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                        action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
                                             secs: number | null;
-                                        } | null;
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "theme";
+                                            theme: string | null;
+                                        }) | null;
                                         /** Format: date-time */
                                         createdAt: string;
                                         /** Format: date-time */
@@ -4671,6 +4735,8 @@ export interface paths {
                                     pinned: boolean;
                                     /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                     autoDeleteSecs: number | null;
+                                    /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
+                                    theme: string | null;
                                     /** @description Your scheduled messages waiting to be sent in this chat */
                                     scheduledCount: number;
                                     /** Format: date-time */

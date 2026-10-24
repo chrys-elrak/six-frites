@@ -3,6 +3,7 @@ import { Id, IsoDate } from "./common.js";
 import { AttachmentDTO } from "./uploads.js";
 import { PublicUser } from "./invites.js";
 import { StickerDTO } from "./stickers.js";
+import { isChatThemeId } from "./chat-themes.js";
 
 export const MessageType = z.enum([
   "text",
@@ -104,8 +105,13 @@ export const EphemeralDTO = z.object({
 export type EphemeralDTO = z.infer<typeof EphemeralDTO>;
 
 export const ServiceAction = z
-  .object({ type: z.literal("auto_delete"), secs: z.number().int().nullable() })
-  .describe("What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)");
+  .discriminatedUnion("type", [
+    z.object({ type: z.literal("auto_delete"), secs: z.number().int().nullable() }),
+    z.object({ type: z.literal("theme"), theme: z.string().nullable() }),
+  ])
+  .describe(
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)",
+  );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 
 /** Allowed range for a chat's auto-delete timer, in seconds. */
@@ -252,6 +258,10 @@ export const ChatDTO = z.object({
     .int()
     .nullable()
     .describe("Shared by both people: new messages are deleted for everyone this long after they are sent"),
+  theme: z
+    .string()
+    .nullable()
+    .describe("Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default"),
   scheduledCount: z.number().int().describe("Your scheduled messages waiting to be sent in this chat"),
   lastActivityAt: IsoDate,
   createdAt: IsoDate,
@@ -313,6 +323,12 @@ export const UpdateChatInput = z
       .describe(
         "For both people: delete messages sent from now on this many seconds after sending. null turns it off.",
       ),
+    theme: z
+      .string()
+      .refine(isChatThemeId, "Unknown chat theme")
+      .nullable()
+      .optional()
+      .describe("For both people: the chat background, a theme id or custom:#rrggbb. null goes back to each person's default."),
   })
   .refine((v) => Object.values(v).some((x) => x !== undefined), "Provide at least one field");
 export type UpdateChatInput = z.infer<typeof UpdateChatInput>;
