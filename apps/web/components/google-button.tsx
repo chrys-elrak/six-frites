@@ -49,11 +49,7 @@ export function GoogleButton({ onCredential }: { onCredential: (idToken: string)
 
   return (
     <>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onReady={() => setReady(true)}
-      />
+      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={() => setReady(true)} />
       <div ref={ref} className="flex min-h-11 w-full justify-center" />
     </>
   );

@@ -23,7 +23,14 @@ export function Logo({ className = "size-16" }: { className?: string }) {
         <rect x="36" y="15" width="5" height="23" rx="2.5" transform="rotate(9 38.5 26.5)" />
       </g>
       <path d="M15 31.5Q32 38 49 31.5L45 51.5Q44.5 54 42 54H22Q19.5 54 19 51.5Z" fill="url(#six-box)" />
-      <path d="M17.6 36.2Q32 41.5 46.4 36.2" stroke="#FFF" strokeOpacity=".28" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      <path
+        d="M17.6 36.2Q32 41.5 46.4 36.2"
+        stroke="#FFF"
+        strokeOpacity=".28"
+        strokeWidth="1.6"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

@@ -14,7 +14,11 @@ export const useTypingStore = create<TypingState>((set, get) => ({
     const key = `${chatId}:${userId}`;
     clearTimeout(timers.get(key));
     timers.delete(key);
-    if (typing) timers.set(key, setTimeout(() => get().set(chatId, userId, false), TTL));
+    if (typing)
+      timers.set(
+        key,
+        setTimeout(() => get().set(chatId, userId, false), TTL),
+      );
 
     const current = get().byChat[chatId] ?? [];
     const has = current.includes(userId);

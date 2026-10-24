@@ -25,7 +25,10 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
 
-  const shuffle = () => void suggestAvatars().then(setSuggestions).catch(() => setSuggestions([]));
+  const shuffle = () =>
+    void suggestAvatars()
+      .then(setSuggestions)
+      .catch(() => setSuggestions([]));
   useEffect(shuffle, []);
 
   useEffect(() => {
