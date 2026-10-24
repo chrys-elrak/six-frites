@@ -1,10 +1,11 @@
-import type { ReplyPreview } from "@six/shared";
+import type { MessageEntity, ReplyPreview } from "@six/shared";
 import { create } from "zustand";
 
 export interface PendingMessage {
   clientId: string;
   chatId: string;
   text: string;
+  entities: MessageEntity[];
   replyTo: ReplyPreview | null;
   spoiler: boolean;
   createdAt: string;

@@ -1,5 +1,5 @@
 import type { Realtime } from "@six/sdk";
-import type { MessageDTO } from "@six/shared";
+import { type MessageDTO, type MessageEntity, maskSpoilers } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { insertMessage, patchChat } from "./chats";
 import { type PendingMessage, useOutbox } from "./outbox";
@@ -11,6 +11,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
     const m = await realtime.sendMessage(pending.chatId, {
       clientId: pending.clientId,
       text: pending.text,
+      entities: pending.entities.length ? pending.entities : undefined,
       replyToId: pending.replyTo?.id,
       spoiler: pending.spoiler || undefined,
     });
@@ -27,19 +28,20 @@ export function sendText(
   realtime: Realtime,
   chatId: string,
   text: string,
-  opts: { replyTo?: MessageDTO; spoiler?: boolean } = {},
+  opts: { entities?: MessageEntity[]; replyTo?: MessageDTO; spoiler?: boolean } = {},
 ) {
   const { replyTo } = opts;
   const pending: PendingMessage = {
     clientId: crypto.randomUUID(),
     chatId,
     text,
+    entities: opts.entities ?? [],
     replyTo: replyTo
       ? {
           id: replyTo.id,
           senderId: replyTo.senderId,
           type: replyTo.type,
-          text: replyTo.text,
+          text: replyTo.text === null ? null : maskSpoilers(replyTo.text, replyTo.entities),
           spoiler: replyTo.spoiler,
           deleted: false,
         }

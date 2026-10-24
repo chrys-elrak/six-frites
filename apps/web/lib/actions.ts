@@ -1,12 +1,16 @@
 import { unwrap } from "@six/sdk";
-import type { ChatDTO, DeleteScope, MessageDTO } from "@six/shared";
+import { type ChatDTO, type DeleteScope, type MessageDTO, type MessageEntity, maskSpoilers } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { chatKeys, mapMessages, patchChat, removeChat, resetMessages, upsertChat } from "./chats";
 import { six } from "./six";
 
 export function applyEdited(qc: QueryClient, m: MessageDTO) {
   mapMessages(qc, m.chatId, (x) =>
-    x.id === m.id ? m : x.replyTo?.id === m.id ? { ...x, replyTo: { ...x.replyTo, text: m.text } } : x,
+    x.id === m.id
+      ? m
+      : x.replyTo?.id === m.id
+        ? { ...x, replyTo: { ...x.replyTo, text: m.text === null ? null : maskSpoilers(m.text, m.entities) } }
+        : x,
   );
   patchChat(qc, m.chatId, (c) => (c.lastMessage?.id === m.id ? { ...c, lastMessage: m } : c));
 }
@@ -15,7 +19,8 @@ export function applyDeleted(qc: QueryClient, chatId: string, ids: string[], sco
   const gone = new Set(ids);
   const now = new Date().toISOString();
   mapMessages(qc, chatId, (x) => {
-    if (gone.has(x.id)) return scope === "me" ? null : { ...x, text: null, deletedAt: x.deletedAt ?? now };
+    if (gone.has(x.id))
+      return scope === "me" ? null : { ...x, text: null, entities: [], deletedAt: x.deletedAt ?? now };
     if (scope === "all" && x.replyTo && gone.has(x.replyTo.id)) {
       return { ...x, replyTo: { ...x.replyTo, text: null, deleted: true } };
     }
@@ -30,8 +35,10 @@ export function applyChatDeleted(qc: QueryClient, chatId: string, scope: DeleteS
   else resetMessages(qc, chatId);
 }
 
-export async function editMessage(qc: QueryClient, messageId: string, text: string) {
-  const m = unwrap(await six.api.PATCH("/v1/messages/{id}", { params: { path: { id: messageId } }, body: { text } }));
+export async function editMessage(qc: QueryClient, messageId: string, text: string, entities: MessageEntity[]) {
+  const m = unwrap(
+    await six.api.PATCH("/v1/messages/{id}", { params: { path: { id: messageId } }, body: { text, entities } }),
+  );
   applyEdited(qc, m);
   return m;
 }
@@ -60,9 +67,7 @@ export async function updateContact(
   userId: string,
   input: { displayName?: string | null; photo?: string | null },
 ) {
-  const contact = unwrap(
-    await six.api.PATCH("/v1/contacts/{userId}", { params: { path: { userId } }, body: input }),
-  );
+  const contact = unwrap(await six.api.PATCH("/v1/contacts/{userId}", { params: { path: { userId } }, body: input }));
   void qc.invalidateQueries({ queryKey: ["contacts"] });
   void qc.invalidateQueries({ queryKey: ["contact", userId] });
   void qc.invalidateQueries({ queryKey: ["referrals"] });

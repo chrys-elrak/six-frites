@@ -644,6 +644,12 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    entities: {
+                                        /** @enum {string} */
+                                        type: "spoiler";
+                                        offset: number;
+                                        length: number;
+                                    }[];
                                     spoiler: boolean;
                                     replyTo: {
                                         id: string;
@@ -737,6 +743,12 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
                                 spoiler: boolean;
                                 replyTo: {
                                     id: string;
@@ -853,6 +865,12 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
                                 spoiler: boolean;
                                 replyTo: {
                                     id: string;
@@ -913,6 +931,13 @@ export interface paths {
                 content: {
                     "application/json": {
                         text: string;
+                        /** @description Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping */
+                        entities?: {
+                            /** @enum {string} */
+                            type: "spoiler";
+                            offset: number;
+                            length: number;
+                        }[];
                     };
                 };
             };
@@ -931,6 +956,12 @@ export interface paths {
                             /** @enum {string} */
                             type: "text";
                             text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
                             spoiler: boolean;
                             replyTo: {
                                 id: string;
@@ -1034,6 +1065,12 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
                                 spoiler: boolean;
                                 replyTo: {
                                     id: string;
@@ -1076,6 +1113,13 @@ export interface paths {
                     "application/json": {
                         clientId: string;
                         text: string;
+                        /** @description Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping */
+                        entities?: {
+                            /** @enum {string} */
+                            type: "spoiler";
+                            offset: number;
+                            length: number;
+                        }[];
                         replyToId?: string;
                         spoiler?: boolean;
                     };
@@ -1096,6 +1140,12 @@ export interface paths {
                             /** @enum {string} */
                             type: "text";
                             text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
                             spoiler: boolean;
                             replyTo: {
                                 id: string;
@@ -1423,6 +1473,12 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    entities: {
+                                        /** @enum {string} */
+                                        type: "spoiler";
+                                        offset: number;
+                                        length: number;
+                                    }[];
                                     spoiler: boolean;
                                     replyTo: {
                                         id: string;
@@ -1453,6 +1509,12 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    entities: {
+                                        /** @enum {string} */
+                                        type: "spoiler";
+                                        offset: number;
+                                        length: number;
+                                    }[];
                                     spoiler: boolean;
                                     replyTo: {
                                         id: string;
@@ -1516,6 +1578,12 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "text";
                                         text: string | null;
+                                        entities: {
+                                            /** @enum {string} */
+                                            type: "spoiler";
+                                            offset: number;
+                                            length: number;
+                                        }[];
                                         spoiler: boolean;
                                         replyTo: {
                                             id: string;

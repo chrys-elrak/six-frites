@@ -211,6 +211,36 @@ describe("spoilers", () => {
   });
 });
 
+describe("partial spoilers", () => {
+  it("stores ranges, masks them in reply previews and replaces them on edit", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const text = "the killer is Bob, obviously";
+    const entities = [{ type: "spoiler", offset: 14, length: 3 }];
+    const m = (await send(host, chatId, text, { entities })).json();
+    expect(m.entities).toEqual(entities);
+
+    const reply = (await send(guest, chatId, "wow", { replyToId: m.id })).json();
+    expect(reply.replyTo.text).toBe("the killer is ••••, obviously");
+    expect(JSON.stringify(reply)).not.toContain("Bob");
+
+    const edited = await call(host, "PATCH", `/v1/messages/${m.id}`, { text });
+    expect(edited.json().entities).toEqual([]);
+  });
+
+  it("rejects ranges outside the text or overlapping", async () => {
+    const { host, chatId } = await makeFriends();
+    const outside = await send(host, chatId, "short", { entities: [{ type: "spoiler", offset: 3, length: 9 }] });
+    expect(outside.json().error.code).toBe("VALIDATION_FAILED");
+    const overlap = await send(host, chatId, "overlapping", {
+      entities: [
+        { type: "spoiler", offset: 0, length: 5 },
+        { type: "spoiler", offset: 3, length: 2 },
+      ],
+    });
+    expect(overlap.json().error.code).toBe("VALIDATION_FAILED");
+  });
+});
+
 describe("deleting chats", () => {
   it("scope=me clears my history and hides the chat until a new message", async () => {
     const { host, guest, chatId } = await makeFriends();

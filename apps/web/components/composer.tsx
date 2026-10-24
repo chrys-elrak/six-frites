@@ -1,5 +1,6 @@
 "use client";
 
+import { maskSpoilers } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, EyeOff, SendHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +8,7 @@ import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
 import { useRealtime } from "@/lib/realtime";
 import { sendText } from "@/lib/send";
+import { parseSpoilers, toSpoilerMarkup } from "@/lib/spoiler-markup";
 
 const drafts = new Map<string, string>();
 
@@ -50,14 +52,32 @@ export function Composer({
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
-    if (!editing) drafts.set(chatId, text);
-  }, [chatId, text, editing]);
+    setText(editing ? toSpoilerMarkup(editing.text ?? "", editing.entities) : (drafts.get(chatId) ?? ""));
+  }, [editing, chatId]);
 
   useEffect(() => {
-    if (editing) setText(editing.text ?? "");
-    else setText(drafts.get(chatId) ?? "");
     if (mode) ref.current?.focus();
-  }, [mode, editing, chatId]);
+  }, [mode]);
+
+  function change(value: string) {
+    setText(value);
+    if (!editing) drafts.set(chatId, value);
+  }
+
+  function spoilerButton() {
+    const el = ref.current;
+    const start = el?.selectionStart ?? 0;
+    const end = el?.selectionEnd ?? 0;
+    if (!el || end <= start) {
+      if (!editing) setSpoiler((v) => !v);
+      return;
+    }
+    change(`${text.slice(0, start)}||${text.slice(start, end)}||${text.slice(end)}`);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(end + 4, end + 4);
+    });
+  }
 
   useEffect(() => {
     if (!realtime || editing) return;
@@ -77,8 +97,8 @@ export function Composer({
     if (window.matchMedia("(pointer: fine)").matches) ref.current?.focus();
   }, [chatId]);
 
-  const trimmed = text.trim();
-  const canSubmit = trimmed.length > 0 && realtime !== null && !saving;
+  const parsed = parseSpoilers(text);
+  const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
 
   function cancel() {
     setError(null);
@@ -88,11 +108,13 @@ export function Composer({
   async function submit() {
     if (!canSubmit) return;
     if (editing) {
-      if (trimmed !== editing.text) {
+      const changed =
+        parsed.text !== editing.text || JSON.stringify(parsed.entities) !== JSON.stringify(editing.entities);
+      if (changed) {
         setSaving(true);
         setError(null);
         try {
-          await editMessage(qc, editing.id, trimmed);
+          await editMessage(qc, editing.id, parsed.text, parsed.entities);
         } catch {
           setError("Couldn't save your edit. Try again.");
           return;
@@ -104,7 +126,8 @@ export function Composer({
       return;
     }
     realtime.setTyping(chatId, false);
-    sendText(qc, realtime, chatId, trimmed, {
+    sendText(qc, realtime, chatId, parsed.text, {
+      entities: parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       spoiler,
     });
@@ -126,11 +149,13 @@ export function Composer({
       {mode?.kind === "reply" && (
         <ModeBar
           label={`Replying to ${nameOf(mode.message.senderId)}`}
-          text={mode.message.spoiler ? "Spoiler" : (mode.message.text ?? "")}
+          text={mode.message.spoiler ? "Spoiler" : maskSpoilers(mode.message.text ?? "", mode.message.entities)}
           onCancel={cancel}
         />
       )}
-      {editing && <ModeBar label="Editing message" text={editing.text ?? ""} onCancel={cancel} />}
+      {editing && (
+        <ModeBar label="Editing message" text={maskSpoilers(editing.text ?? "", editing.entities)} onCancel={cancel} />
+      )}
       {error && (
         <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
           {error}
@@ -138,25 +163,28 @@ export function Composer({
       )}
 
       <div className="flex items-end gap-2">
-        {!editing && (
-          <button
-            type="button"
-            onClick={() => setSpoiler((v) => !v)}
-            onMouseDown={(e) => e.preventDefault()}
-            aria-pressed={spoiler}
-            aria-label={spoiler ? "Send as normal message" : "Send as spoiler"}
-            title={spoiler ? "Spoiler on" : "Send as spoiler"}
-            className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
-              spoiler ? "bg-brand/20 text-brand" : "text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
-            }`}
-          >
-            <EyeOff className="size-5" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={spoilerButton}
+          onMouseDown={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            spoilerButton();
+          }}
+          aria-pressed={!editing && spoiler}
+          aria-label={spoiler && !editing ? "Send as normal message" : "Spoiler"}
+          title="Select text to hide just that part, or tap to send the whole message as a spoiler"
+          className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
+            spoiler && !editing ? "bg-brand/20 text-brand" : "text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+          }`}
+        >
+          <EyeOff className="size-5" />
+        </button>
         <textarea
           ref={ref}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => change(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Escape" && mode) {
               e.preventDefault();

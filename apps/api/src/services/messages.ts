@@ -4,9 +4,11 @@ import {
   type DeleteMessagesQuery,
   type EditMessageInput,
   type MessageDTO,
+  type MessageEntity,
   type MessageType,
   type PageQuery,
   type SendMessageInput,
+  maskSpoilers,
 } from "@six/shared";
 import { type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
@@ -17,6 +19,10 @@ export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclu
 
 const SNIPPET = 200;
 
+const entitiesOf = (m: { entities: Prisma.JsonValue }) => (m.entities as MessageEntity[] | null) ?? [];
+const storedEntities = (entities: MessageEntity[] | undefined) =>
+  entities?.length ? (entities as Prisma.InputJsonValue) : Prisma.DbNull;
+
 export function toMessageDTO(m: MessageRow): MessageDTO {
   const r = m.replyTo;
   return {
@@ -26,13 +32,14 @@ export function toMessageDTO(m: MessageRow): MessageDTO {
     clientId: m.clientId,
     type: m.type as MessageType,
     text: m.deletedAt ? null : m.text,
+    entities: m.deletedAt ? [] : entitiesOf(m),
     spoiler: m.spoiler,
     replyTo: r
       ? {
           id: r.id,
           senderId: r.senderId,
           type: r.type as MessageType,
-          text: r.deletedAt ? null : (r.text?.slice(0, SNIPPET) ?? null),
+          text: r.deletedAt || r.text === null ? null : maskSpoilers(r.text, entitiesOf(r)).slice(0, SNIPPET),
           spoiler: r.spoiler,
           deleted: r.deletedAt !== null,
         }
@@ -96,6 +103,7 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
           clientId: input.clientId,
           type: "text",
           text: input.text,
+          entities: storedEntities(input.entities),
           spoiler: input.spoiler ?? false,
           replyToId: input.replyToId ?? null,
         },
@@ -134,11 +142,14 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     });
     if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
     if (message.deletedAt || message.type !== "text") throw new AppError("MESSAGE_NOT_EDITABLE");
-    if (message.text === input.text) return toMessageDTO(message);
+    const entities = input.entities ?? [];
+    if (message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
+      return toMessageDTO(message);
+    }
 
     const updated = await tx.message.update({
       where: { id: messageId },
-      data: { text: input.text, editedAt: new Date() },
+      data: { text: input.text, entities: storedEntities(entities), editedAt: new Date() },
       include: messageInclude,
     });
     const dto = toMessageDTO(updated);
@@ -182,7 +193,7 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
       const tombstones = messages.filter((m) => m.deletedAt);
       await tx.message.updateMany({
         where: { id: { in: live.map((m) => m.id) } },
-        data: { deletedAt: new Date(), text: null },
+        data: { deletedAt: new Date(), text: null, entities: Prisma.DbNull },
       });
       await scrubMessageEvents(tx, live.map((m) => m.id));
 

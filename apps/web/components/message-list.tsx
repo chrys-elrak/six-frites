@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatDTO, MessageDTO, ReplyPreview } from "@six/shared";
+import type { ChatDTO, MessageDTO, MessageEntity, ReplyPreview } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Ban,
@@ -36,6 +36,7 @@ interface MsgRow {
   message: MessageDTO | null;
   pending: PendingMessage | null;
   text: string | null;
+  entities: MessageEntity[];
   spoiler: boolean;
   replyTo: ReplyPreview | null;
   createdAt: string;
@@ -73,6 +74,7 @@ function buildRows(
         message: m,
         pending: null,
         text: m.text,
+        entities: m.entities,
         spoiler: m.spoiler,
         replyTo: m.replyTo,
         createdAt: m.createdAt,
@@ -92,6 +94,7 @@ function buildRows(
           message: null,
           pending: p,
           text: p.text,
+          entities: p.entities,
           spoiler: p.spoiler,
           replyTo: p.replyTo,
           createdAt: p.createdAt,
@@ -185,6 +188,40 @@ function Quote({
   );
 }
 
+function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) {
+  const revealed = useSpoilers((s) => !!s.revealed[row.key]);
+  const reveal = useSpoilers((s) => s.reveal);
+  const text = row.text ?? "";
+  const ranges = row.spoiler ? [{ offset: 0, length: text.length }] : row.entities;
+  if (revealed || ranges.length === 0) return <>{text}</>;
+
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+  ranges.forEach((r, i) => {
+    if (r.offset > cursor) parts.push(text.slice(cursor, r.offset));
+    parts.push(
+      <span
+        key={i}
+        role="button"
+        tabIndex={0}
+        aria-label="Spoiler, tap to reveal"
+        onClick={(e) => {
+          if (selectable) return;
+          e.stopPropagation();
+          reveal(row.key);
+        }}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && reveal(row.key)}
+        className="spoiler cursor-pointer"
+      >
+        {text.slice(r.offset, r.offset + r.length)}
+      </span>,
+    );
+    cursor = r.offset + r.length;
+  });
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
+}
+
 function Bubble({
   row,
   highlighted,
@@ -206,9 +243,6 @@ function Bubble({
 }) {
   const selectable = selecting && row.message !== null;
   const press = useLongPress(selectable ? onToggle : onMenu);
-  const revealed = useSpoilers((s) => !!s.revealed[row.key]);
-  const reveal = useSpoilers((s) => s.reveal);
-  const hidden = row.spoiler && !revealed && !row.deleted;
   const { mine, groupStart, groupEnd } = row;
   const radius = mine
     ? `rounded-2xl ${groupStart ? "" : "rounded-tr-md"} ${groupEnd ? "" : "rounded-br-md"}`
@@ -265,23 +299,8 @@ function Bubble({
                   <span className="inline-flex items-center gap-1.5">
                     <Ban className="size-4" /> This message was deleted
                   </span>
-                ) : hidden ? (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Spoiler, tap to reveal"
-                    onClick={(e) => {
-                      if (selectable) return;
-                      e.stopPropagation();
-                      reveal(row.key);
-                    }}
-                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && reveal(row.key)}
-                    className="spoiler cursor-pointer"
-                  >
-                    {row.text}
-                  </span>
                 ) : (
-                  row.text
+                  <MessageText row={row} selectable={selectable} />
                 )}
                 <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none opacity-70">
                   {row.edited && !row.deleted && <span>edited</span>}

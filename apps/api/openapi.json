@@ -1110,6 +1110,34 @@
                                 "type": "string",
                                 "nullable": true
                               },
+                              "entities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "spoiler"
+                                      ]
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "length": {
+                                      "type": "integer",
+                                      "minimum": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "offset",
+                                    "length"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
                               "spoiler": {
                                 "type": "boolean"
                               },
@@ -1174,6 +1202,7 @@
                               "clientId",
                               "type",
                               "text",
+                              "entities",
                               "spoiler",
                               "replyTo",
                               "createdAt",
@@ -1372,6 +1401,34 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "spoiler"
+                                ]
+                              },
+                              "offset": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "length": {
+                                "type": "integer",
+                                "minimum": 1
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "offset",
+                              "length"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "spoiler": {
                           "type": "boolean"
                         },
@@ -1436,6 +1493,7 @@
                         "clientId",
                         "type",
                         "text",
+                        "entities",
                         "spoiler",
                         "replyTo",
                         "createdAt",
@@ -1642,6 +1700,34 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "spoiler"
+                                ]
+                              },
+                              "offset": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "length": {
+                                "type": "integer",
+                                "minimum": 1
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "offset",
+                              "length"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "spoiler": {
                           "type": "boolean"
                         },
@@ -1706,6 +1792,7 @@
                         "clientId",
                         "type",
                         "text",
+                        "entities",
                         "spoiler",
                         "replyTo",
                         "createdAt",
@@ -1830,6 +1917,36 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 4000
+                  },
+                  "entities": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "spoiler"
+                          ]
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "length": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "offset",
+                        "length"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 100,
+                    "description": "Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping"
                   }
                 },
                 "required": [
@@ -1888,6 +2005,34 @@
                     "text": {
                       "type": "string",
                       "nullable": true
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "spoiler": {
                       "type": "boolean"
@@ -1953,6 +2098,7 @@
                     "clientId",
                     "type",
                     "text",
+                    "entities",
                     "spoiler",
                     "replyTo",
                     "createdAt",
@@ -2100,6 +2246,34 @@
                             "type": "string",
                             "nullable": true
                           },
+                          "entities": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "spoiler"
+                                  ]
+                                },
+                                "offset": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "length": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "offset",
+                                "length"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
                           "spoiler": {
                             "type": "boolean"
                           },
@@ -2164,6 +2338,7 @@
                           "clientId",
                           "type",
                           "text",
+                          "entities",
                           "spoiler",
                           "replyTo",
                           "createdAt",
@@ -2211,6 +2386,36 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 4000
+                  },
+                  "entities": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "spoiler"
+                          ]
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "length": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "offset",
+                        "length"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 100,
+                    "description": "Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping"
                   },
                   "replyToId": {
                     "type": "string",
@@ -2278,6 +2483,34 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
                     "spoiler": {
                       "type": "boolean"
                     },
@@ -2342,6 +2575,7 @@
                     "clientId",
                     "type",
                     "text",
+                    "entities",
                     "spoiler",
                     "replyTo",
                     "createdAt",
@@ -2930,6 +3164,34 @@
                                     "type": "string",
                                     "nullable": true
                                   },
+                                  "entities": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "spoiler"
+                                          ]
+                                        },
+                                        "offset": {
+                                          "type": "integer",
+                                          "minimum": 0
+                                        },
+                                        "length": {
+                                          "type": "integer",
+                                          "minimum": 1
+                                        }
+                                      },
+                                      "required": [
+                                        "type",
+                                        "offset",
+                                        "length"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
                                   "spoiler": {
                                     "type": "boolean"
                                   },
@@ -2994,6 +3256,7 @@
                                   "clientId",
                                   "type",
                                   "text",
+                                  "entities",
                                   "spoiler",
                                   "replyTo",
                                   "createdAt",
@@ -3054,6 +3317,34 @@
                                     "type": "string",
                                     "nullable": true
                                   },
+                                  "entities": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "spoiler"
+                                          ]
+                                        },
+                                        "offset": {
+                                          "type": "integer",
+                                          "minimum": 0
+                                        },
+                                        "length": {
+                                          "type": "integer",
+                                          "minimum": 1
+                                        }
+                                      },
+                                      "required": [
+                                        "type",
+                                        "offset",
+                                        "length"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
                                   "spoiler": {
                                     "type": "boolean"
                                   },
@@ -3118,6 +3409,7 @@
                                   "clientId",
                                   "type",
                                   "text",
+                                  "entities",
                                   "spoiler",
                                   "replyTo",
                                   "createdAt",
@@ -3307,6 +3599,34 @@
                                         "type": "string",
                                         "nullable": true
                                       },
+                                      "entities": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": {
+                                              "type": "string",
+                                              "enum": [
+                                                "spoiler"
+                                              ]
+                                            },
+                                            "offset": {
+                                              "type": "integer",
+                                              "minimum": 0
+                                            },
+                                            "length": {
+                                              "type": "integer",
+                                              "minimum": 1
+                                            }
+                                          },
+                                          "required": [
+                                            "type",
+                                            "offset",
+                                            "length"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
                                       "spoiler": {
                                         "type": "boolean"
                                       },
@@ -3371,6 +3691,7 @@
                                       "clientId",
                                       "type",
                                       "text",
+                                      "entities",
                                       "spoiler",
                                       "replyTo",
                                       "createdAt",

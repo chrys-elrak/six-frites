@@ -130,6 +130,7 @@ model Message {
   clientId  String
   type      String    @default("text")
   text      String?
+  entities  Json?
   spoiler   Boolean   @default(false)
   replyToId String?
   createdAt DateTime  @default(now())

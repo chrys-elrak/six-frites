@@ -5,6 +5,39 @@ import { PublicUser } from "./invites.js";
 export const MessageType = z.enum(["text"]);
 export type MessageType = z.infer<typeof MessageType>;
 
+export const MessageEntity = z.object({
+  type: z.literal("spoiler"),
+  offset: z.number().int().min(0),
+  length: z.number().int().min(1),
+});
+export type MessageEntity = z.infer<typeof MessageEntity>;
+
+const Entities = z
+  .array(MessageEntity)
+  .max(100)
+  .describe("Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping");
+
+/** Checks entity ranges against the text they annotate. */
+export function entitiesFit(text: string, entities: MessageEntity[] = []) {
+  let end = 0;
+  for (const e of entities) {
+    if (e.offset < end || e.offset + e.length > text.length) return false;
+    end = e.offset + e.length;
+  }
+  return true;
+}
+
+/** Replaces each spoiler range with a fixed mask so previews never reveal hidden text or its length. */
+export function maskSpoilers(text: string, entities: MessageEntity[] = [], mask = "••••") {
+  let out = "";
+  let cursor = 0;
+  for (const e of entities) {
+    out += text.slice(cursor, e.offset) + mask;
+    cursor = e.offset + e.length;
+  }
+  return out + text.slice(cursor);
+}
+
 export const ReplyPreview = z.object({
   id: Id,
   senderId: Id,
@@ -22,6 +55,7 @@ export const MessageDTO = z.object({
   clientId: z.string(),
   type: MessageType,
   text: z.string().nullable(),
+  entities: z.array(MessageEntity),
   spoiler: z.boolean(),
   replyTo: ReplyPreview.nullable(),
   createdAt: IsoDate,
@@ -32,7 +66,9 @@ export type MessageDTO = z.infer<typeof MessageDTO>;
 
 const MessageText = z.string().trim().min(1).max(4000);
 
-export const EditMessageInput = z.object({ text: MessageText });
+export const EditMessageInput = z
+  .object({ text: MessageText, entities: Entities.optional() })
+  .refine((v) => entitiesFit(v.text, v.entities), { message: "Entities fall outside the text", path: ["entities"] });
 export type EditMessageInput = z.infer<typeof EditMessageInput>;
 
 export const DeleteScope = z.enum(["me", "all"]);
@@ -58,12 +94,15 @@ export const MessagesDeletedDTO = z.object({
 });
 export type MessagesDeletedDTO = z.infer<typeof MessagesDeletedDTO>;
 
-export const SendMessageInput = z.object({
-  clientId: z.string().min(1).max(64),
-  text: MessageText,
-  replyToId: Id.optional(),
-  spoiler: z.boolean().optional(),
-});
+export const SendMessageInput = z
+  .object({
+    clientId: z.string().min(1).max(64),
+    text: MessageText,
+    entities: Entities.optional(),
+    replyToId: Id.optional(),
+    spoiler: z.boolean().optional(),
+  })
+  .refine((v) => entitiesFit(v.text, v.entities), { message: "Entities fall outside the text", path: ["entities"] });
 export type SendMessageInput = z.infer<typeof SendMessageInput>;
 
 export const ChatMemberDTO = z.object({

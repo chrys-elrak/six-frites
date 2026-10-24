@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatDTO } from "@six/shared";
+import { type ChatDTO, maskSpoilers } from "@six/shared";
 import { Archive, Ban, BellOff, ChevronLeft, EyeOff, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
           <EyeOff className="size-3.5" /> Spoiler
         </span>
       ) : (
-        m.text
+        maskSpoilers(m.text ?? "", m.entities)
       )}
     </>
   );
