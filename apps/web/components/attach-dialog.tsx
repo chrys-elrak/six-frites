@@ -14,42 +14,41 @@ export interface PickedFile {
 
 interface Item extends PickedFile {
   id: string;
-  url: string;
 }
 
 const visual = (kind: UploadKind) => kind === "image" || kind === "video";
 
 function Preview({
   item,
+  url,
   large,
   onToggleSpoiler,
   onRemove,
 }: {
   item: Item;
+  url: string | undefined;
   large: boolean;
   onToggleSpoiler: () => void;
   onRemove: () => void;
 }) {
-  const media =
-    item.kind === "image" ? (
-      <img src={item.url} alt="" className={`size-full ${large ? "object-contain" : "object-cover"}`} />
-    ) : (
-      <video
-        src={item.url}
-        muted
-        playsInline
-        preload="metadata"
-        className={`size-full ${large ? "object-contain" : "object-cover"}`}
-      />
-    );
+  const fit = large ? "max-h-full max-w-full object-contain" : "size-full object-cover";
+  const media = !url ? null : item.kind === "image" ? (
+    <img src={url} alt="" className={fit} />
+  ) : (
+    <video src={`${url}#t=0.1`} muted playsInline preload="metadata" className={fit} />
+  );
 
   return (
     <div
       className={`relative overflow-hidden rounded-xl bg-stone-100 dark:bg-stone-800 ${
-        large ? "grid max-h-[50dvh] min-h-40 place-items-center" : "aspect-square"
+        large ? "h-[min(50dvh,420px)]" : "aspect-square"
       }`}
     >
-      <div className={`size-full transition duration-300 ${item.spoiler ? "scale-110 blur-xl brightness-75" : ""}`}>
+      <div
+        className={`flex size-full items-center justify-center transition duration-300 ${
+          item.spoiler ? "scale-110 blur-xl brightness-75" : ""
+        }`}
+      >
         {media}
       </div>
       {item.spoiler && (
@@ -98,17 +97,17 @@ export function AttachDialog({
       file,
       kind: kindFor(file.type || "application/octet-stream"),
       spoiler: false,
-      url: URL.createObjectURL(file),
     })),
   );
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const fileIds = items.map((i) => i.id).join();
   const [caption, setCaption] = useState(initialCaption);
   const input = useRef<HTMLTextAreaElement>(null);
-  const created = useRef(items.map((i) => i.url));
-
   useEffect(() => {
-    const urls = created.current;
-    return () => urls.forEach((u) => URL.revokeObjectURL(u));
-  }, []);
+    const made = Object.fromEntries(items.map((i) => [i.id, URL.createObjectURL(i.file)]));
+    setUrls(made);
+    return () => Object.values(made).forEach((u) => URL.revokeObjectURL(u));
+  }, [fileIds]);
 
   useEffect(() => {
     if (window.matchMedia("(pointer: fine)").matches) input.current?.focus();
@@ -163,6 +162,7 @@ export function AttachDialog({
           {single ? (
             <Preview
               item={media[0]!}
+              url={urls[media[0]!.id]}
               large
               onToggleSpoiler={() => update(media[0]!.id, { spoiler: !media[0]!.spoiler })}
               onRemove={() => remove(media[0]!.id)}
@@ -174,6 +174,7 @@ export function AttachDialog({
                   <Preview
                     key={item.id}
                     item={item}
+                    url={urls[item.id]}
                     large={false}
                     onToggleSpoiler={() => update(item.id, { spoiler: !item.spoiler })}
                     onRemove={() => remove(item.id)}
