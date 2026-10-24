@@ -1,7 +1,15 @@
 "use client";
 
 import { unwrap } from "@six/sdk";
-import type { ChatDTO, EphemeralDTO, MessageDTO, MessageEntity, ReplyPreview, ViewMessageResult } from "@six/shared";
+import {
+  type ChatDTO,
+  EPHEMERAL_RESEND,
+  type EphemeralDTO,
+  type MessageDTO,
+  type MessageEntity,
+  type ReplyPreview,
+  type ViewMessageResult,
+} from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Ban,
@@ -18,6 +26,7 @@ import {
   Mic,
   MoreHorizontal,
   Paperclip,
+  RotateCcw,
   Video,
   X,
 } from "lucide-react";
@@ -32,7 +41,7 @@ import {
   useState,
 } from "react";
 import { VList, type VListHandle } from "virtua";
-import { deleteMessage, markOpenedLocally } from "@/lib/actions";
+import { applyEdited, deleteMessage, markOpenedLocally } from "@/lib/actions";
 import { shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
 import { useMessages } from "@/lib/chats";
@@ -146,6 +155,9 @@ function buildRows(
                 firstViewedAt: null,
                 locked: false,
                 expired: false,
+                purged: false,
+                resendsLeft: EPHEMERAL_RESEND.max,
+                resendUntil: null,
               }
             : null,
         },
@@ -359,11 +371,26 @@ function RevealBar({ expiresAt, onHide }: { expiresAt: string | null; onHide: ()
   );
 }
 
-function SenderBadge({ e }: { e: EphemeralDTO }) {
+export const canResend = (e: EphemeralDTO) =>
+  e.expired && !e.purged && e.resendsLeft > 0 && !!e.resendUntil && Date.now() < Date.parse(e.resendUntil);
+
+function SenderBadge({ e, onResend }: { e: EphemeralDTO; onResend: () => void }) {
   return (
     <span className="mb-0.5 flex items-center gap-1 text-[11px] opacity-80">
       <Flame className="size-3" />
-      {shortRule(e)} · {e.views ? `Opened${e.views > 1 ? ` ${e.views}×` : ""}` : "Not opened"}
+      {shortRule(e)} · {e.expired || e.views ? `Opened${e.views > 1 ? ` ${e.views}×` : ""}` : "Not opened"}
+      {canResend(e) && (
+        <button
+          type="button"
+          onClick={(ev) => {
+            ev.stopPropagation();
+            onResend();
+          }}
+          className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-black/10 px-1.5 py-0.5 font-semibold hover:bg-black/20 dark:bg-white/10"
+        >
+          <RotateCcw className="size-3" /> Resend ({e.resendsLeft} left)
+        </button>
+      )}
     </span>
   );
 }
@@ -380,6 +407,7 @@ function Bubble({
   onOpen,
   onOpenEphemeral,
   onHideReveal,
+  onResend,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -392,13 +420,15 @@ function Bubble({
   onOpen: (item: LightboxItem) => void;
   onOpenEphemeral: () => void;
   onHideReveal: () => void;
+  onResend: () => void;
 }) {
   const selectable = selecting && row.message !== null;
   const press = useLongPress(selectable ? onToggle : onMenu);
   const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
-  const sealed = !!row.ephemeral && (row.ephemeral.locked || row.ephemeral.expired);
+  const e = row.ephemeral;
+  const sealed = !!e && (e.locked || (e.expired && (!row.mine || e.purged)));
   const jumbo =
     !row.deleted &&
     !row.ephemeral &&
@@ -469,7 +499,7 @@ function Bubble({
               {row.reveal ? (
                 <RevealBar expiresAt={row.reveal.expiresAt} onHide={onHideReveal} />
               ) : (
-                row.ephemeral && !sealed && !row.deleted && <SenderBadge e={row.ephemeral} />
+                row.ephemeral && !sealed && !row.deleted && <SenderBadge e={row.ephemeral} onResend={onResend} />
               )}
               {row.attachment && !row.deleted && !sealed && (
                 <AttachmentView
@@ -582,6 +612,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       },
       [qc, chat.id],
     );
+
+    async function resendEphemeral(m: MessageDTO) {
+      try {
+        applyEdited(qc, unwrap(await six.api.POST("/v1/messages/{id}/resend", { params: { path: { id: m.id } } })));
+      } catch {
+        void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
+      }
+    }
 
     async function openEphemeral(row: MsgRow) {
       const id = row.id;
@@ -710,6 +748,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       return [
         { label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) },
         { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
+        ...(m.ephemeral && canResend(m.ephemeral)
+          ? [{ label: "Resend so they can open it again", onSelect: () => void resendEphemeral(m) }]
+          : []),
         ...(m.ephemeral
           ? []
           : [
@@ -761,6 +802,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onOpen={setLightbox}
                 onOpenEphemeral={() => void openEphemeral(row)}
                 onHideReveal={() => row.id && hideReveal(row.id)}
+                onResend={() => row.message && void resendEphemeral(row.message)}
               />
             )
           }
