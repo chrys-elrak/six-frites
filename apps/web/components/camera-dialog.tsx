@@ -3,6 +3,7 @@
 import { Camera, RefreshCw, X } from "lucide-react";
 import { useEffect } from "react";
 import { useCamera } from "@/lib/camera";
+import { Portal } from "./portal";
 
 export function CameraDialog({ onClose, onCapture }: { onClose: () => void; onCapture: (file: File) => void }) {
   const cam = useCamera("environment");
@@ -36,47 +37,49 @@ export function CameraDialog({ onClose, onCapture }: { onClose: () => void; onCa
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black" role="dialog" aria-modal aria-label="Take a photo">
-      <div className="flex items-center justify-between p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"
-        >
-          <X className="size-6" />
-        </button>
-        {cam.canSwitch && (
+    <Portal>
+      <div className="fixed inset-0 z-50 flex flex-col bg-black" role="dialog" aria-modal aria-label="Take a photo">
+        <div className="flex items-center justify-between p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
-            onClick={cam.switchCamera}
-            aria-label="Switch camera"
+            onClick={onClose}
+            aria-label="Close"
             className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"
           >
-            <RefreshCw className="size-5" />
+            <X className="size-6" />
           </button>
-        )}
+          {cam.canSwitch && (
+            <button
+              onClick={cam.switchCamera}
+              aria-label="Switch camera"
+              className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"
+            >
+              <RefreshCw className="size-5" />
+            </button>
+          )}
+        </div>
+        <div className="grid min-h-0 flex-1 place-items-center">
+          {cam.error ? (
+            <p className="max-w-xs text-center text-sm text-white/80">{cam.error}</p>
+          ) : (
+            <video
+              ref={cam.video}
+              muted
+              playsInline
+              className={`max-h-full max-w-full object-contain ${cam.facing === "user" ? "-scale-x-100" : ""}`}
+            />
+          )}
+        </div>
+        <div className="grid place-items-center p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <button
+            onClick={shoot}
+            disabled={!cam.stream}
+            aria-label="Take photo"
+            className="grid size-18 place-items-center rounded-full border-4 border-white bg-white/20 text-white transition active:scale-95 disabled:opacity-40"
+          >
+            <Camera className="size-7" />
+          </button>
+        </div>
       </div>
-      <div className="grid min-h-0 flex-1 place-items-center">
-        {cam.error ? (
-          <p className="max-w-xs text-center text-sm text-white/80">{cam.error}</p>
-        ) : (
-          <video
-            ref={cam.video}
-            muted
-            playsInline
-            className={`max-h-full max-w-full object-contain ${cam.facing === "user" ? "-scale-x-100" : ""}`}
-          />
-        )}
-      </div>
-      <div className="grid place-items-center p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <button
-          onClick={shoot}
-          disabled={!cam.stream}
-          aria-label="Take photo"
-          className="grid size-18 place-items-center rounded-full border-4 border-white bg-white/20 text-white transition active:scale-95 disabled:opacity-40"
-        >
-          <Camera className="size-7" />
-        </button>
-      </div>
-    </div>
+    </Portal>
   );
 }

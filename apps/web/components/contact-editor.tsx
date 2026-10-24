@@ -10,6 +10,7 @@ import { toAvatarDataUrl, urlToAvatarDataUrl } from "@/lib/image";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
 import { PrimaryButton } from "./ui";
+import { Portal } from "./portal";
 
 export function ContactEditor({ userId, onClose }: { userId: string; onClose: () => void }) {
   const qc = useQueryClient();
@@ -85,135 +86,137 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
-      role="dialog"
-      aria-modal
-      aria-label="Edit contact"
-    >
-      <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-      <div className="relative w-full max-w-sm rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900">
-        <div className="mb-4 flex items-center">
-          <h2 className="flex-1 text-lg font-semibold">Edit contact</h2>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="grid size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
+    <Portal>
+      <div
+        className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
+        role="dialog"
+        aria-modal
+        aria-label="Edit contact"
+      >
+        <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <div className="relative w-full max-w-sm rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900">
+          <div className="mb-4 flex items-center">
+            <h2 className="flex-1 text-lg font-semibold">Edit contact</h2>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="grid size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
 
-        {!c ? (
-          <p className="py-8 text-center text-sm text-stone-500">
-            {contact.isError ? "Contact not found." : "Loading…"}
-          </p>
-        ) : (
-          <form
-            className="space-y-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void save();
-            }}
-          >
-            <div className="flex flex-col items-center gap-3">
-              <button
-                type="button"
-                onClick={() => file.current?.click()}
-                className="group relative rounded-full"
-                aria-label="Choose a photo"
-              >
-                <Avatar user={{ displayName: name || c.originalName, avatarUrl: shownPhoto }} size="lg" />
-                <span className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
-                  <Camera className="size-6" />
-                </span>
-              </button>
-              <input
-                ref={file}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => void pick(e.target.files?.[0])}
-              />
-              {hasCustomPhoto && (
+          {!c ? (
+            <p className="py-8 text-center text-sm text-stone-500">
+              {contact.isError ? "Contact not found." : "Loading…"}
+            </p>
+          ) : (
+            <form
+              className="space-y-5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void save();
+              }}
+            >
+              <div className="flex flex-col items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setPhoto(null);
-                    setPicked(null);
-                  }}
-                  className="flex items-center gap-1.5 text-sm font-medium text-red-600 dark:text-red-400"
+                  onClick={() => file.current?.click()}
+                  className="group relative rounded-full"
+                  aria-label="Choose a photo"
                 >
-                  <Trash2 className="size-4" /> Remove photo
+                  <Avatar user={{ displayName: name || c.originalName, avatarUrl: shownPhoto }} size="lg" />
+                  <span className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
+                    <Camera className="size-6" />
+                  </span>
                 </button>
-              )}
-            </div>
-
-            {suggestions.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Or pick a picture</span>
+                <input
+                  ref={file}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => void pick(e.target.files?.[0])}
+                />
+                {hasCustomPhoto && (
                   <button
                     type="button"
-                    onClick={shuffle}
-                    className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-brand hover:bg-brand/10"
+                    onClick={() => {
+                      setPhoto(null);
+                      setPicked(null);
+                    }}
+                    className="flex items-center gap-1.5 text-sm font-medium text-red-600 dark:text-red-400"
                   >
-                    <Shuffle className="size-4" /> Shuffle
-                  </button>
-                </div>
-                <div className="grid grid-cols-6 gap-2">
-                  {suggestions.map((src) => (
-                    <button
-                      key={src}
-                      type="button"
-                      onClick={() => void choose(src)}
-                      aria-label="Use this picture"
-                      aria-pressed={picked === src}
-                      className={`aspect-square overflow-hidden rounded-full ring-offset-2 transition hover:scale-105 dark:ring-offset-stone-900 ${
-                        picked === src ? "ring-2 ring-brand" : ""
-                      }`}
-                    >
-                      <img src={src} alt="" className="size-full" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <label className="block space-y-1.5">
-              <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Name</span>
-              <input
-                value={name ?? ""}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={c.originalName}
-                maxLength={64}
-                className="w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
-              />
-              <span className="flex items-center justify-between text-xs text-stone-500">
-                Only you see this.
-                {name && (
-                  <button type="button" onClick={() => setName("")} className="font-medium text-brand">
-                    Use their name
+                    <Trash2 className="size-4" /> Remove photo
                   </button>
                 )}
-              </span>
-            </label>
+              </div>
 
-            {error && (
-              <p
-                role="alert"
-                className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300"
-              >
-                {error}
-              </p>
-            )}
+              {suggestions.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Or pick a picture</span>
+                    <button
+                      type="button"
+                      onClick={shuffle}
+                      className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-brand hover:bg-brand/10"
+                    >
+                      <Shuffle className="size-4" /> Shuffle
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-6 gap-2">
+                    {suggestions.map((src) => (
+                      <button
+                        key={src}
+                        type="button"
+                        onClick={() => void choose(src)}
+                        aria-label="Use this picture"
+                        aria-pressed={picked === src}
+                        className={`aspect-square overflow-hidden rounded-full ring-offset-2 transition hover:scale-105 dark:ring-offset-stone-900 ${
+                          picked === src ? "ring-2 ring-brand" : ""
+                        }`}
+                      >
+                        <img src={src} alt="" className="size-full" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            <PrimaryButton type="submit" disabled={saving} className="w-full">
-              {saving ? "Saving…" : "Save"}
-            </PrimaryButton>
-          </form>
-        )}
+              <label className="block space-y-1.5">
+                <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Name</span>
+                <input
+                  value={name ?? ""}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={c.originalName}
+                  maxLength={64}
+                  className="w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
+                />
+                <span className="flex items-center justify-between text-xs text-stone-500">
+                  Only you see this.
+                  {name && (
+                    <button type="button" onClick={() => setName("")} className="font-medium text-brand">
+                      Use their name
+                    </button>
+                  )}
+                </span>
+              </label>
+
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300"
+                >
+                  {error}
+                </p>
+              )}
+
+              <PrimaryButton type="submit" disabled={saving} className="w-full">
+                {saving ? "Saving…" : "Save"}
+              </PrimaryButton>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
+    </Portal>
   );
 }

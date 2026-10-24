@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatBytes, formatDuration } from "@/lib/format";
 import type { PendingAttachment } from "@/lib/outbox";
 import { usePlaybackRate } from "@/lib/playback";
+import { Portal } from "./portal";
 
 export type ShownAttachment =
   | { source: "server"; data: AttachmentDTO }
@@ -470,41 +471,43 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/95" role="dialog" aria-modal aria-label={item.name}>
-      <div className="flex items-center justify-end gap-1 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <a
-          href={item.url}
-          download={item.name}
-          aria-label="Download"
-          className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"
+    <Portal>
+      <div className="fixed inset-0 z-50 flex flex-col bg-black/95" role="dialog" aria-modal aria-label={item.name}>
+        <div className="flex items-center justify-end gap-1 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <a
+            href={item.url}
+            download={item.name}
+            aria-label="Download"
+            className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"
+          >
+            <Download className="size-5" />
+          </a>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"
+          >
+            <X className="size-6" />
+          </button>
+        </div>
+        <div
+          className="grid min-h-0 flex-1 place-items-center p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+          onClick={(e) => e.target === e.currentTarget && onClose()}
         >
-          <Download className="size-5" />
-        </a>
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"
-        >
-          <X className="size-6" />
-        </button>
+          {item.kind === "image" ? (
+            <img src={item.url} alt="" className="max-h-full max-w-full object-contain" />
+          ) : (
+            <video
+              src={item.url}
+              poster={item.poster ?? undefined}
+              controls
+              autoPlay
+              playsInline
+              className="max-h-full max-w-full"
+            />
+          )}
+        </div>
       </div>
-      <div
-        className="grid min-h-0 flex-1 place-items-center p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
-        onClick={(e) => e.target === e.currentTarget && onClose()}
-      >
-        {item.kind === "image" ? (
-          <img src={item.url} alt="" className="max-h-full max-w-full object-contain" />
-        ) : (
-          <video
-            src={item.url}
-            poster={item.poster ?? undefined}
-            controls
-            autoPlay
-            playsInline
-            className="max-h-full max-w-full"
-          />
-        )}
-      </div>
-    </div>
+    </Portal>
   );
 }
