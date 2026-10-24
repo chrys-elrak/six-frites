@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatDTO, MessageDTO, MessageEntity, ReplyPreview } from "@six/shared";
+import type { ChatDTO, EntityType, MessageDTO, MessageEntity, ReplyPreview } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Ban,
@@ -20,6 +20,7 @@ import { useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { clockTime, dayLabel, sameDay } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
+import { segments } from "@/lib/markup";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
 import { deliver } from "@/lib/send";
@@ -188,38 +189,51 @@ function Quote({
   );
 }
 
+function Styled({ styles, children }: { styles: Set<EntityType>; children: React.ReactNode }) {
+  let node = children;
+  if (styles.has("code")) {
+    node = <code className="rounded bg-black/10 px-1 py-px font-mono text-[0.9em] dark:bg-white/10">{node}</code>;
+  }
+  if (styles.has("strike")) node = <s>{node}</s>;
+  if (styles.has("italic")) node = <em>{node}</em>;
+  if (styles.has("bold")) node = <strong className="font-semibold">{node}</strong>;
+  return <>{node}</>;
+}
+
 function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) {
   const revealed = useSpoilers((s) => !!s.revealed[row.key]);
   const reveal = useSpoilers((s) => s.reveal);
   const text = row.text ?? "";
-  const ranges = row.spoiler ? [{ offset: 0, length: text.length }] : row.entities;
-  if (revealed || ranges.length === 0) return <>{text}</>;
+  const entities = row.spoiler
+    ? [...row.entities, { type: "spoiler" as const, offset: 0, length: text.length }]
+    : row.entities;
+  if (entities.length === 0) return <>{text}</>;
 
-  const parts: React.ReactNode[] = [];
-  let cursor = 0;
-  ranges.forEach((r, i) => {
-    if (r.offset > cursor) parts.push(text.slice(cursor, r.offset));
-    parts.push(
-      <span
-        key={i}
-        role="button"
-        tabIndex={0}
-        aria-label="Spoiler, tap to reveal"
-        onClick={(e) => {
-          if (selectable) return;
-          e.stopPropagation();
-          reveal(row.key);
-        }}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && reveal(row.key)}
-        className="spoiler cursor-pointer"
-      >
-        {text.slice(r.offset, r.offset + r.length)}
-      </span>,
-    );
-    cursor = r.offset + r.length;
-  });
-  if (cursor < text.length) parts.push(text.slice(cursor));
-  return <>{parts}</>;
+  return (
+    <>
+      {segments(text, entities).map((seg, i) => {
+        const styled = <Styled styles={seg.styles}>{seg.text}</Styled>;
+        if (!seg.styles.has("spoiler") || revealed) return <span key={i}>{styled}</span>;
+        return (
+          <span
+            key={i}
+            role="button"
+            tabIndex={0}
+            aria-label="Spoiler, tap to reveal"
+            onClick={(e) => {
+              if (selectable) return;
+              e.stopPropagation();
+              reveal(row.key);
+            }}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && reveal(row.key)}
+            className="spoiler cursor-pointer"
+          >
+            {styled}
+          </span>
+        );
+      })}
+    </>
+  );
 }
 
 function Bubble({

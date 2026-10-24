@@ -1,16 +1,36 @@
 "use client";
 
-import { maskSpoilers } from "@six/shared";
+import { type EntityType, maskSpoilers } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, EyeOff, SendHorizontal, X } from "lucide-react";
+import { Bold, Check, Code, EyeOff, Italic, type LucideIcon, SendHorizontal, Strikethrough, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
 import { useRealtime } from "@/lib/realtime";
 import { sendText } from "@/lib/send";
-import { parseSpoilers, toSpoilerMarkup } from "@/lib/spoiler-markup";
+import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 
 const drafts = new Map<string, string>();
+
+const formats: { type: EntityType; label: string; keys: string; Icon: LucideIcon }[] = [
+  { type: "bold", label: "Bold", keys: "B", Icon: Bold },
+  { type: "italic", label: "Italic", keys: "I", Icon: Italic },
+  { type: "strike", label: "Strikethrough", keys: "Shift+X", Icon: Strikethrough },
+  { type: "code", label: "Code", keys: "E", Icon: Code },
+  { type: "spoiler", label: "Spoiler", keys: "Shift+P", Icon: EyeOff },
+];
+
+const modifierKey = () => (/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl+");
+
+const keepSelection = (onPress: () => void) => ({
+  onMouseDown: (e: React.MouseEvent) => e.preventDefault(),
+  onTouchStart: (e: React.TouchEvent) => e.preventDefault(),
+  onTouchEnd: (e: React.TouchEvent) => {
+    e.preventDefault();
+    onPress();
+  },
+  onClick: onPress,
+});
 
 function ModeBar({ label, text, onCancel }: { label: string; text: string; onCancel: () => void }) {
   return (
@@ -48,11 +68,12 @@ export function Composer({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [spoiler, setSpoiler] = useState(false);
+  const [hasSelection, setHasSelection] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
-    setText(editing ? toSpoilerMarkup(editing.text ?? "", editing.entities) : (drafts.get(chatId) ?? ""));
+    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (drafts.get(chatId) ?? ""));
   }, [editing, chatId]);
 
   useEffect(() => {
@@ -64,19 +85,34 @@ export function Composer({
     if (!editing) drafts.set(chatId, value);
   }
 
-  function spoilerButton() {
+  function wrap(type: EntityType) {
     const el = ref.current;
-    const start = el?.selectionStart ?? 0;
-    const end = el?.selectionEnd ?? 0;
-    if (!el || end <= start) {
-      if (!editing) setSpoiler((v) => !v);
-      return;
-    }
-    change(`${text.slice(0, start)}||${text.slice(start, end)}||${text.slice(end)}`);
+    if (!el || el.selectionEnd <= el.selectionStart) return false;
+    const { selectionStart: start, selectionEnd: end } = el;
+    const marker = MARKERS[type];
+    change(`${text.slice(0, start)}${marker}${text.slice(start, end)}${marker}${text.slice(end)}`);
     requestAnimationFrame(() => {
       el.focus();
-      el.setSelectionRange(end + 4, end + 4);
+      el.setSelectionRange(start + marker.length, end + marker.length);
+      setHasSelection(true);
     });
+    return true;
+  }
+
+  function spoilerButton() {
+    if (!wrap("spoiler") && !editing) setSpoiler((v) => !v);
+  }
+
+  function shortcut(e: React.KeyboardEvent) {
+    if (!(e.metaKey || e.ctrlKey)) return false;
+    const key = e.key.toLowerCase();
+    const type: EntityType | undefined = e.shiftKey
+      ? ({ x: "strike", p: "spoiler" } as const)[key as "x" | "p"]
+      : ({ b: "bold", i: "italic", e: "code" } as const)[key as "b" | "i" | "e"];
+    if (!type) return false;
+    e.preventDefault();
+    wrap(type);
+    return true;
   }
 
   useEffect(() => {
@@ -97,7 +133,7 @@ export function Composer({
     if (window.matchMedia("(pointer: fine)").matches) ref.current?.focus();
   }, [chatId]);
 
-  const parsed = parseSpoilers(text);
+  const parsed = parseMarkup(text);
   const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
 
   function cancel() {
@@ -162,16 +198,27 @@ export function Composer({
         </p>
       )}
 
+      {hasSelection && (
+        <div role="toolbar" aria-label="Formatting" className="flex gap-1">
+          {formats.map(({ type, label, keys, Icon }) => (
+            <button
+              key={type}
+              type="button"
+              {...keepSelection(() => wrap(type))}
+              aria-label={label}
+              title={`${label} (${modifierKey()}${keys})`}
+              className="grid size-9 place-items-center rounded-lg bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-100 dark:bg-stone-900 dark:text-stone-200 dark:ring-stone-800 dark:hover:bg-stone-800"
+            >
+              <Icon className="size-4" />
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-end gap-2">
         <button
           type="button"
-          onClick={spoilerButton}
-          onMouseDown={(e) => e.preventDefault()}
-          onTouchStart={(e) => e.preventDefault()}
-          onTouchEnd={(e) => {
-            e.preventDefault();
-            spoilerButton();
-          }}
+          {...keepSelection(spoilerButton)}
           aria-pressed={!editing && spoiler}
           aria-label={spoiler && !editing ? "Send as normal message" : "Spoiler"}
           title="Select text to hide just that part, or tap to send the whole message as a spoiler"
@@ -185,7 +232,10 @@ export function Composer({
           ref={ref}
           value={text}
           onChange={(e) => change(e.target.value)}
+          onSelect={(e) => setHasSelection(e.currentTarget.selectionEnd > e.currentTarget.selectionStart)}
+          onBlur={() => setHasSelection(false)}
           onKeyDown={(e) => {
+            if (shortcut(e)) return;
             if (e.key === "Escape" && mode) {
               e.preventDefault();
               cancel();

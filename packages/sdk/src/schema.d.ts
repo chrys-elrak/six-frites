@@ -646,7 +646,7 @@ export interface paths {
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
-                                        type: "spoiler";
+                                        type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                         offset: number;
                                         length: number;
                                     }[];
@@ -745,7 +745,7 @@ export interface paths {
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
-                                    type: "spoiler";
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                     offset: number;
                                     length: number;
                                 }[];
@@ -867,7 +867,7 @@ export interface paths {
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
-                                    type: "spoiler";
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                     offset: number;
                                     length: number;
                                 }[];
@@ -931,10 +931,10 @@ export interface paths {
                 content: {
                     "application/json": {
                         text: string;
-                        /** @description Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping */
+                        /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
                         entities?: {
                             /** @enum {string} */
-                            type: "spoiler";
+                            type: "bold" | "italic" | "strike" | "code" | "spoiler";
                             offset: number;
                             length: number;
                         }[];
@@ -958,7 +958,7 @@ export interface paths {
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
-                                type: "spoiler";
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                 offset: number;
                                 length: number;
                             }[];
@@ -1067,7 +1067,7 @@ export interface paths {
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
-                                    type: "spoiler";
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                     offset: number;
                                     length: number;
                                 }[];
@@ -1113,10 +1113,10 @@ export interface paths {
                     "application/json": {
                         clientId: string;
                         text: string;
-                        /** @description Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping */
+                        /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
                         entities?: {
                             /** @enum {string} */
-                            type: "spoiler";
+                            type: "bold" | "italic" | "strike" | "code" | "spoiler";
                             offset: number;
                             length: number;
                         }[];
@@ -1142,7 +1142,7 @@ export interface paths {
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
-                                type: "spoiler";
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                 offset: number;
                                 length: number;
                             }[];
@@ -1475,7 +1475,7 @@ export interface paths {
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
-                                        type: "spoiler";
+                                        type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                         offset: number;
                                         length: number;
                                     }[];
@@ -1511,7 +1511,7 @@ export interface paths {
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
-                                        type: "spoiler";
+                                        type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                         offset: number;
                                         length: number;
                                     }[];
@@ -1580,7 +1580,7 @@ export interface paths {
                                         text: string | null;
                                         entities: {
                                             /** @enum {string} */
-                                            type: "spoiler";
+                                            type: "bold" | "italic" | "strike" | "code" | "spoiler";
                                             offset: number;
                                             length: number;
                                         }[];

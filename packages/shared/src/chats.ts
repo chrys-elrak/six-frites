@@ -5,8 +5,11 @@ import { PublicUser } from "./invites.js";
 export const MessageType = z.enum(["text"]);
 export type MessageType = z.infer<typeof MessageType>;
 
+export const EntityType = z.enum(["bold", "italic", "strike", "code", "spoiler"]);
+export type EntityType = z.infer<typeof EntityType>;
+
 export const MessageEntity = z.object({
-  type: z.literal("spoiler"),
+  type: EntityType,
   offset: z.number().int().min(0),
   length: z.number().int().min(1),
 });
@@ -15,23 +18,32 @@ export type MessageEntity = z.infer<typeof MessageEntity>;
 const Entities = z
   .array(MessageEntity)
   .max(100)
-  .describe("Ranges in UTF-16 code units of the trimmed text, sorted and non-overlapping");
+  .describe(
+    "Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not.",
+  );
 
-/** Checks entity ranges against the text they annotate. */
+/** Checks that every range sits inside the text and that ranges of the same type never overlap. */
 export function entitiesFit(text: string, entities: MessageEntity[] = []) {
-  let end = 0;
+  const byType = new Map<EntityType, MessageEntity[]>();
   for (const e of entities) {
-    if (e.offset < end || e.offset + e.length > text.length) return false;
-    end = e.offset + e.length;
+    if (e.offset + e.length > text.length) return false;
+    byType.set(e.type, [...(byType.get(e.type) ?? []), e]);
+  }
+  for (const ranges of byType.values()) {
+    const sorted = [...ranges].sort((a, b) => a.offset - b.offset);
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i]!.offset < sorted[i - 1]!.offset + sorted[i - 1]!.length) return false;
+    }
   }
   return true;
 }
 
 /** Replaces each spoiler range with a fixed mask so previews never reveal hidden text or its length. */
 export function maskSpoilers(text: string, entities: MessageEntity[] = [], mask = "••••") {
+  const spoilers = entities.filter((e) => e.type === "spoiler").sort((a, b) => a.offset - b.offset);
   let out = "";
   let cursor = 0;
-  for (const e of entities) {
+  for (const e of spoilers) {
     out += text.slice(cursor, e.offset) + mask;
     cursor = e.offset + e.length;
   }

@@ -227,6 +227,20 @@ describe("partial spoilers", () => {
     expect(edited.json().entities).toEqual([]);
   });
 
+  it("accepts overlapping formatting of different types", async () => {
+    const { host, chatId } = await makeFriends();
+    const entities = [
+      { type: "bold", offset: 0, length: 9 },
+      { type: "italic", offset: 5, length: 4 },
+      { type: "spoiler", offset: 5, length: 4 },
+      { type: "code", offset: 10, length: 3 },
+    ];
+    const m = await send(host, chatId, "very bold npm", { entities });
+    expect(m.json().entities).toEqual(entities);
+    const bad = await send(host, chatId, "nope", { entities: [{ type: "underline", offset: 0, length: 2 }] });
+    expect(bad.json().error.code).toBe("VALIDATION_FAILED");
+  });
+
   it("rejects ranges outside the text or overlapping", async () => {
     const { host, chatId } = await makeFriends();
     const outside = await send(host, chatId, "short", { entities: [{ type: "spoiler", offset: 3, length: 9 }] });
