@@ -1,9 +1,11 @@
+import type { ReplyPreview } from "@six/shared";
 import { create } from "zustand";
 
 export interface PendingMessage {
   clientId: string;
   chatId: string;
   text: string;
+  replyTo: ReplyPreview | null;
   createdAt: string;
   status: "sending" | "failed";
 }

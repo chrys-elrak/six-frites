@@ -1,13 +1,16 @@
 import { z } from "zod";
-import { ChatDTO, ChatReadDTO, MessageDTO } from "./chats.js";
+import { ChatDTO, ChatDeletedDTO, ChatReadDTO, MessageDTO, MessagesDeletedDTO } from "./chats.js";
 
 const event = <T extends string, D extends z.ZodTypeAny>(type: T, data: D) =>
   z.object({ eventId: z.string(), type: z.literal(type), data, createdAt: z.string() });
 
 export const ChangeEventDTO = z.discriminatedUnion("type", [
   event("message.new", MessageDTO),
+  event("message.edited", MessageDTO),
+  event("message.deleted", MessagesDeletedDTO),
   event("chat.updated", ChatDTO),
   event("chat.read", ChatReadDTO),
+  event("chat.deleted", ChatDeletedDTO),
 ]);
 export type ChangeEventDTO = z.infer<typeof ChangeEventDTO>;
 export type ChangeEventType = ChangeEventDTO["type"];

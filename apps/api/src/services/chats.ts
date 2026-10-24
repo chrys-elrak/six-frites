@@ -1,15 +1,22 @@
 import type { Prisma } from "@prisma/client";
-import { AppError, type ChatDTO, type ChatListQuery, type ChatReadDTO, type MarkReadInput } from "@six/shared";
+import {
+  AppError,
+  type ChatDTO,
+  type ChatListQuery,
+  type ChatReadDTO,
+  type DeleteScope,
+  type MarkReadInput,
+  type UpdateChatInput,
+} from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
-import { assertMember, toMessageDTO } from "./messages.js";
+import { assertMember, messageInclude, scrubMessageEvents, toMessageDTO, visibleTo } from "./messages.js";
 import { toPublicUser } from "./users.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
 
 const chatInclude = {
   members: { include: { user: true }, orderBy: { joinedAt: "asc" } },
-  messages: { orderBy: newestFirst, take: 1 },
 } satisfies Prisma.ChatInclude;
 
 type ChatWithRelations = Prisma.ChatGetPayload<{ include: typeof chatInclude }>;
@@ -19,13 +26,19 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
   if (!me) throw new AppError("CHAT_NOT_FOUND");
   const others = chat.members.filter((m) => m.userId !== viewerId);
 
-  const unreadCount = await db.message.count({
-    where: {
-      chatId: chat.id,
-      senderId: { not: viewerId },
-      ...(me.lastReadAt && { createdAt: { gt: me.lastReadAt } }),
-    },
-  });
+  const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
+  const readFloor = [me.lastReadAt, me.clearedAt].filter((d): d is Date => d !== null).sort((a, b) => +b - +a)[0];
+  const [lastMessage, unreadCount] = await Promise.all([
+    db.message.findFirst({ where: visible, orderBy: newestFirst, include: messageInclude }),
+    db.message.count({
+      where: {
+        ...visible,
+        senderId: { not: viewerId },
+        deletedAt: null,
+        ...(readFloor && { createdAt: { gt: readFloor } }),
+      },
+    }),
+  ]);
 
   return {
     id: chat.id,
@@ -36,7 +49,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
       lastReadMessageId: m.lastReadMessageId,
       lastReadAt: m.lastReadAt?.toISOString() ?? null,
     })),
-    lastMessage: chat.messages[0] ? toMessageDTO(chat.messages[0]) : null,
+    lastMessage: lastMessage ? toMessageDTO(lastMessage) : null,
     unreadCount,
     archived: me.archived,
     muted: me.muted,
@@ -68,7 +81,7 @@ export async function listChats(userId: string, q: ChatListQuery) {
   const after = q.cursor ? decodeCursor(q.cursor) : null;
   const rows = await prisma.chat.findMany({
     where: {
-      members: { some: { userId, archived: q.archived } },
+      members: { some: { userId, archived: q.archived, hidden: false } },
       ...(after && {
         OR: [{ lastMessageAt: { lt: after.at } }, { lastMessageAt: after.at, id: { lt: after.id } }],
       }),
@@ -123,5 +136,46 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
     const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
     for (const m of members) emit(m.userId, "chat.read", read);
     return read;
+  });
+}
+
+export async function updateChat(userId: string, chatId: string, input: UpdateChatInput) {
+  return withEvents(async (tx, emit) => {
+    await assertMember(tx, chatId, userId);
+    await tx.chatMember.update({ where: { chatId_userId: { chatId, userId } }, data: input });
+    const dto = await getChat(userId, chatId, tx);
+    emit(userId, "chat.updated", dto);
+    return dto;
+  });
+}
+
+/**
+ * `me` clears this user's history and hides the chat until someone writes again.
+ * `all` permanently deletes every message for both members but keeps the chat, since a direct
+ * chat can only be created through an invite and removing it would cut the two people off.
+ */
+export async function deleteChat(userId: string, chatId: string, scope: DeleteScope) {
+  await withEvents(async (tx, emit) => {
+    await assertMember(tx, chatId, userId);
+
+    if (scope === "me") {
+      await tx.chatMember.update({
+        where: { chatId_userId: { chatId, userId } },
+        data: { hidden: true, pinned: false, clearedAt: new Date() },
+      });
+      emit(userId, "chat.deleted", { chatId, scope });
+      return;
+    }
+
+    const ids = (await tx.message.findMany({ where: { chatId }, select: { id: true } })).map((m) => m.id);
+    await scrubMessageEvents(tx, ids);
+    await tx.message.deleteMany({ where: { chatId } });
+    await tx.chatMember.updateMany({ where: { chatId }, data: { lastReadMessageId: null } });
+
+    const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
+    for (const m of members) {
+      emit(m.userId, "chat.deleted", { chatId, scope });
+      emit(m.userId, "chat.updated", await getChat(m.userId, chatId, tx));
+    }
   });
 }

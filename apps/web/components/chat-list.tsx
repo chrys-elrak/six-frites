@@ -14,6 +14,7 @@ const statusText = { connecting: "Connecting…", syncing: "Updating…", offlin
 function preview(chat: ChatDTO, meId: string) {
   const m = chat.lastMessage;
   if (!m) return "Say hi 👋";
+  if (m.deletedAt) return "🚫 Message deleted";
   return `${m.senderId === meId ? "You: " : ""}${m.text ?? ""}`;
 }
 
@@ -31,6 +32,11 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <p className="min-w-0 flex-1 truncate font-semibold">{chat.title}</p>
+          {chat.muted && (
+            <span aria-label="Muted" className="text-xs">
+              🔕
+            </span>
+          )}
           <span className={`shrink-0 text-xs ${unread ? "font-semibold text-brand" : "text-stone-500"}`}>
             {listTime(chat.lastActivityAt)}
           </span>
@@ -39,8 +45,17 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
           <p className={`min-w-0 flex-1 truncate text-sm ${unread ? "text-stone-900 dark:text-stone-100" : "text-stone-500 dark:text-stone-400"}`}>
             {preview(chat, meId)}
           </p>
+          {chat.pinned && !unread && (
+            <span aria-label="Pinned" className="text-xs">
+              📌
+            </span>
+          )}
           {unread && (
-            <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
+            <span
+              className={`grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold ${
+                chat.muted ? "bg-stone-300 text-stone-700 dark:bg-stone-700 dark:text-stone-200" : "bg-brand text-brand-ink"
+              }`}
+            >
               {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
             </span>
           )}
@@ -50,18 +65,29 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
   );
 }
 
-export function ChatList() {
+export function ChatList({ archived = false }: { archived?: boolean }) {
   const meId = useSession((s) => s.user!.id);
   const user = useSession((s) => s.user!);
-  const chats = useChats();
+  const chats = useChats(archived);
+  const archivedChats = useChats(true);
   const { status } = useRealtime();
   const pathname = usePathname();
+  const archivedCount = archivedChats.data?.length ?? 0;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex items-center gap-3 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:border-stone-800">
+        {archived && (
+          <Link
+            href="/"
+            aria-label="Back to chats"
+            className="-ml-2 grid size-10 place-items-center rounded-full text-2xl hover:bg-stone-200 dark:hover:bg-stone-800"
+          >
+            ‹
+          </Link>
+        )}
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold tracking-tight">Chats</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{archived ? "Archived" : "Chats"}</h1>
           {statusText[status] && <p className="text-xs text-stone-500">{statusText[status]}</p>}
         </div>
         <Link href="/settings" aria-label="Settings" className="rounded-full">
@@ -70,9 +96,24 @@ export function ChatList() {
       </header>
 
       <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+        {!archived && archivedCount > 0 && (
+          <Link
+            href="/archived"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-900"
+          >
+            <span className="grid size-14 place-items-center text-xl" aria-hidden>
+              🗄️
+            </span>
+            <span className="flex-1">Archived</span>
+            <span className="text-stone-500">{archivedCount}</span>
+          </Link>
+        )}
         {chats.isPending && <p className="p-4 text-sm text-stone-500">Loading…</p>}
         {chats.isError && <p className="p-4 text-sm text-red-600">Couldn't load chats.</p>}
-        {chats.data?.length === 0 && (
+        {archived && chats.data?.length === 0 && (
+          <p className="p-8 text-center text-sm text-stone-500">No archived chats.</p>
+        )}
+        {!archived && chats.data?.length === 0 && archivedCount === 0 && (
           <div className="space-y-3 p-8 text-center">
             <p className="text-4xl">🍟</p>
             <p className="font-medium">No chats yet</p>

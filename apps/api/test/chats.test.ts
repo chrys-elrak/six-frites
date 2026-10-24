@@ -2,39 +2,13 @@ import type { AddressInfo } from "node:net";
 import { io as connect, type Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSocketServer } from "../src/socket/index.js";
-import { bearer, loginAs, uniqueSub, useApp } from "./helpers.js";
+import { type Auth, bearer, chatHelpers, useApp } from "./helpers.js";
 
 const ctx = useApp();
 
-interface Auth {
-  accessToken: string;
-  user: { id: string };
-}
-
-async function signUp(name: string, extra: Record<string, unknown> = {}): Promise<Auth> {
-  return (await loginAs(ctx.app, uniqueSub(name), "ios", extra)).json();
-}
-
-async function makeFriends() {
-  const host = await signUp("host");
-  const invite = await ctx.app.inject({ method: "POST", url: "/v1/invites", headers: bearer(host.accessToken), payload: {} });
-  const guest = await signUp("guest", { inviteCode: invite.json().code });
-  const chats = await get(host, "/v1/chats");
-  return { host, guest, chatId: chats.items[0].id as string };
-}
-
-async function get(who: Auth, url: string) {
-  return (await ctx.app.inject({ url, headers: bearer(who.accessToken) })).json();
-}
-
-function send(who: Auth, chatId: string, text: string, clientId = `c-${Math.random()}`) {
-  return ctx.app.inject({
-    method: "POST",
-    url: `/v1/chats/${chatId}/messages`,
-    headers: bearer(who.accessToken),
-    payload: { clientId, text },
-  });
-}
+const { signUp, get, makeFriends } = chatHelpers(ctx);
+const send = (who: Auth, chatId: string, text: string, clientId = `c-${Math.random()}`) =>
+  chatHelpers(ctx).send(who, chatId, text, { clientId });
 
 describe("chats over REST", () => {
   it("creates a direct chat when an invite is used", async () => {

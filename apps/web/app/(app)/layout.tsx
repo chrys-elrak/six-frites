@@ -26,7 +26,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return <main className="grid h-dvh place-items-center text-sm text-stone-500">Loading…</main>;
   }
 
-  const onList = pathname === "/";
+  const onArchived = pathname === "/archived";
+  const onList = pathname === "/" || onArchived;
 
   return (
     <RealtimeProvider>
@@ -34,7 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <aside
           className={`${onList ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex md:w-80 md:shrink-0 md:border-r lg:w-96 dark:border-stone-800`}
         >
-          <ChatList />
+          <ChatList archived={onArchived} />
         </aside>
         <section className={`${onList ? "hidden" : "flex"} min-w-0 flex-1 flex-col md:flex`}>{children}</section>
       </div>

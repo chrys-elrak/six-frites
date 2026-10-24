@@ -30,3 +30,32 @@ export function loginAs(app: FastifyInstance, sub: string, platform = "ios", ext
     payload: { idToken: `google:${sub}`, device: { platform, name: "Test device" }, ...extra },
   });
 }
+
+export interface Auth {
+  accessToken: string;
+  user: { id: string };
+}
+
+export function chatHelpers(ctx: { app: FastifyInstance }) {
+  const signUp = async (name: string, extra: Record<string, unknown> = {}): Promise<Auth> =>
+    (await loginAs(ctx.app, uniqueSub(name), "ios", extra)).json();
+
+  const get = async (who: Auth, url: string) =>
+    (await ctx.app.inject({ url, headers: bearer(who.accessToken) })).json();
+
+  const call = (who: Auth, method: "POST" | "PATCH" | "DELETE", url: string, payload?: object) =>
+    ctx.app.inject({ method, url, headers: bearer(who.accessToken), ...(payload && { payload }) });
+
+  const send = (who: Auth, chatId: string, text: string, extra: Record<string, unknown> = {}) =>
+    call(who, "POST", `/v1/chats/${chatId}/messages`, { clientId: `c-${Math.random()}`, text, ...extra });
+
+  async function makeFriends() {
+    const host = await signUp("host");
+    const invite = await call(host, "POST", "/v1/invites", {});
+    const guest = await signUp("guest", { inviteCode: invite.json().code });
+    const chats = await get(host, "/v1/chats");
+    return { host, guest, chatId: chats.items[0].id as string };
+  }
+
+  return { signUp, get, call, send, makeFriends };
+}

@@ -20,8 +20,9 @@ model User {
   invites     Invite[]
   referredBy  Referral? @relation("referee")
   referrals   Referral[] @relation("referrer")
-  memberships ChatMember[]
-  messages    Message[]
+  memberships    ChatMember[]
+  messages       Message[]
+  hiddenMessages MessageHidden[]
 }
 
 model Invite {
@@ -108,6 +109,8 @@ model ChatMember {
   autoDeleteSecs    Int?
   lastReadMessageId String?
   lastReadAt        DateTime?
+  hidden            Boolean   @default(false)
+  clearedAt         DateTime?
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -123,12 +126,29 @@ model Message {
   clientId  String
   type      String    @default("text")
   text      String?
+  replyToId String?
   createdAt DateTime  @default(now())
   editedAt  DateTime?
+  deletedAt DateTime?
 
-  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  chat    Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender  User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo Message?        @relation("replies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies Message[]       @relation("replies")
+  hidden  MessageHidden[]
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
+}
+
+model MessageHidden {
+  userId    String
+  messageId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@id([userId, messageId])
+  @@index([messageId])
 }

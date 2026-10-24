@@ -5,6 +5,15 @@ import { PublicUser } from "./invites.js";
 export const MessageType = z.enum(["text"]);
 export type MessageType = z.infer<typeof MessageType>;
 
+export const ReplyPreview = z.object({
+  id: Id,
+  senderId: Id,
+  type: MessageType,
+  text: z.string().nullable(),
+  deleted: z.boolean(),
+});
+export type ReplyPreview = z.infer<typeof ReplyPreview>;
+
 export const MessageDTO = z.object({
   id: Id,
   chatId: Id,
@@ -12,14 +21,43 @@ export const MessageDTO = z.object({
   clientId: z.string(),
   type: MessageType,
   text: z.string().nullable(),
+  replyTo: ReplyPreview.nullable(),
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
+  deletedAt: IsoDate.nullable(),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 
+const MessageText = z.string().trim().min(1).max(4000);
+
+export const EditMessageInput = z.object({ text: MessageText });
+export type EditMessageInput = z.infer<typeof EditMessageInput>;
+
+export const DeleteScope = z.enum(["me", "all"]);
+export type DeleteScope = z.infer<typeof DeleteScope>;
+
+export const DeleteMessagesQuery = z.object({
+  ids: z
+    .string()
+    .max(4000)
+    .describe("Comma-separated message ids, at most 100")
+    .transform((s) => [...new Set(s.split(",").map((x) => x.trim()).filter(Boolean))])
+    .refine((ids) => ids.length >= 1 && ids.length <= 100, "Provide between 1 and 100 ids"),
+  scope: DeleteScope.default("me"),
+});
+export type DeleteMessagesQuery = z.infer<typeof DeleteMessagesQuery>;
+
+export const MessagesDeletedDTO = z.object({
+  chatId: Id,
+  messageIds: z.array(Id),
+  scope: DeleteScope,
+});
+export type MessagesDeletedDTO = z.infer<typeof MessagesDeletedDTO>;
+
 export const SendMessageInput = z.object({
   clientId: z.string().min(1).max(64),
-  text: z.string().trim().min(1).max(4000),
+  text: MessageText,
+  replyToId: Id.optional(),
 });
 export type SendMessageInput = z.infer<typeof SendMessageInput>;
 
@@ -68,3 +106,18 @@ export const ChatReadDTO = z.object({
   lastReadAt: IsoDate,
 });
 export type ChatReadDTO = z.infer<typeof ChatReadDTO>;
+
+export const UpdateChatInput = z
+  .object({
+    archived: z.boolean().optional(),
+    muted: z.boolean().optional(),
+    pinned: z.boolean().optional(),
+  })
+  .refine((v) => Object.values(v).some((x) => x !== undefined), "Provide at least one field");
+export type UpdateChatInput = z.infer<typeof UpdateChatInput>;
+
+export const DeleteChatQuery = z.object({ scope: DeleteScope.default("me") });
+export type DeleteChatQuery = z.infer<typeof DeleteChatQuery>;
+
+export const ChatDeletedDTO = z.object({ chatId: Id, scope: DeleteScope });
+export type ChatDeletedDTO = z.infer<typeof ChatDeletedDTO>;

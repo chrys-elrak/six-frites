@@ -4,6 +4,9 @@ import {
   ChatDTO,
   ChatListQuery,
   ChatReadDTO,
+  DeleteChatQuery,
+  DeleteMessagesQuery,
+  EditMessageInput,
   Id,
   MarkReadInput,
   MessageDTO,
@@ -11,13 +14,15 @@ import {
   SendMessageInput,
   SyncQuery,
   SyncResult,
+  UpdateChatInput,
   page,
 } from "@six/shared";
-import { getChat, listChats, markRead } from "../services/chats.js";
-import { listMessages, sendMessage } from "../services/messages.js";
+import { deleteChat, getChat, listChats, markRead, updateChat } from "../services/chats.js";
+import { deleteMessages, editMessage, listMessages, sendMessage } from "../services/messages.js";
 import { sync } from "../services/sync.js";
 
 const ChatParams = z.object({ id: Id });
+const MessageParams = z.object({ id: Id });
 const security = [{ bearer: [] }];
 
 const chatRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -43,6 +48,75 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { tags: ["chats"], summary: "Get one chat", security, params: ChatParams, response: { 200: ChatDTO } },
     },
     (req) => getChat(req.auth.userId, req.params.id),
+  );
+
+  app.patch(
+    "/chats/:id",
+    {
+      schema: {
+        tags: ["chats"],
+        summary: "Archive, mute or pin a chat (your settings only)",
+        security,
+        params: ChatParams,
+        body: UpdateChatInput,
+        response: { 200: ChatDTO },
+      },
+    },
+    (req) => updateChat(req.auth.userId, req.params.id, req.body),
+  );
+
+  app.delete(
+    "/chats/:id",
+    {
+      schema: {
+        tags: ["chats"],
+        summary: "Delete a chat",
+        description:
+          "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people.",
+        security,
+        params: ChatParams,
+        querystring: DeleteChatQuery,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await deleteChat(req.auth.userId, req.params.id, req.query.scope);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.patch(
+    "/messages/:id",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Edit one of your text messages",
+        security,
+        params: MessageParams,
+        body: EditMessageInput,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => editMessage(req.auth.userId, req.params.id, req.body),
+  );
+
+  app.delete(
+    "/messages",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Delete messages",
+        description:
+          "`ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes your own messages for everyone.",
+        security,
+        querystring: DeleteMessagesQuery,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await deleteMessages(req.auth.userId, req.query);
+      return reply.status(204).send(null);
+    },
   );
 
   app.get(

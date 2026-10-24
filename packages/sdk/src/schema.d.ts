@@ -641,10 +641,20 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    replyTo: {
+                                        id: string;
+                                        senderId: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                        text: string | null;
+                                        deleted: boolean;
+                                    } | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
                                     editedAt: string | null;
+                                    /** Format: date-time */
+                                    deletedAt: string | null;
                                 } | null;
                                 unreadCount: number;
                                 archived: boolean;
@@ -719,10 +729,20 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                    text: string | null;
+                                    deleted: boolean;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
                                 editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
                             } | null;
                             unreadCount: number;
                             archived: boolean;
@@ -740,7 +760,221 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        /**
+         * Delete a chat
+         * @description `scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people.
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    scope?: "me" | "all";
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": "null" | null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Archive, mute or pin a chat (your settings only) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        archived?: boolean;
+                        muted?: boolean;
+                        pinned?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            type: "direct";
+                            title: string;
+                            members: {
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                };
+                                lastReadMessageId: string | null;
+                                /** Format: date-time */
+                                lastReadAt: string | null;
+                            }[];
+                            lastMessage: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text";
+                                text: string | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                    text: string | null;
+                                    deleted: boolean;
+                                } | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
+                            } | null;
+                            unreadCount: number;
+                            archived: boolean;
+                            muted: boolean;
+                            pinned: boolean;
+                            autoDeleteSecs: number | null;
+                            /** Format: date-time */
+                            lastActivityAt: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/messages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit one of your text messages */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        text: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text";
+                            text: string | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text";
+                                text: string | null;
+                                deleted: boolean;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete messages
+         * @description `ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes your own messages for everyone.
+         */
+        delete: {
+            parameters: {
+                query: {
+                    /** @description Comma-separated message ids, at most 100 */
+                    ids: string;
+                    scope?: "me" | "all";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": "null" | null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -783,10 +1017,20 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                    text: string | null;
+                                    deleted: boolean;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
                                 editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -813,6 +1057,7 @@ export interface paths {
                     "application/json": {
                         clientId: string;
                         text: string;
+                        replyToId?: string;
                     };
                 };
             };
@@ -831,10 +1076,20 @@ export interface paths {
                             /** @enum {string} */
                             type: "text";
                             text: string | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text";
+                                text: string | null;
+                                deleted: boolean;
+                            } | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
                             editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
                         };
                     };
                 };
@@ -941,10 +1196,59 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    replyTo: {
+                                        id: string;
+                                        senderId: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                        text: string | null;
+                                        deleted: boolean;
+                                    } | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
                                     editedAt: string | null;
+                                    /** Format: date-time */
+                                    deletedAt: string | null;
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "message.edited";
+                                data: {
+                                    id: string;
+                                    chatId: string;
+                                    senderId: string;
+                                    clientId: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                    text: string | null;
+                                    replyTo: {
+                                        id: string;
+                                        senderId: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                        text: string | null;
+                                        deleted: boolean;
+                                    } | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    editedAt: string | null;
+                                    /** Format: date-time */
+                                    deletedAt: string | null;
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "message.deleted";
+                                data: {
+                                    chatId: string;
+                                    messageIds: string[];
+                                    /** @enum {string} */
+                                    scope: "me" | "all";
                                 };
                                 createdAt: string;
                             } | {
@@ -975,10 +1279,20 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "text";
                                         text: string | null;
+                                        replyTo: {
+                                            id: string;
+                                            senderId: string;
+                                            /** @enum {string} */
+                                            type: "text";
+                                            text: string | null;
+                                            deleted: boolean;
+                                        } | null;
                                         /** Format: date-time */
                                         createdAt: string;
                                         /** Format: date-time */
                                         editedAt: string | null;
+                                        /** Format: date-time */
+                                        deletedAt: string | null;
                                     } | null;
                                     unreadCount: number;
                                     archived: boolean;
@@ -1001,6 +1315,16 @@ export interface paths {
                                     lastReadMessageId: string;
                                     /** Format: date-time */
                                     lastReadAt: string;
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "chat.deleted";
+                                data: {
+                                    chatId: string;
+                                    /** @enum {string} */
+                                    scope: "me" | "all";
                                 };
                                 createdAt: string;
                             })[];

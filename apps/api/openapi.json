@@ -1098,11 +1098,51 @@
                                 "type": "string",
                                 "nullable": true
                               },
+                              "replyTo": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "senderId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "text"
+                                    ]
+                                  },
+                                  "text": {
+                                    "type": "string",
+                                    "nullable": true
+                                  },
+                                  "deleted": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "senderId",
+                                  "type",
+                                  "text",
+                                  "deleted"
+                                ],
+                                "additionalProperties": false,
+                                "nullable": true
+                              },
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
                               },
                               "editedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                              },
+                              "deletedAt": {
                                 "type": "string",
                                 "format": "date-time",
                                 "nullable": true
@@ -1115,8 +1155,10 @@
                               "clientId",
                               "type",
                               "text",
+                              "replyTo",
                               "createdAt",
-                              "editedAt"
+                              "editedAt",
+                              "deletedAt"
                             ],
                             "additionalProperties": false,
                             "nullable": true
@@ -1298,11 +1340,51 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "replyTo": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "senderId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text"
+                              ]
+                            },
+                            "text": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "deleted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "senderId",
+                            "type",
+                            "text",
+                            "deleted"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time"
                         },
                         "editedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "deletedAt": {
                           "type": "string",
                           "format": "date-time",
                           "nullable": true
@@ -1315,8 +1397,10 @@
                         "clientId",
                         "type",
                         "text",
+                        "replyTo",
                         "createdAt",
-                        "editedAt"
+                        "editedAt",
+                        "deletedAt"
                       ],
                       "additionalProperties": false,
                       "nullable": true
@@ -1361,6 +1445,507 @@
                     "createdAt"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Archive, mute or pin a chat (your settings only)",
+        "tags": [
+          "chats"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "muted": {
+                    "type": "boolean"
+                  },
+                  "pinned": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "direct"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "type": "string",
+                                "format": "uri",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "lastReadMessageId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "nullable": true
+                          },
+                          "lastReadAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "lastReadMessageId",
+                          "lastReadAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "lastMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "chatId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "clientId": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "replyTo": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "senderId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text"
+                              ]
+                            },
+                            "text": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "deleted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "senderId",
+                            "type",
+                            "text",
+                            "deleted"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "editedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "deletedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "chatId",
+                        "senderId",
+                        "clientId",
+                        "type",
+                        "text",
+                        "replyTo",
+                        "createdAt",
+                        "editedAt",
+                        "deletedAt"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "unreadCount": {
+                      "type": "integer"
+                    },
+                    "archived": {
+                      "type": "boolean"
+                    },
+                    "muted": {
+                      "type": "boolean"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "autoDeleteSecs": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "title",
+                    "members",
+                    "lastMessage",
+                    "unreadCount",
+                    "archived",
+                    "muted",
+                    "pinned",
+                    "autoDeleteSecs",
+                    "lastActivityAt",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a chat",
+        "tags": [
+          "chats"
+        ],
+        "description": "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "me",
+                "all"
+              ],
+              "default": "me"
+            },
+            "in": "query",
+            "name": "scope",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "enum": [
+                    "null"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}": {
+      "patch": {
+        "summary": "Edit one of your text messages",
+        "tags": [
+          "messages"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text"
+                      ]
+                    },
+                    "text": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "replyTo": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "deleted"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "editedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "senderId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "replyTo",
+                    "createdAt",
+                    "editedAt",
+                    "deletedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages": {
+      "delete": {
+        "summary": "Delete messages",
+        "tags": [
+          "messages"
+        ],
+        "description": "`ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes your own messages for everyone.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "in": "query",
+            "name": "ids",
+            "required": true,
+            "description": "Comma-separated message ids, at most 100"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "me",
+                "all"
+              ],
+              "default": "me"
+            },
+            "in": "query",
+            "name": "scope",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "enum": [
+                    "null"
+                  ],
+                  "nullable": true
                 }
               }
             }
@@ -1447,11 +2032,51 @@
                             "type": "string",
                             "nullable": true
                           },
+                          "replyTo": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "senderId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "text"
+                                ]
+                              },
+                              "text": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "deleted": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "senderId",
+                              "type",
+                              "text",
+                              "deleted"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
                           },
                           "editedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
+                          "deletedAt": {
                             "type": "string",
                             "format": "date-time",
                             "nullable": true
@@ -1464,8 +2089,10 @@
                           "clientId",
                           "type",
                           "text",
+                          "replyTo",
                           "createdAt",
-                          "editedAt"
+                          "editedAt",
+                          "deletedAt"
                         ],
                         "additionalProperties": false
                       }
@@ -1508,6 +2135,10 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 4000
+                  },
+                  "replyToId": {
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "required": [
@@ -1568,11 +2199,51 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "replyTo": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "deleted"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
                     },
                     "editedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "deletedAt": {
                       "type": "string",
                       "format": "date-time",
                       "nullable": true
@@ -1585,8 +2256,10 @@
                     "clientId",
                     "type",
                     "text",
+                    "replyTo",
                     "createdAt",
-                    "editedAt"
+                    "editedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -1770,11 +2443,51 @@
                                     "type": "string",
                                     "nullable": true
                                   },
+                                  "replyTo": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "senderId": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text"
+                                        ]
+                                      },
+                                      "text": {
+                                        "type": "string",
+                                        "nullable": true
+                                      },
+                                      "deleted": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "senderId",
+                                      "type",
+                                      "text",
+                                      "deleted"
+                                    ],
+                                    "additionalProperties": false,
+                                    "nullable": true
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
                                   },
                                   "editedAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true
+                                  },
+                                  "deletedAt": {
                                     "type": "string",
                                     "format": "date-time",
                                     "nullable": true
@@ -1787,8 +2500,179 @@
                                   "clientId",
                                   "type",
                                   "text",
+                                  "replyTo",
                                   "createdAt",
-                                  "editedAt"
+                                  "editedAt",
+                                  "deletedAt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "eventId",
+                              "type",
+                              "data",
+                              "createdAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "eventId": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "message.edited"
+                                ]
+                              },
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "chatId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "senderId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "clientId": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "text"
+                                    ]
+                                  },
+                                  "text": {
+                                    "type": "string",
+                                    "nullable": true
+                                  },
+                                  "replyTo": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "senderId": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text"
+                                        ]
+                                      },
+                                      "text": {
+                                        "type": "string",
+                                        "nullable": true
+                                      },
+                                      "deleted": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "senderId",
+                                      "type",
+                                      "text",
+                                      "deleted"
+                                    ],
+                                    "additionalProperties": false,
+                                    "nullable": true
+                                  },
+                                  "createdAt": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  "editedAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true
+                                  },
+                                  "deletedAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "chatId",
+                                  "senderId",
+                                  "clientId",
+                                  "type",
+                                  "text",
+                                  "replyTo",
+                                  "createdAt",
+                                  "editedAt",
+                                  "deletedAt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "eventId",
+                              "type",
+                              "data",
+                              "createdAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "eventId": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "message.deleted"
+                                ]
+                              },
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "chatId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "messageIds": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    }
+                                  },
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "me",
+                                      "all"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "chatId",
+                                  "messageIds",
+                                  "scope"
                                 ],
                                 "additionalProperties": false
                               },
@@ -1907,11 +2791,51 @@
                                         "type": "string",
                                         "nullable": true
                                       },
+                                      "replyTo": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
+                                          "senderId": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "text"
+                                            ]
+                                          },
+                                          "text": {
+                                            "type": "string",
+                                            "nullable": true
+                                          },
+                                          "deleted": {
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "senderId",
+                                          "type",
+                                          "text",
+                                          "deleted"
+                                        ],
+                                        "additionalProperties": false,
+                                        "nullable": true
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
                                       },
                                       "editedAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                      },
+                                      "deletedAt": {
                                         "type": "string",
                                         "format": "date-time",
                                         "nullable": true
@@ -1924,8 +2848,10 @@
                                       "clientId",
                                       "type",
                                       "text",
+                                      "replyTo",
                                       "createdAt",
-                                      "editedAt"
+                                      "editedAt",
+                                      "deletedAt"
                                     ],
                                     "additionalProperties": false,
                                     "nullable": true
@@ -2020,6 +2946,51 @@
                                   "userId",
                                   "lastReadMessageId",
                                   "lastReadAt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "eventId",
+                              "type",
+                              "data",
+                              "createdAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "eventId": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "chat.deleted"
+                                ]
+                              },
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "chatId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "me",
+                                      "all"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "chatId",
+                                  "scope"
                                 ],
                                 "additionalProperties": false
                               },
