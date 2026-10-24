@@ -6,6 +6,16 @@ export type RestClient = ReturnType<typeof createRestClient>;
 
 const PUBLIC_PATHS = ["/v1/auth/google", "/v1/auth/refresh"];
 
+/**
+ * openapi-fetch only accepts middleware results that are `instanceof Response`, which fails in
+ * React Native where `fetch` (expo/fetch) returns its own response class; rebuild one in that case.
+ */
+async function asResponse(res: Response): Promise<Response> {
+  if ((res as unknown) instanceof Response) return res;
+  const { status, statusText, headers } = res;
+  return new Response(await res.arrayBuffer(), { status, statusText, headers });
+}
+
 export function createRestClient(baseUrl: string, tokens: TokenManager, fetchImpl?: typeof fetch) {
   const client = createClient<paths>({ baseUrl, credentials: "include", fetch: fetchImpl });
   const retryBodies = new WeakMap<Request, Request>();
@@ -20,11 +30,11 @@ export function createRestClient(baseUrl: string, tokens: TokenManager, fetchImp
     },
     async onResponse({ request, response }) {
       const original = retryBodies.get(request);
-      if (response.status !== 401 || !original) return response;
+      if (response.status !== 401 || !original) return undefined;
       const token = await tokens.refresh();
-      if (!token) return response;
+      if (!token) return undefined;
       original.headers.set("authorization", `Bearer ${token}`);
-      return (fetchImpl ?? fetch)(original);
+      return asResponse(await (fetchImpl ?? fetch)(original));
     },
   };
 
