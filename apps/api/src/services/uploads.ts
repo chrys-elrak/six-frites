@@ -26,8 +26,14 @@ export function toAttachmentDTO(u: Upload, linkSeconds?: number): AttachmentDTO 
   };
 }
 
+/** Files stored once and shared by many uploads (GIFs from GIPHY); deleting an upload leaves them. */
+export const SHARED_PREFIX = "gifs/";
+
 export const uploadKeys = (u: Pick<Upload, "key" | "mainKey" | "thumbKey">) =>
-  [u.key, u.mainKey, u.thumbKey].filter((k): k is string => !!k && k !== u.key).concat(u.key);
+  [u.key, u.mainKey, u.thumbKey]
+    .filter((k): k is string => !!k && k !== u.key)
+    .concat(u.key)
+    .filter((k) => !k.startsWith(SHARED_PREFIX));
 
 export async function presignUpload(ownerId: string, input: PresignUploadInput) {
   const id = createId();

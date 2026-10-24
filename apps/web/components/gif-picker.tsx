@@ -22,7 +22,8 @@ export function GifPicker({ onPick }: { onPick: (gif: GifDTO) => void }) {
     queryFn: async ({ pageParam }) =>
       unwrap(await six.api.GET("/v1/gifs", { params: { query: { q: q || undefined, cursor: pageParam } } })),
     getNextPageParam: (last) => last.nextCursor ?? undefined,
-    staleTime: 5 * 60_000,
+    staleTime: 30 * 60_000,
+    gcTime: 30 * 60_000,
     retry: false,
   });
   const items = gifs.data?.pages.flatMap((p) => p.items) ?? [];

@@ -152,7 +152,18 @@ describe("GIFs", () => {
       });
       const seen = (await get(guest, `/v1/chats/${chatId}/messages`)).items[0];
       expect(seen.attachment.url).not.toContain("giphy");
-      expect(Buffer.from(await (await fetch(seen.attachment.url)).arrayBuffer()).equals(clip)).toBe(true);
+      const file = await fetch(seen.attachment.url);
+      expect(Buffer.from(await file.arrayBuffer()).equals(clip)).toBe(true);
+      expect(file.headers.get("cache-control")).toContain("immutable");
+
+      const downloads = () => spy.mock.calls.filter(([u]) => String(u).includes("media.giphy.com")).length;
+      const before = downloads();
+      const again = (await send(guest, chatId, "", { text: undefined, gifId: "cat1" })).json();
+      expect(downloads()).toBe(before);
+      await call(host, "DELETE", `/v1/messages?ids=${sent.id}&scope=all`);
+      const kept = await fetch((await get(guest, `/v1/chats/${chatId}/messages`)).items[0].attachment.url);
+      expect(again.attachment.id).not.toBe(sent.attachment.id);
+      expect(Buffer.from(await kept.arrayBuffer()).equals(clip)).toBe(true);
 
       expect((await send(host, chatId, "", { text: undefined, gifId: "evil1" })).json().error.code).toBe(
         "GIF_NOT_FOUND",
