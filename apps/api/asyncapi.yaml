@@ -46,11 +46,15 @@ channels:
         summary: Same as POST /v1/chats/{chatId}/messages. Ack data is a MessageDTO.
         payload:
           type: object
-          required: [chatId, clientId, text]
+          required: [chatId, clientId]
           properties:
             chatId: { type: string }
             clientId: { type: string, maxLength: 64 }
-            text: { type: string, minLength: 1, maxLength: 4000 }
+            text: { type: string, minLength: 1, maxLength: 4000, description: "Required unless attachmentId is set" }
+            entities: { type: array, description: "Formatting and spoiler ranges, see OpenAPI MessageEntity" }
+            attachmentId: { type: string, description: "A completed upload (POST /v1/uploads/{id}/complete)" }
+            replyToId: { type: string }
+            spoiler: { type: boolean }
       chatRead:
         name: chat:read
         summary: Same as POST /v1/chats/{chatId}/read. Ack data is a ChatReadDTO or null.

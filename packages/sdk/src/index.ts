@@ -1,10 +1,12 @@
 import type { AuthResult, GoogleLoginInput, Platform } from "@six/shared";
 import { unwrap } from "./errors.js";
 import { createRestClient } from "./rest.js";
+import { type UploadOptions, uploadFile } from "./uploads.js";
 import { createRealtime, type RealtimeOptions } from "./socket.js";
 import { type RefreshTokenStore, TokenManager } from "./tokens.js";
 
 export { SixApiError, unwrap } from "./errors.js";
+export { kindFor, type UploadOptions } from "./uploads.js";
 export type { paths, components } from "./schema.js";
 export type { RefreshTokenStore } from "./tokens.js";
 export type { CursorStore, Realtime, RealtimeOptions, SixSocket } from "./socket.js";
@@ -62,6 +64,7 @@ export function createSixClient(opts: SixClientOptions) {
   return {
     api,
     auth,
+    upload: (body: Blob, uploadOpts: UploadOptions) => uploadFile(api, body, uploadOpts),
     realtime: (realtimeOpts: RealtimeOptions) => createRealtime(opts.baseUrl, tokens, api, realtimeOpts),
   };
 }

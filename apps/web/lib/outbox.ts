@@ -1,5 +1,17 @@
-import type { MessageEntity, ReplyPreview } from "@six/shared";
+import type { MessageEntity, ReplyPreview, UploadKind } from "@six/shared";
 import { create } from "zustand";
+
+export interface PendingAttachment {
+  kind: UploadKind;
+  name: string;
+  mime: string;
+  size: number;
+  localUrl: string;
+  width: number | null;
+  height: number | null;
+  progress: number;
+  uploadId: string | null;
+}
 
 export interface PendingMessage {
   clientId: string;
@@ -8,6 +20,7 @@ export interface PendingMessage {
   entities: MessageEntity[];
   replyTo: ReplyPreview | null;
   spoiler: boolean;
+  attachment: PendingAttachment | null;
   createdAt: string;
   status: "sending" | "failed";
 }
@@ -16,6 +29,7 @@ interface OutboxState {
   byChat: Record<string, PendingMessage[]>;
   add: (m: PendingMessage) => void;
   setStatus: (chatId: string, clientId: string, status: PendingMessage["status"]) => void;
+  patchAttachment: (chatId: string, clientId: string, patch: Partial<PendingAttachment>) => void;
   remove: (chatId: string, clientId: string) => void;
 }
 
@@ -29,6 +43,15 @@ export const useOutbox = create<OutboxState>((set) => ({
         [chatId]: (s.byChat[chatId] ?? []).map((m) => (m.clientId === clientId ? { ...m, status } : m)),
       },
     })),
+  patchAttachment: (chatId, clientId, patch) =>
+    set((s) => ({
+      byChat: {
+        ...s.byChat,
+        [chatId]: (s.byChat[chatId] ?? []).map((m) =>
+          m.clientId === clientId && m.attachment ? { ...m, attachment: { ...m.attachment, ...patch } } : m,
+        ),
+      },
+    })),
   remove: (chatId, clientId) =>
     set((s) => ({
       byChat: { ...s.byChat, [chatId]: (s.byChat[chatId] ?? []).filter((m) => m.clientId !== clientId) },
@@ -37,3 +60,6 @@ export const useOutbox = create<OutboxState>((set) => ({
 
 const EMPTY: PendingMessage[] = [];
 export const usePending = (chatId: string) => useOutbox((s) => s.byChat[chatId] ?? EMPTY);
+
+/** The raw files behind pending attachments, kept outside the store because they are not serializable. */
+export const pendingFiles = new Map<string, Blob>();

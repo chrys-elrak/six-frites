@@ -51,3 +51,14 @@ export async function shareInvite(code: string): Promise<"shared" | "copied"> {
   await navigator.clipboard.writeText(url);
   return "copied";
 }
+
+export function formatDuration(ms: number | null | undefined) {
+  const total = Math.max(0, Math.round((ms ?? 0) / 1000));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+export function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}

@@ -6,13 +6,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useChats } from "@/lib/chats";
-import { listTime } from "@/lib/format";
+import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
+import { MediaLabel } from "./message-list";
 
 const statusText = { connecting: "Connecting…", syncing: "Updating…", offline: "Waiting for network…", live: null };
 
@@ -23,6 +24,19 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
     return (
       <span className="inline-flex items-center gap-1 italic">
         <Ban className="size-3.5" /> Message deleted
+      </span>
+    );
+  }
+  if (m.type !== "text") {
+    const voiceLength =
+      m.type === "voice" && m.attachment?.durationMs ? ` (${formatDuration(m.attachment.durationMs)})` : "";
+    return (
+      <span className="inline-flex max-w-full items-center gap-1">
+        {m.senderId === meId && "You: "}
+        <MediaLabel type={m.type} />
+        {voiceLength}
+        {m.type === "file" && m.attachment && !m.text && <span className="truncate">· {m.attachment.name}</span>}
+        {m.text && <span className="truncate">· {maskSpoilers(m.text, m.entities)}</span>}
       </span>
     );
   }

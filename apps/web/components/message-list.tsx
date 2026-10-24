@@ -10,8 +10,12 @@ import {
   Circle,
   Clock,
   EyeOff,
+  Image as ImageIcon,
   MessageCircle,
+  Mic,
   MoreHorizontal,
+  Paperclip,
+  Video,
 } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { VList, type VListHandle } from "virtua";
@@ -28,6 +32,7 @@ import { deliver } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { AnimatedEmoji } from "./animated-emoji";
+import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { Sheet, type SheetAction } from "./sheet";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
@@ -46,6 +51,7 @@ interface MsgRow {
   mine: boolean;
   deleted: boolean;
   edited: boolean;
+  attachment: ShownAttachment | null;
   groupStart: boolean;
   groupEnd: boolean;
   delivery: Delivery | null;
@@ -84,6 +90,7 @@ function buildRows(
         mine: m.senderId === meId,
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
+        attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
       },
     })),
     ...pending
@@ -104,6 +111,9 @@ function buildRows(
           mine: true,
           deleted: false,
           edited: false,
+          attachment: p.attachment
+            ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
+            : null,
         },
       })),
   ];
@@ -183,11 +193,32 @@ function Quote({
           <span className="inline-flex items-center gap-1">
             <EyeOff className="size-3.5" /> Spoiler
           </span>
+        ) : reply.type !== "text" ? (
+          <span className="inline-flex items-center gap-1">
+            <MediaLabel type={reply.type} />
+            {reply.text && <span className="truncate">· {reply.text}</span>}
+          </span>
         ) : (
           reply.text
         )}
       </span>
     </button>
+  );
+}
+
+const mediaLabels = {
+  image: { Icon: ImageIcon, label: "Photo" },
+  video: { Icon: Video, label: "Video" },
+  voice: { Icon: Mic, label: "Voice message" },
+  file: { Icon: Paperclip, label: "File" },
+} as const;
+
+export function MediaLabel({ type }: { type: Exclude<MessageDTO["type"], "text"> }) {
+  const { Icon, label } = mediaLabels[type];
+  return (
+    <>
+      <Icon className="size-3.5 shrink-0" /> {label}
+    </>
   );
 }
 
@@ -247,6 +278,7 @@ function Bubble({
   onMenu,
   onQuote,
   onToggle,
+  onOpen,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -256,12 +288,17 @@ function Bubble({
   onMenu: () => void;
   onQuote: (id: string) => void;
   onToggle: () => void;
+  onOpen: (item: LightboxItem) => void;
 }) {
   const selectable = selecting && row.message !== null;
   const press = useLongPress(selectable ? onToggle : onMenu);
   const { mine, groupStart, groupEnd } = row;
   const jumbo =
-    !row.deleted && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text ? emojiOnly(row.text) : null;
+    !row.deleted && !row.attachment && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text
+      ? emojiOnly(row.text)
+      : null;
+  const visual = row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
+  const hasText = !!row.text || row.deleted;
   const radius = mine
     ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
     : `rounded-tr-2xl rounded-br-2xl ${groupStart ? "rounded-tl-2xl" : "rounded-tl-md"} ${groupEnd ? "rounded-bl-2xl" : "rounded-bl-md"}`;
@@ -302,7 +339,7 @@ function Bubble({
           <div className="flex min-w-0 flex-col items-end gap-1">
             <div
               {...press}
-              className={`${radius} ${tone} ${jumbo ? "" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${radius} ${tone} ${jumbo ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -313,6 +350,9 @@ function Bubble({
                   name={nameOf(row.replyTo.senderId)}
                   onClick={() => onQuote(row.replyTo!.id)}
                 />
+              )}
+              {row.attachment && !row.deleted && (
+                <AttachmentView attachment={row.attachment} mine={mine} onOpen={onOpen} />
               )}
               {jumbo ? (
                 <div className="flex flex-col items-end">
@@ -329,9 +369,11 @@ function Bubble({
                 </div>
               ) : (
                 <p
-                  className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""}`}
+                  className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""} ${
+                    visual ? "px-2 pt-1 pb-0.5" : ""
+                  } ${!hasText ? "-mt-0.5 min-h-4" : ""}`}
                 >
-                  {row.deleted ? (
+                  {!hasText ? null : row.deleted ? (
                     <span className="inline-flex items-center gap-1.5">
                       <Ban className="size-4" /> This message was deleted
                     </span>
@@ -386,6 +428,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
+    const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
     const nameOf = (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
@@ -530,12 +573,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onMenu={() => setMenuFor(row)}
                 onQuote={jumpTo}
                 onToggle={() => row.id && toggleSelected(row.id)}
+                onOpen={setLightbox}
               />
             )
           }
         </VList>
 
         {menuFor && <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)} />}
+        {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
         {confirmDelete && (
           <Sheet
             title="Delete message?"
