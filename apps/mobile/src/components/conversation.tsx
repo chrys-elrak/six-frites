@@ -1,4 +1,4 @@
-import { type MessageDTO, durationLabel } from "@six/shared";
+import { type MessageDTO, chatTheme, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { ChevronLeft, MoreVertical, Trash2, X } from "lucide-react-native";
@@ -12,8 +12,11 @@ import { useSelection } from "@/lib/selection";
 import { useSession } from "@/lib/session";
 import { brand, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
+import { BubbleColorsContext } from "@/lib/bubble-colors";
+import { useChatTheme } from "@/lib/chat-themes";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
+import { ChatBackground } from "./chat-background";
 import { ChatMenu } from "./chat-menu";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
@@ -36,6 +39,13 @@ export function Conversation({ chatId }: { chatId: string }) {
   const peerId = chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
   useWatchPresence(peerId ? [peerId] : []);
   const presence = usePresence(peerId);
+  const defaultTheme = useChatTheme();
+  const theme = chat.data?.theme ? chatTheme(chat.data.theme) : defaultTheme;
+  const colors = t.dark ? theme.dark : theme.light;
+  const bubble = useMemo(
+    () => ({ bg: colors.bubble, ink: colors.bubbleInk, theirBg: colors.theirBubble, theirInk: colors.theirBubbleInk }),
+    [colors],
+  );
   const selecting = useSelection((s) => s.chatId === chatId);
   const selectedIds = useSelection((s) => s.ids);
   const clearSelection = useSelection((s) => s.clear);
@@ -147,7 +157,12 @@ export function Conversation({ chatId }: { chatId: string }) {
       )}
 
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
+        <View style={{ flex: 1 }}>
+          <ChatBackground themeId={c.theme} />
+          <BubbleColorsContext.Provider value={bubble}>
+            <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
+          </BubbleColorsContext.Provider>
+        </View>
         {!selecting && <Composer
             chatId={chatId}
             nameOf={nameOf}

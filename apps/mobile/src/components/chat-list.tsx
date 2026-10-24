@@ -1,7 +1,7 @@
 import { type ChatDTO, maskSpoilers, serviceText } from "@six/shared";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, MessageCircle, Pin, Timer } from "lucide-react-native";
+import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, MessageCircle, Palette, Pin, Timer } from "lucide-react-native";
 import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useChats } from "@/lib/chats";
@@ -32,7 +32,10 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
 
   if (!m) return line(null, "No messages");
   if (m.deletedAt) return line(<Ban size={14} color={color} />, "Message deleted", true);
-  if (m.type === "service") return line(<Timer size={14} color={color} />, serviceText(m));
+  if (m.type === "service") {
+    const icon = m.action?.type === "theme" ? <Palette size={14} color={color} /> : <Timer size={14} color={color} />;
+    return line(icon, serviceText(m));
+  }
   if (m.ephemeral) {
     const kind =
       m.type === "text"

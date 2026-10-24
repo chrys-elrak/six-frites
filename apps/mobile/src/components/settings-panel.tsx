@@ -5,11 +5,22 @@ import { LogOut, Monitor, Smartphone } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { formatCode, contactUrl, shareContact, shareInvite, timeAgo } from "@/lib/format";
+import {
+  CHAT_THEMES,
+  CUSTOM_THEME_COLORS,
+  type ChatTheme,
+  customTheme,
+  customThemeColor,
+  customThemeId,
+} from "@six/shared";
+import { useChatThemeStore } from "@/lib/chat-themes";
 import { playChime, useNotifyPrefs } from "@/lib/notify";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { Wallpaper } from "./chat-background";
+import { CustomThemePicker } from "./custom-theme";
 import { QrCode } from "./qr-code";
 import { Sheet } from "./sheet";
 import { Card, Divider, PrimaryButton, ScreenHeader, SectionTitle, TextButton } from "./ui";
@@ -86,6 +97,74 @@ function Toggle({
         thumbColor="#fff"
       />
     </Pressable>
+  );
+}
+
+function ThemeSwatch({
+  theme,
+  on,
+  label,
+  onPress,
+}: {
+  theme: ChatTheme;
+  on: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  const w = t.dark ? theme.dark : theme.light;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected: on }}
+      accessibilityLabel={label}
+      style={{ alignItems: "center", gap: 6 }}
+    >
+      <View style={[styles.swatch, { borderColor: on ? brand : t.border }]}>
+        <Wallpaper theme={theme} dark={t.dark} id={`swatch-${theme.id}`} />
+        <View style={[styles.swatchBubble, { backgroundColor: w.bubble }]} />
+        <View style={[styles.swatchBubble, styles.swatchIn, { backgroundColor: t.bubbleIn }]} />
+      </View>
+      <Text style={{ color: on ? brand : t.textSoft, fontSize: 12, fontWeight: on ? "700" : "500" }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function ChatBackgroundPicker() {
+  const current = useChatThemeStore((s) => s.id);
+  const choose = useChatThemeStore((s) => s.set);
+  const [custom, setCustom] = useState(false);
+  const customHex = customThemeColor(current);
+  return (
+    <View>
+      <SectionTitle>Default chat background</SectionTitle>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}>
+        {CHAT_THEMES.map((theme) => (
+          <ThemeSwatch
+            key={theme.id}
+            theme={theme}
+            on={theme.id === current}
+            label={theme.name}
+            onPress={() => choose(theme.id)}
+          />
+        ))}
+        <ThemeSwatch
+          theme={customTheme(customHex ?? CUSTOM_THEME_COLORS[3]!)}
+          on={!!customHex}
+          label="Custom…"
+          onPress={() => setCustom(true)}
+        />
+      </ScrollView>
+      {custom && (
+        <CustomThemePicker
+          title="Default custom background"
+          current={current}
+          onPick={(mine, theirs) => choose(customThemeId(mine, theirs))}
+          onClose={() => setCustom(false)}
+        />
+      )}
+    </View>
   );
 }
 
@@ -432,6 +511,7 @@ export function SettingsPanel() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ProfileCard />
         <FindMe />
+        <ChatBackgroundPicker />
         <NotificationSettings />
         <Invites />
         <Referrals />
@@ -459,6 +539,9 @@ const styles = StyleSheet.create({
   profile: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16 },
   nameInput: { flex: 1, fontSize: 18, fontWeight: "500", paddingVertical: 2 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
+  swatch: { width: 78, height: 112, borderRadius: 14, borderWidth: 2, overflow: "hidden" },
+  swatchBubble: { position: "absolute", right: 8, top: 22, width: 36, height: 14, borderRadius: 7 },
+  swatchIn: { left: 8, right: undefined, top: 46, width: 44 },
   qr: { borderRadius: 8, overflow: "hidden" },
   usernameField: { flex: 1, flexDirection: "row", alignItems: "center", gap: 2, borderRadius: 10, paddingHorizontal: 10 },
   code: { fontFamily: "monospace", fontSize: 16, fontWeight: "700", letterSpacing: 2 },

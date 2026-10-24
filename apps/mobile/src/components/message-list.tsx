@@ -2,7 +2,7 @@ import { unwrap } from "@six/sdk";
 import {
   type ChatDTO,
   EPHEMERAL_RESEND,
-  durationLabel,
+  serviceSentence,
   type EphemeralDTO,
   type MessageDTO,
   type MessageEntity,
@@ -12,7 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { GestureDetector, useLongPressGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
-import { Ban, Check, CheckCheck, CheckCircle2, Circle, Clock, EyeOff, Flame, MessageCircle, RotateCcw, Timer, X } from "lucide-react-native";
+import { Ban, Check, CheckCheck, CheckCircle2, Circle, Clock, EyeOff, Flame, Palette, RotateCcw, Timer, X } from "lucide-react-native";
 import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -30,6 +30,7 @@ import { useComposerMode } from "@/lib/composer";
 import { emojiOnly } from "@/lib/emoji";
 import { canResend, shortRule } from "@/lib/ephemeral";
 import { clockTime, dayLabel, sameDay } from "@/lib/format";
+import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { segments } from "@/lib/markup";
 import { six } from "@/lib/six";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
@@ -197,11 +198,14 @@ function Ticks({ delivery, color, readColor }: { delivery: Delivery; color: stri
 }
 
 function Meta({ row, color, t }: { row: MsgRow; color: string; t: Theme }) {
+  const bubble = useBubbleColors();
+  const onPill = color === "#fff";
+  const readColor = !row.mine ? t.read : onPill ? "#7dd3fc" : bubble.ink;
   return (
     <>
       {row.edited && !row.deleted && <Text style={[styles.meta, { color }]}>edited</Text>}
       <Text style={[styles.meta, { color }]}>{clockTime(row.createdAt)}</Text>
-      {row.delivery && <Ticks delivery={row.delivery} color={color} readColor={row.mine ? "#0c4a6e" : t.read} />}
+      {row.delivery && <Ticks delivery={row.delivery} color={color} readColor={readColor} />}
     </>
   );
 }
@@ -218,7 +222,8 @@ function Quote({
   onPress: () => void;
 }) {
   const t = useTheme();
-  const fg = mine ? brandInk : t.text;
+  const bubble = useBubbleColors();
+  const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
   const dim = reply.deleted || reply.spoiler;
   return (
     <Pressable
@@ -226,8 +231,11 @@ function Quote({
       style={[
         styles.quote,
         mine
-          ? { borderLeftColor: "rgba(62,33,4,0.4)", backgroundColor: "rgba(0,0,0,0.1)" }
-          : { borderLeftColor: brand, backgroundColor: t.dark ? "rgba(68,64,60,0.6)" : stone[100] },
+          ? { borderLeftColor: alpha(bubble.ink, 0.4), backgroundColor: "rgba(0,0,0,0.1)" }
+          : {
+              borderLeftColor: brand,
+              backgroundColor: bubble.theirInk ? alpha(bubble.theirInk, 0.08) : t.dark ? "rgba(68,64,60,0.6)" : stone[100],
+            },
       ]}
     >
       <Text style={{ color: fg, fontWeight: "700", fontSize: 13 }}>{name}</Text>
@@ -405,6 +413,7 @@ function Bubble({
   onReact: (emoji: string) => void;
 }) {
   const t = useTheme();
+  const bubble = useBubbleColors();
   const selectable = selecting && row.message !== null;
   const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
   const revealMedia = useSpoilers((s) => s.reveal);
@@ -439,10 +448,16 @@ function Bubble({
     : row.deleted
       ? { borderWidth: 1, borderColor: t.dark ? stone[700] : stone[300] }
       : mine
-        ? { backgroundColor: brand }
-        : { backgroundColor: t.bubbleIn, borderWidth: StyleSheet.hairlineWidth, borderColor: t.dark ? stone[700] : stone[200] };
-  const fg = row.deleted ? t.muted : mine && !bare ? brandInk : t.text;
-  const metaColor = mine && !bare && !row.deleted ? "rgba(62,33,4,0.7)" : t.muted;
+        ? { backgroundColor: bubble.bg }
+        : {
+            backgroundColor: bubble.theirBg ?? t.bubbleIn,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: t.dark ? stone[700] : stone[200],
+          };
+  const theirInk = bubble.theirInk ?? t.text;
+  const fg = row.deleted ? t.muted : bare ? t.text : mine ? bubble.ink : theirInk;
+  const metaColor =
+    row.deleted || bare ? t.muted : mine ? alpha(bubble.ink, 0.7) : bubble.theirInk ? alpha(theirInk, 0.6) : t.muted;
 
   const bubbleRef = useRef<ComponentRef<typeof View>>(null);
   const canReact = !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
@@ -793,8 +808,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       <View style={{ flex: 1 }}>
         {rows.length === 0 ? (
           <View style={styles.empty}>
-            <MessageCircle size={32} strokeWidth={1.6} color={t.faint} />
-            <Text style={{ color: t.muted, fontSize: 14 }}>No messages yet. Say hello!</Text>
+            <Text style={[styles.onWallpaper, styles.emptyChip]}>No messages yet. Say hello!</Text>
           </View>
         ) : (
           <FlatList
@@ -818,17 +832,18 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             renderItem={({ item: row }) =>
               row.kind === "day" ? (
                 <View style={styles.day}>
-                  <Text style={[styles.dayText, { backgroundColor: t.chip, color: t.textSoft }]}>{row.label}</Text>
+                  <Text style={[styles.dayText, styles.onWallpaper]}>{row.label}</Text>
                 </View>
               ) : row.kind === "service" ? (
                 <View style={styles.service}>
-                  <View style={[styles.serviceChip, { backgroundColor: t.chip }]}>
-                    <Timer size={14} color={t.textSoft} />
-                    <Text style={{ color: t.textSoft, fontSize: 12, textAlign: "center", flexShrink: 1 }}>
-                      {nameOf(row.message.senderId)}{" "}
-                      {row.message.action?.secs
-                        ? `set messages to auto-delete after ${durationLabel(row.message.action.secs)}`
-                        : "turned off auto-delete"}
+                  <View style={[styles.serviceChip, styles.onWallpaper]}>
+                    {row.message.action?.type === "theme" ? (
+                      <Palette size={14} color="#fff" />
+                    ) : (
+                      <Timer size={14} color="#fff" />
+                    )}
+                    <Text style={{ color: "#fff", fontSize: 12, textAlign: "center", flexShrink: 1 }}>
+                      {nameOf(row.message.senderId)} {serviceSentence(row.message)}
                     </Text>
                   </View>
                 </View>
@@ -926,6 +941,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     backgroundColor: "rgba(28,25,23,0.4)",
   },
+  emptyChip: { fontSize: 14, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 },
+  onWallpaper: { backgroundColor: "rgba(0,0,0,0.28)", color: "#fff", overflow: "hidden" },
   service: { alignItems: "center", paddingHorizontal: 24, paddingVertical: 8 },
   serviceChip: {
     flexDirection: "row",

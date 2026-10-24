@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { shareRemoteFile } from "@/lib/download";
 import { formatBytes, formatDuration } from "@/lib/format";
+import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { usePlaybackRate } from "@/lib/playback";
 import type { PendingAttachment } from "@/lib/outbox";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
@@ -204,19 +205,20 @@ function VoicePlayer({
   }
 
   const done = total ? position / total : 0;
-  const fg = mine ? brandInk : undefined;
+  const bubble = useBubbleColors();
+  const fg = mine ? bubble.ink : (bubble.theirInk ?? undefined);
   return (
     <View style={styles.voice}>
       <Pressable
         onPress={toggle}
         disabled={!url}
         accessibilityLabel={status.playing ? "Pause" : "Play voice message"}
-        style={[styles.voiceButton, { backgroundColor: mine ? brandInk : brand, opacity: url ? 1 : 0.5 }]}
+        style={[styles.voiceButton, { backgroundColor: mine ? bubble.ink : brand, opacity: url ? 1 : 0.5 }]}
       >
         {status.playing ? (
-          <Pause size={20} color={mine ? brand : brandInk} fill={mine ? brand : brandInk} />
+          <Pause size={20} color={mine ? bubble.bg : brandInk} fill={mine ? bubble.bg : brandInk} />
         ) : (
-          <Play size={20} color={mine ? brand : brandInk} fill={mine ? brand : brandInk} style={{ marginLeft: 2 }} />
+          <Play size={20} color={mine ? bubble.bg : brandInk} fill={mine ? bubble.bg : brandInk} style={{ marginLeft: 2 }} />
         )}
       </Pressable>
       <View style={{ flex: 1 }}>
@@ -244,8 +246,8 @@ function VoicePlayer({
             {formatDuration(status.playing || position ? position : total)}
           </Text>
           <SpeedButton
-            tint={mine ? brandInk : brand}
-            bg={mine ? "rgba(62,33,4,0.15)" : "rgba(235,138,0,0.15)"}
+            tint={mine ? bubble.ink : brand}
+            bg={mine ? alpha(bubble.ink, 0.15) : "rgba(235,138,0,0.15)"}
           />
         </View>
       </View>
@@ -398,6 +400,7 @@ export function AttachmentView({
   autoPlay?: boolean;
 }) {
   const t = useTheme();
+  const bubble = useBubbleColors();
   const a = view(attachment);
   const [busy, setBusy] = useState(false);
 
@@ -474,11 +477,11 @@ export function AttachmentView({
         {a.state !== "ready" && (
           <View style={styles.voiceState}>
             {a.state === "failed" ? (
-              <AlertCircle size={12} color={mine ? brandInk : t.muted} />
+              <AlertCircle size={12} color={mine ? bubble.ink : t.muted} />
             ) : (
-              <ActivityIndicator size="small" color={mine ? brandInk : t.muted} />
+              <ActivityIndicator size="small" color={mine ? bubble.ink : t.muted} />
             )}
-            <Text style={[styles.small, mine && { color: brandInk }]}>
+            <Text style={[styles.small, mine && { color: bubble.ink }]}>
               {a.state === "uploading"
                 ? `Uploading ${Math.round(a.progress * 100)}%`
                 : a.state === "failed"
@@ -492,7 +495,7 @@ export function AttachmentView({
   }
 
   const ready = a.state === "ready" && attachment.source === "server" && a.url;
-  const fg = mine ? brandInk : t.text;
+  const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
   return (
     <Pressable
       disabled={!ready || busy}
@@ -503,13 +506,13 @@ export function AttachmentView({
       }}
       style={styles.file}
     >
-      <View style={[styles.fileIcon, { backgroundColor: mine ? "rgba(62,33,4,0.15)" : "rgba(235,138,0,0.15)" }]}>
+      <View style={[styles.fileIcon, { backgroundColor: mine ? alpha(bubble.ink, 0.15) : "rgba(235,138,0,0.15)" }]}>
         {a.state === "uploading" || busy ? (
-          <ActivityIndicator size="small" color={mine ? brandInk : brand} />
+          <ActivityIndicator size="small" color={mine ? bubble.ink : brand} />
         ) : ready ? (
-          <Download size={20} color={mine ? brandInk : brand} />
+          <Download size={20} color={mine ? bubble.ink : brand} />
         ) : (
-          <FileText size={20} color={mine ? brandInk : brand} />
+          <FileText size={20} color={mine ? bubble.ink : brand} />
         )}
       </View>
       <View style={{ flex: 1 }}>
