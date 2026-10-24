@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { applyChatDeleted, applyDeleted, applyEdited } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
 import { useOutbox } from "./outbox";
+import { useTypingStore } from "./typing";
 import { useSession } from "./session";
 import { six } from "./six";
 
@@ -32,6 +33,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       const m = e.data;
       insertMessage(qc, m);
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
+      else useTypingStore.getState().set(m.chatId, m.senderId, false);
       const viewing = activeChatId === m.chatId && document.visibilityState === "visible";
       const found = patchChat(qc, m.chatId, (c) => ({
         ...c,
@@ -54,12 +56,33 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
     case "chat.deleted":
       applyChatDeleted(qc, e.data.chatId, e.data.scope);
       break;
+    case "chat.delivered": {
+      const d = e.data;
+      patchChat(qc, d.chatId, (c) => ({
+        ...c,
+        members: c.members.map((m) =>
+          m.user.id === d.userId
+            ? { ...m, lastDeliveredMessageId: d.lastDeliveredMessageId, lastDeliveredAt: d.lastDeliveredAt }
+            : m,
+        ),
+      }));
+      break;
+    }
     case "chat.read": {
       const r = e.data;
       patchChat(qc, r.chatId, (c) => ({
         ...c,
         members: c.members.map((m) =>
-          m.user.id === r.userId ? { ...m, lastReadMessageId: r.lastReadMessageId, lastReadAt: r.lastReadAt } : m,
+          m.user.id !== r.userId
+            ? m
+            : {
+                ...m,
+                lastReadMessageId: r.lastReadMessageId,
+                lastReadAt: r.lastReadAt,
+                ...(!m.lastDeliveredAt || Date.parse(m.lastDeliveredAt) < Date.parse(r.lastReadAt)
+                  ? { lastDeliveredMessageId: r.lastReadMessageId, lastDeliveredAt: r.lastReadAt }
+                  : {}),
+              },
         ),
         unreadCount:
           r.userId !== meId
@@ -85,6 +108,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     if (!meId) return;
     const rt = six.realtime({
       onEvent: (e) => me.current && applyEvent(qc, me.current, e),
+      onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing),
       onStatus: setStatus,
       onResyncRequired: () => void qc.invalidateQueries(),
     });

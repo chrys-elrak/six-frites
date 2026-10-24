@@ -2,12 +2,14 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   ChatDTO,
+  ChatDeliveredDTO,
   ChatListQuery,
   ChatReadDTO,
   DeleteChatQuery,
   DeleteMessagesQuery,
   EditMessageInput,
   Id,
+  MarkDeliveredInput,
   MarkReadInput,
   MessageDTO,
   PageQuery,
@@ -17,7 +19,7 @@ import {
   UpdateChatInput,
   page,
 } from "@six/shared";
-import { deleteChat, getChat, listChats, markRead, updateChat } from "../services/chats.js";
+import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
 import { deleteMessages, editMessage, listMessages, sendMessage } from "../services/messages.js";
 import { sync } from "../services/sync.js";
 
@@ -165,6 +167,22 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => markRead(req.auth.userId, req.params.id, req.body ?? {}),
+  );
+
+  app.post(
+    "/chats/:id/delivered",
+    {
+      schema: {
+        tags: ["chats"],
+        summary: "Acknowledge that this device received messages up to `messageId` (or the latest)",
+        description: "Clients call this automatically when they receive someone else's message. Returns null when nothing changed.",
+        security,
+        params: ChatParams,
+        body: MarkDeliveredInput.nullish(),
+        response: { 200: ChatDeliveredDTO.nullable() },
+      },
+    },
+    (req) => markDelivered(req.auth.userId, req.params.id, req.body ?? {}),
   );
 
   app.get(

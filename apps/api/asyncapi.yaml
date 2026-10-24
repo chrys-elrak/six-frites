@@ -28,9 +28,11 @@ channels:
           required: [eventId, type, data, createdAt]
           properties:
             eventId: { type: string, description: "Monotonic per user; use as the sync cursor." }
-            type: { type: string, enum: ["message.new", "chat.updated", "chat.read"] }
+            type:
+              type: string
+              enum: ["message.new", "message.edited", "message.deleted", "chat.updated", "chat.deleted", "chat.delivered", "chat.read"]
             data:
-              description: "MessageDTO, ChatDTO or ChatReadDTO depending on type (see OpenAPI components)."
+              description: "MessageDTO, MessagesDeletedDTO, ChatDTO, ChatDeletedDTO, ChatDeliveredDTO or ChatReadDTO depending on type (see OpenAPI components)."
             createdAt: { type: string, format: date-time }
       sessionRevoked:
         name: session:revoked
@@ -58,6 +60,33 @@ channels:
           properties:
             chatId: { type: string }
             messageId: { type: string }
+      typing:
+        name: typing
+        summary: Ephemeral; another member started or stopped typing. Not stored and not returned by /v1/sync.
+        payload:
+          type: object
+          properties:
+            chatId: { type: string }
+            userId: { type: string }
+            typing: { type: boolean }
+      chatTyping:
+        name: chat:typing
+        summary: Tell the other members you are typing. Send at most every 3s while typing, and `typing:false` when done. Socket only.
+        payload:
+          type: object
+          required: [chatId, typing]
+          properties:
+            chatId: { type: string }
+            typing: { type: boolean }
+      chatDelivered:
+        name: chat:delivered
+        summary: Same as POST /v1/chats/{chatId}/delivered. Send when this device receives someone else's message.
+        payload:
+          type: object
+          required: [chatId]
+          properties:
+            chatId: { type: string }
+            messageId: { type: string }
       ping:
         name: ping
         payload: { type: object }
@@ -78,6 +107,18 @@ operations:
     action: receive
     channel: { $ref: "#/channels/root" }
     messages: [{ $ref: "#/channels/root/messages/chatRead" }]
+  receiveTyping:
+    action: send
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/typing" }]
+  sendTyping:
+    action: receive
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/chatTyping" }]
+  markDelivered:
+    action: receive
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/chatDelivered" }]
   ping:
     action: receive
     channel: { $ref: "#/channels/root" }

@@ -14,7 +14,7 @@ import { useRealtime } from "@/lib/realtime";
 import { deliver } from "@/lib/send";
 import { Sheet, type SheetAction } from "./sheet";
 
-type Delivery = "sending" | "failed" | "sent" | "read";
+type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
 
 interface MsgRow {
   kind: "msg";
@@ -41,7 +41,13 @@ interface Item {
   row: Omit<MsgRow, "kind" | "groupStart" | "groupEnd" | "delivery">;
 }
 
-function buildRows(messages: MessageDTO[], pending: PendingMessage[], meId: string, peerReadAt: number): Row[] {
+function buildRows(
+  messages: MessageDTO[],
+  pending: PendingMessage[],
+  meId: string,
+  peerDeliveredAt: number,
+  peerReadAt: number,
+): Row[] {
   const sent = new Set(messages.filter((m) => m.senderId === meId).map((m) => m.clientId));
   const items: Item[] = [
     ...messages.map((m) => ({
@@ -105,7 +111,9 @@ function buildRows(messages: MessageDTO[], pending: PendingMessage[], meId: stri
             ? r.pending.status
             : Date.parse(r.createdAt) <= peerReadAt
               ? "read"
-              : "sent",
+              : Date.parse(r.createdAt) <= peerDeliveredAt
+                ? "delivered"
+                : "sent",
     });
   });
   return rows;
@@ -114,12 +122,10 @@ function buildRows(messages: MessageDTO[], pending: PendingMessage[], meId: stri
 function Ticks({ delivery }: { delivery: Delivery }) {
   if (delivery === "sending") return <span aria-label="Sending">🕓</span>;
   if (delivery === "failed") return null;
+  const label = { sent: "Sent", delivered: "Delivered", read: "Read" }[delivery];
   return (
-    <span
-      aria-label={delivery === "read" ? "Read" : "Sent"}
-      className={delivery === "read" ? "text-sky-700 dark:text-sky-300" : ""}
-    >
-      {delivery === "read" ? "✓✓" : "✓"}
+    <span aria-label={label} title={label} className={delivery === "read" ? "text-sky-700 dark:text-sky-300" : ""}>
+      {delivery === "sent" ? "✓" : "✓✓"}
     </span>
   );
 }
@@ -231,18 +237,21 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
     const nameOf = (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
 
-    const peerReadAt = useMemo(() => {
-      const times = chat.members
-        .filter((m) => m.user.id !== meId)
-        .map((m) => (m.lastReadAt ? Date.parse(m.lastReadAt) : 0));
-      return times.length ? Math.min(...times) : 0;
+    const { peerDeliveredAt, peerReadAt } = useMemo(() => {
+      const peers = chat.members.filter((m) => m.user.id !== meId);
+      const earliest = (pick: (m: (typeof peers)[number]) => string | null) =>
+        peers.length ? Math.min(...peers.map((m) => (pick(m) ? Date.parse(pick(m)!) : 0))) : 0;
+      return { peerDeliveredAt: earliest((m) => m.lastDeliveredAt), peerReadAt: earliest((m) => m.lastReadAt) };
     }, [chat.members, meId]);
 
     const ordered = useMemo(
       () => (messages.data?.pages.flatMap((p) => p.items) ?? []).slice().reverse(),
       [messages.data],
     );
-    const rows = useMemo(() => buildRows(ordered, pending, meId, peerReadAt), [ordered, pending, meId, peerReadAt]);
+    const rows = useMemo(
+      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt),
+      [ordered, pending, meId, peerDeliveredAt, peerReadAt],
+    );
 
     const firstKey = useRef<string | undefined>(undefined);
     const lastKey = useRef<string | undefined>(undefined);

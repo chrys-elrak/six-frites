@@ -102,7 +102,12 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
       await tx.chatMember.updateMany({ where: { chatId, hidden: true }, data: { hidden: false } });
       await tx.chatMember.update({
         where: { chatId_userId: { chatId, userId } },
-        data: { lastReadMessageId: message.id, lastReadAt: message.createdAt },
+        data: {
+          lastReadMessageId: message.id,
+          lastReadAt: message.createdAt,
+          lastDeliveredMessageId: message.id,
+          lastDeliveredAt: message.createdAt,
+        },
       });
 
       const dto = toMessageDTO(message);

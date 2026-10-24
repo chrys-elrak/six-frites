@@ -21,11 +21,16 @@ export interface TokenManagerOptions {
  */
 export class TokenManager {
   private accessToken: string | null = null;
+  private currentUserId: string | null = null;
   private expiresAt = 0;
   private inflight: Promise<string | null> | null = null;
   private listeners = new Set<AuthListener>();
 
   constructor(private readonly opts: TokenManagerOptions) {}
+
+  get userId() {
+    return this.currentUserId;
+  }
 
   get isWeb() {
     return this.opts.platform === "web";
@@ -38,6 +43,7 @@ export class TokenManager {
 
   async accept(auth: AuthResult) {
     this.accessToken = auth.accessToken;
+    this.currentUserId = auth.user.id;
     this.expiresAt = Date.parse(auth.accessTokenExpiresAt);
     if (!this.isWeb && auth.refreshToken) await this.opts.store?.set(auth.refreshToken);
     this.listeners.forEach((fn) => fn(auth));
@@ -45,6 +51,7 @@ export class TokenManager {
 
   async clear() {
     this.accessToken = null;
+    this.currentUserId = null;
     this.expiresAt = 0;
     if (!this.isWeb) await this.opts.store?.set(null);
     this.listeners.forEach((fn) => fn(null));

@@ -87,6 +87,44 @@ describe("chats over REST", () => {
   });
 });
 
+describe("delivery receipts", () => {
+  it("moves forward only, tells the sender, and is implied by reading", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const m1 = (await send(host, chatId, "one")).json();
+    const m2 = (await send(host, chatId, "two")).json();
+    const head = (await get(host, "/v1/sync")).cursor;
+    const guestHead = (await get(guest, "/v1/sync")).cursor;
+
+    const deliver = (messageId?: string) =>
+      ctx.app.inject({
+        method: "POST",
+        url: `/v1/chats/${chatId}/delivered`,
+        headers: bearer(guest.accessToken),
+        payload: messageId ? { messageId } : {},
+      });
+
+    expect((await deliver(m1.id)).json().lastDeliveredMessageId).toBe(m1.id);
+    expect((await deliver(m1.id)).body).toBe("null");
+    expect((await deliver()).json().lastDeliveredMessageId).toBe(m2.id);
+
+    const events = await get(host, `/v1/sync?since=${head}`);
+    expect(events.events.map((e: { type: string }) => e.type)).toEqual(["chat.delivered", "chat.delivered"]);
+    expect((await get(guest, `/v1/sync?since=${guestHead}`)).events).toEqual([]);
+
+    const m3 = (await send(host, chatId, "three")).json();
+    await ctx.app.inject({
+      method: "POST",
+      url: `/v1/chats/${chatId}/read`,
+      headers: bearer(guest.accessToken),
+      payload: {},
+    });
+    const view = await get(host, `/v1/chats/${chatId}`);
+    const g = view.members.find((m: { user: { id: string } }) => m.user.id === guest.user.id);
+    expect(g.lastDeliveredMessageId).toBe(m3.id);
+    expect((await deliver(m2.id)).body).toBe("null");
+  });
+});
+
 describe("sync", () => {
   it("returns the head cursor, then pages through changes", async () => {
     const { host, guest, chatId } = await makeFriends();
@@ -160,5 +198,30 @@ describe("socket", () => {
 
     const read = await b.emitWithAck("chat:read", { chatId });
     expect(read.ok && read.data.lastReadMessageId).toBe(ack.data.id);
+  });
+
+  it("relays typing to the other member only", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const stranger = await signUp("lurker");
+    const a = open(host.accessToken);
+    const b = open(guest.accessToken);
+    const c = open(stranger.accessToken);
+    await Promise.all([connected(a), connected(b), connected(c)]);
+
+    const seenByStranger: unknown[] = [];
+    c.on("typing", (e) => seenByStranger.push(e));
+    const echoedToSelf: unknown[] = [];
+    a.on("typing", (e) => echoedToSelf.push(e));
+
+    const got = new Promise((resolve) => b.once("typing", resolve));
+    expect(await a.emitWithAck("chat:typing", { chatId, typing: true })).toMatchObject({ ok: true });
+    expect(await got).toEqual({ chatId, userId: host.user.id, typing: true });
+
+    const denied = await c.emitWithAck("chat:typing", { chatId, typing: true });
+    expect(denied).toMatchObject({ ok: false, error: { code: "CHAT_NOT_FOUND" } });
+
+    await new Promise((r) => setTimeout(r, 100));
+    expect(seenByStranger).toEqual([]);
+    expect(echoedToSelf).toEqual([]);
   });
 });

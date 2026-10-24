@@ -7,6 +7,7 @@ import type {
   MessageDTO,
   SendMessageInput,
   ServerToClientEvents,
+  TypingDTO,
 } from "@six/shared";
 import { SixApiError, unwrap } from "./errors.js";
 import type { RestClient } from "./rest.js";
@@ -22,6 +23,8 @@ export interface CursorStore {
 
 export interface RealtimeOptions {
   onEvent: (event: ChangeEventDTO) => void;
+  /** Ephemeral "is typing" signals from other members; not replayed by sync. */
+  onTyping?: (event: TypingDTO) => void;
   /** Called when the server can no longer replay from our cursor; refetch everything. */
   onResyncRequired?: () => void;
   onStatus?: (status: "connecting" | "syncing" | "live" | "offline") => void;
@@ -50,11 +53,29 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     auth: (cb) => void tokens.getAccessToken().then((token) => cb({ token })),
   });
 
+  const undelivered = new Map<string, string>();
+  let deliveryTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function flushDeliveries() {
+    deliveryTimer = null;
+    for (const [chatId, messageId] of undelivered) {
+      undelivered.delete(chatId);
+      const ack = socket.connected
+        ? socket.timeout(10_000).emitWithAck("chat:delivered", { chatId, messageId })
+        : api.POST("/v1/chats/{id}/delivered", { params: { path: { id: chatId } }, body: { messageId } });
+      void ack.catch(() => null);
+    }
+  }
+
   function apply(event: ChangeEventDTO) {
     const id = BigInt(event.eventId);
     if (cursor !== null && id <= cursor) return;
     cursor = id;
     opts.onEvent(event);
+    if (event.type === "message.new" && event.data.senderId !== tokens.userId) {
+      undelivered.set(event.data.chatId, event.data.id);
+      deliveryTimer ??= setTimeout(flushDeliveries, 300);
+    }
   }
 
   async function saveCursor() {
@@ -110,6 +131,8 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     }
   });
 
+  socket.on("typing", (e) => opts.onTyping?.(e));
+
   socket.on("disconnect", () => opts.onStatus?.("offline"));
 
   socket.on("connect_error", async (err) => {
@@ -131,8 +154,23 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     return res.data;
   }
 
+  const typingSentAt = new Map<string, number>();
+
   return {
     socket,
+    /** Call on every keystroke; it throttles itself. Pass false when the draft is sent or cleared. */
+    setTyping(chatId: string, typing: boolean) {
+      if (!socket.connected) return;
+      const last = typingSentAt.get(chatId);
+      if (typing) {
+        if (last && Date.now() - last < 3000) return;
+        typingSentAt.set(chatId, Date.now());
+      } else {
+        if (!last) return;
+        typingSentAt.delete(chatId);
+      }
+      socket.emit("chat:typing", { chatId, typing });
+    },
     start() {
       opts.onStatus?.("connecting");
       socket.connect();

@@ -1051,6 +1051,16 @@
                                   ],
                                   "additionalProperties": false
                                 },
+                                "lastDeliveredMessageId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "nullable": true
+                                },
+                                "lastDeliveredAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "nullable": true
+                                },
                                 "lastReadMessageId": {
                                   "type": "string",
                                   "minLength": 1,
@@ -1064,6 +1074,8 @@
                               },
                               "required": [
                                 "user",
+                                "lastDeliveredMessageId",
+                                "lastDeliveredAt",
                                 "lastReadMessageId",
                                 "lastReadAt"
                               ],
@@ -1293,6 +1305,16 @@
                             ],
                             "additionalProperties": false
                           },
+                          "lastDeliveredMessageId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "nullable": true
+                          },
+                          "lastDeliveredAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
                           "lastReadMessageId": {
                             "type": "string",
                             "minLength": 1,
@@ -1306,6 +1328,8 @@
                         },
                         "required": [
                           "user",
+                          "lastDeliveredMessageId",
+                          "lastDeliveredAt",
                           "lastReadMessageId",
                           "lastReadAt"
                         ],
@@ -1543,6 +1567,16 @@
                             ],
                             "additionalProperties": false
                           },
+                          "lastDeliveredMessageId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "nullable": true
+                          },
+                          "lastDeliveredAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
                           "lastReadMessageId": {
                             "type": "string",
                             "minLength": 1,
@@ -1556,6 +1590,8 @@
                         },
                         "required": [
                           "user",
+                          "lastDeliveredMessageId",
+                          "lastDeliveredAt",
                           "lastReadMessageId",
                           "lastReadAt"
                         ],
@@ -2357,6 +2393,94 @@
         }
       }
     },
+    "/v1/chats/{id}/delivered": {
+      "post": {
+        "summary": "Acknowledge that this device received messages up to `messageId` (or the latest)",
+        "tags": [
+          "chats"
+        ],
+        "description": "Clients call this automatically when they receive someone else's message. Returns null when nothing changed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "not": {}
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "messageId": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "additionalProperties": false,
+                    "nullable": true
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "lastDeliveredMessageId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "lastDeliveredAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "chatId",
+                    "userId",
+                    "lastDeliveredMessageId",
+                    "lastDeliveredAt"
+                  ],
+                  "additionalProperties": false,
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sync": {
       "get": {
         "summary": "Changes since an event cursor",
@@ -2745,6 +2869,16 @@
                                           ],
                                           "additionalProperties": false
                                         },
+                                        "lastDeliveredMessageId": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "nullable": true
+                                        },
+                                        "lastDeliveredAt": {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "nullable": true
+                                        },
                                         "lastReadMessageId": {
                                           "type": "string",
                                           "minLength": 1,
@@ -2758,6 +2892,8 @@
                                       },
                                       "required": [
                                         "user",
+                                        "lastDeliveredMessageId",
+                                        "lastDeliveredAt",
                                         "lastReadMessageId",
                                         "lastReadAt"
                                       ],
@@ -2895,6 +3031,58 @@
                                   "autoDeleteSecs",
                                   "lastActivityAt",
                                   "createdAt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "eventId",
+                              "type",
+                              "data",
+                              "createdAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "eventId": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "chat.delivered"
+                                ]
+                              },
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "chatId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "userId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "lastDeliveredMessageId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "lastDeliveredAt": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  }
+                                },
+                                "required": [
+                                  "chatId",
+                                  "userId",
+                                  "lastDeliveredMessageId",
+                                  "lastDeliveredAt"
                                 ],
                                 "additionalProperties": false
                               },

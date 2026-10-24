@@ -629,6 +629,9 @@ export interface paths {
                                         /** Format: uri */
                                         avatarUrl: string | null;
                                     };
+                                    lastDeliveredMessageId: string | null;
+                                    /** Format: date-time */
+                                    lastDeliveredAt: string | null;
                                     lastReadMessageId: string | null;
                                     /** Format: date-time */
                                     lastReadAt: string | null;
@@ -717,6 +720,9 @@ export interface paths {
                                     /** Format: uri */
                                     avatarUrl: string | null;
                                 };
+                                lastDeliveredMessageId: string | null;
+                                /** Format: date-time */
+                                lastDeliveredAt: string | null;
                                 lastReadMessageId: string | null;
                                 /** Format: date-time */
                                 lastReadAt: string | null;
@@ -828,6 +834,9 @@ export interface paths {
                                     /** Format: uri */
                                     avatarUrl: string | null;
                                 };
+                                lastDeliveredMessageId: string | null;
+                                /** Format: date-time */
+                                lastDeliveredAt: string | null;
                                 lastReadMessageId: string | null;
                                 /** Format: date-time */
                                 lastReadAt: string | null;
@@ -1154,6 +1163,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/chats/{id}/delivered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Acknowledge that this device received messages up to `messageId` (or the latest)
+         * @description Clients call this automatically when they receive someone else's message. Returns null when nothing changed.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": unknown | ({
+                        messageId?: string;
+                    } | null);
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            chatId: string;
+                            userId: string;
+                            lastDeliveredMessageId: string;
+                            /** Format: date-time */
+                            lastDeliveredAt: string;
+                        } | null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/sync": {
         parameters: {
             query?: never;
@@ -1270,6 +1332,9 @@ export interface paths {
                                             /** Format: uri */
                                             avatarUrl: string | null;
                                         };
+                                        lastDeliveredMessageId: string | null;
+                                        /** Format: date-time */
+                                        lastDeliveredAt: string | null;
                                         lastReadMessageId: string | null;
                                         /** Format: date-time */
                                         lastReadAt: string | null;
@@ -1306,6 +1371,18 @@ export interface paths {
                                     lastActivityAt: string;
                                     /** Format: date-time */
                                     createdAt: string;
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "chat.delivered";
+                                data: {
+                                    chatId: string;
+                                    userId: string;
+                                    lastDeliveredMessageId: string;
+                                    /** Format: date-time */
+                                    lastDeliveredAt: string;
                                 };
                                 createdAt: string;
                             } | {

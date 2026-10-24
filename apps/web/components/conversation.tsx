@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
+import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { Composer } from "./composer";
@@ -20,6 +21,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const { realtime } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
+  const typing = useIsTyping(chatId);
 
   useEffect(() => {
     setActiveChat(chatId);
@@ -74,8 +76,14 @@ export function Conversation({ chatId }: { chatId: string }) {
         <Avatar user={peer} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{c.title}</p>
-          {(c.muted || c.archived) && (
-            <p className="text-xs text-stone-500">{[c.muted && "Muted", c.archived && "Archived"].filter(Boolean).join(" · ")}</p>
+          {typing ? (
+            <p className="text-xs font-medium text-brand">typing…</p>
+          ) : (
+            (c.muted || c.archived) && (
+              <p className="text-xs text-stone-500">
+                {[c.muted && "Muted", c.archived && "Archived"].filter(Boolean).join(" · ")}
+              </p>
+            )
           )}
         </div>
         <button

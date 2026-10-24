@@ -1,12 +1,21 @@
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import { ZodError, z } from "zod";
-import { type Ack, type AckResult, AppError, MarkReadInput, SendMessageInput } from "@six/shared";
+import {
+  type Ack,
+  type AckResult,
+  AppError,
+  MarkDeliveredInput,
+  MarkReadInput,
+  SendMessageInput,
+  TypingInput,
+} from "@six/shared";
 import { env } from "../env.js";
+import { prisma } from "../lib/prisma.js";
 import { type IO, rooms, setIo } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
-import { markRead } from "../services/chats.js";
-import { sendMessage } from "../services/messages.js";
+import { markDelivered, markRead } from "../services/chats.js";
+import { assertMember, sendMessage } from "../services/messages.js";
 
 declare module "socket.io" {
   interface SocketData {
@@ -68,6 +77,27 @@ export function createSocketServer(http: HttpServer) {
     socket.on(
       "chat:read",
       handle((p) => markRead(userId, ChatRef.parse(p).chatId, MarkReadInput.parse(p))),
+    );
+
+    socket.on(
+      "chat:delivered",
+      handle((p) => markDelivered(userId, ChatRef.parse(p).chatId, MarkDeliveredInput.parse(p))),
+    );
+
+    socket.on(
+      "chat:typing",
+      handle(async (p) => {
+        const { chatId, typing } = TypingInput.parse(p);
+        await assertMember(prisma, chatId, userId);
+        const others = await prisma.chatMember.findMany({
+          where: { chatId, userId: { not: userId } },
+          select: { userId: true },
+        });
+        if (others.length) {
+          io.to(others.map((m) => rooms.user(m.userId))).emit("typing", { chatId, userId, typing });
+        }
+        return null;
+      }),
     );
   });
 

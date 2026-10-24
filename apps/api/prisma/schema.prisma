@@ -107,6 +107,8 @@ model ChatMember {
   muted             Boolean   @default(false)
   pinned            Boolean   @default(false)
   autoDeleteSecs    Int?
+  lastDeliveredMessageId String?
+  lastDeliveredAt        DateTime?
   lastReadMessageId String?
   lastReadAt        DateTime?
   hidden            Boolean   @default(false)

@@ -58,6 +58,13 @@ export function Composer({
   }, [mode, editing, chatId]);
 
   useEffect(() => {
+    if (!realtime || editing) return;
+    realtime.setTyping(chatId, text.trim().length > 0);
+  }, [realtime, chatId, text, editing]);
+
+  useEffect(() => () => realtime?.setTyping(chatId, false), [realtime, chatId]);
+
+  useEffect(() => {
     const el = ref.current;
     if (!el) return;
     el.style.height = "auto";
@@ -94,6 +101,7 @@ export function Composer({
       cancel();
       return;
     }
+    realtime.setTyping(chatId, false);
     sendText(qc, realtime, chatId, trimmed, mode?.kind === "reply" ? mode.message : undefined);
     drafts.delete(chatId);
     setText("");

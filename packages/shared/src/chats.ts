@@ -65,6 +65,8 @@ export type SendMessageInput = z.infer<typeof SendMessageInput>;
 
 export const ChatMemberDTO = z.object({
   user: PublicUser,
+  lastDeliveredMessageId: Id.nullable(),
+  lastDeliveredAt: IsoDate.nullable(),
   lastReadMessageId: Id.nullable(),
   lastReadAt: IsoDate.nullable(),
 });
@@ -100,6 +102,23 @@ export const MarkReadInput = z.object({
   messageId: Id.optional(),
 });
 export type MarkReadInput = z.infer<typeof MarkReadInput>;
+
+export const MarkDeliveredInput = MarkReadInput;
+export type MarkDeliveredInput = MarkReadInput;
+
+export const ChatDeliveredDTO = z.object({
+  chatId: Id,
+  userId: Id,
+  lastDeliveredMessageId: Id,
+  lastDeliveredAt: IsoDate,
+});
+export type ChatDeliveredDTO = z.infer<typeof ChatDeliveredDTO>;
+
+export const TypingInput = z.object({ chatId: Id, typing: z.boolean() });
+export type TypingInput = z.infer<typeof TypingInput>;
+
+export const TypingDTO = TypingInput.extend({ userId: Id });
+export type TypingDTO = z.infer<typeof TypingDTO>;
 
 export const ChatReadDTO = z.object({
   chatId: Id,

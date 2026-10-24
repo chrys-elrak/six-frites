@@ -9,6 +9,7 @@ import { useChats } from "@/lib/chats";
 import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
+import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 
@@ -25,6 +26,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
   const router = useRouter();
   const [menu, setMenu] = useState(false);
   const press = useLongPress(() => setMenu(true));
+  const typing = useIsTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const unread = chat.unreadCount > 0;
   return (
@@ -50,8 +52,16 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <p className={`min-w-0 flex-1 truncate text-sm ${unread ? "text-stone-900 dark:text-stone-100" : "text-stone-500 dark:text-stone-400"}`}>
-              {preview(chat, meId)}
+            <p
+              className={`min-w-0 flex-1 truncate text-sm ${
+                typing
+                  ? "font-medium text-brand"
+                  : unread
+                    ? "text-stone-900 dark:text-stone-100"
+                    : "text-stone-500 dark:text-stone-400"
+              }`}
+            >
+              {typing ? "typing…" : preview(chat, meId)}
             </p>
             {chat.pinned && !unread && (
               <span aria-label="Pinned" className="text-xs">
