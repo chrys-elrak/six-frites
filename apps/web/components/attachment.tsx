@@ -5,6 +5,7 @@ import { AlertCircle, Download, EyeOff, FileText, Loader2, Pause, Play, X } from
 import { useEffect, useRef, useState } from "react";
 import { formatBytes, formatDuration } from "@/lib/format";
 import type { PendingAttachment } from "@/lib/outbox";
+import { usePlaybackRate } from "@/lib/playback";
 
 export type ShownAttachment =
   | { source: "server"; data: AttachmentDTO }
@@ -103,7 +104,25 @@ function boxSize(width: number | null, height: number | null) {
 
 let playing: HTMLMediaElement | null = null;
 
-function VoicePlayer({
+function SpeedButton({ className = "" }: { className?: string }) {
+  const rate = usePlaybackRate((s) => s.rate);
+  const next = usePlaybackRate((s) => s.next);
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        next();
+      }}
+      aria-label={`Playback speed ${rate}×, tap to change`}
+      className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${className}`}
+    >
+      {rate}×
+    </button>
+  );
+}
+
+export function VoicePlayer({
   url,
   durationMs,
   waveform,
@@ -117,15 +136,20 @@ function VoicePlayer({
   const audio = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
+  const rate = usePlaybackRate((s) => s.rate);
   const bars = waveform ?? Array.from({ length: 48 }, () => 18);
   const total = durationMs ?? 0;
 
   useEffect(() => () => audio.current?.pause(), []);
+  useEffect(() => {
+    if (audio.current) audio.current.playbackRate = rate;
+  }, [rate]);
 
   function toggle() {
     if (!url) return;
     if (!audio.current) {
       const el = new Audio(url);
+      el.playbackRate = rate;
       el.ontimeupdate = () => setPosition(el.currentTime * 1000);
       el.onplay = () => setPlaying(true);
       el.onpause = () => setPlaying(false);
@@ -175,7 +199,10 @@ function VoicePlayer({
             />
           ))}
         </div>
-        <p className="text-[11px] opacity-70">{formatDuration(isPlaying || position ? position : total)}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-[11px] opacity-70">{formatDuration(isPlaying || position ? position : total)}</p>
+          <SpeedButton className={mine ? "bg-brand-ink/15" : "bg-brand/15 text-brand"} />
+        </div>
       </div>
     </div>
   );
@@ -197,9 +224,14 @@ function VideoNote({
   progress: number;
 }) {
   const video = useRef<HTMLVideoElement>(null);
+  const rate = usePlaybackRate((s) => s.rate);
   const [isPlaying, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const total = durationMs ? durationMs / 1000 : 0;
+
+  useEffect(() => {
+    if (video.current) video.current.playbackRate = rate;
+  }, [rate]);
 
   function toggle() {
     const el = video.current;
@@ -208,6 +240,7 @@ function VideoNote({
       if (playing && playing !== el) playing.pause();
       playing = el;
       el.muted = false;
+      el.playbackRate = rate;
       void el.play();
     } else el.pause();
   }
@@ -217,59 +250,62 @@ function VideoNote({
   const done = total ? position / total : 0;
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={!url}
-      aria-label={isPlaying ? "Pause video message" : "Play video message"}
-      className="relative block size-56 shrink-0 md:size-64"
-    >
-      <span className="absolute inset-0 overflow-hidden rounded-full bg-stone-300 dark:bg-stone-700">
-        <video
-          ref={video}
-          src={url ?? local ?? undefined}
-          poster={poster ?? undefined}
-          playsInline
-          preload="metadata"
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => {
-            setPlaying(false);
-            setPosition(0);
-          }}
-          onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
-          className="size-full object-cover"
-        />
-      </span>
-      {isPlaying && (
-        <svg viewBox="0 0 100 100" className="pointer-events-none absolute -inset-1.5 -rotate-90" aria-hidden>
-          <circle
-            cx="50"
-            cy="50"
-            r={r}
-            fill="none"
-            stroke="var(--color-brand)"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeDasharray={c}
-            strokeDashoffset={c * (1 - done)}
+    <div className="flex flex-col items-center gap-1.5">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={!url}
+        aria-label={isPlaying ? "Pause video message" : "Play video message"}
+        className="relative block size-56 shrink-0 md:size-64"
+      >
+        <span className="absolute inset-0 overflow-hidden rounded-full bg-stone-300 dark:bg-stone-700">
+          <video
+            ref={video}
+            src={url ?? local ?? undefined}
+            poster={poster ?? undefined}
+            playsInline
+            preload="metadata"
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => {
+              setPlaying(false);
+              setPosition(0);
+            }}
+            onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
+            className="size-full object-cover"
           />
-        </svg>
-      )}
-      {state === "ready" && !isPlaying && (
-        <span className="absolute inset-0 grid place-items-center">
-          <span className="grid size-12 place-items-center rounded-full bg-black/45 text-white">
-            <Play className="ml-0.5 size-6 fill-current" />
-          </span>
         </span>
-      )}
-      <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white">
-        {formatDuration(isPlaying ? position * 1000 : durationMs)}
-      </span>
-      <span className="absolute inset-0 overflow-hidden rounded-full">
-        <Overlay state={state} progress={progress} />
-      </span>
-    </button>
+        {isPlaying && (
+          <svg viewBox="0 0 100 100" className="pointer-events-none absolute -inset-1.5 -rotate-90" aria-hidden>
+            <circle
+              cx="50"
+              cy="50"
+              r={r}
+              fill="none"
+              stroke="var(--color-brand)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeDasharray={c}
+              strokeDashoffset={c * (1 - done)}
+            />
+          </svg>
+        )}
+        {state === "ready" && !isPlaying && (
+          <span className="absolute inset-0 grid place-items-center">
+            <span className="grid size-12 place-items-center rounded-full bg-black/45 text-white">
+              <Play className="ml-0.5 size-6 fill-current" />
+            </span>
+          </span>
+        )}
+        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white">
+          {formatDuration(isPlaying ? position * 1000 : durationMs)}
+        </span>
+        <span className="absolute inset-0 overflow-hidden rounded-full">
+          <Overlay state={state} progress={progress} />
+        </span>
+      </button>
+      {isPlaying && <SpeedButton className="bg-black/50 text-white" />}
+    </div>
   );
 }
 

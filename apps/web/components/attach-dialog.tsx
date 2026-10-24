@@ -1,10 +1,11 @@
 "use client";
 
 import { kindFor } from "@six/sdk";
-import type { UploadKind } from "@six/shared";
+import type { EphemeralInput, UploadKind } from "@six/shared";
 import { EyeOff, FileText, SendHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { formatBytes } from "@/lib/format";
+import { EphemeralPicker } from "./ephemeral-picker";
 
 export interface PickedFile {
   file: File;
@@ -83,13 +84,15 @@ function Preview({
 export function AttachDialog({
   files,
   initialCaption,
+  initialEphemeral,
   onCancel,
   onSend,
 }: {
   files: File[];
   initialCaption: string;
+  initialEphemeral: EphemeralInput | null;
   onCancel: () => void;
-  onSend: (items: PickedFile[], caption: string) => void;
+  onSend: (items: PickedFile[], caption: string, ephemeral: EphemeralInput | null) => void;
 }) {
   const [items, setItems] = useState<Item[]>(() =>
     files.map((file) => ({
@@ -102,6 +105,7 @@ export function AttachDialog({
   const [urls, setUrls] = useState<Record<string, string>>({});
   const fileIds = items.map((i) => i.id).join();
   const [caption, setCaption] = useState(initialCaption);
+  const [ephemeral, setEphemeral] = useState(initialEphemeral);
   const input = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const made = Object.fromEntries(items.map((i) => [i.id, URL.createObjectURL(i.file)]));
@@ -131,6 +135,7 @@ export function AttachDialog({
     onSend(
       items.map(({ file, kind, spoiler }) => ({ file, kind, spoiler })),
       caption,
+      ephemeral,
     );
 
   const title =
@@ -205,6 +210,10 @@ export function AttachDialog({
           {media.length > 0 && (
             <p className="px-1 text-xs text-stone-500">Tap the eye on a photo or video to hide it as a spoiler.</p>
           )}
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <span className="text-sm text-stone-500">Self-destruct after viewing</span>
+            <EphemeralPicker value={ephemeral} onChange={setEphemeral} />
+          </div>
         </div>
 
         <form

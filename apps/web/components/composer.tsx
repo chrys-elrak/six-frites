@@ -1,12 +1,13 @@
 "use client";
 
-import { type EntityType, type UploadKind, maskSpoilers } from "@six/shared";
+import { type EntityType, type EphemeralInput, type UploadKind, maskSpoilers } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bold,
   Check,
   Code,
   EyeOff,
+  Flame,
   Italic,
   type LucideIcon,
   Mic,
@@ -20,7 +21,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
 import { isTouch } from "@/lib/camera";
+import { shortRule } from "@/lib/ephemeral";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
+import { EphemeralPicker } from "./ephemeral-picker";
 import { CameraDialog } from "./camera-dialog";
 import { Sheet } from "./sheet";
 import { VideoNoteRecorder } from "./video-note-recorder";
@@ -100,6 +103,7 @@ export function Composer({
   const recorder = useRecorder();
   const [picked, setPicked] = useState<File[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
+  const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
   const closeCamera = useCallback(() => setCamera(false), []);
   const closeNoteRecorder = useCallback(() => setNoteRecorder(false), []);
 
@@ -109,8 +113,10 @@ export function Composer({
     void queueMessage(qc, realtime, chatId, {
       text: "",
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
+      ephemeral,
       file: { blob: file, kind: "video_note", name: file.name, mime: file.type || "video/webm" },
     });
+    setEphemeral(null);
     if (mode) cancel();
     onSent();
   }
@@ -231,9 +237,11 @@ export function Composer({
       entities: parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       spoiler: file ? false : spoiler,
+      ephemeral,
       file,
     });
     setSpoiler(false);
+    setEphemeral(null);
     drafts.delete(chatId);
     setText("");
     if (mode) cancel();
@@ -244,7 +252,7 @@ export function Composer({
     setPicked([...files]);
   }
 
-  function sendPicked(items: PickedFile[], caption: string) {
+  function sendPicked(items: PickedFile[], caption: string, chosen: EphemeralInput | null) {
     setPicked(null);
     if (!realtime) return;
     const { text: captionText, entities } = parseMarkup(caption);
@@ -256,12 +264,14 @@ export function Composer({
         entities: first ? entities : [],
         replyTo: first && mode?.kind === "reply" ? mode.message : undefined,
         spoiler: hidden && (kind === "image" || kind === "video"),
+        ephemeral: chosen,
         file: { blob: file, kind, name: file.name || "file", mime: file.type || "application/octet-stream" },
       });
     });
     drafts.delete(chatId);
     setText("");
     setSpoiler(false);
+    setEphemeral(null);
     if (mode) cancel();
     onSent();
   }
@@ -302,6 +312,23 @@ export function Composer({
             text={maskSpoilers(editing.text ?? "", editing.entities)}
             onCancel={cancel}
           />
+        )}
+        {ephemeral && !editing && (
+          <div className="flex items-center gap-2 px-1 text-sm text-orange-600 dark:text-orange-400">
+            <Flame className="size-4 fill-current" />
+            <span className="flex-1">
+              Self-destruct:{" "}
+              {shortRule({ maxViews: ephemeral.maxViews ?? null, ttlSeconds: ephemeral.ttlSeconds ?? null })}
+            </span>
+            <button
+              type="button"
+              onClick={() => setEphemeral(null)}
+              aria-label="Turn off self-destruct"
+              className="grid size-7 place-items-center rounded-full hover:bg-orange-500/10"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         )}
         {error && (
           <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
@@ -439,6 +466,7 @@ export function Composer({
               >
                 <EyeOff className="size-5" />
               </button>
+              {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
             </div>
             {showMic ? (
               <button
@@ -480,7 +508,13 @@ export function Composer({
       )}
       {noteRecorder && <VideoNoteRecorder onClose={closeNoteRecorder} onSend={sendVideoNote} />}
       {picked && (
-        <AttachDialog files={picked} initialCaption={editing ? "" : text} onCancel={closePicker} onSend={sendPicked} />
+        <AttachDialog
+          files={picked}
+          initialCaption={editing ? "" : text}
+          initialEphemeral={ephemeral}
+          onCancel={closePicker}
+          onSend={sendPicked}
+        />
       )}
     </>
   );

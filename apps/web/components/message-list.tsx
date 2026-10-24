@@ -1,6 +1,7 @@
 "use client";
 
-import type { ChatDTO, EntityType, MessageDTO, MessageEntity, ReplyPreview } from "@six/shared";
+import { unwrap } from "@six/sdk";
+import type { ChatDTO, EphemeralDTO, MessageDTO, MessageEntity, ReplyPreview, ViewMessageResult } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Ban,
@@ -11,6 +12,7 @@ import {
   CircleUserRound,
   Clock,
   EyeOff,
+  Flame,
   Image as ImageIcon,
   MessageCircle,
   Mic,
@@ -18,9 +20,20 @@ import {
   Paperclip,
   Video,
 } from "lucide-react";
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { VList, type VListHandle } from "virtua";
 import { deleteMessage } from "@/lib/actions";
+import { shortRule } from "@/lib/ephemeral";
+import { six } from "@/lib/six";
 import { useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { clockTime, dayLabel, sameDay } from "@/lib/format";
@@ -34,6 +47,8 @@ import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
+import { EphemeralViewer } from "./ephemeral-viewer";
+import { Styled } from "./rich-text";
 import { Sheet, type SheetAction } from "./sheet";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
@@ -53,6 +68,8 @@ interface MsgRow {
   deleted: boolean;
   edited: boolean;
   attachment: ShownAttachment | null;
+  type: MessageDTO["type"];
+  ephemeral: EphemeralDTO | null;
   groupStart: boolean;
   groupEnd: boolean;
   delivery: Delivery | null;
@@ -92,6 +109,8 @@ function buildRows(
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
         attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
+        type: m.type,
+        ephemeral: m.ephemeral,
       },
     })),
     ...pending
@@ -114,6 +133,17 @@ function buildRows(
           edited: false,
           attachment: p.attachment
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
+            : null,
+          type: (p.attachment?.kind ?? "text") as MessageDTO["type"],
+          ephemeral: p.ephemeral
+            ? {
+                maxViews: p.ephemeral.maxViews ?? null,
+                ttlSeconds: p.ephemeral.ttlSeconds ?? null,
+                views: 0,
+                firstViewedAt: null,
+                locked: false,
+                expired: false,
+              }
             : null,
         },
       })),
@@ -190,6 +220,10 @@ function Quote({
       <span className={`line-clamp-2 ${reply.deleted || reply.spoiler ? "italic opacity-70" : "opacity-80"}`}>
         {reply.deleted ? (
           "Message deleted"
+        ) : reply.ephemeral ? (
+          <span className="inline-flex items-center gap-1">
+            <Flame className="size-3.5" /> Self-destructing message
+          </span>
         ) : reply.spoiler ? (
           <span className="inline-flex items-center gap-1">
             <EyeOff className="size-3.5" /> Spoiler
@@ -222,17 +256,6 @@ export function MediaLabel({ type }: { type: Exclude<MessageDTO["type"], "text">
       <Icon className="size-3.5 shrink-0" /> {label}
     </>
   );
-}
-
-function Styled({ styles, children }: { styles: Set<EntityType>; children: React.ReactNode }) {
-  let node = children;
-  if (styles.has("code")) {
-    node = <code className="rounded bg-black/10 px-1 py-px font-mono text-[0.9em] dark:bg-white/10">{node}</code>;
-  }
-  if (styles.has("strike")) node = <s>{node}</s>;
-  if (styles.has("italic")) node = <em>{node}</em>;
-  if (styles.has("bold")) node = <strong className="font-semibold">{node}</strong>;
-  return <>{node}</>;
 }
 
 function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) {
@@ -272,6 +295,42 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
   );
 }
 
+function Sealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
+  const e = row.ephemeral!;
+  const kind = row.type === "text" ? "Message" : mediaLabels[row.type].label;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      disabled={e.expired}
+      className="flex min-w-48 items-center gap-3 py-1 text-left disabled:cursor-default"
+    >
+      <span
+        className={`grid size-10 shrink-0 place-items-center rounded-full ${
+          e.expired ? "bg-stone-500/15 text-stone-500" : "bg-orange-500/15 text-orange-600 dark:text-orange-400"
+        }`}
+      >
+        <Flame className={`size-5 ${e.expired ? "" : "fill-current"}`} />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-semibold">{e.expired ? "Opened" : "Tap to view"}</span>
+        <span className="block text-xs opacity-70">
+          {kind} · {shortRule(e)}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function SenderBadge({ e }: { e: EphemeralDTO }) {
+  return (
+    <span className="mb-0.5 flex items-center gap-1 text-[11px] opacity-80">
+      <Flame className="size-3" />
+      {shortRule(e)} · {e.views ? `Opened${e.views > 1 ? ` ${e.views}×` : ""}` : "Not opened"}
+    </span>
+  );
+}
+
 function Bubble({
   row,
   highlighted,
@@ -282,6 +341,7 @@ function Bubble({
   onQuote,
   onToggle,
   onOpen,
+  onOpenEphemeral,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -292,18 +352,27 @@ function Bubble({
   onQuote: (id: string) => void;
   onToggle: () => void;
   onOpen: (item: LightboxItem) => void;
+  onOpenEphemeral: () => void;
 }) {
   const selectable = selecting && row.message !== null;
   const press = useLongPress(selectable ? onToggle : onMenu);
   const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
+  const sealed = !!row.ephemeral && (row.ephemeral.locked || row.ephemeral.expired);
   const jumbo =
-    !row.deleted && !row.attachment && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text
+    !row.deleted &&
+    !row.ephemeral &&
+    !row.attachment &&
+    !row.spoiler &&
+    !row.replyTo &&
+    row.entities.length === 0 &&
+    row.text
       ? emojiOnly(row.text)
       : null;
-  const visual = row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
-  const note = row.attachment?.data.kind === "video_note" && !row.deleted;
+  const visual =
+    !sealed && row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
+  const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const hasText = !!row.text || row.deleted;
   const radius = mine
     ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
@@ -358,7 +427,8 @@ function Bubble({
                   onClick={() => onQuote(row.replyTo!.id)}
                 />
               )}
-              {row.attachment && !row.deleted && (
+              {row.ephemeral && !sealed && !row.deleted && <SenderBadge e={row.ephemeral} />}
+              {row.attachment && !row.deleted && !sealed && (
                 <AttachmentView
                   attachment={row.attachment}
                   mine={mine}
@@ -367,7 +437,15 @@ function Bubble({
                   onReveal={() => revealMedia(row.key)}
                 />
               )}
-              {jumbo ? (
+              {sealed ? (
+                <div className="flex items-end gap-2">
+                  <Sealed row={row} onOpen={onOpenEphemeral} />
+                  <span className="mb-1 flex shrink-0 items-center gap-1 text-[11px] leading-none opacity-70">
+                    {clockTime(row.createdAt)}
+                    {row.delivery && <Ticks delivery={row.delivery} />}
+                  </span>
+                </div>
+              ) : jumbo ? (
                 <div className="flex flex-col items-end">
                   <div className="flex">
                     {jumbo.map((e, i) => (
@@ -442,6 +520,17 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
+    const [opened, setOpened] = useState<ViewMessageResult | null>(null);
+    const closeOpened = useCallback(() => setOpened(null), []);
+
+    async function openEphemeral(row: MsgRow) {
+      if (!row.id) return;
+      try {
+        setOpened(unwrap(await six.api.POST("/v1/messages/{id}/view", { params: { path: { id: row.id } } })));
+      } catch {
+        void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
+      }
+    }
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
     const nameOf = (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
@@ -542,8 +631,12 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       return [
         { label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) },
         { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
-        { label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") },
-        ...(row.mine ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }] : []),
+        ...(m.ephemeral
+          ? []
+          : [
+              { label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") },
+              ...(row.mine ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }] : []),
+            ]),
         { label: "Delete", destructive: true, onSelect: () => setConfirmDelete(m) },
       ];
     }
@@ -587,12 +680,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onQuote={jumpTo}
                 onToggle={() => row.id && toggleSelected(row.id)}
                 onOpen={setLightbox}
+                onOpenEphemeral={() => void openEphemeral(row)}
               />
             )
           }
         </VList>
 
         {menuFor && <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)} />}
+        {opened && <EphemeralViewer message={opened.message} expiresAt={opened.expiresAt} onClose={closeOpened} />}
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
         {confirmDelete && (
           <Sheet

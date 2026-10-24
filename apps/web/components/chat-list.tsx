@@ -1,7 +1,7 @@
 "use client";
 
 import { type ChatDTO, maskSpoilers } from "@six/shared";
-import { Archive, Ban, BellOff, ChevronLeft, EyeOff, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
+import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -24,6 +24,25 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
     return (
       <span className="inline-flex items-center gap-1 italic">
         <Ban className="size-3.5" /> Message deleted
+      </span>
+    );
+  }
+  if (m.ephemeral) {
+    const kind =
+      m.type === "text"
+        ? "message"
+        : m.type === "video_note"
+          ? "video message"
+          : m.type === "voice"
+            ? "voice message"
+            : m.type === "image"
+              ? "photo"
+              : m.type;
+    return (
+      <span className="inline-flex items-center gap-1">
+        {m.senderId === meId && "You: "}
+        <Flame className="size-3.5 shrink-0 text-orange-500" />
+        {m.ephemeral.expired ? "Opened" : `Self-destructing ${kind}`}
       </span>
     );
   }

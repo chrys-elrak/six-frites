@@ -1,4 +1,4 @@
-import type { MessageEntity, ReplyPreview, UploadKind } from "@six/shared";
+import type { EphemeralInput, MessageEntity, ReplyPreview, UploadKind } from "@six/shared";
 import { create } from "zustand";
 
 export interface PendingAttachment {
@@ -20,6 +20,7 @@ export interface PendingMessage {
   entities: MessageEntity[];
   replyTo: ReplyPreview | null;
   spoiler: boolean;
+  ephemeral: EphemeralInput | null;
   attachment: PendingAttachment | null;
   createdAt: string;
   status: "sending" | "failed";

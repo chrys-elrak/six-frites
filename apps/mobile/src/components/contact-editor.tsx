@@ -1,0 +1,209 @@
+import { SixApiError, unwrap } from "@six/sdk";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Camera, Shuffle, Trash2, X } from "lucide-react-native";
+import { useRef, useState } from "react";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SvgXml } from "react-native-svg";
+import { captureRef } from "react-native-view-shot";
+import { updateContact } from "@/lib/actions";
+import { suggestAvatars } from "@/lib/avatar-suggestions";
+import { pickAvatar } from "@/lib/media";
+import { six } from "@/lib/six";
+import { brand, useTheme } from "@/lib/theme";
+import { Avatar } from "./avatar";
+import { IconButton, Notice, PrimaryButton } from "./ui";
+
+const MAX_BYTES = 64 * 1024;
+
+export function ContactEditor({ userId, onClose }: { userId: string; onClose: () => void }) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const qc = useQueryClient();
+  const contact = useQuery({
+    queryKey: ["contact", userId],
+    queryFn: async () => unwrap(await six.api.GET("/v1/contacts/{userId}", { params: { path: { userId } } })),
+  });
+  const [name, setName] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<string | null | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [suggestions, setSuggestions] = useState(() => suggestAvatars());
+  const [picked, setPicked] = useState<number | null>(null);
+  const [rendering, setRendering] = useState<string | null>(null);
+  const shot = useRef<View>(null);
+
+  const c = contact.data;
+  if (c && name === null) setName(c.customName ?? "");
+  const shownPhoto = photo === undefined ? (c?.user.avatarUrl ?? null) : photo;
+  const hasCustomPhoto = photo === undefined ? !!c?.hasCustomPhoto : photo !== null;
+
+  async function choosePhoto() {
+    setError(null);
+    try {
+      const url = await pickAvatar();
+      if (url) {
+        setPhoto(url);
+        setPicked(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't read that image.");
+    }
+  }
+
+  async function chooseSuggestion(i: number) {
+    setError(null);
+    setRendering(suggestions[i]!);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    try {
+      for (const quality of [0.85, 0.7, 0.55]) {
+        const base64 = await captureRef(shot, { format: "jpg", quality, result: "base64", width: 192, height: 192 });
+        if (Math.floor((base64.length * 3) / 4) <= MAX_BYTES) {
+          setPhoto(`data:image/jpeg;base64,${base64}`);
+          setPicked(i);
+          return;
+        }
+      }
+      throw new Error("too big");
+    } catch {
+      setError("Couldn't use that picture.");
+    }
+  }
+
+  async function save() {
+    if (!c) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const trimmed = (name ?? "").trim();
+      await updateContact(qc, userId, {
+        displayName: trimmed && trimmed !== c.originalName ? trimmed : null,
+        ...(photo !== undefined && { photo }),
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof SixApiError ? err.message : "Couldn't save. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+      <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
+      <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
+        <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
+          <View style={styles.head}>
+            <Text style={[styles.heading, { color: t.text }]}>Edit contact</Text>
+            <IconButton Icon={X} label="Close" onPress={onClose} />
+          </View>
+
+          {!c ? (
+            <Text style={{ color: t.muted, textAlign: "center", paddingVertical: 32 }}>
+              {contact.isError ? "Contact not found." : "Loading…"}
+            </Text>
+          ) : (
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 18 }}>
+              <View style={{ alignItems: "center", gap: 10 }}>
+                <Pressable onPress={choosePhoto} accessibilityLabel="Choose a photo">
+                  <Avatar user={{ displayName: name || c.originalName, avatarUrl: shownPhoto }} size="lg" />
+                  <View style={styles.cameraBadge}>
+                    <Camera size={22} color="#fff" />
+                  </View>
+                </Pressable>
+                {hasCustomPhoto && (
+                  <Pressable
+                    onPress={() => {
+                      setPhoto(null);
+                      setPicked(null);
+                    }}
+                    style={styles.removePhoto}
+                  >
+                    <Trash2 size={16} color={t.danger} />
+                    <Text style={{ color: t.danger, fontWeight: "600" }}>Remove photo</Text>
+                  </Pressable>
+                )}
+              </View>
+
+              <View style={{ gap: 8 }}>
+                <View style={styles.suggestHead}>
+                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>Or pick a picture</Text>
+                  <Pressable onPress={() => setSuggestions(suggestAvatars())} style={styles.shuffle} hitSlop={6}>
+                    <Shuffle size={16} color={brand} />
+                    <Text style={{ color: brand, fontWeight: "600" }}>Shuffle</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.grid}>
+                  {suggestions.map((svg, i) => (
+                    <Pressable
+                      key={i}
+                      onPress={() => void chooseSuggestion(i)}
+                      accessibilityLabel="Use this picture"
+                      style={[styles.suggestion, picked === i && { borderColor: brand }]}
+                    >
+                      <View style={styles.suggestionClip}>
+                        <SvgXml xml={svg} width="100%" height="100%" />
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              <View style={{ gap: 6 }}>
+                <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>Name</Text>
+                <TextInput
+                  value={name ?? ""}
+                  onChangeText={setName}
+                  placeholder={c.originalName}
+                  placeholderTextColor={t.muted}
+                  maxLength={64}
+                  style={[styles.input, { backgroundColor: t.field, color: t.text }]}
+                />
+                <View style={styles.suggestHead}>
+                  <Text style={{ color: t.muted, fontSize: 12 }}>Only you see this.</Text>
+                  {!!name && (
+                    <Pressable onPress={() => setName("")} hitSlop={6}>
+                      <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>Use their name</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+
+              {error && <Notice tone="error">{error}</Notice>}
+              <PrimaryButton title={saving ? "Saving…" : "Save"} disabled={saving} onPress={() => void save()} />
+            </ScrollView>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+
+      {rendering && (
+        <View ref={shot} collapsable={false} style={styles.offscreen}>
+          <SvgXml xml={rendering} width={192} height={192} />
+        </View>
+      )}
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { flex: 1, justifyContent: "flex-end" },
+  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, maxHeight: "92%" },
+  head: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  heading: { flex: 1, fontSize: 18, fontWeight: "700" },
+  cameraBadge: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 40,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removePhoto: { flexDirection: "row", alignItems: "center", gap: 6 },
+  suggestHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  shuffle: { flexDirection: "row", alignItems: "center", gap: 6 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  suggestion: { width: "14.5%", aspectRatio: 1, borderRadius: 999, borderWidth: 2, borderColor: "transparent", padding: 1 },
+  suggestionClip: { flex: 1, borderRadius: 999, overflow: "hidden" },
+  input: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
+  offscreen: { position: "absolute", left: -1000, top: 0, width: 192, height: 192, backgroundColor: "#fff" },
+});
