@@ -198,7 +198,7 @@ export function Composer({
       text: parsed.text,
       entities: parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
-      spoiler: file ? false : spoiler,
+      spoiler: file ? spoiler && (file.kind === "image" || file.kind === "video") : spoiler,
       file,
     });
     setSpoiler(false);
@@ -209,11 +209,13 @@ export function Composer({
   }
 
   function sendFiles(files: FileList | File[]) {
+    const hide = spoiler;
     [...files].forEach((f, i) => {
       const mime = f.type || "application/octet-stream";
       const file = { blob: f, kind: kindFor(mime), name: f.name || "file", mime };
+      const visual = file.kind === "image" || file.kind === "video";
       if (i === 0) send(file);
-      else if (realtime) void queueMessage(qc, realtime, chatId, { text: "", file });
+      else if (realtime) void queueMessage(qc, realtime, chatId, { text: "", file, spoiler: hide && visual });
     });
   }
 
@@ -357,7 +359,7 @@ export function Composer({
               rows={1}
               maxLength={4000}
               enterKeyHint={editing ? "done" : "send"}
-              placeholder={spoiler ? "Spoiler message" : "Message"}
+              placeholder={spoiler ? "Spoiler: text or photo" : "Message"}
               aria-label="Message"
               className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none"
             />
@@ -366,7 +368,7 @@ export function Composer({
               {...keepSelection(spoilerButton)}
               aria-pressed={!editing && spoiler}
               aria-label={spoiler && !editing ? "Send as normal message" : "Spoiler"}
-              title="Select text to hide just that part, or tap to send the whole message as a spoiler"
+              title="Select text to hide just that part, or turn on to send the next message or photo as a spoiler"
               className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
                 spoiler && !editing ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
               }`}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { AttachmentDTO } from "@six/shared";
-import { AlertCircle, Download, FileText, Loader2, Pause, Play, X } from "lucide-react";
+import { AlertCircle, Download, EyeOff, FileText, Loader2, Pause, Play, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { formatBytes, formatDuration } from "@/lib/format";
 import type { PendingAttachment } from "@/lib/outbox";
@@ -185,10 +185,14 @@ export function AttachmentView({
   attachment,
   mine,
   onOpen,
+  hidden = false,
+  onReveal,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
   onOpen: (item: LightboxItem) => void;
+  hidden?: boolean;
+  onReveal?: () => void;
 }) {
   const a = view(attachment);
 
@@ -200,14 +204,31 @@ export function AttachmentView({
     return (
       <button
         type="button"
-        onClick={open}
-        disabled={!ready}
+        onClick={hidden ? onReveal : open}
+        disabled={!ready && !hidden}
         className="relative block overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700"
         style={{ width: size.width, aspectRatio: size.aspectRatio, maxWidth: "100%" }}
-        aria-label={a.kind === "image" ? "Open photo" : "Play video"}
+        aria-label={hidden ? "Spoiler, tap to reveal" : a.kind === "image" ? "Open photo" : "Play video"}
       >
-        {a.thumbUrl && <img src={a.thumbUrl} alt="" className="size-full object-cover" draggable={false} />}
-        {a.kind === "video" && a.state === "ready" && (
+        {a.thumbUrl && (
+          <img
+            src={a.thumbUrl}
+            alt=""
+            className={`size-full object-cover transition duration-300 ${hidden ? "scale-125 blur-2xl brightness-75" : ""}`}
+            draggable={false}
+          />
+        )}
+        {hidden && (
+          <>
+            <span className="spoiler absolute inset-0 rounded-none text-white/85" aria-hidden />
+            <span className="absolute inset-0 grid place-items-center">
+              <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                <EyeOff className="size-3.5" /> Spoiler
+              </span>
+            </span>
+          </>
+        )}
+        {a.kind === "video" && a.state === "ready" && !hidden && (
           <>
             <span className="absolute inset-0 grid place-items-center">
               <span className="grid size-12 place-items-center rounded-full bg-black/50 text-white">

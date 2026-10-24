@@ -237,9 +237,10 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
   const revealed = useSpoilers((s) => !!s.revealed[row.key]);
   const reveal = useSpoilers((s) => s.reveal);
   const text = row.text ?? "";
-  const entities = row.spoiler
-    ? [...row.entities, { type: "spoiler" as const, offset: 0, length: text.length }]
-    : row.entities;
+  const entities =
+    row.spoiler && !row.attachment
+      ? [...row.entities, { type: "spoiler" as const, offset: 0, length: text.length }]
+      : row.entities;
   if (entities.length === 0) return <>{text}</>;
 
   return (
@@ -292,6 +293,8 @@ function Bubble({
 }) {
   const selectable = selecting && row.message !== null;
   const press = useLongPress(selectable ? onToggle : onMenu);
+  const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
+  const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
   const jumbo =
     !row.deleted && !row.attachment && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text
@@ -352,7 +355,13 @@ function Bubble({
                 />
               )}
               {row.attachment && !row.deleted && (
-                <AttachmentView attachment={row.attachment} mine={mine} onOpen={onOpen} />
+                <AttachmentView
+                  attachment={row.attachment}
+                  mine={mine}
+                  onOpen={onOpen}
+                  hidden={row.spoiler && !mediaRevealed}
+                  onReveal={() => revealMedia(row.key)}
+                />
               )}
               {jumbo ? (
                 <div className="flex flex-col items-end">
