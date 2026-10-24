@@ -1,0 +1,25 @@
+{
+  "name": "six-frites",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @six/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:migrate": "npm run db:migrate -w @six/api",
+    "dev:web": "npm run dev -w @six/web",
+    "sdk:generate": "npm run openapi -w @six/api && npm run generate -w @six/sdk"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "prisma@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.28.2": true,
+    "@prisma/client@6.19.3": true
+  }
+}

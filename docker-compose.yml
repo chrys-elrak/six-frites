@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: six
+      POSTGRES_PASSWORD: six
+      POSTGRES_DB: six
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U six"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  api:
+    build: { context: ., dockerfile: Dockerfile.dev }
+    working_dir: /repo/apps/api
+    command: sh -c "npx prisma migrate deploy && npx prisma generate && npx tsx watch src/server.ts"
+    env_file: apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://six:six@postgres:5432/six
+      REDIS_URL: redis://redis:6379
+    ports: ["4000:4000"]
+    volumes: &app-volumes
+      - .:/repo
+      - /repo/node_modules
+      - /repo/apps/api/node_modules
+      - /repo/apps/web/.next
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+
+  web:
+    build: { context: ., dockerfile: Dockerfile.dev }
+    working_dir: /repo/apps/web
+    command: npx next dev --port 3000 --hostname 0.0.0.0
+    environment:
+      WATCHPACK_POLLING: "true"
+    ports: ["3000:3000"]
+    volumes: *app-volumes
+    depends_on: [api]
+
+  minio:
+    image: minio/minio:latest
+    profiles: [storage]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [miniodata:/data]
+
+  minio-setup:
+    image: minio/mc:latest
+    profiles: [storage]
+    depends_on: [minio]
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minio minio12345; do sleep 1; done;
+      mc mb --ignore-existing local/six-media;
+      "
+
+volumes:
+  pgdata:
+  miniodata:

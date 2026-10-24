@@ -1,0 +1,27 @@
+{
+  "name": "@six/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@six/sdk": "*",
+    "@six/shared": "*",
+    "@tanstack/react-query": "^5.104.5",
+    "next": "^15.5.28",
+    "react": "^19.1.10",
+    "react-dom": "^19.1.10",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "tailwindcss": "^4.3.3"
+  }
+}

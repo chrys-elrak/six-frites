@@ -1,0 +1,544 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Six Frites API",
+    "version": "1.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {}
+  },
+  "paths": {
+    "/v1/auth/google": {
+      "post": {
+        "summary": "Sign in with a Google ID token",
+        "tags": [
+          "auth"
+        ],
+        "description": "Web clients receive the refresh token as an httpOnly cookie; native clients receive it in the body.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idToken": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "inviteCode": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "device": {
+                    "type": "object",
+                    "properties": {
+                      "platform": {
+                        "type": "string",
+                        "enum": [
+                          "web",
+                          "ios",
+                          "android"
+                        ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "maxLength": 100
+                      }
+                    },
+                    "required": [
+                      "platform"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "idToken",
+                  "device"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "accessTokenExpiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "avatarUrl",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "accessTokenExpiresAt",
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "summary": "Rotate the refresh token and get a new access token",
+        "tags": [
+          "auth"
+        ],
+        "description": "Send `refreshToken` in the body (native) or rely on the httpOnly cookie (web).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "not": {}
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "refreshToken": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "additionalProperties": false,
+                    "nullable": true
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "accessTokenExpiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "avatarUrl",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "accessTokenExpiresAt",
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "summary": "Revoke the current session",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "enum": [
+                    "null"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "summary": "Current user",
+        "tags": [
+          "me"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "avatarUrl",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update profile",
+        "tags": [
+          "me"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "avatarUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "avatarUrl",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sessions": {
+      "get": {
+        "summary": "List active sessions (devices)",
+        "tags": [
+          "sessions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "platform": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "ios",
+                              "android"
+                            ]
+                          },
+                          "deviceName": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "lastUsedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "current": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "platform",
+                          "deviceName",
+                          "createdAt",
+                          "lastUsedAt",
+                          "current"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Log out every other device",
+        "tags": [
+          "sessions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "revoked": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "revoked"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sessions/{id}": {
+      "delete": {
+        "summary": "Log out one device",
+        "tags": [
+          "sessions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "enum": [
+                    "null"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000"
+    }
+  ]
+}

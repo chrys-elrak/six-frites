@@ -1,0 +1,14 @@
+FROM node:24-alpine
+
+RUN apk add --no-cache openssl libc6-compat
+
+WORKDIR /repo
+
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY packages/shared/package.json packages/shared/
+COPY packages/sdk/package.json packages/sdk/
+COPY apps/api/prisma apps/api/prisma
+
+RUN npm ci

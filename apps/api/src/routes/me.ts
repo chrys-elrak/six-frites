@@ -1,0 +1,29 @@
+import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { UpdateMeInput, UserDTO } from "@six/shared";
+import { getMe, updateMe } from "../services/users.js";
+
+const meRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.addHook("onRequest", app.requireAuth);
+
+  app.get(
+    "/me",
+    { schema: { tags: ["me"], summary: "Current user", security: [{ bearer: [] }], response: { 200: UserDTO } } },
+    (req) => getMe(req.auth.userId),
+  );
+
+  app.patch(
+    "/me",
+    {
+      schema: {
+        tags: ["me"],
+        summary: "Update profile",
+        security: [{ bearer: [] }],
+        body: UpdateMeInput,
+        response: { 200: UserDTO },
+      },
+    },
+    (req) => updateMe(req.auth.userId, req.body),
+  );
+};
+
+export default meRoutes;

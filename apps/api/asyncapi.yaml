@@ -1,0 +1,38 @@
+asyncapi: 3.0.0
+info:
+  title: Six Frites Realtime
+  version: 1.0.0
+  description: |
+    Socket.IO transport. Authenticate in the handshake with `io(url, { auth: { token: accessToken } })`.
+    Every server event is wrapped as `{ eventId, data }`; `eventId` is the cursor for `GET /v1/sync?since=`.
+    Client actions use acknowledgements returning `{ ok: true, data }` or `{ ok: false, error }`.
+servers:
+  dev:
+    host: localhost:4000
+    protocol: ws
+channels:
+  session:
+    address: /
+    messages:
+      sessionRevoked:
+        name: session:revoked
+        payload:
+          type: object
+          properties:
+            eventId: { type: string }
+            data:
+              type: object
+              properties:
+                sessionId: { type: string }
+      ping:
+        name: ping
+        payload: { type: object }
+operations:
+  receiveSessionRevoked:
+    action: send
+    channel: { $ref: "#/channels/session" }
+    messages: [{ $ref: "#/channels/session/messages/sessionRevoked" }]
+  ping:
+    action: receive
+    channel: { $ref: "#/channels/session" }
+    messages: [{ $ref: "#/channels/session/messages/ping" }]

@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  googleSub   String   @unique
+  email       String   @unique
+  displayName String
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions    Session[]
+  invites     Invite[]
+  referredBy  Referral? @relation("referee")
+  referrals   Referral[] @relation("referrer")
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  creatorId String
+  maxUses   Int?
+  uses      Int       @default(0)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  creator   User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  referrals Referral[]
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  inviteId   String
+  referrerId String
+  refereeId  String   @unique
+  createdAt  DateTime @default(now())
+
+  invite   Invite @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+  referrer User   @relation("referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee  User   @relation("referee", fields: [refereeId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id               String      @id @default(cuid())
+  userId           String
+  platform         String
+  deviceName       String?
+  refreshTokenHash String      @unique
+  createdAt        DateTime    @default(now())
+  lastUsedAt       DateTime    @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pushTokens PushToken[]
+
+  @@index([userId])
+}
+
+model PushToken {
+  id        String  @id @default(cuid())
+  sessionId String
+  provider  String
+  token     String  @db.Text
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, provider])
+}
+
+model ChangeEvent {
+  id        BigInt   @id @default(autoincrement())
+  userId    String
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([userId, id])
+}

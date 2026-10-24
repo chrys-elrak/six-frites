@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: oklch(0.72 0.17 65);
+  --color-brand-ink: oklch(0.28 0.06 60);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100;
+}
