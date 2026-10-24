@@ -8,6 +8,7 @@ import {
   type MessageDTO,
   type MessageEntity,
   type ReplyPreview,
+  type StickerDTO,
   type ViewMessageResult,
   durationLabel,
 } from "@six/shared";
@@ -21,6 +22,7 @@ import {
   CircleUserRound,
   Clock,
   EyeOff,
+  Film,
   Flame,
   Image as ImageIcon,
   MessageCircle,
@@ -28,6 +30,7 @@ import {
   MoreHorizontal,
   Paperclip,
   RotateCcw,
+  Sticker as StickerIcon,
   Timer,
   Video,
   X,
@@ -59,8 +62,10 @@ import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
+import { PackDialog } from "./pack-dialog";
 import { Styled } from "./rich-text";
 import { Sheet, type SheetAction } from "./sheet";
+import { StickerView } from "./sticker";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
 
@@ -79,6 +84,7 @@ interface MsgRow {
   deleted: boolean;
   edited: boolean;
   attachment: ShownAttachment | null;
+  sticker: StickerDTO | null;
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   reveal: { expiresAt: string | null } | null;
@@ -121,6 +127,7 @@ function buildRows(
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
         attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
+        sticker: m.sticker,
         type: m.type,
         ephemeral: m.ephemeral,
         reveal: null,
@@ -147,7 +154,8 @@ function buildRows(
           attachment: p.attachment
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
             : null,
-          type: (p.attachment?.kind ?? "text") as MessageDTO["type"],
+          sticker: p.sticker,
+          type: (p.sticker ? "sticker" : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           reveal: null,
           ephemeral: p.ephemeral
             ? {
@@ -269,6 +277,8 @@ const mediaLabels = {
   video_note: { Icon: CircleUserRound, label: "Video message" },
   voice: { Icon: Mic, label: "Voice message" },
   file: { Icon: Paperclip, label: "File" },
+  gif: { Icon: Film, label: "GIF" },
+  sticker: { Icon: StickerIcon, label: "Sticker" },
 } as const;
 
 export function MediaLabel({ type }: { type: keyof typeof mediaLabels }) {
@@ -415,6 +425,7 @@ function Bubble({
   onOpenEphemeral,
   onHideReveal,
   onResend,
+  onOpenPack,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -428,6 +439,7 @@ function Bubble({
   onOpenEphemeral: () => void;
   onHideReveal: () => void;
   onResend: () => void;
+  onOpenPack: (packId: string) => void;
 }) {
   const selectable = selecting && row.message !== null;
   const press = useLongPress(selectable ? onToggle : onMenu);
@@ -446,15 +458,15 @@ function Bubble({
     row.text
       ? emojiOnly(row.text)
       : null;
-  const visual =
-    !sealed && row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
+  const visual = !sealed && row.attachment && ["image", "video", "gif"].includes(row.attachment.data.kind);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
+  const sticker = !sealed && !row.deleted ? row.sticker : null;
   const hasText = !!row.text || row.deleted;
   const radius = mine
     ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
     : `rounded-tr-2xl rounded-br-2xl ${groupStart ? "rounded-tl-2xl" : "rounded-tl-md"} ${groupEnd ? "rounded-bl-2xl" : "rounded-bl-md"}`;
   const tone =
-    jumbo || note
+    jumbo || note || sticker
       ? "bg-transparent text-stone-900 dark:text-stone-100"
       : row.deleted
         ? "bg-transparent text-stone-500 ring-1 ring-inset ring-stone-300 dark:ring-stone-700"
@@ -491,7 +503,7 @@ function Bubble({
           <div className="flex min-w-0 flex-col items-end gap-1">
             <div
               {...press}
-              className={`${radius} ${tone} ${jumbo || note ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${radius} ${tone} ${jumbo || note || sticker ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -522,6 +534,20 @@ function Bubble({
                 <div className="flex items-end gap-2">
                   <Sealed row={row} onOpen={onOpenEphemeral} />
                   <span className="mb-1 flex shrink-0 items-center gap-1 text-[11px] leading-none opacity-70">
+                    {clockTime(row.createdAt)}
+                    {row.delivery && <Ticks delivery={row.delivery} />}
+                  </span>
+                </div>
+              ) : sticker ? (
+                <div className="flex flex-col items-end">
+                  <button
+                    type="button"
+                    onClick={() => onOpenPack(sticker.packId)}
+                    aria-label={`${sticker.emoji} sticker, see its pack`}
+                  >
+                    <StickerView sticker={sticker} size={160} />
+                  </button>
+                  <span className="flex items-center gap-1 rounded-full bg-stone-900/40 px-2 py-0.5 text-[11px] leading-none text-white">
                     {clockTime(row.createdAt)}
                     {row.delivery && <Ticks delivery={row.delivery} />}
                   </span>
@@ -601,6 +627,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
+    const [packFor, setPackFor] = useState<string | null>(null);
     const [opened, setOpened] = useState<Record<string, ViewMessageResult>>({});
     const openedRef = useRef(opened);
     openedRef.current = opened;
@@ -761,8 +788,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ...(m.ephemeral
           ? []
           : [
-              { label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") },
-              ...(row.mine ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }] : []),
+              ...(m.text ? [{ label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") }] : []),
+              ...(row.mine && m.type !== "sticker"
+                ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
+                : []),
             ]),
         { label: "Delete", destructive: true, onSelect: () => setConfirmDelete(m) },
       ];
@@ -820,6 +849,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onOpenEphemeral={() => void openEphemeral(row)}
                 onHideReveal={() => row.id && hideReveal(row.id)}
                 onResend={() => row.message && void resendEphemeral(row.message)}
+                onOpenPack={setPackFor}
               />
             )
           }
@@ -827,6 +857,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 
         {menuFor && <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)} />}
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
+        {packFor && <PackDialog packId={packFor} onClose={() => setPackFor(null)} />}
         {confirmDelete && (
           <Sheet
             title="Delete message?"

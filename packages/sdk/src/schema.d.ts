@@ -642,7 +642,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -653,8 +653,11 @@ export interface paths {
                                     spoiler: boolean;
                                     attachment: {
                                         id: string;
-                                        /** @enum {string} */
-                                        kind: "image" | "video" | "video_note" | "voice" | "file";
+                                        /**
+                                         * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                         * @enum {string}
+                                         */
+                                        kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                         /** @enum {string} */
                                         status: "pending" | "processing" | "ready" | "failed";
                                         name: string;
@@ -671,6 +674,23 @@ export interface paths {
                                         height: number | null;
                                         durationMs: number | null;
                                         waveform: number[] | null;
+                                    } | null;
+                                    sticker: {
+                                        id: string;
+                                        packId: string;
+                                        emoji: string;
+                                        /**
+                                         * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                         * @enum {string}
+                                         */
+                                        format: "lottie" | "image";
+                                        /**
+                                         * Format: uri
+                                         * @description Null while an uploaded sticker is still being processed
+                                         */
+                                        url: string | null;
+                                        width: number | null;
+                                        height: number | null;
                                     } | null;
                                     ephemeral: {
                                         maxViews: number | null;
@@ -697,7 +717,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
@@ -798,7 +818,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -809,8 +829,11 @@ export interface paths {
                                 spoiler: boolean;
                                 attachment: {
                                     id: string;
-                                    /** @enum {string} */
-                                    kind: "image" | "video" | "video_note" | "voice" | "file";
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -827,6 +850,23 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
                                 } | null;
                                 ephemeral: {
                                     maxViews: number | null;
@@ -853,7 +893,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -982,7 +1022,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -993,8 +1033,11 @@ export interface paths {
                                 spoiler: boolean;
                                 attachment: {
                                     id: string;
-                                    /** @enum {string} */
-                                    kind: "image" | "video" | "video_note" | "voice" | "file";
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -1011,6 +1054,23 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
                                 } | null;
                                 ephemeral: {
                                     maxViews: number | null;
@@ -1037,7 +1097,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -1130,7 +1190,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1141,8 +1201,11 @@ export interface paths {
                             spoiler: boolean;
                             attachment: {
                                 id: string;
-                                /** @enum {string} */
-                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -1159,6 +1222,23 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
                             } | null;
                             ephemeral: {
                                 maxViews: number | null;
@@ -1185,7 +1265,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -1252,7 +1332,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1263,8 +1343,11 @@ export interface paths {
                                 spoiler: boolean;
                                 attachment: {
                                     id: string;
-                                    /** @enum {string} */
-                                    kind: "image" | "video" | "video_note" | "voice" | "file";
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -1281,6 +1364,23 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
                                 } | null;
                                 ephemeral: {
                                     maxViews: number | null;
@@ -1307,7 +1407,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -1383,7 +1483,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1394,8 +1494,11 @@ export interface paths {
                             spoiler: boolean;
                             attachment: {
                                 id: string;
-                                /** @enum {string} */
-                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -1412,6 +1515,23 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
                             } | null;
                             ephemeral: {
                                 maxViews: number | null;
@@ -1438,7 +1558,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -1550,7 +1670,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1561,8 +1681,11 @@ export interface paths {
                                 spoiler: boolean;
                                 attachment: {
                                     id: string;
-                                    /** @enum {string} */
-                                    kind: "image" | "video" | "video_note" | "voice" | "file";
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -1579,6 +1702,23 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
                                 } | null;
                                 ephemeral: {
                                     maxViews: number | null;
@@ -1605,7 +1745,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -1664,6 +1804,10 @@ export interface paths {
                         }[];
                         /** @description A completed upload from POST /v1/uploads/{id}/complete */
                         attachmentId?: string;
+                        /** @description A GIF from GET /v1/gifs; the server saves a copy and attaches it */
+                        gifId?: string;
+                        /** @description Send this sticker, on its own */
+                        stickerId?: string;
                         replyToId?: string;
                         spoiler?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
@@ -1689,7 +1833,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1700,8 +1844,11 @@ export interface paths {
                             spoiler: boolean;
                             attachment: {
                                 id: string;
-                                /** @enum {string} */
-                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -1718,6 +1865,23 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
                             } | null;
                             ephemeral: {
                                 maxViews: number | null;
@@ -1744,7 +1908,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -1813,7 +1977,7 @@ export interface paths {
                                 /** @description Becomes the clientId of the message once it is sent */
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1824,8 +1988,11 @@ export interface paths {
                                 spoiler: boolean;
                                 attachment: {
                                     id: string;
-                                    /** @enum {string} */
-                                    kind: "image" | "video" | "video_note" | "voice" | "file";
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -1851,7 +2018,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -1897,6 +2064,10 @@ export interface paths {
                         }[];
                         /** @description A completed upload from POST /v1/uploads/{id}/complete */
                         attachmentId?: string;
+                        /** @description A GIF from GET /v1/gifs; the server saves a copy and attaches it */
+                        gifId?: string;
+                        /** @description Send this sticker, on its own */
+                        stickerId?: string;
                         replyToId?: string;
                         spoiler?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
@@ -1927,7 +2098,7 @@ export interface paths {
                             /** @description Becomes the clientId of the message once it is sent */
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1938,8 +2109,11 @@ export interface paths {
                             spoiler: boolean;
                             attachment: {
                                 id: string;
-                                /** @enum {string} */
-                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -1965,7 +2139,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -2060,7 +2234,7 @@ export interface paths {
                             /** @description Becomes the clientId of the message once it is sent */
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -2071,8 +2245,11 @@ export interface paths {
                             spoiler: boolean;
                             attachment: {
                                 id: string;
-                                /** @enum {string} */
-                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -2098,7 +2275,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -2148,7 +2325,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -2159,8 +2336,11 @@ export interface paths {
                             spoiler: boolean;
                             attachment: {
                                 id: string;
-                                /** @enum {string} */
-                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -2177,6 +2357,23 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
                             } | null;
                             ephemeral: {
                                 maxViews: number | null;
@@ -2203,7 +2400,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -2535,7 +2732,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -2546,8 +2743,11 @@ export interface paths {
                                     spoiler: boolean;
                                     attachment: {
                                         id: string;
-                                        /** @enum {string} */
-                                        kind: "image" | "video" | "video_note" | "voice" | "file";
+                                        /**
+                                         * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                         * @enum {string}
+                                         */
+                                        kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                         /** @enum {string} */
                                         status: "pending" | "processing" | "ready" | "failed";
                                         name: string;
@@ -2564,6 +2764,23 @@ export interface paths {
                                         height: number | null;
                                         durationMs: number | null;
                                         waveform: number[] | null;
+                                    } | null;
+                                    sticker: {
+                                        id: string;
+                                        packId: string;
+                                        emoji: string;
+                                        /**
+                                         * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                         * @enum {string}
+                                         */
+                                        format: "lottie" | "image";
+                                        /**
+                                         * Format: uri
+                                         * @description Null while an uploaded sticker is still being processed
+                                         */
+                                        url: string | null;
+                                        width: number | null;
+                                        height: number | null;
                                     } | null;
                                     ephemeral: {
                                         maxViews: number | null;
@@ -2590,7 +2807,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
@@ -2625,7 +2842,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -2636,8 +2853,11 @@ export interface paths {
                                     spoiler: boolean;
                                     attachment: {
                                         id: string;
-                                        /** @enum {string} */
-                                        kind: "image" | "video" | "video_note" | "voice" | "file";
+                                        /**
+                                         * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                         * @enum {string}
+                                         */
+                                        kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                         /** @enum {string} */
                                         status: "pending" | "processing" | "ready" | "failed";
                                         name: string;
@@ -2654,6 +2874,23 @@ export interface paths {
                                         height: number | null;
                                         durationMs: number | null;
                                         waveform: number[] | null;
+                                    } | null;
+                                    sticker: {
+                                        id: string;
+                                        packId: string;
+                                        emoji: string;
+                                        /**
+                                         * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                         * @enum {string}
+                                         */
+                                        format: "lottie" | "image";
+                                        /**
+                                         * Format: uri
+                                         * @description Null while an uploaded sticker is still being processed
+                                         */
+                                        url: string | null;
+                                        width: number | null;
+                                        height: number | null;
                                     } | null;
                                     ephemeral: {
                                         maxViews: number | null;
@@ -2680,7 +2917,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
@@ -2748,7 +2985,7 @@ export interface paths {
                                         senderId: string;
                                         clientId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                         text: string | null;
                                         entities: {
                                             /** @enum {string} */
@@ -2759,8 +2996,11 @@ export interface paths {
                                         spoiler: boolean;
                                         attachment: {
                                             id: string;
-                                            /** @enum {string} */
-                                            kind: "image" | "video" | "video_note" | "voice" | "file";
+                                            /**
+                                             * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                             * @enum {string}
+                                             */
+                                            kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                             /** @enum {string} */
                                             status: "pending" | "processing" | "ready" | "failed";
                                             name: string;
@@ -2777,6 +3017,23 @@ export interface paths {
                                             height: number | null;
                                             durationMs: number | null;
                                             waveform: number[] | null;
+                                        } | null;
+                                        sticker: {
+                                            id: string;
+                                            packId: string;
+                                            emoji: string;
+                                            /**
+                                             * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                             * @enum {string}
+                                             */
+                                            format: "lottie" | "image";
+                                            /**
+                                             * Format: uri
+                                             * @description Null while an uploaded sticker is still being processed
+                                             */
+                                            url: string | null;
+                                            width: number | null;
+                                            height: number | null;
                                         } | null;
                                         ephemeral: {
                                             maxViews: number | null;
@@ -2803,7 +3060,7 @@ export interface paths {
                                             id: string;
                                             senderId: string;
                                             /** @enum {string} */
-                                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
                                             text: string | null;
                                             spoiler: boolean;
                                             ephemeral: boolean;
@@ -2914,8 +3171,11 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @enum {string} */
-                        kind: "image" | "video" | "video_note" | "voice" | "file";
+                        /**
+                         * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                         * @enum {string}
+                         */
+                        kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                         name: string;
                         mime: string;
                         size: number;
@@ -2932,8 +3192,11 @@ export interface paths {
                         "application/json": {
                             upload: {
                                 id: string;
-                                /** @enum {string} */
-                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -3003,8 +3266,11 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            /** @enum {string} */
-                            kind: "image" | "video" | "video_note" | "voice" | "file";
+                            /**
+                             * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                             * @enum {string}
+                             */
+                            kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                             /** @enum {string} */
                             status: "pending" | "processing" | "ready" | "failed";
                             name: string;
@@ -3059,8 +3325,11 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            /** @enum {string} */
-                            kind: "image" | "video" | "video_note" | "voice" | "file";
+                            /**
+                             * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                             * @enum {string}
+                             */
+                            kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
                             /** @enum {string} */
                             status: "pending" | "processing" | "ready" | "failed";
                             name: string;
@@ -3194,6 +3463,409 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sticker-packs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your sticker packs: the built-in ones, then the ones you made or saved */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                title: string;
+                                builtin: boolean;
+                                /** @description You created it and can add or remove stickers */
+                                mine: boolean;
+                                /** @description It is in your sticker collection (built-in packs always are) */
+                                saved: boolean;
+                                stickers: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                }[];
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a sticker pack */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            title: string;
+                            builtin: boolean;
+                            /** @description You created it and can add or remove stickers */
+                            mine: boolean;
+                            /** @description It is in your sticker collection (built-in packs always are) */
+                            saved: boolean;
+                            stickers: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sticker-packs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One sticker pack, e.g. the one a sticker you received comes from */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            title: string;
+                            builtin: boolean;
+                            /** @description You created it and can add or remove stickers */
+                            mine: boolean;
+                            /** @description It is in your sticker collection (built-in packs always are) */
+                            saved: boolean;
+                            stickers: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sticker-packs/{id}/stickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a sticker to your pack
+         * @description Upload the file first with kind `sticker` (.tgs, Lottie .json, .webp or .png, at most 512 KB). Its `url` stays null until processing finishes.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description A completed upload of kind `sticker` */
+                        uploadId: string;
+                        /** @description The emoji this sticker stands for */
+                        emoji: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            packId: string;
+                            emoji: string;
+                            /**
+                             * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                             * @enum {string}
+                             */
+                            format: "lottie" | "image";
+                            /**
+                             * Format: uri
+                             * @description Null while an uploaded sticker is still being processed
+                             */
+                            url: string | null;
+                            width: number | null;
+                            height: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sticker-packs/{id}/stickers/{stickerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a sticker from your pack
+         * @description Messages that already show it keep it.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    stickerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sticker-packs/{id}/saved": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Add a pack to your stickers */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remove a pack from your stickers */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/gifs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search GIFs, or list trending ones
+         * @description Proxied from GIPHY. Returns GIFS_UNAVAILABLE when the server has no GIPHY key. Send one with `gifId`.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Search terms; trending GIFs when empty */
+                    q?: string;
+                    cursor?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @description Send it with `gifId` */
+                                id: string;
+                                title: string;
+                                /**
+                                 * Format: uri
+                                 * @description Small animated preview for pickers
+                                 */
+                                previewUrl: string;
+                                width: number;
+                                height: number;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

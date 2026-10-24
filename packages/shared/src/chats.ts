@@ -2,8 +2,19 @@ import { z } from "zod";
 import { Id, IsoDate } from "./common.js";
 import { AttachmentDTO } from "./uploads.js";
 import { PublicUser } from "./invites.js";
+import { StickerDTO } from "./stickers.js";
 
-export const MessageType = z.enum(["text", "image", "video", "video_note", "voice", "file", "service"]);
+export const MessageType = z.enum([
+  "text",
+  "image",
+  "video",
+  "video_note",
+  "voice",
+  "file",
+  "gif",
+  "sticker",
+  "service",
+]);
 export type MessageType = z.infer<typeof MessageType>;
 
 export const EntityType = z.enum(["bold", "italic", "strike", "code", "spoiler"]);
@@ -110,6 +121,7 @@ export const MessageDTO = z.object({
   entities: z.array(MessageEntity),
   spoiler: z.boolean(),
   attachment: AttachmentDTO.nullable(),
+  sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
   replyTo: ReplyPreview.nullable(),
   action: ServiceAction.nullable(),
@@ -163,14 +175,25 @@ export const SendMessageInput = z
     text: MessageText.optional().describe("Required unless attachmentId is set, in which case it is the caption"),
     entities: Entities.optional(),
     attachmentId: Id.optional().describe("A completed upload from POST /v1/uploads/{id}/complete"),
+    gifId: z
+      .string()
+      .regex(/^\w{1,64}$/)
+      .optional()
+      .describe("A GIF from GET /v1/gifs; the server saves a copy and attaches it"),
+    stickerId: Id.optional().describe("Send this sticker, on its own"),
     replyToId: Id.optional(),
     spoiler: z.boolean().optional(),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
   })
-  .refine((v) => v.text !== undefined || v.attachmentId !== undefined, {
-    message: "Send text, an attachment, or both",
+  .refine((v) => v.text !== undefined || v.attachmentId !== undefined || v.gifId !== undefined || v.stickerId, {
+    message: "Send text, an attachment, a GIF or a sticker",
     path: ["text"],
   })
+  .refine((v) => [v.attachmentId, v.gifId, v.stickerId].filter((x) => x !== undefined).length <= 1, {
+    message: "Send one attachment, GIF or sticker at a time",
+    path: ["attachmentId"],
+  })
+  .refine((v) => !v.stickerId || v.text === undefined, { message: "Stickers have no caption", path: ["text"] })
   .refine((v) => entitiesFit(v.text ?? "", v.entities), {
     message: "Entities fall outside the text",
     path: ["entities"],
@@ -283,7 +306,7 @@ export const SCHEDULE_LIMITS = { perChat: 100, maxAheadSeconds: 365 * 24 * 60 * 
 
 export const ScheduleMessageInput = SendMessageInput.safeExtend({
   sendAt: IsoDate.describe("When to send it, in the future and at most a year ahead"),
-});
+}).refine((v) => !v.stickerId, { message: "Stickers can't be scheduled", path: ["stickerId"] });
 export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
 
 export const ScheduledMessageDTO = z.object({

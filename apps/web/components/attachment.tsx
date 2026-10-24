@@ -345,6 +345,35 @@ export function AttachmentView({
 }) {
   const a = view(attachment);
 
+  if (a.kind === "gif") {
+    const size = boxSize(a.width, a.height);
+    return (
+      <div
+        className="relative overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700"
+        style={{ width: size.width, aspectRatio: size.aspectRatio, maxWidth: "100%" }}
+      >
+        {hidden ? (
+          <button
+            type="button"
+            onClick={onReveal}
+            aria-label="Spoiler, tap to reveal"
+            className="spoiler absolute inset-0 grid place-items-center rounded-none text-white/85"
+          >
+            <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white">
+              <EyeOff className="size-3.5" /> Spoiler
+            </span>
+          </button>
+        ) : attachment.source === "local" ? (
+          <img src={a.url ?? undefined} alt="" draggable={false} className="size-full object-cover" />
+        ) : (
+          a.url && <video src={a.url} autoPlay loop muted playsInline className="size-full object-cover" />
+        )}
+        <span className="absolute top-1.5 left-1.5 rounded bg-black/50 px-1 text-[10px] font-bold text-white">GIF</span>
+        {a.state === "failed" && <Overlay state={a.state} progress={a.progress} />}
+      </div>
+    );
+  }
+
   if (a.kind === "image" || a.kind === "video") {
     const size = boxSize(a.width, a.height);
     const ready = a.state === "ready" && a.url;

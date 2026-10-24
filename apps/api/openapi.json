@@ -1129,6 +1129,8 @@
                                   "video_note",
                                   "voice",
                                   "file",
+                                  "gif",
+                                  "sticker",
                                   "service"
                                 ]
                               },
@@ -1188,8 +1190,11 @@
                                       "video",
                                       "video_note",
                                       "voice",
-                                      "file"
-                                    ]
+                                      "file",
+                                      "gif",
+                                      "sticker"
+                                    ],
+                                    "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                                   },
                                   "status": {
                                     "type": "string",
@@ -1263,6 +1268,59 @@
                                   "height",
                                   "durationMs",
                                   "waveform"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "sticker": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "packId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "emoji": {
+                                    "type": "string"
+                                  },
+                                  "format": {
+                                    "type": "string",
+                                    "enum": [
+                                      "lottie",
+                                      "image"
+                                    ],
+                                    "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                                  },
+                                  "url": {
+                                    "nullable": true,
+                                    "description": "Null while an uploaded sticker is still being processed",
+                                    "type": "string",
+                                    "format": "uri"
+                                  },
+                                  "width": {
+                                    "nullable": true,
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "height": {
+                                    "nullable": true,
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "packId",
+                                  "emoji",
+                                  "format",
+                                  "url",
+                                  "width",
+                                  "height"
                                 ],
                                 "additionalProperties": false
                               },
@@ -1354,6 +1412,8 @@
                                       "video_note",
                                       "voice",
                                       "file",
+                                      "gif",
+                                      "sticker",
                                       "service"
                                     ]
                                   },
@@ -1441,6 +1501,7 @@
                               "entities",
                               "spoiler",
                               "attachment",
+                              "sticker",
                               "ephemeral",
                               "replyTo",
                               "action",
@@ -1656,6 +1717,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -1715,8 +1778,11 @@
                                 "video",
                                 "video_note",
                                 "voice",
-                                "file"
-                              ]
+                                "file",
+                                "gif",
+                                "sticker"
+                              ],
+                              "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                             },
                             "status": {
                               "type": "string",
@@ -1790,6 +1856,59 @@
                             "height",
                             "durationMs",
                             "waveform"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "sticker": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "packId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "emoji": {
+                              "type": "string"
+                            },
+                            "format": {
+                              "type": "string",
+                              "enum": [
+                                "lottie",
+                                "image"
+                              ],
+                              "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                            },
+                            "url": {
+                              "nullable": true,
+                              "description": "Null while an uploaded sticker is still being processed",
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "width": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "height": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "packId",
+                            "emoji",
+                            "format",
+                            "url",
+                            "width",
+                            "height"
                           ],
                           "additionalProperties": false
                         },
@@ -1881,6 +2000,8 @@
                                 "video_note",
                                 "voice",
                                 "file",
+                                "gif",
+                                "sticker",
                                 "service"
                               ]
                             },
@@ -1968,6 +2089,7 @@
                         "entities",
                         "spoiler",
                         "attachment",
+                        "sticker",
                         "ephemeral",
                         "replyTo",
                         "action",
@@ -2198,6 +2320,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -2257,8 +2381,11 @@
                                 "video",
                                 "video_note",
                                 "voice",
-                                "file"
-                              ]
+                                "file",
+                                "gif",
+                                "sticker"
+                              ],
+                              "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                             },
                             "status": {
                               "type": "string",
@@ -2332,6 +2459,59 @@
                             "height",
                             "durationMs",
                             "waveform"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "sticker": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "packId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "emoji": {
+                              "type": "string"
+                            },
+                            "format": {
+                              "type": "string",
+                              "enum": [
+                                "lottie",
+                                "image"
+                              ],
+                              "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                            },
+                            "url": {
+                              "nullable": true,
+                              "description": "Null while an uploaded sticker is still being processed",
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "width": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "height": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "packId",
+                            "emoji",
+                            "format",
+                            "url",
+                            "width",
+                            "height"
                           ],
                           "additionalProperties": false
                         },
@@ -2423,6 +2603,8 @@
                                 "video_note",
                                 "voice",
                                 "file",
+                                "gif",
+                                "sticker",
                                 "service"
                               ]
                             },
@@ -2510,6 +2692,7 @@
                         "entities",
                         "spoiler",
                         "attachment",
+                        "sticker",
                         "ephemeral",
                         "replyTo",
                         "action",
@@ -2742,6 +2925,8 @@
                         "video_note",
                         "voice",
                         "file",
+                        "gif",
+                        "sticker",
                         "service"
                       ]
                     },
@@ -2801,8 +2986,11 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
-                          ]
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                         },
                         "status": {
                           "type": "string",
@@ -2876,6 +3064,59 @@
                         "height",
                         "durationMs",
                         "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
                       ],
                       "additionalProperties": false
                     },
@@ -2967,6 +3208,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -3054,6 +3297,7 @@
                     "entities",
                     "spoiler",
                     "attachment",
+                    "sticker",
                     "ephemeral",
                     "replyTo",
                     "action",
@@ -3128,6 +3372,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -3187,8 +3433,11 @@
                                 "video",
                                 "video_note",
                                 "voice",
-                                "file"
-                              ]
+                                "file",
+                                "gif",
+                                "sticker"
+                              ],
+                              "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                             },
                             "status": {
                               "type": "string",
@@ -3262,6 +3511,59 @@
                             "height",
                             "durationMs",
                             "waveform"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "sticker": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "packId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "emoji": {
+                              "type": "string"
+                            },
+                            "format": {
+                              "type": "string",
+                              "enum": [
+                                "lottie",
+                                "image"
+                              ],
+                              "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                            },
+                            "url": {
+                              "nullable": true,
+                              "description": "Null while an uploaded sticker is still being processed",
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "width": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "height": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "packId",
+                            "emoji",
+                            "format",
+                            "url",
+                            "width",
+                            "height"
                           ],
                           "additionalProperties": false
                         },
@@ -3353,6 +3655,8 @@
                                 "video_note",
                                 "voice",
                                 "file",
+                                "gif",
+                                "sticker",
                                 "service"
                               ]
                             },
@@ -3440,6 +3744,7 @@
                         "entities",
                         "spoiler",
                         "attachment",
+                        "sticker",
                         "ephemeral",
                         "replyTo",
                         "action",
@@ -3525,6 +3830,8 @@
                         "video_note",
                         "voice",
                         "file",
+                        "gif",
+                        "sticker",
                         "service"
                       ]
                     },
@@ -3584,8 +3891,11 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
-                          ]
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                         },
                         "status": {
                           "type": "string",
@@ -3659,6 +3969,59 @@
                         "height",
                         "durationMs",
                         "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
                       ],
                       "additionalProperties": false
                     },
@@ -3750,6 +4113,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -3837,6 +4202,7 @@
                     "entities",
                     "spoiler",
                     "attachment",
+                    "sticker",
                     "ephemeral",
                     "replyTo",
                     "action",
@@ -3986,6 +4352,8 @@
                               "video_note",
                               "voice",
                               "file",
+                              "gif",
+                              "sticker",
                               "service"
                             ]
                           },
@@ -4045,8 +4413,11 @@
                                   "video",
                                   "video_note",
                                   "voice",
-                                  "file"
-                                ]
+                                  "file",
+                                  "gif",
+                                  "sticker"
+                                ],
+                                "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                               },
                               "status": {
                                 "type": "string",
@@ -4120,6 +4491,59 @@
                               "height",
                               "durationMs",
                               "waveform"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "sticker": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "packId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "emoji": {
+                                "type": "string"
+                              },
+                              "format": {
+                                "type": "string",
+                                "enum": [
+                                  "lottie",
+                                  "image"
+                                ],
+                                "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                              },
+                              "url": {
+                                "nullable": true,
+                                "description": "Null while an uploaded sticker is still being processed",
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "width": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "height": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "packId",
+                              "emoji",
+                              "format",
+                              "url",
+                              "width",
+                              "height"
                             ],
                             "additionalProperties": false
                           },
@@ -4211,6 +4635,8 @@
                                   "video_note",
                                   "voice",
                                   "file",
+                                  "gif",
+                                  "sticker",
                                   "service"
                                 ]
                               },
@@ -4298,6 +4724,7 @@
                           "entities",
                           "spoiler",
                           "attachment",
+                          "sticker",
                           "ephemeral",
                           "replyTo",
                           "action",
@@ -4389,6 +4816,16 @@
                     "type": "string",
                     "minLength": 1
                   },
+                  "gifId": {
+                    "description": "A GIF from GET /v1/gifs; the server saves a copy and attaches it",
+                    "type": "string",
+                    "pattern": "^\\w{1,64}$"
+                  },
+                  "stickerId": {
+                    "description": "Send this sticker, on its own",
+                    "type": "string",
+                    "minLength": 1
+                  },
                   "replyToId": {
                     "type": "string",
                     "minLength": 1
@@ -4470,6 +4907,8 @@
                         "video_note",
                         "voice",
                         "file",
+                        "gif",
+                        "sticker",
                         "service"
                       ]
                     },
@@ -4529,8 +4968,11 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
-                          ]
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                         },
                         "status": {
                           "type": "string",
@@ -4604,6 +5046,59 @@
                         "height",
                         "durationMs",
                         "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
                       ],
                       "additionalProperties": false
                     },
@@ -4695,6 +5190,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -4782,6 +5279,7 @@
                     "entities",
                     "spoiler",
                     "attachment",
+                    "sticker",
                     "ephemeral",
                     "replyTo",
                     "action",
@@ -4855,6 +5353,8 @@
                               "video_note",
                               "voice",
                               "file",
+                              "gif",
+                              "sticker",
                               "service"
                             ]
                           },
@@ -4914,8 +5414,11 @@
                                   "video",
                                   "video_note",
                                   "voice",
-                                  "file"
-                                ]
+                                  "file",
+                                  "gif",
+                                  "sticker"
+                                ],
+                                "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                               },
                               "status": {
                                 "type": "string",
@@ -5036,6 +5539,8 @@
                                   "video_note",
                                   "voice",
                                   "file",
+                                  "gif",
+                                  "sticker",
                                   "service"
                                 ]
                               },
@@ -5172,6 +5677,16 @@
                     "type": "string",
                     "minLength": 1
                   },
+                  "gifId": {
+                    "description": "A GIF from GET /v1/gifs; the server saves a copy and attaches it",
+                    "type": "string",
+                    "pattern": "^\\w{1,64}$"
+                  },
+                  "stickerId": {
+                    "description": "Send this sticker, on its own",
+                    "type": "string",
+                    "minLength": 1
+                  },
                   "replyToId": {
                     "type": "string",
                     "minLength": 1
@@ -5257,6 +5772,8 @@
                         "video_note",
                         "voice",
                         "file",
+                        "gif",
+                        "sticker",
                         "service"
                       ]
                     },
@@ -5316,8 +5833,11 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
-                          ]
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                         },
                         "status": {
                           "type": "string",
@@ -5438,6 +5958,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -5607,6 +6129,8 @@
                         "video_note",
                         "voice",
                         "file",
+                        "gif",
+                        "sticker",
                         "service"
                       ]
                     },
@@ -5666,8 +6190,11 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
-                          ]
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                         },
                         "status": {
                           "type": "string",
@@ -5788,6 +6315,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -5941,6 +6470,8 @@
                         "video_note",
                         "voice",
                         "file",
+                        "gif",
+                        "sticker",
                         "service"
                       ]
                     },
@@ -6000,8 +6531,11 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
-                          ]
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                         },
                         "status": {
                           "type": "string",
@@ -6075,6 +6609,59 @@
                         "height",
                         "durationMs",
                         "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
                       ],
                       "additionalProperties": false
                     },
@@ -6166,6 +6753,8 @@
                             "video_note",
                             "voice",
                             "file",
+                            "gif",
+                            "sticker",
                             "service"
                           ]
                         },
@@ -6253,6 +6842,7 @@
                     "entities",
                     "spoiler",
                     "attachment",
+                    "sticker",
                     "ephemeral",
                     "replyTo",
                     "action",
@@ -6827,6 +7417,8 @@
                                       "video_note",
                                       "voice",
                                       "file",
+                                      "gif",
+                                      "sticker",
                                       "service"
                                     ]
                                   },
@@ -6886,8 +7478,11 @@
                                           "video",
                                           "video_note",
                                           "voice",
-                                          "file"
-                                        ]
+                                          "file",
+                                          "gif",
+                                          "sticker"
+                                        ],
+                                        "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                                       },
                                       "status": {
                                         "type": "string",
@@ -6961,6 +7556,59 @@
                                       "height",
                                       "durationMs",
                                       "waveform"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "sticker": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "packId": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "emoji": {
+                                        "type": "string"
+                                      },
+                                      "format": {
+                                        "type": "string",
+                                        "enum": [
+                                          "lottie",
+                                          "image"
+                                        ],
+                                        "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                                      },
+                                      "url": {
+                                        "nullable": true,
+                                        "description": "Null while an uploaded sticker is still being processed",
+                                        "type": "string",
+                                        "format": "uri"
+                                      },
+                                      "width": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "height": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "packId",
+                                      "emoji",
+                                      "format",
+                                      "url",
+                                      "width",
+                                      "height"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -7052,6 +7700,8 @@
                                           "video_note",
                                           "voice",
                                           "file",
+                                          "gif",
+                                          "sticker",
                                           "service"
                                         ]
                                       },
@@ -7139,6 +7789,7 @@
                                   "entities",
                                   "spoiler",
                                   "attachment",
+                                  "sticker",
                                   "ephemeral",
                                   "replyTo",
                                   "action",
@@ -7200,6 +7851,8 @@
                                       "video_note",
                                       "voice",
                                       "file",
+                                      "gif",
+                                      "sticker",
                                       "service"
                                     ]
                                   },
@@ -7259,8 +7912,11 @@
                                           "video",
                                           "video_note",
                                           "voice",
-                                          "file"
-                                        ]
+                                          "file",
+                                          "gif",
+                                          "sticker"
+                                        ],
+                                        "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                                       },
                                       "status": {
                                         "type": "string",
@@ -7334,6 +7990,59 @@
                                       "height",
                                       "durationMs",
                                       "waveform"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "sticker": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "packId": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "emoji": {
+                                        "type": "string"
+                                      },
+                                      "format": {
+                                        "type": "string",
+                                        "enum": [
+                                          "lottie",
+                                          "image"
+                                        ],
+                                        "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                                      },
+                                      "url": {
+                                        "nullable": true,
+                                        "description": "Null while an uploaded sticker is still being processed",
+                                        "type": "string",
+                                        "format": "uri"
+                                      },
+                                      "width": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "height": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "packId",
+                                      "emoji",
+                                      "format",
+                                      "url",
+                                      "width",
+                                      "height"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -7425,6 +8134,8 @@
                                           "video_note",
                                           "voice",
                                           "file",
+                                          "gif",
+                                          "sticker",
                                           "service"
                                         ]
                                       },
@@ -7512,6 +8223,7 @@
                                   "entities",
                                   "spoiler",
                                   "attachment",
+                                  "sticker",
                                   "ephemeral",
                                   "replyTo",
                                   "action",
@@ -7705,6 +8417,8 @@
                                           "video_note",
                                           "voice",
                                           "file",
+                                          "gif",
+                                          "sticker",
                                           "service"
                                         ]
                                       },
@@ -7764,8 +8478,11 @@
                                               "video",
                                               "video_note",
                                               "voice",
-                                              "file"
-                                            ]
+                                              "file",
+                                              "gif",
+                                              "sticker"
+                                            ],
+                                            "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                                           },
                                           "status": {
                                             "type": "string",
@@ -7839,6 +8556,59 @@
                                           "height",
                                           "durationMs",
                                           "waveform"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "sticker": {
+                                        "nullable": true,
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
+                                          "packId": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
+                                          "emoji": {
+                                            "type": "string"
+                                          },
+                                          "format": {
+                                            "type": "string",
+                                            "enum": [
+                                              "lottie",
+                                              "image"
+                                            ],
+                                            "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                                          },
+                                          "url": {
+                                            "nullable": true,
+                                            "description": "Null while an uploaded sticker is still being processed",
+                                            "type": "string",
+                                            "format": "uri"
+                                          },
+                                          "width": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "height": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "packId",
+                                          "emoji",
+                                          "format",
+                                          "url",
+                                          "width",
+                                          "height"
                                         ],
                                         "additionalProperties": false
                                       },
@@ -7930,6 +8700,8 @@
                                               "video_note",
                                               "voice",
                                               "file",
+                                              "gif",
+                                              "sticker",
                                               "service"
                                             ]
                                           },
@@ -8017,6 +8789,7 @@
                                       "entities",
                                       "spoiler",
                                       "attachment",
+                                      "sticker",
                                       "ephemeral",
                                       "replyTo",
                                       "action",
@@ -8289,8 +9062,11 @@
                       "video",
                       "video_note",
                       "voice",
-                      "file"
-                    ]
+                      "file",
+                      "gif",
+                      "sticker"
+                    ],
+                    "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                   },
                   "name": {
                     "type": "string",
@@ -8344,8 +9120,11 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
-                          ]
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                         },
                         "status": {
                           "type": "string",
@@ -8490,8 +9269,11 @@
                         "video",
                         "video_note",
                         "voice",
-                        "file"
-                      ]
+                        "file",
+                        "gif",
+                        "sticker"
+                      ],
+                      "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                     },
                     "status": {
                       "type": "string",
@@ -8615,8 +9397,11 @@
                         "video",
                         "video_note",
                         "voice",
-                        "file"
-                      ]
+                        "file",
+                        "gif",
+                        "sticker"
+                      ],
+                      "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
                     },
                     "status": {
                       "type": "string",
@@ -8825,6 +9610,716 @@
                   "enum": [
                     null
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sticker-packs": {
+      "get": {
+        "summary": "Your sticker packs: the built-in ones, then the ones you made or saved",
+        "tags": [
+          "stickers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "builtin": {
+                            "type": "boolean"
+                          },
+                          "mine": {
+                            "type": "boolean",
+                            "description": "You created it and can add or remove stickers"
+                          },
+                          "saved": {
+                            "type": "boolean",
+                            "description": "It is in your sticker collection (built-in packs always are)"
+                          },
+                          "stickers": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "packId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "emoji": {
+                                  "type": "string"
+                                },
+                                "format": {
+                                  "type": "string",
+                                  "enum": [
+                                    "lottie",
+                                    "image"
+                                  ],
+                                  "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                                },
+                                "url": {
+                                  "nullable": true,
+                                  "description": "Null while an uploaded sticker is still being processed",
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "width": {
+                                  "nullable": true,
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "height": {
+                                  "nullable": true,
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "packId",
+                                "emoji",
+                                "format",
+                                "url",
+                                "width",
+                                "height"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "builtin",
+                          "mine",
+                          "saved",
+                          "stickers"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a sticker pack",
+        "tags": [
+          "stickers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "builtin": {
+                      "type": "boolean"
+                    },
+                    "mine": {
+                      "type": "boolean",
+                      "description": "You created it and can add or remove stickers"
+                    },
+                    "saved": {
+                      "type": "boolean",
+                      "description": "It is in your sticker collection (built-in packs always are)"
+                    },
+                    "stickers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "packId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "format": {
+                            "type": "string",
+                            "enum": [
+                              "lottie",
+                              "image"
+                            ],
+                            "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                          },
+                          "url": {
+                            "nullable": true,
+                            "description": "Null while an uploaded sticker is still being processed",
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "width": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "height": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "packId",
+                          "emoji",
+                          "format",
+                          "url",
+                          "width",
+                          "height"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "builtin",
+                    "mine",
+                    "saved",
+                    "stickers"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sticker-packs/{id}": {
+      "get": {
+        "summary": "One sticker pack, e.g. the one a sticker you received comes from",
+        "tags": [
+          "stickers"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "builtin": {
+                      "type": "boolean"
+                    },
+                    "mine": {
+                      "type": "boolean",
+                      "description": "You created it and can add or remove stickers"
+                    },
+                    "saved": {
+                      "type": "boolean",
+                      "description": "It is in your sticker collection (built-in packs always are)"
+                    },
+                    "stickers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "packId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "format": {
+                            "type": "string",
+                            "enum": [
+                              "lottie",
+                              "image"
+                            ],
+                            "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                          },
+                          "url": {
+                            "nullable": true,
+                            "description": "Null while an uploaded sticker is still being processed",
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "width": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "height": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "packId",
+                          "emoji",
+                          "format",
+                          "url",
+                          "width",
+                          "height"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "builtin",
+                    "mine",
+                    "saved",
+                    "stickers"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sticker-packs/{id}/stickers": {
+      "post": {
+        "summary": "Add a sticker to your pack",
+        "tags": [
+          "stickers"
+        ],
+        "description": "Upload the file first with kind `sticker` (.tgs, Lottie .json, .webp or .png, at most 512 KB). Its `url` stays null until processing finishes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uploadId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "A completed upload of kind `sticker`"
+                  },
+                  "emoji": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 16,
+                    "description": "The emoji this sticker stands for"
+                  }
+                },
+                "required": [
+                  "uploadId",
+                  "emoji"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "packId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "emoji": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string",
+                      "enum": [
+                        "lottie",
+                        "image"
+                      ],
+                      "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                    },
+                    "url": {
+                      "nullable": true,
+                      "description": "Null while an uploaded sticker is still being processed",
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "width": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "height": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "packId",
+                    "emoji",
+                    "format",
+                    "url",
+                    "width",
+                    "height"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sticker-packs/{id}/stickers/{stickerId}": {
+      "delete": {
+        "summary": "Remove a sticker from your pack",
+        "tags": [
+          "stickers"
+        ],
+        "description": "Messages that already show it keep it.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "stickerId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sticker-packs/{id}/saved": {
+      "put": {
+        "summary": "Add a pack to your stickers",
+        "tags": [
+          "stickers"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a pack from your stickers",
+        "tags": [
+          "stickers"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/gifs": {
+      "get": {
+        "summary": "Search GIFs, or list trending ones",
+        "tags": [
+          "gifs"
+        ],
+        "description": "Proxied from GIPHY. Returns GIFS_UNAVAILABLE when the server has no GIPHY key. Send one with `gifId`.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "description": "Search terms; trending GIFs when empty"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Send it with `gifId`"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "previewUrl": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Small animated preview for pickers"
+                          },
+                          "width": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "height": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "previewUrl",
+                          "width",
+                          "height"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }

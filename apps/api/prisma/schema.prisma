@@ -28,6 +28,8 @@ model User {
   contactsSaved  ContactOverride[]  @relation("owner")
   savedAs        ContactOverride[]  @relation("contact")
   scheduled      ScheduledMessage[]
+  stickerPacks   StickerPack[]
+  savedPacks     SavedStickerPack[]
 }
 
 model Invite {
@@ -142,6 +144,7 @@ model Message {
   resendCount  Int       @default(0)
   purgedAt     DateTime?
   attachmentId String?
+  stickerId    String?
   replyToId    String?
   action       Json?
   createdAt    DateTime  @default(now())
@@ -153,6 +156,7 @@ model Message {
   sender           User               @relation(fields: [senderId], references: [id], onDelete: Cascade)
   replyTo          Message?           @relation("replies", fields: [replyToId], references: [id], onDelete: SetNull)
   attachment       Upload?            @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
+  sticker          Sticker?           @relation(fields: [stickerId], references: [id], onDelete: SetNull)
   replies          Message[]          @relation("replies")
   scheduledReplies ScheduledMessage[]
   hidden           MessageHidden[]
@@ -236,9 +240,52 @@ model Upload {
   owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   messages  Message[]
   scheduled ScheduledMessage?
+  sticker   Sticker?
 
   @@index([ownerId])
   @@index([status, createdAt])
+}
+
+model StickerPack {
+  id        String   @id @default(cuid())
+  ownerId   String?
+  title     String
+  builtin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  owner    User?              @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  stickers Sticker[]
+  savedBy  SavedStickerPack[]
+
+  @@index([ownerId])
+}
+
+model Sticker {
+  id        String    @id @default(cuid())
+  packId    String
+  emoji     String
+  uploadId  String?   @unique
+  lottieUrl String?
+  position  Int       @default(0)
+  removedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  pack     StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  upload   Upload?     @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  @@index([packId, position])
+}
+
+model SavedStickerPack {
+  userId    String
+  packId    String
+  createdAt DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pack StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@id([userId, packId])
 }
 
 model MessageView {

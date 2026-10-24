@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { gunzipSync } from "node:zlib";
 import type { Upload } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 import { getObjectBytes, putObject } from "../lib/storage.js";
@@ -90,6 +91,48 @@ async function voice(upload: Upload, dir: string, input: string) {
   };
 }
 
+const STICKER_SIZE = 512;
+const LOTTIE_MAX_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Stickers: images become a WebP of at most 512px; Lottie (.tgs is gzipped) becomes plain JSON,
+ * without image assets that point outside the file, so a sticker can't load a tracking pixel.
+ */
+async function sticker(upload: Upload, dir: string, input: string) {
+  if (upload.mime.startsWith("image/")) {
+    const fit = `scale='min(${STICKER_SIZE},iw)':'min(${STICKER_SIZE},ih)':force_original_aspect_ratio=decrease`;
+    await ffmpeg(["-i", input, "-frames:v", "1", "-vf", fit, "-c:v", "libwebp", "-quality", "90", join(dir, "main.webp")]);
+    const info = await probe(join(dir, "main.webp"));
+    return {
+      mainKey: await store(upload, dir, "main.webp", "main.webp", "image/webp"),
+      mainMime: "image/webp",
+      width: info.width,
+      height: info.height,
+    };
+  }
+
+  const raw = await readFile(input);
+  const gzipped = raw[0] === 0x1f && raw[1] === 0x8b;
+  const text = (gzipped ? gunzipSync(raw, { maxOutputLength: LOTTIE_MAX_BYTES }) : raw).toString();
+  let lottie: { w?: unknown; h?: unknown; layers?: unknown; assets?: { p?: unknown }[] };
+  try {
+    lottie = JSON.parse(text);
+  } catch {
+    throw new Error("Not a Lottie animation");
+  }
+  if (!Array.isArray(lottie.layers) || typeof lottie.w !== "number" || typeof lottie.h !== "number") {
+    throw new Error("Not a Lottie animation");
+  }
+  lottie.assets = (lottie.assets ?? []).filter((a) => typeof a.p !== "string" || a.p.startsWith("data:"));
+  await writeFile(join(dir, "main.json"), JSON.stringify(lottie));
+  return {
+    mainKey: await store(upload, dir, "main.json", "main.json", "application/json"),
+    mainMime: "application/json",
+    width: Math.round(lottie.w),
+    height: Math.round(lottie.h),
+  };
+}
+
 /** Converts an uploaded file into formats every platform can display, then marks it ready. */
 export async function processUpload(uploadId: string) {
   const upload = await prisma.upload.findUnique({ where: { id: uploadId } });
@@ -110,7 +153,9 @@ export async function processUpload(uploadId: string) {
             ? await videoNote(upload, dir, input)
             : upload.kind === "voice"
               ? await voice(upload, dir, input)
-              : {};
+              : upload.kind === "sticker"
+                ? await sticker(upload, dir, input)
+                : {};
     await finishUpload(uploadId, { ...result, status: "ready", error: null });
   } finally {
     await rm(dir, { recursive: true, force: true });

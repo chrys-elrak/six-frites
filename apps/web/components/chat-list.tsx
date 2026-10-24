@@ -70,6 +70,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
     return (
       <span className="inline-flex max-w-full items-center gap-1">
         {m.senderId === meId && "You: "}
+        {m.sticker?.emoji}
         <MediaLabel type={m.type} />
         {voiceLength}
         {m.type === "file" && m.attachment && !m.text && <span className="truncate">· {m.attachment.name}</span>}

@@ -18,10 +18,17 @@ import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { timersQueue } from "../lib/queue.js";
+import { saveGif } from "./gifs.js";
 import { queuePush } from "./push.js";
+import { toStickerDTO } from "./stickers.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
-export const messageInclude = { replyTo: true, attachment: true, views: true } satisfies Prisma.MessageInclude;
+export const messageInclude = {
+  replyTo: true,
+  attachment: true,
+  views: true,
+  sticker: { include: { upload: true } },
+} satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
 
 const SNIPPET = 200;
@@ -81,6 +88,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
       hideContent || !m.attachment
         ? null
         : toAttachmentDTO(m.attachment, ephemeral && opts.reveal ? EPHEMERAL_LINK_SECONDS : undefined),
+    sticker: hideContent || !m.sticker ? null : toStickerDTO(m.sticker),
     ephemeral: ephemeral
       ? {
           maxViews: m.maxViews,
@@ -158,6 +166,9 @@ export async function createMessage(
     if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
   }
   const upload = content?.attachmentId ? await claimForMessage(tx, userId, content.attachmentId) : null;
+  if (content?.stickerId && !(await tx.sticker.findFirst({ where: { id: content.stickerId, removedAt: null } }))) {
+    throw new AppError("STICKER_NOT_FOUND");
+  }
   const { autoDeleteSecs } = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
   const createdAt = new Date();
 
@@ -166,10 +177,11 @@ export async function createMessage(
       chatId,
       senderId: userId,
       clientId: input.clientId,
-      type: content ? (upload?.kind ?? "text") : "service",
+      type: content ? (content.stickerId ? "sticker" : (upload?.kind ?? "text")) : "service",
       text: content?.text ?? null,
       entities: storedEntities(content?.entities),
       attachmentId: upload?.id ?? null,
+      stickerId: content?.stickerId ?? null,
       spoiler: content?.spoiler ?? false,
       maxViews: content?.ephemeral?.maxViews ?? null,
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
@@ -197,12 +209,21 @@ export async function createMessage(
   return { message, recipients: members.filter((id) => id !== userId) };
 }
 
+/** Swaps a `gifId` for a stored copy of that GIF, checking membership first so only members trigger downloads. */
+export async function resolveGif<T extends SendMessageInput>(userId: string, chatId: string, input: T): Promise<T> {
+  if (!input.gifId) return input;
+  await assertMember(prisma, chatId, userId);
+  const upload = await saveGif(userId, input.gifId);
+  return { ...input, gifId: undefined, attachmentId: upload.id };
+}
+
 export async function sendMessage(userId: string, chatId: string, input: SendMessageInput): Promise<MessageDTO> {
   const existing = await findByClientId(userId, chatId, input.clientId);
   if (existing) return toMessageDTO(existing, userId);
 
   try {
-    const { message, recipients } = await withEvents((tx, emit) => createMessage(tx, emit, userId, chatId, input));
+    const ready = await resolveGif(userId, chatId, input);
+    const { message, recipients } = await withEvents((tx, emit) => createMessage(tx, emit, userId, chatId, ready));
     await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
     return toMessageDTO(message, userId);
   } catch (err) {
@@ -221,7 +242,7 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
-    if (message.deletedAt || isEphemeral(message) || message.type === "service") {
+    if (message.deletedAt || isEphemeral(message) || message.type === "service" || message.type === "sticker") {
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
     const entities = input.entities ?? [];

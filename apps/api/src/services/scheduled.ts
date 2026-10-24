@@ -11,7 +11,15 @@ import {
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { getChat } from "./chats.js";
-import { assertMember, createMessage, entitiesOf, storedEntities, toMessageDTO, toReplyPreview } from "./messages.js";
+import {
+  assertMember,
+  createMessage,
+  entitiesOf,
+  resolveGif,
+  storedEntities,
+  toMessageDTO,
+  toReplyPreview,
+} from "./messages.js";
 import { queuePush } from "./push.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
@@ -76,6 +84,7 @@ export async function scheduleMessage(userId: string, chatId: string, input: Sch
   if (await prisma.message.findUnique({ where: key, select: { id: true } })) {
     throw new AppError("CONFLICT", "A message with this clientId was already sent");
   }
+  input = await resolveGif(userId, chatId, input);
 
   return withEvents(async (tx, emit) => {
     await assertMember(tx, chatId, userId);

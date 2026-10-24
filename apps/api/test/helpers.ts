@@ -43,7 +43,7 @@ export function chatHelpers(ctx: { app: FastifyInstance }) {
   const get = async (who: Auth, url: string) =>
     (await ctx.app.inject({ url, headers: bearer(who.accessToken) })).json();
 
-  const call = (who: Auth, method: "POST" | "PATCH" | "DELETE", url: string, payload?: object) =>
+  const call = (who: Auth, method: "POST" | "PUT" | "PATCH" | "DELETE", url: string, payload?: object) =>
     ctx.app.inject({ method, url, headers: bearer(who.accessToken), ...(payload && { payload }) });
 
   const send = (who: Auth, chatId: string, text: string, extra: Record<string, unknown> = {}) =>

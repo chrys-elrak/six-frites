@@ -3,8 +3,13 @@ import { Id } from "./common.js";
 
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
-export const UploadKind = z.enum(["image", "video", "video_note", "voice", "file"]);
+export const UploadKind = z
+  .enum(["image", "video", "video_note", "voice", "file", "gif", "sticker"])
+  .describe("`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs");
 export type UploadKind = z.infer<typeof UploadKind>;
+
+/** Stickers are small: a Lottie animation (.tgs or .json) or a static WebP/PNG. */
+export const STICKER_MAX_BYTES = 512 * 1024;
 
 export const UploadStatus = z.enum(["pending", "processing", "ready", "failed"]);
 export type UploadStatus = z.infer<typeof UploadStatus>;
@@ -17,6 +22,8 @@ export const ACCEPTED_TYPES: Record<Exclude<UploadKind, "file">, string[]> = {
   video: VIDEO_TYPES,
   video_note: VIDEO_TYPES,
   voice: ["audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/aac", "audio/x-m4a", "audio/wav"],
+  gif: [],
+  sticker: ["application/x-tgsticker", "application/json", "image/webp", "image/png"],
 };
 
 const MimeType = z
@@ -35,6 +42,10 @@ export const PresignUploadInput = z
   .refine((v) => v.kind === "file" || ACCEPTED_TYPES[v.kind].includes(v.mime), {
     message: "This file type is not supported for that kind of upload",
     path: ["mime"],
+  })
+  .refine((v) => v.kind !== "sticker" || v.size <= STICKER_MAX_BYTES, {
+    message: "Stickers can be at most 512 KB",
+    path: ["size"],
   });
 export type PresignUploadInput = z.infer<typeof PresignUploadInput>;
 

@@ -1,4 +1,4 @@
-import type { EphemeralInput, MessageEntity, ReplyPreview, UploadKind } from "@six/shared";
+import type { EphemeralInput, GifDTO, MessageEntity, ReplyPreview, StickerDTO, UploadKind } from "@six/shared";
 import { create } from "zustand";
 
 export interface PendingAttachment {
@@ -22,6 +22,8 @@ export interface PendingMessage {
   spoiler: boolean;
   ephemeral: EphemeralInput | null;
   attachment: PendingAttachment | null;
+  gif: GifDTO | null;
+  sticker: StickerDTO | null;
   createdAt: string;
   status: "sending" | "failed";
 }

@@ -1,6 +1,13 @@
 "use client";
 
-import { type EntityType, type EphemeralInput, type UploadKind, maskSpoilers } from "@six/shared";
+import {
+  type EntityType,
+  type EphemeralInput,
+  type GifDTO,
+  type StickerDTO,
+  type UploadKind,
+  maskSpoilers,
+} from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bold,
@@ -286,6 +293,19 @@ export function Composer({
     if (mode) cancel();
   }
 
+  function sendGifOrSticker(extra: { gif?: GifDTO; sticker?: StickerDTO }) {
+    if (!realtime || editing) return;
+    void queueMessage(qc, realtime, chatId, {
+      text: "",
+      replyTo: mode?.kind === "reply" ? mode.message : undefined,
+      ephemeral,
+      ...extra,
+    });
+    setEphemeral(null);
+    if (mode) cancel();
+    onSent();
+  }
+
   function sendFiles(files: FileList | File[]) {
     setPicked([...files]);
   }
@@ -460,7 +480,11 @@ export function Composer({
               </>
             )}
             <div className="flex min-h-10 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800">
-              <EmojiButton onPick={insert} />
+              <EmojiButton
+                onPick={insert}
+                onGif={(gif) => sendGifOrSticker({ gif })}
+                onSticker={(sticker) => sendGifOrSticker({ sticker })}
+              />
               <textarea
                 ref={ref}
                 value={text}

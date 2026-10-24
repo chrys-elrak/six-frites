@@ -1,5 +1,13 @@
 import type { Realtime } from "@six/sdk";
-import { type EphemeralInput, type MessageDTO, type MessageEntity, type UploadKind, maskSpoilers } from "@six/shared";
+import {
+  type EphemeralInput,
+  type GifDTO,
+  type MessageDTO,
+  type MessageEntity,
+  type StickerDTO,
+  type UploadKind,
+  maskSpoilers,
+} from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { insertMessage, patchChat } from "./chats";
 import { type PendingMessage, pendingFiles, useOutbox } from "./outbox";
@@ -12,6 +20,8 @@ export interface Draft {
   spoiler?: boolean;
   ephemeral?: EphemeralInput | null;
   file?: { blob: Blob; kind: UploadKind; name: string; mime: string };
+  gif?: GifDTO;
+  sticker?: StickerDTO;
 }
 
 async function imageSize(blob: Blob) {
@@ -31,7 +41,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
   outbox.setStatus(chatId, clientId, "sending");
   try {
     let attachmentId = pending.attachment?.uploadId ?? undefined;
-    if (pending.attachment && !attachmentId) {
+    if (pending.attachment && !attachmentId && !pending.gif) {
       const blob = pendingFiles.get(clientId);
       if (!blob) throw new Error("The file is no longer available");
       const { kind, name, mime } = pending.attachment;
@@ -50,6 +60,8 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       text: pending.text || undefined,
       entities: pending.entities.length ? pending.entities : undefined,
       attachmentId,
+      gifId: pending.gif?.id,
+      stickerId: pending.sticker?.id,
       replyToId: pending.replyTo?.id,
       spoiler: pending.spoiler || undefined,
       ephemeral: pending.ephemeral ?? undefined,
@@ -66,7 +78,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
 
 export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string, draft: Draft) {
   const clientId = crypto.randomUUID();
-  const { replyTo, file } = draft;
+  const { replyTo, file, gif } = draft;
   if (file) pendingFiles.set(clientId, file.blob);
 
   const pending: PendingMessage = {
@@ -98,7 +110,21 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           progress: 0,
           uploadId: null,
         }
-      : null,
+      : gif
+        ? {
+            kind: "gif",
+            name: gif.title,
+            mime: "image/webp",
+            size: 0,
+            localUrl: gif.previewUrl,
+            width: gif.width,
+            height: gif.height,
+            progress: 1,
+            uploadId: null,
+          }
+        : null,
+    gif: gif ?? null,
+    sticker: draft.sticker ?? null,
     createdAt: new Date().toISOString(),
     status: "sending",
   };

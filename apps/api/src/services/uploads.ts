@@ -79,6 +79,9 @@ export async function claimForMessage(tx: Tx, senderId: string, uploadId: string
     include: { messages: { select: { id: true } }, scheduled: { select: { id: true } } },
   });
   if (!upload || upload.ownerId !== senderId) throw new AppError("UPLOAD_NOT_FOUND");
+  if (upload.kind === "sticker") {
+    throw new AppError("VALIDATION_FAILED", "Add stickers to a pack and send them with stickerId");
+  }
   if (upload.status === "pending") throw new AppError("UPLOAD_NOT_READY", "Complete the upload before sending it");
   if (upload.status === "failed") throw new AppError("UPLOAD_NOT_READY", "This file could not be processed");
   if (upload.messages.length || upload.scheduled) throw new AppError("UPLOAD_IN_USE");
@@ -110,10 +113,15 @@ export async function purgeUploads(ids: string[]) {
   await prisma.upload.deleteMany({ where: { id: { in: uploads.map((u) => u.id) } } });
 }
 
-/** Deletes uploads that were never attached to a message (or scheduled one) within a day. */
+/** Deletes uploads that never made it into a message, a scheduled message or a sticker pack within a day. */
 export async function purgeAbandonedUploads(olderThanMs = 24 * 60 * 60 * 1000) {
   const stale = await prisma.upload.findMany({
-    where: { createdAt: { lt: new Date(Date.now() - olderThanMs) }, messages: { none: {} }, scheduled: null },
+    where: {
+      createdAt: { lt: new Date(Date.now() - olderThanMs) },
+      messages: { none: {} },
+      scheduled: null,
+      sticker: null,
+    },
     select: { id: true },
   });
   await purgeUploads(stale.map((u) => u.id));

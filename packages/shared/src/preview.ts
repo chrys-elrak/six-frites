@@ -6,6 +6,8 @@ const KIND_LABELS: Record<Exclude<MessageDTO["type"], "text" | "service">, strin
   video_note: "Video message",
   voice: "Voice message",
   file: "File",
+  gif: "GIF",
+  sticker: "Sticker",
 };
 
 const DURATIONS = [
@@ -38,6 +40,7 @@ export function previewText(m: MessageDTO) {
   if (m.type === "service") return serviceText(m);
   if (m.ephemeral) return "Self-destructing message";
   if (m.deletedAt) return "Message deleted";
+  if (m.type === "sticker") return m.sticker ? `${m.sticker.emoji} Sticker` : "Sticker";
   const caption = m.text ? (m.spoiler && m.type === "text" ? "Spoiler" : maskSpoilers(m.text, m.entities)) : "";
   if (m.type === "text") return caption;
   const label = m.type === "file" && m.attachment ? `File: ${m.attachment.name}` : KIND_LABELS[m.type];

@@ -4,40 +4,14 @@ import { unwrap } from "@six/sdk";
 import { SCHEDULE_LIMITS, type ScheduledMessageDTO, maskSpoilers } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EyeOff, Flame, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cancelScheduled, rescheduleMessage, scheduledKey, sendScheduledNow } from "@/lib/actions";
 import { shortRule } from "@/lib/ephemeral";
 import { sendAtLabel, toLocalInput } from "@/lib/format";
 import { six } from "@/lib/six";
+import { Dialog } from "./dialog";
 import { MediaLabel } from "./message-list";
-import { Portal } from "./portal";
 import { PrimaryButton } from "./ui";
-
-function Overlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <Portal>
-      <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal>
-        <button
-          type="button"
-          aria-label="Close"
-          onClick={onClose}
-          className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-        />
-        <div className="relative w-full max-w-md p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3">
-          <div className="max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-xl dark:bg-stone-900">
-            {children}
-          </div>
-        </div>
-      </div>
-    </Portal>
-  );
-}
 
 export function ScheduleDialog({
   title,
@@ -63,7 +37,7 @@ export function ScheduleDialog({
   }
 
   return (
-    <Overlay onClose={onClose}>
+    <Dialog onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -104,7 +78,7 @@ export function ScheduleDialog({
           </PrimaryButton>
         </div>
       </form>
-    </Overlay>
+    </Dialog>
   );
 }
 
@@ -157,7 +131,7 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
 
   const items = list.data ?? [];
   return (
-    <Overlay onClose={onClose}>
+    <Dialog onClose={onClose}>
       <div className="flex items-center border-b border-stone-200 px-4 py-3 dark:border-stone-800">
         <h2 className="flex-1 font-semibold">Scheduled messages</h2>
         <button
@@ -201,6 +175,6 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
           ))}
         </ul>
       )}
-    </Overlay>
+    </Dialog>
   );
 }
