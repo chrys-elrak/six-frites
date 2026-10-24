@@ -30,7 +30,11 @@ export async function buildApp() {
   app.setSerializerCompiler(serializerCompiler);
 
   await app.register(errorsPlugin);
-  await app.register(cors, { origin: env.WEB_ORIGIN.split(","), credentials: true });
+  await app.register(cors, {
+    origin: env.WEB_ORIGIN.split(","),
+    credentials: true,
+    methods: ["GET", "HEAD", "POST", "PATCH", "DELETE"],
+  });
   await app.register(cookie);
   await app.register(rateLimit, {
     max: 300,

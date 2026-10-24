@@ -301,7 +301,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       }
       const m = row.message!;
       if (row.deleted) {
-        return [{ label: "Delete for me", destructive: true, onSelect: () => void deleteMessage(qc, m, "me") }];
+        return [{ label: "Delete for me", destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) }];
       }
       return [
         { label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) },
@@ -357,11 +357,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                     {
                       label: chat.type === "direct" ? `Delete for me and ${chat.title}` : "Delete for everyone",
                       destructive: true,
-                      onSelect: () => void deleteMessage(qc, confirmDelete, "all"),
+                      onSelect: () => void deleteMessage(qc, confirmDelete, "all").catch(() => null),
                     },
                   ]
                 : []),
-              { label: "Delete for me", destructive: true, onSelect: () => void deleteMessage(qc, confirmDelete, "me") },
+              { label: "Delete for me", destructive: true, onSelect: () => void deleteMessage(qc, confirmDelete, "me").catch(() => null) },
             ]}
           />
         )}

@@ -38,7 +38,12 @@ export async function editMessage(qc: QueryClient, messageId: string, text: stri
 
 export async function deleteMessage(qc: QueryClient, m: MessageDTO, scope: DeleteScope) {
   applyDeleted(qc, m.chatId, [m.id], scope);
-  unwrap(await six.api.DELETE("/v1/messages", { params: { query: { ids: m.id, scope } } }));
+  try {
+    unwrap(await six.api.DELETE("/v1/messages", { params: { query: { ids: m.id, scope } } }));
+  } catch (err) {
+    await qc.invalidateQueries({ queryKey: chatKeys.messages(m.chatId) });
+    throw err;
+  }
 }
 
 export async function updateChatSettings(

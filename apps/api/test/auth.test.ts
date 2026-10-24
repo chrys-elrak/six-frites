@@ -124,6 +124,21 @@ describe("referrals at signup", () => {
 });
 
 describe("contract", () => {
+  it("allows the web origin to send every method the API uses", async () => {
+    for (const method of ["PATCH", "DELETE"]) {
+      const res = await ctx.app.inject({
+        method: "OPTIONS",
+        url: "/v1/messages/x",
+        headers: {
+          origin: "http://localhost:3000",
+          "access-control-request-method": method,
+          "access-control-request-headers": "authorization,content-type",
+        },
+      });
+      expect(res.headers["access-control-allow-methods"]).toContain(method);
+    }
+  });
+
   it("serves OpenAPI with versioned routes and a JSON 404", async () => {
     const spec = (await ctx.app.inject({ url: "/docs/json" })).json();
     expect(Object.keys(spec.paths)).toEqual(

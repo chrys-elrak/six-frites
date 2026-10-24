@@ -43,6 +43,7 @@ export function Composer({
   const setMode = useComposerMode((s) => s.set);
   const [text, setText] = useState(() => drafts.get(chatId) ?? "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
   const editing = mode?.kind === "edit" ? mode.message : null;
 
@@ -71,6 +72,7 @@ export function Composer({
   const canSubmit = trimmed.length > 0 && realtime !== null && !saving;
 
   function cancel() {
+    setError(null);
     setMode(chatId, undefined);
   }
 
@@ -79,8 +81,12 @@ export function Composer({
     if (editing) {
       if (trimmed !== editing.text) {
         setSaving(true);
+        setError(null);
         try {
           await editMessage(qc, editing.id, trimmed);
+        } catch {
+          setError("Couldn't save your edit. Try again.");
+          return;
         } finally {
           setSaving(false);
         }
@@ -111,6 +117,11 @@ export function Composer({
         />
       )}
       {editing && <ModeBar label="Editing message" text={editing.text ?? ""} onCancel={cancel} />}
+      {error && (
+        <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
 
       <div className="flex items-end gap-2">
         <textarea
