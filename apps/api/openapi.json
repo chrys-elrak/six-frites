@@ -55,15 +55,13 @@
                     },
                     "required": [
                       "platform"
-                    ],
-                    "additionalProperties": false
+                    ]
                   }
                 },
                 "required": [
                   "idToken",
                   "device"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -81,7 +79,8 @@
                     },
                     "accessTokenExpiresAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "refreshToken": {
                       "type": "string"
@@ -95,19 +94,21 @@
                         },
                         "email": {
                           "type": "string",
-                          "format": "email"
+                          "format": "email",
+                          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                         },
                         "displayName": {
                           "type": "string"
                         },
                         "avatarUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         },
                         "createdAt": {
                           "type": "string",
-                          "format": "date-time"
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -145,22 +146,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "not": {}
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "refreshToken": {
-                        "type": "string",
-                        "minLength": 1
-                      }
-                    },
-                    "additionalProperties": false,
-                    "nullable": true
+                "nullable": true,
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 1
                   }
-                ]
+                }
               }
             }
           }
@@ -178,7 +171,8 @@
                     },
                     "accessTokenExpiresAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "refreshToken": {
                       "type": "string"
@@ -192,19 +186,21 @@
                         },
                         "email": {
                           "type": "string",
-                          "format": "email"
+                          "format": "email",
+                          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                         },
                         "displayName": {
                           "type": "string"
                         },
                         "avatarUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         },
                         "createdAt": {
                           "type": "string",
-                          "format": "date-time"
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -247,10 +243,11 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "string",
+                  "nullable": true,
                   "enum": [
-                    "null"
-                  ],
-                  "nullable": true
+                    null
+                  ]
                 }
               }
             }
@@ -283,19 +280,21 @@
                     },
                     "email": {
                       "type": "string",
-                      "format": "email"
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                     },
                     "displayName": {
                       "type": "string"
                     },
                     "avatarUrl": {
+                      "nullable": true,
                       "type": "string",
-                      "format": "uri",
-                      "nullable": true
+                      "format": "uri"
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -330,12 +329,11 @@
                     "maxLength": 64
                   },
                   "avatarUrl": {
+                    "nullable": true,
                     "type": "string",
-                    "format": "uri",
-                    "nullable": true
+                    "format": "uri"
                   }
-                },
-                "additionalProperties": false
+                }
               }
             }
           }
@@ -359,19 +357,21 @@
                     },
                     "email": {
                       "type": "string",
-                      "format": "email"
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                     },
                     "displayName": {
                       "type": "string"
                     },
                     "avatarUrl": {
+                      "nullable": true,
                       "type": "string",
-                      "format": "uri",
-                      "nullable": true
+                      "format": "uri"
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -426,16 +426,18 @@
                             ]
                           },
                           "deviceName": {
-                            "type": "string",
-                            "nullable": true
+                            "nullable": true,
+                            "type": "string"
                           },
                           "createdAt": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "lastUsedAt": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "current": {
                             "type": "boolean"
@@ -482,7 +484,9 @@
                   "type": "object",
                   "properties": {
                     "revoked": {
-                      "type": "integer"
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     }
                   },
                   "required": [
@@ -524,10 +528,11 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "string",
+                  "nullable": true,
                   "enum": [
-                    "null"
-                  ],
-                  "nullable": true
+                    null
+                  ]
                 }
               }
             }
@@ -575,9 +580,9 @@
                           "type": "string"
                         },
                         "avatarUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         }
                       },
                       "required": [
@@ -623,21 +628,20 @@
                 "type": "object",
                 "properties": {
                   "maxUses": {
+                    "default": null,
+                    "nullable": true,
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": 1000,
-                    "nullable": true,
-                    "default": null
+                    "maximum": 1000
                   },
                   "expiresInDays": {
+                    "default": 30,
+                    "nullable": true,
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": 365,
-                    "nullable": true,
-                    "default": 30
+                    "maximum": 365
                   }
-                },
-                "additionalProperties": false
+                }
               }
             }
           }
@@ -659,20 +663,26 @@
                       "type": "string"
                     },
                     "maxUses": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "uses": {
-                      "type": "integer"
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "expiresAt": {
+                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -705,10 +715,10 @@
           },
           {
             "schema": {
+              "default": 30,
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "default": 30
+              "maximum": 100
             },
             "in": "query",
             "name": "limit",
@@ -737,20 +747,26 @@
                             "type": "string"
                           },
                           "maxUses": {
+                            "nullable": true,
                             "type": "integer",
-                            "nullable": true
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
                           },
                           "uses": {
-                            "type": "integer"
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
                           },
                           "expiresAt": {
+                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
-                            "nullable": true
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "createdAt": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           }
                         },
                         "required": [
@@ -764,8 +780,8 @@
                       }
                     },
                     "nextCursor": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -822,9 +838,9 @@
                           "type": "string"
                         },
                         "avatarUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         }
                       },
                       "required": [
@@ -863,10 +879,10 @@
           },
           {
             "schema": {
+              "default": 30,
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "default": 30
+              "maximum": 100
             },
             "in": "query",
             "name": "limit",
@@ -906,9 +922,9 @@
                                 "type": "string"
                               },
                               "avatarUrl": {
+                                "nullable": true,
                                 "type": "string",
-                                "format": "uri",
-                                "nullable": true
+                                "format": "uri"
                               }
                             },
                             "required": [
@@ -923,7 +939,8 @@
                           },
                           "createdAt": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           }
                         },
                         "required": [
@@ -936,8 +953,8 @@
                       }
                     },
                     "nextCursor": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -961,12 +978,12 @@
         "parameters": [
           {
             "schema": {
+              "default": "false",
               "type": "string",
               "enum": [
                 "true",
                 "false"
-              ],
-              "default": "false"
+              ]
             },
             "in": "query",
             "name": "archived",
@@ -982,10 +999,10 @@
           },
           {
             "schema": {
+              "default": 30,
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "default": 30
+              "maximum": 100
             },
             "in": "query",
             "name": "limit",
@@ -1039,9 +1056,9 @@
                                       "type": "string"
                                     },
                                     "avatarUrl": {
+                                      "nullable": true,
                                       "type": "string",
-                                      "format": "uri",
-                                      "nullable": true
+                                      "format": "uri"
                                     }
                                   },
                                   "required": [
@@ -1052,24 +1069,26 @@
                                   "additionalProperties": false
                                 },
                                 "lastDeliveredMessageId": {
+                                  "nullable": true,
                                   "type": "string",
-                                  "minLength": 1,
-                                  "nullable": true
+                                  "minLength": 1
                                 },
                                 "lastDeliveredAt": {
+                                  "nullable": true,
                                   "type": "string",
                                   "format": "date-time",
-                                  "nullable": true
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                 },
                                 "lastReadMessageId": {
+                                  "nullable": true,
                                   "type": "string",
-                                  "minLength": 1,
-                                  "nullable": true
+                                  "minLength": 1
                                 },
                                 "lastReadAt": {
+                                  "nullable": true,
                                   "type": "string",
                                   "format": "date-time",
-                                  "nullable": true
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                 }
                               },
                               "required": [
@@ -1083,6 +1102,7 @@
                             }
                           },
                           "lastMessage": {
+                            "nullable": true,
                             "type": "object",
                             "properties": {
                               "id": {
@@ -1112,8 +1132,8 @@
                                 ]
                               },
                               "text": {
-                                "type": "string",
-                                "nullable": true
+                                "nullable": true,
+                                "type": "string"
                               },
                               "entities": {
                                 "type": "array",
@@ -1132,11 +1152,13 @@
                                     },
                                     "offset": {
                                       "type": "integer",
-                                      "minimum": 0
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
                                     },
                                     "length": {
                                       "type": "integer",
-                                      "minimum": 1
+                                      "minimum": 1,
+                                      "maximum": 9007199254740991
                                     }
                                   },
                                   "required": [
@@ -1151,6 +1173,7 @@
                                 "type": "boolean"
                               },
                               "attachment": {
+                                "nullable": true,
                                 "type": "object",
                                 "properties": {
                                   "id": {
@@ -1183,39 +1206,47 @@
                                     "type": "string"
                                   },
                                   "size": {
-                                    "type": "integer"
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "url": {
-                                    "type": "string",
-                                    "format": "uri",
                                     "nullable": true,
-                                    "description": "Signed link to the playable or viewable file, once ready"
+                                    "description": "Signed link to the playable or viewable file, once ready",
+                                    "type": "string",
+                                    "format": "uri"
                                   },
                                   "thumbUrl": {
+                                    "nullable": true,
                                     "type": "string",
-                                    "format": "uri",
-                                    "nullable": true
+                                    "format": "uri"
                                   },
                                   "width": {
+                                    "nullable": true,
                                     "type": "integer",
-                                    "nullable": true
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "height": {
+                                    "nullable": true,
                                     "type": "integer",
-                                    "nullable": true
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "durationMs": {
+                                    "nullable": true,
                                     "type": "integer",
-                                    "nullable": true
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "waveform": {
+                                    "nullable": true,
                                     "type": "array",
                                     "items": {
                                       "type": "integer",
                                       "minimum": 0,
                                       "maximum": 100
-                                    },
-                                    "nullable": true
+                                    }
                                   }
                                 },
                                 "required": [
@@ -1232,28 +1263,35 @@
                                   "durationMs",
                                   "waveform"
                                 ],
-                                "additionalProperties": false,
-                                "nullable": true
+                                "additionalProperties": false
                               },
                               "ephemeral": {
+                                "nullable": true,
                                 "type": "object",
                                 "properties": {
                                   "maxViews": {
+                                    "nullable": true,
                                     "type": "integer",
-                                    "nullable": true
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "ttlSeconds": {
+                                    "nullable": true,
                                     "type": "integer",
-                                    "nullable": true
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "views": {
                                     "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
                                     "description": "How many times the recipient opened it"
                                   },
                                   "firstViewedAt": {
+                                    "nullable": true,
                                     "type": "string",
                                     "format": "date-time",
-                                    "nullable": true
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "locked": {
                                     "type": "boolean",
@@ -1269,13 +1307,16 @@
                                   },
                                   "resendsLeft": {
                                     "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
                                     "description": "How many more times the sender can re-arm it"
                                   },
                                   "resendUntil": {
+                                    "nullable": true,
+                                    "description": "Until when the sender can resend it, once it has been opened",
                                     "type": "string",
                                     "format": "date-time",
-                                    "nullable": true,
-                                    "description": "Until when the sender can resend it, once it has been opened"
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   }
                                 },
                                 "required": [
@@ -1289,10 +1330,10 @@
                                   "resendsLeft",
                                   "resendUntil"
                                 ],
-                                "additionalProperties": false,
-                                "nullable": true
+                                "additionalProperties": false
                               },
                               "replyTo": {
+                                "nullable": true,
                                 "type": "object",
                                 "properties": {
                                   "id": {
@@ -1315,8 +1356,8 @@
                                     ]
                                   },
                                   "text": {
-                                    "type": "string",
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "string"
                                   },
                                   "spoiler": {
                                     "type": "boolean"
@@ -1337,22 +1378,24 @@
                                   "ephemeral",
                                   "deleted"
                                 ],
-                                "additionalProperties": false,
-                                "nullable": true
+                                "additionalProperties": false
                               },
                               "createdAt": {
                                 "type": "string",
-                                "format": "date-time"
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "editedAt": {
+                                "nullable": true,
                                 "type": "string",
                                 "format": "date-time",
-                                "nullable": true
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "deletedAt": {
+                                "nullable": true,
                                 "type": "string",
                                 "format": "date-time",
-                                "nullable": true
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
@@ -1371,11 +1414,12 @@
                               "editedAt",
                               "deletedAt"
                             ],
-                            "additionalProperties": false,
-                            "nullable": true
+                            "additionalProperties": false
                           },
                           "unreadCount": {
-                            "type": "integer"
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
                           },
                           "archived": {
                             "type": "boolean"
@@ -1387,16 +1431,20 @@
                             "type": "boolean"
                           },
                           "autoDeleteSecs": {
+                            "nullable": true,
                             "type": "integer",
-                            "nullable": true
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
                           },
                           "lastActivityAt": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "createdAt": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           }
                         },
                         "required": [
@@ -1417,8 +1465,8 @@
                       }
                     },
                     "nextCursor": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -1492,9 +1540,9 @@
                                 "type": "string"
                               },
                               "avatarUrl": {
+                                "nullable": true,
                                 "type": "string",
-                                "format": "uri",
-                                "nullable": true
+                                "format": "uri"
                               }
                             },
                             "required": [
@@ -1505,24 +1553,26 @@
                             "additionalProperties": false
                           },
                           "lastDeliveredMessageId": {
+                            "nullable": true,
                             "type": "string",
-                            "minLength": 1,
-                            "nullable": true
+                            "minLength": 1
                           },
                           "lastDeliveredAt": {
+                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
-                            "nullable": true
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "lastReadMessageId": {
+                            "nullable": true,
                             "type": "string",
-                            "minLength": 1,
-                            "nullable": true
+                            "minLength": 1
                           },
                           "lastReadAt": {
+                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
-                            "nullable": true
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           }
                         },
                         "required": [
@@ -1536,6 +1586,7 @@
                       }
                     },
                     "lastMessage": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -1565,8 +1616,8 @@
                           ]
                         },
                         "text": {
-                          "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "type": "string"
                         },
                         "entities": {
                           "type": "array",
@@ -1585,11 +1636,13 @@
                               },
                               "offset": {
                                 "type": "integer",
-                                "minimum": 0
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               },
                               "length": {
                                 "type": "integer",
-                                "minimum": 1
+                                "minimum": 1,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -1604,6 +1657,7 @@
                           "type": "boolean"
                         },
                         "attachment": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "id": {
@@ -1636,39 +1690,47 @@
                               "type": "string"
                             },
                             "size": {
-                              "type": "integer"
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "url": {
-                              "type": "string",
-                              "format": "uri",
                               "nullable": true,
-                              "description": "Signed link to the playable or viewable file, once ready"
+                              "description": "Signed link to the playable or viewable file, once ready",
+                              "type": "string",
+                              "format": "uri"
                             },
                             "thumbUrl": {
+                              "nullable": true,
                               "type": "string",
-                              "format": "uri",
-                              "nullable": true
+                              "format": "uri"
                             },
                             "width": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "height": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "durationMs": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "waveform": {
+                              "nullable": true,
                               "type": "array",
                               "items": {
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 100
-                              },
-                              "nullable": true
+                              }
                             }
                           },
                           "required": [
@@ -1685,28 +1747,35 @@
                             "durationMs",
                             "waveform"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "ephemeral": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "maxViews": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "ttlSeconds": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "views": {
                               "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
                               "description": "How many times the recipient opened it"
                             },
                             "firstViewedAt": {
+                              "nullable": true,
                               "type": "string",
                               "format": "date-time",
-                              "nullable": true
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             "locked": {
                               "type": "boolean",
@@ -1722,13 +1791,16 @@
                             },
                             "resendsLeft": {
                               "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
                               "description": "How many more times the sender can re-arm it"
                             },
                             "resendUntil": {
+                              "nullable": true,
+                              "description": "Until when the sender can resend it, once it has been opened",
                               "type": "string",
                               "format": "date-time",
-                              "nullable": true,
-                              "description": "Until when the sender can resend it, once it has been opened"
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
@@ -1742,10 +1814,10 @@
                             "resendsLeft",
                             "resendUntil"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "replyTo": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "id": {
@@ -1768,8 +1840,8 @@
                               ]
                             },
                             "text": {
-                              "type": "string",
-                              "nullable": true
+                              "nullable": true,
+                              "type": "string"
                             },
                             "spoiler": {
                               "type": "boolean"
@@ -1790,22 +1862,24 @@
                             "ephemeral",
                             "deleted"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "createdAt": {
                           "type": "string",
-                          "format": "date-time"
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "editedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "deletedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -1824,11 +1898,12 @@
                         "editedAt",
                         "deletedAt"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "unreadCount": {
-                      "type": "integer"
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "archived": {
                       "type": "boolean"
@@ -1840,16 +1915,20 @@
                       "type": "boolean"
                     },
                     "autoDeleteSecs": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "lastActivityAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -1894,8 +1973,7 @@
                   "pinned": {
                     "type": "boolean"
                   }
-                },
-                "additionalProperties": false
+                }
               }
             }
           }
@@ -1953,9 +2031,9 @@
                                 "type": "string"
                               },
                               "avatarUrl": {
+                                "nullable": true,
                                 "type": "string",
-                                "format": "uri",
-                                "nullable": true
+                                "format": "uri"
                               }
                             },
                             "required": [
@@ -1966,24 +2044,26 @@
                             "additionalProperties": false
                           },
                           "lastDeliveredMessageId": {
+                            "nullable": true,
                             "type": "string",
-                            "minLength": 1,
-                            "nullable": true
+                            "minLength": 1
                           },
                           "lastDeliveredAt": {
+                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
-                            "nullable": true
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "lastReadMessageId": {
+                            "nullable": true,
                             "type": "string",
-                            "minLength": 1,
-                            "nullable": true
+                            "minLength": 1
                           },
                           "lastReadAt": {
+                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
-                            "nullable": true
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           }
                         },
                         "required": [
@@ -1997,6 +2077,7 @@
                       }
                     },
                     "lastMessage": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -2026,8 +2107,8 @@
                           ]
                         },
                         "text": {
-                          "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "type": "string"
                         },
                         "entities": {
                           "type": "array",
@@ -2046,11 +2127,13 @@
                               },
                               "offset": {
                                 "type": "integer",
-                                "minimum": 0
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               },
                               "length": {
                                 "type": "integer",
-                                "minimum": 1
+                                "minimum": 1,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -2065,6 +2148,7 @@
                           "type": "boolean"
                         },
                         "attachment": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "id": {
@@ -2097,39 +2181,47 @@
                               "type": "string"
                             },
                             "size": {
-                              "type": "integer"
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "url": {
-                              "type": "string",
-                              "format": "uri",
                               "nullable": true,
-                              "description": "Signed link to the playable or viewable file, once ready"
+                              "description": "Signed link to the playable or viewable file, once ready",
+                              "type": "string",
+                              "format": "uri"
                             },
                             "thumbUrl": {
+                              "nullable": true,
                               "type": "string",
-                              "format": "uri",
-                              "nullable": true
+                              "format": "uri"
                             },
                             "width": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "height": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "durationMs": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "waveform": {
+                              "nullable": true,
                               "type": "array",
                               "items": {
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 100
-                              },
-                              "nullable": true
+                              }
                             }
                           },
                           "required": [
@@ -2146,28 +2238,35 @@
                             "durationMs",
                             "waveform"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "ephemeral": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "maxViews": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "ttlSeconds": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "views": {
                               "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
                               "description": "How many times the recipient opened it"
                             },
                             "firstViewedAt": {
+                              "nullable": true,
                               "type": "string",
                               "format": "date-time",
-                              "nullable": true
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             "locked": {
                               "type": "boolean",
@@ -2183,13 +2282,16 @@
                             },
                             "resendsLeft": {
                               "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
                               "description": "How many more times the sender can re-arm it"
                             },
                             "resendUntil": {
+                              "nullable": true,
+                              "description": "Until when the sender can resend it, once it has been opened",
                               "type": "string",
                               "format": "date-time",
-                              "nullable": true,
-                              "description": "Until when the sender can resend it, once it has been opened"
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
@@ -2203,10 +2305,10 @@
                             "resendsLeft",
                             "resendUntil"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "replyTo": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "id": {
@@ -2229,8 +2331,8 @@
                               ]
                             },
                             "text": {
-                              "type": "string",
-                              "nullable": true
+                              "nullable": true,
+                              "type": "string"
                             },
                             "spoiler": {
                               "type": "boolean"
@@ -2251,22 +2353,24 @@
                             "ephemeral",
                             "deleted"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "createdAt": {
                           "type": "string",
-                          "format": "date-time"
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "editedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "deletedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -2285,11 +2389,12 @@
                         "editedAt",
                         "deletedAt"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "unreadCount": {
-                      "type": "integer"
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "archived": {
                       "type": "boolean"
@@ -2301,16 +2406,20 @@
                       "type": "boolean"
                     },
                     "autoDeleteSecs": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "lastActivityAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -2343,12 +2452,12 @@
         "parameters": [
           {
             "schema": {
+              "default": "me",
               "type": "string",
               "enum": [
                 "me",
                 "all"
-              ],
-              "default": "me"
+              ]
             },
             "in": "query",
             "name": "scope",
@@ -2375,10 +2484,11 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "string",
+                  "nullable": true,
                   "enum": [
-                    "null"
-                  ],
-                  "nullable": true
+                    null
+                  ]
                 }
               }
             }
@@ -2405,6 +2515,7 @@
                     "maxLength": 4000
                   },
                   "entities": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -2421,28 +2532,27 @@
                         },
                         "offset": {
                           "type": "integer",
-                          "minimum": 0
+                          "minimum": 0,
+                          "maximum": 9007199254740991
                         },
                         "length": {
                           "type": "integer",
-                          "minimum": 1
+                          "minimum": 1,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
                         "type",
                         "offset",
                         "length"
-                      ],
-                      "additionalProperties": false
+                      ]
                     },
-                    "maxItems": 100,
                     "description": "Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not."
                   }
                 },
                 "required": [
                   "text"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -2498,8 +2608,8 @@
                       ]
                     },
                     "text": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     },
                     "entities": {
                       "type": "array",
@@ -2518,11 +2628,13 @@
                           },
                           "offset": {
                             "type": "integer",
-                            "minimum": 0
+                            "minimum": 0,
+                            "maximum": 9007199254740991
                           },
                           "length": {
                             "type": "integer",
-                            "minimum": 1
+                            "minimum": 1,
+                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -2537,6 +2649,7 @@
                       "type": "boolean"
                     },
                     "attachment": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -2569,39 +2682,47 @@
                           "type": "string"
                         },
                         "size": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "url": {
-                          "type": "string",
-                          "format": "uri",
                           "nullable": true,
-                          "description": "Signed link to the playable or viewable file, once ready"
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
                         },
                         "thumbUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         },
                         "width": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "height": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "durationMs": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "waveform": {
+                          "nullable": true,
                           "type": "array",
                           "items": {
                             "type": "integer",
                             "minimum": 0,
                             "maximum": 100
-                          },
-                          "nullable": true
+                          }
                         }
                       },
                       "required": [
@@ -2618,28 +2739,35 @@
                         "durationMs",
                         "waveform"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "ephemeral": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "maxViews": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "ttlSeconds": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "views": {
                           "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
                           "description": "How many times the recipient opened it"
                         },
                         "firstViewedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "locked": {
                           "type": "boolean",
@@ -2655,13 +2783,16 @@
                         },
                         "resendsLeft": {
                           "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
                           "description": "How many more times the sender can re-arm it"
                         },
                         "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true,
-                          "description": "Until when the sender can resend it, once it has been opened"
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -2675,10 +2806,10 @@
                         "resendsLeft",
                         "resendUntil"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "replyTo": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -2701,8 +2832,8 @@
                           ]
                         },
                         "text": {
-                          "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "type": "string"
                         },
                         "spoiler": {
                           "type": "boolean"
@@ -2723,22 +2854,24 @@
                         "ephemeral",
                         "deleted"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "editedAt": {
+                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "deletedAt": {
+                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -2826,8 +2959,8 @@
                           ]
                         },
                         "text": {
-                          "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "type": "string"
                         },
                         "entities": {
                           "type": "array",
@@ -2846,11 +2979,13 @@
                               },
                               "offset": {
                                 "type": "integer",
-                                "minimum": 0
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               },
                               "length": {
                                 "type": "integer",
-                                "minimum": 1
+                                "minimum": 1,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -2865,6 +3000,7 @@
                           "type": "boolean"
                         },
                         "attachment": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "id": {
@@ -2897,39 +3033,47 @@
                               "type": "string"
                             },
                             "size": {
-                              "type": "integer"
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "url": {
-                              "type": "string",
-                              "format": "uri",
                               "nullable": true,
-                              "description": "Signed link to the playable or viewable file, once ready"
+                              "description": "Signed link to the playable or viewable file, once ready",
+                              "type": "string",
+                              "format": "uri"
                             },
                             "thumbUrl": {
+                              "nullable": true,
                               "type": "string",
-                              "format": "uri",
-                              "nullable": true
+                              "format": "uri"
                             },
                             "width": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "height": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "durationMs": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "waveform": {
+                              "nullable": true,
                               "type": "array",
                               "items": {
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 100
-                              },
-                              "nullable": true
+                              }
                             }
                           },
                           "required": [
@@ -2946,28 +3090,35 @@
                             "durationMs",
                             "waveform"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "ephemeral": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "maxViews": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "ttlSeconds": {
+                              "nullable": true,
                               "type": "integer",
-                              "nullable": true
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "views": {
                               "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
                               "description": "How many times the recipient opened it"
                             },
                             "firstViewedAt": {
+                              "nullable": true,
                               "type": "string",
                               "format": "date-time",
-                              "nullable": true
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             },
                             "locked": {
                               "type": "boolean",
@@ -2983,13 +3134,16 @@
                             },
                             "resendsLeft": {
                               "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
                               "description": "How many more times the sender can re-arm it"
                             },
                             "resendUntil": {
+                              "nullable": true,
+                              "description": "Until when the sender can resend it, once it has been opened",
                               "type": "string",
                               "format": "date-time",
-                              "nullable": true,
-                              "description": "Until when the sender can resend it, once it has been opened"
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
@@ -3003,10 +3157,10 @@
                             "resendsLeft",
                             "resendUntil"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "replyTo": {
+                          "nullable": true,
                           "type": "object",
                           "properties": {
                             "id": {
@@ -3029,8 +3183,8 @@
                               ]
                             },
                             "text": {
-                              "type": "string",
-                              "nullable": true
+                              "nullable": true,
+                              "type": "string"
                             },
                             "spoiler": {
                               "type": "boolean"
@@ -3051,22 +3205,24 @@
                             "ephemeral",
                             "deleted"
                           ],
-                          "additionalProperties": false,
-                          "nullable": true
+                          "additionalProperties": false
                         },
                         "createdAt": {
                           "type": "string",
-                          "format": "date-time"
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "editedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "deletedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -3088,10 +3244,11 @@
                       "additionalProperties": false
                     },
                     "expiresAt": {
+                      "nullable": true,
+                      "description": "When the content will be destroyed, if a timer is running",
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true,
-                      "description": "When the content will be destroyed, if a timer is running"
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -3164,8 +3321,8 @@
                       ]
                     },
                     "text": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     },
                     "entities": {
                       "type": "array",
@@ -3184,11 +3341,13 @@
                           },
                           "offset": {
                             "type": "integer",
-                            "minimum": 0
+                            "minimum": 0,
+                            "maximum": 9007199254740991
                           },
                           "length": {
                             "type": "integer",
-                            "minimum": 1
+                            "minimum": 1,
+                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -3203,6 +3362,7 @@
                       "type": "boolean"
                     },
                     "attachment": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -3235,39 +3395,47 @@
                           "type": "string"
                         },
                         "size": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "url": {
-                          "type": "string",
-                          "format": "uri",
                           "nullable": true,
-                          "description": "Signed link to the playable or viewable file, once ready"
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
                         },
                         "thumbUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         },
                         "width": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "height": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "durationMs": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "waveform": {
+                          "nullable": true,
                           "type": "array",
                           "items": {
                             "type": "integer",
                             "minimum": 0,
                             "maximum": 100
-                          },
-                          "nullable": true
+                          }
                         }
                       },
                       "required": [
@@ -3284,28 +3452,35 @@
                         "durationMs",
                         "waveform"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "ephemeral": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "maxViews": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "ttlSeconds": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "views": {
                           "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
                           "description": "How many times the recipient opened it"
                         },
                         "firstViewedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "locked": {
                           "type": "boolean",
@@ -3321,13 +3496,16 @@
                         },
                         "resendsLeft": {
                           "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
                           "description": "How many more times the sender can re-arm it"
                         },
                         "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true,
-                          "description": "Until when the sender can resend it, once it has been opened"
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -3341,10 +3519,10 @@
                         "resendsLeft",
                         "resendUntil"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "replyTo": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -3367,8 +3545,8 @@
                           ]
                         },
                         "text": {
-                          "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "type": "string"
                         },
                         "spoiler": {
                           "type": "boolean"
@@ -3389,22 +3567,24 @@
                         "ephemeral",
                         "deleted"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "editedAt": {
+                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "deletedAt": {
+                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -3451,12 +3631,12 @@
           },
           {
             "schema": {
+              "default": "me",
               "type": "string",
               "enum": [
                 "me",
                 "all"
-              ],
-              "default": "me"
+              ]
             },
             "in": "query",
             "name": "scope",
@@ -3474,10 +3654,11 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "string",
+                  "nullable": true,
                   "enum": [
-                    "null"
-                  ],
-                  "nullable": true
+                    null
+                  ]
                 }
               }
             }
@@ -3502,10 +3683,10 @@
           },
           {
             "schema": {
+              "default": 30,
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "default": 30
+              "maximum": 100
             },
             "in": "query",
             "name": "limit",
@@ -3566,8 +3747,8 @@
                             ]
                           },
                           "text": {
-                            "type": "string",
-                            "nullable": true
+                            "nullable": true,
+                            "type": "string"
                           },
                           "entities": {
                             "type": "array",
@@ -3586,11 +3767,13 @@
                                 },
                                 "offset": {
                                   "type": "integer",
-                                  "minimum": 0
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
                                 },
                                 "length": {
                                   "type": "integer",
-                                  "minimum": 1
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
                                 }
                               },
                               "required": [
@@ -3605,6 +3788,7 @@
                             "type": "boolean"
                           },
                           "attachment": {
+                            "nullable": true,
                             "type": "object",
                             "properties": {
                               "id": {
@@ -3637,39 +3821,47 @@
                                 "type": "string"
                               },
                               "size": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               },
                               "url": {
-                                "type": "string",
-                                "format": "uri",
                                 "nullable": true,
-                                "description": "Signed link to the playable or viewable file, once ready"
+                                "description": "Signed link to the playable or viewable file, once ready",
+                                "type": "string",
+                                "format": "uri"
                               },
                               "thumbUrl": {
+                                "nullable": true,
                                 "type": "string",
-                                "format": "uri",
-                                "nullable": true
+                                "format": "uri"
                               },
                               "width": {
+                                "nullable": true,
                                 "type": "integer",
-                                "nullable": true
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               },
                               "height": {
+                                "nullable": true,
                                 "type": "integer",
-                                "nullable": true
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               },
                               "durationMs": {
+                                "nullable": true,
                                 "type": "integer",
-                                "nullable": true
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               },
                               "waveform": {
+                                "nullable": true,
                                 "type": "array",
                                 "items": {
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 100
-                                },
-                                "nullable": true
+                                }
                               }
                             },
                             "required": [
@@ -3686,28 +3878,35 @@
                               "durationMs",
                               "waveform"
                             ],
-                            "additionalProperties": false,
-                            "nullable": true
+                            "additionalProperties": false
                           },
                           "ephemeral": {
+                            "nullable": true,
                             "type": "object",
                             "properties": {
                               "maxViews": {
+                                "nullable": true,
                                 "type": "integer",
-                                "nullable": true
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               },
                               "ttlSeconds": {
+                                "nullable": true,
                                 "type": "integer",
-                                "nullable": true
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               },
                               "views": {
                                 "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
                                 "description": "How many times the recipient opened it"
                               },
                               "firstViewedAt": {
+                                "nullable": true,
                                 "type": "string",
                                 "format": "date-time",
-                                "nullable": true
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "locked": {
                                 "type": "boolean",
@@ -3723,13 +3922,16 @@
                               },
                               "resendsLeft": {
                                 "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
                                 "description": "How many more times the sender can re-arm it"
                               },
                               "resendUntil": {
+                                "nullable": true,
+                                "description": "Until when the sender can resend it, once it has been opened",
                                 "type": "string",
                                 "format": "date-time",
-                                "nullable": true,
-                                "description": "Until when the sender can resend it, once it has been opened"
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
@@ -3743,10 +3945,10 @@
                               "resendsLeft",
                               "resendUntil"
                             ],
-                            "additionalProperties": false,
-                            "nullable": true
+                            "additionalProperties": false
                           },
                           "replyTo": {
+                            "nullable": true,
                             "type": "object",
                             "properties": {
                               "id": {
@@ -3769,8 +3971,8 @@
                                 ]
                               },
                               "text": {
-                                "type": "string",
-                                "nullable": true
+                                "nullable": true,
+                                "type": "string"
                               },
                               "spoiler": {
                                 "type": "boolean"
@@ -3791,22 +3993,24 @@
                               "ephemeral",
                               "deleted"
                             ],
-                            "additionalProperties": false,
-                            "nullable": true
+                            "additionalProperties": false
                           },
                           "createdAt": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "editedAt": {
+                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
-                            "nullable": true
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "deletedAt": {
+                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
-                            "nullable": true
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           }
                         },
                         "required": [
@@ -3829,8 +4033,8 @@
                       }
                     },
                     "nextCursor": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -3863,12 +4067,13 @@
                     "maxLength": 64
                   },
                   "text": {
+                    "description": "Required unless attachmentId is set, in which case it is the caption",
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 4000,
-                    "description": "Required unless attachmentId is set, in which case it is the caption"
+                    "maxLength": 4000
                   },
                   "entities": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -3885,27 +4090,27 @@
                         },
                         "offset": {
                           "type": "integer",
-                          "minimum": 0
+                          "minimum": 0,
+                          "maximum": 9007199254740991
                         },
                         "length": {
                           "type": "integer",
-                          "minimum": 1
+                          "minimum": 1,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
                         "type",
                         "offset",
                         "length"
-                      ],
-                      "additionalProperties": false
+                      ]
                     },
-                    "maxItems": 100,
                     "description": "Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not."
                   },
                   "attachmentId": {
+                    "description": "A completed upload from POST /v1/uploads/{id}/complete",
                     "type": "string",
-                    "minLength": 1,
-                    "description": "A completed upload from POST /v1/uploads/{id}/complete"
+                    "minLength": 1
                   },
                   "replyToId": {
                     "type": "string",
@@ -3915,29 +4120,27 @@
                     "type": "boolean"
                   },
                   "ephemeral": {
+                    "description": "Self-destruct after viewing, like Telegram's view-once and timers",
                     "type": "object",
                     "properties": {
                       "maxViews": {
+                        "description": "Destroy after this many views by the recipient",
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 10,
-                        "description": "Destroy after this many views by the recipient"
+                        "maximum": 10
                       },
                       "ttlSeconds": {
+                        "description": "Destroy this many seconds after the recipient first opens it",
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 604800,
-                        "description": "Destroy this many seconds after the recipient first opens it"
+                        "maximum": 604800
                       }
-                    },
-                    "additionalProperties": false,
-                    "description": "Self-destruct after viewing, like Telegram's view-once and timers"
+                    }
                   }
                 },
                 "required": [
                   "clientId"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -3993,8 +4196,8 @@
                       ]
                     },
                     "text": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     },
                     "entities": {
                       "type": "array",
@@ -4013,11 +4216,13 @@
                           },
                           "offset": {
                             "type": "integer",
-                            "minimum": 0
+                            "minimum": 0,
+                            "maximum": 9007199254740991
                           },
                           "length": {
                             "type": "integer",
-                            "minimum": 1
+                            "minimum": 1,
+                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -4032,6 +4237,7 @@
                       "type": "boolean"
                     },
                     "attachment": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -4064,39 +4270,47 @@
                           "type": "string"
                         },
                         "size": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "url": {
-                          "type": "string",
-                          "format": "uri",
                           "nullable": true,
-                          "description": "Signed link to the playable or viewable file, once ready"
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
                         },
                         "thumbUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         },
                         "width": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "height": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "durationMs": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "waveform": {
+                          "nullable": true,
                           "type": "array",
                           "items": {
                             "type": "integer",
                             "minimum": 0,
                             "maximum": 100
-                          },
-                          "nullable": true
+                          }
                         }
                       },
                       "required": [
@@ -4113,28 +4327,35 @@
                         "durationMs",
                         "waveform"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "ephemeral": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "maxViews": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "ttlSeconds": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "views": {
                           "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
                           "description": "How many times the recipient opened it"
                         },
                         "firstViewedAt": {
+                          "nullable": true,
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
                         "locked": {
                           "type": "boolean",
@@ -4150,13 +4371,16 @@
                         },
                         "resendsLeft": {
                           "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
                           "description": "How many more times the sender can re-arm it"
                         },
                         "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
                           "type": "string",
                           "format": "date-time",
-                          "nullable": true,
-                          "description": "Until when the sender can resend it, once it has been opened"
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
@@ -4170,10 +4394,10 @@
                         "resendsLeft",
                         "resendUntil"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "replyTo": {
+                      "nullable": true,
                       "type": "object",
                       "properties": {
                         "id": {
@@ -4196,8 +4420,8 @@
                           ]
                         },
                         "text": {
-                          "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "type": "string"
                         },
                         "spoiler": {
                           "type": "boolean"
@@ -4218,22 +4442,24 @@
                         "ephemeral",
                         "deleted"
                       ],
-                      "additionalProperties": false,
-                      "nullable": true
+                      "additionalProperties": false
                     },
                     "createdAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "editedAt": {
+                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     "deletedAt": {
+                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
-                      "nullable": true
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -4272,22 +4498,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "not": {}
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "messageId": {
-                        "type": "string",
-                        "minLength": 1
-                      }
-                    },
-                    "additionalProperties": false,
-                    "nullable": true
+                "nullable": true,
+                "type": "object",
+                "properties": {
+                  "messageId": {
+                    "type": "string",
+                    "minLength": 1
                   }
-                ]
+                }
               }
             }
           }
@@ -4314,6 +4532,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "nullable": true,
                   "type": "object",
                   "properties": {
                     "chatId": {
@@ -4330,7 +4549,8 @@
                     },
                     "lastReadAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -4339,8 +4559,7 @@
                     "lastReadMessageId",
                     "lastReadAt"
                   ],
-                  "additionalProperties": false,
-                  "nullable": true
+                  "additionalProperties": false
                 }
               }
             }
@@ -4360,22 +4579,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "not": {}
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "messageId": {
-                        "type": "string",
-                        "minLength": 1
-                      }
-                    },
-                    "additionalProperties": false,
-                    "nullable": true
+                "nullable": true,
+                "type": "object",
+                "properties": {
+                  "messageId": {
+                    "type": "string",
+                    "minLength": 1
                   }
-                ]
+                }
               }
             }
           }
@@ -4402,6 +4613,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "nullable": true,
                   "type": "object",
                   "properties": {
                     "chatId": {
@@ -4418,7 +4630,8 @@
                     },
                     "lastDeliveredAt": {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     }
                   },
                   "required": [
@@ -4427,8 +4640,7 @@
                     "lastDeliveredMessageId",
                     "lastDeliveredAt"
                   ],
-                  "additionalProperties": false,
-                  "nullable": true
+                  "additionalProperties": false
                 }
               }
             }
@@ -4463,10 +4675,10 @@
           },
           {
             "schema": {
+              "default": 100,
               "type": "integer",
               "minimum": 1,
-              "maximum": 200,
-              "default": 100
+              "maximum": 200
             },
             "in": "query",
             "name": "limit",
@@ -4502,9 +4714,9 @@
                                 "type": "string"
                               },
                               "avatarUrl": {
+                                "nullable": true,
                                 "type": "string",
-                                "format": "uri",
-                                "nullable": true
+                                "format": "uri"
                               }
                             },
                             "required": [
@@ -4523,8 +4735,8 @@
                             "type": "string"
                           },
                           "customName": {
-                            "type": "string",
-                            "nullable": true
+                            "nullable": true,
+                            "type": "string"
                           },
                           "hasCustomPhoto": {
                             "type": "boolean"
@@ -4541,8 +4753,8 @@
                       }
                     },
                     "nextCursor": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -4598,9 +4810,9 @@
                           "type": "string"
                         },
                         "avatarUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         }
                       },
                       "required": [
@@ -4619,8 +4831,8 @@
                       "type": "string"
                     },
                     "customName": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
@@ -4654,18 +4866,17 @@
                 "type": "object",
                 "properties": {
                   "displayName": {
+                    "nullable": true,
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 64,
-                    "nullable": true
+                    "maxLength": 64
                   },
                   "photo": {
+                    "nullable": true,
                     "type": "string",
-                    "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$",
-                    "nullable": true
+                    "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$"
                   }
-                },
-                "additionalProperties": false
+                }
               }
             }
           }
@@ -4705,9 +4916,9 @@
                           "type": "string"
                         },
                         "avatarUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         }
                       },
                       "required": [
@@ -4726,8 +4937,8 @@
                       "type": "string"
                     },
                     "customName": {
-                      "type": "string",
-                      "nullable": true
+                      "nullable": true,
+                      "type": "string"
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
@@ -4767,10 +4978,10 @@
           },
           {
             "schema": {
+              "default": 200,
               "type": "integer",
               "minimum": 1,
-              "maximum": 500,
-              "default": 200
+              "maximum": 500
             },
             "in": "query",
             "name": "limit",
@@ -4793,7 +5004,7 @@
                     "events": {
                       "type": "array",
                       "items": {
-                        "anyOf": [
+                        "oneOf": [
                           {
                             "type": "object",
                             "properties": {
@@ -4836,8 +5047,8 @@
                                     ]
                                   },
                                   "text": {
-                                    "type": "string",
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "string"
                                   },
                                   "entities": {
                                     "type": "array",
@@ -4856,11 +5067,13 @@
                                         },
                                         "offset": {
                                           "type": "integer",
-                                          "minimum": 0
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
                                         },
                                         "length": {
                                           "type": "integer",
-                                          "minimum": 1
+                                          "minimum": 1,
+                                          "maximum": 9007199254740991
                                         }
                                       },
                                       "required": [
@@ -4875,6 +5088,7 @@
                                     "type": "boolean"
                                   },
                                   "attachment": {
+                                    "nullable": true,
                                     "type": "object",
                                     "properties": {
                                       "id": {
@@ -4907,39 +5121,47 @@
                                         "type": "string"
                                       },
                                       "size": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "url": {
-                                        "type": "string",
-                                        "format": "uri",
                                         "nullable": true,
-                                        "description": "Signed link to the playable or viewable file, once ready"
+                                        "description": "Signed link to the playable or viewable file, once ready",
+                                        "type": "string",
+                                        "format": "uri"
                                       },
                                       "thumbUrl": {
+                                        "nullable": true,
                                         "type": "string",
-                                        "format": "uri",
-                                        "nullable": true
+                                        "format": "uri"
                                       },
                                       "width": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "height": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "durationMs": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "waveform": {
+                                        "nullable": true,
                                         "type": "array",
                                         "items": {
                                           "type": "integer",
                                           "minimum": 0,
                                           "maximum": 100
-                                        },
-                                        "nullable": true
+                                        }
                                       }
                                     },
                                     "required": [
@@ -4956,28 +5178,35 @@
                                       "durationMs",
                                       "waveform"
                                     ],
-                                    "additionalProperties": false,
-                                    "nullable": true
+                                    "additionalProperties": false
                                   },
                                   "ephemeral": {
+                                    "nullable": true,
                                     "type": "object",
                                     "properties": {
                                       "maxViews": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "ttlSeconds": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "views": {
                                         "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991,
                                         "description": "How many times the recipient opened it"
                                       },
                                       "firstViewedAt": {
+                                        "nullable": true,
                                         "type": "string",
                                         "format": "date-time",
-                                        "nullable": true
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       },
                                       "locked": {
                                         "type": "boolean",
@@ -4993,13 +5222,16 @@
                                       },
                                       "resendsLeft": {
                                         "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991,
                                         "description": "How many more times the sender can re-arm it"
                                       },
                                       "resendUntil": {
+                                        "nullable": true,
+                                        "description": "Until when the sender can resend it, once it has been opened",
                                         "type": "string",
                                         "format": "date-time",
-                                        "nullable": true,
-                                        "description": "Until when the sender can resend it, once it has been opened"
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       }
                                     },
                                     "required": [
@@ -5013,10 +5245,10 @@
                                       "resendsLeft",
                                       "resendUntil"
                                     ],
-                                    "additionalProperties": false,
-                                    "nullable": true
+                                    "additionalProperties": false
                                   },
                                   "replyTo": {
+                                    "nullable": true,
                                     "type": "object",
                                     "properties": {
                                       "id": {
@@ -5039,8 +5271,8 @@
                                         ]
                                       },
                                       "text": {
-                                        "type": "string",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "type": "string"
                                       },
                                       "spoiler": {
                                         "type": "boolean"
@@ -5061,22 +5293,24 @@
                                       "ephemeral",
                                       "deleted"
                                     ],
-                                    "additionalProperties": false,
-                                    "nullable": true
+                                    "additionalProperties": false
                                   },
                                   "createdAt": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "editedAt": {
+                                    "nullable": true,
                                     "type": "string",
                                     "format": "date-time",
-                                    "nullable": true
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "deletedAt": {
+                                    "nullable": true,
                                     "type": "string",
                                     "format": "date-time",
-                                    "nullable": true
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   }
                                 },
                                 "required": [
@@ -5151,8 +5385,8 @@
                                     ]
                                   },
                                   "text": {
-                                    "type": "string",
-                                    "nullable": true
+                                    "nullable": true,
+                                    "type": "string"
                                   },
                                   "entities": {
                                     "type": "array",
@@ -5171,11 +5405,13 @@
                                         },
                                         "offset": {
                                           "type": "integer",
-                                          "minimum": 0
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
                                         },
                                         "length": {
                                           "type": "integer",
-                                          "minimum": 1
+                                          "minimum": 1,
+                                          "maximum": 9007199254740991
                                         }
                                       },
                                       "required": [
@@ -5190,6 +5426,7 @@
                                     "type": "boolean"
                                   },
                                   "attachment": {
+                                    "nullable": true,
                                     "type": "object",
                                     "properties": {
                                       "id": {
@@ -5222,39 +5459,47 @@
                                         "type": "string"
                                       },
                                       "size": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "url": {
-                                        "type": "string",
-                                        "format": "uri",
                                         "nullable": true,
-                                        "description": "Signed link to the playable or viewable file, once ready"
+                                        "description": "Signed link to the playable or viewable file, once ready",
+                                        "type": "string",
+                                        "format": "uri"
                                       },
                                       "thumbUrl": {
+                                        "nullable": true,
                                         "type": "string",
-                                        "format": "uri",
-                                        "nullable": true
+                                        "format": "uri"
                                       },
                                       "width": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "height": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "durationMs": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "waveform": {
+                                        "nullable": true,
                                         "type": "array",
                                         "items": {
                                           "type": "integer",
                                           "minimum": 0,
                                           "maximum": 100
-                                        },
-                                        "nullable": true
+                                        }
                                       }
                                     },
                                     "required": [
@@ -5271,28 +5516,35 @@
                                       "durationMs",
                                       "waveform"
                                     ],
-                                    "additionalProperties": false,
-                                    "nullable": true
+                                    "additionalProperties": false
                                   },
                                   "ephemeral": {
+                                    "nullable": true,
                                     "type": "object",
                                     "properties": {
                                       "maxViews": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "ttlSeconds": {
+                                        "nullable": true,
                                         "type": "integer",
-                                        "nullable": true
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       },
                                       "views": {
                                         "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991,
                                         "description": "How many times the recipient opened it"
                                       },
                                       "firstViewedAt": {
+                                        "nullable": true,
                                         "type": "string",
                                         "format": "date-time",
-                                        "nullable": true
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       },
                                       "locked": {
                                         "type": "boolean",
@@ -5308,13 +5560,16 @@
                                       },
                                       "resendsLeft": {
                                         "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991,
                                         "description": "How many more times the sender can re-arm it"
                                       },
                                       "resendUntil": {
+                                        "nullable": true,
+                                        "description": "Until when the sender can resend it, once it has been opened",
                                         "type": "string",
                                         "format": "date-time",
-                                        "nullable": true,
-                                        "description": "Until when the sender can resend it, once it has been opened"
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       }
                                     },
                                     "required": [
@@ -5328,10 +5583,10 @@
                                       "resendsLeft",
                                       "resendUntil"
                                     ],
-                                    "additionalProperties": false,
-                                    "nullable": true
+                                    "additionalProperties": false
                                   },
                                   "replyTo": {
+                                    "nullable": true,
                                     "type": "object",
                                     "properties": {
                                       "id": {
@@ -5354,8 +5609,8 @@
                                         ]
                                       },
                                       "text": {
-                                        "type": "string",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "type": "string"
                                       },
                                       "spoiler": {
                                         "type": "boolean"
@@ -5376,22 +5631,24 @@
                                       "ephemeral",
                                       "deleted"
                                     ],
-                                    "additionalProperties": false,
-                                    "nullable": true
+                                    "additionalProperties": false
                                   },
                                   "createdAt": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "editedAt": {
+                                    "nullable": true,
                                     "type": "string",
                                     "format": "date-time",
-                                    "nullable": true
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "deletedAt": {
+                                    "nullable": true,
                                     "type": "string",
                                     "format": "date-time",
-                                    "nullable": true
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   }
                                 },
                                 "required": [
@@ -5522,9 +5779,9 @@
                                               "type": "string"
                                             },
                                             "avatarUrl": {
+                                              "nullable": true,
                                               "type": "string",
-                                              "format": "uri",
-                                              "nullable": true
+                                              "format": "uri"
                                             }
                                           },
                                           "required": [
@@ -5535,24 +5792,26 @@
                                           "additionalProperties": false
                                         },
                                         "lastDeliveredMessageId": {
+                                          "nullable": true,
                                           "type": "string",
-                                          "minLength": 1,
-                                          "nullable": true
+                                          "minLength": 1
                                         },
                                         "lastDeliveredAt": {
+                                          "nullable": true,
                                           "type": "string",
                                           "format": "date-time",
-                                          "nullable": true
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                         },
                                         "lastReadMessageId": {
+                                          "nullable": true,
                                           "type": "string",
-                                          "minLength": 1,
-                                          "nullable": true
+                                          "minLength": 1
                                         },
                                         "lastReadAt": {
+                                          "nullable": true,
                                           "type": "string",
                                           "format": "date-time",
-                                          "nullable": true
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                         }
                                       },
                                       "required": [
@@ -5566,6 +5825,7 @@
                                     }
                                   },
                                   "lastMessage": {
+                                    "nullable": true,
                                     "type": "object",
                                     "properties": {
                                       "id": {
@@ -5595,8 +5855,8 @@
                                         ]
                                       },
                                       "text": {
-                                        "type": "string",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "type": "string"
                                       },
                                       "entities": {
                                         "type": "array",
@@ -5615,11 +5875,13 @@
                                             },
                                             "offset": {
                                               "type": "integer",
-                                              "minimum": 0
+                                              "minimum": 0,
+                                              "maximum": 9007199254740991
                                             },
                                             "length": {
                                               "type": "integer",
-                                              "minimum": 1
+                                              "minimum": 1,
+                                              "maximum": 9007199254740991
                                             }
                                           },
                                           "required": [
@@ -5634,6 +5896,7 @@
                                         "type": "boolean"
                                       },
                                       "attachment": {
+                                        "nullable": true,
                                         "type": "object",
                                         "properties": {
                                           "id": {
@@ -5666,39 +5929,47 @@
                                             "type": "string"
                                           },
                                           "size": {
-                                            "type": "integer"
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
                                           },
                                           "url": {
-                                            "type": "string",
-                                            "format": "uri",
                                             "nullable": true,
-                                            "description": "Signed link to the playable or viewable file, once ready"
+                                            "description": "Signed link to the playable or viewable file, once ready",
+                                            "type": "string",
+                                            "format": "uri"
                                           },
                                           "thumbUrl": {
+                                            "nullable": true,
                                             "type": "string",
-                                            "format": "uri",
-                                            "nullable": true
+                                            "format": "uri"
                                           },
                                           "width": {
+                                            "nullable": true,
                                             "type": "integer",
-                                            "nullable": true
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
                                           },
                                           "height": {
+                                            "nullable": true,
                                             "type": "integer",
-                                            "nullable": true
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
                                           },
                                           "durationMs": {
+                                            "nullable": true,
                                             "type": "integer",
-                                            "nullable": true
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
                                           },
                                           "waveform": {
+                                            "nullable": true,
                                             "type": "array",
                                             "items": {
                                               "type": "integer",
                                               "minimum": 0,
                                               "maximum": 100
-                                            },
-                                            "nullable": true
+                                            }
                                           }
                                         },
                                         "required": [
@@ -5715,28 +5986,35 @@
                                           "durationMs",
                                           "waveform"
                                         ],
-                                        "additionalProperties": false,
-                                        "nullable": true
+                                        "additionalProperties": false
                                       },
                                       "ephemeral": {
+                                        "nullable": true,
                                         "type": "object",
                                         "properties": {
                                           "maxViews": {
+                                            "nullable": true,
                                             "type": "integer",
-                                            "nullable": true
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
                                           },
                                           "ttlSeconds": {
+                                            "nullable": true,
                                             "type": "integer",
-                                            "nullable": true
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
                                           },
                                           "views": {
                                             "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991,
                                             "description": "How many times the recipient opened it"
                                           },
                                           "firstViewedAt": {
+                                            "nullable": true,
                                             "type": "string",
                                             "format": "date-time",
-                                            "nullable": true
+                                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                           },
                                           "locked": {
                                             "type": "boolean",
@@ -5752,13 +6030,16 @@
                                           },
                                           "resendsLeft": {
                                             "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991,
                                             "description": "How many more times the sender can re-arm it"
                                           },
                                           "resendUntil": {
+                                            "nullable": true,
+                                            "description": "Until when the sender can resend it, once it has been opened",
                                             "type": "string",
                                             "format": "date-time",
-                                            "nullable": true,
-                                            "description": "Until when the sender can resend it, once it has been opened"
+                                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                           }
                                         },
                                         "required": [
@@ -5772,10 +6053,10 @@
                                           "resendsLeft",
                                           "resendUntil"
                                         ],
-                                        "additionalProperties": false,
-                                        "nullable": true
+                                        "additionalProperties": false
                                       },
                                       "replyTo": {
+                                        "nullable": true,
                                         "type": "object",
                                         "properties": {
                                           "id": {
@@ -5798,8 +6079,8 @@
                                             ]
                                           },
                                           "text": {
-                                            "type": "string",
-                                            "nullable": true
+                                            "nullable": true,
+                                            "type": "string"
                                           },
                                           "spoiler": {
                                             "type": "boolean"
@@ -5820,22 +6101,24 @@
                                           "ephemeral",
                                           "deleted"
                                         ],
-                                        "additionalProperties": false,
-                                        "nullable": true
+                                        "additionalProperties": false
                                       },
                                       "createdAt": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       },
                                       "editedAt": {
+                                        "nullable": true,
                                         "type": "string",
                                         "format": "date-time",
-                                        "nullable": true
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       },
                                       "deletedAt": {
+                                        "nullable": true,
                                         "type": "string",
                                         "format": "date-time",
-                                        "nullable": true
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       }
                                     },
                                     "required": [
@@ -5854,11 +6137,12 @@
                                       "editedAt",
                                       "deletedAt"
                                     ],
-                                    "additionalProperties": false,
-                                    "nullable": true
+                                    "additionalProperties": false
                                   },
                                   "unreadCount": {
-                                    "type": "integer"
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "archived": {
                                     "type": "boolean"
@@ -5870,16 +6154,20 @@
                                     "type": "boolean"
                                   },
                                   "autoDeleteSecs": {
+                                    "nullable": true,
                                     "type": "integer",
-                                    "nullable": true
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   "lastActivityAt": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "createdAt": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   }
                                 },
                                 "required": [
@@ -5939,7 +6227,8 @@
                                   },
                                   "lastDeliveredAt": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   }
                                 },
                                 "required": [
@@ -5991,7 +6280,8 @@
                                   },
                                   "lastReadAt": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   }
                                 },
                                 "required": [
@@ -6126,8 +6416,7 @@
                   "name",
                   "mime",
                   "size"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -6178,39 +6467,47 @@
                           "type": "string"
                         },
                         "size": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "url": {
-                          "type": "string",
-                          "format": "uri",
                           "nullable": true,
-                          "description": "Signed link to the playable or viewable file, once ready"
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
                         },
                         "thumbUrl": {
+                          "nullable": true,
                           "type": "string",
-                          "format": "uri",
-                          "nullable": true
+                          "format": "uri"
                         },
                         "width": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "height": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "durationMs": {
+                          "nullable": true,
                           "type": "integer",
-                          "nullable": true
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "waveform": {
+                          "nullable": true,
                           "type": "array",
                           "items": {
                             "type": "integer",
                             "minimum": 0,
                             "maximum": 100
-                          },
-                          "nullable": true
+                          }
                         }
                       },
                       "required": [
@@ -6316,39 +6613,47 @@
                       "type": "string"
                     },
                     "size": {
-                      "type": "integer"
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "url": {
-                      "type": "string",
-                      "format": "uri",
                       "nullable": true,
-                      "description": "Signed link to the playable or viewable file, once ready"
+                      "description": "Signed link to the playable or viewable file, once ready",
+                      "type": "string",
+                      "format": "uri"
                     },
                     "thumbUrl": {
+                      "nullable": true,
                       "type": "string",
-                      "format": "uri",
-                      "nullable": true
+                      "format": "uri"
                     },
                     "width": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "height": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "durationMs": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "waveform": {
+                      "nullable": true,
                       "type": "array",
                       "items": {
                         "type": "integer",
                         "minimum": 0,
                         "maximum": 100
-                      },
-                      "nullable": true
+                      }
                     }
                   },
                   "required": [
@@ -6433,39 +6738,47 @@
                       "type": "string"
                     },
                     "size": {
-                      "type": "integer"
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "url": {
-                      "type": "string",
-                      "format": "uri",
                       "nullable": true,
-                      "description": "Signed link to the playable or viewable file, once ready"
+                      "description": "Signed link to the playable or viewable file, once ready",
+                      "type": "string",
+                      "format": "uri"
                     },
                     "thumbUrl": {
+                      "nullable": true,
                       "type": "string",
-                      "format": "uri",
-                      "nullable": true
+                      "format": "uri"
                     },
                     "width": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "height": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "durationMs": {
+                      "nullable": true,
                       "type": "integer",
-                      "nullable": true
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "waveform": {
+                      "nullable": true,
                       "type": "array",
                       "items": {
                         "type": "integer",
                         "minimum": 0,
                         "maximum": 100
-                      },
-                      "nullable": true
+                      }
                     }
                   },
                   "required": [
@@ -6505,9 +6818,9 @@
                   "type": "object",
                   "properties": {
                     "webPushPublicKey": {
-                      "type": "string",
                       "nullable": true,
-                      "description": "VAPID key for PushManager.subscribe, or null if Web Push is off"
+                      "description": "VAPID key for PushManager.subscribe, or null if Web Push is off",
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -6553,8 +6866,7 @@
                 "required": [
                   "provider",
                   "token"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -6570,10 +6882,11 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "string",
+                  "nullable": true,
                   "enum": [
-                    "null"
-                  ],
-                  "nullable": true
+                    null
+                  ]
                 }
               }
             }
@@ -6611,10 +6924,11 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "string",
+                  "nullable": true,
                   "enum": [
-                    "null"
-                  ],
-                  "nullable": true
+                    null
+                  ]
                 }
               }
             }

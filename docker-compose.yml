@@ -72,7 +72,7 @@ services:
     build: { context: ., dockerfile: Dockerfile.dev }
     working_dir: /repo/apps/web
     restart: unless-stopped
-    command: npx next dev --port 3000 --hostname 0.0.0.0
+    command: npx next dev --webpack --port 3000 --hostname 0.0.0.0
     environment:
       WATCHPACK_POLLING: "true"
     ports: ["3000:3000"]

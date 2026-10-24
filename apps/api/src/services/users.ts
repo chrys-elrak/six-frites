@@ -1,4 +1,4 @@
-import type { User } from "@prisma/client";
+import type { User } from "../generated/prisma/client.js";
 import { AppError, type UpdateMeInput, type UserDTO } from "@six/shared";
 import { prisma } from "../lib/prisma.js";
 

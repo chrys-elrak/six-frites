@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Upload } from "@prisma/client";
+import type { Upload } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 import { getObjectBytes, putObject } from "../lib/storage.js";
 import { finishUpload } from "../services/uploads.js";

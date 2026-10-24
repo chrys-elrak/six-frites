@@ -7,3 +7,5 @@ next-env.d.ts
 .env*.local
 *.log
 .DS_Store
+
+apps/api/src/generated

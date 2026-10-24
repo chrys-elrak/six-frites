@@ -1,5 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
-import type { Prisma, Upload } from "@prisma/client";
+import type { Prisma, Upload } from "../generated/prisma/client.js";
 import { type AttachmentDTO, AppError, MAX_UPLOAD_BYTES, type PresignUploadInput, type UploadKind } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";

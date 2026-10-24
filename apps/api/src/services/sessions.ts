@@ -1,4 +1,4 @@
-import type { Session } from "@prisma/client";
+import type { Session } from "../generated/prisma/client.js";
 import { AppError, type Platform, type SessionDTO } from "@six/shared";
 import { prisma } from "../lib/prisma.js";
 import { getIo, rooms } from "../lib/realtime.js";

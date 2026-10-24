@@ -1,4 +1,4 @@
-import type { ChangeEvent, Prisma } from "@prisma/client";
+import type { ChangeEvent, Prisma } from "../generated/prisma/client.js";
 import type { ChangeEventData, ChangeEventDTO, ChangeEventType } from "@six/shared";
 import { prisma } from "./prisma.js";
 import { broadcaster, rooms } from "./realtime.js";

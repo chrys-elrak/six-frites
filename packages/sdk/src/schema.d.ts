@@ -92,9 +92,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": unknown | ({
+                    "application/json": {
                         refreshToken?: string;
-                    } | null);
+                    } | null;
                 };
             };
             responses: {
@@ -155,7 +155,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": "null" | null;
+                        "application/json": null;
                     };
                 };
             };
@@ -346,7 +346,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": "null" | null;
+                        "application/json": null;
                     };
                 };
             };
@@ -891,7 +891,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": "null" | null;
+                        "application/json": null;
                     };
                 };
             };
@@ -1425,7 +1425,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": "null" | null;
+                        "application/json": null;
                     };
                 };
             };
@@ -1700,9 +1700,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": unknown | ({
+                    "application/json": {
                         messageId?: string;
-                    } | null);
+                    } | null;
                 };
             };
             responses: {
@@ -1753,9 +1753,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": unknown | ({
+                    "application/json": {
                         messageId?: string;
-                    } | null);
+                    } | null;
                 };
             };
             responses: {
@@ -2569,7 +2569,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": "null" | null;
+                        "application/json": null;
                     };
                 };
             };
@@ -2592,7 +2592,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": "null" | null;
+                        "application/json": null;
                     };
                 };
             };

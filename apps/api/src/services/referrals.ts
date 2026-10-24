@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import type { Invite } from "@prisma/client";
+import type { Invite } from "../generated/prisma/client.js";
 import {
   AppError,
   type CreateInviteInput,

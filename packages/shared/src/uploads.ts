@@ -57,6 +57,6 @@ export type AttachmentDTO = z.infer<typeof AttachmentDTO>;
 export const PresignUploadResult = z.object({
   upload: AttachmentDTO,
   url: z.string().url().describe("PUT the file here within 15 minutes"),
-  headers: z.record(z.string()).describe("Send these headers with the PUT"),
+  headers: z.record(z.string(), z.string()).describe("Send these headers with the PUT"),
 });
 export type PresignUploadResult = z.infer<typeof PresignUploadResult>;
