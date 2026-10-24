@@ -15,6 +15,7 @@ import { env } from "./env.js";
 import authPlugin from "./plugins/auth.js";
 import errorsPlugin from "./plugins/errors.js";
 import authRoutes from "./routes/auth.js";
+import inviteRoutes from "./routes/invites.js";
 import meRoutes from "./routes/me.js";
 import sessionRoutes from "./routes/sessions.js";
 
@@ -55,6 +56,7 @@ export async function buildApp() {
       await v1.register(authRoutes, { prefix: "/auth" });
       await v1.register(meRoutes);
       await v1.register(sessionRoutes);
+      await v1.register(inviteRoutes);
     },
     { prefix: "/v1" },
   );

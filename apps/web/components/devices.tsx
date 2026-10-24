@@ -1,0 +1,82 @@
+"use client";
+
+import { unwrap } from "@six/sdk";
+import type { SessionDTO } from "@six/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { timeAgo } from "@/lib/format";
+import { six } from "@/lib/six";
+import { Card, SectionTitle } from "./ui";
+
+const platformIcon: Record<SessionDTO["platform"], string> = { web: "🖥️", ios: "📱", android: "📱" };
+
+export function Devices() {
+  const qc = useQueryClient();
+  const sessions = useQuery({
+    queryKey: ["sessions"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/sessions")).items,
+  });
+
+  const revoke = useMutation({
+    mutationFn: async (id: string) => unwrap(await six.api.DELETE("/v1/sessions/{id}", { params: { path: { id } } })),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
+  });
+
+  const revokeOthers = useMutation({
+    mutationFn: async () => unwrap(await six.api.DELETE("/v1/sessions")),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
+  });
+
+  const others = sessions.data?.filter((s) => !s.current).length ?? 0;
+
+  return (
+    <section className="space-y-3">
+      <SectionTitle
+        action={
+          others > 0 && (
+            <button
+              onClick={() => revokeOthers.mutate()}
+              disabled={revokeOthers.isPending}
+              className="text-sm font-medium text-red-600 disabled:opacity-50 dark:text-red-400"
+            >
+              Log out other devices
+            </button>
+          )
+        }
+      >
+        Devices
+      </SectionTitle>
+
+      <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+        {sessions.isPending && <p className="p-4 text-sm text-stone-500">Loading…</p>}
+        {sessions.isError && <p className="p-4 text-sm text-red-600">Couldn't load devices.</p>}
+        {sessions.data?.map((s) => (
+          <div key={s.id} className="flex items-center gap-3 p-4">
+            <span className="text-2xl" aria-hidden>
+              {platformIcon[s.platform]}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">
+                {s.deviceName ?? s.platform}
+                {s.current && (
+                  <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    This device
+                  </span>
+                )}
+              </p>
+              <p className="text-sm text-stone-500 dark:text-stone-400">Active {timeAgo(s.lastUsedAt)}</p>
+            </div>
+            {!s.current && (
+              <button
+                onClick={() => revoke.mutate(s.id)}
+                disabled={revoke.isPending && revoke.variables === s.id}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950"
+              >
+                Log out
+              </button>
+            )}
+          </div>
+        ))}
+      </Card>
+    </section>
+  );
+}

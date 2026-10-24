@@ -2,7 +2,7 @@
 
 import { SixApiError } from "@six/sdk";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
 import { deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -21,17 +21,25 @@ function LoginForm() {
   const status = useSession((s) => s.status);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const signingIn = useRef(false);
 
   useEffect(() => {
-    if (status === "authed") router.replace("/");
-  }, [status, router]);
+    if (status !== "authed" || signingIn.current) return;
+    router.replace(inviteCode ? `/invite/${encodeURIComponent(inviteCode)}` : "/");
+  }, [status, router, inviteCode]);
 
   async function onCredential(idToken: string) {
+    signingIn.current = true;
     setBusy(true);
     setError(null);
     try {
       await six.auth.loginWithGoogle(idToken, { inviteCode, deviceName: deviceName() });
+      if (inviteCode) {
+        await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
+      }
+      router.replace("/");
     } catch (err) {
+      signingIn.current = false;
       setError(err instanceof SixApiError ? (errorText[err.code] ?? err.message) : "Something went wrong.");
     } finally {
       setBusy(false);
