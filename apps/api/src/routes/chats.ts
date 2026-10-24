@@ -5,8 +5,11 @@ import {
   ChatDeliveredDTO,
   ChatListQuery,
   ChatReadDTO,
+  AddContactInput,
   ContactDTO,
   ContactListQuery,
+  FindUserQuery,
+  FoundUserDTO,
   UpdateContactInput,
   DeleteChatQuery,
   DeleteMessagesQuery,
@@ -17,6 +20,8 @@ import {
   MarkReadInput,
   MessageDTO,
   PageQuery,
+  ReactInput,
+  ReactionEmoji,
   ScheduleMessageInput,
   ScheduledMessageDTO,
   SendMessageInput,
@@ -28,10 +33,12 @@ import {
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
 import { findContact, listContacts, updateContact } from "../services/contacts.js";
+import { addContact, findUser } from "../services/discovery.js";
 import {
   deleteMessages,
   editMessage,
   listMessages,
+  setReaction,
   resendMessage,
   sendMessage,
   viewMessage,
@@ -124,6 +131,40 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => editMessage(req.auth.userId, req.params.id, req.body),
+  );
+
+  app.post(
+    "/messages/:id/reactions",
+    {
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["messages"],
+        summary: "Add a reaction to a message",
+        description:
+          "You can add several different emoji, up to 10 (REACTION_LIMIT_REACHED). Adding one you already have changes nothing. Both people get message.edited with the new `reactions`. REACTION_NOT_ALLOWED on deleted, destroyed or service messages.",
+        security,
+        params: MessageParams,
+        body: ReactInput,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => setReaction(req.auth.userId, req.params.id, req.body.emoji, true),
+  );
+
+  app.delete(
+    "/messages/:id/reactions/:emoji",
+    {
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["messages"],
+        summary: "Remove one of your reactions",
+        description: "`emoji` is URL-encoded. Removing one you don't have changes nothing.",
+        security,
+        params: z.object({ id: Id, emoji: ReactionEmoji }),
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => setReaction(req.auth.userId, req.params.id, req.params.emoji, false),
   );
 
   app.post(
@@ -335,6 +376,40 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => listContacts(req.auth.userId, req.query),
+  );
+
+  app.get(
+    "/users/find",
+    {
+      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["contacts"],
+        summary: "Find someone by contact code, contact link, username or email",
+        description:
+          "`q` is a contact code (dashes and spaces ignored), a contact link or scanned QR (…/add/CODE), " +
+          "@username, or an exact email of someone who allows it. USER_NOT_FOUND if no one matches, CONTACT_SELF for you.",
+        security,
+        querystring: FindUserQuery,
+        response: { 200: FoundUserDTO },
+      },
+    },
+    (req) => findUser(req.auth.userId, req.query.q),
+  );
+
+  app.post(
+    "/contacts",
+    {
+      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["contacts"],
+        summary: "Add someone found with /users/find",
+        description: "Takes the same `q`. Opens a direct chat right away, or returns the one you already have.",
+        security,
+        body: AddContactInput,
+        response: { 200: ContactDTO },
+      },
+    },
+    (req) => addContact(req.auth.userId, req.body.q),
   );
 
   app.get(

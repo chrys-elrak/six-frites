@@ -13,6 +13,9 @@ model User {
   email       String    @unique
   displayName String
   avatarUrl   String?
+  username    String?   @unique
+  contactCode String    @unique @default(dbgenerated("random_code()"))
+  findByEmail Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   bannedAt    DateTime?
@@ -28,6 +31,7 @@ model User {
   hiddenMessages MessageHidden[]
   uploads        Upload[]
   messageViews   MessageView[]
+  reactions      MessageReaction[]
   contactsSaved  ContactOverride[]  @relation("owner")
   savedAs        ContactOverride[]  @relation("contact")
   scheduled      ScheduledMessage[]
@@ -187,6 +191,7 @@ model Message {
   scheduledReplies ScheduledMessage[]
   hidden           MessageHidden[]
   views            MessageView[]
+  reactions        MessageReaction[]
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
@@ -244,25 +249,25 @@ model ContactOverride {
 }
 
 model Upload {
-  id         String   @id @default(cuid())
-  ownerId    String
-  kind       String
-  status     String   @default("pending")
-  name       String
-  mime       String
-  size       Int
+  id          String   @id @default(cuid())
+  ownerId     String
+  kind        String
+  status      String   @default("pending")
+  name        String
+  mime        String
+  size        Int
   storedBytes Int?
-  key        String   @unique
-  mainKey    String?
-  mainMime   String?
-  thumbKey   String?
-  width      Int?
-  height     Int?
-  durationMs Int?
-  waveform   Json?
-  error      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  key         String   @unique
+  mainKey     String?
+  mainMime    String?
+  thumbKey    String?
+  width       Int?
+  height      Int?
+  durationMs  Int?
+  waveform    Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   messages  Message[]
@@ -327,4 +332,16 @@ model MessageView {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([messageId, userId])
+}
+
+model MessageReaction {
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId, emoji])
 }

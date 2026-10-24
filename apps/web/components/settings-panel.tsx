@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { six } from "@/lib/six";
 import { AdminLink } from "./admin/admin-link";
 import { Devices } from "./devices";
+import { FindMe } from "./find-me";
 import { Invites, Referrals } from "./invites";
 import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
@@ -11,7 +12,7 @@ import { ProfileCard } from "./profile-card";
 export function SettingsPanel() {
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-2 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:border-stone-800">
+      <header className="flex items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800">
         <h1 className="flex-1 text-xl font-semibold tracking-tight">Settings</h1>
         <button
           onClick={() => void six.auth.logout()}
@@ -24,6 +25,7 @@ export function SettingsPanel() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4">
           <ProfileCard />
+          <FindMe />
           <NotificationSettings />
           <Invites />
           <Referrals />

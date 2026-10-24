@@ -56,11 +56,20 @@ export function inviteUrl(code: string) {
   return `${window.location.origin}/invite/${code}`;
 }
 
-export async function shareInvite(code: string): Promise<"shared" | "copied"> {
-  const url = inviteUrl(code);
+export function contactUrl(code: string) {
+  return `${window.location.origin}/add/${code}`;
+}
+
+export const formatCode = (code: string) => `${code.slice(0, 4)}-${code.slice(4)}`;
+
+export const shareInvite = (code: string) => shareLink("Join me on Six Frites", inviteUrl(code));
+
+export const shareContact = (code: string) => shareLink("Add me on Six Frites", contactUrl(code));
+
+async function shareLink(title: string, url: string): Promise<"shared" | "copied"> {
   if (navigator.share) {
     try {
-      await navigator.share({ title: "Join me on Six Frites", url });
+      await navigator.share({ title, url });
       return "shared";
     } catch (err) {
       if ((err as DOMException).name === "AbortError") return "shared";

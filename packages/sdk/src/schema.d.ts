@@ -56,6 +56,11 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                username: string | null;
+                                /** @description Share it (or its QR code) so people can find you */
+                                contactCode: string;
+                                /** @description Whether people who type your exact email can find you */
+                                findByEmail: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -116,6 +121,11 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                username: string | null;
+                                /** @description Share it (or its QR code) so people can find you */
+                                contactCode: string;
+                                /** @description Whether people who type your exact email can find you */
+                                findByEmail: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -1225,6 +1235,11 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1237,7 +1252,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update profile */
+        /**
+         * Update profile
+         * @description `username` is stored lowercase without the @; USERNAME_TAKEN if someone has it.
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -1251,6 +1269,8 @@ export interface paths {
                         displayName?: string;
                         /** Format: uri */
                         avatarUrl?: string | null;
+                        username?: string | null;
+                        findByEmail?: boolean;
                     };
                 };
             };
@@ -1268,6 +1288,11 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1275,6 +1300,59 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/me/contact-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a new contact code
+         * @description The old code, contact link and QR code stop working.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/sessions": {
@@ -1769,6 +1847,11 @@ export interface paths {
                                      * @description When the chat's auto-delete timer removes it for everyone
                                      */
                                     expiresAt: string | null;
+                                    /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                    reactions: {
+                                        emoji: string;
+                                        userIds: string[];
+                                    }[];
                                 } | null;
                                 unreadCount: number;
                                 archived: boolean;
@@ -1945,6 +2028,11 @@ export interface paths {
                                  * @description When the chat's auto-delete timer removes it for everyone
                                  */
                                 expiresAt: string | null;
+                                /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                reactions: {
+                                    emoji: string;
+                                    userIds: string[];
+                                }[];
                             } | null;
                             unreadCount: number;
                             archived: boolean;
@@ -2149,6 +2237,11 @@ export interface paths {
                                  * @description When the chat's auto-delete timer removes it for everyone
                                  */
                                 expiresAt: string | null;
+                                /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                reactions: {
+                                    emoji: string;
+                                    userIds: string[];
+                                }[];
                             } | null;
                             unreadCount: number;
                             archived: boolean;
@@ -2317,11 +2410,323 @@ export interface paths {
                              * @description When the chat's auto-delete timer removes it for everyone
                              */
                             expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
                         };
                     };
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/messages/{id}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a reaction to a message
+         * @description You can add several different emoji, up to 10 (REACTION_LIMIT_REACHED). Adding one you already have changes nothing. Both people get message.edited with the new `reactions`. REACTION_NOT_ALLOWED on deleted, destroyed or service messages.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        emoji: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                            action: {
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/{id}/reactions/{emoji}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove one of your reactions
+         * @description `emoji` is URL-encoded. Removing one you don't have changes nothing.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    emoji: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                            action: {
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/messages/{id}/view": {
@@ -2459,6 +2864,11 @@ export interface paths {
                                  * @description When the chat's auto-delete timer removes it for everyone
                                  */
                                 expiresAt: string | null;
+                                /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                reactions: {
+                                    emoji: string;
+                                    userIds: string[];
+                                }[];
                             };
                             /**
                              * Format: date-time
@@ -2610,6 +3020,11 @@ export interface paths {
                              * @description When the chat's auto-delete timer removes it for everyone
                              */
                             expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
                         };
                     };
                 };
@@ -2797,6 +3212,11 @@ export interface paths {
                                  * @description When the chat's auto-delete timer removes it for everyone
                                  */
                                 expiresAt: string | null;
+                                /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                reactions: {
+                                    emoji: string;
+                                    userIds: string[];
+                                }[];
                             }[];
                             nextCursor: string | null;
                         };
@@ -2960,6 +3380,11 @@ export interface paths {
                              * @description When the chat's auto-delete timer removes it for everyone
                              */
                             expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
                         };
                     };
                 };
@@ -3452,6 +3877,11 @@ export interface paths {
                              * @description When the chat's auto-delete timer removes it for everyone
                              */
                             expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
                         };
                     };
                 };
@@ -3614,6 +4044,101 @@ export interface paths {
                                 hasCustomPhoto: boolean;
                             }[];
                             nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Add someone found with /users/find
+         * @description Takes the same `q`. Opens a direct chat right away, or returns the one you already have.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description A contact code, a contact link, @username or an exact email */
+                        q: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description With your custom name and photo applied */
+                            user: {
+                                id: string;
+                                displayName: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                            };
+                            chatId: string;
+                            originalName: string;
+                            customName: string | null;
+                            hasCustomPhoto: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/users/find": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find someone by contact code, contact link, username or email
+         * @description `q` is a contact code (dashes and spaces ignored), a contact link or scanned QR (…/add/CODE), @username, or an exact email of someone who allows it. USER_NOT_FOUND if no one matches, CONTACT_SELF for you.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description A contact code, a contact link, @username or an exact email */
+                    q: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description With your custom name and photo applied if you already know them */
+                            user: {
+                                id: string;
+                                displayName: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                            };
+                            username: string | null;
+                            /** @description Your direct chat with them, if you already have one */
+                            chatId: string | null;
                         };
                     };
                 };
@@ -3859,6 +4384,11 @@ export interface paths {
                                      * @description When the chat's auto-delete timer removes it for everyone
                                      */
                                     expiresAt: string | null;
+                                    /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                    reactions: {
+                                        emoji: string;
+                                        userIds: string[];
+                                    }[];
                                 };
                                 createdAt: string;
                             } | {
@@ -3969,6 +4499,11 @@ export interface paths {
                                      * @description When the chat's auto-delete timer removes it for everyone
                                      */
                                     expiresAt: string | null;
+                                    /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                    reactions: {
+                                        emoji: string;
+                                        userIds: string[];
+                                    }[];
                                 };
                                 createdAt: string;
                             } | {
@@ -3983,6 +4518,18 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     scope: "me" | "all";
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "message.reacted";
+                                data: {
+                                    chatId: string;
+                                    messageId: string;
+                                    /** @description Who reacted */
+                                    userId: string;
+                                    emoji: string;
                                 };
                                 createdAt: string;
                             } | {
@@ -4112,6 +4659,11 @@ export interface paths {
                                          * @description When the chat's auto-delete timer removes it for everyone
                                          */
                                         expiresAt: string | null;
+                                        /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                        reactions: {
+                                            emoji: string;
+                                            userIds: string[];
+                                        }[];
                                     } | null;
                                     unreadCount: number;
                                     archived: boolean;
@@ -4492,6 +5044,59 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Whether people are online, and when they were last seen
+         * @description Only people you share a chat with are returned; other ids are left out. Live changes arrive as the `presence` socket event.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Comma-separated user ids, at most 100. Only people you share a chat with are returned. */
+                    ids: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                userId: string;
+                                /** @description Has the app open on at least one device right now */
+                                online: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When they last had the app open; null if never recorded
+                                 */
+                                lastSeenAt: string | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

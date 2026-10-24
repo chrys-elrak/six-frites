@@ -14,7 +14,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "sticker", label: "Stickers" },
 ];
 
-function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
+export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
   return (
     <EmojiPicker.Root
       onEmojiSelect={({ emoji }) => onPick(emoji)}

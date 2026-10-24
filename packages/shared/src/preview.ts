@@ -26,6 +26,12 @@ export function durationLabel(secs: number) {
   return `${n} ${unit}${n === 1 ? "" : "s"}`;
 }
 
+/** How a notification describes someone reacting to your message. */
+export function reactionText(emoji: string, m: MessageDTO) {
+  const preview = previewText(m);
+  return preview ? `Reacted ${emoji} to “${preview}”` : `Reacted ${emoji} to your message`;
+}
+
 /** What a service message says, without the sender's name. */
 export function serviceText(m: Pick<MessageDTO, "action">) {
   const secs = m.action?.secs;

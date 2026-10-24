@@ -105,6 +105,18 @@
                           "type": "string",
                           "format": "uri"
                         },
+                        "username": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "contactCode": {
+                          "type": "string",
+                          "description": "Share it (or its QR code) so people can find you"
+                        },
+                        "findByEmail": {
+                          "type": "boolean",
+                          "description": "Whether people who type your exact email can find you"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -116,6 +128,9 @@
                         "email",
                         "displayName",
                         "avatarUrl",
+                        "username",
+                        "contactCode",
+                        "findByEmail",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -197,6 +212,18 @@
                           "type": "string",
                           "format": "uri"
                         },
+                        "username": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "contactCode": {
+                          "type": "string",
+                          "description": "Share it (or its QR code) so people can find you"
+                        },
+                        "findByEmail": {
+                          "type": "boolean",
+                          "description": "Whether people who type your exact email can find you"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -208,6 +235,9 @@
                         "email",
                         "displayName",
                         "avatarUrl",
+                        "username",
+                        "contactCode",
+                        "findByEmail",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -2666,6 +2696,18 @@
                       "type": "string",
                       "format": "uri"
                     },
+                    "username": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contactCode": {
+                      "type": "string",
+                      "description": "Share it (or its QR code) so people can find you"
+                    },
+                    "findByEmail": {
+                      "type": "boolean",
+                      "description": "Whether people who type your exact email can find you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -2677,6 +2719,9 @@
                     "email",
                     "displayName",
                     "avatarUrl",
+                    "username",
+                    "contactCode",
+                    "findByEmail",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -2691,6 +2736,7 @@
         "tags": [
           "me"
         ],
+        "description": "`username` is stored lowercase without the @; USERNAME_TAKEN if someone has it.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2707,6 +2753,13 @@
                     "nullable": true,
                     "type": "string",
                     "format": "uri"
+                  },
+                  "username": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "findByEmail": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -2743,6 +2796,18 @@
                       "type": "string",
                       "format": "uri"
                     },
+                    "username": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contactCode": {
+                      "type": "string",
+                      "description": "Share it (or its QR code) so people can find you"
+                    },
+                    "findByEmail": {
+                      "type": "boolean",
+                      "description": "Whether people who type your exact email can find you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -2754,6 +2819,82 @@
                     "email",
                     "displayName",
                     "avatarUrl",
+                    "username",
+                    "contactCode",
+                    "findByEmail",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/contact-code": {
+      "post": {
+        "summary": "Get a new contact code",
+        "tags": [
+          "me"
+        ],
+        "description": "The old code, contact link and QR code stop working.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "username": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contactCode": {
+                      "type": "string",
+                      "description": "Share it (or its QR code) so people can find you"
+                    },
+                    "findByEmail": {
+                      "type": "boolean",
+                      "description": "Whether people who type your exact email can find you"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "avatarUrl",
+                    "username",
+                    "contactCode",
+                    "findByEmail",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3864,6 +4005,30 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "reactions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "emoji": {
+                                      "type": "string"
+                                    },
+                                    "userIds": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "emoji",
+                                    "userIds"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "description": "One entry per emoji, oldest first; a person can add several different emoji"
                               }
                             },
                             "required": [
@@ -3883,7 +4048,8 @@
                               "createdAt",
                               "editedAt",
                               "deletedAt",
-                              "expiresAt"
+                              "expiresAt",
+                              "reactions"
                             ],
                             "additionalProperties": false
                           },
@@ -4452,6 +4618,30 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "reactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "emoji": {
+                                "type": "string"
+                              },
+                              "userIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "emoji",
+                              "userIds"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "One entry per emoji, oldest first; a person can add several different emoji"
                         }
                       },
                       "required": [
@@ -4471,7 +4661,8 @@
                         "createdAt",
                         "editedAt",
                         "deletedAt",
-                        "expiresAt"
+                        "expiresAt",
+                        "reactions"
                       ],
                       "additionalProperties": false
                     },
@@ -5055,6 +5246,30 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "reactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "emoji": {
+                                "type": "string"
+                              },
+                              "userIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "emoji",
+                              "userIds"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "One entry per emoji, oldest first; a person can add several different emoji"
                         }
                       },
                       "required": [
@@ -5074,7 +5289,8 @@
                         "createdAt",
                         "editedAt",
                         "deletedAt",
-                        "expiresAt"
+                        "expiresAt",
+                        "reactions"
                       ],
                       "additionalProperties": false
                     },
@@ -5660,6 +5876,30 @@
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
                     }
                   },
                   "required": [
@@ -5679,7 +5919,976 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
-                    "expiresAt"
+                    "expiresAt",
+                    "reactions"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/reactions": {
+      "post": {
+        "summary": "Add a reaction to a message",
+        "tags": [
+          "messages"
+        ],
+        "description": "You can add several different emoji, up to 10 (REACTION_LIMIT_REACHED). Adding one you already have changes nothing. Both people get message.edited with the new `reactions`. REACTION_NOT_ALLOWED on deleted, destroyed or service messages.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emoji": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "pattern": "^(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier}|[\\u{E0020}-\\u{E007F}]|\\u200D\\p{Extended_Pictographic})*)$"
+                  }
+                },
+                "required": [
+                  "emoji"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file",
+                        "gif",
+                        "sticker",
+                        "service"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ephemeral": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ttlSeconds": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "views": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired",
+                        "purged",
+                        "resendsLeft",
+                        "resendUntil"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "replyTo": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker",
+                            "service"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "action": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "auto_delete"
+                          ]
+                        },
+                        "secs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "secs"
+                      ],
+                      "additionalProperties": false,
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "editedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "deletedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "senderId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "sticker",
+                    "ephemeral",
+                    "replyTo",
+                    "action",
+                    "createdAt",
+                    "editedAt",
+                    "deletedAt",
+                    "expiresAt",
+                    "reactions"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/reactions/{emoji}": {
+      "delete": {
+        "summary": "Remove one of your reactions",
+        "tags": [
+          "messages"
+        ],
+        "description": "`emoji` is URL-encoded. Removing one you don't have changes nothing.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 32,
+              "pattern": "^(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier}|[\\u{E0020}-\\u{E007F}]|\\u200D\\p{Extended_Pictographic})*)$"
+            },
+            "in": "path",
+            "name": "emoji",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file",
+                        "gif",
+                        "sticker",
+                        "service"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ephemeral": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ttlSeconds": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "views": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired",
+                        "purged",
+                        "resendsLeft",
+                        "resendUntil"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "replyTo": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker",
+                            "service"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "action": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "auto_delete"
+                          ]
+                        },
+                        "secs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "secs"
+                      ],
+                      "additionalProperties": false,
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "editedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "deletedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "senderId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "sticker",
+                    "ephemeral",
+                    "replyTo",
+                    "action",
+                    "createdAt",
+                    "editedAt",
+                    "deletedAt",
+                    "expiresAt",
+                    "reactions"
                   ],
                   "additionalProperties": false
                 }
@@ -6107,6 +7316,30 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "reactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "emoji": {
+                                "type": "string"
+                              },
+                              "userIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "emoji",
+                              "userIds"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "One entry per emoji, oldest first; a person can add several different emoji"
                         }
                       },
                       "required": [
@@ -6126,7 +7359,8 @@
                         "createdAt",
                         "editedAt",
                         "deletedAt",
-                        "expiresAt"
+                        "expiresAt",
+                        "reactions"
                       ],
                       "additionalProperties": false
                     },
@@ -6565,6 +7799,30 @@
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
                     }
                   },
                   "required": [
@@ -6584,7 +7842,8 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
-                    "expiresAt"
+                    "expiresAt",
+                    "reactions"
                   ],
                   "additionalProperties": false
                 }
@@ -7087,6 +8346,30 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "reactions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "emoji": {
+                                  "type": "string"
+                                },
+                                "userIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                }
+                              },
+                              "required": [
+                                "emoji",
+                                "userIds"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "One entry per emoji, oldest first; a person can add several different emoji"
                           }
                         },
                         "required": [
@@ -7106,7 +8389,8 @@
                           "createdAt",
                           "editedAt",
                           "deletedAt",
-                          "expiresAt"
+                          "expiresAt",
+                          "reactions"
                         ],
                         "additionalProperties": false
                       }
@@ -7642,6 +8926,30 @@
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
                     }
                   },
                   "required": [
@@ -7661,7 +8969,8 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
-                    "expiresAt"
+                    "expiresAt",
+                    "reactions"
                   ],
                   "additionalProperties": false
                 }
@@ -9205,6 +10514,30 @@
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
                     }
                   },
                   "required": [
@@ -9224,7 +10557,8 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
-                    "expiresAt"
+                    "expiresAt",
+                    "reactions"
                   ],
                   "additionalProperties": false
                 }
@@ -9508,6 +10842,180 @@
                   "required": [
                     "items",
                     "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add someone found with /users/find",
+        "tags": [
+          "contacts"
+        ],
+        "description": "Takes the same `q`. Opens a direct chat right away, or returns the one you already have.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 320,
+                    "description": "A contact code, a contact link, @username or an exact email"
+                  }
+                },
+                "required": [
+                  "q"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "displayName",
+                        "avatarUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "With your custom name and photo applied"
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "originalName": {
+                      "type": "string"
+                    },
+                    "customName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "hasCustomPhoto": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "chatId",
+                    "originalName",
+                    "customName",
+                    "hasCustomPhoto"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/users/find": {
+      "get": {
+        "summary": "Find someone by contact code, contact link, username or email",
+        "tags": [
+          "contacts"
+        ],
+        "description": "`q` is a contact code (dashes and spaces ignored), a contact link or scanned QR (…/add/CODE), @username, or an exact email of someone who allows it. USER_NOT_FOUND if no one matches, CONTACT_SELF for you.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 320
+            },
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "description": "A contact code, a contact link, @username or an exact email"
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "displayName",
+                        "avatarUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "With your custom name and photo applied if you already know them"
+                    },
+                    "username": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "chatId": {
+                      "nullable": true,
+                      "description": "Your direct chat with them, if you already have one",
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "username",
+                    "chatId"
                   ],
                   "additionalProperties": false
                 }
@@ -10152,6 +11660,30 @@
                                     "type": "string",
                                     "format": "date-time",
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  },
+                                  "reactions": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "emoji": {
+                                          "type": "string"
+                                        },
+                                        "userIds": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "emoji",
+                                        "userIds"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "description": "One entry per emoji, oldest first; a person can add several different emoji"
                                   }
                                 },
                                 "required": [
@@ -10171,7 +11703,8 @@
                                   "createdAt",
                                   "editedAt",
                                   "deletedAt",
-                                  "expiresAt"
+                                  "expiresAt",
+                                  "reactions"
                                 ],
                                 "additionalProperties": false
                               },
@@ -10586,6 +12119,30 @@
                                     "type": "string",
                                     "format": "date-time",
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  },
+                                  "reactions": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "emoji": {
+                                          "type": "string"
+                                        },
+                                        "userIds": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "emoji",
+                                        "userIds"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "description": "One entry per emoji, oldest first; a person can add several different emoji"
                                   }
                                 },
                                 "required": [
@@ -10605,7 +12162,8 @@
                                   "createdAt",
                                   "editedAt",
                                   "deletedAt",
-                                  "expiresAt"
+                                  "expiresAt",
+                                  "reactions"
                                 ],
                                 "additionalProperties": false
                               },
@@ -10660,6 +12218,58 @@
                                   "chatId",
                                   "messageIds",
                                   "scope"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "eventId",
+                              "type",
+                              "data",
+                              "createdAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "eventId": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "message.reacted"
+                                ]
+                              },
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "chatId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "messageId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "userId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": "Who reacted"
+                                  },
+                                  "emoji": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "chatId",
+                                  "messageId",
+                                  "userId",
+                                  "emoji"
                                 ],
                                 "additionalProperties": false
                               },
@@ -11152,6 +12762,30 @@
                                         "type": "string",
                                         "format": "date-time",
                                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      },
+                                      "reactions": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "emoji": {
+                                              "type": "string"
+                                            },
+                                            "userIds": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string",
+                                                "minLength": 1
+                                              }
+                                            }
+                                          },
+                                          "required": [
+                                            "emoji",
+                                            "userIds"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "description": "One entry per emoji, oldest first; a person can add several different emoji"
                                       }
                                     },
                                     "required": [
@@ -11171,7 +12805,8 @@
                                       "createdAt",
                                       "editedAt",
                                       "deletedAt",
-                                      "expiresAt"
+                                      "expiresAt",
+                                      "reactions"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -11985,6 +13620,79 @@
                   "enum": [
                     null
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/presence": {
+      "get": {
+        "summary": "Whether people are online, and when they were last seen",
+        "tags": [
+          "presence"
+        ],
+        "description": "Only people you share a chat with are returned; other ids are left out. Live changes arrive as the `presence` socket event.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "in": "query",
+            "name": "ids",
+            "required": true,
+            "description": "Comma-separated user ids, at most 100. Only people you share a chat with are returned."
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "online": {
+                            "type": "boolean",
+                            "description": "Has the app open on at least one device right now"
+                          },
+                          "lastSeenAt": {
+                            "nullable": true,
+                            "description": "When they last had the app open; null if never recorded",
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "userId",
+                          "online",
+                          "lastSeenAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }

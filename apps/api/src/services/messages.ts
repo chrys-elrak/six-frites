@@ -12,6 +12,7 @@ import {
   type ServiceAction,
   type ViewMessageResult,
   EPHEMERAL_RESEND,
+  MAX_REACTIONS_PER_USER,
   maskSpoilers,
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
@@ -19,7 +20,7 @@ import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { timersQueue } from "../lib/queue.js";
 import { saveGif } from "./gifs.js";
-import { queuePush } from "./push.js";
+import { queuePush, queueReactionPush } from "./push.js";
 import { toStickerDTO } from "./stickers.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
@@ -28,6 +29,7 @@ export const messageInclude = {
   attachment: true,
   views: true,
   sticker: { include: { upload: true } },
+  reactions: { orderBy: { createdAt: "asc" } },
 } satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
 
@@ -42,6 +44,12 @@ const isEphemeral = (m: { maxViews: number | null; ttlSeconds: number | null }) 
 
 /** How long download links for opened self-destructing media stay valid. */
 export const EPHEMERAL_LINK_SECONDS = 5 * 60;
+
+function groupReactions(reactions: MessageRow["reactions"]) {
+  const byEmoji = new Map<string, string[]>();
+  for (const r of reactions) byEmoji.set(r.emoji, [...(byEmoji.get(r.emoji) ?? []), r.userId]);
+  return [...byEmoji].map(([emoji, userIds]) => ({ emoji, userIds }));
+}
 
 export function toReplyPreview(r: Message): ReplyPreview {
   return {
@@ -111,6 +119,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     editedAt: m.editedAt?.toISOString() ?? null,
     deletedAt: m.deletedAt?.toISOString() ?? null,
     expiresAt: m.expiresAt?.toISOString() ?? null,
+    reactions: m.deletedAt || purged ? [] : groupReactions(m.reactions),
   };
 }
 
@@ -258,6 +267,38 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
   });
+}
+
+async function reactableMessage(tx: Tx, userId: string, messageId: string) {
+  const message = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+  const member = message && (await tx.chatMember.findUnique({ where: { chatId_userId: { chatId: message.chatId, userId } } }));
+  const visible = member && (await tx.message.count({ where: { id: messageId, ...visibleTo(userId, member.clearedAt) } }));
+  if (!message || !visible) throw new AppError("MESSAGE_NOT_FOUND");
+  if (message.deletedAt || message.purgedAt || message.type === "service") throw new AppError("REACTION_NOT_ALLOWED");
+  return message;
+}
+
+/** Adds (`on`) or removes one of the user's reactions, and tells both people if anything changed. */
+export async function setReaction(userId: string, messageId: string, emoji: string, on: boolean) {
+  const result = await withEvents(async (tx, emit) => {
+    const message = await reactableMessage(tx, userId, messageId);
+    const mine = message.reactions.filter((r) => r.userId === userId).map((r) => r.emoji);
+    if (mine.includes(emoji) === on) return { dto: toMessageDTO(message, userId), authorId: null };
+    if (on && mine.length >= MAX_REACTIONS_PER_USER) throw new AppError("REACTION_LIMIT_REACHED");
+
+    const key = { messageId_userId_emoji: { messageId, userId, emoji } };
+    if (on) await tx.messageReaction.create({ data: key.messageId_userId_emoji });
+    else await tx.messageReaction.delete({ where: key });
+
+    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    if (on && message.senderId !== userId) {
+      emit(message.senderId, "message.reacted", { chatId: message.chatId, messageId, userId, emoji });
+    }
+    return { dto: toMessageDTO(updated, userId), authorId: on ? message.senderId : null };
+  });
+  if (result.authorId) await queueReactionPush(messageId, result.authorId, userId, emoji).catch(() => null);
+  return result.dto;
 }
 
 /**

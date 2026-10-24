@@ -1,4 +1,4 @@
-import { type ChatDTO, type MessageDTO, previewText } from "@six/shared";
+import { type ChatDTO, type MessageDTO, type MessageReactedDTO, previewText, reactionText } from "@six/shared";
 import { create } from "zustand";
 
 const PREFS_KEY = "six:notifications";
@@ -105,28 +105,55 @@ export function notifyIncoming(
   open: (chatId: string) => void,
 ) {
   if (chat?.muted || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
-  const prefs = useNotifyPrefs.getState();
   const sender = chat?.members.find((x) => x.user.id === m.senderId)?.user;
-  const title = sender?.displayName ?? chat?.title ?? "New message";
-  const body = previewText(m) || "New message";
+  alertUser(
+    { id: m.id, chatId: m.chatId, title: sender?.displayName ?? chat?.title ?? "New message", body: previewText(m) || "New message" },
+    sender?.avatarUrl ?? null,
+    open,
+  );
+}
+
+/** Tells me someone reacted to my message; `message` is my cached copy, if I have it. */
+export function notifyReaction(
+  r: MessageReactedDTO,
+  at: string,
+  message: MessageDTO | undefined,
+  chat: ChatDTO | undefined,
+  viewing: boolean,
+  open: (chatId: string) => void,
+) {
+  if (chat?.muted || viewing || Date.now() - Date.parse(at) > FRESH_MS) return;
+  const reactor = chat?.members.find((x) => x.user.id === r.userId)?.user;
+  alertUser(
+    {
+      id: `${r.messageId}:${r.userId}:${r.emoji}`,
+      chatId: r.chatId,
+      title: reactor?.displayName ?? chat?.title ?? "New reaction",
+      body: message ? reactionText(r.emoji, message) : `Reacted ${r.emoji} to your message`,
+    },
+    reactor?.avatarUrl ?? null,
+    open,
+  );
+}
+
+function alertUser(
+  n: { id: string; chatId: string; title: string; body: string },
+  avatarUrl: string | null,
+  open: (chatId: string) => void,
+) {
+  const prefs = useNotifyPrefs.getState();
   const hidden = document.visibilityState !== "visible";
 
   if (prefs.sound) playChime();
   if (hidden && prefs.push) return;
   if (hidden && prefs.system && "Notification" in window && Notification.permission === "granted") {
-    const n = new Notification(title, { body, icon: sender?.avatarUrl ?? "/icon.svg", tag: m.chatId });
-    n.onclick = () => {
+    const notification = new Notification(n.title, { body: n.body, icon: avatarUrl ?? "/icon.svg", tag: n.chatId });
+    notification.onclick = () => {
       window.focus();
-      open(m.chatId);
-      n.close();
+      open(n.chatId);
+      notification.close();
     };
   } else if (!hidden && prefs.popups) {
-    useToasts.getState().push({
-      id: m.id,
-      chatId: m.chatId,
-      title,
-      body,
-      avatar: { displayName: title, avatarUrl: sender?.avatarUrl ?? null },
-    });
+    useToasts.getState().push({ ...n, avatar: { displayName: n.title, avatarUrl } });
   }
 }

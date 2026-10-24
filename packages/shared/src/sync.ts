@@ -5,6 +5,7 @@ import {
   ChatDeliveredDTO,
   ChatReadDTO,
   MessageDTO,
+  MessageReactedDTO,
   MessagesDeletedDTO,
 } from "./chats.js";
 
@@ -15,6 +16,7 @@ export const ChangeEventDTO = z.discriminatedUnion("type", [
   event("message.new", MessageDTO),
   event("message.edited", MessageDTO),
   event("message.deleted", MessagesDeletedDTO),
+  event("message.reacted", MessageReactedDTO),
   event("chat.updated", ChatDTO),
   event("chat.delivered", ChatDeliveredDTO),
   event("chat.read", ChatReadDTO),

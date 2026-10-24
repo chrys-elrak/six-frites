@@ -1,4 +1,3 @@
-import { randomInt } from "node:crypto";
 import type { Invite } from "../generated/prisma/client.js";
 import {
   AppError,
@@ -8,19 +7,13 @@ import {
   type InviteStatus,
   type PageQuery,
 } from "@six/shared";
+import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { ensureDirectChat } from "./chats.js";
 import { applyOverride, loadOverrides } from "./contacts.js";
 import { toPublicUser } from "./users.js";
-
-const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-const CODE_LENGTH = 8;
-
-function generateCode() {
-  return Array.from({ length: CODE_LENGTH }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join("");
-}
 
 export function normalizeCode(code: string) {
   return code.trim().toUpperCase();
@@ -51,7 +44,7 @@ export async function createInvite(userId: string, input: CreateInviteInput) {
       });
       return toInviteDTO(invite);
     } catch (err) {
-      if ((err as { code?: string }).code !== "P2002") throw err;
+      if (!isUniqueViolation(err)) throw err;
     }
   }
   throw new AppError("CONFLICT", "Could not generate a unique invite code");

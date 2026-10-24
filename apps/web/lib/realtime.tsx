@@ -6,9 +6,10 @@ import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
-import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
+import { chatKeys, findMessage, insertMessage, patchChat, upsertChat } from "./chats";
 import { useOutbox } from "./outbox";
-import { notifyIncoming } from "./notify";
+import { notifyIncoming, notifyReaction } from "./notify";
+import { usePresenceStore } from "./presence";
 import { useTypingStore } from "./typing";
 import { useSession } from "./session";
 import { six } from "./six";
@@ -58,6 +59,13 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (cha
     case "message.edited":
       applyEdited(qc, e.data);
       break;
+    case "message.reacted": {
+      const r = e.data;
+      const viewing = activeChatId === r.chatId && document.visibilityState === "visible";
+      const message = findMessage(qc, r.chatId, r.messageId) ?? cachedChat(qc, r.chatId)?.lastMessage ?? undefined;
+      notifyReaction(r, e.createdAt, message?.id === r.messageId ? message : undefined, cachedChat(qc, r.chatId), viewing, open);
+      break;
+    }
     case "message.deleted":
       applyDeleted(qc, e.data.chatId, e.data.messageIds, e.data.scope);
       break;
@@ -126,6 +134,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       onStatus: setStatus,
       onResyncRequired: () => void qc.invalidateQueries(),
     });
+    rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
     rt.start();
     setRealtime(rt);
     const presence = () => rt.setPresence(document.visibilityState === "visible");

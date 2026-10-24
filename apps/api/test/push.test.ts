@@ -3,7 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { setActive } from "../src/lib/presence.js";
 import { pushQueue } from "../src/lib/queue.js";
 import { setPushProviders } from "../src/push/providers.js";
-import { PUSH_DELAY_MS, deliverPush } from "../src/services/push.js";
+import { PUSH_DELAY_MS, deliverPush, deliverReactionPush } from "../src/services/push.js";
 import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -92,6 +92,31 @@ describe("push notifications", () => {
     const muted = (await send(host, chatId, "shh")).json();
     expect(await deliverPush(muted.id, guest.user.id)).toBe(0);
     expect(await deliverPush(muted.id, host.user.id)).toBe(0);
+  });
+
+  it("tells the author about reactions that are still there", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const token = await subscribe(host);
+    const m = (await send(host, chatId, "lunch?")).json();
+    const reaction = { emoji: "👍", reactorId: guest.user.id };
+
+    await call(guest, "POST", `/v1/messages/${m.id}/reactions`, { emoji: "👍" });
+    const job = await pushQueue().getJob(`react-${m.id}-${guest.user.id}-${Buffer.from("👍").toString("hex")}`);
+    expect(job?.data).toEqual({ messageId: m.id, userId: host.user.id, reaction });
+    expect(job?.opts.delay).toBe(PUSH_DELAY_MS);
+
+    expect(await deliverReactionPush(m.id, host.user.id, reaction)).toBe(1);
+    expect(sent.at(-1)).toMatchObject({ token, payload: { body: "Reacted 👍 to “lunch?”", chatId, messageId: m.id } });
+
+    await call(guest, "DELETE", `/v1/messages/${m.id}/reactions/${encodeURIComponent("👍")}`);
+    expect(await deliverReactionPush(m.id, host.user.id, reaction)).toBe(0);
+
+    await call(host, "POST", `/v1/messages/${m.id}/reactions`, { emoji: "😂" });
+    expect(await pushQueue().getJob(`react-${m.id}-${host.user.id}-${Buffer.from("😂").toString("hex")}`)).toBeUndefined();
+
+    await call(guest, "POST", `/v1/messages/${m.id}/reactions`, { emoji: "👍" });
+    await call(host, "PATCH", `/v1/chats/${chatId}`, { muted: true });
+    expect(await deliverReactionPush(m.id, host.user.id, reaction)).toBe(0);
   });
 
   it("forgets subscriptions the push service says are gone, and on request", async () => {

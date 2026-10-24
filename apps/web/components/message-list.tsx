@@ -28,6 +28,7 @@ import {
   MessageCircle,
   Mic,
   MoreHorizontal,
+  SmilePlus,
   Paperclip,
   RotateCcw,
   Sticker as StickerIcon,
@@ -46,7 +47,7 @@ import {
   useState,
 } from "react";
 import { VList, type VListHandle } from "virtua";
-import { applyEdited, deleteMessage, markOpenedLocally } from "@/lib/actions";
+import { applyEdited, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
 import { shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
 import { useMessages } from "@/lib/chats";
@@ -65,6 +66,7 @@ import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } fro
 import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
+import { ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
 import { Sheet, type SheetAction } from "./sheet";
 import { StickerView } from "./sticker";
 
@@ -427,6 +429,10 @@ function Bubble({
   onHideReveal,
   onResend,
   onOpenPack,
+  meId,
+  onReact,
+  onLongPress,
+  onReactButton,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -441,9 +447,25 @@ function Bubble({
   onHideReveal: () => void;
   onResend: () => void;
   onOpenPack: (packId: string) => void;
+  meId: string;
+  onReact: (emoji: string) => void;
+  onLongPress: (anchor: DOMRect) => void;
+  onReactButton: (anchor: DOMRect) => void;
 }) {
   const selectable = selecting && row.message !== null;
-  const press = useLongPress(selectable ? onToggle : onMenu);
+  const bubble = useRef<HTMLDivElement>(null);
+  const lastTap = useRef(0);
+  const anchor = () => bubble.current!.getBoundingClientRect();
+  const press = useLongPress(selectable ? onToggle : () => onLongPress(anchor()));
+  const reactable = !selecting && canReact(row);
+
+  function onTap(e: React.MouseEvent) {
+    if (!reactable || (e.target as Element).closest("a, button, video, audio, input")) return;
+    if (e.timeStamp - lastTap.current < 300) {
+      lastTap.current = 0;
+      onReact("❤️");
+    } else lastTap.current = e.timeStamp;
+  }
   const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
@@ -503,7 +525,10 @@ function Bubble({
         <div className={`flex max-w-[80%] items-center gap-1 md:max-w-[65%] ${mine ? "flex-row-reverse" : ""}`}>
           <div className="flex min-w-0 flex-col items-end gap-1">
             <div
+              ref={bubble}
               {...press}
+              onClick={onTap}
+              onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
               className={`${radius} ${tone} ${jumbo || note || sticker ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
@@ -587,12 +612,24 @@ function Bubble({
                 </p>
               )}
             </div>
+            {row.message && !row.deleted && (
+              <ReactionChips message={row.message} meId={meId} mine={mine} nameOf={nameOf} onReact={onReact} />
+            )}
             {row.delivery === "failed" && (
               <button onClick={onMenu} className="text-xs font-medium text-red-600 dark:text-red-400">
                 Not sent · Tap for options
               </button>
             )}
           </div>
+          {reactable && (
+            <button
+              onClick={() => onReactButton(anchor())}
+              aria-label="React"
+              className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
+            >
+              <SmilePlus className="size-4" />
+            </button>
+          )}
           <button
             onClick={onMenu}
             aria-label="Message options"
@@ -605,6 +642,9 @@ function Bubble({
     </div>
   );
 }
+
+const canReact = (row: MsgRow) =>
+  !!row.message && !row.pending && !row.deleted && row.message.type !== "service" && !row.message.ephemeral?.purged;
 
 export interface MessageListHandle {
   scrollToBottom: () => void;
@@ -630,6 +670,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
     const [packFor, setPackFor] = useState<string | null>(null);
+    const [reactFor, setReactFor] = useState<MessageDTO | null>(null);
+    const [reactAt, setReactAt] = useState<{ row: MsgRow; anchor: DOMRect } | null>(null);
+    const closeReactBar = useCallback(() => setReactAt(null), []);
     const [opened, setOpened] = useState<Record<string, ViewMessageResult>>({});
     const openedRef = useRef(opened);
     openedRef.current = opened;
@@ -853,12 +896,52 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onHideReveal={() => row.id && hideReveal(row.id)}
                 onResend={() => row.message && void resendEphemeral(row.message)}
                 onOpenPack={setPackFor}
+                meId={meId}
+                onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
+                onLongPress={(anchor) => {
+                  setMenuFor(row);
+                  if (canReact(row)) setReactAt({ row, anchor });
+                }}
+                onReactButton={(anchor) => setReactAt({ row, anchor })}
               />
             )
           }
         </VList>
 
-        {menuFor && <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)} />}
+        {menuFor && (
+          <Sheet
+            actions={actionsFor(menuFor)}
+            onClose={() => {
+              setMenuFor(null);
+              setReactAt(null);
+            }}
+          />
+        )}
+        {reactAt && (
+          <ReactionPopover
+            anchor={reactAt.anchor}
+            alignEnd={reactAt.row.mine}
+            message={reactAt.row.message!}
+            meId={meId}
+            onReact={(emoji) => {
+              setReactAt(null);
+              setMenuFor(null);
+              void react(qc, reactAt.row.message!, meId, emoji);
+            }}
+            onMore={() => {
+              setReactAt(null);
+              setMenuFor(null);
+              setReactFor(reactAt.row.message);
+            }}
+            onClose={closeReactBar}
+          />
+        )}
+        {reactFor && (
+          <ReactionPicker
+            onPick={(emoji) => void react(qc, reactFor, meId, emoji)}
+            onClose={() => setReactFor(null)}
+          />
+        )}
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
         {reporting && (
           <ReportDialog

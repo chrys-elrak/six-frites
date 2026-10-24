@@ -77,6 +77,13 @@ export function insertMessage(qc: QueryClient, m: MessageDTO) {
   });
 }
 
+export function findMessage(qc: QueryClient, chatId: string, messageId: string) {
+  return qc
+    .getQueryData<Messages>(chatKeys.messages(chatId))
+    ?.pages.flatMap((p) => p.items)
+    .find((m) => m.id === messageId);
+}
+
 export function mapMessages(qc: QueryClient, chatId: string, fn: (m: MessageDTO) => MessageDTO | null) {
   qc.setQueryData<Messages>(chatKeys.messages(chatId), (data) =>
     data

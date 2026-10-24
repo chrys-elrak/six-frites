@@ -25,3 +25,38 @@ export function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElemen
     />
   );
 }
+
+export function Toggle({
+  label,
+  hint,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  return (
+    <label className={`flex items-center gap-3 p-4 ${disabled ? "opacity-60" : "cursor-pointer"}`}>
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">{label}</span>
+        {hint && <span className="block text-sm text-stone-500 dark:text-stone-400">{hint}</span>}
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
+      <span
+        aria-hidden
+        className="relative h-6 w-10 shrink-0 rounded-full bg-stone-300 transition peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-2 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4 dark:bg-stone-700"
+      />
+    </label>
+  );
+}

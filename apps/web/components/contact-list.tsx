@@ -2,11 +2,12 @@
 
 import { unwrap } from "@six/sdk";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
-import { Pencil, Search, UserPlus, Users } from "lucide-react";
+import { Pencil, Search, Share2, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { shareInvite } from "@/lib/format";
 import { six } from "@/lib/six";
+import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ContactEditor } from "./contact-editor";
 
@@ -26,6 +27,7 @@ export function ContactList() {
   const q = useDebounced(query.trim());
   const [flash, setFlash] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const contacts = useInfiniteQuery({
     queryKey: contactKeys.list(q),
@@ -49,7 +51,7 @@ export function ContactList() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="space-y-3 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:border-stone-800">
+      <header className="space-y-3 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800">
         <h1 className="text-xl font-semibold tracking-tight">Contacts</h1>
         <label className="flex items-center gap-2 rounded-xl bg-stone-200/70 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-800">
           <Search className="size-4 shrink-0" />
@@ -65,22 +67,32 @@ export function ContactList() {
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <button
+          onClick={() => setAdding(true)}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-100 dark:hover:bg-stone-900"
+        >
+          <span className="grid size-11 place-items-center rounded-full bg-brand/15 text-brand">
+            <UserPlus className="size-5" />
+          </span>
+          <span className="font-medium text-brand">Add contact</span>
+        </button>
+        <button
           onClick={() => invite.mutate()}
           disabled={invite.isPending}
           className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-100 disabled:opacity-60 dark:hover:bg-stone-900"
         >
           <span className="grid size-11 place-items-center rounded-full bg-brand/15 text-brand">
-            <UserPlus className="size-5" />
+            <Share2 className="size-5" />
           </span>
           <span className="font-medium text-brand">{flash ?? "Invite a friend"}</span>
         </button>
+        {adding && <AddContact onClose={() => setAdding(false)} />}
 
         {contacts.isPending && <p className="p-4 text-sm text-stone-500">Loading…</p>}
         {contacts.isError && <p className="p-4 text-sm text-red-600">Couldn't load contacts.</p>}
         {contacts.isSuccess && items.length === 0 && (
           <div className="flex flex-col items-center gap-2 p-8 text-center text-sm text-stone-500">
             <Users className="size-8 text-stone-400" strokeWidth={1.6} />
-            {q ? `No contacts match “${q}”.` : "No contacts yet. People who join with your invite link show up here."}
+            {q ? `No contacts match “${q}”.` : "No contacts yet. Add someone with their contact code, or invite a friend."}
           </div>
         )}
 

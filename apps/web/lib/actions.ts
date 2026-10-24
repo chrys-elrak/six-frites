@@ -23,6 +23,33 @@ export function applyEdited(qc: QueryClient, m: MessageDTO) {
   patchChat(qc, m.chatId, (c) => (c.lastMessage?.id === m.id ? { ...c, lastMessage: m } : c));
 }
 
+/** Adds or removes one of my reactions, showing the change before the server answers. */
+export async function react(qc: QueryClient, m: MessageDTO, meId: string, emoji: string) {
+  const current = m.reactions ?? [];
+  const on = !current.some((r) => r.emoji === emoji && r.userIds.includes(meId));
+  const reactions = on
+    ? current.some((r) => r.emoji === emoji)
+      ? current.map((r) => (r.emoji === emoji ? { ...r, userIds: [...r.userIds, meId] } : r))
+      : [...current, { emoji, userIds: [meId] }]
+    : current
+        .map((r) => (r.emoji === emoji ? { ...r, userIds: r.userIds.filter((id) => id !== meId) } : r))
+        .filter((r) => r.userIds.length);
+  applyEdited(qc, { ...m, reactions });
+  try {
+    const params = { path: { id: m.id } };
+    applyEdited(
+      qc,
+      unwrap(
+        on
+          ? await six.api.POST("/v1/messages/{id}/reactions", { params, body: { emoji } })
+          : await six.api.DELETE("/v1/messages/{id}/reactions/{emoji}", { params: { path: { id: m.id, emoji } } }),
+      ),
+    );
+  } catch {
+    void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
+  }
+}
+
 /** Shows a self-destructing message as opened straight away instead of waiting for the server's update. */
 export function markOpenedLocally(qc: QueryClient, chatId: string, messageId: string) {
   const expire = (m: MessageDTO): MessageDTO =>

@@ -32,3 +32,18 @@ export const UpdateContactInput = z
   })
   .refine((v) => v.displayName !== undefined || v.photo !== undefined, "Provide displayName and/or photo");
 export type UpdateContactInput = z.infer<typeof UpdateContactInput>;
+
+export const FindUserQuery = z.object({
+  q: z.string().trim().min(1).max(320).describe("A contact code, a contact link, @username or an exact email"),
+});
+export type FindUserQuery = z.infer<typeof FindUserQuery>;
+
+export const FoundUserDTO = z.object({
+  user: PublicUser.describe("With your custom name and photo applied if you already know them"),
+  username: z.string().nullable(),
+  chatId: Id.nullable().describe("Your direct chat with them, if you already have one"),
+});
+export type FoundUserDTO = z.infer<typeof FoundUserDTO>;
+
+export const AddContactInput = FindUserQuery;
+export type AddContactInput = FindUserQuery;

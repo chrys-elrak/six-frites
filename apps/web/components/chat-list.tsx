@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useChats } from "@/lib/chats";
+import { usePresence, useWatchPresence } from "@/lib/presence";
 import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
@@ -98,6 +99,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
   const press = useLongPress(() => setMenu(true));
   const typing = useIsTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
+  const online = usePresence(peer.id === meId ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
 
   return (
@@ -109,7 +111,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
           active ? "bg-stone-100 dark:bg-stone-800" : "hover:bg-stone-50 dark:hover:bg-stone-900"
         }`}
       >
-        <Avatar user={peer} size="md" />
+        <Avatar user={peer} size="md" online={online} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="min-w-0 flex-1 truncate font-semibold">{chat.title}</p>
@@ -175,10 +177,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
 
   const visible = chats.data?.filter((c) => c.lastMessage !== null) ?? [];
   const archivedCount = archivedChats.data?.filter((c) => c.lastMessage !== null).length ?? 0;
+  useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-2 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:border-stone-800">
+      <header className="flex items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800">
         {archived && (
           <Link
             href="/"

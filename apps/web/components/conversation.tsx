@@ -10,6 +10,7 @@ import { deleteMessages } from "@/lib/actions";
 import { useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
+import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { useSession } from "@/lib/session";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
@@ -20,7 +21,7 @@ import { MessageList, type MessageListHandle } from "./message-list";
 import { Sheet } from "./sheet";
 
 const headerClass =
-  "flex items-center gap-2 border-b border-stone-200 bg-stone-50/90 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90";
+  "flex items-center gap-2 border-b border-stone-200 bg-stone-50/90 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90";
 const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
 
@@ -73,6 +74,9 @@ export function Conversation({ chatId }: { chatId: string }) {
     const names = new Map(members?.map((m) => [m.user.id, m.user.displayName]));
     return (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
   }, [members, meId]);
+  const peerId = members?.find((m) => m.user.id !== meId)?.user.id;
+  const presence = usePresence(peerId);
+  useWatchPresence(peerId ? [peerId] : []);
 
   if (chat.isPending) return <div className="grid h-full place-items-center text-sm text-stone-500">Loading…</div>;
   if (!chat.data) {
@@ -128,15 +132,18 @@ export function Conversation({ chatId }: { chatId: string }) {
             className="flex min-w-0 flex-1 items-center gap-2 rounded-xl py-0.5 pr-2 text-left hover:bg-stone-200/60 dark:hover:bg-stone-800/60"
             aria-label={`Edit contact ${c.title}`}
           >
-            <Avatar user={peer} />
+            <Avatar user={peer} online={presence?.online} />
             <span className="min-w-0 flex-1">
               <span className="block truncate font-semibold">{c.title}</span>
               {typing ? (
                 <span className="block text-xs font-medium text-brand">typing…</span>
               ) : (
-                (c.muted || c.archived || c.autoDeleteSecs) && (
-                  <span className="block text-xs text-stone-500">
+                (presence || c.muted || c.archived || c.autoDeleteSecs) && (
+                  <span className="block truncate text-xs text-stone-500">
+                    {presence?.online && <span className="font-medium text-brand">online</span>}
+                    {presence?.online && (c.muted || c.archived || c.autoDeleteSecs) && " · "}
                     {[
+                      !presence?.online && presenceLabel(presence),
                       c.autoDeleteSecs && `Auto-delete: ${durationLabel(c.autoDeleteSecs)}`,
                       c.muted && "Muted",
                       c.archived && "Archived",

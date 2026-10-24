@@ -111,6 +111,31 @@ export type ServiceAction = z.infer<typeof ServiceAction>;
 /** Allowed range for a chat's auto-delete timer, in seconds. */
 export const AUTO_DELETE = { min: 60 * 60, max: 365 * 24 * 60 * 60 } as const;
 
+const HOUR = 60 * 60;
+const DAY = 24 * HOUR;
+
+/** Timers offered in the auto-delete menu; any other value in range can be set as a custom one. */
+export const AUTO_DELETE_PRESETS = [
+  HOUR,
+  8 * HOUR,
+  DAY,
+  3 * DAY,
+  7 * DAY,
+  14 * DAY,
+  30 * DAY,
+  90 * DAY,
+  180 * DAY,
+  365 * DAY,
+] as const;
+
+/** Units for a custom auto-delete timer, in seconds. A month is 30 days, as in `durationLabel`. */
+export const AUTO_DELETE_UNITS = [
+  ["hours", HOUR],
+  ["days", DAY],
+  ["weeks", 7 * DAY],
+  ["months", 30 * DAY],
+] as const;
+
 export const MessageDTO = z.object({
   id: Id,
   chatId: Id,
@@ -129,6 +154,9 @@ export const MessageDTO = z.object({
   editedAt: IsoDate.nullable(),
   deletedAt: IsoDate.nullable(),
   expiresAt: IsoDate.nullable().describe("When the chat's auto-delete timer removes it for everyone"),
+  reactions: z
+    .array(z.object({ emoji: z.string(), userIds: z.array(Id) }))
+    .describe("One entry per emoji, oldest first; a person can add several different emoji"),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 
@@ -294,6 +322,31 @@ export type DeleteChatQuery = z.infer<typeof DeleteChatQuery>;
 
 export const ChatDeletedDTO = z.object({ chatId: Id, scope: DeleteScope });
 export type ChatDeletedDTO = z.infer<typeof ChatDeletedDTO>;
+
+/** Offered in the quick reaction bar; any other single emoji can be picked too. */
+export const QUICK_REACTIONS = ["❤️", "👍", "😂", "😮", "😢", "🙏"] as const;
+
+export const ReactionEmoji = z
+  .string()
+  .max(32)
+  .regex(
+    /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier}|[\u{E0020}-\u{E007F}]|\u200D\p{Extended_Pictographic})*)$/u,
+    "Expected a single emoji",
+  );
+
+export const MessageReactedDTO = z.object({
+  chatId: Id,
+  messageId: Id,
+  userId: Id.describe("Who reacted"),
+  emoji: z.string(),
+});
+export type MessageReactedDTO = z.infer<typeof MessageReactedDTO>;
+
+/** How many different emoji one person can put on one message. */
+export const MAX_REACTIONS_PER_USER = 10;
+
+export const ReactInput = z.object({ emoji: ReactionEmoji });
+export type ReactInput = z.infer<typeof ReactInput>;
 
 export const ViewMessageResult = z.object({
   message: MessageDTO,

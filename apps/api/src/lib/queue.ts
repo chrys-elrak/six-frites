@@ -49,6 +49,8 @@ export function timersQueue() {
 export interface PushJob {
   messageId: string;
   userId: string;
+  /** Set when the push is about someone's reaction to the user's message rather than the message itself. */
+  reaction?: { emoji: string; reactorId: string };
 }
 
 export const PUSH_QUEUE = "push";

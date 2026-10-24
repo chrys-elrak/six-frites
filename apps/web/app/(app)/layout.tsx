@@ -1,10 +1,12 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ChatList } from "@/components/chat-list";
 import { ContactList } from "@/components/contact-list";
+import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
 import { type Tab, TabBar } from "@/components/tab-bar";
 import { RealtimeProvider } from "@/lib/realtime";
@@ -54,9 +56,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (status === "anon") {
       qc.clear();
-      router.replace("/login");
+      router.replace(pathname === "/" ? "/login" : `/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [status, router, qc]);
+  }, [status, router, qc, pathname]);
 
   if (status !== "authed") {
     return <main className="grid h-dvh place-items-center text-sm text-stone-500">Loading…</main>;
@@ -67,18 +69,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <RealtimeProvider>
-      <div className="fixed inset-x-0 top-0 flex h-[var(--app-height,100dvh)] overflow-hidden">
-        <aside
-          className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex md:w-80 md:shrink-0 md:border-r lg:w-96 dark:border-stone-800`}
+      <div className="fixed inset-x-0 top-0 flex h-[var(--app-height,100dvh)] flex-col overflow-hidden">
+        <Link
+          href="/"
+          className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-2 border-b border-stone-200 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:flex dark:border-stone-800`}
         >
-          <div className="min-h-0 flex-1">
-            {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
-            {tab === "contacts" && <ContactList />}
-            {tab === "settings" && <SettingsPanel />}
-          </div>
-          <TabBar active={tab} />
-        </aside>
-        <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col md:flex`}>{children}</section>
+          <Logo className="size-7" />
+          <span className="text-[15px] font-bold tracking-tight">Six Frites</span>
+        </Link>
+        <div className="flex min-h-0 flex-1">
+          <aside
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex md:w-80 md:shrink-0 md:border-r lg:w-96 dark:border-stone-800`}
+          >
+            <div className="min-h-0 flex-1">
+              {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
+              {tab === "contacts" && <ContactList />}
+              {tab === "settings" && <SettingsPanel />}
+            </div>
+            <TabBar active={tab} />
+          </aside>
+          <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col md:flex`}>{children}</section>
+        </div>
       </div>
       <Toasts />
       <UnreadTitle />

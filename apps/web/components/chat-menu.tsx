@@ -1,13 +1,11 @@
 "use client";
 
-import { type ChatDTO, type DeleteScope, durationLabel } from "@six/shared";
+import { AUTO_DELETE_PRESETS, type ChatDTO, type DeleteScope, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { deleteChat, updateChatSettings } from "@/lib/actions";
+import { AutoDeleteCustom } from "./auto-delete-custom";
 import { Sheet } from "./sheet";
-
-const DAY = 24 * 60 * 60;
-const AUTO_DELETE_OPTIONS = [DAY, 7 * DAY, 30 * DAY];
 
 export function ChatMenu({
   chat,
@@ -21,7 +19,7 @@ export function ChatMenu({
   onDeleted?: (scope: DeleteScope) => void;
 }) {
   const qc = useQueryClient();
-  const [view, setView] = useState<"menu" | "delete" | "autoDelete">("menu");
+  const [view, setView] = useState<"menu" | "delete" | "autoDelete" | "custom">("menu");
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
 
@@ -51,16 +49,33 @@ export function ChatMenu({
     );
   }
 
+  if (view === "custom") {
+    return (
+      <AutoDeleteCustom
+        value={chat.autoDeleteSecs}
+        peerName={peerName}
+        onSave={(secs) => settings({ autoDeleteSecs: secs })}
+        onClose={onClose}
+      />
+    );
+  }
+
   if (view === "autoDelete") {
+    const custom = chat.autoDeleteSecs && !(AUTO_DELETE_PRESETS as readonly number[]).includes(chat.autoDeleteSecs);
     return (
       <Sheet
         title={`Delete new messages for you and ${peerName} after`}
         onClose={onClose}
         actions={[
-          ...AUTO_DELETE_OPTIONS.map((secs) => ({
+          ...AUTO_DELETE_PRESETS.map((secs) => ({
             label: `${durationLabel(secs)}${chat.autoDeleteSecs === secs ? " ✓" : ""}`,
             onSelect: () => settings({ autoDeleteSecs: secs }),
           })),
+          {
+            label: custom ? `Custom: ${durationLabel(chat.autoDeleteSecs!)} ✓` : "Custom…",
+            keepOpen: true,
+            onSelect: () => setView("custom"),
+          },
           ...(chat.autoDeleteSecs
             ? [{ label: "Off", destructive: true, onSelect: () => settings({ autoDeleteSecs: null }) }]
             : []),

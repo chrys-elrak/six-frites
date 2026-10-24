@@ -19,6 +19,8 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const inviteCode = params.get("invite") ?? undefined;
+  const next = params.get("next");
+  const home = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
   const status = useSession((s) => s.status);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,8 +28,8 @@ function LoginForm() {
 
   useEffect(() => {
     if (status !== "authed" || signingIn.current) return;
-    router.replace(inviteCode ? `/invite/${encodeURIComponent(inviteCode)}` : "/");
-  }, [status, router, inviteCode]);
+    router.replace(inviteCode ? `/invite/${encodeURIComponent(inviteCode)}` : home);
+  }, [status, router, inviteCode, home]);
 
   async function onCredential(idToken: string) {
     signingIn.current = true;
@@ -38,7 +40,7 @@ function LoginForm() {
       if (inviteCode) {
         await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
       }
-      router.replace("/");
+      router.replace(home);
     } catch (err) {
       signingIn.current = false;
       setError(err instanceof SixApiError ? (errorText[err.code] ?? err.message) : "Something went wrong.");
@@ -53,7 +55,11 @@ function LoginForm() {
         <Logo className="mx-auto size-20 drop-shadow-sm" />
         <h1 className="text-2xl font-semibold tracking-tight">Six Frites</h1>
         <p className="text-sm text-stone-500 dark:text-stone-400">
-          {inviteCode ? "You've been invited. Sign in to accept." : "Sign in to continue."}
+          {inviteCode
+            ? "You've been invited. Sign in to accept."
+            : next?.startsWith("/add/")
+              ? "Sign in to add this contact."
+              : "Sign in to continue."}
         </p>
       </div>
 

@@ -17,7 +17,7 @@ import {
 import { ensureBucket } from "./lib/storage.js";
 import { processUpload } from "./media/process.js";
 import { deleteExpiredMessages, expireMessage, purgeMessage } from "./services/messages.js";
-import { deliverPush } from "./services/push.js";
+import { deliverPush, deliverReactionPush } from "./services/push.js";
 import { sendDueScheduled } from "./services/scheduled.js";
 import { finishUpload, purgeAbandonedUploads, purgeUploads } from "./services/uploads.js";
 
@@ -44,7 +44,11 @@ const timers = new Worker<TimerJob>(
 );
 const pushes = new Worker<PushJob>(
   PUSH_QUEUE,
-  async (job) => ({ sent: await deliverPush(job.data.messageId, job.data.userId) }),
+  async (job) => ({
+    sent: job.data.reaction
+      ? await deliverReactionPush(job.data.messageId, job.data.userId, job.data.reaction)
+      : await deliverPush(job.data.messageId, job.data.userId),
+  }),
   {
     connection: redisConnection(),
     concurrency: 8,
