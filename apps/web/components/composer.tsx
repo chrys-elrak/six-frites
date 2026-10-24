@@ -16,12 +16,12 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
+import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { EmojiButton } from "./emoji-picker";
 import { useRealtime } from "@/lib/realtime";
-import { kindFor } from "@six/sdk";
 import { formatDuration } from "@/lib/format";
 import { useRecorder } from "@/lib/recorder";
 import { queueMessage } from "@/lib/send";
@@ -89,6 +89,8 @@ export function Composer({
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const recorder = useRecorder();
+  const [picked, setPicked] = useState<File[] | null>(null);
+  const closePicker = useCallback(() => setPicked(null), []);
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
@@ -198,7 +200,7 @@ export function Composer({
       text: parsed.text,
       entities: parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
-      spoiler: file ? spoiler && (file.kind === "image" || file.kind === "video") : spoiler,
+      spoiler: file ? false : spoiler,
       file,
     });
     setSpoiler(false);
@@ -209,14 +211,29 @@ export function Composer({
   }
 
   function sendFiles(files: FileList | File[]) {
-    const hide = spoiler;
-    [...files].forEach((f, i) => {
-      const mime = f.type || "application/octet-stream";
-      const file = { blob: f, kind: kindFor(mime), name: f.name || "file", mime };
-      const visual = file.kind === "image" || file.kind === "video";
-      if (i === 0) send(file);
-      else if (realtime) void queueMessage(qc, realtime, chatId, { text: "", file, spoiler: hide && visual });
+    setPicked([...files]);
+  }
+
+  function sendPicked(items: PickedFile[], caption: string) {
+    setPicked(null);
+    if (!realtime) return;
+    const { text: captionText, entities } = parseMarkup(caption);
+    realtime.setTyping(chatId, false);
+    items.forEach(({ file, kind, spoiler: hidden }, i) => {
+      const first = i === 0;
+      void queueMessage(qc, realtime, chatId, {
+        text: first ? captionText : "",
+        entities: first ? entities : [],
+        replyTo: first && mode?.kind === "reply" ? mode.message : undefined,
+        spoiler: hidden && (kind === "image" || kind === "video"),
+        file: { blob: file, kind, name: file.name || "file", mime: file.type || "application/octet-stream" },
+      });
     });
+    drafts.delete(chatId);
+    setText("");
+    setSpoiler(false);
+    if (mode) cancel();
+    onSent();
   }
 
   async function sendVoice() {
@@ -234,175 +251,189 @@ export function Composer({
   const showMic = !editing && parsed.text.length === 0;
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        void submit();
-      }}
-      className="space-y-2 border-t border-stone-200 bg-stone-50/90 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
-    >
-      {mode?.kind === "reply" && (
-        <ModeBar
-          label={`Replying to ${nameOf(mode.message.senderId)}`}
-          text={mode.message.spoiler ? "Spoiler" : maskSpoilers(mode.message.text ?? "", mode.message.entities)}
-          onCancel={cancel}
-        />
-      )}
-      {editing && (
-        <ModeBar label="Editing message" text={maskSpoilers(editing.text ?? "", editing.entities)} onCancel={cancel} />
-      )}
-      {error && (
-        <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
-      )}
+    <>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+        className="space-y-2 border-t border-stone-200 bg-stone-50/90 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
+      >
+        {mode?.kind === "reply" && (
+          <ModeBar
+            label={`Replying to ${nameOf(mode.message.senderId)}`}
+            text={mode.message.spoiler ? "Spoiler" : maskSpoilers(mode.message.text ?? "", mode.message.entities)}
+            onCancel={cancel}
+          />
+        )}
+        {editing && (
+          <ModeBar
+            label="Editing message"
+            text={maskSpoilers(editing.text ?? "", editing.entities)}
+            onCancel={cancel}
+          />
+        )}
+        {error && (
+          <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
 
-      {hasSelection && (
-        <div role="toolbar" aria-label="Formatting" className="flex gap-1">
-          {formats.map(({ type, label, keys, Icon }) => (
-            <button
-              key={type}
-              type="button"
-              {...keepSelection(() => wrap(type))}
-              aria-label={label}
-              title={`${label} (${modifierKey()}${keys})`}
-              className="grid size-9 place-items-center rounded-lg bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-100 dark:bg-stone-900 dark:text-stone-200 dark:ring-stone-800 dark:hover:bg-stone-800"
-            >
-              <Icon className="size-4" />
-            </button>
-          ))}
-        </div>
-      )}
-
-      {recorder.error && (
-        <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
-          {recorder.error}
-        </p>
-      )}
-
-      {recorder.recording ? (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={recorder.cancel}
-            aria-label="Discard recording"
-            className="grid size-10 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-          >
-            <Trash2 className="size-5" />
-          </button>
-          <div className="flex min-h-10 flex-1 items-center gap-2 rounded-2xl bg-white px-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
-            <span className="size-2.5 animate-pulse rounded-full bg-red-500" aria-hidden />
-            <span className="font-mono text-sm tabular-nums">{formatDuration(recorder.elapsed)}</span>
-            <span className="text-sm text-stone-500">Recording…</span>
+        {hasSelection && (
+          <div role="toolbar" aria-label="Formatting" className="flex gap-1">
+            {formats.map(({ type, label, keys, Icon }) => (
+              <button
+                key={type}
+                type="button"
+                {...keepSelection(() => wrap(type))}
+                aria-label={label}
+                title={`${label} (${modifierKey()}${keys})`}
+                className="grid size-9 place-items-center rounded-lg bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-100 dark:bg-stone-900 dark:text-stone-200 dark:ring-stone-800 dark:hover:bg-stone-800"
+              >
+                <Icon className="size-4" />
+              </button>
+            ))}
           </div>
-          <button
-            type="button"
-            onClick={() => void sendVoice()}
-            aria-label="Send voice message"
-            className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
-          >
-            <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-end gap-1.5">
-          {!editing && (
-            <>
+        )}
+
+        {recorder.error && (
+          <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
+            {recorder.error}
+          </p>
+        )}
+
+        {recorder.recording ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={recorder.cancel}
+              aria-label="Discard recording"
+              className="grid size-10 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+            >
+              <Trash2 className="size-5" />
+            </button>
+            <div className="flex min-h-10 flex-1 items-center gap-2 rounded-2xl bg-white px-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+              <span className="size-2.5 animate-pulse rounded-full bg-red-500" aria-hidden />
+              <span className="font-mono text-sm tabular-nums">{formatDuration(recorder.elapsed)}</span>
+              <span className="text-sm text-stone-500">Recording…</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void sendVoice()}
+              aria-label="Send voice message"
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
+            >
+              <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-end gap-1.5">
+            {!editing && (
+              <>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => fileInput.current?.click()}
+                  aria-label="Attach a file"
+                  className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+                >
+                  <Paperclip className="size-5" />
+                </button>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.length) sendFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+              </>
+            )}
+            <div className="flex min-h-10 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800">
+              <EmojiButton onPick={insert} />
+              <textarea
+                ref={ref}
+                value={text}
+                onChange={(e) => change(e.target.value)}
+                onSelect={(e) => setHasSelection(e.currentTarget.selectionEnd > e.currentTarget.selectionStart)}
+                onBlur={() => setHasSelection(false)}
+                onPaste={(e) => {
+                  const files = [...e.clipboardData.files];
+                  if (!files.length || editing) return;
+                  e.preventDefault();
+                  sendFiles(files);
+                }}
+                onKeyDown={(e) => {
+                  if (shortcut(e)) return;
+                  if (e.key === "Escape" && mode) {
+                    e.preventDefault();
+                    cancel();
+                    return;
+                  }
+                  const desktop = window.matchMedia("(pointer: fine)").matches;
+                  if (e.key === "Enter" && !e.shiftKey && desktop && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    void submit();
+                  }
+                }}
+                rows={1}
+                maxLength={4000}
+                enterKeyHint={editing ? "done" : "send"}
+                placeholder={spoiler ? "Spoiler message" : "Message"}
+                aria-label="Message"
+                className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none"
+              />
               <button
                 type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => fileInput.current?.click()}
-                aria-label="Attach a file"
-                className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+                {...keepSelection(spoilerButton)}
+                aria-pressed={!editing && spoiler}
+                aria-label={spoiler && !editing ? "Send as normal message" : "Spoiler"}
+                title="Select text to hide just that part, or tap to send the whole message as a spoiler"
+                className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
+                  spoiler && !editing ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                }`}
               >
-                <Paperclip className="size-5" />
+                <EyeOff className="size-5" />
               </button>
-              <input
-                ref={fileInput}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.length) sendFiles(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-            </>
-          )}
-          <div className="flex min-h-10 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800">
-            <EmojiButton onPick={insert} />
-            <textarea
-              ref={ref}
-              value={text}
-              onChange={(e) => change(e.target.value)}
-              onSelect={(e) => setHasSelection(e.currentTarget.selectionEnd > e.currentTarget.selectionStart)}
-              onBlur={() => setHasSelection(false)}
-              onPaste={(e) => {
-                const files = [...e.clipboardData.files];
-                if (!files.length || editing) return;
-                e.preventDefault();
-                sendFiles(files);
-              }}
-              onKeyDown={(e) => {
-                if (shortcut(e)) return;
-                if (e.key === "Escape" && mode) {
-                  e.preventDefault();
-                  cancel();
-                  return;
-                }
-                const desktop = window.matchMedia("(pointer: fine)").matches;
-                if (e.key === "Enter" && !e.shiftKey && desktop && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  void submit();
-                }
-              }}
-              rows={1}
-              maxLength={4000}
-              enterKeyHint={editing ? "done" : "send"}
-              placeholder={spoiler ? "Spoiler: text or photo" : "Message"}
-              aria-label="Message"
-              className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none"
-            />
-            <button
-              type="button"
-              {...keepSelection(spoilerButton)}
-              aria-pressed={!editing && spoiler}
-              aria-label={spoiler && !editing ? "Send as normal message" : "Spoiler"}
-              title="Select text to hide just that part, or turn on to send the next message or photo as a spoiler"
-              className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
-                spoiler && !editing ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
-              }`}
-            >
-              <EyeOff className="size-5" />
-            </button>
+            </div>
+            {showMic ? (
+              <button
+                type="button"
+                onClick={() => void recorder.start()}
+                disabled={!realtime}
+                aria-label="Record a voice message"
+                className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
+              >
+                <Mic className="size-5" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                onMouseDown={(e) => e.preventDefault()}
+                aria-label={editing ? "Save" : "Send"}
+                className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
+              >
+                {editing ? (
+                  <Check className="size-5" strokeWidth={2.6} aria-hidden />
+                ) : (
+                  <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
+                )}
+              </button>
+            )}
           </div>
-          {showMic ? (
-            <button
-              type="button"
-              onClick={() => void recorder.start()}
-              disabled={!realtime}
-              aria-label="Record a voice message"
-              className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
-            >
-              <Mic className="size-5" />
-            </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              onMouseDown={(e) => e.preventDefault()}
-              aria-label={editing ? "Save" : "Send"}
-              className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
-            >
-              {editing ? (
-                <Check className="size-5" strokeWidth={2.6} aria-hidden />
-              ) : (
-                <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
-              )}
-            </button>
-          )}
-        </div>
+        )}
+      </form>
+      {picked && (
+        <AttachDialog
+          files={picked}
+          initialCaption={editing ? "" : text}
+          onCancel={closePicker}
+          onSend={sendPicked}
+        />
       )}
-    </form>
+    </>
   );
 }
