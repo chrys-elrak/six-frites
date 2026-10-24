@@ -2,6 +2,7 @@
 
 import type { AttachmentDTO } from "@six/shared";
 import { AlertCircle, Download, EyeOff, FileText, Loader2, Pause, Play, X } from "lucide-react";
+import { ProtectedImage, noSave } from "./protected-image";
 import { useEffect, useRef, useState } from "react";
 import { formatBytes, formatDuration } from "@/lib/format";
 import type { PendingAttachment } from "@/lib/outbox";
@@ -284,6 +285,9 @@ function VideoNote({
             poster={poster ?? undefined}
             playsInline
             preload="metadata"
+            controlsList="nodownload noremoteplayback"
+            disablePictureInPicture
+            {...noSave}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
             onEnded={() => {
@@ -366,7 +370,18 @@ export function AttachmentView({
         ) : attachment.source === "local" ? (
           <img src={a.url ?? undefined} alt="" draggable={false} className="size-full object-cover" />
         ) : (
-          a.url && <video src={a.url} autoPlay loop muted playsInline className="size-full object-cover" />
+          a.url && (
+            <video
+              src={a.url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              disablePictureInPicture
+              {...noSave}
+              className="size-full object-cover"
+            />
+          )
         )}
         <span className="absolute top-1.5 left-1.5 rounded bg-black/50 px-1 text-[10px] font-bold text-white">GIF</span>
         {a.state === "failed" && <Overlay state={a.state} progress={a.progress} />}
@@ -389,11 +404,9 @@ export function AttachmentView({
         aria-label={hidden ? "Spoiler, tap to reveal" : a.kind === "image" ? "Open photo" : "Play video"}
       >
         {a.thumbUrl && (
-          <img
+          <ProtectedImage
             src={a.thumbUrl}
-            alt=""
-            className={`size-full object-cover transition duration-300 ${hidden ? "scale-125 blur-2xl brightness-75" : ""}`}
-            draggable={false}
+            className={`size-full transition duration-300 ${hidden ? "scale-125 blur-2xl brightness-75" : ""}`}
           />
         )}
         {hidden && (
@@ -503,14 +516,6 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
     <Portal>
       <div className="fixed inset-0 z-50 flex flex-col bg-black/95" role="dialog" aria-modal aria-label={item.name}>
         <div className="flex items-center justify-end gap-1 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-          <a
-            href={item.url}
-            download={item.name}
-            aria-label="Download"
-            className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"
-          >
-            <Download className="size-5" />
-          </a>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -524,14 +529,17 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           {item.kind === "image" ? (
-            <img src={item.url} alt="" className="max-h-full max-w-full object-contain" />
+            <ProtectedImage src={item.url} fit="contain" className="size-full" />
           ) : (
             <video
               src={item.url}
               poster={item.poster ?? undefined}
               controls
+              controlsList="nodownload noremoteplayback"
+              disablePictureInPicture
               autoPlay
               playsInline
+              {...noSave}
               className="max-h-full max-w-full"
             />
           )}
