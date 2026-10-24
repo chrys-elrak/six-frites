@@ -32,7 +32,7 @@ import {
   useState,
 } from "react";
 import { VList, type VListHandle } from "virtua";
-import { deleteMessage } from "@/lib/actions";
+import { deleteMessage, markOpenedLocally } from "@/lib/actions";
 import { shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
 import { useMessages } from "@/lib/chats";
@@ -565,13 +565,22 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
     const [opened, setOpened] = useState<Record<string, ViewMessageResult>>({});
+    const openedRef = useRef(opened);
+    openedRef.current = opened;
     const hideReveal = useCallback(
-      (id: string) =>
+      (id: string) => {
+        const shown = openedRef.current[id];
+        const e = shown?.message.ephemeral;
+        const endsAt = shown?.expiresAt ? Date.parse(shown.expiresAt) : null;
+        const viewsUsed = !!e?.maxViews && e.views >= e.maxViews;
+        if (viewsUsed || (endsAt !== null && Date.now() >= endsAt - 250)) markOpenedLocally(qc, chat.id, id);
+        else if (endsAt !== null) setTimeout(() => markOpenedLocally(qc, chat.id, id), endsAt - Date.now());
         setOpened((all) => {
           const { [id]: _gone, ...rest } = all;
           return rest;
-        }),
-      [],
+        });
+      },
+      [qc, chat.id],
     );
 
     async function openEphemeral(row: MsgRow) {

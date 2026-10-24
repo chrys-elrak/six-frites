@@ -15,6 +15,22 @@ export function applyEdited(qc: QueryClient, m: MessageDTO) {
   patchChat(qc, m.chatId, (c) => (c.lastMessage?.id === m.id ? { ...c, lastMessage: m } : c));
 }
 
+/** Shows a self-destructing message as opened straight away instead of waiting for the server's update. */
+export function markOpenedLocally(qc: QueryClient, chatId: string, messageId: string) {
+  const expire = (m: MessageDTO): MessageDTO =>
+    m.id !== messageId || !m.ephemeral
+      ? m
+      : {
+          ...m,
+          text: null,
+          entities: [],
+          attachment: null,
+          ephemeral: { ...m.ephemeral, locked: false, expired: true },
+        };
+  mapMessages(qc, chatId, expire);
+  patchChat(qc, chatId, (c) => (c.lastMessage ? { ...c, lastMessage: expire(c.lastMessage) } : c));
+}
+
 export function applyDeleted(qc: QueryClient, chatId: string, ids: string[], scope: DeleteScope) {
   const gone = new Set(ids);
   const now = new Date().toISOString();
