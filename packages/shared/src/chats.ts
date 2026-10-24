@@ -57,9 +57,34 @@ export const ReplyPreview = z.object({
   type: MessageType,
   text: z.string().nullable(),
   spoiler: z.boolean(),
+  ephemeral: z.boolean(),
   deleted: z.boolean(),
 });
 export type ReplyPreview = z.infer<typeof ReplyPreview>;
+
+export const EphemeralInput = z
+  .object({
+    maxViews: z.number().int().min(1).max(10).optional().describe("Destroy after this many views by the recipient"),
+    ttlSeconds: z
+      .number()
+      .int()
+      .min(1)
+      .max(7 * 24 * 60 * 60)
+      .optional()
+      .describe("Destroy this many seconds after the recipient first opens it"),
+  })
+  .refine((v) => v.maxViews !== undefined || v.ttlSeconds !== undefined, "Set maxViews, ttlSeconds or both");
+export type EphemeralInput = z.infer<typeof EphemeralInput>;
+
+export const EphemeralDTO = z.object({
+  maxViews: z.number().int().nullable(),
+  ttlSeconds: z.number().int().nullable(),
+  views: z.number().int().describe("How many times the recipient opened it"),
+  firstViewedAt: IsoDate.nullable(),
+  locked: z.boolean().describe("Content is withheld for you; open it with POST /v1/messages/{id}/view"),
+  expired: z.boolean().describe("Destroyed after its views or timer ran out"),
+});
+export type EphemeralDTO = z.infer<typeof EphemeralDTO>;
 
 export const MessageDTO = z.object({
   id: Id,
@@ -71,6 +96,7 @@ export const MessageDTO = z.object({
   entities: z.array(MessageEntity),
   spoiler: z.boolean(),
   attachment: AttachmentDTO.nullable(),
+  ephemeral: EphemeralDTO.nullable(),
   replyTo: ReplyPreview.nullable(),
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
@@ -116,6 +142,7 @@ export const SendMessageInput = z
     attachmentId: Id.optional().describe("A completed upload from POST /v1/uploads/{id}/complete"),
     replyToId: Id.optional(),
     spoiler: z.boolean().optional(),
+    ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
   })
   .refine((v) => v.text !== undefined || v.attachmentId !== undefined, {
     message: "Send text, an attachment, or both",
@@ -203,3 +230,9 @@ export type DeleteChatQuery = z.infer<typeof DeleteChatQuery>;
 
 export const ChatDeletedDTO = z.object({ chatId: Id, scope: DeleteScope });
 export type ChatDeletedDTO = z.infer<typeof ChatDeletedDTO>;
+
+export const ViewMessageResult = z.object({
+  message: MessageDTO,
+  expiresAt: IsoDate.nullable().describe("When the content will be destroyed, if a timer is running"),
+});
+export type ViewMessageResult = z.infer<typeof ViewMessageResult>;

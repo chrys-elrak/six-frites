@@ -60,7 +60,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
       lastReadMessageId: m.lastReadMessageId,
       lastReadAt: m.lastReadAt?.toISOString() ?? null,
     })),
-    lastMessage: lastMessage ? toMessageDTO(lastMessage) : null,
+    lastMessage: lastMessage ? toMessageDTO(lastMessage, viewerId) : null,
     unreadCount,
     archived: me.archived,
     muted: me.muted,

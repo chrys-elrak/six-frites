@@ -1235,6 +1235,46 @@
                                 "additionalProperties": false,
                                 "nullable": true
                               },
+                              "ephemeral": {
+                                "type": "object",
+                                "properties": {
+                                  "maxViews": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  },
+                                  "ttlSeconds": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  },
+                                  "views": {
+                                    "type": "integer",
+                                    "description": "How many times the recipient opened it"
+                                  },
+                                  "firstViewedAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true
+                                  },
+                                  "locked": {
+                                    "type": "boolean",
+                                    "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                                  },
+                                  "expired": {
+                                    "type": "boolean",
+                                    "description": "Destroyed after its views or timer ran out"
+                                  }
+                                },
+                                "required": [
+                                  "maxViews",
+                                  "ttlSeconds",
+                                  "views",
+                                  "firstViewedAt",
+                                  "locked",
+                                  "expired"
+                                ],
+                                "additionalProperties": false,
+                                "nullable": true
+                              },
                               "replyTo": {
                                 "type": "object",
                                 "properties": {
@@ -1264,6 +1304,9 @@
                                   "spoiler": {
                                     "type": "boolean"
                                   },
+                                  "ephemeral": {
+                                    "type": "boolean"
+                                  },
                                   "deleted": {
                                     "type": "boolean"
                                   }
@@ -1274,6 +1317,7 @@
                                   "type",
                                   "text",
                                   "spoiler",
+                                  "ephemeral",
                                   "deleted"
                                 ],
                                 "additionalProperties": false,
@@ -1304,6 +1348,7 @@
                               "entities",
                               "spoiler",
                               "attachment",
+                              "ephemeral",
                               "replyTo",
                               "createdAt",
                               "editedAt",
@@ -1626,6 +1671,46 @@
                           "additionalProperties": false,
                           "nullable": true
                         },
+                        "ephemeral": {
+                          "type": "object",
+                          "properties": {
+                            "maxViews": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "ttlSeconds": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "views": {
+                              "type": "integer",
+                              "description": "How many times the recipient opened it"
+                            },
+                            "firstViewedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true
+                            },
+                            "locked": {
+                              "type": "boolean",
+                              "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                            },
+                            "expired": {
+                              "type": "boolean",
+                              "description": "Destroyed after its views or timer ran out"
+                            }
+                          },
+                          "required": [
+                            "maxViews",
+                            "ttlSeconds",
+                            "views",
+                            "firstViewedAt",
+                            "locked",
+                            "expired"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
                         "replyTo": {
                           "type": "object",
                           "properties": {
@@ -1655,6 +1740,9 @@
                             "spoiler": {
                               "type": "boolean"
                             },
+                            "ephemeral": {
+                              "type": "boolean"
+                            },
                             "deleted": {
                               "type": "boolean"
                             }
@@ -1665,6 +1753,7 @@
                             "type",
                             "text",
                             "spoiler",
+                            "ephemeral",
                             "deleted"
                           ],
                           "additionalProperties": false,
@@ -1695,6 +1784,7 @@
                         "entities",
                         "spoiler",
                         "attachment",
+                        "ephemeral",
                         "replyTo",
                         "createdAt",
                         "editedAt",
@@ -2025,6 +2115,46 @@
                           "additionalProperties": false,
                           "nullable": true
                         },
+                        "ephemeral": {
+                          "type": "object",
+                          "properties": {
+                            "maxViews": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "ttlSeconds": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "views": {
+                              "type": "integer",
+                              "description": "How many times the recipient opened it"
+                            },
+                            "firstViewedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true
+                            },
+                            "locked": {
+                              "type": "boolean",
+                              "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                            },
+                            "expired": {
+                              "type": "boolean",
+                              "description": "Destroyed after its views or timer ran out"
+                            }
+                          },
+                          "required": [
+                            "maxViews",
+                            "ttlSeconds",
+                            "views",
+                            "firstViewedAt",
+                            "locked",
+                            "expired"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
                         "replyTo": {
                           "type": "object",
                           "properties": {
@@ -2054,6 +2184,9 @@
                             "spoiler": {
                               "type": "boolean"
                             },
+                            "ephemeral": {
+                              "type": "boolean"
+                            },
                             "deleted": {
                               "type": "boolean"
                             }
@@ -2064,6 +2197,7 @@
                             "type",
                             "text",
                             "spoiler",
+                            "ephemeral",
                             "deleted"
                           ],
                           "additionalProperties": false,
@@ -2094,6 +2228,7 @@
                         "entities",
                         "spoiler",
                         "attachment",
+                        "ephemeral",
                         "replyTo",
                         "createdAt",
                         "editedAt",
@@ -2435,6 +2570,46 @@
                       "additionalProperties": false,
                       "nullable": true
                     },
+                    "ephemeral": {
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "ttlSeconds": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "views": {
+                          "type": "integer",
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Destroyed after its views or timer ran out"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
                     "replyTo": {
                       "type": "object",
                       "properties": {
@@ -2464,6 +2639,9 @@
                         "spoiler": {
                           "type": "boolean"
                         },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
                         "deleted": {
                           "type": "boolean"
                         }
@@ -2474,6 +2652,7 @@
                         "type",
                         "text",
                         "spoiler",
+                        "ephemeral",
                         "deleted"
                       ],
                       "additionalProperties": false,
@@ -2504,10 +2683,335 @@
                     "entities",
                     "spoiler",
                     "attachment",
+                    "ephemeral",
                     "replyTo",
                     "createdAt",
                     "editedAt",
                     "deletedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/view": {
+      "post": {
+        "summary": "Open a self-destructing message",
+        "tags": [
+          "messages"
+        ],
+        "description": "Returns the content (with download links valid for 5 minutes) and counts a view. Destroys the message once its views run out; with a timer, it is destroyed `ttlSeconds` after the first view. Returns MESSAGE_EXPIRED afterwards. Senders and normal messages are returned without counting.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "chatId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "clientId": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "bold",
+                                  "italic",
+                                  "strike",
+                                  "code",
+                                  "spoiler"
+                                ]
+                              },
+                              "offset": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "length": {
+                                "type": "integer",
+                                "minimum": 1
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "offset",
+                              "length"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "attachment": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "image",
+                                "video",
+                                "video_note",
+                                "voice",
+                                "file"
+                              ]
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "processing",
+                                "ready",
+                                "failed"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "mime": {
+                              "type": "string"
+                            },
+                            "size": {
+                              "type": "integer"
+                            },
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true,
+                              "description": "Signed link to the playable or viewable file, once ready"
+                            },
+                            "thumbUrl": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true
+                            },
+                            "width": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "height": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "durationMs": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "waveform": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "status",
+                            "name",
+                            "mime",
+                            "size",
+                            "url",
+                            "thumbUrl",
+                            "width",
+                            "height",
+                            "durationMs",
+                            "waveform"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "ephemeral": {
+                          "type": "object",
+                          "properties": {
+                            "maxViews": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "ttlSeconds": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "views": {
+                              "type": "integer",
+                              "description": "How many times the recipient opened it"
+                            },
+                            "firstViewedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true
+                            },
+                            "locked": {
+                              "type": "boolean",
+                              "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                            },
+                            "expired": {
+                              "type": "boolean",
+                              "description": "Destroyed after its views or timer ran out"
+                            }
+                          },
+                          "required": [
+                            "maxViews",
+                            "ttlSeconds",
+                            "views",
+                            "firstViewedAt",
+                            "locked",
+                            "expired"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "replyTo": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "senderId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video",
+                                "video_note",
+                                "voice",
+                                "file"
+                              ]
+                            },
+                            "text": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "spoiler": {
+                              "type": "boolean"
+                            },
+                            "ephemeral": {
+                              "type": "boolean"
+                            },
+                            "deleted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "senderId",
+                            "type",
+                            "text",
+                            "spoiler",
+                            "ephemeral",
+                            "deleted"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "editedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "deletedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "chatId",
+                        "senderId",
+                        "clientId",
+                        "type",
+                        "text",
+                        "entities",
+                        "spoiler",
+                        "attachment",
+                        "ephemeral",
+                        "replyTo",
+                        "createdAt",
+                        "editedAt",
+                        "deletedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true,
+                      "description": "When the content will be destroyed, if a timer is running"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "expiresAt"
                   ],
                   "additionalProperties": false
                 }
@@ -2775,6 +3279,46 @@
                             "additionalProperties": false,
                             "nullable": true
                           },
+                          "ephemeral": {
+                            "type": "object",
+                            "properties": {
+                              "maxViews": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "ttlSeconds": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "views": {
+                                "type": "integer",
+                                "description": "How many times the recipient opened it"
+                              },
+                              "firstViewedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                              },
+                              "locked": {
+                                "type": "boolean",
+                                "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                              },
+                              "expired": {
+                                "type": "boolean",
+                                "description": "Destroyed after its views or timer ran out"
+                              }
+                            },
+                            "required": [
+                              "maxViews",
+                              "ttlSeconds",
+                              "views",
+                              "firstViewedAt",
+                              "locked",
+                              "expired"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
                           "replyTo": {
                             "type": "object",
                             "properties": {
@@ -2804,6 +3348,9 @@
                               "spoiler": {
                                 "type": "boolean"
                               },
+                              "ephemeral": {
+                                "type": "boolean"
+                              },
                               "deleted": {
                                 "type": "boolean"
                               }
@@ -2814,6 +3361,7 @@
                               "type",
                               "text",
                               "spoiler",
+                              "ephemeral",
                               "deleted"
                             ],
                             "additionalProperties": false,
@@ -2844,6 +3392,7 @@
                           "entities",
                           "spoiler",
                           "attachment",
+                          "ephemeral",
                           "replyTo",
                           "createdAt",
                           "editedAt",
@@ -2937,6 +3486,25 @@
                   },
                   "spoiler": {
                     "type": "boolean"
+                  },
+                  "ephemeral": {
+                    "type": "object",
+                    "properties": {
+                      "maxViews": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10,
+                        "description": "Destroy after this many views by the recipient"
+                      },
+                      "ttlSeconds": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 604800,
+                        "description": "Destroy this many seconds after the recipient first opens it"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Self-destruct after viewing, like Telegram's view-once and timers"
                   }
                 },
                 "required": [
@@ -3121,6 +3689,46 @@
                       "additionalProperties": false,
                       "nullable": true
                     },
+                    "ephemeral": {
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "ttlSeconds": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "views": {
+                          "type": "integer",
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Destroyed after its views or timer ran out"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
                     "replyTo": {
                       "type": "object",
                       "properties": {
@@ -3150,6 +3758,9 @@
                         "spoiler": {
                           "type": "boolean"
                         },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
                         "deleted": {
                           "type": "boolean"
                         }
@@ -3160,6 +3771,7 @@
                         "type",
                         "text",
                         "spoiler",
+                        "ephemeral",
                         "deleted"
                       ],
                       "additionalProperties": false,
@@ -3190,6 +3802,7 @@
                     "entities",
                     "spoiler",
                     "attachment",
+                    "ephemeral",
                     "replyTo",
                     "createdAt",
                     "editedAt",
@@ -3902,6 +4515,46 @@
                                     "additionalProperties": false,
                                     "nullable": true
                                   },
+                                  "ephemeral": {
+                                    "type": "object",
+                                    "properties": {
+                                      "maxViews": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "ttlSeconds": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "views": {
+                                        "type": "integer",
+                                        "description": "How many times the recipient opened it"
+                                      },
+                                      "firstViewedAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                      },
+                                      "locked": {
+                                        "type": "boolean",
+                                        "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                                      },
+                                      "expired": {
+                                        "type": "boolean",
+                                        "description": "Destroyed after its views or timer ran out"
+                                      }
+                                    },
+                                    "required": [
+                                      "maxViews",
+                                      "ttlSeconds",
+                                      "views",
+                                      "firstViewedAt",
+                                      "locked",
+                                      "expired"
+                                    ],
+                                    "additionalProperties": false,
+                                    "nullable": true
+                                  },
                                   "replyTo": {
                                     "type": "object",
                                     "properties": {
@@ -3931,6 +4584,9 @@
                                       "spoiler": {
                                         "type": "boolean"
                                       },
+                                      "ephemeral": {
+                                        "type": "boolean"
+                                      },
                                       "deleted": {
                                         "type": "boolean"
                                       }
@@ -3941,6 +4597,7 @@
                                       "type",
                                       "text",
                                       "spoiler",
+                                      "ephemeral",
                                       "deleted"
                                     ],
                                     "additionalProperties": false,
@@ -3971,6 +4628,7 @@
                                   "entities",
                                   "spoiler",
                                   "attachment",
+                                  "ephemeral",
                                   "replyTo",
                                   "createdAt",
                                   "editedAt",
@@ -4155,6 +4813,46 @@
                                     "additionalProperties": false,
                                     "nullable": true
                                   },
+                                  "ephemeral": {
+                                    "type": "object",
+                                    "properties": {
+                                      "maxViews": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "ttlSeconds": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "views": {
+                                        "type": "integer",
+                                        "description": "How many times the recipient opened it"
+                                      },
+                                      "firstViewedAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                      },
+                                      "locked": {
+                                        "type": "boolean",
+                                        "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                                      },
+                                      "expired": {
+                                        "type": "boolean",
+                                        "description": "Destroyed after its views or timer ran out"
+                                      }
+                                    },
+                                    "required": [
+                                      "maxViews",
+                                      "ttlSeconds",
+                                      "views",
+                                      "firstViewedAt",
+                                      "locked",
+                                      "expired"
+                                    ],
+                                    "additionalProperties": false,
+                                    "nullable": true
+                                  },
                                   "replyTo": {
                                     "type": "object",
                                     "properties": {
@@ -4184,6 +4882,9 @@
                                       "spoiler": {
                                         "type": "boolean"
                                       },
+                                      "ephemeral": {
+                                        "type": "boolean"
+                                      },
                                       "deleted": {
                                         "type": "boolean"
                                       }
@@ -4194,6 +4895,7 @@
                                       "type",
                                       "text",
                                       "spoiler",
+                                      "ephemeral",
                                       "deleted"
                                     ],
                                     "additionalProperties": false,
@@ -4224,6 +4926,7 @@
                                   "entities",
                                   "spoiler",
                                   "attachment",
+                                  "ephemeral",
                                   "replyTo",
                                   "createdAt",
                                   "editedAt",
@@ -4537,6 +5240,46 @@
                                         "additionalProperties": false,
                                         "nullable": true
                                       },
+                                      "ephemeral": {
+                                        "type": "object",
+                                        "properties": {
+                                          "maxViews": {
+                                            "type": "integer",
+                                            "nullable": true
+                                          },
+                                          "ttlSeconds": {
+                                            "type": "integer",
+                                            "nullable": true
+                                          },
+                                          "views": {
+                                            "type": "integer",
+                                            "description": "How many times the recipient opened it"
+                                          },
+                                          "firstViewedAt": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "nullable": true
+                                          },
+                                          "locked": {
+                                            "type": "boolean",
+                                            "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                                          },
+                                          "expired": {
+                                            "type": "boolean",
+                                            "description": "Destroyed after its views or timer ran out"
+                                          }
+                                        },
+                                        "required": [
+                                          "maxViews",
+                                          "ttlSeconds",
+                                          "views",
+                                          "firstViewedAt",
+                                          "locked",
+                                          "expired"
+                                        ],
+                                        "additionalProperties": false,
+                                        "nullable": true
+                                      },
                                       "replyTo": {
                                         "type": "object",
                                         "properties": {
@@ -4566,6 +5309,9 @@
                                           "spoiler": {
                                             "type": "boolean"
                                           },
+                                          "ephemeral": {
+                                            "type": "boolean"
+                                          },
                                           "deleted": {
                                             "type": "boolean"
                                           }
@@ -4576,6 +5322,7 @@
                                           "type",
                                           "text",
                                           "spoiler",
+                                          "ephemeral",
                                           "deleted"
                                         ],
                                         "additionalProperties": false,
@@ -4606,6 +5353,7 @@
                                       "entities",
                                       "spoiler",
                                       "attachment",
+                                      "ephemeral",
                                       "replyTo",
                                       "createdAt",
                                       "editedAt",

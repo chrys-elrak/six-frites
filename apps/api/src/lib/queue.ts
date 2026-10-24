@@ -21,3 +21,19 @@ export function mediaQueue() {
   });
   return media;
 }
+
+export type TimerJob = { messageId: string } | { uploadIds: string[] };
+
+export const TIMERS_QUEUE = "timers";
+
+let timers: Queue<TimerJob> | null = null;
+
+/** Delayed jobs: destroying self-destructing messages and the files they leave behind. */
+export function timersQueue() {
+  timers ??= new Queue<TimerJob>(TIMERS_QUEUE, {
+    connection: redisConnection(),
+    prefix: env.QUEUE_PREFIX,
+    defaultJobOptions: { attempts: 5, backoff: { type: "exponential", delay: 2000 }, removeOnComplete: 1000, removeOnFail: 5000 },
+  });
+  return timers;
+}

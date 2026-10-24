@@ -6,7 +6,8 @@ import { prisma } from "../lib/prisma.js";
 import { mediaQueue } from "../lib/queue.js";
 import { deleteObjects, headObject, presignGet, presignPut } from "../lib/storage.js";
 
-export function toAttachmentDTO(u: Upload): AttachmentDTO {
+/** `linkSeconds` makes the download links short-lived instead of the cacheable daily ones. */
+export function toAttachmentDTO(u: Upload, linkSeconds?: number): AttachmentDTO {
   const ready = u.status === "ready";
   const mainKey = u.mainKey ?? u.key;
   return {
@@ -16,8 +17,8 @@ export function toAttachmentDTO(u: Upload): AttachmentDTO {
     name: u.name,
     mime: u.mainMime ?? u.mime,
     size: u.size,
-    url: ready ? presignGet(mainKey, u.kind === "file" ? u.name : undefined) : null,
-    thumbUrl: ready && u.thumbKey ? presignGet(u.thumbKey) : null,
+    url: ready ? presignGet(mainKey, u.kind === "file" ? u.name : undefined, linkSeconds) : null,
+    thumbUrl: ready && u.thumbKey ? presignGet(u.thumbKey, undefined, linkSeconds) : null,
     width: u.width,
     height: u.height,
     durationMs: u.durationMs,
@@ -87,8 +88,7 @@ export async function announceUpload(tx: Tx, emit: Emit, uploadId: string) {
   const messages = await tx.message.findMany({ where: { attachmentId: uploadId }, include: messageInclude });
   for (const m of messages) {
     const members = await tx.chatMember.findMany({ where: { chatId: m.chatId }, select: { userId: true } });
-    const dto = toMessageDTO(m);
-    for (const { userId } of members) emit(userId, "message.edited", dto);
+    for (const { userId } of members) emit(userId, "message.edited", toMessageDTO(m, userId));
   }
 }
 

@@ -8,14 +8,16 @@ import {
   type MessageType,
   type PageQuery,
   type SendMessageInput,
+  type ViewMessageResult,
   maskSpoilers,
 } from "@six/shared";
-import { type Tx, withEvents } from "../lib/events.js";
+import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
+import { timersQueue } from "../lib/queue.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
-export const messageInclude = { replyTo: true, attachment: true } satisfies Prisma.MessageInclude;
+export const messageInclude = { replyTo: true, attachment: true, views: true } satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
 
 const SNIPPET = 200;
@@ -24,25 +26,60 @@ const entitiesOf = (m: { entities: Prisma.JsonValue }) => (m.entities as Message
 const storedEntities = (entities: MessageEntity[] | undefined) =>
   entities?.length ? (entities as Prisma.InputJsonValue) : Prisma.DbNull;
 
-export function toMessageDTO(m: MessageRow): MessageDTO {
+const isEphemeral = (m: { maxViews: number | null; ttlSeconds: number | null }) =>
+  m.maxViews !== null || m.ttlSeconds !== null;
+
+/** How long download links for opened self-destructing media stay valid. */
+export const EPHEMERAL_LINK_SECONDS = 5 * 60;
+
+/**
+ * Builds a message as `viewerId` may see it. Self-destructing messages are locked for everyone but
+ * the sender: no text and no file links, until POST /v1/messages/{id}/view opens them (`reveal`).
+ */
+export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: boolean } = {}): MessageDTO {
   const r = m.replyTo;
+  const ephemeral = isEphemeral(m);
+  const expired = m.expiredAt !== null;
+  const locked = ephemeral && !expired && viewerId !== m.senderId && !opts.reveal;
+  const hideContent = m.deletedAt !== null || expired || locked;
+  const others = m.views.filter((v) => v.userId !== m.senderId);
+  const mine = m.views.find((v) => v.userId === viewerId);
+  const firstView = viewerId === m.senderId ? others.map((v) => v.firstViewedAt).sort((a, b) => +a - +b)[0] : mine?.firstViewedAt;
+
   return {
     id: m.id,
     chatId: m.chatId,
     senderId: m.senderId,
     clientId: m.clientId,
     type: m.type as MessageType,
-    text: m.deletedAt ? null : m.text,
-    entities: m.deletedAt ? [] : entitiesOf(m),
+    text: hideContent ? null : m.text,
+    entities: hideContent ? [] : entitiesOf(m),
     spoiler: m.spoiler,
-    attachment: m.deletedAt || !m.attachment ? null : toAttachmentDTO(m.attachment),
+    attachment:
+      hideContent || !m.attachment
+        ? null
+        : toAttachmentDTO(m.attachment, ephemeral && opts.reveal ? EPHEMERAL_LINK_SECONDS : undefined),
+    ephemeral: ephemeral
+      ? {
+          maxViews: m.maxViews,
+          ttlSeconds: m.ttlSeconds,
+          views: viewerId === m.senderId ? others.reduce((n, v) => n + v.count, 0) : (mine?.count ?? 0),
+          firstViewedAt: firstView?.toISOString() ?? null,
+          locked,
+          expired,
+        }
+      : null,
     replyTo: r
       ? {
           id: r.id,
           senderId: r.senderId,
           type: r.type as MessageType,
-          text: r.deletedAt || r.text === null ? null : maskSpoilers(r.text, entitiesOf(r)).slice(0, SNIPPET),
+          text:
+            r.deletedAt || r.expiredAt || isEphemeral(r) || r.text === null
+              ? null
+              : maskSpoilers(r.text, entitiesOf(r)).slice(0, SNIPPET),
           spoiler: r.spoiler,
+          ephemeral: isEphemeral(r),
           deleted: r.deletedAt !== null,
         }
       : null,
@@ -74,7 +111,7 @@ export async function listMessages(userId: string, chatId: string, q: PageQuery)
     include: messageInclude,
     ...pageArgs(q),
   });
-  return toPage(rows, q, toMessageDTO);
+  return toPage(rows, q, (m) => toMessageDTO(m, userId));
 }
 
 async function findByClientId(senderId: string, chatId: string, clientId: string) {
@@ -88,7 +125,7 @@ async function findByClientId(senderId: string, chatId: string, clientId: string
 
 export async function sendMessage(userId: string, chatId: string, input: SendMessageInput): Promise<MessageDTO> {
   const existing = await findByClientId(userId, chatId, input.clientId);
-  if (existing) return toMessageDTO(existing);
+  if (existing) return toMessageDTO(existing, userId);
 
   try {
     return await withEvents(async (tx, emit) => {
@@ -109,6 +146,8 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
           entities: storedEntities(input.entities),
           attachmentId: upload?.id ?? null,
           spoiler: input.spoiler ?? false,
+          maxViews: input.ephemeral?.maxViews ?? null,
+          ttlSeconds: input.ephemeral?.ttlSeconds ?? null,
           replyToId: input.replyToId ?? null,
         },
         include: messageInclude,
@@ -125,15 +164,14 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
         },
       });
 
-      const dto = toMessageDTO(message);
-      for (const id of await memberIds(tx, chatId)) emit(id, "message.new", dto);
-      return dto;
+      for (const id of await memberIds(tx, chatId)) emit(id, "message.new", toMessageDTO(message, id));
+      return toMessageDTO(message, userId);
     });
   } catch (err) {
     if ((err as { code?: string }).code !== "P2002") throw err;
     const raced = await findByClientId(userId, chatId, input.clientId);
     if (!raced) throw err;
-    return toMessageDTO(raced);
+    return toMessageDTO(raced, userId);
   }
 }
 
@@ -145,10 +183,10 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
-    if (message.deletedAt) throw new AppError("MESSAGE_NOT_EDITABLE");
+    if (message.deletedAt || isEphemeral(message)) throw new AppError("MESSAGE_NOT_EDITABLE");
     const entities = input.entities ?? [];
     if (message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
-      return toMessageDTO(message);
+      return toMessageDTO(message, userId);
     }
 
     const updated = await tx.message.update({
@@ -156,9 +194,8 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       data: { text: input.text, entities: storedEntities(entities), editedAt: new Date() },
       include: messageInclude,
     });
-    const dto = toMessageDTO(updated);
-    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", dto);
-    return dto;
+    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    return toMessageDTO(updated, userId);
   });
 }
 
@@ -227,4 +264,69 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
     return [];
   });
   await purgeUploads(detached);
+}
+
+/**
+ * Destroys a self-destructing message for everyone: wipes its text, detaches its file and removes
+ * it from the sync log. The file itself is deleted after `purgeFilesAfterMs`, so a recipient who
+ * just opened it can finish loading it with their short-lived link.
+ */
+async function markExpired(tx: Tx, emit: Emit, m: MessageRow, purgeFilesAfterMs: number) {
+  const updated = await tx.message.update({
+    where: { id: m.id },
+    data: { expiredAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
+    include: messageInclude,
+  });
+  await scrubMessageEvents(tx, [m.id]);
+  for (const id of await memberIds(tx, m.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+  if (m.attachmentId) {
+    await timersQueue().add("purge-uploads", { uploadIds: [m.attachmentId] }, { delay: purgeFilesAfterMs });
+  }
+}
+
+export async function expireMessage(messageId: string) {
+  await withEvents(async (tx, emit) => {
+    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    if (!m || m.expiredAt || m.deletedAt || !isEphemeral(m)) return;
+    await markExpired(tx, emit, m, 0);
+  });
+}
+
+/** Opens a message for its recipient, counting the view and starting any self-destruct timer. */
+export async function viewMessage(userId: string, messageId: string): Promise<ViewMessageResult> {
+  return withEvents(async (tx, emit) => {
+    await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
+    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
+    await assertMember(tx, m.chatId, userId).catch(() => {
+      throw new AppError("MESSAGE_NOT_FOUND");
+    });
+    if (m.expiredAt) throw new AppError("MESSAGE_EXPIRED");
+    if (!isEphemeral(m) || m.senderId === userId) {
+      return { message: toMessageDTO(m, userId, { reveal: true }), expiresAt: null };
+    }
+
+    const view = await tx.messageView.upsert({
+      where: { messageId_userId: { messageId, userId } },
+      create: { messageId, userId, count: 1 },
+      update: { count: { increment: 1 } },
+    });
+    const opened = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    const message = toMessageDTO(opened, userId, { reveal: true });
+    const expiresAt = m.ttlSeconds ? new Date(view.firstViewedAt.getTime() + m.ttlSeconds * 1000) : null;
+
+    if (m.maxViews !== null && view.count >= m.maxViews) {
+      await markExpired(tx, emit, opened, EPHEMERAL_LINK_SECONDS * 1000);
+    } else {
+      for (const id of await memberIds(tx, m.chatId)) emit(id, "message.edited", toMessageDTO(opened, id));
+      if (expiresAt && view.count === 1) {
+        await timersQueue().add(
+          "expire-message",
+          { messageId },
+          { delay: Math.max(0, expiresAt.getTime() - Date.now()) + 2000, jobId: `expire-${messageId}` },
+        );
+      }
+    }
+    return { message, expiresAt: expiresAt?.toISOString() ?? null };
+  });
 }

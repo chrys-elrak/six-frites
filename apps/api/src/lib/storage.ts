@@ -54,11 +54,11 @@ export function presignPut(key: string, contentType: string, contentLength: numb
  * Signed download link valid for 7 days. Signing as of the start of the current UTC day keeps the
  * URL identical all day, so browsers can cache the file instead of refetching it on every render.
  */
-export function presignGet(key: string, downloadName?: string) {
+export function presignGet(key: string, downloadName?: string, shortLivedSeconds?: number) {
   const signingDate = new Date();
-  signingDate.setUTCHours(0, 0, 0, 0);
+  if (!shortLivedSeconds) signingDate.setUTCHours(0, 0, 0, 0);
   return presignGetSync(publicSigner, key, {
-    expiresIn: 7 * DAY,
+    expiresIn: shortLivedSeconds ?? 7 * DAY,
     signingDate,
     query: downloadName
       ? { "response-content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}` }

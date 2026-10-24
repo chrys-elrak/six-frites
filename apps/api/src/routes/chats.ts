@@ -20,11 +20,12 @@ import {
   SyncQuery,
   SyncResult,
   UpdateChatInput,
+  ViewMessageResult,
   page,
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
 import { findContact, listContacts, updateContact } from "../services/contacts.js";
-import { deleteMessages, editMessage, listMessages, sendMessage } from "../services/messages.js";
+import { deleteMessages, editMessage, listMessages, sendMessage, viewMessage } from "../services/messages.js";
 import { sync } from "../services/sync.js";
 
 const ChatParams = z.object({ id: Id });
@@ -104,6 +105,22 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => editMessage(req.auth.userId, req.params.id, req.body),
+  );
+
+  app.post(
+    "/messages/:id/view",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Open a self-destructing message",
+        description:
+          "Returns the content (with download links valid for 5 minutes) and counts a view. Destroys the message once its views run out; with a timer, it is destroyed `ttlSeconds` after the first view. Returns MESSAGE_EXPIRED afterwards. Senders and normal messages are returned without counting.",
+        security,
+        params: MessageParams,
+        response: { 200: ViewMessageResult },
+      },
+    },
+    (req) => viewMessage(req.auth.userId, req.params.id),
   );
 
   app.delete(

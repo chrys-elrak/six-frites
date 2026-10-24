@@ -672,6 +672,18 @@ export interface paths {
                                         durationMs: number | null;
                                         waveform: number[] | null;
                                     } | null;
+                                    ephemeral: {
+                                        maxViews: number | null;
+                                        ttlSeconds: number | null;
+                                        /** @description How many times the recipient opened it */
+                                        views: number;
+                                        /** Format: date-time */
+                                        firstViewedAt: string | null;
+                                        /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                        locked: boolean;
+                                        /** @description Destroyed after its views or timer ran out */
+                                        expired: boolean;
+                                    } | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
@@ -679,6 +691,7 @@ export interface paths {
                                         type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
+                                        ephemeral: boolean;
                                         deleted: boolean;
                                     } | null;
                                     /** Format: date-time */
@@ -792,6 +805,18 @@ export interface paths {
                                     durationMs: number | null;
                                     waveform: number[] | null;
                                 } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Destroyed after its views or timer ran out */
+                                    expired: boolean;
+                                } | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -799,6 +824,7 @@ export interface paths {
                                     type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
+                                    ephemeral: boolean;
                                     deleted: boolean;
                                 } | null;
                                 /** Format: date-time */
@@ -935,6 +961,18 @@ export interface paths {
                                     durationMs: number | null;
                                     waveform: number[] | null;
                                 } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Destroyed after its views or timer ran out */
+                                    expired: boolean;
+                                } | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -942,6 +980,7 @@ export interface paths {
                                     type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
+                                    ephemeral: boolean;
                                     deleted: boolean;
                                 } | null;
                                 /** Format: date-time */
@@ -1047,6 +1086,18 @@ export interface paths {
                                 durationMs: number | null;
                                 waveform: number[] | null;
                             } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Destroyed after its views or timer ran out */
+                                expired: boolean;
+                            } | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -1054,6 +1105,7 @@ export interface paths {
                                 type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                 text: string | null;
                                 spoiler: boolean;
+                                ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
                             /** Format: date-time */
@@ -1067,6 +1119,118 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/messages/{id}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open a self-destructing message
+         * @description Returns the content (with download links valid for 5 minutes) and counts a view. Destroys the message once its views run out; with a timer, it is destroyed `ttlSeconds` after the first view. Returns MESSAGE_EXPIRED afterwards. Senders and normal messages are returned without counting.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
+                                spoiler: boolean;
+                                attachment: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file";
+                                    /** @enum {string} */
+                                    status: "pending" | "processing" | "ready" | "failed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Destroyed after its views or timer ran out */
+                                    expired: boolean;
+                                } | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    text: string | null;
+                                    spoiler: boolean;
+                                    ephemeral: boolean;
+                                    deleted: boolean;
+                                } | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
+                            };
+                            /**
+                             * Format: date-time
+                             * @description When the content will be destroyed, if a timer is running
+                             */
+                            expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/messages": {
@@ -1177,6 +1341,18 @@ export interface paths {
                                     durationMs: number | null;
                                     waveform: number[] | null;
                                 } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Destroyed after its views or timer ran out */
+                                    expired: boolean;
+                                } | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -1184,6 +1360,7 @@ export interface paths {
                                     type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
+                                    ephemeral: boolean;
                                     deleted: boolean;
                                 } | null;
                                 /** Format: date-time */
@@ -1230,6 +1407,13 @@ export interface paths {
                         attachmentId?: string;
                         replyToId?: string;
                         spoiler?: boolean;
+                        /** @description Self-destruct after viewing, like Telegram's view-once and timers */
+                        ephemeral?: {
+                            /** @description Destroy after this many views by the recipient */
+                            maxViews?: number;
+                            /** @description Destroy this many seconds after the recipient first opens it */
+                            ttlSeconds?: number;
+                        };
                     };
                 };
             };
@@ -1276,6 +1460,18 @@ export interface paths {
                                 durationMs: number | null;
                                 waveform: number[] | null;
                             } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Destroyed after its views or timer ran out */
+                                expired: boolean;
+                            } | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -1283,6 +1479,7 @@ export interface paths {
                                 type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                 text: string | null;
                                 spoiler: boolean;
+                                ephemeral: boolean;
                                 deleted: boolean;
                             } | null;
                             /** Format: date-time */
@@ -1630,6 +1827,18 @@ export interface paths {
                                         durationMs: number | null;
                                         waveform: number[] | null;
                                     } | null;
+                                    ephemeral: {
+                                        maxViews: number | null;
+                                        ttlSeconds: number | null;
+                                        /** @description How many times the recipient opened it */
+                                        views: number;
+                                        /** Format: date-time */
+                                        firstViewedAt: string | null;
+                                        /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                        locked: boolean;
+                                        /** @description Destroyed after its views or timer ran out */
+                                        expired: boolean;
+                                    } | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
@@ -1637,6 +1846,7 @@ export interface paths {
                                         type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
+                                        ephemeral: boolean;
                                         deleted: boolean;
                                     } | null;
                                     /** Format: date-time */
@@ -1687,6 +1897,18 @@ export interface paths {
                                         durationMs: number | null;
                                         waveform: number[] | null;
                                     } | null;
+                                    ephemeral: {
+                                        maxViews: number | null;
+                                        ttlSeconds: number | null;
+                                        /** @description How many times the recipient opened it */
+                                        views: number;
+                                        /** Format: date-time */
+                                        firstViewedAt: string | null;
+                                        /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                        locked: boolean;
+                                        /** @description Destroyed after its views or timer ran out */
+                                        expired: boolean;
+                                    } | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
@@ -1694,6 +1916,7 @@ export interface paths {
                                         type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
+                                        ephemeral: boolean;
                                         deleted: boolean;
                                     } | null;
                                     /** Format: date-time */
@@ -1777,6 +2000,18 @@ export interface paths {
                                             durationMs: number | null;
                                             waveform: number[] | null;
                                         } | null;
+                                        ephemeral: {
+                                            maxViews: number | null;
+                                            ttlSeconds: number | null;
+                                            /** @description How many times the recipient opened it */
+                                            views: number;
+                                            /** Format: date-time */
+                                            firstViewedAt: string | null;
+                                            /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                            locked: boolean;
+                                            /** @description Destroyed after its views or timer ran out */
+                                            expired: boolean;
+                                        } | null;
                                         replyTo: {
                                             id: string;
                                             senderId: string;
@@ -1784,6 +2019,7 @@ export interface paths {
                                             type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                             text: string | null;
                                             spoiler: boolean;
+                                            ephemeral: boolean;
                                             deleted: boolean;
                                         } | null;
                                         /** Format: date-time */

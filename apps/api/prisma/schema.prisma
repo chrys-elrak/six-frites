@@ -24,6 +24,7 @@ model User {
   messages       Message[]
   hiddenMessages MessageHidden[]
   uploads        Upload[]
+  messageViews   MessageView[]
   contactsSaved  ContactOverride[] @relation("owner")
   savedAs        ContactOverride[] @relation("contact")
 }
@@ -133,6 +134,9 @@ model Message {
   text      String?
   entities  Json?
   spoiler   Boolean   @default(false)
+  maxViews   Int?
+  ttlSeconds Int?
+  expiredAt  DateTime?
   attachmentId String?
   replyToId String?
   createdAt DateTime  @default(now())
@@ -145,6 +149,7 @@ model Message {
   attachment Upload?      @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
   replies Message[]       @relation("replies")
   hidden  MessageHidden[]
+  views   MessageView[]
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
@@ -200,4 +205,16 @@ model Upload {
 
   @@index([ownerId])
   @@index([status, createdAt])
+}
+
+model MessageView {
+  messageId     String
+  userId        String
+  count         Int      @default(0)
+  firstViewedAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
 }
