@@ -123,11 +123,13 @@ function SpeedButton({ className = "" }: { className?: string }) {
 }
 
 export function VoicePlayer({
+  autoPlay = false,
   url,
   durationMs,
   waveform,
   mine,
 }: {
+  autoPlay?: boolean;
   url: string | null;
   durationMs: number | null;
   waveform: number[] | null;
@@ -144,6 +146,13 @@ export function VoicePlayer({
   useEffect(() => {
     if (audio.current) audio.current.playbackRate = rate;
   }, [rate]);
+
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!autoPlay || !url || autoStarted.current) return;
+    autoStarted.current = true;
+    toggle();
+  });
 
   function toggle() {
     if (!url) return;
@@ -209,6 +218,7 @@ export function VoicePlayer({
 }
 
 function VideoNote({
+  autoPlay = false,
   url,
   poster,
   local,
@@ -216,6 +226,7 @@ function VideoNote({
   state,
   progress,
 }: {
+  autoPlay?: boolean;
   url: string | null;
   poster: string | null;
   local: string | null;
@@ -232,6 +243,13 @@ function VideoNote({
   useEffect(() => {
     if (video.current) video.current.playbackRate = rate;
   }, [rate]);
+
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!autoPlay || !url || autoStarted.current) return;
+    autoStarted.current = true;
+    toggle();
+  });
 
   function toggle() {
     const el = video.current;
@@ -315,12 +333,14 @@ export function AttachmentView({
   onOpen,
   hidden = false,
   onReveal,
+  autoPlay = false,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
   onOpen: (item: LightboxItem) => void;
   hidden?: boolean;
   onReveal?: () => void;
+  autoPlay?: boolean;
 }) {
   const a = view(attachment);
 
@@ -376,6 +396,7 @@ export function AttachmentView({
   if (a.kind === "video_note") {
     return (
       <VideoNote
+        autoPlay={autoPlay}
         url={a.state === "ready" ? a.url : null}
         poster={a.thumbUrl}
         local={attachment.source === "local" ? a.url : null}
@@ -390,6 +411,7 @@ export function AttachmentView({
     return (
       <div className="relative">
         <VoicePlayer
+          autoPlay={autoPlay}
           url={a.state === "ready" ? a.url : null}
           durationMs={a.durationMs}
           waveform={a.waveform}

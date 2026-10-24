@@ -1,5 +1,4 @@
-import type { EntityType, MessageEntity } from "@six/shared";
-import { segments } from "@/lib/markup";
+import type { EntityType } from "@six/shared";
 
 export function Styled({ styles, children }: { styles: Set<EntityType>; children: React.ReactNode }) {
   let node = children;
@@ -10,18 +9,4 @@ export function Styled({ styles, children }: { styles: Set<EntityType>; children
   if (styles.has("italic")) node = <em>{node}</em>;
   if (styles.has("bold")) node = <strong className="font-semibold">{node}</strong>;
   return <>{node}</>;
-}
-
-/** Formatted text with spoilers shown, for places where the reader has already chosen to see it. */
-export function RichText({ text, entities }: { text: string; entities: MessageEntity[] }) {
-  if (!entities.length) return <>{text}</>;
-  return (
-    <>
-      {segments(text, entities).map((seg, i) => (
-        <span key={i} className={seg.styles.has("spoiler") ? "rounded bg-white/10 px-0.5" : undefined}>
-          <Styled styles={seg.styles}>{seg.text}</Styled>
-        </span>
-      ))}
-    </>
-  );
 }

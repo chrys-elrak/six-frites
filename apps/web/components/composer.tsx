@@ -107,13 +107,13 @@ export function Composer({
   const closeCamera = useCallback(() => setCamera(false), []);
   const closeNoteRecorder = useCallback(() => setNoteRecorder(false), []);
 
-  function sendVideoNote(file: File) {
+  function sendVideoNote(file: File, chosen: EphemeralInput | null) {
     setNoteRecorder(false);
     if (!realtime) return;
     void queueMessage(qc, realtime, chatId, {
       text: "",
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
-      ephemeral,
+      ephemeral: chosen,
       file: { blob: file, kind: "video_note", name: file.name, mime: file.type || "video/webm" },
     });
     setEphemeral(null);
@@ -374,6 +374,7 @@ export function Composer({
               <span className="font-mono text-sm tabular-nums">{formatDuration(recorder.elapsed)}</span>
               <span className="text-sm text-stone-500">Recording…</span>
             </div>
+            <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
             <button
               type="button"
               onClick={() => void sendVoice()}
@@ -506,7 +507,9 @@ export function Composer({
           }}
         />
       )}
-      {noteRecorder && <VideoNoteRecorder onClose={closeNoteRecorder} onSend={sendVideoNote} />}
+      {noteRecorder && (
+        <VideoNoteRecorder initialEphemeral={ephemeral} onClose={closeNoteRecorder} onSend={sendVideoNote} />
+      )}
       {picked && (
         <AttachDialog
           files={picked}

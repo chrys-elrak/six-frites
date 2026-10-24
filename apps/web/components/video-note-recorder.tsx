@@ -2,7 +2,9 @@
 
 import { RefreshCw, SendHorizontal, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { EphemeralInput } from "@six/shared";
 import { useCamera } from "@/lib/camera";
+import { EphemeralPicker } from "./ephemeral-picker";
 import { formatDuration } from "@/lib/format";
 
 const MAX_MS = 60_000;
@@ -29,8 +31,17 @@ function Ring({ progress }: { progress: number }) {
   );
 }
 
-export function VideoNoteRecorder({ onClose, onSend }: { onClose: () => void; onSend: (file: File) => void }) {
+export function VideoNoteRecorder({
+  initialEphemeral,
+  onClose,
+  onSend,
+}: {
+  initialEphemeral: EphemeralInput | null;
+  onClose: () => void;
+  onSend: (file: File, ephemeral: EphemeralInput | null) => void;
+}) {
   const cam = useCamera("user", { audio: true, square: true });
+  const [ephemeral, setEphemeral] = useState(initialEphemeral);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const startedAt = useRef(0);
@@ -137,7 +148,10 @@ export function VideoNoteRecorder({ onClose, onSend }: { onClose: () => void; on
         </p>
       </div>
 
-      <div className="flex items-center gap-8 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="relative flex items-center gap-8 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <span className="absolute top-1/2 left-[calc(100%+0.5rem)] -translate-y-1/2 text-white">
+          <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
+        </span>
         {result ? (
           <>
             <button
@@ -148,7 +162,7 @@ export function VideoNoteRecorder({ onClose, onSend }: { onClose: () => void; on
               <Trash2 className="size-6" />
             </button>
             <button
-              onClick={() => onSend(result.file)}
+              onClick={() => onSend(result.file, ephemeral)}
               aria-label="Send video message"
               className="grid size-16 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
             >
