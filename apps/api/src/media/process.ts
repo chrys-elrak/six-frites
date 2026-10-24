@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import type { Upload } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
-import { getObjectBytes, putObject } from "../lib/storage.js";
+import { getObjectBytes, headObject, putObject } from "../lib/storage.js";
 import { finishUpload } from "../services/uploads.js";
 import { ffmpeg, probe, waveform } from "./ffmpeg.js";
 
@@ -156,7 +156,10 @@ export async function processUpload(uploadId: string) {
               : upload.kind === "sticker"
                 ? await sticker(upload, dir, input)
                 : {};
-    await finishUpload(uploadId, { ...result, status: "ready", error: null });
+    const { mainKey, thumbKey } = result as { mainKey?: string; thumbKey?: string };
+    const sizes = await Promise.all([mainKey, thumbKey].filter((k): k is string => !!k).map(headObject));
+    const storedBytes = upload.size + sizes.reduce((n, h) => n + (h?.size ?? 0), 0);
+    await finishUpload(uploadId, { ...result, storedBytes, status: "ready", error: null });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

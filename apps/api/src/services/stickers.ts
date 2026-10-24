@@ -58,6 +58,10 @@ const BUILTIN = [
 
 const notoKey = (emoji: string) => [...emoji].map((c) => c.codePointAt(0)!.toString(16)).join("_");
 
+/** The Noto packs come from code and are re-created on every start, so nobody edits them. */
+export const SEEDED_PREFIX = "noto-";
+export const isSeededPack = (packId: string) => packId.startsWith(SEEDED_PREFIX);
+
 /** Creates or refreshes the built-in packs, made of Google's Noto animated emoji (Lottie). */
 export async function ensureBuiltinStickers() {
   for (const pack of BUILTIN) {
@@ -124,6 +128,11 @@ async function ownPack(userId: string, packId: string) {
 
 export async function addSticker(userId: string, packId: string, input: AddStickerInput) {
   await ownPack(userId, packId);
+  return attachSticker(userId, packId, input);
+}
+
+/** Adds one of `userId`'s sticker uploads to a pack they may change. */
+export async function attachSticker(userId: string, packId: string, input: AddStickerInput) {
   const count = await prisma.sticker.count({ where: { packId, removedAt: null } });
   if (count >= STICKER_LIMITS.perPack) {
     throw new AppError("STICKER_LIMIT_REACHED", `A pack holds at most ${STICKER_LIMITS.perPack} stickers`);

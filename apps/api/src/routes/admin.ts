@@ -1,6 +1,8 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  AddStickerInput,
+  AdminPackQuery,
   AdminReportQuery,
   AdminStatsDTO,
   AdminStickerPackDTO,
@@ -8,17 +10,20 @@ import {
   AdminUserQuery,
   BanUserInput,
   CreateReportInput,
+  CreateStickerPackInput,
   Id,
-  PageQuery,
   ReportDTO,
   ResolveReportInput,
+  StickerDTO,
   page,
 } from "@six/shared";
 import {
+  addOfficialSticker,
   adminStats,
   banSticker,
   banStickerPack,
   banUser,
+  createOfficialPack,
   getUser,
   listStickerPacks,
   listUsers,
@@ -172,13 +177,44 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         tags,
-        summary: "Sticker packs people made, newest first",
+        summary: "Sticker packs people made (or the official ones), newest first",
         security,
-        querystring: PageQuery,
+        querystring: AdminPackQuery,
         response: { 200: page(AdminStickerPackDTO) },
       },
     },
     (req) => listStickerPacks(req.query),
+  );
+
+  app.post(
+    "/admin/sticker-packs",
+    {
+      schema: {
+        tags,
+        summary: "Create an official sticker pack",
+        description: "Official packs are in everyone's stickers, like the built-in ones.",
+        security,
+        body: CreateStickerPackInput,
+        response: { 201: AdminStickerPackDTO },
+      },
+    },
+    async (req, reply) => reply.status(201).send(await createOfficialPack(req.auth.userId, req.body)),
+  );
+
+  app.post(
+    "/admin/sticker-packs/:id/stickers",
+    {
+      schema: {
+        tags,
+        summary: "Add a sticker to an official pack",
+        description: "Upload the file first (kind `sticker`) with your own account.",
+        security,
+        params: Params,
+        body: AddStickerInput,
+        response: { 201: StickerDTO },
+      },
+    },
+    async (req, reply) => reply.status(201).send(await addOfficialSticker(req.auth.userId, req.params.id, req.body)),
   );
 
   app.delete(

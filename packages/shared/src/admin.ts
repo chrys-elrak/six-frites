@@ -35,6 +35,7 @@ export const AdminUserDTO = AdminUserRef.extend({
   messages: z.number().int(),
   activeSessions: z.number().int(),
   openReports: z.number().int().describe("Open reports against this person"),
+  storageBytes: z.number().int().describe("Space their uploads take, processed copies included; GIFs not counted"),
 });
 export type AdminUserDTO = z.infer<typeof AdminUserDTO>;
 
@@ -95,12 +96,22 @@ export type BanUserInput = z.infer<typeof BanUserInput>;
 export const AdminStickerPackDTO = z.object({
   id: Id,
   title: z.string(),
+  official: z.boolean().describe("Made by an admin and in everyone's stickers"),
   owner: AdminUserRef.nullable(),
   createdAt: IsoDate,
   bannedAt: IsoDate.nullable(),
   stickers: z.array(StickerDTO),
 });
 export type AdminStickerPackDTO = z.infer<typeof AdminStickerPackDTO>;
+
+export const AdminPackQuery = PageQuery.extend({
+  official: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true")
+    .describe("Official packs instead of the ones people made"),
+});
+export type AdminPackQuery = z.infer<typeof AdminPackQuery>;
 
 export const AdminStatsDTO = z.object({
   users: z.number().int(),
@@ -110,6 +121,9 @@ export const AdminStatsDTO = z.object({
   messages24h: z.number().int(),
   openReports: z.number().int(),
   stickerPacks: z.number().int(),
+  storageBytes: z.number().int().describe("Space everyone's uploads take"),
+  gifCacheBytes: z.number().int().describe("Space the shared GIF copies take"),
+  topStorage: z.array(z.object({ user: AdminUserRef, bytes: z.number().int() })).describe("The 10 biggest users"),
   signups: z.array(z.object({ day: z.string(), count: z.number().int() })).describe("Last 30 days, oldest first"),
 });
 export type AdminStatsDTO = z.infer<typeof AdminStatsDTO>;

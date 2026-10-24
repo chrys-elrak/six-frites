@@ -250,6 +250,7 @@ model Upload {
   name       String
   mime       String
   size       Int
+  storedBytes Int?
   key        String   @unique
   mainKey    String?
   mainMime   String?

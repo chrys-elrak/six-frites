@@ -6,7 +6,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { adminKeys, refreshAdmin } from "@/lib/admin";
-import { timeAgo } from "@/lib/format";
+import { formatBytes, timeAgo } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Avatar } from "../avatar";
 import { Dialog } from "../dialog";
@@ -101,7 +101,7 @@ function UserRow({ u }: { u: AdminUserDTO }) {
         <p className="truncate text-xs text-stone-500">{u.email}</p>
         <p className="text-xs text-stone-500">
           Joined {timeAgo(u.createdAt)} · {u.lastActiveAt ? `active ${timeAgo(u.lastActiveAt)}` : "signed out"} ·{" "}
-          {u.chats} chats · {u.messages} messages
+          {u.chats} chats · {u.messages} messages · {formatBytes(u.storageBytes)} stored
           {u.openReports > 0 && (
             <span className="text-red-600 dark:text-red-400">
               {" "}

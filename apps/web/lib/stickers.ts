@@ -46,15 +46,16 @@ export async function createPack(qc: QueryClient, title: string) {
   return pack;
 }
 
-export async function addStickers(qc: QueryClient, packId: string, files: File[], emoji: string) {
+/** Uploads sticker files into a pack: your own, or an official one when `official` (admins only). */
+export async function addStickers(qc: QueryClient, packId: string, files: File[], emoji: string, official = false) {
   try {
     for (const file of files) {
       const upload = await six.upload(file, { kind: "sticker", name: file.name, mime: stickerMime(file) });
+      const req = { params: { path: { id: packId } }, body: { uploadId: upload.id, emoji } };
       unwrap(
-        await six.api.POST("/v1/sticker-packs/{id}/stickers", {
-          params: { path: { id: packId } },
-          body: { uploadId: upload.id, emoji },
-        }),
+        official
+          ? await six.api.POST("/v1/admin/sticker-packs/{id}/stickers", req)
+          : await six.api.POST("/v1/sticker-packs/{id}/stickers", req),
       );
     }
   } finally {

@@ -236,6 +236,23 @@ export interface paths {
                             messages24h: number;
                             openReports: number;
                             stickerPacks: number;
+                            /** @description Space everyone's uploads take */
+                            storageBytes: number;
+                            /** @description Space the shared GIF copies take */
+                            gifCacheBytes: number;
+                            /** @description The 10 biggest users */
+                            topStorage: {
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                };
+                                bytes: number;
+                            }[];
                             /** @description Last 30 days, oldest first */
                             signups: {
                                 day: string;
@@ -303,6 +320,8 @@ export interface paths {
                                 activeSessions: number;
                                 /** @description Open reports against this person */
                                 openReports: number;
+                                /** @description Space their uploads take, processed copies included; GIFs not counted */
+                                storageBytes: number;
                             }[];
                             nextCursor: string | null;
                         };
@@ -362,6 +381,8 @@ export interface paths {
                             activeSessions: number;
                             /** @description Open reports against this person */
                             openReports: number;
+                            /** @description Space their uploads take, processed copies included; GIFs not counted */
+                            storageBytes: number;
                         };
                     };
                 };
@@ -430,6 +451,8 @@ export interface paths {
                             activeSessions: number;
                             /** @description Open reports against this person */
                             openReports: number;
+                            /** @description Space their uploads take, processed copies included; GIFs not counted */
+                            storageBytes: number;
                         };
                     };
                 };
@@ -487,6 +510,8 @@ export interface paths {
                             activeSessions: number;
                             /** @description Open reports against this person */
                             openReports: number;
+                            /** @description Space their uploads take, processed copies included; GIFs not counted */
+                            storageBytes: number;
                         };
                     };
                 };
@@ -544,6 +569,8 @@ export interface paths {
                             activeSessions: number;
                             /** @description Open reports against this person */
                             openReports: number;
+                            /** @description Space their uploads take, processed copies included; GIFs not counted */
+                            storageBytes: number;
                         };
                     };
                 };
@@ -836,12 +863,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Sticker packs people made, newest first */
+        /** Sticker packs people made (or the official ones), newest first */
         get: {
             parameters: {
                 query?: {
                     cursor?: string;
                     limit?: number;
+                    /** @description Official packs instead of the ones people made */
+                    official?: "true" | "false";
                 };
                 header?: never;
                 path?: never;
@@ -859,6 +888,8 @@ export interface paths {
                             items: {
                                 id: string;
                                 title: string;
+                                /** @description Made by an admin and in everyone's stickers */
+                                official: boolean;
                                 owner: {
                                     id: string;
                                     displayName: string;
@@ -897,7 +928,137 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /**
+         * Create an official sticker pack
+         * @description Official packs are in everyone's stickers, like the built-in ones.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            title: string;
+                            /** @description Made by an admin and in everyone's stickers */
+                            official: boolean;
+                            owner: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            stickers: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/sticker-packs/{id}/stickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a sticker to an official pack
+         * @description Upload the file first (kind `sticker`) with your own account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description A completed upload of kind `sticker` */
+                        uploadId: string;
+                        /** @description The emoji this sticker stands for */
+                        emoji: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            packId: string;
+                            emoji: string;
+                            /**
+                             * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                             * @enum {string}
+                             */
+                            format: "lottie" | "image";
+                            /**
+                             * Format: uri
+                             * @description Null while an uploaded sticker is still being processed
+                             */
+                            url: string | null;
+                            width: number | null;
+                            height: number | null;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

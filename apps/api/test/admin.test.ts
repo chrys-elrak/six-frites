@@ -120,3 +120,92 @@ describe("sticker moderation", () => {
     );
   });
 });
+
+describe("official sticker packs", () => {
+  it("are made by admins, show up for everyone, and can be tidied without blanking old messages", async () => {
+    const boss = await admin();
+    const { host, guest, chatId } = await makeFriends();
+    expect((await call(host, "POST", "/v1/admin/sticker-packs", { title: "Mine" })).json().error.code).toBe(
+      "FORBIDDEN",
+    );
+
+    const pack = (await call(boss, "POST", "/v1/admin/sticker-packs", { title: "Six Frites" })).json();
+    expect(pack).toMatchObject({ title: "Six Frites", official: true });
+    const upload = await prisma.upload.create({
+      data: {
+        ownerId: boss.user.id,
+        kind: "sticker",
+        status: "ready",
+        name: "fries.json",
+        mime: "application/json",
+        mainMime: "application/json",
+        size: 10,
+        key: `test/${Math.random()}`,
+      },
+    });
+    const added = await call(boss, "POST", `/v1/admin/sticker-packs/${pack.id}/stickers`, {
+      uploadId: upload.id,
+      emoji: "🍟",
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    const sticker = added.json();
+
+    const theirs = (await get(guest, "/v1/sticker-packs")).items.find((p: { id: string }) => p.id === pack.id);
+    expect(theirs).toMatchObject({ builtin: true, saved: true, stickers: [{ id: sticker.id, format: "lottie" }] });
+    expect(
+      (
+        await call(boss, "POST", "/v1/admin/sticker-packs/noto-faces/stickers", { uploadId: upload.id, emoji: "x" })
+      ).json().error.code,
+    ).toBe("STICKER_PACK_NOT_FOUND");
+
+    await send(host, chatId, "", { text: undefined, stickerId: sticker.id });
+    expect((await call(boss, "DELETE", `/v1/admin/stickers/${sticker.id}`)).statusCode).toBe(204);
+    expect((await get(guest, `/v1/sticker-packs/${pack.id}`)).stickers).toEqual([]);
+    expect((await get(guest, `/v1/chats/${chatId}/messages`)).items[0].sticker.url).not.toBeNull();
+    expect((await get(boss, "/v1/admin/sticker-packs?official=true")).items.map((p: { id: string }) => p.id)).toContain(
+      pack.id,
+    );
+  });
+});
+
+describe("storage", () => {
+  it("adds up each person's uploads, processed copies included, and ranks the biggest", async () => {
+    const boss = await admin();
+    const hoarder = await signUp("Hoarder");
+    const files = [
+      { size: 4_000_000, storedBytes: 9_000_000 },
+      { size: 1_000_000, storedBytes: null },
+    ];
+    for (const f of files) {
+      await prisma.upload.create({
+        data: {
+          ownerId: hoarder.user.id,
+          kind: "video",
+          status: "ready",
+          name: "v.mp4",
+          mime: "video/mp4",
+          key: `test/${Math.random()}`,
+          ...f,
+        },
+      });
+    }
+    await prisma.upload.create({
+      data: {
+        ownerId: hoarder.user.id,
+        kind: "gif",
+        status: "ready",
+        name: "g.mp4",
+        mime: "video/mp4",
+        size: 500,
+        key: `test/${Math.random()}`,
+      },
+    });
+
+    const [found] = (await get(boss, "/v1/admin/users?q=hoarder")).items;
+    expect(found.storageBytes).toBe(10_000_000);
+    const stats = await get(boss, "/v1/admin/stats");
+    expect(stats.topStorage[0]).toMatchObject({ user: { id: hoarder.user.id }, bytes: 10_000_000 });
+    expect(stats.storageBytes).toBeGreaterThanOrEqual(10_000_000);
+    expect(stats.gifCacheBytes).toBeGreaterThanOrEqual(500);
+  });
+});

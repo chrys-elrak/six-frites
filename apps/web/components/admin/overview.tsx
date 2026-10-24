@@ -4,6 +4,7 @@ import { unwrap } from "@six/sdk";
 import type { AdminStatsDTO } from "@six/shared";
 import { useQuery } from "@tanstack/react-query";
 import { adminKeys } from "@/lib/admin";
+import { formatBytes } from "@/lib/format";
 import { six } from "@/lib/six";
 
 const dayFormat = (day: string) =>
@@ -81,6 +82,36 @@ export function Overview() {
         <Tile label="Open reports" value={s.openReports} note={`${s.stickerPacks.toLocaleString()} sticker packs`} />
       </div>
       <SignupsChart data={s.signups} />
+      <Storage stats={s} />
     </div>
+  );
+}
+
+function Storage({ stats }: { stats: AdminStatsDTO }) {
+  const max = Math.max(1, ...stats.topStorage.map((t) => t.bytes));
+  return (
+    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-medium">Storage</h2>
+        <p className="text-sm text-stone-500">{formatBytes(stats.gifCacheBytes)} of shared GIFs on top</p>
+      </div>
+      <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{formatBytes(stats.storageBytes)}</p>
+      <p className="text-xs text-stone-500">Everyone's uploads, converted copies and thumbnails included</p>
+      {stats.topStorage.length > 0 && (
+        <ol className="mt-4 space-y-2.5">
+          {stats.topStorage.map(({ user, bytes }) => (
+            <li key={user.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1">
+              <span className="truncate text-sm">
+                {user.displayName} <span className="text-stone-500">· {user.email}</span>
+              </span>
+              <span className="text-sm text-stone-600 tabular-nums dark:text-stone-300">{formatBytes(bytes)}</span>
+              <span className="col-span-2 h-1.5 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-800">
+                <span className="block h-full rounded-full bg-brand" style={{ width: `${(bytes / max) * 100}%` }} />
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
   );
 }

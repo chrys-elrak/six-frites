@@ -11,7 +11,7 @@ import { PrimaryButton } from "./ui";
 
 const field = "block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800 md:text-sm";
 
-function UploadForm({
+export function UploadForm({
   withTitle,
   label,
   onSubmit,

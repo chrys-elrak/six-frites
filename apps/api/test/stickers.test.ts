@@ -2,7 +2,7 @@ import { gzipSync } from "node:zlib";
 import { describe, expect, it, vi } from "vitest";
 import { processUpload } from "../src/media/process.js";
 import { ensureBuiltinStickers } from "../src/services/stickers.js";
-import { type Auth, chatHelpers, useApp } from "./helpers.js";
+import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, send, makeFriends } = chatHelpers(ctx);
@@ -28,6 +28,8 @@ describe("sticker packs", () => {
     const tracked = { assets: [{ id: "img", p: "https://tracker.example/pixel.png" }] };
     const uploadId = await uploadSticker(host, gzipSync(lottie(tracked)));
     await processUpload(uploadId);
+    const stored = await prisma.upload.findUniqueOrThrow({ where: { id: uploadId } });
+    expect(stored.storedBytes).toBeGreaterThan(stored.size);
     const added = await call(host, "POST", `/v1/sticker-packs/${pack.id}/stickers`, { uploadId, emoji: "🎉" });
     expect(added.statusCode, added.body).toBe(201);
     const sticker = added.json();

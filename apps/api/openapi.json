@@ -346,6 +346,71 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "storageBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space everyone's uploads take"
+                    },
+                    "gifCacheBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space the shared GIF copies take"
+                    },
+                    "topStorage": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "bannedAt": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "email",
+                              "avatarUrl",
+                              "bannedAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "bytes": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "bytes"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The 10 biggest users"
+                    },
                     "signups": {
                       "type": "array",
                       "items": {
@@ -377,6 +442,9 @@
                     "messages24h",
                     "openReports",
                     "stickerPacks",
+                    "storageBytes",
+                    "gifCacheBytes",
+                    "topStorage",
                     "signups"
                   ],
                   "additionalProperties": false
@@ -513,6 +581,12 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991,
                             "description": "Open reports against this person"
+                          },
+                          "storageBytes": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Space their uploads take, processed copies included; GIFs not counted"
                           }
                         },
                         "required": [
@@ -528,7 +602,8 @@
                           "chats",
                           "messages",
                           "activeSessions",
-                          "openReports"
+                          "openReports",
+                          "storageBytes"
                         ],
                         "additionalProperties": false
                       }
@@ -639,6 +714,12 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Open reports against this person"
+                    },
+                    "storageBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space their uploads take, processed copies included; GIFs not counted"
                     }
                   },
                   "required": [
@@ -654,7 +735,8 @@
                     "chats",
                     "messages",
                     "activeSessions",
-                    "openReports"
+                    "openReports",
+                    "storageBytes"
                   ],
                   "additionalProperties": false
                 }
@@ -774,6 +856,12 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Open reports against this person"
+                    },
+                    "storageBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space their uploads take, processed copies included; GIFs not counted"
                     }
                   },
                   "required": [
@@ -789,7 +877,8 @@
                     "chats",
                     "messages",
                     "activeSessions",
-                    "openReports"
+                    "openReports",
+                    "storageBytes"
                   ],
                   "additionalProperties": false
                 }
@@ -888,6 +977,12 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Open reports against this person"
+                    },
+                    "storageBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space their uploads take, processed copies included; GIFs not counted"
                     }
                   },
                   "required": [
@@ -903,7 +998,8 @@
                     "chats",
                     "messages",
                     "activeSessions",
-                    "openReports"
+                    "openReports",
+                    "storageBytes"
                   ],
                   "additionalProperties": false
                 }
@@ -1002,6 +1098,12 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Open reports against this person"
+                    },
+                    "storageBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space their uploads take, processed copies included; GIFs not counted"
                     }
                   },
                   "required": [
@@ -1017,7 +1119,8 @@
                     "chats",
                     "messages",
                     "activeSessions",
-                    "openReports"
+                    "openReports",
+                    "storageBytes"
                   ],
                   "additionalProperties": false
                 }
@@ -1896,7 +1999,7 @@
     },
     "/v1/admin/sticker-packs": {
       "get": {
-        "summary": "Sticker packs people made, newest first",
+        "summary": "Sticker packs people made (or the official ones), newest first",
         "tags": [
           "admin"
         ],
@@ -1919,6 +2022,20 @@
             "in": "query",
             "name": "limit",
             "required": false
+          },
+          {
+            "schema": {
+              "default": "false",
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "in": "query",
+            "name": "official",
+            "required": false,
+            "description": "Official packs instead of the ones people made"
           }
         ],
         "security": [
@@ -1945,6 +2062,10 @@
                           },
                           "title": {
                             "type": "string"
+                          },
+                          "official": {
+                            "type": "boolean",
+                            "description": "Made by an admin and in everyone's stickers"
                           },
                           "owner": {
                             "nullable": true,
@@ -2051,6 +2172,7 @@
                         "required": [
                           "id",
                           "title",
+                          "official",
                           "owner",
                           "createdAt",
                           "bannedAt",
@@ -2067,6 +2189,287 @@
                   "required": [
                     "items",
                     "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an official sticker pack",
+        "tags": [
+          "admin"
+        ],
+        "description": "Official packs are in everyone's stickers, like the built-in ones.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "official": {
+                      "type": "boolean",
+                      "description": "Made by an admin and in everyone's stickers"
+                    },
+                    "owner": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "bannedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "displayName",
+                        "email",
+                        "avatarUrl",
+                        "bannedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "bannedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "stickers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "packId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "format": {
+                            "type": "string",
+                            "enum": [
+                              "lottie",
+                              "image"
+                            ],
+                            "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                          },
+                          "url": {
+                            "nullable": true,
+                            "description": "Null while an uploaded sticker is still being processed",
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "width": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "height": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "packId",
+                          "emoji",
+                          "format",
+                          "url",
+                          "width",
+                          "height"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "official",
+                    "owner",
+                    "createdAt",
+                    "bannedAt",
+                    "stickers"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/sticker-packs/{id}/stickers": {
+      "post": {
+        "summary": "Add a sticker to an official pack",
+        "tags": [
+          "admin"
+        ],
+        "description": "Upload the file first (kind `sticker`) with your own account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uploadId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "A completed upload of kind `sticker`"
+                  },
+                  "emoji": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 16,
+                    "description": "The emoji this sticker stands for"
+                  }
+                },
+                "required": [
+                  "uploadId",
+                  "emoji"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "packId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "emoji": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string",
+                      "enum": [
+                        "lottie",
+                        "image"
+                      ],
+                      "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                    },
+                    "url": {
+                      "nullable": true,
+                      "description": "Null while an uploaded sticker is still being processed",
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "width": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "height": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "packId",
+                    "emoji",
+                    "format",
+                    "url",
+                    "width",
+                    "height"
                   ],
                   "additionalProperties": false
                 }

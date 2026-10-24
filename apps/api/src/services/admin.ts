@@ -1,10 +1,12 @@
 import {
+  type AddStickerInput,
+  type AdminPackQuery,
   type AdminStatsDTO,
   type AdminStickerPackDTO,
   type AdminUserDTO,
   type AdminUserQuery,
   AppError,
-  type PageQuery,
+  type CreateStickerPackInput,
 } from "@six/shared";
 import type { Prisma } from "../generated/prisma/client.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
@@ -12,7 +14,7 @@ import { prisma } from "../lib/prisma.js";
 import { isAdminEmail } from "../plugins/auth.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
-import { toStickerDTO } from "./stickers.js";
+import { SEEDED_PREFIX, attachSticker, isSeededPack, toStickerDTO } from "./stickers.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -25,7 +27,7 @@ const userInclude = () =>
   }) satisfies Prisma.UserInclude;
 type UserRow = Prisma.UserGetPayload<{ include: ReturnType<typeof userInclude> }>;
 
-function toAdminUser(u: UserRow): AdminUserDTO {
+function toAdminUser(u: UserRow, storageBytes: number): AdminUserDTO {
   const lastActive = u.sessions.map((s) => s.lastUsedAt).sort((a, b) => +b - +a)[0];
   return {
     ...toUserRef(u),
@@ -37,7 +39,22 @@ function toAdminUser(u: UserRow): AdminUserDTO {
     messages: u._count.messages,
     activeSessions: u.sessions.length,
     openReports: u._count.reportsAgainst,
+    storageBytes,
   };
+}
+
+/** Bytes each user's uploads take in storage, processed copies included. Shared GIF copies are left out. */
+async function storageOf(userIds: string[]) {
+  if (!userIds.length) return new Map<string, number>();
+  const rows = await prisma.$queryRaw<{ ownerId: string; bytes: bigint }[]>`
+    SELECT "ownerId", SUM(COALESCE("storedBytes", "size"))::bigint AS bytes
+    FROM "Upload" WHERE "kind" <> 'gif' AND "ownerId" = ANY(${userIds}::text[]) GROUP BY 1`;
+  return new Map(rows.map((r) => [r.ownerId, Number(r.bytes)]));
+}
+
+async function withStorage(rows: UserRow[]) {
+  const storage = await storageOf(rows.map((u) => u.id));
+  return rows.map((u) => toAdminUser(u, storage.get(u.id) ?? 0));
 }
 
 export async function listUsers(q: AdminUserQuery) {
@@ -54,13 +71,14 @@ export async function listUsers(q: AdminUserQuery) {
     include: userInclude(),
     ...pageArgs(q),
   });
-  return toPage(rows, q, toAdminUser);
+  const page = toPage(rows, q, (u) => u);
+  return { items: await withStorage(page.items), nextCursor: page.nextCursor };
 }
 
 export async function getUser(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId }, include: userInclude() });
   if (!user) throw new AppError("USER_NOT_FOUND");
-  return toAdminUser(user);
+  return (await withStorage([user]))[0]!;
 }
 
 export async function signOutEverywhere(userId: string) {
@@ -87,51 +105,89 @@ export async function unbanUser(userId: string) {
 
 const packInclude = {
   owner: true,
-  stickers: { where: { removedAt: null }, include: { upload: true }, orderBy: { position: "asc" } },
+  stickers: {
+    where: { removedAt: null, OR: [{ lottieUrl: { not: null } }, { upload: { status: { not: "failed" } } }] },
+    include: { upload: true },
+    orderBy: { position: "asc" },
+  },
 } satisfies Prisma.StickerPackInclude;
 
-export async function listStickerPacks(q: PageQuery) {
-  const rows = await prisma.stickerPack.findMany({ where: { builtin: false }, include: packInclude, ...pageArgs(q) });
-  return toPage(
-    rows,
-    q,
-    (p): AdminStickerPackDTO => ({
-      id: p.id,
-      title: p.title,
-      owner: p.owner ? toUserRef(p.owner) : null,
-      createdAt: p.createdAt.toISOString(),
-      bannedAt: p.bannedAt?.toISOString() ?? null,
-      stickers: p.stickers.map(toStickerDTO),
-    }),
-  );
+type PackRow = Prisma.StickerPackGetPayload<{ include: typeof packInclude }>;
+
+const toAdminPack = (p: PackRow): AdminStickerPackDTO => ({
+  id: p.id,
+  title: p.title,
+  official: p.builtin,
+  owner: p.owner ? toUserRef(p.owner) : null,
+  createdAt: p.createdAt.toISOString(),
+  bannedAt: p.bannedAt?.toISOString() ?? null,
+  stickers: p.stickers.map(toStickerDTO),
+});
+
+/** People's packs, or the official ones admins made (in everyone's stickers, like the built-in Noto packs). */
+export async function listStickerPacks(q: AdminPackQuery) {
+  const rows = await prisma.stickerPack.findMany({
+    where: q.official ? { builtin: true, NOT: { id: { startsWith: SEEDED_PREFIX } } } : { builtin: false },
+    include: packInclude,
+    ...pageArgs(q),
+  });
+  return toPage(rows, q, toAdminPack);
+}
+
+export async function createOfficialPack(adminId: string, input: CreateStickerPackInput) {
+  const pack = await prisma.stickerPack.create({
+    data: { title: input.title, builtin: true, ownerId: adminId },
+    include: packInclude,
+  });
+  return toAdminPack(pack);
+}
+
+export async function addOfficialSticker(adminId: string, packId: string, input: AddStickerInput) {
+  const pack = await prisma.stickerPack.findUnique({ where: { id: packId } });
+  if (!pack || !pack.builtin || isSeededPack(pack.id) || pack.bannedAt) throw new AppError("STICKER_PACK_NOT_FOUND");
+  return attachSticker(adminId, packId, input);
 }
 
 /**
- * Takes stickers down for good: out of their pack, unsendable, and blank in the messages that
- * already show them.
+ * Takes stickers out of their pack so they can't be sent again. A moderation takedown (`ban`) also
+ * blanks them in messages that already show them; tidying an official pack leaves those alone.
  */
-async function banStickers(where: Prisma.StickerWhereInput) {
+async function takeDownStickers(where: Prisma.StickerWhereInput, ban: boolean) {
   const now = new Date();
   await prisma.sticker.updateMany({ where: { ...where, removedAt: null }, data: { removedAt: now } });
-  await prisma.sticker.updateMany({ where: { ...where, bannedAt: null }, data: { bannedAt: now } });
+  if (ban) await prisma.sticker.updateMany({ where: { ...where, bannedAt: null }, data: { bannedAt: now } });
 }
 
 export async function banStickerPack(packId: string) {
   const pack = await prisma.stickerPack.findUnique({ where: { id: packId } });
-  if (!pack || pack.builtin) throw new AppError("STICKER_PACK_NOT_FOUND");
+  if (!pack || isSeededPack(pack.id)) throw new AppError("STICKER_PACK_NOT_FOUND");
   await prisma.stickerPack.update({ where: { id: packId }, data: { bannedAt: pack.bannedAt ?? new Date() } });
-  await banStickers({ packId });
+  await takeDownStickers({ packId }, !pack.builtin);
 }
 
 export async function banSticker(stickerId: string) {
   const sticker = await prisma.sticker.findUnique({ where: { id: stickerId }, include: { pack: true } });
-  if (!sticker || sticker.pack.builtin) throw new AppError("STICKER_NOT_FOUND");
-  await banStickers({ id: stickerId });
+  if (!sticker || isSeededPack(sticker.packId)) throw new AppError("STICKER_NOT_FOUND");
+  await takeDownStickers({ id: stickerId }, !sticker.pack.builtin);
 }
+
+const total = (rows: { bytes: bigint | null }[]) => Number(rows[0]?.bytes ?? 0);
 
 export async function adminStats(): Promise<AdminStatsDTO> {
   const now = Date.now();
-  const [users, bannedUsers, active, messages, messages24h, openReports, stickerPacks, signups] = await Promise.all([
+  const [
+    users,
+    bannedUsers,
+    active,
+    messages,
+    messages24h,
+    openReports,
+    stickerPacks,
+    signups,
+    storage,
+    gifCache,
+    top,
+  ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { bannedAt: { not: null } } }),
     prisma.session.findMany({
@@ -146,7 +202,18 @@ export async function adminStats(): Promise<AdminStatsDTO> {
     prisma.$queryRaw<{ day: string; count: bigint }[]>`
       SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS day, count(*) AS count
       FROM "User" WHERE "createdAt" > now() - interval '30 days' GROUP BY 1`,
+    prisma.$queryRaw<{ bytes: bigint | null }[]>`
+      SELECT SUM(COALESCE("storedBytes", "size"))::bigint AS bytes FROM "Upload" WHERE "kind" <> 'gif'`,
+    prisma.$queryRaw<{ bytes: bigint | null }[]>`
+      SELECT SUM("size")::bigint AS bytes
+      FROM (SELECT DISTINCT ON (COALESCE("mainKey", "key")) "size" FROM "Upload" WHERE "kind" = 'gif') AS files`,
+    prisma.$queryRaw<{ ownerId: string; bytes: bigint }[]>`
+      SELECT "ownerId", SUM(COALESCE("storedBytes", "size"))::bigint AS bytes
+      FROM "Upload" WHERE "kind" <> 'gif' GROUP BY 1 ORDER BY 2 DESC LIMIT 10`,
   ]);
+  const owners = new Map(
+    (await prisma.user.findMany({ where: { id: { in: top.map((t) => t.ownerId) } } })).map((u) => [u.id, u]),
+  );
   const byDay = new Map(signups.map((s) => [s.day, Number(s.count)]));
   const days = Array.from({ length: 30 }, (_, i) => new Date(now - (29 - i) * DAY_MS).toISOString().slice(0, 10));
   return {
@@ -157,6 +224,12 @@ export async function adminStats(): Promise<AdminStatsDTO> {
     messages24h,
     openReports,
     stickerPacks,
+    storageBytes: total(storage),
+    gifCacheBytes: total(gifCache),
+    topStorage: top.flatMap((t) => {
+      const user = owners.get(t.ownerId);
+      return user ? [{ user: toUserRef(user), bytes: Number(t.bytes) }] : [];
+    }),
     signups: days.map((day) => ({ day, count: byDay.get(day) ?? 0 })),
   };
 }
