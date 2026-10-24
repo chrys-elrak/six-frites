@@ -9,6 +9,7 @@ import type {
   TypingInput,
 } from "./chats.js";
 import type { ErrorBody } from "./errors.js";
+import type { PresenceDTO } from "./presence.js";
 import type { ChangeEventDTO } from "./sync.js";
 
 export type AckResult<T> = { ok: true; data: T } | ({ ok: false } & ErrorBody);
@@ -22,6 +23,8 @@ export interface SocketEnvelope<T> {
 export interface ServerToClientEvents {
   change: (e: ChangeEventDTO) => void;
   typing: (e: TypingDTO) => void;
+  /** A contact came online or went offline. */
+  presence: (e: PresenceDTO) => void;
   "session:revoked": (e: SocketEnvelope<{ sessionId: string }>) => void;
 }
 

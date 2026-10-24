@@ -17,6 +17,7 @@ model User {
   updatedAt   DateTime  @updatedAt
   bannedAt    DateTime?
   banReason   String?
+  lastSeenAt  DateTime?
 
   sessions       Session[]
   invites        Invite[]
