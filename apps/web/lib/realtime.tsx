@@ -1,12 +1,14 @@
 "use client";
 
 import type { Realtime } from "@six/sdk";
-import type { ChangeEventDTO } from "@six/shared";
+import type { ChangeEventDTO, ChatDTO } from "@six/shared";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { applyChatDeleted, applyDeleted, applyEdited } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
 import { useOutbox } from "./outbox";
+import { notifyIncoming } from "./notify";
 import { useTypingStore } from "./typing";
 import { useSession } from "./session";
 import { six } from "./six";
@@ -27,7 +29,15 @@ export function setActiveChat(id: string | null) {
   activeChatId = id;
 }
 
-function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
+function cachedChat(qc: QueryClient, chatId: string) {
+  return (
+    qc.getQueryData<ChatDTO[]>(chatKeys.list(false))?.find((c) => c.id === chatId) ??
+    qc.getQueryData<ChatDTO[]>(chatKeys.list(true))?.find((c) => c.id === chatId) ??
+    qc.getQueryData<ChatDTO>(chatKeys.chat(chatId))
+  );
+}
+
+function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (chatId: string) => void) {
   switch (e.type) {
     case "message.new": {
       const m = e.data;
@@ -42,6 +52,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
         unreadCount: m.senderId === meId || viewing ? c.unreadCount : c.unreadCount + 1,
       }));
       if (!found) void qc.invalidateQueries({ queryKey: chatKeys.lists });
+      if (m.senderId !== meId) notifyIncoming(m, cachedChat(qc, m.chatId), viewing, open);
       break;
     }
     case "message.edited":
@@ -99,6 +110,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
 
 export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient();
+  const router = useRouter();
   const meId = useSession((s) => s.user?.id);
   const [status, setStatus] = useState<Status>("connecting");
   const [realtime, setRealtime] = useState<Realtime | null>(null);
@@ -108,7 +120,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!meId) return;
     const rt = six.realtime({
-      onEvent: (e) => me.current && applyEvent(qc, me.current, e),
+      onEvent: (e) => me.current && applyEvent(qc, me.current, e, (chatId) => router.push(`/chats/${chatId}`)),
       onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing),
       onStatus: setStatus,
       onResyncRequired: () => void qc.invalidateQueries(),
@@ -119,7 +131,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       rt.stop();
       setRealtime(null);
     };
-  }, [meId, qc]);
+  }, [meId, qc, router]);
 
   return <Ctx.Provider value={{ realtime, status }}>{children}</Ctx.Provider>;
 }

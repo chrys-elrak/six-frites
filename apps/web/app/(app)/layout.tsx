@@ -9,7 +9,10 @@ import { SettingsPanel } from "@/components/settings-panel";
 import { type Tab, TabBar } from "@/components/tab-bar";
 import { RealtimeProvider } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
+import { primeAudio } from "@/lib/notify";
 import { useAppHeight } from "@/lib/viewport";
+import { Toasts } from "@/components/toasts";
+import { useChats } from "@/lib/chats";
 
 const tabRoutes: Record<string, Tab> = {
   "/": "chats",
@@ -18,12 +21,22 @@ const tabRoutes: Record<string, Tab> = {
   "/settings": "settings",
 };
 
+function UnreadTitle() {
+  const chats = useChats();
+  const unread = chats.data?.filter((c) => !c.muted).reduce((n, c) => n + c.unreadCount, 0) ?? 0;
+  useEffect(() => {
+    document.title = unread ? `(${unread > 99 ? "99+" : unread}) Six Frites` : "Six Frites";
+  }, [unread]);
+  return null;
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const qc = useQueryClient();
   const status = useSession((s) => s.status);
   useAppHeight();
+  useEffect(primeAudio, []);
 
   useEffect(() => {
     if (status === "anon") {
@@ -54,6 +67,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </aside>
         <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col md:flex`}>{children}</section>
       </div>
+      <Toasts />
+      <UnreadTitle />
     </RealtimeProvider>
   );
 }

@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { six } from "@/lib/six";
 import { Devices } from "./devices";
 import { Invites, Referrals } from "./invites";
+import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
 
 export function SettingsPanel() {
@@ -22,6 +23,7 @@ export function SettingsPanel() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4">
           <ProfileCard />
+          <NotificationSettings />
           <Invites />
           <Referrals />
           <Devices />
