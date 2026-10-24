@@ -1,7 +1,7 @@
 import type { ChangeEvent, Prisma } from "@prisma/client";
 import type { ChangeEventData, ChangeEventDTO, ChangeEventType } from "@six/shared";
 import { prisma } from "./prisma.js";
-import { getIo, rooms } from "./realtime.js";
+import { broadcaster, rooms } from "./realtime.js";
 
 export type Tx = Prisma.TransactionClient;
 export type Emit = <T extends ChangeEventType>(userId: string, type: T, data: ChangeEventData<T>) => void;
@@ -45,7 +45,9 @@ export async function withEvents<R>(fn: (tx: Tx, emit: Emit) => Promise<R>): Pro
     return { result, rows };
   });
 
-  const io = getIo();
-  if (io) for (const row of rows) io.to(rooms.user(row.userId)).emit("change", toChangeEventDTO(row));
+  if (rows.length) {
+    const out = broadcaster();
+    for (const row of rows) out.to(rooms.user(row.userId)).emit("change", toChangeEventDTO(row));
+  }
   return result;
 }

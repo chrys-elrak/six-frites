@@ -12,7 +12,9 @@ import {
 } from "@six/shared";
 import { env } from "../env.js";
 import { prisma } from "../lib/prisma.js";
-import { type IO, rooms, setIo } from "../lib/realtime.js";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { redisConnection } from "../lib/queue.js";
+import { type IO, rooms, setIo, socketKey } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
 import { markDelivered, markRead } from "../services/chats.js";
 import { assertMember, sendMessage } from "../services/messages.js";
@@ -46,8 +48,10 @@ function handle<T>(fn: (payload: unknown) => Promise<T>) {
 }
 
 export function createSocketServer(http: HttpServer) {
+  const pub = redisConnection();
   const io: IO = new Server(http, {
     cors: { origin: env.WEB_ORIGIN.split(","), credentials: true },
+    adapter: createAdapter(pub, pub.duplicate(), { key: socketKey }),
   });
 
   io.use(async (socket, next) => {

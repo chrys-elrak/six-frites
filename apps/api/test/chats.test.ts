@@ -1,6 +1,7 @@
 import type { AddressInfo } from "node:net";
 import { io as connect, type Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { setIo } from "../src/lib/realtime.js";
 import { createSocketServer } from "../src/socket/index.js";
 import { type Auth, bearer, chatHelpers, useApp } from "./helpers.js";
 
@@ -150,10 +151,11 @@ describe("sync", () => {
 
 describe("socket", () => {
   let url: string;
+  let io: ReturnType<typeof createSocketServer>;
   const sockets: Socket[] = [];
 
   beforeAll(async () => {
-    createSocketServer(ctx.app.server);
+    io = createSocketServer(ctx.app.server);
     await ctx.app.listen({ port: 0, host: "127.0.0.1" });
     url = `http://127.0.0.1:${(ctx.app.server.address() as AddressInfo).port}`;
   });
@@ -201,6 +203,27 @@ describe("socket", () => {
 
     const read = await b.emitWithAck("chat:read", { chatId });
     expect(read.ok && read.data.lastReadMessageId).toBe(ack.data.id);
+  });
+
+  it("delivers events raised outside the API process, like the media worker's", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const b = open(guest.accessToken);
+    await connected(b);
+
+    const received = new Promise<{ type: string; data: { text: string } }>((resolve) =>
+      b.on("change", (e) => e.type === "message.new" && resolve(e)),
+    );
+    setIo(null);
+    try {
+      await send(host, chatId, "from another process");
+      const event = await Promise.race([
+        received,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("event never arrived")), 3000)),
+      ]);
+      expect(event.data.text).toBe("from another process");
+    } finally {
+      setIo(io);
+    }
   });
 
   it("relays typing to the other member only", async () => {
