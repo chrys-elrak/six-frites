@@ -263,15 +263,15 @@ function Bubble({
   const jumbo =
     !row.deleted && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text ? emojiOnly(row.text) : null;
   const radius = mine
-    ? `rounded-2xl ${groupStart ? "" : "rounded-tr-md"} ${groupEnd ? "" : "rounded-br-md"}`
-    : `rounded-2xl ${groupStart ? "" : "rounded-tl-md"} ${groupEnd ? "" : "rounded-bl-md"}`;
+    ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
+    : `rounded-tr-2xl rounded-br-2xl ${groupStart ? "rounded-tl-2xl" : "rounded-tl-md"} ${groupEnd ? "rounded-bl-2xl" : "rounded-bl-md"}`;
   const tone = jumbo
     ? "bg-transparent text-stone-900 dark:text-stone-100"
     : row.deleted
-      ? "bg-transparent text-stone-500 ring-1 ring-stone-300 dark:ring-stone-700"
+      ? "bg-transparent text-stone-500 ring-1 ring-inset ring-stone-300 dark:ring-stone-700"
       : mine
         ? "bg-brand text-brand-ink"
-        : "bg-white text-stone-900 ring-1 ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
+        : "bg-white text-stone-900 ring-1 ring-inset ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
 
   return (
     <div
@@ -286,7 +286,7 @@ function Bubble({
       }
       className={`group flex items-center gap-2 px-3 ${selectable ? "cursor-pointer" : ""} ${
         selected ? "bg-brand/10" : ""
-      } ${groupEnd ? "pb-2" : "pb-0.5"}`}
+      } ${groupEnd ? "pb-3" : "pb-1"}`}
     >
       {selecting && (
         <span className={`shrink-0 ${row.message ? "" : "invisible"}`} aria-hidden>
