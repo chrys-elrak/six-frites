@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: six
       POSTGRES_PASSWORD: six
@@ -14,35 +15,53 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports: ["6379:6379"]
+
+  install:
+    build: { context: ., dockerfile: Dockerfile.dev }
+    working_dir: /repo
+    command:
+      - sh
+      - -c
+      - |
+        hash=$$(sha1sum package-lock.json | cut -d' ' -f1)
+        if [ "$$(cat node_modules/.lock-hash 2>/dev/null)" = "$$hash" ]; then echo "dependencies up to date"; exit 0; fi
+        npm ci --no-audit --no-fund && echo "$$hash" > node_modules/.lock-hash
+    volumes: &app-volumes
+      - .:/repo
+      - node_modules:/repo/node_modules
+      - api_node_modules:/repo/apps/api/node_modules
+      - web_next:/repo/apps/web/.next
 
   api:
     build: { context: ., dockerfile: Dockerfile.dev }
     working_dir: /repo/apps/api
+    restart: unless-stopped
     command: sh -c "npx prisma migrate deploy && npx prisma generate && npx tsx watch src/server.ts"
     env_file: apps/api/.env
     environment:
       DATABASE_URL: postgresql://six:six@postgres:5432/six
       REDIS_URL: redis://redis:6379
     ports: ["4000:4000"]
-    volumes: &app-volumes
-      - .:/repo
-      - /repo/node_modules
-      - /repo/apps/api/node_modules
-      - /repo/apps/web/.next
+    volumes: *app-volumes
     depends_on:
+      install: { condition: service_completed_successfully }
       postgres: { condition: service_healthy }
       redis: { condition: service_started }
 
   web:
     build: { context: ., dockerfile: Dockerfile.dev }
     working_dir: /repo/apps/web
+    restart: unless-stopped
     command: npx next dev --port 3000 --hostname 0.0.0.0
     environment:
       WATCHPACK_POLLING: "true"
     ports: ["3000:3000"]
     volumes: *app-volumes
-    depends_on: [api]
+    depends_on:
+      install: { condition: service_completed_successfully }
+      api: { condition: service_started }
 
   minio:
     image: minio/minio:latest
@@ -67,3 +86,6 @@ services:
 volumes:
   pgdata:
   miniodata:
+  node_modules:
+  api_node_modules:
+  web_next:
