@@ -4,35 +4,81 @@ info:
   version: 1.0.0
   description: |
     Socket.IO transport. Authenticate in the handshake with `io(url, { auth: { token: accessToken } })`.
-    Every server event is wrapped as `{ eventId, data }`; `eventId` is the cursor for `GET /v1/sync?since=`.
-    Client actions use acknowledgements returning `{ ok: true, data }` or `{ ok: false, error }`.
+
+    Every data change reaches a client as a `change` event `{ eventId, type, data, createdAt }`.
+    `GET /v1/sync?since=<eventId>` returns the same objects, so clients apply both through one reducer.
+    On (re)connect: drain `/v1/sync` from the last applied eventId, then apply live events,
+    ignoring any with an eventId at or below the cursor.
+
+    Client actions use acknowledgements: `{ ok: true, data }` or `{ ok: false, error: { code, message, details? } }`.
+    Each action also exists as a REST endpoint.
 servers:
   dev:
     host: localhost:4000
     protocol: ws
 channels:
-  session:
+  root:
     address: /
     messages:
+      change:
+        name: change
+        summary: A persisted change for this user, also returned by /v1/sync.
+        payload:
+          type: object
+          required: [eventId, type, data, createdAt]
+          properties:
+            eventId: { type: string, description: "Monotonic per user; use as the sync cursor." }
+            type: { type: string, enum: ["message.new", "chat.updated", "chat.read"] }
+            data:
+              description: "MessageDTO, ChatDTO or ChatReadDTO depending on type (see OpenAPI components)."
+            createdAt: { type: string, format: date-time }
       sessionRevoked:
         name: session:revoked
         payload:
           type: object
           properties:
             eventId: { type: string }
-            data:
-              type: object
-              properties:
-                sessionId: { type: string }
+            data: { type: object, properties: { sessionId: { type: string } } }
+      messageSend:
+        name: message:send
+        summary: Same as POST /v1/chats/{chatId}/messages. Ack data is a MessageDTO.
+        payload:
+          type: object
+          required: [chatId, clientId, text]
+          properties:
+            chatId: { type: string }
+            clientId: { type: string, maxLength: 64 }
+            text: { type: string, minLength: 1, maxLength: 4000 }
+      chatRead:
+        name: chat:read
+        summary: Same as POST /v1/chats/{chatId}/read. Ack data is a ChatReadDTO or null.
+        payload:
+          type: object
+          required: [chatId]
+          properties:
+            chatId: { type: string }
+            messageId: { type: string }
       ping:
         name: ping
         payload: { type: object }
 operations:
+  receiveChange:
+    action: send
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/change" }]
   receiveSessionRevoked:
     action: send
-    channel: { $ref: "#/channels/session" }
-    messages: [{ $ref: "#/channels/session/messages/sessionRevoked" }]
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/sessionRevoked" }]
+  sendMessage:
+    action: receive
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/messageSend" }]
+  markRead:
+    action: receive
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/chatRead" }]
   ping:
     action: receive
-    channel: { $ref: "#/channels/session" }
-    messages: [{ $ref: "#/channels/session/messages/ping" }]
+    channel: { $ref: "#/channels/root" }
+    messages: [{ $ref: "#/channels/root/messages/ping" }]

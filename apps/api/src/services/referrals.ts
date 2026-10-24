@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import type { Invite, Prisma, User } from "@prisma/client";
+import type { Invite } from "@prisma/client";
 import {
   AppError,
   type CreateInviteInput,
@@ -7,10 +7,12 @@ import {
   type InvitePreview,
   type InviteStatus,
   type PageQuery,
-  type PublicUser,
 } from "@six/shared";
+import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
+import { ensureDirectChat } from "./chats.js";
+import { toPublicUser } from "./users.js";
 
 const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const CODE_LENGTH = 8;
@@ -21,10 +23,6 @@ function generateCode() {
 
 export function normalizeCode(code: string) {
   return code.trim().toUpperCase();
-}
-
-export function toPublicUser(u: Pick<User, "id" | "displayName" | "avatarUrl">): PublicUser {
-  return { id: u.id, displayName: u.displayName, avatarUrl: u.avatarUrl };
 }
 
 function toInviteDTO(i: Invite): InviteDTO {
@@ -69,7 +67,7 @@ export async function previewInvite(code: string): Promise<InvitePreview> {
   return { code: invite.code, inviter: toPublicUser(invite.creator), status: inviteStatus(invite) };
 }
 
-export async function applyInvite(tx: Prisma.TransactionClient, refereeId: string, code: string) {
+export async function applyInvite(tx: Tx, emit: Emit, refereeId: string, code: string) {
   const invite = await tx.invite.findUnique({ where: { code: normalizeCode(code) } });
   if (!invite) throw new AppError("INVITE_NOT_FOUND");
   if (invite.expiresAt && invite.expiresAt < new Date()) throw new AppError("INVITE_EXPIRED");
@@ -84,10 +82,12 @@ export async function applyInvite(tx: Prisma.TransactionClient, refereeId: strin
   });
   if (claimed.count === 0) throw new AppError("INVITE_EXHAUSTED");
 
-  return tx.referral.create({
+  const referral = await tx.referral.create({
     data: { inviteId: invite.id, referrerId: invite.creatorId, refereeId },
     include: { referrer: true },
   });
+  await ensureDirectChat(tx, emit, invite.creatorId, refereeId);
+  return referral;
 }
 
 export async function acceptInvite(userId: string, code: string) {
@@ -97,7 +97,7 @@ export async function acceptInvite(userId: string, code: string) {
   });
   if (existing?.invite.code === normalizeCode(code)) return { referrer: toPublicUser(existing.referrer) };
 
-  const referral = await prisma.$transaction((tx) => applyInvite(tx, userId, code));
+  const referral = await withEvents((tx, emit) => applyInvite(tx, emit, userId, code));
   return { referrer: toPublicUser(referral.referrer) };
 }
 

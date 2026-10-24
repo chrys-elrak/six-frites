@@ -1,43 +1,19 @@
 import type { AuthResult, GoogleLoginInput, Platform } from "@six/shared";
-import type { ErrorBody, ErrorCode } from "@six/shared";
+import { unwrap } from "./errors.js";
 import { createRestClient } from "./rest.js";
 import { createRealtime, type RealtimeOptions } from "./socket.js";
 import { type RefreshTokenStore, TokenManager } from "./tokens.js";
 
+export { SixApiError, unwrap } from "./errors.js";
 export type { paths, components } from "./schema.js";
 export type { RefreshTokenStore } from "./tokens.js";
-export type { SixSocket } from "./socket.js";
+export type { CursorStore, Realtime, RealtimeOptions, SixSocket } from "./socket.js";
 
 export interface SixClientOptions {
   baseUrl: string;
   platform: Platform;
   refreshTokenStore?: RefreshTokenStore;
   fetch?: typeof fetch;
-}
-
-export class SixApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: ErrorCode | string,
-    message: string,
-    readonly details?: unknown,
-  ) {
-    super(message);
-  }
-}
-
-/** Unwraps an openapi-fetch result, throwing SixApiError on the API's standard error shape. */
-export function unwrap<T>(res: { data?: T; error?: unknown; response: Response }): T {
-  if (res.error !== undefined || !res.response.ok) {
-    const body = res.error as ErrorBody | undefined;
-    throw new SixApiError(
-      res.response.status,
-      body?.error?.code ?? "INTERNAL",
-      body?.error?.message ?? res.response.statusText,
-      body?.error?.details,
-    );
-  }
-  return res.data as T;
 }
 
 export function createSixClient(opts: SixClientOptions) {
@@ -86,7 +62,7 @@ export function createSixClient(opts: SixClientOptions) {
   return {
     api,
     auth,
-    realtime: (realtimeOpts?: RealtimeOptions) => createRealtime(opts.baseUrl, tokens, realtimeOpts),
+    realtime: (realtimeOpts: RealtimeOptions) => createRealtime(opts.baseUrl, tokens, api, realtimeOpts),
   };
 }
 

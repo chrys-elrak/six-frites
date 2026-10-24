@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
-import type { Prisma } from "@prisma/client";
 import { AppError, type AuthResult, type DeviceInfo, type GoogleLoginInput } from "@six/shared";
+import { type Tx, withEvents } from "../lib/events.js";
 import { type GoogleVerifier, verifyGoogleIdToken } from "../lib/google.js";
 import { prisma } from "../lib/prisma.js";
 import {
@@ -31,7 +31,7 @@ export async function loginWithGoogle(
 ): Promise<IssuedAuth> {
   const identity = await verify(input.idToken);
 
-  const { user, session, refresh } = await prisma.$transaction(async (tx) => {
+  const { user, session, refresh } = await withEvents(async (tx, emit) => {
     const existing = await tx.user.findUnique({ where: { googleSub: identity.sub } });
     const user =
       existing ??
@@ -44,7 +44,7 @@ export async function loginWithGoogle(
         },
       }));
 
-    if (input.inviteCode && !existing) await applyInvite(tx, user.id, input.inviteCode);
+    if (input.inviteCode && !existing) await applyInvite(tx, emit, user.id, input.inviteCode);
 
     const session = await createSession(tx, user.id, input.device);
     return { user, ...session };
@@ -59,7 +59,7 @@ export async function loginWithGoogle(
 }
 
 async function createSession(
-  tx: Prisma.TransactionClient,
+  tx: Tx,
   userId: string,
   device: DeviceInfo,
 ) {

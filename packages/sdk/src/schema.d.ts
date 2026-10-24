@@ -589,6 +589,436 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List chats, most recent activity first */
+        get: {
+            parameters: {
+                query?: {
+                    archived?: "true" | "false";
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                /** @enum {string} */
+                                type: "direct";
+                                title: string;
+                                members: {
+                                    user: {
+                                        id: string;
+                                        displayName: string;
+                                        /** Format: uri */
+                                        avatarUrl: string | null;
+                                    };
+                                    lastReadMessageId: string | null;
+                                    /** Format: date-time */
+                                    lastReadAt: string | null;
+                                }[];
+                                lastMessage: {
+                                    id: string;
+                                    chatId: string;
+                                    senderId: string;
+                                    clientId: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                    text: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    editedAt: string | null;
+                                } | null;
+                                unreadCount: number;
+                                archived: boolean;
+                                muted: boolean;
+                                pinned: boolean;
+                                autoDeleteSecs: number | null;
+                                /** Format: date-time */
+                                lastActivityAt: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chats/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one chat */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            type: "direct";
+                            title: string;
+                            members: {
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                };
+                                lastReadMessageId: string | null;
+                                /** Format: date-time */
+                                lastReadAt: string | null;
+                            }[];
+                            lastMessage: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text";
+                                text: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                            } | null;
+                            unreadCount: number;
+                            archived: boolean;
+                            muted: boolean;
+                            pinned: boolean;
+                            autoDeleteSecs: number | null;
+                            /** Format: date-time */
+                            lastActivityAt: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chats/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Messages in a chat, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text";
+                                text: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Send a message
+         * @description Idempotent per `clientId`: retrying with the same clientId returns the original message.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        clientId: string;
+                        text: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text";
+                            text: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chats/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark messages as read up to `messageId` (or the latest)
+         * @description Returns null when the read marker did not move forward.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": unknown | ({
+                        messageId?: string;
+                    } | null);
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            chatId: string;
+                            userId: string;
+                            lastReadMessageId: string;
+                            /** Format: date-time */
+                            lastReadAt: string;
+                        } | null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Changes since an event cursor
+         * @description Call without `since` to get the current cursor. On reconnect, page through with the returned cursor until `hasMore` is false, then resume the socket.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    since?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            events: ({
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "message.new";
+                                data: {
+                                    id: string;
+                                    chatId: string;
+                                    senderId: string;
+                                    clientId: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                    text: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    editedAt: string | null;
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "chat.updated";
+                                data: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "direct";
+                                    title: string;
+                                    members: {
+                                        user: {
+                                            id: string;
+                                            displayName: string;
+                                            /** Format: uri */
+                                            avatarUrl: string | null;
+                                        };
+                                        lastReadMessageId: string | null;
+                                        /** Format: date-time */
+                                        lastReadAt: string | null;
+                                    }[];
+                                    lastMessage: {
+                                        id: string;
+                                        chatId: string;
+                                        senderId: string;
+                                        clientId: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                        text: string | null;
+                                        /** Format: date-time */
+                                        createdAt: string;
+                                        /** Format: date-time */
+                                        editedAt: string | null;
+                                    } | null;
+                                    unreadCount: number;
+                                    archived: boolean;
+                                    muted: boolean;
+                                    pinned: boolean;
+                                    autoDeleteSecs: number | null;
+                                    /** Format: date-time */
+                                    lastActivityAt: string;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "chat.read";
+                                data: {
+                                    chatId: string;
+                                    userId: string;
+                                    lastReadMessageId: string;
+                                    /** Format: date-time */
+                                    lastReadAt: string;
+                                };
+                                createdAt: string;
+                            })[];
+                            cursor: string;
+                            hasMore: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

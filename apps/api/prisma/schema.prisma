@@ -20,6 +20,8 @@ model User {
   invites     Invite[]
   referredBy  Referral? @relation("referee")
   referrals   Referral[] @relation("referrer")
+  memberships ChatMember[]
+  messages    Message[]
 }
 
 model Invite {
@@ -83,4 +85,50 @@ model ChangeEvent {
   createdAt DateTime @default(now())
 
   @@index([userId, id])
+}
+
+model Chat {
+  id            String   @id @default(cuid())
+  type          String   @default("direct")
+  directKey     String?  @unique
+  createdAt     DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+
+  members  ChatMember[]
+  messages Message[]
+}
+
+model ChatMember {
+  chatId            String
+  userId            String
+  joinedAt          DateTime  @default(now())
+  archived          Boolean   @default(false)
+  muted             Boolean   @default(false)
+  pinned            Boolean   @default(false)
+  autoDeleteSecs    Int?
+  lastReadMessageId String?
+  lastReadAt        DateTime?
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  chatId    String
+  senderId  String
+  clientId  String
+  type      String    @default("text")
+  text      String?
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, clientId])
+  @@index([chatId, createdAt])
 }

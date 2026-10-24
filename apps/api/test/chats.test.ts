@@ -1,0 +1,190 @@
+import type { AddressInfo } from "node:net";
+import { io as connect, type Socket } from "socket.io-client";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createSocketServer } from "../src/socket/index.js";
+import { bearer, loginAs, uniqueSub, useApp } from "./helpers.js";
+
+const ctx = useApp();
+
+interface Auth {
+  accessToken: string;
+  user: { id: string };
+}
+
+async function signUp(name: string, extra: Record<string, unknown> = {}): Promise<Auth> {
+  return (await loginAs(ctx.app, uniqueSub(name), "ios", extra)).json();
+}
+
+async function makeFriends() {
+  const host = await signUp("host");
+  const invite = await ctx.app.inject({ method: "POST", url: "/v1/invites", headers: bearer(host.accessToken), payload: {} });
+  const guest = await signUp("guest", { inviteCode: invite.json().code });
+  const chats = await get(host, "/v1/chats");
+  return { host, guest, chatId: chats.items[0].id as string };
+}
+
+async function get(who: Auth, url: string) {
+  return (await ctx.app.inject({ url, headers: bearer(who.accessToken) })).json();
+}
+
+function send(who: Auth, chatId: string, text: string, clientId = `c-${Math.random()}`) {
+  return ctx.app.inject({
+    method: "POST",
+    url: `/v1/chats/${chatId}/messages`,
+    headers: bearer(who.accessToken),
+    payload: { clientId, text },
+  });
+}
+
+describe("chats over REST", () => {
+  it("creates a direct chat when an invite is used", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const guestChats = await get(guest, "/v1/chats");
+    expect(guestChats.items).toHaveLength(1);
+    expect(guestChats.items[0].id).toBe(chatId);
+    expect(guestChats.items[0].members.map((m: { user: { id: string } }) => m.user.id).sort()).toEqual(
+      [host.user.id, guest.user.id].sort(),
+    );
+
+    const events = await get(host, "/v1/sync?since=0");
+    expect(events.events.map((e: { type: string }) => e.type)).toEqual(["chat.updated"]);
+  });
+
+  it("sends idempotently and tracks unread counts", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const first = await send(host, chatId, "hello", "same-id");
+    const retry = await send(host, chatId, "hello", "same-id");
+    expect(first.statusCode).toBe(201);
+    expect(retry.json().id).toBe(first.json().id);
+    await send(host, chatId, "second");
+
+    const messages = await get(guest, `/v1/chats/${chatId}/messages`);
+    expect(messages.items.map((m: { text: string }) => m.text)).toEqual(["second", "hello"]);
+
+    expect((await get(guest, `/v1/chats/${chatId}`)).unreadCount).toBe(2);
+    expect((await get(host, `/v1/chats/${chatId}`)).unreadCount).toBe(0);
+    expect((await get(guest, `/v1/chats/${chatId}`)).lastMessage.text).toBe("second");
+  });
+
+  it("hides chats from non-members", async () => {
+    const { chatId } = await makeFriends();
+    const stranger = await signUp("stranger");
+    expect((await get(stranger, `/v1/chats/${chatId}`)).error.code).toBe("CHAT_NOT_FOUND");
+    expect((await send(stranger, chatId, "hi")).json().error.code).toBe("CHAT_NOT_FOUND");
+  });
+
+  it("moves the read marker forward only", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const m1 = (await send(host, chatId, "one")).json();
+    await send(host, chatId, "two");
+
+    const read = (path: string, payload: unknown) =>
+      ctx.app.inject({ method: "POST", url: path, headers: bearer(guest.accessToken), payload: payload as object });
+
+    expect((await read(`/v1/chats/${chatId}/read`, { messageId: m1.id })).json().lastReadMessageId).toBe(m1.id);
+    expect((await get(guest, `/v1/chats/${chatId}`)).unreadCount).toBe(1);
+
+    expect((await read(`/v1/chats/${chatId}/read`, {})).json().chatId).toBe(chatId);
+    expect((await get(guest, `/v1/chats/${chatId}`)).unreadCount).toBe(0);
+    expect((await read(`/v1/chats/${chatId}/read`, { messageId: m1.id })).body).toBe("null");
+
+    const hostView = await get(host, `/v1/chats/${chatId}`);
+    const guestMember = hostView.members.find((m: { user: { id: string } }) => m.user.id === guest.user.id);
+    expect(guestMember.lastReadAt).not.toBeNull();
+  });
+
+  it("orders chats by latest activity with a cursor", async () => {
+    const host = await signUp("popular");
+    const chatIds: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const invite = await ctx.app.inject({ method: "POST", url: "/v1/invites", headers: bearer(host.accessToken), payload: {} });
+      await signUp(`friend${i}`, { inviteCode: invite.json().code });
+    }
+    const all = await get(host, "/v1/chats");
+    chatIds.push(...all.items.map((c: { id: string }) => c.id));
+
+    await send(host, chatIds[2]!, "bump the oldest");
+    const first = await get(host, "/v1/chats?limit=2");
+    expect(first.items[0].id).toBe(chatIds[2]);
+    const second = await get(host, `/v1/chats?limit=2&cursor=${first.nextCursor}`);
+    expect(second.items).toHaveLength(1);
+    expect(second.nextCursor).toBeNull();
+    expect(new Set([...first.items, ...second.items].map((c: { id: string }) => c.id)).size).toBe(3);
+  });
+});
+
+describe("sync", () => {
+  it("returns the head cursor, then pages through changes", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const head = await get(guest, "/v1/sync");
+    expect(head.events).toEqual([]);
+
+    for (let i = 0; i < 5; i++) await send(host, chatId, `m${i}`);
+
+    const page1 = await get(guest, `/v1/sync?since=${head.cursor}&limit=3`);
+    expect(page1.hasMore).toBe(true);
+    const page2 = await get(guest, `/v1/sync?since=${page1.cursor}&limit=3`);
+    expect(page2.hasMore).toBe(false);
+    const texts = [...page1.events, ...page2.events].map((e: { data: { text: string } }) => e.data.text);
+    expect(texts).toEqual(["m0", "m1", "m2", "m3", "m4"]);
+
+    const empty = await get(guest, `/v1/sync?since=${page2.cursor}`);
+    expect(empty).toMatchObject({ events: [], cursor: page2.cursor, hasMore: false });
+  });
+});
+
+describe("socket", () => {
+  let url: string;
+  const sockets: Socket[] = [];
+
+  beforeAll(async () => {
+    createSocketServer(ctx.app.server);
+    await ctx.app.listen({ port: 0, host: "127.0.0.1" });
+    url = `http://127.0.0.1:${(ctx.app.server.address() as AddressInfo).port}`;
+  });
+
+  afterAll(() => sockets.forEach((s) => s.disconnect()));
+
+  function open(token?: string) {
+    const s = connect(url, { auth: token ? { token } : {}, transports: ["websocket"], forceNew: true });
+    sockets.push(s);
+    return s;
+  }
+
+  const connected = (s: Socket) =>
+    new Promise<void>((resolve, reject) => {
+      s.once("connect", () => resolve());
+      s.once("connect_error", reject);
+    });
+
+  it("rejects connections without a valid token", async () => {
+    const err = await connected(open("nope")).catch((e) => e);
+    expect(err.data.error.code).toBe("UNAUTHENTICATED");
+  });
+
+  it("delivers sends to the other member with an event cursor", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const a = open(host.accessToken);
+    const b = open(guest.accessToken);
+    await Promise.all([connected(a), connected(b)]);
+
+    const received = new Promise<{ eventId: string; type: string; data: { text: string } }>((resolve) =>
+      b.on("change", (e) => e.type === "message.new" && resolve(e)),
+    );
+    const ack = await a.emitWithAck("message:send", { chatId, clientId: "sock-1", text: "over the wire" });
+    expect(ack.ok).toBe(true);
+
+    const event = await received;
+    expect(event.data.text).toBe("over the wire");
+    expect(event.eventId).toMatch(/^\d+$/);
+
+    const synced = await get(guest, `/v1/sync?since=${BigInt(event.eventId) - 1n}`);
+    expect(synced.events[0].eventId).toBe(event.eventId);
+
+    const bad = await a.emitWithAck("message:send", { chatId, clientId: "sock-2", text: "" });
+    expect(bad).toMatchObject({ ok: false, error: { code: "VALIDATION_FAILED" } });
+
+    const read = await b.emitWithAck("chat:read", { chatId });
+    expect(read.ok && read.data.lastReadMessageId).toBe(ack.data.id);
+  });
+});

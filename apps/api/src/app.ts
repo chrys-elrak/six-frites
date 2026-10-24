@@ -15,6 +15,7 @@ import { env } from "./env.js";
 import authPlugin from "./plugins/auth.js";
 import errorsPlugin from "./plugins/errors.js";
 import authRoutes from "./routes/auth.js";
+import chatRoutes from "./routes/chats.js";
 import inviteRoutes from "./routes/invites.js";
 import meRoutes from "./routes/me.js";
 import sessionRoutes from "./routes/sessions.js";
@@ -57,6 +58,7 @@ export async function buildApp() {
       await v1.register(meRoutes);
       await v1.register(sessionRoutes);
       await v1.register(inviteRoutes);
+      await v1.register(chatRoutes);
     },
     { prefix: "/v1" },
   );

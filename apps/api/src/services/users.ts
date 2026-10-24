@@ -12,6 +12,10 @@ export function toUserDTO(u: User): UserDTO {
   };
 }
 
+export function toPublicUser(u: Pick<User, "id" | "displayName" | "avatarUrl">) {
+  return { id: u.id, displayName: u.displayName, avatarUrl: u.avatarUrl };
+}
+
 export async function getMe(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new AppError("USER_NOT_FOUND");
