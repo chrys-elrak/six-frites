@@ -2,10 +2,11 @@
 
 import { SixApiError, unwrap } from "@six/sdk";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Trash2, X } from "lucide-react";
+import { Camera, Shuffle, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateContact } from "@/lib/actions";
-import { toAvatarDataUrl } from "@/lib/image";
+import { suggestAvatars } from "@/lib/avatar-suggestions";
+import { toAvatarDataUrl, urlToAvatarDataUrl } from "@/lib/image";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
 import { PrimaryButton } from "./ui";
@@ -21,6 +22,11 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const file = useRef<HTMLInputElement>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [picked, setPicked] = useState<string | null>(null);
+
+  const shuffle = () => void suggestAvatars().then(setSuggestions).catch(() => setSuggestions([]));
+  useEffect(shuffle, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -41,8 +47,19 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     setError(null);
     try {
       setPhoto(await toAvatarDataUrl(f));
+      setPicked(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't read that image.");
+    }
+  }
+
+  async function choose(src: string) {
+    setError(null);
+    try {
+      setPhoto(await urlToAvatarDataUrl(src));
+      setPicked(src);
+    } catch {
+      setError("Couldn't use that picture.");
     }
   }
 
@@ -118,13 +135,47 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               {hasCustomPhoto && (
                 <button
                   type="button"
-                  onClick={() => setPhoto(null)}
+                  onClick={() => {
+                    setPhoto(null);
+                    setPicked(null);
+                  }}
                   className="flex items-center gap-1.5 text-sm font-medium text-red-600 dark:text-red-400"
                 >
                   <Trash2 className="size-4" /> Remove photo
                 </button>
               )}
             </div>
+
+            {suggestions.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Or pick a picture</span>
+                  <button
+                    type="button"
+                    onClick={shuffle}
+                    className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-brand hover:bg-brand/10"
+                  >
+                    <Shuffle className="size-4" /> Shuffle
+                  </button>
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {suggestions.map((src) => (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => void choose(src)}
+                      aria-label="Use this picture"
+                      aria-pressed={picked === src}
+                      className={`aspect-square overflow-hidden rounded-full ring-offset-2 transition hover:scale-105 dark:ring-offset-stone-900 ${
+                        picked === src ? "ring-2 ring-brand" : ""
+                      }`}
+                    >
+                      <img src={src} alt="" className="size-full" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <label className="block space-y-1.5">
               <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Name</span>
