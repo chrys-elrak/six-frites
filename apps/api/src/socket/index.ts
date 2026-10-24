@@ -11,6 +11,7 @@ import {
   TypingInput,
 } from "@six/shared";
 import { env } from "../env.js";
+import { setActive } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { redisConnection } from "../lib/queue.js";
@@ -72,6 +73,13 @@ export function createSocketServer(http: HttpServer) {
     socket.join([rooms.user(userId), rooms.session(sessionId)]);
 
     socket.on("ping", handle(async () => ({ at: new Date().toISOString() })));
+
+    socket.on("presence", (p) => {
+      void setActive(sessionId, typeof p === "object" && p !== null && (p as { active?: unknown }).active === true).catch(
+        () => null,
+      );
+    });
+    socket.on("disconnect", () => void setActive(sessionId, false).catch(() => null));
 
     socket.on(
       "message:send",

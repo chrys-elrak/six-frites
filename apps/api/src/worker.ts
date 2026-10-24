@@ -4,15 +4,19 @@ import { prisma } from "./lib/prisma.js";
 import {
   MEDIA_QUEUE,
   type MediaJob,
+  PUSH_QUEUE,
+  type PushJob,
   TIMERS_QUEUE,
   type TimerJob,
   mediaQueue,
   redisConnection,
+  pushQueue,
   timersQueue,
 } from "./lib/queue.js";
 import { ensureBucket } from "./lib/storage.js";
 import { processUpload } from "./media/process.js";
 import { expireMessage, purgeMessage } from "./services/messages.js";
+import { deliverPush } from "./services/push.js";
 import { finishUpload, purgeAbandonedUploads, purgeUploads } from "./services/uploads.js";
 
 await ensureBucket();
@@ -35,6 +39,17 @@ const timers = new Worker<TimerJob>(
   },
   { connection: redisConnection(), concurrency: 4, prefix: env.QUEUE_PREFIX },
 );
+const pushes = new Worker<PushJob>(
+  PUSH_QUEUE,
+  async (job) => ({ sent: await deliverPush(job.data.messageId, job.data.userId) }),
+  {
+    connection: redisConnection(),
+    concurrency: 8,
+    prefix: env.QUEUE_PREFIX,
+  },
+);
+pushes.on("failed", (job, err) => console.error(`push for ${job?.data.messageId} failed:`, err.message));
+
 timers.on("failed", (job, err) => console.error(`timer job ${job?.name} failed:`, err.message));
 
 worker.on("failed", async (job, err) => {
@@ -44,12 +59,16 @@ worker.on("failed", async (job, err) => {
   }
 });
 
-await mediaQueue().upsertJobScheduler("purge-abandoned", { every: 60 * 60 * 1000 }, { name: "purge-abandoned", data: { uploadId: "" } });
+await mediaQueue().upsertJobScheduler(
+  "purge-abandoned",
+  { every: 60 * 60 * 1000 },
+  { name: "purge-abandoned", data: { uploadId: "" } },
+);
 console.log("media worker ready");
 
 const shutdown = async () => {
-  await Promise.all([worker.close(), timers.close()]);
-  await Promise.all([mediaQueue().close(), timersQueue().close()]);
+  await Promise.all([worker.close(), timers.close(), pushes.close()]);
+  await Promise.all([mediaQueue().close(), timersQueue().close(), pushQueue().close()]);
   await prisma.$disconnect();
   process.exit(0);
 };

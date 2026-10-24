@@ -9,7 +9,8 @@ import { SettingsPanel } from "@/components/settings-panel";
 import { type Tab, TabBar } from "@/components/tab-bar";
 import { RealtimeProvider } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
-import { primeAudio } from "@/lib/notify";
+import { primeAudio, useNotifyPrefs } from "@/lib/notify";
+import { relinkPush } from "@/lib/push";
 import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
 import { useChats } from "@/lib/chats";
@@ -20,6 +21,17 @@ const tabRoutes: Record<string, Tab> = {
   "/contacts": "contacts",
   "/settings": "settings",
 };
+
+function usePushLinks(signedIn: boolean) {
+  const router = useRouter();
+  useEffect(() => {
+    if (!signedIn || !("serviceWorker" in navigator)) return;
+    if (useNotifyPrefs.getState().push) void relinkPush().catch(() => null);
+    const onMessage = (e: MessageEvent) => e.data?.type === "open" && router.push(e.data.url);
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [signedIn, router]);
+}
 
 function UnreadTitle() {
   const chats = useChats();
@@ -37,6 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const status = useSession((s) => s.status);
   useAppHeight();
   useEffect(primeAudio, []);
+  usePushLinks(status === "authed");
 
   useEffect(() => {
     if (status === "anon") {

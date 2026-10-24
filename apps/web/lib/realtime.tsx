@@ -127,7 +127,11 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     });
     rt.start();
     setRealtime(rt);
+    const presence = () => rt.setPresence(document.visibilityState === "visible");
+    presence();
+    document.addEventListener("visibilitychange", presence);
     return () => {
+      document.removeEventListener("visibilitychange", presence);
       rt.stop();
       setRealtime(null);
     };

@@ -16,6 +16,9 @@ const Env = z.object({
   S3_BUCKET: z.string(),
   S3_ACCESS_KEY: z.string(),
   S3_SECRET_KEY: z.string(),
+  WEB_PUSH_PUBLIC_KEY: z.string().optional(),
+  WEB_PUSH_PRIVATE_KEY: z.string().optional(),
+  WEB_PUSH_SUBJECT: z.string().default("mailto:admin@example.com"),
 });
 
 export const env = Env.parse(process.env);

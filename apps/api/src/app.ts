@@ -19,6 +19,7 @@ import chatRoutes from "./routes/chats.js";
 import inviteRoutes from "./routes/invites.js";
 import meRoutes from "./routes/me.js";
 import sessionRoutes from "./routes/sessions.js";
+import pushRoutes from "./routes/push.js";
 import uploadRoutes from "./routes/uploads.js";
 
 export async function buildApp() {
@@ -65,6 +66,7 @@ export async function buildApp() {
       await v1.register(inviteRoutes);
       await v1.register(chatRoutes);
       await v1.register(uploadRoutes);
+      await v1.register(pushRoutes);
     },
     { prefix: "/v1" },
   );

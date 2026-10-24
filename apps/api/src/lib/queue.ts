@@ -40,3 +40,21 @@ export function timersQueue() {
   });
   return timers;
 }
+
+export interface PushJob {
+  messageId: string;
+  userId: string;
+}
+
+export const PUSH_QUEUE = "push";
+
+let push: Queue<PushJob> | null = null;
+
+export function pushQueue() {
+  push ??= new Queue<PushJob>(PUSH_QUEUE, {
+    connection: redisConnection(),
+    prefix: env.QUEUE_PREFIX,
+    defaultJobOptions: { attempts: 3, backoff: { type: "exponential", delay: 3000 }, removeOnComplete: 1000, removeOnFail: 5000 },
+  });
+  return push;
+}

@@ -107,7 +107,12 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     }
   }
 
+  let active = false;
+  let heartbeat: ReturnType<typeof setInterval> | null = null;
+  const sendPresence = () => socket.connected && socket.emit("presence", { active });
+
   socket.on("connect", async () => {
+    sendPresence();
     syncing = true;
     opts.onStatus?.("syncing");
     try {
@@ -176,7 +181,19 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
       socket.connect();
     },
     stop() {
+      if (heartbeat) clearInterval(heartbeat);
+      heartbeat = null;
       socket.disconnect();
+    },
+    /**
+     * Tells the server whether the app is open and visible, so push notifications skip this device
+     * while it is in use. Call on visibility changes; it keeps itself fresh while active.
+     */
+    setPresence(next: boolean) {
+      active = next;
+      sendPresence();
+      if (heartbeat) clearInterval(heartbeat);
+      heartbeat = next ? setInterval(sendPresence, 30_000) : null;
     },
     /** Sends over the socket when live, otherwise over REST. Safe to retry with the same clientId. */
     async sendMessage(chatId: string, input: SendMessageInput): Promise<MessageDTO> {

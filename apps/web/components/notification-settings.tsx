@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { playChime, unlockAudio, useNotifyPrefs } from "@/lib/notify";
+import { disablePush, enablePush, pushSupported } from "@/lib/push";
 import { Card, SectionTitle } from "./ui";
 
 function Toggle({
@@ -47,6 +48,26 @@ export function NotificationSettings() {
     setPermission("Notification" in window ? Notification.permission : "unsupported");
   }, []);
 
+  const [pushState, setPushState] = useState<"idle" | "working" | "denied" | "unavailable">("idle");
+
+  async function setPush(on: boolean) {
+    setPushState("working");
+    try {
+      if (!on) {
+        await disablePush();
+        prefs.set({ push: false });
+        setPushState("idle");
+        return;
+      }
+      const result = await enablePush();
+      prefs.set({ push: result === "on" });
+      setPushState(result === "on" ? "idle" : result);
+      if ("Notification" in window) setPermission(Notification.permission);
+    } catch {
+      setPushState("idle");
+    }
+  }
+
   async function setSystem(on: boolean) {
     if (!on) return prefs.set({ system: false });
     const result = await Notification.requestPermission();
@@ -79,6 +100,19 @@ export function NotificationSettings() {
           hint="Shows new messages from other chats while you use the app."
           checked={prefs.popups}
           onChange={(on) => prefs.set({ popups: on })}
+        />
+        <Toggle
+          label="When Six Frites is closed"
+          hint={
+            pushState === "unavailable" || !pushSupported()
+              ? "Not available in this browser."
+              : pushState === "denied" || permission === "denied"
+                ? "Blocked in your browser's site settings."
+                : "Get notified even when no Six Frites tab is open."
+          }
+          checked={prefs.push}
+          disabled={pushState === "working" || !pushSupported() || permission === "denied"}
+          onChange={(on) => void setPush(on)}
         />
         <Toggle
           label="System notifications"

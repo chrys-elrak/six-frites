@@ -1,4 +1,4 @@
-import { type ChatDTO, type MessageDTO, maskSpoilers } from "@six/shared";
+import { type ChatDTO, type MessageDTO, previewText } from "@six/shared";
 import { create } from "zustand";
 
 const PREFS_KEY = "six:notifications";
@@ -7,10 +7,11 @@ export interface NotifyPrefs {
   sound: boolean;
   popups: boolean;
   system: boolean;
+  push: boolean;
 }
 
 function loadPrefs(): NotifyPrefs {
-  const defaults = { sound: true, popups: true, system: false };
+  const defaults = { sound: true, popups: true, system: false, push: false };
   try {
     return { ...defaults, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") };
   } catch {
@@ -20,12 +21,12 @@ function loadPrefs(): NotifyPrefs {
 
 /** Notification settings for this device. */
 export const useNotifyPrefs = create<NotifyPrefs & { set: (patch: Partial<NotifyPrefs>) => void }>((set, get) => ({
-  ...(typeof window === "undefined" ? { sound: true, popups: true, system: false } : loadPrefs()),
+  ...(typeof window === "undefined" ? { sound: true, popups: true, system: false, push: false } : loadPrefs()),
   set(patch) {
     set(patch);
-    const { sound, popups, system } = get();
+    const { sound, popups, system, push } = get();
     try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups, system }));
+      localStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups, system, push }));
     } catch {}
   },
 }));
@@ -48,24 +49,6 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
     dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   }),
 );
-
-const kindLabels: Record<Exclude<MessageDTO["type"], "text">, string> = {
-  image: "Photo",
-  video: "Video",
-  video_note: "Video message",
-  voice: "Voice message",
-  file: "File",
-};
-
-/** A one-line, spoiler-safe description of a message for previews and notifications. */
-export function previewText(m: MessageDTO) {
-  if (m.ephemeral) return "Self-destructing message";
-  if (m.deletedAt) return "Message deleted";
-  const caption = m.text ? (m.spoiler && m.type === "text" ? "Spoiler" : maskSpoilers(m.text, m.entities)) : "";
-  if (m.type === "text") return caption;
-  const label = m.type === "file" && m.attachment ? `File: ${m.attachment.name}` : kindLabels[m.type];
-  return caption ? `${label} · ${caption}` : label;
-}
 
 let audio: AudioContext | null = null;
 
@@ -129,6 +112,7 @@ export function notifyIncoming(
   const hidden = document.visibilityState !== "visible";
 
   if (prefs.sound) playChime();
+  if (hidden && prefs.push) return;
   if (hidden && prefs.system && "Notification" in window && Notification.permission === "granted") {
     const n = new Notification(title, { body, icon: sender?.avatarUrl ?? "/icon.svg", tag: m.chatId });
     n.onclick = () => {

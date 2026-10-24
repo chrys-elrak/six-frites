@@ -6489,6 +6489,138 @@
           }
         }
       }
+    },
+    "/v1/push/config": {
+      "get": {
+        "summary": "Public settings for subscribing to push notifications",
+        "tags": [
+          "push"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "webPushPublicKey": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "VAPID key for PushManager.subscribe, or null if Web Push is off"
+                    }
+                  },
+                  "required": [
+                    "webPushPublicKey"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/push-token": {
+      "post": {
+        "summary": "Register this device for push notifications",
+        "tags": [
+          "push"
+        ],
+        "description": "One token per provider per session (signing out removes it). Notifications are skipped while the app is open and visible on that device.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "webpush",
+                      "fcm",
+                      "apns"
+                    ]
+                  },
+                  "token": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000,
+                    "description": "webpush: the JSON PushSubscription; fcm/apns: the device token"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "token"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "enum": [
+                    "null"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Stop push notifications on this device",
+        "tags": [
+          "push"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "webpush",
+                "fcm",
+                "apns"
+              ]
+            },
+            "in": "query",
+            "name": "provider",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "enum": [
+                    "null"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "servers": [

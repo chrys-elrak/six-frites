@@ -16,6 +16,7 @@ import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { timersQueue } from "../lib/queue.js";
+import { queuePush } from "./push.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
 export const messageInclude = { replyTo: true, attachment: true, views: true } satisfies Prisma.MessageInclude;
@@ -137,7 +138,7 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
   if (existing) return toMessageDTO(existing, userId);
 
   try {
-    return await withEvents(async (tx, emit) => {
+    const { dto, recipients } = await withEvents(async (tx, emit) => {
       await assertMember(tx, chatId, userId);
       if (input.replyToId) {
         const original = await tx.message.findFirst({ where: { id: input.replyToId, chatId }, select: { id: true } });
@@ -173,9 +174,12 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
         },
       });
 
-      for (const id of await memberIds(tx, chatId)) emit(id, "message.new", toMessageDTO(message, id));
-      return toMessageDTO(message, userId);
+      const members = await memberIds(tx, chatId);
+      for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
+      return { dto: toMessageDTO(message, userId), recipients: members.filter((id) => id !== userId) };
     });
+    await queuePush(dto.id, recipients).catch((err) => console.error("could not queue push:", err.message));
+    return dto;
   } catch (err) {
     if ((err as { code?: string }).code !== "P2002") throw err;
     const raced = await findByClientId(userId, chatId, input.clientId);
@@ -335,7 +339,7 @@ export async function purgeMessage(messageId: string, cycle: number) {
 
 /** Re-arms an opened self-destructing message so its recipient can open it again. */
 export async function resendMessage(userId: string, messageId: string): Promise<MessageDTO> {
-  return withEvents(async (tx, emit) => {
+  const { dto, recipients, round } = await withEvents(async (tx, emit) => {
     await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
     const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
     if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
@@ -358,8 +362,11 @@ export async function resendMessage(userId: string, messageId: string): Promise<
     await tx.chat.update({ where: { id: m.chatId }, data: { lastMessageAt: new Date() } });
     await notifyMembers(tx, emit, messageId);
     const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
-    return toMessageDTO(fresh, userId);
+    const recipients = (await memberIds(tx, m.chatId)).filter((id) => id !== userId);
+    return { dto: toMessageDTO(fresh, userId), recipients, round: fresh.resendCount };
   });
+  await queuePush(messageId, recipients, `r${round}`).catch((err) => console.error("could not queue push:", err.message));
+  return dto;
 }
 
 /** Opens a message for its recipient, counting the view and starting any self-destruct timer. */

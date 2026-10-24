@@ -7,4 +7,6 @@ export * from "./chats.js";
 export * from "./contacts.js";
 export * from "./sync.js";
 export * from "./uploads.js";
+export * from "./preview.js";
+export * from "./push.js";
 export * from "./socket.js";
