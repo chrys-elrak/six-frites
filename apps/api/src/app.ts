@@ -19,6 +19,7 @@ import chatRoutes from "./routes/chats.js";
 import inviteRoutes from "./routes/invites.js";
 import meRoutes from "./routes/me.js";
 import sessionRoutes from "./routes/sessions.js";
+import uploadRoutes from "./routes/uploads.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -63,6 +64,7 @@ export async function buildApp() {
       await v1.register(sessionRoutes);
       await v1.register(inviteRoutes);
       await v1.register(chatRoutes);
+      await v1.register(uploadRoutes);
     },
     { prefix: "/v1" },
   );

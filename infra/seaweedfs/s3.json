@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "six-dev",
+      "credentials": [{ "accessKey": "six", "secretKey": "six-dev-secret-key" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

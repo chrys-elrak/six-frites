@@ -1103,7 +1103,11 @@
                               "type": {
                                 "type": "string",
                                 "enum": [
-                                  "text"
+                                  "text",
+                                  "image",
+                                  "video",
+                                  "voice",
+                                  "file"
                                 ]
                               },
                               "text": {
@@ -1145,6 +1149,90 @@
                               "spoiler": {
                                 "type": "boolean"
                               },
+                              "attachment": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "image",
+                                      "video",
+                                      "voice",
+                                      "file"
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "processing",
+                                      "ready",
+                                      "failed"
+                                    ]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "mime": {
+                                    "type": "string"
+                                  },
+                                  "size": {
+                                    "type": "integer"
+                                  },
+                                  "url": {
+                                    "type": "string",
+                                    "format": "uri",
+                                    "nullable": true,
+                                    "description": "Signed link to the playable or viewable file, once ready"
+                                  },
+                                  "thumbUrl": {
+                                    "type": "string",
+                                    "format": "uri",
+                                    "nullable": true
+                                  },
+                                  "width": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  },
+                                  "height": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  },
+                                  "durationMs": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  },
+                                  "waveform": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 100
+                                    },
+                                    "nullable": true
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "kind",
+                                  "status",
+                                  "name",
+                                  "mime",
+                                  "size",
+                                  "url",
+                                  "thumbUrl",
+                                  "width",
+                                  "height",
+                                  "durationMs",
+                                  "waveform"
+                                ],
+                                "additionalProperties": false,
+                                "nullable": true
+                              },
                               "replyTo": {
                                 "type": "object",
                                 "properties": {
@@ -1159,7 +1247,11 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
-                                      "text"
+                                      "text",
+                                      "image",
+                                      "video",
+                                      "voice",
+                                      "file"
                                     ]
                                   },
                                   "text": {
@@ -1208,6 +1300,7 @@
                               "text",
                               "entities",
                               "spoiler",
+                              "attachment",
                               "replyTo",
                               "createdAt",
                               "editedAt",
@@ -1398,7 +1491,11 @@
                         "type": {
                           "type": "string",
                           "enum": [
-                            "text"
+                            "text",
+                            "image",
+                            "video",
+                            "voice",
+                            "file"
                           ]
                         },
                         "text": {
@@ -1440,6 +1537,90 @@
                         "spoiler": {
                           "type": "boolean"
                         },
+                        "attachment": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "image",
+                                "video",
+                                "voice",
+                                "file"
+                              ]
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "processing",
+                                "ready",
+                                "failed"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "mime": {
+                              "type": "string"
+                            },
+                            "size": {
+                              "type": "integer"
+                            },
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true,
+                              "description": "Signed link to the playable or viewable file, once ready"
+                            },
+                            "thumbUrl": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true
+                            },
+                            "width": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "height": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "durationMs": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "waveform": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "status",
+                            "name",
+                            "mime",
+                            "size",
+                            "url",
+                            "thumbUrl",
+                            "width",
+                            "height",
+                            "durationMs",
+                            "waveform"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
                         "replyTo": {
                           "type": "object",
                           "properties": {
@@ -1454,7 +1635,11 @@
                             "type": {
                               "type": "string",
                               "enum": [
-                                "text"
+                                "text",
+                                "image",
+                                "video",
+                                "voice",
+                                "file"
                               ]
                             },
                             "text": {
@@ -1503,6 +1688,7 @@
                         "text",
                         "entities",
                         "spoiler",
+                        "attachment",
                         "replyTo",
                         "createdAt",
                         "editedAt",
@@ -1701,7 +1887,11 @@
                         "type": {
                           "type": "string",
                           "enum": [
-                            "text"
+                            "text",
+                            "image",
+                            "video",
+                            "voice",
+                            "file"
                           ]
                         },
                         "text": {
@@ -1743,6 +1933,90 @@
                         "spoiler": {
                           "type": "boolean"
                         },
+                        "attachment": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "image",
+                                "video",
+                                "voice",
+                                "file"
+                              ]
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "processing",
+                                "ready",
+                                "failed"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "mime": {
+                              "type": "string"
+                            },
+                            "size": {
+                              "type": "integer"
+                            },
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true,
+                              "description": "Signed link to the playable or viewable file, once ready"
+                            },
+                            "thumbUrl": {
+                              "type": "string",
+                              "format": "uri",
+                              "nullable": true
+                            },
+                            "width": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "height": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "durationMs": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "waveform": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "status",
+                            "name",
+                            "mime",
+                            "size",
+                            "url",
+                            "thumbUrl",
+                            "width",
+                            "height",
+                            "durationMs",
+                            "waveform"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
                         "replyTo": {
                           "type": "object",
                           "properties": {
@@ -1757,7 +2031,11 @@
                             "type": {
                               "type": "string",
                               "enum": [
-                                "text"
+                                "text",
+                                "image",
+                                "video",
+                                "voice",
+                                "file"
                               ]
                             },
                             "text": {
@@ -1806,6 +2084,7 @@
                         "text",
                         "entities",
                         "spoiler",
+                        "attachment",
                         "replyTo",
                         "createdAt",
                         "editedAt",
@@ -2015,7 +2294,11 @@
                     "type": {
                       "type": "string",
                       "enum": [
-                        "text"
+                        "text",
+                        "image",
+                        "video",
+                        "voice",
+                        "file"
                       ]
                     },
                     "text": {
@@ -2057,6 +2340,90 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "attachment": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready"
+                        },
+                        "thumbUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "width": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "height": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "durationMs": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "waveform": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          },
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
                     "replyTo": {
                       "type": "object",
                       "properties": {
@@ -2071,7 +2438,11 @@
                         "type": {
                           "type": "string",
                           "enum": [
-                            "text"
+                            "text",
+                            "image",
+                            "video",
+                            "voice",
+                            "file"
                           ]
                         },
                         "text": {
@@ -2120,6 +2491,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "attachment",
                     "replyTo",
                     "createdAt",
                     "editedAt",
@@ -2259,7 +2631,11 @@
                           "type": {
                             "type": "string",
                             "enum": [
-                              "text"
+                              "text",
+                              "image",
+                              "video",
+                              "voice",
+                              "file"
                             ]
                           },
                           "text": {
@@ -2301,6 +2677,90 @@
                           "spoiler": {
                             "type": "boolean"
                           },
+                          "attachment": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "image",
+                                  "video",
+                                  "voice",
+                                  "file"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "processing",
+                                  "ready",
+                                  "failed"
+                                ]
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "mime": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "integer"
+                              },
+                              "url": {
+                                "type": "string",
+                                "format": "uri",
+                                "nullable": true,
+                                "description": "Signed link to the playable or viewable file, once ready"
+                              },
+                              "thumbUrl": {
+                                "type": "string",
+                                "format": "uri",
+                                "nullable": true
+                              },
+                              "width": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "height": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "waveform": {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "kind",
+                              "status",
+                              "name",
+                              "mime",
+                              "size",
+                              "url",
+                              "thumbUrl",
+                              "width",
+                              "height",
+                              "durationMs",
+                              "waveform"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
                           "replyTo": {
                             "type": "object",
                             "properties": {
@@ -2315,7 +2775,11 @@
                               "type": {
                                 "type": "string",
                                 "enum": [
-                                  "text"
+                                  "text",
+                                  "image",
+                                  "video",
+                                  "voice",
+                                  "file"
                                 ]
                               },
                               "text": {
@@ -2364,6 +2828,7 @@
                           "text",
                           "entities",
                           "spoiler",
+                          "attachment",
                           "replyTo",
                           "createdAt",
                           "editedAt",
@@ -2409,7 +2874,8 @@
                   "text": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 4000
+                    "maxLength": 4000,
+                    "description": "Required unless attachmentId is set, in which case it is the caption"
                   },
                   "entities": {
                     "type": "array",
@@ -2445,6 +2911,11 @@
                     "maxItems": 100,
                     "description": "Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not."
                   },
+                  "attachmentId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "A completed upload from POST /v1/uploads/{id}/complete"
+                  },
                   "replyToId": {
                     "type": "string",
                     "minLength": 1
@@ -2454,8 +2925,7 @@
                   }
                 },
                 "required": [
-                  "clientId",
-                  "text"
+                  "clientId"
                 ],
                 "additionalProperties": false
               }
@@ -2504,7 +2974,11 @@
                     "type": {
                       "type": "string",
                       "enum": [
-                        "text"
+                        "text",
+                        "image",
+                        "video",
+                        "voice",
+                        "file"
                       ]
                     },
                     "text": {
@@ -2546,6 +3020,90 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "attachment": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready"
+                        },
+                        "thumbUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "width": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "height": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "durationMs": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "waveform": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          },
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
                     "replyTo": {
                       "type": "object",
                       "properties": {
@@ -2560,7 +3118,11 @@
                         "type": {
                           "type": "string",
                           "enum": [
-                            "text"
+                            "text",
+                            "image",
+                            "video",
+                            "voice",
+                            "file"
                           ]
                         },
                         "text": {
@@ -2609,6 +3171,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "attachment",
                     "replyTo",
                     "createdAt",
                     "editedAt",
@@ -3189,7 +3752,11 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
-                                      "text"
+                                      "text",
+                                      "image",
+                                      "video",
+                                      "voice",
+                                      "file"
                                     ]
                                   },
                                   "text": {
@@ -3231,6 +3798,90 @@
                                   "spoiler": {
                                     "type": "boolean"
                                   },
+                                  "attachment": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "image",
+                                          "video",
+                                          "voice",
+                                          "file"
+                                        ]
+                                      },
+                                      "status": {
+                                        "type": "string",
+                                        "enum": [
+                                          "pending",
+                                          "processing",
+                                          "ready",
+                                          "failed"
+                                        ]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "mime": {
+                                        "type": "string"
+                                      },
+                                      "size": {
+                                        "type": "integer"
+                                      },
+                                      "url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "nullable": true,
+                                        "description": "Signed link to the playable or viewable file, once ready"
+                                      },
+                                      "thumbUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "nullable": true
+                                      },
+                                      "width": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "height": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "durationMs": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "waveform": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "nullable": true
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "kind",
+                                      "status",
+                                      "name",
+                                      "mime",
+                                      "size",
+                                      "url",
+                                      "thumbUrl",
+                                      "width",
+                                      "height",
+                                      "durationMs",
+                                      "waveform"
+                                    ],
+                                    "additionalProperties": false,
+                                    "nullable": true
+                                  },
                                   "replyTo": {
                                     "type": "object",
                                     "properties": {
@@ -3245,7 +3896,11 @@
                                       "type": {
                                         "type": "string",
                                         "enum": [
-                                          "text"
+                                          "text",
+                                          "image",
+                                          "video",
+                                          "voice",
+                                          "file"
                                         ]
                                       },
                                       "text": {
@@ -3294,6 +3949,7 @@
                                   "text",
                                   "entities",
                                   "spoiler",
+                                  "attachment",
                                   "replyTo",
                                   "createdAt",
                                   "editedAt",
@@ -3346,7 +4002,11 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
-                                      "text"
+                                      "text",
+                                      "image",
+                                      "video",
+                                      "voice",
+                                      "file"
                                     ]
                                   },
                                   "text": {
@@ -3388,6 +4048,90 @@
                                   "spoiler": {
                                     "type": "boolean"
                                   },
+                                  "attachment": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "image",
+                                          "video",
+                                          "voice",
+                                          "file"
+                                        ]
+                                      },
+                                      "status": {
+                                        "type": "string",
+                                        "enum": [
+                                          "pending",
+                                          "processing",
+                                          "ready",
+                                          "failed"
+                                        ]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "mime": {
+                                        "type": "string"
+                                      },
+                                      "size": {
+                                        "type": "integer"
+                                      },
+                                      "url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "nullable": true,
+                                        "description": "Signed link to the playable or viewable file, once ready"
+                                      },
+                                      "thumbUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "nullable": true
+                                      },
+                                      "width": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "height": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "durationMs": {
+                                        "type": "integer",
+                                        "nullable": true
+                                      },
+                                      "waveform": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "nullable": true
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "kind",
+                                      "status",
+                                      "name",
+                                      "mime",
+                                      "size",
+                                      "url",
+                                      "thumbUrl",
+                                      "width",
+                                      "height",
+                                      "durationMs",
+                                      "waveform"
+                                    ],
+                                    "additionalProperties": false,
+                                    "nullable": true
+                                  },
                                   "replyTo": {
                                     "type": "object",
                                     "properties": {
@@ -3402,7 +4146,11 @@
                                       "type": {
                                         "type": "string",
                                         "enum": [
-                                          "text"
+                                          "text",
+                                          "image",
+                                          "video",
+                                          "voice",
+                                          "file"
                                         ]
                                       },
                                       "text": {
@@ -3451,6 +4199,7 @@
                                   "text",
                                   "entities",
                                   "spoiler",
+                                  "attachment",
                                   "replyTo",
                                   "createdAt",
                                   "editedAt",
@@ -3632,7 +4381,11 @@
                                       "type": {
                                         "type": "string",
                                         "enum": [
-                                          "text"
+                                          "text",
+                                          "image",
+                                          "video",
+                                          "voice",
+                                          "file"
                                         ]
                                       },
                                       "text": {
@@ -3674,6 +4427,90 @@
                                       "spoiler": {
                                         "type": "boolean"
                                       },
+                                      "attachment": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
+                                          "kind": {
+                                            "type": "string",
+                                            "enum": [
+                                              "image",
+                                              "video",
+                                              "voice",
+                                              "file"
+                                            ]
+                                          },
+                                          "status": {
+                                            "type": "string",
+                                            "enum": [
+                                              "pending",
+                                              "processing",
+                                              "ready",
+                                              "failed"
+                                            ]
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          },
+                                          "mime": {
+                                            "type": "string"
+                                          },
+                                          "size": {
+                                            "type": "integer"
+                                          },
+                                          "url": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "nullable": true,
+                                            "description": "Signed link to the playable or viewable file, once ready"
+                                          },
+                                          "thumbUrl": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "nullable": true
+                                          },
+                                          "width": {
+                                            "type": "integer",
+                                            "nullable": true
+                                          },
+                                          "height": {
+                                            "type": "integer",
+                                            "nullable": true
+                                          },
+                                          "durationMs": {
+                                            "type": "integer",
+                                            "nullable": true
+                                          },
+                                          "waveform": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "integer",
+                                              "minimum": 0,
+                                              "maximum": 100
+                                            },
+                                            "nullable": true
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "kind",
+                                          "status",
+                                          "name",
+                                          "mime",
+                                          "size",
+                                          "url",
+                                          "thumbUrl",
+                                          "width",
+                                          "height",
+                                          "durationMs",
+                                          "waveform"
+                                        ],
+                                        "additionalProperties": false,
+                                        "nullable": true
+                                      },
                                       "replyTo": {
                                         "type": "object",
                                         "properties": {
@@ -3688,7 +4525,11 @@
                                           "type": {
                                             "type": "string",
                                             "enum": [
-                                              "text"
+                                              "text",
+                                              "image",
+                                              "video",
+                                              "voice",
+                                              "file"
                                             ]
                                           },
                                           "text": {
@@ -3737,6 +4578,7 @@
                                       "text",
                                       "entities",
                                       "spoiler",
+                                      "attachment",
                                       "replyTo",
                                       "createdAt",
                                       "editedAt",
@@ -3961,6 +4803,410 @@
                     "events",
                     "cursor",
                     "hasMore"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/uploads/presign": {
+      "post": {
+        "summary": "Start an upload (max 25 MB)",
+        "tags": [
+          "uploads"
+        ],
+        "description": "Returns a URL to PUT the file to directly, with the given headers. Then call POST /v1/uploads/{id}/complete.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "image",
+                      "video",
+                      "voice",
+                      "file"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "mime": {
+                    "type": "string",
+                    "pattern": "^[\\w.+-]+\\/[\\w.+-]+$"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 26214400
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "mime",
+                  "size"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "upload": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready"
+                        },
+                        "thumbUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "width": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "height": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "durationMs": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "waveform": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          },
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "PUT the file here within 15 minutes"
+                    },
+                    "headers": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Send these headers with the PUT"
+                    }
+                  },
+                  "required": [
+                    "upload",
+                    "url",
+                    "headers"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/uploads/{id}/complete": {
+      "post": {
+        "summary": "Confirm the file was uploaded and start processing it",
+        "tags": [
+          "uploads"
+        ],
+        "description": "Images, video and voice notes are converted in the background (status `processing`); other files are `ready` at once. A message can be sent with the upload right away.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "image",
+                        "video",
+                        "voice",
+                        "file"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "processing",
+                        "ready",
+                        "failed"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "mime": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true,
+                      "description": "Signed link to the playable or viewable file, once ready"
+                    },
+                    "thumbUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "width": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "height": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "durationMs": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "waveform": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "status",
+                    "name",
+                    "mime",
+                    "size",
+                    "url",
+                    "thumbUrl",
+                    "width",
+                    "height",
+                    "durationMs",
+                    "waveform"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/uploads/{id}": {
+      "get": {
+        "summary": "One of your uploads, with fresh download links",
+        "tags": [
+          "uploads"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "image",
+                        "video",
+                        "voice",
+                        "file"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "processing",
+                        "ready",
+                        "failed"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "mime": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true,
+                      "description": "Signed link to the playable or viewable file, once ready"
+                    },
+                    "thumbUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "width": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "height": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "durationMs": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "waveform": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "status",
+                    "name",
+                    "mime",
+                    "size",
+                    "url",
+                    "thumbUrl",
+                    "width",
+                    "height",
+                    "durationMs",
+                    "waveform"
                   ],
                   "additionalProperties": false
                 }

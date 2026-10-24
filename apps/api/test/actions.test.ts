@@ -147,16 +147,17 @@ describe("custom contact names and photos", () => {
     await send(guest, chatId, "hi");
 
     const res = await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { displayName: "Bestie", photo: PNG_1PX });
-    expect(res.json()).toMatchObject({
-      customName: "Bestie",
-      hasCustomPhoto: true,
-      user: { displayName: "Bestie", avatarUrl: PNG_1PX },
-    });
+    expect(res.json()).toMatchObject({ customName: "Bestie", hasCustomPhoto: true, user: { displayName: "Bestie" } });
+    const photoUrl: string = res.json().user.avatarUrl;
+    expect(photoUrl).toMatch(/^http:\/\/localhost:8333\/six-test\/c\//);
+    const photo = await fetch(photoUrl);
+    expect(photo.headers.get("content-type")).toBe("image/png");
+    expect(Buffer.from(await photo.arrayBuffer()).toString("base64")).toBe(PNG_1PX.split(",")[1]);
 
     const hostChat = await get(host, `/v1/chats/${chatId}`);
     expect(hostChat.title).toBe("Bestie");
     expect(hostChat.members.find((m: { user: { id: string } }) => m.user.id === guest.user.id).user.avatarUrl).toBe(
-      PNG_1PX,
+      photoUrl,
     );
     expect((await get(host, "/v1/me/referrals")).items[0].user.displayName).toBe("Bestie");
     expect(await get(host, `/v1/contacts/${guest.user.id}`)).toMatchObject({ customName: "Bestie", chatId });

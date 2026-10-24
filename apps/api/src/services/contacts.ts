@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import {
   AppError,
@@ -8,16 +9,15 @@ import {
 } from "@six/shared";
 import { type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
+import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
 
 interface Override {
   displayName: string | null;
-  photo: Uint8Array | null;
-  photoMime: string | null;
+  photoKey: string | null;
 }
 
-const photoUrl = (o: Override) =>
-  o.photo && o.photoMime ? `data:${o.photoMime};base64,${Buffer.from(o.photo).toString("base64")}` : null;
+const photoUrl = (o: Override) => (o.photoKey ? presignGet(o.photoKey) : null);
 
 export function applyOverride(user: PublicUser, o: Override | undefined): PublicUser {
   if (!o) return user;
@@ -29,7 +29,7 @@ export async function loadOverrides(db: Tx, ownerId: string, userIds: string[]) 
   const rows = userIds.length
     ? await db.contactOverride.findMany({ where: { ownerId, contactId: { in: userIds } } })
     : [];
-  return new Map(rows.map((r) => [r.contactId, r as Override]));
+  return new Map<string, Override>(rows.map((r) => [r.contactId, r]));
 }
 
 function encodeCursor(name: string, id: string) {
@@ -50,19 +50,18 @@ interface ContactRow {
   originalName: string;
   avatarUrl: string | null;
   customName: string | null;
-  photo: Uint8Array | null;
-  photoMime: string | null;
+  photoKey: string | null;
   name: string;
 }
 
 function toContactDTO(r: ContactRow): ContactDTO {
-  const o = { displayName: r.customName, photo: r.photo, photoMime: r.photoMime };
+  const o = { displayName: r.customName, photoKey: r.photoKey };
   return {
     user: applyOverride({ id: r.id, displayName: r.originalName, avatarUrl: r.avatarUrl }, o),
     chatId: r.chatId,
     originalName: r.originalName,
     customName: r.customName,
-    hasCustomPhoto: r.photo !== null,
+    hasCustomPhoto: r.photoKey !== null,
   };
 }
 
@@ -72,7 +71,7 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
   return prisma.$queryRaw<ContactRow[]>`
     SELECT * FROM (
       SELECT cm."chatId", u.id, u."displayName" AS "originalName", u."avatarUrl",
-             o."displayName" AS "customName", o.photo, o."photoMime",
+             o."displayName" AS "customName", o."photoKey",
              COALESCE(o."displayName", u."displayName") AS name
       FROM "ChatMember" cm
       JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct'
@@ -121,30 +120,41 @@ async function getContact(userId: string, contactId: string) {
 
 function parsePhoto(dataUrl: string) {
   const [meta, data] = dataUrl.split(",", 2) as [string, string];
-  return { photoMime: meta.slice(5, meta.indexOf(";")), photo: Buffer.from(data, "base64") };
+  const mime = meta.slice(5, meta.indexOf(";"));
+  return { mime, bytes: Buffer.from(data, "base64"), ext: mime.split("/")[1] === "jpeg" ? "jpg" : mime.split("/")[1]! };
 }
 
 /** Sets or clears the name and photo only `ownerId` sees for this contact. */
 export async function updateContact(ownerId: string, contactId: string, input: UpdateContactInput) {
   const contact = await getContact(ownerId, contactId);
+  const previousKey = contact.photoKey;
+
+  let photoKey: string | null | undefined;
+  if (input.photo === null) photoKey = null;
+  else if (input.photo !== undefined) {
+    const photo = parsePhoto(input.photo);
+    photoKey = `c/${ownerId}/${contactId}/${randomUUID()}.${photo.ext}`;
+    await putObject(photoKey, photo.bytes, photo.mime);
+  }
 
   await withEvents(async (tx, emit) => {
     const data = {
       ...(input.displayName !== undefined && { displayName: input.displayName }),
-      ...(input.photo !== undefined &&
-        (input.photo === null ? { photo: null, photoMime: null } : parsePhoto(input.photo))),
+      ...(photoKey !== undefined && { photoKey }),
     };
     const saved = await tx.contactOverride.upsert({
       where: { ownerId_contactId: { ownerId, contactId } },
       create: { ownerId, contactId, ...data },
       update: data,
     });
-    if (saved.displayName === null && saved.photo === null) {
+    if (saved.displayName === null && saved.photoKey === null) {
       await tx.contactOverride.delete({ where: { ownerId_contactId: { ownerId, contactId } } });
     }
-
     emit(ownerId, "chat.updated", await getChat(ownerId, contact.chatId, tx));
   });
 
+  if (photoKey !== undefined && previousKey && previousKey !== photoKey) {
+    await deleteObjects([previousKey]).catch(() => null);
+  }
   return toContactDTO(await getContact(ownerId, contactId));
 }

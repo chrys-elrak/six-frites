@@ -9,6 +9,12 @@ const Env = z.object({
   REDIS_URL: z.string().default("redis://localhost:6379"),
   GOOGLE_CLIENT_IDS: z.string().transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
   JWT_SECRET: z.string().min(32),
+  S3_ENDPOINT: z.string().url(),
+  S3_PUBLIC_ENDPOINT: z.string().url(),
+  S3_REGION: z.string().default("us-east-1"),
+  S3_BUCKET: z.string(),
+  S3_ACCESS_KEY: z.string(),
+  S3_SECRET_KEY: z.string(),
 });
 
 export const env = Env.parse(process.env);

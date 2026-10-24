@@ -642,7 +642,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text";
+                                    type: "text" | "image" | "video" | "voice" | "file";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -651,11 +651,32 @@ export interface paths {
                                         length: number;
                                     }[];
                                     spoiler: boolean;
+                                    attachment: {
+                                        id: string;
+                                        /** @enum {string} */
+                                        kind: "image" | "video" | "voice" | "file";
+                                        /** @enum {string} */
+                                        status: "pending" | "processing" | "ready" | "failed";
+                                        name: string;
+                                        mime: string;
+                                        size: number;
+                                        /**
+                                         * Format: uri
+                                         * @description Signed link to the playable or viewable file, once ready
+                                         */
+                                        url: string | null;
+                                        /** Format: uri */
+                                        thumbUrl: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                        durationMs: number | null;
+                                        waveform: number[] | null;
+                                    } | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text";
+                                        type: "text" | "image" | "video" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
                                         deleted: boolean;
@@ -741,7 +762,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text";
+                                type: "text" | "image" | "video" | "voice" | "file";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -750,11 +771,32 @@ export interface paths {
                                     length: number;
                                 }[];
                                 spoiler: boolean;
+                                attachment: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    kind: "image" | "video" | "voice" | "file";
+                                    /** @enum {string} */
+                                    status: "pending" | "processing" | "ready" | "failed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                } | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text";
+                                    type: "text" | "image" | "video" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
                                     deleted: boolean;
@@ -863,7 +905,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text";
+                                type: "text" | "image" | "video" | "voice" | "file";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -872,11 +914,32 @@ export interface paths {
                                     length: number;
                                 }[];
                                 spoiler: boolean;
+                                attachment: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    kind: "image" | "video" | "voice" | "file";
+                                    /** @enum {string} */
+                                    status: "pending" | "processing" | "ready" | "failed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                } | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text";
+                                    type: "text" | "image" | "video" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
                                     deleted: boolean;
@@ -954,7 +1017,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text";
+                            type: "text" | "image" | "video" | "voice" | "file";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -963,11 +1026,32 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "image" | "video" | "voice" | "file";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text";
+                                type: "text" | "image" | "video" | "voice" | "file";
                                 text: string | null;
                                 spoiler: boolean;
                                 deleted: boolean;
@@ -1063,7 +1147,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text";
+                                type: "text" | "image" | "video" | "voice" | "file";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1072,11 +1156,32 @@ export interface paths {
                                     length: number;
                                 }[];
                                 spoiler: boolean;
+                                attachment: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    kind: "image" | "video" | "voice" | "file";
+                                    /** @enum {string} */
+                                    status: "pending" | "processing" | "ready" | "failed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                } | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text";
+                                    type: "text" | "image" | "video" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
                                     deleted: boolean;
@@ -1112,7 +1217,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         clientId: string;
-                        text: string;
+                        /** @description Required unless attachmentId is set, in which case it is the caption */
+                        text?: string;
                         /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
                         entities?: {
                             /** @enum {string} */
@@ -1120,6 +1226,8 @@ export interface paths {
                             offset: number;
                             length: number;
                         }[];
+                        /** @description A completed upload from POST /v1/uploads/{id}/complete */
+                        attachmentId?: string;
                         replyToId?: string;
                         spoiler?: boolean;
                     };
@@ -1138,7 +1246,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text";
+                            type: "text" | "image" | "video" | "voice" | "file";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1147,11 +1255,32 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "image" | "video" | "voice" | "file";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text";
+                                type: "text" | "image" | "video" | "voice" | "file";
                                 text: string | null;
                                 spoiler: boolean;
                                 deleted: boolean;
@@ -1471,7 +1600,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text";
+                                    type: "text" | "image" | "video" | "voice" | "file";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -1480,11 +1609,32 @@ export interface paths {
                                         length: number;
                                     }[];
                                     spoiler: boolean;
+                                    attachment: {
+                                        id: string;
+                                        /** @enum {string} */
+                                        kind: "image" | "video" | "voice" | "file";
+                                        /** @enum {string} */
+                                        status: "pending" | "processing" | "ready" | "failed";
+                                        name: string;
+                                        mime: string;
+                                        size: number;
+                                        /**
+                                         * Format: uri
+                                         * @description Signed link to the playable or viewable file, once ready
+                                         */
+                                        url: string | null;
+                                        /** Format: uri */
+                                        thumbUrl: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                        durationMs: number | null;
+                                        waveform: number[] | null;
+                                    } | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text";
+                                        type: "text" | "image" | "video" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
                                         deleted: boolean;
@@ -1507,7 +1657,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text";
+                                    type: "text" | "image" | "video" | "voice" | "file";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -1516,11 +1666,32 @@ export interface paths {
                                         length: number;
                                     }[];
                                     spoiler: boolean;
+                                    attachment: {
+                                        id: string;
+                                        /** @enum {string} */
+                                        kind: "image" | "video" | "voice" | "file";
+                                        /** @enum {string} */
+                                        status: "pending" | "processing" | "ready" | "failed";
+                                        name: string;
+                                        mime: string;
+                                        size: number;
+                                        /**
+                                         * Format: uri
+                                         * @description Signed link to the playable or viewable file, once ready
+                                         */
+                                        url: string | null;
+                                        /** Format: uri */
+                                        thumbUrl: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                        durationMs: number | null;
+                                        waveform: number[] | null;
+                                    } | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text";
+                                        type: "text" | "image" | "video" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
                                         deleted: boolean;
@@ -1576,7 +1747,7 @@ export interface paths {
                                         senderId: string;
                                         clientId: string;
                                         /** @enum {string} */
-                                        type: "text";
+                                        type: "text" | "image" | "video" | "voice" | "file";
                                         text: string | null;
                                         entities: {
                                             /** @enum {string} */
@@ -1585,11 +1756,32 @@ export interface paths {
                                             length: number;
                                         }[];
                                         spoiler: boolean;
+                                        attachment: {
+                                            id: string;
+                                            /** @enum {string} */
+                                            kind: "image" | "video" | "voice" | "file";
+                                            /** @enum {string} */
+                                            status: "pending" | "processing" | "ready" | "failed";
+                                            name: string;
+                                            mime: string;
+                                            size: number;
+                                            /**
+                                             * Format: uri
+                                             * @description Signed link to the playable or viewable file, once ready
+                                             */
+                                            url: string | null;
+                                            /** Format: uri */
+                                            thumbUrl: string | null;
+                                            width: number | null;
+                                            height: number | null;
+                                            durationMs: number | null;
+                                            waveform: number[] | null;
+                                        } | null;
                                         replyTo: {
                                             id: string;
                                             senderId: string;
                                             /** @enum {string} */
-                                            type: "text";
+                                            type: "text" | "image" | "video" | "voice" | "file";
                                             text: string | null;
                                             spoiler: boolean;
                                             deleted: boolean;
@@ -1649,6 +1841,205 @@ export interface paths {
                             })[];
                             cursor: string;
                             hasMore: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/uploads/presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start an upload (max 25 MB)
+         * @description Returns a URL to PUT the file to directly, with the given headers. Then call POST /v1/uploads/{id}/complete.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        kind: "image" | "video" | "voice" | "file";
+                        name: string;
+                        mime: string;
+                        size: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            upload: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "image" | "video" | "voice" | "file";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            };
+                            /**
+                             * Format: uri
+                             * @description PUT the file here within 15 minutes
+                             */
+                            url: string;
+                            /** @description Send these headers with the PUT */
+                            headers: {
+                                [key: string]: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/uploads/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm the file was uploaded and start processing it
+         * @description Images, video and voice notes are converted in the background (status `processing`); other files are `ready` at once. A message can be sent with the upload right away.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            kind: "image" | "video" | "voice" | "file";
+                            /** @enum {string} */
+                            status: "pending" | "processing" | "ready" | "failed";
+                            name: string;
+                            mime: string;
+                            size: number;
+                            /**
+                             * Format: uri
+                             * @description Signed link to the playable or viewable file, once ready
+                             */
+                            url: string | null;
+                            /** Format: uri */
+                            thumbUrl: string | null;
+                            width: number | null;
+                            height: number | null;
+                            durationMs: number | null;
+                            waveform: number[] | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/uploads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of your uploads, with fresh download links */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            kind: "image" | "video" | "voice" | "file";
+                            /** @enum {string} */
+                            status: "pending" | "processing" | "ready" | "failed";
+                            name: string;
+                            mime: string;
+                            size: number;
+                            /**
+                             * Format: uri
+                             * @description Signed link to the playable or viewable file, once ready
+                             */
+                            url: string | null;
+                            /** Format: uri */
+                            thumbUrl: string | null;
+                            width: number | null;
+                            height: number | null;
+                            durationMs: number | null;
+                            waveform: number[] | null;
                         };
                     };
                 };

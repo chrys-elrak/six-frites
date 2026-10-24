@@ -23,6 +23,7 @@ model User {
   memberships    ChatMember[]
   messages       Message[]
   hiddenMessages MessageHidden[]
+  uploads        Upload[]
   contactsSaved  ContactOverride[] @relation("owner")
   savedAs        ContactOverride[] @relation("contact")
 }
@@ -132,6 +133,7 @@ model Message {
   text      String?
   entities  Json?
   spoiler   Boolean   @default(false)
+  attachmentId String?
   replyToId String?
   createdAt DateTime  @default(now())
   editedAt  DateTime?
@@ -140,6 +142,7 @@ model Message {
   chat    Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
   sender  User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
   replyTo Message?        @relation("replies", fields: [replyToId], references: [id], onDelete: SetNull)
+  attachment Upload?      @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
   replies Message[]       @relation("replies")
   hidden  MessageHidden[]
 
@@ -163,12 +166,38 @@ model ContactOverride {
   ownerId     String
   contactId   String
   displayName String?
-  photo       Bytes?
-  photoMime   String?
+  photoKey    String?
   updatedAt   DateTime @updatedAt
 
   owner   User @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
   contact User @relation("contact", fields: [contactId], references: [id], onDelete: Cascade)
 
   @@id([ownerId, contactId])
+}
+
+model Upload {
+  id         String   @id @default(cuid())
+  ownerId    String
+  kind       String
+  status     String   @default("pending")
+  name       String
+  mime       String
+  size       Int
+  key        String   @unique
+  mainKey    String?
+  mainMime   String?
+  thumbKey   String?
+  width      Int?
+  height     Int?
+  durationMs Int?
+  waveform   Json?
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([ownerId])
+  @@index([status, createdAt])
 }

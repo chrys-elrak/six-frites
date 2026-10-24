@@ -13,8 +13,9 @@ import {
 import { type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
+import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
-export const messageInclude = { replyTo: true } satisfies Prisma.MessageInclude;
+export const messageInclude = { replyTo: true, attachment: true } satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
 
 const SNIPPET = 200;
@@ -34,6 +35,7 @@ export function toMessageDTO(m: MessageRow): MessageDTO {
     text: m.deletedAt ? null : m.text,
     entities: m.deletedAt ? [] : entitiesOf(m),
     spoiler: m.spoiler,
+    attachment: m.deletedAt || !m.attachment ? null : toAttachmentDTO(m.attachment),
     replyTo: r
       ? {
           id: r.id,
@@ -95,15 +97,17 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
         const original = await tx.message.findFirst({ where: { id: input.replyToId, chatId }, select: { id: true } });
         if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
       }
+      const upload = input.attachmentId ? await claimForMessage(tx, userId, input.attachmentId) : null;
 
       const message = await tx.message.create({
         data: {
           chatId,
           senderId: userId,
           clientId: input.clientId,
-          type: "text",
-          text: input.text,
+          type: upload?.kind ?? "text",
+          text: input.text ?? null,
           entities: storedEntities(input.entities),
+          attachmentId: upload?.id ?? null,
           spoiler: input.spoiler ?? false,
           replyToId: input.replyToId ?? null,
         },
@@ -141,7 +145,7 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
-    if (message.deletedAt || message.type !== "text") throw new AppError("MESSAGE_NOT_EDITABLE");
+    if (message.deletedAt) throw new AppError("MESSAGE_NOT_EDITABLE");
     const entities = input.entities ?? [];
     if (message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
       return toMessageDTO(message);
@@ -174,7 +178,7 @@ export async function scrubMessageEvents(tx: Tx, messageIds: string[]) {
 }
 
 export async function deleteMessages(userId: string, { ids, scope }: DeleteMessagesQuery) {
-  await withEvents(async (tx, emit) => {
+  const detached = await withEvents(async (tx, emit): Promise<string[]> => {
     const messages = await tx.message.findMany({ where: { id: { in: ids } } });
     const chatIds = [...new Set(messages.map((m) => m.chatId))];
     const memberships = await tx.chatMember.count({ where: { userId, chatId: { in: chatIds } } });
@@ -193,7 +197,7 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
       const tombstones = messages.filter((m) => m.deletedAt);
       await tx.message.updateMany({
         where: { id: { in: live.map((m) => m.id) } },
-        data: { deletedAt: new Date(), text: null, entities: Prisma.DbNull },
+        data: { deletedAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
       });
       await scrubMessageEvents(tx, live.map((m) => m.id));
 
@@ -212,7 +216,7 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
           if (removed.length) emit(id, "message.deleted", { chatId, messageIds: removed, scope: "me" });
         }
       }
-      return;
+      return live.map((m) => m.attachmentId).filter((a): a is string => !!a);
     }
 
     await tx.messageHidden.createMany({ data: ids.map((messageId) => ({ userId, messageId })), skipDuplicates: true });
@@ -220,5 +224,7 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
       const data = { chatId, messageIds: messages.filter((m) => m.chatId === chatId).map((m) => m.id), scope };
       emit(userId, "message.deleted", data);
     }
+    return [];
   });
+  await purgeUploads(detached);
 }

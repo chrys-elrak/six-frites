@@ -13,6 +13,7 @@ import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { assertMember, messageInclude, scrubMessageEvents, toMessageDTO, visibleTo } from "./messages.js";
 import { applyOverride, loadOverrides } from "./contacts.js";
+import { purgeUploads } from "./uploads.js";
 import { toPublicUser } from "./users.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
@@ -204,7 +205,7 @@ export async function updateChat(userId: string, chatId: string, input: UpdateCh
  * chat can only be created through an invite and removing it would cut the two people off.
  */
 export async function deleteChat(userId: string, chatId: string, scope: DeleteScope) {
-  await withEvents(async (tx, emit) => {
+  const detached = await withEvents(async (tx, emit): Promise<string[]> => {
     await assertMember(tx, chatId, userId);
 
     if (scope === "me") {
@@ -213,10 +214,11 @@ export async function deleteChat(userId: string, chatId: string, scope: DeleteSc
         data: { hidden: true, pinned: false, clearedAt: new Date() },
       });
       emit(userId, "chat.deleted", { chatId, scope });
-      return;
+      return [];
     }
 
-    const ids = (await tx.message.findMany({ where: { chatId }, select: { id: true } })).map((m) => m.id);
+    const doomed = await tx.message.findMany({ where: { chatId }, select: { id: true, attachmentId: true } });
+    const ids = doomed.map((m) => m.id);
     await scrubMessageEvents(tx, ids);
     await tx.message.deleteMany({ where: { chatId } });
     await tx.chatMember.updateMany({ where: { chatId }, data: { lastReadMessageId: null } });
@@ -226,5 +228,7 @@ export async function deleteChat(userId: string, chatId: string, scope: DeleteSc
       emit(m.userId, "chat.deleted", { chatId, scope });
       emit(m.userId, "chat.updated", await getChat(m.userId, chatId, tx));
     }
+    return doomed.map((m) => m.attachmentId).filter((a): a is string => !!a);
   });
+  await purgeUploads(detached);
 }

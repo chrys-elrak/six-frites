@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { Id, IsoDate } from "./common.js";
+import { AttachmentDTO } from "./uploads.js";
 import { PublicUser } from "./invites.js";
 
-export const MessageType = z.enum(["text"]);
+export const MessageType = z.enum(["text", "image", "video", "voice", "file"]);
 export type MessageType = z.infer<typeof MessageType>;
 
 export const EntityType = z.enum(["bold", "italic", "strike", "code", "spoiler"]);
@@ -69,6 +70,7 @@ export const MessageDTO = z.object({
   text: z.string().nullable(),
   entities: z.array(MessageEntity),
   spoiler: z.boolean(),
+  attachment: AttachmentDTO.nullable(),
   replyTo: ReplyPreview.nullable(),
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
@@ -109,12 +111,17 @@ export type MessagesDeletedDTO = z.infer<typeof MessagesDeletedDTO>;
 export const SendMessageInput = z
   .object({
     clientId: z.string().min(1).max(64),
-    text: MessageText,
+    text: MessageText.optional().describe("Required unless attachmentId is set, in which case it is the caption"),
     entities: Entities.optional(),
+    attachmentId: Id.optional().describe("A completed upload from POST /v1/uploads/{id}/complete"),
     replyToId: Id.optional(),
     spoiler: z.boolean().optional(),
   })
-  .refine((v) => entitiesFit(v.text, v.entities), { message: "Entities fall outside the text", path: ["entities"] });
+  .refine((v) => v.text !== undefined || v.attachmentId !== undefined, {
+    message: "Send text, an attachment, or both",
+    path: ["text"],
+  })
+  .refine((v) => entitiesFit(v.text ?? "", v.entities), { message: "Entities fall outside the text", path: ["entities"] });
 export type SendMessageInput = z.infer<typeof SendMessageInput>;
 
 export const ChatMemberDTO = z.object({
