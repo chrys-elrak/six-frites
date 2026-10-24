@@ -2,12 +2,13 @@
 
 import { unwrap } from "@six/sdk";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
-import { Search, UserPlus, Users } from "lucide-react";
+import { Pencil, Search, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { shareInvite } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
+import { ContactEditor } from "./contact-editor";
 
 export const contactKeys = { all: ["contacts"] as const, list: (q: string) => ["contacts", q] as const };
 
@@ -24,6 +25,7 @@ export function ContactList() {
   const [query, setQuery] = useState("");
   const q = useDebounced(query.trim());
   const [flash, setFlash] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const contacts = useInfiniteQuery({
     queryKey: contactKeys.list(q),
@@ -83,15 +85,28 @@ export function ContactList() {
         )}
 
         {items.map((c) => (
-          <Link
-            key={c.chatId}
-            href={`/chats/${c.chatId}`}
-            className="flex items-center gap-3 px-4 py-2.5 hover:bg-stone-100 active:bg-stone-100 dark:hover:bg-stone-900 dark:active:bg-stone-900"
-          >
-            <Avatar user={c.user} />
-            <span className="min-w-0 flex-1 truncate font-medium">{c.user.displayName}</span>
-          </Link>
+          <div key={c.chatId} className="flex items-center hover:bg-stone-100 dark:hover:bg-stone-900">
+            <Link
+              href={`/chats/${c.chatId}`}
+              className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-4 active:bg-stone-100 dark:active:bg-stone-900"
+            >
+              <Avatar user={c.user} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{c.user.displayName}</span>
+                {c.customName && <span className="block truncate text-xs text-stone-500">{c.originalName}</span>}
+              </span>
+            </Link>
+            <button
+              onClick={() => setEditing(c.user.id)}
+              aria-label={`Edit ${c.user.displayName}`}
+              className="mr-2 grid size-9 shrink-0 place-items-center rounded-full text-stone-400 hover:bg-stone-200 hover:text-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-200"
+            >
+              <Pencil className="size-4" />
+            </button>
+          </div>
         ))}
+
+        {editing && <ContactEditor userId={editing} onClose={() => setEditing(null)} />}
 
         {contacts.hasNextPage && (
           <button

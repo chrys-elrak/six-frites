@@ -7,6 +7,7 @@ import {
   ChatReadDTO,
   ContactDTO,
   ContactListQuery,
+  UpdateContactInput,
   DeleteChatQuery,
   DeleteMessagesQuery,
   EditMessageInput,
@@ -22,7 +23,7 @@ import {
   page,
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
-import { listContacts } from "../services/contacts.js";
+import { findContact, listContacts, updateContact } from "../services/contacts.js";
 import { deleteMessages, editMessage, listMessages, sendMessage } from "../services/messages.js";
 import { sync } from "../services/sync.js";
 
@@ -201,6 +202,39 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => listContacts(req.auth.userId, req.query),
+  );
+
+  app.get(
+    "/contacts/:userId",
+    {
+      schema: {
+        tags: ["contacts"],
+        summary: "One contact, with your custom name and photo",
+        security,
+        params: z.object({ userId: Id }),
+        response: { 200: ContactDTO },
+      },
+    },
+    (req) => findContact(req.auth.userId, req.params.userId),
+  );
+
+  app.patch(
+    "/contacts/:userId",
+    {
+      config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+      bodyLimit: 128 * 1024,
+      schema: {
+        tags: ["contacts"],
+        summary: "Set the name and/or photo you see for a contact",
+        description:
+          "Only you see these. `photo` is a base64 JPEG, PNG or WebP data URL of at most 64 KB; send null to go back to their own.",
+        security,
+        params: z.object({ userId: Id }),
+        body: UpdateContactInput,
+        response: { 200: ContactDTO },
+      },
+    },
+    (req) => updateContact(req.auth.userId, req.params.userId, req.body),
   );
 
   app.get(

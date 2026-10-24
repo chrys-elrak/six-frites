@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChatDTO } from "@six/shared";
-import { Archive, Ban, BellOff, ChevronLeft, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
+import { Archive, Ban, BellOff, ChevronLeft, EyeOff, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,7 +29,13 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   return (
     <>
       {m.senderId === meId && "You: "}
-      {m.text}
+      {m.spoiler ? (
+        <span className="inline-flex items-center gap-1 italic">
+          <EyeOff className="size-3.5" /> Spoiler
+        </span>
+      ) : (
+        m.text
+      )}
     </>
   );
 }
@@ -72,7 +78,9 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
             >
               {typing ? "typing…" : <Preview chat={chat} meId={meId} />}
             </p>
-            {chat.pinned && !unread && <Pin aria-label="Pinned" className="size-3.5 shrink-0 rotate-45 text-stone-400" />}
+            {chat.pinned && !unread && (
+              <Pin aria-label="Pinned" className="size-3.5 shrink-0 rotate-45 text-stone-400" />
+            )}
             {unread && (
               <span
                 className={`grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold ${
@@ -152,7 +160,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         {chats.isSuccess && visible.length === 0 && (archived || archivedCount === 0) && (
           <div className="flex flex-col items-center gap-3 p-8 text-center">
             <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
-              {archived ? <Archive className="size-8" strokeWidth={1.6} /> : <MessageCircle className="size-8" strokeWidth={1.6} />}
+              {archived ? (
+                <Archive className="size-8" strokeWidth={1.6} />
+              ) : (
+                <MessageCircle className="size-8" strokeWidth={1.6} />
+              )}
             </span>
             <p className="font-medium">{archived ? "No archived chats" : "No conversations yet"}</p>
             {!archived && (

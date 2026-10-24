@@ -10,6 +10,7 @@ export const ReplyPreview = z.object({
   senderId: Id,
   type: MessageType,
   text: z.string().nullable(),
+  spoiler: z.boolean(),
   deleted: z.boolean(),
 });
 export type ReplyPreview = z.infer<typeof ReplyPreview>;
@@ -21,6 +22,7 @@ export const MessageDTO = z.object({
   clientId: z.string(),
   type: MessageType,
   text: z.string().nullable(),
+  spoiler: z.boolean(),
   replyTo: ReplyPreview.nullable(),
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
@@ -60,6 +62,7 @@ export const SendMessageInput = z.object({
   clientId: z.string().min(1).max(64),
   text: MessageText,
   replyToId: Id.optional(),
+  spoiler: z.boolean().optional(),
 });
 export type SendMessageInput = z.infer<typeof SendMessageInput>;
 

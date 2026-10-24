@@ -36,14 +36,39 @@ export async function editMessage(qc: QueryClient, messageId: string, text: stri
   return m;
 }
 
-export async function deleteMessage(qc: QueryClient, m: MessageDTO, scope: DeleteScope) {
-  applyDeleted(qc, m.chatId, [m.id], m.deletedAt ? "me" : scope);
+export async function deleteMessages(qc: QueryClient, chatId: string, messages: MessageDTO[], scope: DeleteScope) {
+  if (!messages.length) return;
+  const tombstones = messages.filter((m) => m.deletedAt).map((m) => m.id);
+  const live = messages.filter((m) => !m.deletedAt).map((m) => m.id);
+  if (live.length) applyDeleted(qc, chatId, live, scope);
+  if (tombstones.length) applyDeleted(qc, chatId, tombstones, "me");
   try {
-    unwrap(await six.api.DELETE("/v1/messages", { params: { query: { ids: m.id, scope } } }));
+    const ids = messages.map((m) => m.id).join(",");
+    unwrap(await six.api.DELETE("/v1/messages", { params: { query: { ids, scope } } }));
   } catch (err) {
-    await qc.invalidateQueries({ queryKey: chatKeys.messages(m.chatId) });
+    await qc.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
     throw err;
   }
+}
+
+export function deleteMessage(qc: QueryClient, m: MessageDTO, scope: DeleteScope) {
+  return deleteMessages(qc, m.chatId, [m], scope);
+}
+
+export async function updateContact(
+  qc: QueryClient,
+  userId: string,
+  input: { displayName?: string | null; photo?: string | null },
+) {
+  const contact = unwrap(
+    await six.api.PATCH("/v1/contacts/{userId}", { params: { path: { userId } }, body: input }),
+  );
+  void qc.invalidateQueries({ queryKey: ["contacts"] });
+  void qc.invalidateQueries({ queryKey: ["contact", userId] });
+  void qc.invalidateQueries({ queryKey: ["referrals"] });
+  void qc.invalidateQueries({ queryKey: chatKeys.lists });
+  void qc.invalidateQueries({ queryKey: chatKeys.chat(contact.chatId) });
+  return contact;
 }
 
 export async function updateChatSettings(

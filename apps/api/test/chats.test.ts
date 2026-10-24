@@ -14,9 +14,8 @@ describe("chats over REST", () => {
   it("connects both people when an invite is used, but lists the chat only once someone writes", async () => {
     const { host, guest, chatId } = await makeFriends();
     const guestContacts = await get(guest, "/v1/contacts");
-    expect(guestContacts.items).toEqual([
-      { user: expect.objectContaining({ id: host.user.id }), chatId },
-    ]);
+    expect(guestContacts.items).toHaveLength(1);
+    expect(guestContacts.items[0]).toMatchObject({ user: { id: host.user.id }, chatId, customName: null });
     expect((await get(guest, "/v1/chats")).items).toEqual([]);
     expect((await get(guest, `/v1/chats/${chatId}`)).members).toHaveLength(2);
 

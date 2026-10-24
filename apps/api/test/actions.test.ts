@@ -138,6 +138,79 @@ describe("contacts", () => {
   });
 });
 
+const PNG_1PX =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+describe("custom contact names and photos", () => {
+  it("are applied only for the person who set them", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await send(guest, chatId, "hi");
+
+    const res = await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { displayName: "Bestie", photo: PNG_1PX });
+    expect(res.json()).toMatchObject({
+      customName: "Bestie",
+      hasCustomPhoto: true,
+      user: { displayName: "Bestie", avatarUrl: PNG_1PX },
+    });
+
+    const hostChat = await get(host, `/v1/chats/${chatId}`);
+    expect(hostChat.title).toBe("Bestie");
+    expect(hostChat.members.find((m: { user: { id: string } }) => m.user.id === guest.user.id).user.avatarUrl).toBe(
+      PNG_1PX,
+    );
+    expect((await get(host, "/v1/me/referrals")).items[0].user.displayName).toBe("Bestie");
+    expect(await get(host, `/v1/contacts/${guest.user.id}`)).toMatchObject({ customName: "Bestie", chatId });
+
+    const guestChat = await get(guest, `/v1/chats/${chatId}`);
+    const guestSelf = guestChat.members.find((m: { user: { id: string } }) => m.user.id === guest.user.id);
+    expect(guestSelf.user.displayName).not.toBe("Bestie");
+
+    const reset = await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { displayName: null, photo: null });
+    expect(reset.json()).toMatchObject({ customName: null, hasCustomPhoto: false });
+    expect((await get(host, `/v1/chats/${chatId}`)).title).toBe(reset.json().originalName);
+  });
+
+  it("sorts and searches contacts by the name you gave them", async () => {
+    const host = await signUp("sorter");
+    const ids: string[] = [];
+    for (const name of ["Mia", "Noah"]) {
+      const invite = await call(host, "POST", "/v1/invites", {});
+      ids.push((await signUp(name, { inviteCode: invite.json().code })).user.id);
+    }
+    await call(host, "PATCH", `/v1/contacts/${ids[1]}`, { displayName: "aaa Brother" });
+    const list = await get(host, "/v1/contacts");
+    expect(list.items.map((c: { user: { id: string } }) => c.user.id)).toEqual([ids[1], ids[0]]);
+    expect((await get(host, "/v1/contacts?q=brother")).items).toHaveLength(1);
+    expect((await get(host, "/v1/contacts?q=noah")).items[0].customName).toBe("aaa Brother");
+  });
+
+  it("rejects strangers and bad photos", async () => {
+    const me = await signUp("picky");
+    const stranger = await signUp("nobody");
+    const notContact = await call(me, "PATCH", `/v1/contacts/${stranger.user.id}`, { displayName: "x" });
+    expect(notContact.json().error.code).toBe("CONTACT_NOT_FOUND");
+
+    const { host, guest } = await makeFriends();
+    const svg = await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { photo: "data:image/svg+xml;base64,PHN2Zz4=" });
+    expect(svg.json().error.code).toBe("VALIDATION_FAILED");
+    const huge = `data:image/jpeg;base64,${"A".repeat(90_000)}`;
+    expect((await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { photo: huge })).json().error.code).toBe(
+      "VALIDATION_FAILED",
+    );
+  });
+});
+
+describe("spoilers", () => {
+  it("are flagged on the message and in reply previews", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const secret = (await send(host, chatId, "the butler did it", { spoiler: true })).json();
+    expect(secret.spoiler).toBe(true);
+    const reply = (await send(guest, chatId, "no way", { replyToId: secret.id })).json();
+    expect(reply.replyTo).toMatchObject({ spoiler: true });
+    expect(reply.spoiler).toBe(false);
+  });
+});
+
 describe("deleting chats", () => {
   it("scope=me clears my history and hides the chat until a new message", async () => {
     const { host, guest, chatId } = await makeFriends();

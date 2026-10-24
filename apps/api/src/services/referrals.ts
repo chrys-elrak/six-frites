@@ -12,6 +12,7 @@ import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { ensureDirectChat } from "./chats.js";
+import { applyOverride, loadOverrides } from "./contacts.js";
 import { toPublicUser } from "./users.js";
 
 const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -107,9 +108,10 @@ export async function listReferrals(userId: string, q: PageQuery) {
     include: { referee: true, invite: { select: { code: true } } },
     ...pageArgs(q),
   });
+  const overrides = await loadOverrides(prisma, userId, rows.map((r) => r.refereeId));
   return toPage(rows, q, (r) => ({
     id: r.id,
-    user: toPublicUser(r.referee),
+    user: applyOverride(toPublicUser(r.referee), overrides.get(r.refereeId)),
     inviteCode: r.invite.code,
     createdAt: r.createdAt.toISOString(),
   }));

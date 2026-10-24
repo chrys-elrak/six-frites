@@ -23,6 +23,8 @@ model User {
   memberships    ChatMember[]
   messages       Message[]
   hiddenMessages MessageHidden[]
+  contactsSaved  ContactOverride[] @relation("owner")
+  savedAs        ContactOverride[] @relation("contact")
 }
 
 model Invite {
@@ -128,6 +130,7 @@ model Message {
   clientId  String
   type      String    @default("text")
   text      String?
+  spoiler   Boolean   @default(false)
   replyToId String?
   createdAt DateTime  @default(now())
   editedAt  DateTime?
@@ -153,4 +156,18 @@ model MessageHidden {
 
   @@id([userId, messageId])
   @@index([messageId])
+}
+
+model ContactOverride {
+  ownerId     String
+  contactId   String
+  displayName String?
+  photo       Bytes?
+  photoMime   String?
+  updatedAt   DateTime @updatedAt
+
+  owner   User @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  contact User @relation("contact", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([ownerId, contactId])
 }

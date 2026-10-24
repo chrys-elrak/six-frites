@@ -26,12 +26,14 @@ export function toMessageDTO(m: MessageRow): MessageDTO {
     clientId: m.clientId,
     type: m.type as MessageType,
     text: m.deletedAt ? null : m.text,
+    spoiler: m.spoiler,
     replyTo: r
       ? {
           id: r.id,
           senderId: r.senderId,
           type: r.type as MessageType,
           text: r.deletedAt ? null : (r.text?.slice(0, SNIPPET) ?? null),
+          spoiler: r.spoiler,
           deleted: r.deletedAt !== null,
         }
       : null,
@@ -94,6 +96,7 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
           clientId: input.clientId,
           type: "text",
           text: input.text,
+          spoiler: input.spoiler ?? false,
           replyToId: input.replyToId ?? null,
         },
         include: messageInclude,

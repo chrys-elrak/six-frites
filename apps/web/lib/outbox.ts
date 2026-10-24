@@ -6,6 +6,7 @@ export interface PendingMessage {
   chatId: string;
   text: string;
   replyTo: ReplyPreview | null;
+  spoiler: boolean;
   createdAt: string;
   status: "sending" | "failed";
 }

@@ -12,6 +12,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       clientId: pending.clientId,
       text: pending.text,
       replyToId: pending.replyTo?.id,
+      spoiler: pending.spoiler || undefined,
     });
     insertMessage(qc, m);
     patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
@@ -21,14 +22,29 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
   }
 }
 
-export function sendText(qc: QueryClient, realtime: Realtime, chatId: string, text: string, replyTo?: MessageDTO) {
+export function sendText(
+  qc: QueryClient,
+  realtime: Realtime,
+  chatId: string,
+  text: string,
+  opts: { replyTo?: MessageDTO; spoiler?: boolean } = {},
+) {
+  const { replyTo } = opts;
   const pending: PendingMessage = {
     clientId: crypto.randomUUID(),
     chatId,
     text,
     replyTo: replyTo
-      ? { id: replyTo.id, senderId: replyTo.senderId, type: replyTo.type, text: replyTo.text, deleted: false }
+      ? {
+          id: replyTo.id,
+          senderId: replyTo.senderId,
+          type: replyTo.type,
+          text: replyTo.text,
+          spoiler: replyTo.spoiler,
+          deleted: false,
+        }
       : null,
+    spoiler: opts.spoiler ?? false,
     createdAt: new Date().toISOString(),
     status: "sending",
   };

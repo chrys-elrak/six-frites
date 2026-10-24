@@ -644,12 +644,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    spoiler: boolean;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
                                         type: "text";
                                         text: string | null;
+                                        spoiler: boolean;
                                         deleted: boolean;
                                     } | null;
                                     /** Format: date-time */
@@ -735,12 +737,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                spoiler: boolean;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    spoiler: boolean;
                                     deleted: boolean;
                                 } | null;
                                 /** Format: date-time */
@@ -849,12 +853,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                spoiler: boolean;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    spoiler: boolean;
                                     deleted: boolean;
                                 } | null;
                                 /** Format: date-time */
@@ -925,12 +931,14 @@ export interface paths {
                             /** @enum {string} */
                             type: "text";
                             text: string | null;
+                            spoiler: boolean;
                             replyTo: {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                spoiler: boolean;
                                 deleted: boolean;
                             } | null;
                             /** Format: date-time */
@@ -1026,12 +1034,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                spoiler: boolean;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    spoiler: boolean;
                                     deleted: boolean;
                                 } | null;
                                 /** Format: date-time */
@@ -1067,6 +1077,7 @@ export interface paths {
                         clientId: string;
                         text: string;
                         replyToId?: string;
+                        spoiler?: boolean;
                     };
                 };
             };
@@ -1085,12 +1096,14 @@ export interface paths {
                             /** @enum {string} */
                             type: "text";
                             text: string | null;
+                            spoiler: boolean;
                             replyTo: {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
                                 type: "text";
                                 text: string | null;
+                                spoiler: boolean;
                                 deleted: boolean;
                             } | null;
                             /** Format: date-time */
@@ -1248,6 +1261,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             items: {
+                                /** @description With your custom name and photo applied */
                                 user: {
                                     id: string;
                                     displayName: string;
@@ -1255,6 +1269,9 @@ export interface paths {
                                     avatarUrl: string | null;
                                 };
                                 chatId: string;
+                                originalName: string;
+                                customName: string | null;
+                                hasCustomPhoto: boolean;
                             }[];
                             nextCursor: string | null;
                         };
@@ -1268,6 +1285,100 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/contacts/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One contact, with your custom name and photo */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description With your custom name and photo applied */
+                            user: {
+                                id: string;
+                                displayName: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                            };
+                            chatId: string;
+                            originalName: string;
+                            customName: string | null;
+                            hasCustomPhoto: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set the name and/or photo you see for a contact
+         * @description Only you see these. `photo` is a base64 JPEG, PNG or WebP data URL of at most 64 KB; send null to go back to their own.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        displayName?: string | null;
+                        photo?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description With your custom name and photo applied */
+                            user: {
+                                id: string;
+                                displayName: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                            };
+                            chatId: string;
+                            originalName: string;
+                            customName: string | null;
+                            hasCustomPhoto: boolean;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/v1/sync": {
@@ -1312,12 +1423,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    spoiler: boolean;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
                                         type: "text";
                                         text: string | null;
+                                        spoiler: boolean;
                                         deleted: boolean;
                                     } | null;
                                     /** Format: date-time */
@@ -1340,12 +1453,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text";
                                     text: string | null;
+                                    spoiler: boolean;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
                                         type: "text";
                                         text: string | null;
+                                        spoiler: boolean;
                                         deleted: boolean;
                                     } | null;
                                     /** Format: date-time */
@@ -1401,12 +1516,14 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "text";
                                         text: string | null;
+                                        spoiler: boolean;
                                         replyTo: {
                                             id: string;
                                             senderId: string;
                                             /** @enum {string} */
                                             type: "text";
                                             text: string | null;
+                                            spoiler: boolean;
                                             deleted: boolean;
                                         } | null;
                                         /** Format: date-time */

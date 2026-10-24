@@ -2,7 +2,17 @@
 
 import type { ChatDTO, MessageDTO, ReplyPreview } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Ban, Check, CheckCheck, Clock, MessageCircle, MoreHorizontal } from "lucide-react";
+import {
+  Ban,
+  Check,
+  CheckCheck,
+  CheckCircle2,
+  Circle,
+  Clock,
+  EyeOff,
+  MessageCircle,
+  MoreHorizontal,
+} from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { VList, type VListHandle } from "virtua";
 import { deleteMessage } from "@/lib/actions";
@@ -13,6 +23,8 @@ import { useLongPress } from "@/lib/long-press";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
 import { deliver } from "@/lib/send";
+import { useSelection } from "@/lib/selection";
+import { useSpoilers } from "@/lib/spoilers";
 import { Sheet, type SheetAction } from "./sheet";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
@@ -24,6 +36,7 @@ interface MsgRow {
   message: MessageDTO | null;
   pending: PendingMessage | null;
   text: string | null;
+  spoiler: boolean;
   replyTo: ReplyPreview | null;
   createdAt: string;
   mine: boolean;
@@ -60,6 +73,7 @@ function buildRows(
         message: m,
         pending: null,
         text: m.text,
+        spoiler: m.spoiler,
         replyTo: m.replyTo,
         createdAt: m.createdAt,
         mine: m.senderId === meId,
@@ -78,6 +92,7 @@ function buildRows(
           message: null,
           pending: p,
           text: p.text,
+          spoiler: p.spoiler,
           replyTo: p.replyTo,
           createdAt: p.createdAt,
           mine: true,
@@ -126,12 +141,26 @@ function Ticks({ delivery }: { delivery: Delivery }) {
   const label = { sent: "Sent", delivered: "Delivered", read: "Read" }[delivery];
   return (
     <span aria-label={label} title={label} className={delivery === "read" ? "text-sky-700 dark:text-sky-300" : ""}>
-      {delivery === "sent" ? <Check className="size-3.5" strokeWidth={2.5} /> : <CheckCheck className="size-3.5" strokeWidth={2.5} />}
+      {delivery === "sent" ? (
+        <Check className="size-3.5" strokeWidth={2.5} />
+      ) : (
+        <CheckCheck className="size-3.5" strokeWidth={2.5} />
+      )}
     </span>
   );
 }
 
-function Quote({ reply, name, mine, onClick }: { reply: ReplyPreview; name: string; mine: boolean; onClick: () => void }) {
+function Quote({
+  reply,
+  name,
+  mine,
+  onClick,
+}: {
+  reply: ReplyPreview;
+  name: string;
+  mine: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -141,8 +170,16 @@ function Quote({ reply, name, mine, onClick }: { reply: ReplyPreview; name: stri
       }`}
     >
       <span className="block font-semibold">{name}</span>
-      <span className={`line-clamp-2 ${reply.deleted ? "italic opacity-70" : "opacity-80"}`}>
-        {reply.deleted ? "Message deleted" : reply.text}
+      <span className={`line-clamp-2 ${reply.deleted || reply.spoiler ? "italic opacity-70" : "opacity-80"}`}>
+        {reply.deleted ? (
+          "Message deleted"
+        ) : reply.spoiler ? (
+          <span className="inline-flex items-center gap-1">
+            <EyeOff className="size-3.5" /> Spoiler
+          </span>
+        ) : (
+          reply.text
+        )}
       </span>
     </button>
   );
@@ -151,17 +188,27 @@ function Quote({ reply, name, mine, onClick }: { reply: ReplyPreview; name: stri
 function Bubble({
   row,
   highlighted,
+  selecting,
+  selected,
   nameOf,
   onMenu,
   onQuote,
+  onToggle,
 }: {
   row: MsgRow;
   highlighted: boolean;
+  selecting: boolean;
+  selected: boolean;
   nameOf: (userId: string) => string;
   onMenu: () => void;
   onQuote: (id: string) => void;
+  onToggle: () => void;
 }) {
-  const press = useLongPress(onMenu);
+  const selectable = selecting && row.message !== null;
+  const press = useLongPress(selectable ? onToggle : onMenu);
+  const revealed = useSpoilers((s) => !!s.revealed[row.key]);
+  const reveal = useSpoilers((s) => s.reveal);
+  const hidden = row.spoiler && !revealed && !row.deleted;
   const { mine, groupStart, groupEnd } = row;
   const radius = mine
     ? `rounded-2xl ${groupStart ? "" : "rounded-tr-md"} ${groupEnd ? "" : "rounded-br-md"}`
@@ -173,51 +220,90 @@ function Bubble({
       : "bg-white text-stone-900 ring-1 ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
 
   return (
-    <div className={`group flex px-3 ${mine ? "justify-end" : "justify-start"} ${groupEnd ? "pb-2" : "pb-0.5"}`}>
-      <div className={`flex max-w-[80%] items-center gap-1 md:max-w-[65%] ${mine ? "flex-row-reverse" : ""}`}>
-        <div className="flex min-w-0 flex-col items-end gap-1">
-          <div
-            {...press}
-            className={`${radius} ${tone} px-3 py-1.5 transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
-              row.delivery === "failed" ? "opacity-60" : ""
-            } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
-          >
-            {row.replyTo && !row.deleted && (
-              <Quote
-                reply={row.replyTo}
-                mine={mine}
-                name={nameOf(row.replyTo.senderId)}
-                onClick={() => onQuote(row.replyTo!.id)}
-              />
-            )}
-            <p className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""}`}>
-              {row.deleted ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <Ban className="size-4" /> This message was deleted
-                </span>
-              ) : (
-                row.text
-              )}
-              <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none opacity-70">
-                {row.edited && !row.deleted && <span>edited</span>}
-                {clockTime(row.createdAt)}
-                {row.delivery && <Ticks delivery={row.delivery} />}
-              </span>
-            </p>
-          </div>
-          {row.delivery === "failed" && (
-            <button onClick={onMenu} className="text-xs font-medium text-red-600 dark:text-red-400">
-              Not sent · Tap for options
-            </button>
+    <div
+      onClickCapture={
+        selectable
+          ? (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggle();
+            }
+          : undefined
+      }
+      className={`group flex items-center gap-2 px-3 ${selectable ? "cursor-pointer" : ""} ${
+        selected ? "bg-brand/10" : ""
+      } ${groupEnd ? "pb-2" : "pb-0.5"}`}
+    >
+      {selecting && (
+        <span className={`shrink-0 ${row.message ? "" : "invisible"}`} aria-hidden>
+          {selected ? (
+            <CheckCircle2 className="size-5 fill-brand text-white dark:text-stone-950" />
+          ) : (
+            <Circle className="size-5 text-stone-400" />
           )}
+        </span>
+      )}
+      <div className={`flex min-w-0 flex-1 ${mine ? "justify-end" : "justify-start"}`}>
+        <div className={`flex max-w-[80%] items-center gap-1 md:max-w-[65%] ${mine ? "flex-row-reverse" : ""}`}>
+          <div className="flex min-w-0 flex-col items-end gap-1">
+            <div
+              {...press}
+              className={`${radius} ${tone} px-3 py-1.5 transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
+                row.delivery === "failed" ? "opacity-60" : ""
+              } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
+            >
+              {row.replyTo && !row.deleted && (
+                <Quote
+                  reply={row.replyTo}
+                  mine={mine}
+                  name={nameOf(row.replyTo.senderId)}
+                  onClick={() => onQuote(row.replyTo!.id)}
+                />
+              )}
+              <p className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""}`}>
+                {row.deleted ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Ban className="size-4" /> This message was deleted
+                  </span>
+                ) : hidden ? (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Spoiler, tap to reveal"
+                    onClick={(e) => {
+                      if (selectable) return;
+                      e.stopPropagation();
+                      reveal(row.key);
+                    }}
+                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && reveal(row.key)}
+                    className="spoiler cursor-pointer"
+                  >
+                    {row.text}
+                  </span>
+                ) : (
+                  row.text
+                )}
+                <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none opacity-70">
+                  {row.edited && !row.deleted && <span>edited</span>}
+                  {clockTime(row.createdAt)}
+                  {row.delivery && <Ticks delivery={row.delivery} />}
+                </span>
+              </p>
+            </div>
+            {row.delivery === "failed" && (
+              <button onClick={onMenu} className="text-xs font-medium text-red-600 dark:text-red-400">
+                Not sent · Tap for options
+              </button>
+            )}
+          </div>
+          <button
+            onClick={onMenu}
+            aria-label="Message options"
+            className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
+          >
+            <MoreHorizontal className="size-4" />
+          </button>
         </div>
-        <button
-          onClick={onMenu}
-          aria-label="Message options"
-          className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
-        >
-          <MoreHorizontal className="size-4" />
-        </button>
       </div>
     </div>
   );
@@ -234,6 +320,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const messages = useMessages(chat.id);
     const pending = usePending(chat.id);
     const setMode = useComposerMode((s) => s.set);
+    const selecting = useSelection((s) => s.chatId === chat.id);
+    const selectedIds = useSelection((s) => s.ids);
+    const startSelection = useSelection((s) => s.start);
+    const toggleSelected = useSelection((s) => s.toggle);
     const list = useRef<VListHandle>(null);
     const atBottom = useRef(true);
     const initialScrollDone = useRef(false);
@@ -311,13 +401,16 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       if (row.pending) {
         const p = row.pending;
         return [
-          ...(p.status === "failed" && realtime ? [{ label: "Retry", onSelect: () => void deliver(qc, realtime, p) }] : []),
+          ...(p.status === "failed" && realtime
+            ? [{ label: "Retry", onSelect: () => void deliver(qc, realtime, p) }]
+            : []),
           { label: "Discard", destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
         ];
       }
       const m = row.message!;
       if (row.deleted) {
         return [
+          { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
           ...(chat.type === "direct" || row.mine
             ? [
                 {
@@ -327,11 +420,16 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 },
               ]
             : []),
-          { label: "Remove for me", destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) },
+          {
+            label: "Remove for me",
+            destructive: true,
+            onSelect: () => void deleteMessage(qc, m, "me").catch(() => null),
+          },
         ];
       }
       return [
         { label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) },
+        { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
         { label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") },
         ...(row.mine ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }] : []),
         { label: "Delete", destructive: true, onSelect: () => setConfirmDelete(m) },
@@ -370,9 +468,12 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 key={row.key}
                 row={row}
                 highlighted={row.id !== null && row.id === highlight}
+                selecting={selecting}
+                selected={row.id !== null && selecting && selectedIds.includes(row.id)}
                 nameOf={nameOf}
                 onMenu={() => setMenuFor(row)}
                 onQuote={jumpTo}
+                onToggle={() => row.id && toggleSelected(row.id)}
               />
             )
           }
@@ -393,7 +494,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                     },
                   ]
                 : []),
-              { label: "Delete for me", destructive: true, onSelect: () => void deleteMessage(qc, confirmDelete, "me").catch(() => null) },
+              {
+                label: "Delete for me",
+                destructive: true,
+                onSelect: () => void deleteMessage(qc, confirmDelete, "me").catch(() => null),
+              },
             ]}
           />
         )}

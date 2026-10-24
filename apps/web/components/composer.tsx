@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, SendHorizontal, X } from "lucide-react";
+import { Check, EyeOff, SendHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
@@ -45,6 +45,7 @@ export function Composer({
   const [text, setText] = useState(() => drafts.get(chatId) ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [spoiler, setSpoiler] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const editing = mode?.kind === "edit" ? mode.message : null;
 
@@ -103,7 +104,11 @@ export function Composer({
       return;
     }
     realtime.setTyping(chatId, false);
-    sendText(qc, realtime, chatId, trimmed, mode?.kind === "reply" ? mode.message : undefined);
+    sendText(qc, realtime, chatId, trimmed, {
+      replyTo: mode?.kind === "reply" ? mode.message : undefined,
+      spoiler,
+    });
+    setSpoiler(false);
     drafts.delete(chatId);
     setText("");
     if (mode) cancel();
@@ -121,7 +126,7 @@ export function Composer({
       {mode?.kind === "reply" && (
         <ModeBar
           label={`Replying to ${nameOf(mode.message.senderId)}`}
-          text={mode.message.text ?? ""}
+          text={mode.message.spoiler ? "Spoiler" : (mode.message.text ?? "")}
           onCancel={cancel}
         />
       )}
@@ -133,6 +138,21 @@ export function Composer({
       )}
 
       <div className="flex items-end gap-2">
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => setSpoiler((v) => !v)}
+            onMouseDown={(e) => e.preventDefault()}
+            aria-pressed={spoiler}
+            aria-label={spoiler ? "Send as normal message" : "Send as spoiler"}
+            title={spoiler ? "Spoiler on" : "Send as spoiler"}
+            className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
+              spoiler ? "bg-brand/20 text-brand" : "text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+            }`}
+          >
+            <EyeOff className="size-5" />
+          </button>
+        )}
         <textarea
           ref={ref}
           value={text}
@@ -152,7 +172,7 @@ export function Composer({
           rows={1}
           maxLength={4000}
           enterKeyHint={editing ? "done" : "send"}
-          placeholder="Message"
+          placeholder={spoiler ? "Spoiler message" : "Message"}
           aria-label="Message"
           className="max-h-40 min-h-10 flex-1 resize-none rounded-2xl bg-white px-4 py-2 text-[16px] leading-6 outline-none ring-1 ring-stone-200 focus:ring-2 focus:ring-brand dark:bg-stone-900 dark:ring-stone-800"
         />

@@ -12,6 +12,7 @@ import {
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { assertMember, messageInclude, scrubMessageEvents, toMessageDTO, visibleTo } from "./messages.js";
+import { applyOverride, loadOverrides } from "./contacts.js";
 import { toPublicUser } from "./users.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
@@ -25,7 +26,13 @@ type ChatWithRelations = Prisma.ChatGetPayload<{ include: typeof chatInclude }>;
 async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Promise<ChatDTO> {
   const me = chat.members.find((m) => m.userId === viewerId);
   if (!me) throw new AppError("CHAT_NOT_FOUND");
-  const others = chat.members.filter((m) => m.userId !== viewerId);
+  const overrides = await loadOverrides(
+    db,
+    viewerId,
+    chat.members.filter((m) => m.userId !== viewerId).map((m) => m.userId),
+  );
+  const members = chat.members.map((m) => ({ ...m, shown: applyOverride(toPublicUser(m.user), overrides.get(m.userId)) }));
+  const others = members.filter((m) => m.userId !== viewerId);
 
   const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
   const readFloor = [me.lastReadAt, me.clearedAt].filter((d): d is Date => d !== null).sort((a, b) => +b - +a)[0];
@@ -44,9 +51,9 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
   return {
     id: chat.id,
     type: "direct",
-    title: others.map((m) => m.user.displayName).join(", ") || "Just you",
-    members: chat.members.map((m) => ({
-      user: toPublicUser(m.user),
+    title: others.map((m) => m.shown.displayName).join(", ") || "Just you",
+    members: members.map((m) => ({
+      user: m.shown,
       lastDeliveredMessageId: m.lastDeliveredMessageId,
       lastDeliveredAt: m.lastDeliveredAt?.toISOString() ?? null,
       lastReadMessageId: m.lastReadMessageId,
