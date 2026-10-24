@@ -137,6 +137,8 @@ model Message {
   maxViews   Int?
   ttlSeconds Int?
   expiredAt  DateTime?
+  resendCount Int      @default(0)
+  purgedAt   DateTime?
   attachmentId String?
   replyToId String?
   createdAt DateTime  @default(now())

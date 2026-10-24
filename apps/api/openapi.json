@@ -1261,7 +1261,21 @@
                                   },
                                   "expired": {
                                     "type": "boolean",
-                                    "description": "Destroyed after its views or timer ran out"
+                                    "description": "Its views or timer ran out; the recipient can no longer open it"
+                                  },
+                                  "purged": {
+                                    "type": "boolean",
+                                    "description": "Content permanently deleted; it can no longer be resent"
+                                  },
+                                  "resendsLeft": {
+                                    "type": "integer",
+                                    "description": "How many more times the sender can re-arm it"
+                                  },
+                                  "resendUntil": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true,
+                                    "description": "Until when the sender can resend it, once it has been opened"
                                   }
                                 },
                                 "required": [
@@ -1270,7 +1284,10 @@
                                   "views",
                                   "firstViewedAt",
                                   "locked",
-                                  "expired"
+                                  "expired",
+                                  "purged",
+                                  "resendsLeft",
+                                  "resendUntil"
                                 ],
                                 "additionalProperties": false,
                                 "nullable": true
@@ -1697,7 +1714,21 @@
                             },
                             "expired": {
                               "type": "boolean",
-                              "description": "Destroyed after its views or timer ran out"
+                              "description": "Its views or timer ran out; the recipient can no longer open it"
+                            },
+                            "purged": {
+                              "type": "boolean",
+                              "description": "Content permanently deleted; it can no longer be resent"
+                            },
+                            "resendsLeft": {
+                              "type": "integer",
+                              "description": "How many more times the sender can re-arm it"
+                            },
+                            "resendUntil": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true,
+                              "description": "Until when the sender can resend it, once it has been opened"
                             }
                           },
                           "required": [
@@ -1706,7 +1737,10 @@
                             "views",
                             "firstViewedAt",
                             "locked",
-                            "expired"
+                            "expired",
+                            "purged",
+                            "resendsLeft",
+                            "resendUntil"
                           ],
                           "additionalProperties": false,
                           "nullable": true
@@ -2141,7 +2175,21 @@
                             },
                             "expired": {
                               "type": "boolean",
-                              "description": "Destroyed after its views or timer ran out"
+                              "description": "Its views or timer ran out; the recipient can no longer open it"
+                            },
+                            "purged": {
+                              "type": "boolean",
+                              "description": "Content permanently deleted; it can no longer be resent"
+                            },
+                            "resendsLeft": {
+                              "type": "integer",
+                              "description": "How many more times the sender can re-arm it"
+                            },
+                            "resendUntil": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true,
+                              "description": "Until when the sender can resend it, once it has been opened"
                             }
                           },
                           "required": [
@@ -2150,7 +2198,10 @@
                             "views",
                             "firstViewedAt",
                             "locked",
-                            "expired"
+                            "expired",
+                            "purged",
+                            "resendsLeft",
+                            "resendUntil"
                           ],
                           "additionalProperties": false,
                           "nullable": true
@@ -2596,7 +2647,21 @@
                         },
                         "expired": {
                           "type": "boolean",
-                          "description": "Destroyed after its views or timer ran out"
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened"
                         }
                       },
                       "required": [
@@ -2605,7 +2670,10 @@
                         "views",
                         "firstViewedAt",
                         "locked",
-                        "expired"
+                        "expired",
+                        "purged",
+                        "resendsLeft",
+                        "resendUntil"
                       ],
                       "additionalProperties": false,
                       "nullable": true
@@ -2907,7 +2975,21 @@
                             },
                             "expired": {
                               "type": "boolean",
-                              "description": "Destroyed after its views or timer ran out"
+                              "description": "Its views or timer ran out; the recipient can no longer open it"
+                            },
+                            "purged": {
+                              "type": "boolean",
+                              "description": "Content permanently deleted; it can no longer be resent"
+                            },
+                            "resendsLeft": {
+                              "type": "integer",
+                              "description": "How many more times the sender can re-arm it"
+                            },
+                            "resendUntil": {
+                              "type": "string",
+                              "format": "date-time",
+                              "nullable": true,
+                              "description": "Until when the sender can resend it, once it has been opened"
                             }
                           },
                           "required": [
@@ -2916,7 +2998,10 @@
                             "views",
                             "firstViewedAt",
                             "locked",
-                            "expired"
+                            "expired",
+                            "purged",
+                            "resendsLeft",
+                            "resendUntil"
                           ],
                           "additionalProperties": false,
                           "nullable": true
@@ -3012,6 +3097,331 @@
                   "required": [
                     "message",
                     "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/resend": {
+      "post": {
+        "summary": "Let the recipient open a self-destructing message again",
+        "tags": [
+          "messages"
+        ],
+        "description": "Sender only, after it was opened: re-arms it with the same rule and resets its views. Allowed 3 times, within an hour of it being opened (see ephemeral.resendsLeft and resendUntil).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file"
+                      ]
+                    },
+                    "text": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready"
+                        },
+                        "thumbUrl": {
+                          "type": "string",
+                          "format": "uri",
+                          "nullable": true
+                        },
+                        "width": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "height": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "durationMs": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "waveform": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          },
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "ephemeral": {
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "ttlSeconds": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "views": {
+                          "type": "integer",
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired",
+                        "purged",
+                        "resendsLeft",
+                        "resendUntil"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "replyTo": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "editedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "senderId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "ephemeral",
+                    "replyTo",
+                    "createdAt",
+                    "editedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -3305,7 +3715,21 @@
                               },
                               "expired": {
                                 "type": "boolean",
-                                "description": "Destroyed after its views or timer ran out"
+                                "description": "Its views or timer ran out; the recipient can no longer open it"
+                              },
+                              "purged": {
+                                "type": "boolean",
+                                "description": "Content permanently deleted; it can no longer be resent"
+                              },
+                              "resendsLeft": {
+                                "type": "integer",
+                                "description": "How many more times the sender can re-arm it"
+                              },
+                              "resendUntil": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true,
+                                "description": "Until when the sender can resend it, once it has been opened"
                               }
                             },
                             "required": [
@@ -3314,7 +3738,10 @@
                               "views",
                               "firstViewedAt",
                               "locked",
-                              "expired"
+                              "expired",
+                              "purged",
+                              "resendsLeft",
+                              "resendUntil"
                             ],
                             "additionalProperties": false,
                             "nullable": true
@@ -3715,7 +4142,21 @@
                         },
                         "expired": {
                           "type": "boolean",
-                          "description": "Destroyed after its views or timer ran out"
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened"
                         }
                       },
                       "required": [
@@ -3724,7 +4165,10 @@
                         "views",
                         "firstViewedAt",
                         "locked",
-                        "expired"
+                        "expired",
+                        "purged",
+                        "resendsLeft",
+                        "resendUntil"
                       ],
                       "additionalProperties": false,
                       "nullable": true
@@ -4541,7 +4985,21 @@
                                       },
                                       "expired": {
                                         "type": "boolean",
-                                        "description": "Destroyed after its views or timer ran out"
+                                        "description": "Its views or timer ran out; the recipient can no longer open it"
+                                      },
+                                      "purged": {
+                                        "type": "boolean",
+                                        "description": "Content permanently deleted; it can no longer be resent"
+                                      },
+                                      "resendsLeft": {
+                                        "type": "integer",
+                                        "description": "How many more times the sender can re-arm it"
+                                      },
+                                      "resendUntil": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true,
+                                        "description": "Until when the sender can resend it, once it has been opened"
                                       }
                                     },
                                     "required": [
@@ -4550,7 +5008,10 @@
                                       "views",
                                       "firstViewedAt",
                                       "locked",
-                                      "expired"
+                                      "expired",
+                                      "purged",
+                                      "resendsLeft",
+                                      "resendUntil"
                                     ],
                                     "additionalProperties": false,
                                     "nullable": true
@@ -4839,7 +5300,21 @@
                                       },
                                       "expired": {
                                         "type": "boolean",
-                                        "description": "Destroyed after its views or timer ran out"
+                                        "description": "Its views or timer ran out; the recipient can no longer open it"
+                                      },
+                                      "purged": {
+                                        "type": "boolean",
+                                        "description": "Content permanently deleted; it can no longer be resent"
+                                      },
+                                      "resendsLeft": {
+                                        "type": "integer",
+                                        "description": "How many more times the sender can re-arm it"
+                                      },
+                                      "resendUntil": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true,
+                                        "description": "Until when the sender can resend it, once it has been opened"
                                       }
                                     },
                                     "required": [
@@ -4848,7 +5323,10 @@
                                       "views",
                                       "firstViewedAt",
                                       "locked",
-                                      "expired"
+                                      "expired",
+                                      "purged",
+                                      "resendsLeft",
+                                      "resendUntil"
                                     ],
                                     "additionalProperties": false,
                                     "nullable": true
@@ -5266,7 +5744,21 @@
                                           },
                                           "expired": {
                                             "type": "boolean",
-                                            "description": "Destroyed after its views or timer ran out"
+                                            "description": "Its views or timer ran out; the recipient can no longer open it"
+                                          },
+                                          "purged": {
+                                            "type": "boolean",
+                                            "description": "Content permanently deleted; it can no longer be resent"
+                                          },
+                                          "resendsLeft": {
+                                            "type": "integer",
+                                            "description": "How many more times the sender can re-arm it"
+                                          },
+                                          "resendUntil": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "nullable": true,
+                                            "description": "Until when the sender can resend it, once it has been opened"
                                           }
                                         },
                                         "required": [
@@ -5275,7 +5767,10 @@
                                           "views",
                                           "firstViewedAt",
                                           "locked",
-                                          "expired"
+                                          "expired",
+                                          "purged",
+                                          "resendsLeft",
+                                          "resendUntil"
                                         ],
                                         "additionalProperties": false,
                                         "nullable": true

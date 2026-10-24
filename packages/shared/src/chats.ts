@@ -76,13 +76,19 @@ export const EphemeralInput = z
   .refine((v) => v.maxViews !== undefined || v.ttlSeconds !== undefined, "Set maxViews, ttlSeconds or both");
 export type EphemeralInput = z.infer<typeof EphemeralInput>;
 
+/** How often, and for how long after it was opened, a sender can re-arm a self-destructing message. */
+export const EPHEMERAL_RESEND = { max: 3, windowSeconds: 60 * 60 } as const;
+
 export const EphemeralDTO = z.object({
   maxViews: z.number().int().nullable(),
   ttlSeconds: z.number().int().nullable(),
   views: z.number().int().describe("How many times the recipient opened it"),
   firstViewedAt: IsoDate.nullable(),
   locked: z.boolean().describe("Content is withheld for you; open it with POST /v1/messages/{id}/view"),
-  expired: z.boolean().describe("Destroyed after its views or timer ran out"),
+  expired: z.boolean().describe("Its views or timer ran out; the recipient can no longer open it"),
+  purged: z.boolean().describe("Content permanently deleted; it can no longer be resent"),
+  resendsLeft: z.number().int().describe("How many more times the sender can re-arm it"),
+  resendUntil: IsoDate.nullable().describe("Until when the sender can resend it, once it has been opened"),
 });
 export type EphemeralDTO = z.infer<typeof EphemeralDTO>;
 

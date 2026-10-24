@@ -9,6 +9,7 @@ import {
   type PageQuery,
   type SendMessageInput,
   type ViewMessageResult,
+  EPHEMERAL_RESEND,
   maskSpoilers,
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
@@ -39,9 +40,11 @@ export const EPHEMERAL_LINK_SECONDS = 5 * 60;
 export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: boolean } = {}): MessageDTO {
   const r = m.replyTo;
   const ephemeral = isEphemeral(m);
+  const isSender = viewerId === m.senderId;
   const expired = m.expiredAt !== null;
-  const locked = ephemeral && !expired && viewerId !== m.senderId && !opts.reveal;
-  const hideContent = m.deletedAt !== null || expired || locked;
+  const purged = m.purgedAt !== null;
+  const locked = ephemeral && !expired && !isSender && !opts.reveal;
+  const hideContent = m.deletedAt !== null || purged || locked || (expired && !isSender);
   const others = m.views.filter((v) => v.userId !== m.senderId);
   const mine = m.views.find((v) => v.userId === viewerId);
   const firstView = viewerId === m.senderId ? others.map((v) => v.firstViewedAt).sort((a, b) => +a - +b)[0] : mine?.firstViewedAt;
@@ -67,6 +70,12 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
           firstViewedAt: firstView?.toISOString() ?? null,
           locked,
           expired,
+          purged,
+          resendsLeft: isSender && !purged ? Math.max(0, EPHEMERAL_RESEND.max - m.resendCount) : 0,
+          resendUntil:
+            isSender && m.expiredAt && !purged
+              ? new Date(m.expiredAt.getTime() + EPHEMERAL_RESEND.windowSeconds * 1000).toISOString()
+              : null,
         }
       : null,
     replyTo: r
@@ -266,29 +275,90 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
   await purgeUploads(detached);
 }
 
+async function notifyMembers(tx: Tx, emit: Emit, messageId: string) {
+  const m = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+  for (const id of await memberIds(tx, m.chatId)) emit(id, "message.edited", toMessageDTO(m, id));
+}
+
 /**
- * Destroys a self-destructing message for everyone: wipes its text, detaches its file and removes
- * it from the sync log. The file itself is deleted after `purgeFilesAfterMs`, so a recipient who
- * just opened it can finish loading it with their short-lived link.
+ * Permanently deletes a self-destructing message's content: its text, its place in the sync log,
+ * and (after `filesAfterMs`, so a link just handed out can still load) its file.
  */
-async function markExpired(tx: Tx, emit: Emit, m: MessageRow, purgeFilesAfterMs: number) {
-  const updated = await tx.message.update({
+async function wipeContent(tx: Tx, emit: Emit, m: MessageRow, filesAfterMs: number) {
+  await tx.message.update({
     where: { id: m.id },
-    data: { expiredAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
-    include: messageInclude,
+    data: { purgedAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
   });
   await scrubMessageEvents(tx, [m.id]);
-  for (const id of await memberIds(tx, m.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+  await notifyMembers(tx, emit, m.id);
   if (m.attachmentId) {
-    await timersQueue().add("purge-uploads", { uploadIds: [m.attachmentId] }, { delay: purgeFilesAfterMs });
+    await timersQueue().add("purge-uploads", { uploadIds: [m.attachmentId] }, { delay: filesAfterMs });
   }
 }
 
-export async function expireMessage(messageId: string) {
+/**
+ * Closes a self-destructing message to its recipient. The sender keeps it for
+ * EPHEMERAL_RESEND.windowSeconds so they can resend it; once that window passes, or straight away
+ * when no resends are left, its content is wiped for good.
+ */
+async function markExpired(tx: Tx, emit: Emit, m: MessageRow, filesAfterMs: number) {
+  await tx.message.update({ where: { id: m.id }, data: { expiredAt: new Date() } });
+  await scrubMessageEvents(tx, [m.id]);
+  if (m.resendCount >= EPHEMERAL_RESEND.max) {
+    await wipeContent(tx, emit, m, filesAfterMs);
+    return;
+  }
+  await notifyMembers(tx, emit, m.id);
+  await timersQueue().add(
+    "purge-message",
+    { purgeMessageId: m.id, cycle: m.resendCount },
+    { delay: EPHEMERAL_RESEND.windowSeconds * 1000, jobId: `purge-${m.id}-${m.resendCount}` },
+  );
+}
+
+export async function expireMessage(messageId: string, cycle: number) {
   await withEvents(async (tx, emit) => {
     const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
-    if (!m || m.expiredAt || m.deletedAt || !isEphemeral(m)) return;
+    if (!m || m.expiredAt || m.deletedAt || !isEphemeral(m) || m.resendCount !== cycle) return;
     await markExpired(tx, emit, m, 0);
+  });
+}
+
+/** Wipes an expired message whose resend window has passed, unless it was resent since. */
+export async function purgeMessage(messageId: string, cycle: number) {
+  await withEvents(async (tx, emit) => {
+    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    if (!m || !m.expiredAt || m.purgedAt || m.resendCount !== cycle) return;
+    await wipeContent(tx, emit, m, 0);
+  });
+}
+
+/** Re-arms an opened self-destructing message so its recipient can open it again. */
+export async function resendMessage(userId: string, messageId: string): Promise<MessageDTO> {
+  return withEvents(async (tx, emit) => {
+    await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
+    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
+    await assertMember(tx, m.chatId, userId).catch(() => {
+      throw new AppError("MESSAGE_NOT_FOUND");
+    });
+    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can resend it");
+    if (!isEphemeral(m)) throw new AppError("RESEND_NOT_ALLOWED", "Only self-destructing messages can be resent");
+    if (!m.expiredAt) throw new AppError("RESEND_NOT_ALLOWED", "It has not been opened yet");
+    if (m.purgedAt) throw new AppError("MESSAGE_EXPIRED", "It was destroyed for good");
+    if (m.resendCount >= EPHEMERAL_RESEND.max) {
+      throw new AppError("RESEND_NOT_ALLOWED", `It can only be resent ${EPHEMERAL_RESEND.max} times`);
+    }
+    if (Date.now() > m.expiredAt.getTime() + EPHEMERAL_RESEND.windowSeconds * 1000) {
+      throw new AppError("RESEND_NOT_ALLOWED", "It is too late to resend it");
+    }
+
+    await tx.messageView.deleteMany({ where: { messageId } });
+    await tx.message.update({ where: { id: messageId }, data: { expiredAt: null, resendCount: { increment: 1 } } });
+    await tx.chat.update({ where: { id: m.chatId }, data: { lastMessageAt: new Date() } });
+    await notifyMembers(tx, emit, messageId);
+    const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    return toMessageDTO(fresh, userId);
   });
 }
 
@@ -318,12 +388,15 @@ export async function viewMessage(userId: string, messageId: string): Promise<Vi
     if (m.maxViews !== null && view.count >= m.maxViews) {
       await markExpired(tx, emit, opened, EPHEMERAL_LINK_SECONDS * 1000);
     } else {
-      for (const id of await memberIds(tx, m.chatId)) emit(id, "message.edited", toMessageDTO(opened, id));
+      await notifyMembers(tx, emit, messageId);
       if (expiresAt && view.count === 1) {
         await timersQueue().add(
           "expire-message",
-          { messageId },
-          { delay: Math.max(0, expiresAt.getTime() - Date.now()) + 2000, jobId: `expire-${messageId}` },
+          { messageId, cycle: m.resendCount },
+          {
+            delay: Math.max(0, expiresAt.getTime() - Date.now()) + 2000,
+            jobId: `expire-${messageId}-${m.resendCount}`,
+          },
         );
       }
     }

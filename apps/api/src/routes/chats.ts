@@ -25,7 +25,14 @@ import {
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
 import { findContact, listContacts, updateContact } from "../services/contacts.js";
-import { deleteMessages, editMessage, listMessages, sendMessage, viewMessage } from "../services/messages.js";
+import {
+  deleteMessages,
+  editMessage,
+  listMessages,
+  resendMessage,
+  sendMessage,
+  viewMessage,
+} from "../services/messages.js";
 import { sync } from "../services/sync.js";
 
 const ChatParams = z.object({ id: Id });
@@ -121,6 +128,22 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => viewMessage(req.auth.userId, req.params.id),
+  );
+
+  app.post(
+    "/messages/:id/resend",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Let the recipient open a self-destructing message again",
+        description:
+          "Sender only, after it was opened: re-arms it with the same rule and resets its views. Allowed 3 times, within an hour of it being opened (see ephemeral.resendsLeft and resendUntil).",
+        security,
+        params: MessageParams,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => resendMessage(req.auth.userId, req.params.id),
   );
 
   app.delete(

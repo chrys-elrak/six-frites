@@ -681,8 +681,17 @@ export interface paths {
                                         firstViewedAt: string | null;
                                         /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                         locked: boolean;
-                                        /** @description Destroyed after its views or timer ran out */
+                                        /** @description Its views or timer ran out; the recipient can no longer open it */
                                         expired: boolean;
+                                        /** @description Content permanently deleted; it can no longer be resent */
+                                        purged: boolean;
+                                        /** @description How many more times the sender can re-arm it */
+                                        resendsLeft: number;
+                                        /**
+                                         * Format: date-time
+                                         * @description Until when the sender can resend it, once it has been opened
+                                         */
+                                        resendUntil: string | null;
                                     } | null;
                                     replyTo: {
                                         id: string;
@@ -814,8 +823,17 @@ export interface paths {
                                     firstViewedAt: string | null;
                                     /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                     locked: boolean;
-                                    /** @description Destroyed after its views or timer ran out */
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
                                     expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -970,8 +988,17 @@ export interface paths {
                                     firstViewedAt: string | null;
                                     /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                     locked: boolean;
-                                    /** @description Destroyed after its views or timer ran out */
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
                                     expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -1095,8 +1122,17 @@ export interface paths {
                                 firstViewedAt: string | null;
                                 /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                 locked: boolean;
-                                /** @description Destroyed after its views or timer ran out */
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
                                 expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -1197,8 +1233,17 @@ export interface paths {
                                     firstViewedAt: string | null;
                                     /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                     locked: boolean;
-                                    /** @description Destroyed after its views or timer ran out */
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
                                     expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -1222,6 +1267,120 @@ export interface paths {
                              * @description When the content will be destroyed, if a timer is running
                              */
                             expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/{id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Let the recipient open a self-destructing message again
+         * @description Sender only, after it was opened: re-arms it with the same rule and resets its views. Allowed 3 times, within an hour of it being opened (see ephemeral.resendsLeft and resendUntil).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
                         };
                     };
                 };
@@ -1350,8 +1509,17 @@ export interface paths {
                                     firstViewedAt: string | null;
                                     /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                     locked: boolean;
-                                    /** @description Destroyed after its views or timer ran out */
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
                                     expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -1469,8 +1637,17 @@ export interface paths {
                                 firstViewedAt: string | null;
                                 /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                 locked: boolean;
-                                /** @description Destroyed after its views or timer ran out */
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
                                 expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -1836,8 +2013,17 @@ export interface paths {
                                         firstViewedAt: string | null;
                                         /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                         locked: boolean;
-                                        /** @description Destroyed after its views or timer ran out */
+                                        /** @description Its views or timer ran out; the recipient can no longer open it */
                                         expired: boolean;
+                                        /** @description Content permanently deleted; it can no longer be resent */
+                                        purged: boolean;
+                                        /** @description How many more times the sender can re-arm it */
+                                        resendsLeft: number;
+                                        /**
+                                         * Format: date-time
+                                         * @description Until when the sender can resend it, once it has been opened
+                                         */
+                                        resendUntil: string | null;
                                     } | null;
                                     replyTo: {
                                         id: string;
@@ -1906,8 +2092,17 @@ export interface paths {
                                         firstViewedAt: string | null;
                                         /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                         locked: boolean;
-                                        /** @description Destroyed after its views or timer ran out */
+                                        /** @description Its views or timer ran out; the recipient can no longer open it */
                                         expired: boolean;
+                                        /** @description Content permanently deleted; it can no longer be resent */
+                                        purged: boolean;
+                                        /** @description How many more times the sender can re-arm it */
+                                        resendsLeft: number;
+                                        /**
+                                         * Format: date-time
+                                         * @description Until when the sender can resend it, once it has been opened
+                                         */
+                                        resendUntil: string | null;
                                     } | null;
                                     replyTo: {
                                         id: string;
@@ -2009,8 +2204,17 @@ export interface paths {
                                             firstViewedAt: string | null;
                                             /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
                                             locked: boolean;
-                                            /** @description Destroyed after its views or timer ran out */
+                                            /** @description Its views or timer ran out; the recipient can no longer open it */
                                             expired: boolean;
+                                            /** @description Content permanently deleted; it can no longer be resent */
+                                            purged: boolean;
+                                            /** @description How many more times the sender can re-arm it */
+                                            resendsLeft: number;
+                                            /**
+                                             * Format: date-time
+                                             * @description Until when the sender can resend it, once it has been opened
+                                             */
+                                            resendUntil: string | null;
                                         } | null;
                                         replyTo: {
                                             id: string;

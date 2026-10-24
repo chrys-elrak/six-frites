@@ -22,7 +22,10 @@ export function mediaQueue() {
   return media;
 }
 
-export type TimerJob = { messageId: string } | { uploadIds: string[] };
+export type TimerJob =
+  | { messageId: string; cycle: number }
+  | { purgeMessageId: string; cycle: number }
+  | { uploadIds: string[] };
 
 export const TIMERS_QUEUE = "timers";
 

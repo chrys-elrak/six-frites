@@ -12,7 +12,7 @@ import {
 } from "./lib/queue.js";
 import { ensureBucket } from "./lib/storage.js";
 import { processUpload } from "./media/process.js";
-import { expireMessage } from "./services/messages.js";
+import { expireMessage, purgeMessage } from "./services/messages.js";
 import { finishUpload, purgeAbandonedUploads, purgeUploads } from "./services/uploads.js";
 
 await ensureBucket();
@@ -29,7 +29,8 @@ const worker = new Worker<MediaJob>(
 const timers = new Worker<TimerJob>(
   TIMERS_QUEUE,
   async (job) => {
-    if ("messageId" in job.data) await expireMessage(job.data.messageId);
+    if ("messageId" in job.data) await expireMessage(job.data.messageId, job.data.cycle);
+    else if ("purgeMessageId" in job.data) await purgeMessage(job.data.purgeMessageId, job.data.cycle);
     else await purgeUploads(job.data.uploadIds);
   },
   { connection: redisConnection(), concurrency: 4, prefix: env.QUEUE_PREFIX },
