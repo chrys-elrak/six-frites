@@ -75,6 +75,24 @@ describe.skipIf(!hasFfmpeg)("media processing", () => {
     expect(await headObject(done.thumbKey!)).not.toBeNull();
   });
 
+  it("crops round video messages to a small square and caps them at 60 seconds", async () => {
+    const { host } = await makeFriends();
+    const webm = fixture("note.webm", [
+      "-f", "lavfi", "-i", "testsrc=size=640x480:rate=25:duration=62",
+      "-f", "lavfi", "-i", "sine=frequency=500:duration=62",
+      "-c:v", "libvpx", "-deadline", "realtime", "-cpu-used", "8", "-b:v", "200k", "-c:a", "libopus", "-shortest",
+    ]);
+    const upload = await stage(host.user.id, "video_note", "video/webm", webm);
+    await processUpload(upload.id);
+
+    const done = await prisma.upload.findUniqueOrThrow({ where: { id: upload.id } });
+    expect(done).toMatchObject({ status: "ready", width: 384, height: 384, mainMime: "video/mp4" });
+    const main = await probeKey(done.mainKey!);
+    expect(main).toMatchObject({ width: 384, height: 384, codecs: ["h264", "aac"] });
+    expect(done.durationMs).toBeLessThanOrEqual(60_100);
+    expect(done.durationMs).toBeGreaterThan(59_000);
+  }, 60_000);
+
   it("converts voice notes to AAC and draws a 64-bar waveform", async () => {
     const { host } = await makeFriends();
     const webm = fixture("in.webm", [

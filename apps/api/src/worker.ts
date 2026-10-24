@@ -1,4 +1,5 @@
 import { Worker } from "bullmq";
+import { env } from "./env.js";
 import { prisma } from "./lib/prisma.js";
 import { MEDIA_QUEUE, type MediaJob, mediaQueue, redisConnection } from "./lib/queue.js";
 import { ensureBucket } from "./lib/storage.js";
@@ -13,7 +14,7 @@ const worker = new Worker<MediaJob>(
     if (job.name === "purge-abandoned") return { purged: await purgeAbandonedUploads() };
     await processUpload(job.data.uploadId);
   },
-  { connection: redisConnection(), concurrency: 2 },
+  { connection: redisConnection(), concurrency: 2, prefix: env.QUEUE_PREFIX },
 );
 
 worker.on("failed", async (job, err) => {

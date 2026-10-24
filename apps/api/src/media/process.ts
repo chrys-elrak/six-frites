@@ -50,6 +50,34 @@ async function video(upload: Upload, dir: string, input: string) {
   };
 }
 
+const NOTE_SIZE = 384;
+const NOTE_MAX_SECONDS = 60;
+
+/** Round video messages: centre square crop, small and short like Telegram's video notes. */
+async function videoNote(upload: Upload, dir: string, input: string) {
+  const out = join(dir, "main.mp4");
+  await ffmpeg([
+    "-i", input,
+    "-t", String(NOTE_MAX_SECONDS),
+    "-map", "0:v:0", "-map", "0:a:0?",
+    "-vf", `crop='min(iw,ih)':'min(iw,ih)',scale=${NOTE_SIZE}:${NOTE_SIZE},format=yuv420p`,
+    "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
+    "-c:a", "aac", "-b:a", "64k", "-ac", "1",
+    "-movflags", "+faststart",
+    out,
+  ]);
+  const info = await probe(out);
+  await ffmpeg(["-i", out, ...THUMB, join(dir, "thumb.webp")]);
+  return {
+    mainKey: await store(upload, dir, "main.mp4", "main.mp4", "video/mp4"),
+    mainMime: "video/mp4",
+    thumbKey: await store(upload, dir, "thumb.webp", "thumb.webp", "image/webp"),
+    width: NOTE_SIZE,
+    height: NOTE_SIZE,
+    durationMs: info.durationMs,
+  };
+}
+
 async function voice(upload: Upload, dir: string, input: string) {
   const out = join(dir, "main.m4a");
   await ffmpeg(["-i", input, "-vn", "-c:a", "aac", "-b:a", "64k", "-ac", "1", "-movflags", "+faststart", out]);
@@ -78,9 +106,11 @@ export async function processUpload(uploadId: string) {
         ? await image(upload, dir, input)
         : upload.kind === "video"
           ? await video(upload, dir, input)
-          : upload.kind === "voice"
-            ? await voice(upload, dir, input)
-            : {};
+          : upload.kind === "video_note"
+            ? await videoNote(upload, dir, input)
+            : upload.kind === "voice"
+              ? await voice(upload, dir, input)
+              : {};
     await finishUpload(uploadId, { ...result, status: "ready", error: null });
   } finally {
     await rm(dir, { recursive: true, force: true });

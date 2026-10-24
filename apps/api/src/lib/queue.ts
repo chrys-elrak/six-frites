@@ -16,6 +16,7 @@ let media: Queue<MediaJob> | null = null;
 export function mediaQueue() {
   media ??= new Queue<MediaJob>(MEDIA_QUEUE, {
     connection: redisConnection(),
+    prefix: env.QUEUE_PREFIX,
     defaultJobOptions: { attempts: 3, backoff: { type: "exponential", delay: 5000 }, removeOnComplete: 1000, removeOnFail: 5000 },
   });
   return media;

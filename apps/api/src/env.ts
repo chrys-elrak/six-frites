@@ -7,6 +7,7 @@ const Env = z.object({
   WEB_ORIGIN: z.string().default("http://localhost:3000"),
   DATABASE_URL: z.string(),
   REDIS_URL: z.string().default("redis://localhost:6379"),
+  QUEUE_PREFIX: z.string().default("six"),
   GOOGLE_CLIENT_IDS: z.string().transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
   JWT_SECRET: z.string().min(32),
   S3_ENDPOINT: z.string().url(),

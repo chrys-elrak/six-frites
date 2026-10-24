@@ -8,6 +8,7 @@ import {
   CheckCheck,
   CheckCircle2,
   Circle,
+  CircleUserRound,
   Clock,
   EyeOff,
   Image as ImageIcon,
@@ -209,6 +210,7 @@ function Quote({
 const mediaLabels = {
   image: { Icon: ImageIcon, label: "Photo" },
   video: { Icon: Video, label: "Video" },
+  video_note: { Icon: CircleUserRound, label: "Video message" },
   voice: { Icon: Mic, label: "Voice message" },
   file: { Icon: Paperclip, label: "File" },
 } as const;
@@ -301,17 +303,19 @@ function Bubble({
       ? emojiOnly(row.text)
       : null;
   const visual = row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
+  const note = row.attachment?.data.kind === "video_note" && !row.deleted;
   const hasText = !!row.text || row.deleted;
   const radius = mine
     ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
     : `rounded-tr-2xl rounded-br-2xl ${groupStart ? "rounded-tl-2xl" : "rounded-tl-md"} ${groupEnd ? "rounded-bl-2xl" : "rounded-bl-md"}`;
-  const tone = jumbo
-    ? "bg-transparent text-stone-900 dark:text-stone-100"
-    : row.deleted
-      ? "bg-transparent text-stone-500 ring-1 ring-inset ring-stone-300 dark:ring-stone-700"
-      : mine
-        ? "bg-brand text-brand-ink"
-        : "bg-white text-stone-900 ring-1 ring-inset ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
+  const tone =
+    jumbo || note
+      ? "bg-transparent text-stone-900 dark:text-stone-100"
+      : row.deleted
+        ? "bg-transparent text-stone-500 ring-1 ring-inset ring-stone-300 dark:ring-stone-700"
+        : mine
+          ? "bg-brand text-brand-ink"
+          : "bg-white text-stone-900 ring-1 ring-inset ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
 
   return (
     <div
@@ -342,7 +346,7 @@ function Bubble({
           <div className="flex min-w-0 flex-col items-end gap-1">
             <div
               {...press}
-              className={`${radius} ${tone} ${jumbo ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${radius} ${tone} ${jumbo || note ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >

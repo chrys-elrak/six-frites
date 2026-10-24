@@ -101,7 +101,7 @@ function boxSize(width: number | null, height: number | null) {
   return { width: Math.max(120, Math.round(w * scale)), aspectRatio: `${w} / ${h}` };
 }
 
-let playing: HTMLAudioElement | null = null;
+let playing: HTMLMediaElement | null = null;
 
 function VoicePlayer({
   url,
@@ -181,6 +181,98 @@ function VoicePlayer({
   );
 }
 
+function VideoNote({
+  url,
+  poster,
+  local,
+  durationMs,
+  state,
+  progress,
+}: {
+  url: string | null;
+  poster: string | null;
+  local: string | null;
+  durationMs: number | null;
+  state: ReturnType<typeof view>["state"];
+  progress: number;
+}) {
+  const video = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setPlaying] = useState(false);
+  const [position, setPosition] = useState(0);
+  const total = durationMs ? durationMs / 1000 : 0;
+
+  function toggle() {
+    const el = video.current;
+    if (!el || !url) return;
+    if (el.paused) {
+      if (playing && playing !== el) playing.pause();
+      playing = el;
+      el.muted = false;
+      void el.play();
+    } else el.pause();
+  }
+
+  const r = 49;
+  const c = 2 * Math.PI * r;
+  const done = total ? position / total : 0;
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={!url}
+      aria-label={isPlaying ? "Pause video message" : "Play video message"}
+      className="relative block size-56 shrink-0 md:size-64"
+    >
+      <span className="absolute inset-0 overflow-hidden rounded-full bg-stone-300 dark:bg-stone-700">
+        <video
+          ref={video}
+          src={url ?? local ?? undefined}
+          poster={poster ?? undefined}
+          playsInline
+          preload="metadata"
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => {
+            setPlaying(false);
+            setPosition(0);
+          }}
+          onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
+          className="size-full object-cover"
+        />
+      </span>
+      {isPlaying && (
+        <svg viewBox="0 0 100 100" className="pointer-events-none absolute -inset-1.5 -rotate-90" aria-hidden>
+          <circle
+            cx="50"
+            cy="50"
+            r={r}
+            fill="none"
+            stroke="var(--color-brand)"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeDasharray={c}
+            strokeDashoffset={c * (1 - done)}
+          />
+        </svg>
+      )}
+      {state === "ready" && !isPlaying && (
+        <span className="absolute inset-0 grid place-items-center">
+          <span className="grid size-12 place-items-center rounded-full bg-black/45 text-white">
+            <Play className="ml-0.5 size-6 fill-current" />
+          </span>
+        </span>
+      )}
+      <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white">
+        {formatDuration(isPlaying ? position * 1000 : durationMs)}
+      </span>
+      <span className="absolute inset-0 overflow-hidden rounded-full">
+        <Overlay state={state} progress={progress} />
+      </span>
+    </button>
+  );
+}
+
 export function AttachmentView({
   attachment,
   mine,
@@ -242,6 +334,19 @@ export function AttachmentView({
         )}
         <Overlay state={a.state} progress={a.progress} />
       </button>
+    );
+  }
+
+  if (a.kind === "video_note") {
+    return (
+      <VideoNote
+        url={a.state === "ready" ? a.url : null}
+        poster={a.thumbUrl}
+        local={attachment.source === "local" ? a.url : null}
+        durationMs={a.durationMs}
+        state={a.state}
+        progress={a.progress}
+      />
     );
   }
 

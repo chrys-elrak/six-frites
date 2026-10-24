@@ -19,7 +19,11 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
+import { isTouch } from "@/lib/camera";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
+import { CameraDialog } from "./camera-dialog";
+import { Sheet } from "./sheet";
+import { VideoNoteRecorder } from "./video-note-recorder";
 import { EmojiButton } from "./emoji-picker";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration } from "@/lib/format";
@@ -88,9 +92,35 @@ export function Composer({
   const [hasSelection, setHasSelection] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const mediaInput = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const [attachMenu, setAttachMenu] = useState(false);
+  const [camera, setCamera] = useState(false);
+  const [noteRecorder, setNoteRecorder] = useState(false);
   const recorder = useRecorder();
   const [picked, setPicked] = useState<File[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
+  const closeCamera = useCallback(() => setCamera(false), []);
+  const closeNoteRecorder = useCallback(() => setNoteRecorder(false), []);
+
+  function sendVideoNote(file: File) {
+    setNoteRecorder(false);
+    if (!realtime) return;
+    void queueMessage(qc, realtime, chatId, {
+      text: "",
+      replyTo: mode?.kind === "reply" ? mode.message : undefined,
+      file: { blob: file, kind: "video_note", name: file.name, mime: file.type || "video/webm" },
+    });
+    if (mode) cancel();
+    onSent();
+  }
+
+  const attachActions = [
+    { label: "Photo or video", onSelect: () => mediaInput.current?.click() },
+    { label: "Camera", onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
+    { label: "Video message", onSelect: () => setNoteRecorder(true) },
+    { label: "File", onSelect: () => fileInput.current?.click() },
+  ];
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
@@ -333,22 +363,34 @@ export function Composer({
                 <button
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => fileInput.current?.click()}
-                  aria-label="Attach a file"
+                  onClick={() => setAttachMenu(true)}
+                  aria-label="Attach"
+                  aria-haspopup="menu"
                   className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
                 >
                   <Paperclip className="size-5" />
                 </button>
-                <input
-                  ref={fileInput}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files?.length) sendFiles(e.target.files);
-                    e.target.value = "";
-                  }}
-                />
+                {(
+                  [
+                    [mediaInput, "image/*,video/*", undefined],
+                    [fileInput, undefined, undefined],
+                    [cameraInput, "image/*", "environment"],
+                  ] as const
+                ).map(([ref, accept, capture], i) => (
+                  <input
+                    key={i}
+                    ref={ref}
+                    type="file"
+                    accept={accept}
+                    capture={capture}
+                    multiple={!capture}
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.length) sendFiles(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                ))}
               </>
             )}
             <div className="flex min-h-10 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800">
@@ -426,13 +468,19 @@ export function Composer({
           </div>
         )}
       </form>
-      {picked && (
-        <AttachDialog
-          files={picked}
-          initialCaption={editing ? "" : text}
-          onCancel={closePicker}
-          onSend={sendPicked}
+      {attachMenu && <Sheet title="Send" actions={attachActions} onClose={() => setAttachMenu(false)} />}
+      {camera && (
+        <CameraDialog
+          onClose={closeCamera}
+          onCapture={(file) => {
+            setCamera(false);
+            setPicked([file]);
+          }}
         />
+      )}
+      {noteRecorder && <VideoNoteRecorder onClose={closeNoteRecorder} onSend={sendVideoNote} />}
+      {picked && (
+        <AttachDialog files={picked} initialCaption={editing ? "" : text} onCancel={closePicker} onSend={sendPicked} />
       )}
     </>
   );

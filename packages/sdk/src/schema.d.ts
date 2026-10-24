@@ -642,7 +642,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -654,7 +654,7 @@ export interface paths {
                                     attachment: {
                                         id: string;
                                         /** @enum {string} */
-                                        kind: "image" | "video" | "voice" | "file";
+                                        kind: "image" | "video" | "video_note" | "voice" | "file";
                                         /** @enum {string} */
                                         status: "pending" | "processing" | "ready" | "failed";
                                         name: string;
@@ -676,7 +676,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
                                         deleted: boolean;
@@ -762,7 +762,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -774,7 +774,7 @@ export interface paths {
                                 attachment: {
                                     id: string;
                                     /** @enum {string} */
-                                    kind: "image" | "video" | "voice" | "file";
+                                    kind: "image" | "video" | "video_note" | "voice" | "file";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -796,7 +796,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
                                     deleted: boolean;
@@ -905,7 +905,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -917,7 +917,7 @@ export interface paths {
                                 attachment: {
                                     id: string;
                                     /** @enum {string} */
-                                    kind: "image" | "video" | "voice" | "file";
+                                    kind: "image" | "video" | "video_note" | "voice" | "file";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -939,7 +939,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
                                     deleted: boolean;
@@ -1017,7 +1017,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "voice" | "file";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1029,7 +1029,7 @@ export interface paths {
                             attachment: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "image" | "video" | "voice" | "file";
+                                kind: "image" | "video" | "video_note" | "voice" | "file";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -1051,7 +1051,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                 text: string | null;
                                 spoiler: boolean;
                                 deleted: boolean;
@@ -1147,7 +1147,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1159,7 +1159,7 @@ export interface paths {
                                 attachment: {
                                     id: string;
                                     /** @enum {string} */
-                                    kind: "image" | "video" | "voice" | "file";
+                                    kind: "image" | "video" | "video_note" | "voice" | "file";
                                     /** @enum {string} */
                                     status: "pending" | "processing" | "ready" | "failed";
                                     name: string;
@@ -1181,7 +1181,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     spoiler: boolean;
                                     deleted: boolean;
@@ -1246,7 +1246,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "voice" | "file";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1258,7 +1258,7 @@ export interface paths {
                             attachment: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "image" | "video" | "voice" | "file";
+                                kind: "image" | "video" | "video_note" | "voice" | "file";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -1280,7 +1280,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                 text: string | null;
                                 spoiler: boolean;
                                 deleted: boolean;
@@ -1600,7 +1600,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -1612,7 +1612,7 @@ export interface paths {
                                     attachment: {
                                         id: string;
                                         /** @enum {string} */
-                                        kind: "image" | "video" | "voice" | "file";
+                                        kind: "image" | "video" | "video_note" | "voice" | "file";
                                         /** @enum {string} */
                                         status: "pending" | "processing" | "ready" | "failed";
                                         name: string;
@@ -1634,7 +1634,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
                                         deleted: boolean;
@@ -1657,7 +1657,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -1669,7 +1669,7 @@ export interface paths {
                                     attachment: {
                                         id: string;
                                         /** @enum {string} */
-                                        kind: "image" | "video" | "voice" | "file";
+                                        kind: "image" | "video" | "video_note" | "voice" | "file";
                                         /** @enum {string} */
                                         status: "pending" | "processing" | "ready" | "failed";
                                         name: string;
@@ -1691,7 +1691,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                         text: string | null;
                                         spoiler: boolean;
                                         deleted: boolean;
@@ -1747,7 +1747,7 @@ export interface paths {
                                         senderId: string;
                                         clientId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                         text: string | null;
                                         entities: {
                                             /** @enum {string} */
@@ -1759,7 +1759,7 @@ export interface paths {
                                         attachment: {
                                             id: string;
                                             /** @enum {string} */
-                                            kind: "image" | "video" | "voice" | "file";
+                                            kind: "image" | "video" | "video_note" | "voice" | "file";
                                             /** @enum {string} */
                                             status: "pending" | "processing" | "ready" | "failed";
                                             name: string;
@@ -1781,7 +1781,7 @@ export interface paths {
                                             id: string;
                                             senderId: string;
                                             /** @enum {string} */
-                                            type: "text" | "image" | "video" | "voice" | "file";
+                                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
                                             text: string | null;
                                             spoiler: boolean;
                                             deleted: boolean;
@@ -1878,7 +1878,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        kind: "image" | "video" | "voice" | "file";
+                        kind: "image" | "video" | "video_note" | "voice" | "file";
                         name: string;
                         mime: string;
                         size: number;
@@ -1896,7 +1896,7 @@ export interface paths {
                             upload: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "image" | "video" | "voice" | "file";
+                                kind: "image" | "video" | "video_note" | "voice" | "file";
                                 /** @enum {string} */
                                 status: "pending" | "processing" | "ready" | "failed";
                                 name: string;
@@ -1967,7 +1967,7 @@ export interface paths {
                         "application/json": {
                             id: string;
                             /** @enum {string} */
-                            kind: "image" | "video" | "voice" | "file";
+                            kind: "image" | "video" | "video_note" | "voice" | "file";
                             /** @enum {string} */
                             status: "pending" | "processing" | "ready" | "failed";
                             name: string;
@@ -2023,7 +2023,7 @@ export interface paths {
                         "application/json": {
                             id: string;
                             /** @enum {string} */
-                            kind: "image" | "video" | "voice" | "file";
+                            kind: "image" | "video" | "video_note" | "voice" | "file";
                             /** @enum {string} */
                             status: "pending" | "processing" | "ready" | "failed";
                             name: string;

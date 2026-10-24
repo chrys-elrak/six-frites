@@ -3,16 +3,19 @@ import { Id } from "./common.js";
 
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
-export const UploadKind = z.enum(["image", "video", "voice", "file"]);
+export const UploadKind = z.enum(["image", "video", "video_note", "voice", "file"]);
 export type UploadKind = z.infer<typeof UploadKind>;
 
 export const UploadStatus = z.enum(["pending", "processing", "ready", "failed"]);
 export type UploadStatus = z.infer<typeof UploadStatus>;
 
 /** Content types accepted per kind. Anything goes for plain files, which are only ever downloaded. */
+const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm", "video/x-matroska"];
+
 export const ACCEPTED_TYPES: Record<Exclude<UploadKind, "file">, string[]> = {
   image: ["image/jpeg", "image/png", "image/webp", "image/gif"],
-  video: ["video/mp4", "video/quicktime", "video/webm", "video/x-matroska"],
+  video: VIDEO_TYPES,
+  video_note: VIDEO_TYPES,
   voice: ["audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/aac", "audio/x-m4a", "audio/wav"],
 };
 

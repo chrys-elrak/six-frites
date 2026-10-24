@@ -3,7 +3,7 @@ import { Id, IsoDate } from "./common.js";
 import { AttachmentDTO } from "./uploads.js";
 import { PublicUser } from "./invites.js";
 
-export const MessageType = z.enum(["text", "image", "video", "voice", "file"]);
+export const MessageType = z.enum(["text", "image", "video", "video_note", "voice", "file"]);
 export type MessageType = z.infer<typeof MessageType>;
 
 export const EntityType = z.enum(["bold", "italic", "strike", "code", "spoiler"]);
