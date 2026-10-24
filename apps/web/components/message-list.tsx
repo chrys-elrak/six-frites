@@ -63,6 +63,7 @@ import { useSpoilers } from "@/lib/spoilers";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { PackDialog } from "./pack-dialog";
+import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
 import { Sheet, type SheetAction } from "./sheet";
 import { StickerView } from "./sticker";
@@ -624,6 +625,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const atBottom = useRef(true);
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
+    const [reporting, setReporting] = useState<MessageDTO | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
@@ -793,6 +795,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
                 : []),
             ]),
+        ...(row.mine ? [] : [{ label: "Report", onSelect: () => setReporting(m) }]),
         { label: "Delete", destructive: true, onSelect: () => setConfirmDelete(m) },
       ];
     }
@@ -857,6 +860,13 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 
         {menuFor && <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)} />}
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
+        {reporting && (
+          <ReportDialog
+            target={{ messageId: reporting.id }}
+            title="Report message"
+            onClose={() => setReporting(null)}
+          />
+        )}
         {packFor && <PackDialog packId={packFor} onClose={() => setPackFor(null)} />}
         {confirmDelete && (
           <Sheet

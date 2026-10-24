@@ -19,6 +19,7 @@ export default defineConfig({
       REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
       QUEUE_PREFIX: "six-test",
       GIPHY_API_KEY: "test-giphy-key",
+      ADMIN_EMAILS: "the-admin@example.com",
     },
   },
 });

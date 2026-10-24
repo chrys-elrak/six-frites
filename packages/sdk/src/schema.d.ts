@@ -166,6 +166,874 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether you are an admin (403 otherwise) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            admin: true;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform overview */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            users: number;
+                            bannedUsers: number;
+                            activeUsers7d: number;
+                            messages: number;
+                            messages24h: number;
+                            openReports: number;
+                            stickerPacks: number;
+                            /** @description Last 30 days, oldest first */
+                            signups: {
+                                day: string;
+                                count: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Users, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                    /** @description Matches name or email */
+                    q?: string;
+                    banned?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                                banReason: string | null;
+                                admin: boolean;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                lastActiveAt: string | null;
+                                chats: number;
+                                messages: number;
+                                activeSessions: number;
+                                /** @description Open reports against this person */
+                                openReports: number;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            displayName: string;
+                            email: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            banReason: string | null;
+                            admin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            lastActiveAt: string | null;
+                            chats: number;
+                            messages: number;
+                            activeSessions: number;
+                            /** @description Open reports against this person */
+                            openReports: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/ban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ban a user
+         * @description Signs them out of every device and blocks signing in again. Their messages stay.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            displayName: string;
+                            email: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            banReason: string | null;
+                            admin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            lastActiveAt: string | null;
+                            chats: number;
+                            messages: number;
+                            activeSessions: number;
+                            /** @description Open reports against this person */
+                            openReports: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/unban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lift a ban */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            displayName: string;
+                            email: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            banReason: string | null;
+                            admin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            lastActiveAt: string | null;
+                            chats: number;
+                            messages: number;
+                            activeSessions: number;
+                            /** @description Open reports against this person */
+                            openReports: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign a user out of every device */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            displayName: string;
+                            email: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            banReason: string | null;
+                            admin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            lastActiveAt: string | null;
+                            chats: number;
+                            messages: number;
+                            activeSessions: number;
+                            /** @description Open reports against this person */
+                            openReports: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reports, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                    status?: "open" | "resolved";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                /** @enum {string} */
+                                reason: "spam" | "harassment" | "sexual" | "violence" | "illegal" | "other";
+                                note: string | null;
+                                /** @enum {string} */
+                                status: "open" | "dismissed" | "actioned";
+                                reporter: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                };
+                                target: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                };
+                                /** @description Copied when the report was made, so later edits or deletes don't hide it */
+                                messages: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    text: string | null;
+                                    entities: {
+                                        /** @enum {string} */
+                                        type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                        offset: number;
+                                        length: number;
+                                    }[];
+                                    /** @description Null once the file is gone; links last 5 minutes */
+                                    attachment: {
+                                        id: string;
+                                        /**
+                                         * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                         * @enum {string}
+                                         */
+                                        kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                        /** @enum {string} */
+                                        status: "pending" | "processing" | "ready" | "failed";
+                                        name: string;
+                                        mime: string;
+                                        size: number;
+                                        /**
+                                         * Format: uri
+                                         * @description Signed link to the playable or viewable file, once ready
+                                         */
+                                        url: string | null;
+                                        /** Format: uri */
+                                        thumbUrl: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                        durationMs: number | null;
+                                        waveform: number[] | null;
+                                    } | null;
+                                    sticker: {
+                                        id: string;
+                                        packId: string;
+                                        emoji: string;
+                                        /**
+                                         * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                         * @enum {string}
+                                         */
+                                        format: "lottie" | "image";
+                                        /**
+                                         * Format: uri
+                                         * @description Null while an uploaded sticker is still being processed
+                                         */
+                                        url: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** @description The message that was reported; the others are the few around it */
+                                    reported: boolean;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                resolvedAt: string | null;
+                                resolution: string | null;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Handle a report
+         * @description Optionally deletes the reported message for everyone and/or bans the reported person.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Delete the reported message for everyone */
+                        deleteMessage?: boolean;
+                        /** @description Ban the reported person */
+                        banUser?: boolean;
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            reason: "spam" | "harassment" | "sexual" | "violence" | "illegal" | "other";
+                            note: string | null;
+                            /** @enum {string} */
+                            status: "open" | "dismissed" | "actioned";
+                            reporter: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            };
+                            target: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            };
+                            /** @description Copied when the report was made, so later edits or deletes don't hide it */
+                            messages: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
+                                /** @description Null once the file is gone; links last 5 minutes */
+                                attachment: {
+                                    id: string;
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                    /** @enum {string} */
+                                    status: "pending" | "processing" | "ready" | "failed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** @description The message that was reported; the others are the few around it */
+                                reported: boolean;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            resolvedAt: string | null;
+                            resolution: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/sticker-packs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sticker packs people made, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                title: string;
+                                owner: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                } | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                                stickers: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                }[];
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/sticker-packs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Take a sticker pack down
+         * @description Hides the pack, stops its stickers being sent, and blanks them in messages that show them.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/stickers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take one sticker down */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report a message or a person to the moderators
+         * @description Reporting a message shares it, and the few messages around it, with the moderators. Reporting the same thing twice does nothing.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Report this message (and its sender) */
+                        messageId?: string;
+                        /** @description Report this person, someone you share a chat with */
+                        userId?: string;
+                        /** @enum {string} */
+                        reason: "spam" | "harassment" | "sexual" | "violence" | "illegal" | "other";
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;

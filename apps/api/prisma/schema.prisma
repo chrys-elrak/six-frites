@@ -8,13 +8,15 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  googleSub   String   @unique
-  email       String   @unique
+  id          String    @id @default(cuid())
+  googleSub   String    @unique
+  email       String    @unique
   displayName String
   avatarUrl   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bannedAt    DateTime?
+  banReason   String?
 
   sessions       Session[]
   invites        Invite[]
@@ -30,6 +32,29 @@ model User {
   scheduled      ScheduledMessage[]
   stickerPacks   StickerPack[]
   savedPacks     SavedStickerPack[]
+  reportsMade    Report[]           @relation("reporter")
+  reportsAgainst Report[]           @relation("target")
+}
+
+model Report {
+  id           String    @id @default(cuid())
+  reporterId   String
+  targetId     String
+  messageId    String?
+  reason       String
+  note         String?
+  snapshot     Json
+  status       String    @default("open")
+  resolution   String?
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  reporter User @relation("reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  target   User @relation("target", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([targetId, status])
 }
 
 model Invite {
@@ -247,11 +272,12 @@ model Upload {
 }
 
 model StickerPack {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   ownerId   String?
   title     String
-  builtin   Boolean  @default(false)
-  createdAt DateTime @default(now())
+  builtin   Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  bannedAt  DateTime?
 
   owner    User?              @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   stickers Sticker[]
@@ -268,6 +294,7 @@ model Sticker {
   lottieUrl String?
   position  Int       @default(0)
   removedAt DateTime?
+  bannedAt  DateTime?
   createdAt DateTime  @default(now())
 
   pack     StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)

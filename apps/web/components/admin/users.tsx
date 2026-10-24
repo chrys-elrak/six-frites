@@ -1,0 +1,235 @@
+"use client";
+
+import { unwrap } from "@six/sdk";
+import type { AdminUserDTO } from "@six/shared";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { adminKeys, refreshAdmin } from "@/lib/admin";
+import { timeAgo } from "@/lib/format";
+import { six } from "@/lib/six";
+import { Avatar } from "../avatar";
+import { Dialog } from "../dialog";
+import { Sheet } from "../sheet";
+import { Segmented } from "./segmented";
+
+function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Dialog onClose={onClose}>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            unwrap(
+              await six.api.POST("/v1/admin/users/{id}/ban", {
+                params: { path: { id: user.id } },
+                body: { reason: reason.trim() },
+              }),
+            );
+            refreshAdmin(qc);
+            onClose();
+          } catch (err) {
+            setError((err as Error).message);
+          }
+        }}
+        className="space-y-3 p-4"
+      >
+        <h2 className="font-semibold">Ban {user.displayName}?</h2>
+        <p className="text-sm text-stone-500">
+          They are signed out everywhere and can't sign in again until you lift the ban. Their messages stay.
+        </p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          required
+          maxLength={500}
+          rows={2}
+          autoFocus
+          placeholder="Reason (only admins see it)"
+          aria-label="Reason"
+          className="block w-full resize-none rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800 md:text-sm"
+        />
+        {error && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!reason.trim()}
+            className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 active:scale-[0.98] disabled:opacity-50"
+          >
+            Ban
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
+function UserRow({ u }: { u: AdminUserDTO }) {
+  const qc = useQueryClient();
+  const [banning, setBanning] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function act(path: "/v1/admin/users/{id}/unban" | "/v1/admin/users/{id}/sign-out") {
+    unwrap(await six.api.POST(path, { params: { path: { id: u.id } } }));
+    refreshAdmin(qc);
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-3 px-4 py-3">
+      <Avatar user={u} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">
+          {u.displayName}
+          {u.admin && <span className="ml-1.5 text-xs text-brand">Admin</span>}
+          {u.bannedAt && <span className="ml-1.5 text-xs text-red-600 dark:text-red-400">Banned</span>}
+        </p>
+        <p className="truncate text-xs text-stone-500">{u.email}</p>
+        <p className="text-xs text-stone-500">
+          Joined {timeAgo(u.createdAt)} · {u.lastActiveAt ? `active ${timeAgo(u.lastActiveAt)}` : "signed out"} ·{" "}
+          {u.chats} chats · {u.messages} messages
+          {u.openReports > 0 && (
+            <span className="text-red-600 dark:text-red-400">
+              {" "}
+              · {u.openReports} open report{u.openReports === 1 ? "" : "s"}
+            </span>
+          )}
+        </p>
+        {u.banReason && <p className="text-xs text-red-600 dark:text-red-400">Ban reason: {u.banReason}</p>}
+      </div>
+      {!u.admin && (
+        <div className="flex gap-2">
+          {u.activeSessions > 0 && (
+            <button
+              type="button"
+              onClick={() => setSigningOut(true)}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
+            >
+              Sign out
+            </button>
+          )}
+          {u.bannedAt ? (
+            <button
+              type="button"
+              onClick={() => void act("/v1/admin/users/{id}/unban")}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
+            >
+              Lift ban
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setBanning(true)}
+              className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+            >
+              Ban
+            </button>
+          )}
+        </div>
+      )}
+      {banning && <BanDialog user={u} onClose={() => setBanning(false)} />}
+      {signingOut && (
+        <Sheet
+          title={`Sign ${u.displayName} out of ${u.activeSessions} device${u.activeSessions === 1 ? "" : "s"}?`}
+          onClose={() => setSigningOut(false)}
+          actions={[
+            {
+              label: "Sign out everywhere",
+              destructive: true,
+              onSelect: () => void act("/v1/admin/users/{id}/sign-out"),
+            },
+          ]}
+        />
+      )}
+    </li>
+  );
+}
+
+export function Users() {
+  const [input, setInput] = useState("");
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "banned">("all");
+
+  useEffect(() => {
+    const t = setTimeout(() => setQ(input.trim()), 300);
+    return () => clearTimeout(t);
+  }, [input]);
+
+  const users = useInfiniteQuery({
+    queryKey: adminKeys.users(q, filter === "banned"),
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) =>
+      unwrap(
+        await six.api.GET("/v1/admin/users", {
+          params: {
+            query: {
+              q: q || undefined,
+              banned: filter === "banned" ? "true" : undefined,
+              cursor: pageParam,
+              limit: 30,
+            },
+          },
+        }),
+      ),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
+  const items = users.data?.pages.flatMap((p) => p.items) ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="relative min-w-56 flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-stone-400" />
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Search by name or email"
+            aria-label="Search users"
+            className="w-full rounded-xl bg-white py-2 pr-3 pl-9 text-[16px] ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-stone-900 dark:ring-stone-800"
+          />
+        </label>
+        <Segmented
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: "all", label: "Everyone" },
+            { value: "banned", label: "Banned" },
+          ]}
+        />
+      </div>
+      <ul className="divide-y divide-stone-100 rounded-2xl bg-white shadow-sm ring-1 ring-stone-200 dark:divide-stone-800 dark:bg-stone-900 dark:ring-stone-800">
+        {users.isPending && <li className="p-6 text-center text-sm text-stone-500">Loading…</li>}
+        {!users.isPending && items.length === 0 && (
+          <li className="p-6 text-center text-sm text-stone-500">Nobody matches.</li>
+        )}
+        {items.map((u) => (
+          <UserRow key={u.id} u={u} />
+        ))}
+      </ul>
+      {users.hasNextPage && (
+        <button
+          type="button"
+          onClick={() => void users.fetchNextPage()}
+          disabled={users.isFetchingNextPage}
+          className="w-full rounded-xl py-2.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-800 dark:hover:bg-stone-900"
+        >
+          {users.isFetchingNextPage ? "Loading…" : "Load more"}
+        </button>
+      )}
+    </div>
+  );
+}

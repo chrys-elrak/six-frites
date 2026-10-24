@@ -19,7 +19,7 @@ export function toStickerDTO(s: Sticker & { upload: Upload | null }): StickerDTO
     packId: s.packId,
     emoji: s.emoji,
     format: s.lottieUrl || u?.mainMime === LOTTIE_MIME ? "lottie" : "image",
-    url: s.lottieUrl ?? (u?.status === "ready" ? presignGet(u.mainKey ?? u.key) : null),
+    url: s.bannedAt ? null : (s.lottieUrl ?? (u?.status === "ready" ? presignGet(u.mainKey ?? u.key) : null)),
     width: u?.width ?? null,
     height: u?.height ?? null,
   };
@@ -88,7 +88,7 @@ export async function ensureBuiltinStickers() {
 
 export async function listPacks(userId: string) {
   const packs = await prisma.stickerPack.findMany({
-    where: { OR: [{ builtin: true }, { savedBy: { some: { userId } } }] },
+    where: { bannedAt: null, OR: [{ builtin: true }, { savedBy: { some: { userId } } }] },
     include: packInclude,
     orderBy: [{ builtin: "desc" }, { createdAt: "asc" }],
   });
@@ -100,7 +100,7 @@ export async function getPack(userId: string, packId: string) {
     where: { id: packId },
     include: { ...packInclude, savedBy: { where: { userId } } },
   });
-  if (!pack) throw new AppError("STICKER_PACK_NOT_FOUND");
+  if (!pack || pack.bannedAt) throw new AppError("STICKER_PACK_NOT_FOUND");
   return toPackDTO(pack, userId, pack.savedBy.length > 0);
 }
 
@@ -117,7 +117,7 @@ export async function createPack(userId: string, input: CreateStickerPackInput) 
 
 async function ownPack(userId: string, packId: string) {
   const pack = await prisma.stickerPack.findUnique({ where: { id: packId } });
-  if (!pack) throw new AppError("STICKER_PACK_NOT_FOUND");
+  if (!pack || pack.bannedAt) throw new AppError("STICKER_PACK_NOT_FOUND");
   if (pack.ownerId !== userId) throw new AppError("FORBIDDEN", "Only the pack's creator can change it");
   return pack;
 }
@@ -153,7 +153,7 @@ export async function removeSticker(userId: string, packId: string, stickerId: s
 
 export async function setPackSaved(userId: string, packId: string, saved: boolean) {
   const pack = await prisma.stickerPack.findUnique({ where: { id: packId } });
-  if (!pack) throw new AppError("STICKER_PACK_NOT_FOUND");
+  if (!pack || pack.bannedAt) throw new AppError("STICKER_PACK_NOT_FOUND");
   if (pack.builtin) return;
   if (saved) {
     await prisma.savedStickerPack.upsert({

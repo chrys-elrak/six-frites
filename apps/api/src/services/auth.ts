@@ -33,6 +33,7 @@ export async function loginWithGoogle(
 
   const { user, session, refresh } = await withEvents(async (tx, emit) => {
     const existing = await tx.user.findUnique({ where: { googleSub: identity.sub } });
+    if (existing?.bannedAt) throw new AppError("ACCOUNT_BANNED", "This account has been banned");
     const user =
       existing ??
       (await tx.user.create({
@@ -87,6 +88,10 @@ export async function refreshSession(refreshToken: string): Promise<IssuedAuth> 
   const session = await prisma.session.findUnique({ where: { id: sessionId }, include: { user: true } });
   if (!session) throw new AppError("INVALID_REFRESH_TOKEN");
   if (session.revokedAt || session.expiresAt < new Date()) throw new AppError("SESSION_REVOKED");
+  if (session.user.bannedAt) {
+    await revokeSession(session.id);
+    throw new AppError("ACCOUNT_BANNED", "This account has been banned");
+  }
 
   if (session.refreshTokenHash !== hash) {
     await revokeSession(session.id);

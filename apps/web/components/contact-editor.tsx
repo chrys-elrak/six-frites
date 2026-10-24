@@ -11,6 +11,7 @@ import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
 import { PrimaryButton } from "./ui";
 import { Portal } from "./portal";
+import { ReportDialog } from "./report-dialog";
 
 export function ContactEditor({ userId, onClose }: { userId: string; onClose: () => void }) {
   const qc = useQueryClient();
@@ -25,6 +26,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const file = useRef<HTMLInputElement>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
 
   const shuffle = () =>
     void suggestAvatars()
@@ -213,7 +215,21 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               <PrimaryButton type="submit" disabled={saving} className="w-full">
                 {saving ? "Saving…" : "Save"}
               </PrimaryButton>
+              <button
+                type="button"
+                onClick={() => setReporting(true)}
+                className="block w-full text-center text-sm font-medium text-red-600 dark:text-red-400"
+              >
+                Report {c.originalName}
+              </button>
             </form>
+          )}
+          {reporting && (
+            <ReportDialog
+              target={{ userId }}
+              title={`Report ${contact.data?.originalName ?? "this person"}`}
+              onClose={() => setReporting(false)}
+            />
           )}
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { LogOut } from "lucide-react";
 import { six } from "@/lib/six";
+import { AdminLink } from "./admin/admin-link";
 import { Devices } from "./devices";
 import { Invites, Referrals } from "./invites";
 import { NotificationSettings } from "./notification-settings";
@@ -27,6 +28,7 @@ export function SettingsPanel() {
           <Invites />
           <Referrals />
           <Devices />
+          <AdminLink />
           <p className="px-1 pb-2 text-center text-xs leading-relaxed text-stone-400">
             Animated emoji from{" "}
             <a
