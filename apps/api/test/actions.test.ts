@@ -108,6 +108,7 @@ describe("deleting messages", () => {
 describe("chat settings", () => {
   it("archives, mutes and pins per member", async () => {
     const { host, guest, chatId } = await makeFriends();
+    await send(guest, chatId, "hey");
     const updated = await call(host, "PATCH", `/v1/chats/${chatId}`, { archived: true, muted: true });
     expect(updated.json()).toMatchObject({ archived: true, muted: true, pinned: false });
 
@@ -116,6 +117,24 @@ describe("chat settings", () => {
     expect((await get(guest, `/v1/chats/${chatId}`)).archived).toBe(false);
 
     expect((await call(host, "PATCH", `/v1/chats/${chatId}`, {})).json().error.code).toBe("VALIDATION_FAILED");
+  });
+});
+
+describe("contacts", () => {
+  it("lists connections alphabetically with search and a cursor", async () => {
+    const host = await signUp("hub");
+    for (const name of ["Zoé", "adam", "Bea"]) {
+      const invite = await call(host, "POST", "/v1/invites", {});
+      await signUp(name, { inviteCode: invite.json().code });
+    }
+    const names = (page: { items: { user: { displayName: string } }[] }) =>
+      page.items.map((c) => c.user.displayName.split("-")[0]);
+
+    const first = await get(host, "/v1/contacts?limit=2");
+    const second = await get(host, `/v1/contacts?limit=2&cursor=${first.nextCursor}`);
+    expect([...names(first), ...names(second)]).toEqual(["adam", "Bea", "Zoé"]);
+    expect(second.nextCursor).toBeNull();
+    expect(names(await get(host, "/v1/contacts?q=BE"))).toEqual(["Bea"]);
   });
 });
 
@@ -142,6 +161,8 @@ describe("deleting chats", () => {
     await call(guest, "DELETE", `/v1/chats/${chatId}?scope=all`);
 
     expect(texts(await get(host, `/v1/chats/${chatId}/messages`))).toEqual([]);
+    expect((await get(host, "/v1/chats")).items).toEqual([]);
+    expect((await get(host, "/v1/contacts")).items[0].chatId).toBe(chatId);
     expect((await get(host, `/v1/chats/${chatId}`)).lastMessage).toBeNull();
     expect(JSON.stringify(await get(host, "/v1/sync?since=0"))).not.toContain("gone soon");
   });

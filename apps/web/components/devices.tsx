@@ -3,11 +3,21 @@
 import { unwrap } from "@six/sdk";
 import type { SessionDTO } from "@six/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type LucideIcon, Monitor, Smartphone } from "lucide-react";
 import { timeAgo } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Card, SectionTitle } from "./ui";
 
-const platformIcon: Record<SessionDTO["platform"], string> = { web: "🖥️", ios: "📱", android: "📱" };
+const platformIcon: Record<SessionDTO["platform"], LucideIcon> = { web: Monitor, ios: Smartphone, android: Smartphone };
+
+function PlatformIcon({ platform }: { platform: SessionDTO["platform"] }) {
+  const Icon = platformIcon[platform];
+  return (
+    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-500 dark:bg-stone-800">
+      <Icon className="size-5" />
+    </span>
+  );
+}
 
 export function Devices() {
   const qc = useQueryClient();
@@ -51,9 +61,7 @@ export function Devices() {
         {sessions.isError && <p className="p-4 text-sm text-red-600">Couldn't load devices.</p>}
         {sessions.data?.map((s) => (
           <div key={s.id} className="flex items-center gap-3 p-4">
-            <span className="text-2xl" aria-hidden>
-              {platformIcon[s.platform]}
-            </span>
+            <PlatformIcon platform={s.platform} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
                 {s.deviceName ?? s.platform}

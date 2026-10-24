@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { Check, SendHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
@@ -20,9 +21,9 @@ function ModeBar({ label, text, onCancel }: { label: string; text: string; onCan
         type="button"
         onClick={onCancel}
         aria-label="Cancel"
-        className="grid size-8 place-items-center rounded-full text-lg text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+        className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
       >
-        ×
+        <X className="size-4" />
       </button>
     </div>
   );
@@ -163,13 +164,9 @@ export function Composer({
           className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
         >
           {editing ? (
-            <span className="text-lg font-bold" aria-hidden>
-              ✓
-            </span>
+            <Check className="size-5" strokeWidth={2.6} aria-hidden />
           ) : (
-            <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden>
-              <path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8z" />
-            </svg>
+            <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
           )}
         </button>
       </div>

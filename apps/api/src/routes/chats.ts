@@ -5,6 +5,8 @@ import {
   ChatDeliveredDTO,
   ChatListQuery,
   ChatReadDTO,
+  ContactDTO,
+  ContactListQuery,
   DeleteChatQuery,
   DeleteMessagesQuery,
   EditMessageInput,
@@ -20,6 +22,7 @@ import {
   page,
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
+import { listContacts } from "../services/contacts.js";
 import { deleteMessages, editMessage, listMessages, sendMessage } from "../services/messages.js";
 import { sync } from "../services/sync.js";
 
@@ -183,6 +186,21 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => markDelivered(req.auth.userId, req.params.id, req.body ?? {}),
+  );
+
+  app.get(
+    "/contacts",
+    {
+      schema: {
+        tags: ["contacts"],
+        summary: "People you are connected with, A to Z",
+        description: "Everyone you share a direct chat with, including chats with no messages yet. `q` filters by name.",
+        security,
+        querystring: ContactListQuery,
+        response: { 200: page(ContactDTO) },
+      },
+    },
+    (req) => listContacts(req.auth.userId, req.query),
   );
 
   app.get(

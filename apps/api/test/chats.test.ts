@@ -11,17 +11,20 @@ const send = (who: Auth, chatId: string, text: string, clientId = `c-${Math.rand
   chatHelpers(ctx).send(who, chatId, text, { clientId });
 
 describe("chats over REST", () => {
-  it("creates a direct chat when an invite is used", async () => {
+  it("connects both people when an invite is used, but lists the chat only once someone writes", async () => {
     const { host, guest, chatId } = await makeFriends();
-    const guestChats = await get(guest, "/v1/chats");
-    expect(guestChats.items).toHaveLength(1);
-    expect(guestChats.items[0].id).toBe(chatId);
-    expect(guestChats.items[0].members.map((m: { user: { id: string } }) => m.user.id).sort()).toEqual(
-      [host.user.id, guest.user.id].sort(),
-    );
+    const guestContacts = await get(guest, "/v1/contacts");
+    expect(guestContacts.items).toEqual([
+      { user: expect.objectContaining({ id: host.user.id }), chatId },
+    ]);
+    expect((await get(guest, "/v1/chats")).items).toEqual([]);
+    expect((await get(guest, `/v1/chats/${chatId}`)).members).toHaveLength(2);
+
+    await send(guest, chatId, "hi");
+    expect((await get(host, "/v1/chats")).items.map((c: { id: string }) => c.id)).toEqual([chatId]);
 
     const events = await get(host, "/v1/sync?since=0");
-    expect(events.events.map((e: { type: string }) => e.type)).toEqual(["chat.updated"]);
+    expect(events.events.map((e: { type: string }) => e.type)[0]).toBe("chat.updated");
   });
 
   it("sends idempotently and tracks unread counts", async () => {
@@ -68,14 +71,15 @@ describe("chats over REST", () => {
   });
 
   it("orders chats by latest activity with a cursor", async () => {
-    const host = await signUp("popular");
+    const host = await signUp("Popular");
     const chatIds: string[] = [];
     for (let i = 0; i < 3; i++) {
       const invite = await ctx.app.inject({ method: "POST", url: "/v1/invites", headers: bearer(host.accessToken), payload: {} });
       await signUp(`friend${i}`, { inviteCode: invite.json().code });
     }
-    const all = await get(host, "/v1/chats");
-    chatIds.push(...all.items.map((c: { id: string }) => c.id));
+    const contacts = await get(host, "/v1/contacts");
+    chatIds.push(...contacts.items.map((c: { chatId: string }) => c.chatId));
+    for (const id of chatIds) await send(host, id, "hello");
 
     await send(host, chatIds[2]!, "bump the oldest");
     const first = await get(host, "/v1/chats?limit=2");

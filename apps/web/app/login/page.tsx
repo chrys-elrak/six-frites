@@ -4,6 +4,7 @@ import { SixApiError } from "@six/sdk";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
+import { Logo } from "@/components/logo";
 import { deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
@@ -49,9 +50,7 @@ function LoginForm() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-8 px-4 pb-[env(safe-area-inset-bottom)]">
       <div className="space-y-3 text-center">
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-brand text-3xl text-brand-ink shadow-sm">
-          🍟
-        </div>
+        <Logo className="mx-auto size-20 drop-shadow-sm" />
         <h1 className="text-2xl font-semibold tracking-tight">Six Frites</h1>
         <p className="text-sm text-stone-500 dark:text-stone-400">
           {inviteCode ? "You've been invited. Sign in to accept." : "Sign in to continue."}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -69,9 +70,9 @@ export function Conversation({ chatId }: { chatId: string }) {
         <Link
           href={c.archived ? "/archived" : "/"}
           aria-label="Back to chats"
-          className="grid size-10 place-items-center rounded-full text-2xl hover:bg-stone-200 md:hidden dark:hover:bg-stone-800"
+          className="grid size-10 place-items-center rounded-full hover:bg-stone-200 md:hidden dark:hover:bg-stone-800"
         >
-          ‹
+          <ChevronLeft className="size-6" />
         </Link>
         <Avatar user={peer} />
         <div className="min-w-0 flex-1">
@@ -89,9 +90,9 @@ export function Conversation({ chatId }: { chatId: string }) {
         <button
           onClick={() => setMenu(true)}
           aria-label="Chat options"
-          className="grid size-10 place-items-center rounded-full text-xl text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
+          className="grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
         >
-          ⋯
+          <MoreVertical className="size-5" />
         </button>
       </header>
 

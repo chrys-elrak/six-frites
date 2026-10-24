@@ -2,6 +2,7 @@
 
 import type { ChatDTO, MessageDTO, ReplyPreview } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
+import { Ban, Check, CheckCheck, Clock, MessageCircle, MoreHorizontal } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { VList, type VListHandle } from "virtua";
 import { deleteMessage } from "@/lib/actions";
@@ -120,12 +121,12 @@ function buildRows(
 }
 
 function Ticks({ delivery }: { delivery: Delivery }) {
-  if (delivery === "sending") return <span aria-label="Sending">🕓</span>;
+  if (delivery === "sending") return <Clock aria-label="Sending" className="size-3" />;
   if (delivery === "failed") return null;
   const label = { sent: "Sent", delivered: "Delivered", read: "Read" }[delivery];
   return (
     <span aria-label={label} title={label} className={delivery === "read" ? "text-sky-700 dark:text-sky-300" : ""}>
-      {delivery === "sent" ? "✓" : "✓✓"}
+      {delivery === "sent" ? <Check className="size-3.5" strokeWidth={2.5} /> : <CheckCheck className="size-3.5" strokeWidth={2.5} />}
     </span>
   );
 }
@@ -190,7 +191,13 @@ function Bubble({
               />
             )}
             <p className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""}`}>
-              {row.deleted ? "🚫 This message was deleted" : row.text}
+              {row.deleted ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Ban className="size-4" /> This message was deleted
+                </span>
+              ) : (
+                row.text
+              )}
               <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none opacity-70">
                 {row.edited && !row.deleted && <span>edited</span>}
                 {clockTime(row.createdAt)}
@@ -209,7 +216,7 @@ function Bubble({
           aria-label="Message options"
           className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
         >
-          ⋯
+          <MoreHorizontal className="size-4" />
         </button>
       </div>
     </div>
@@ -337,7 +344,12 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 
     return (
       <div className="flex min-h-0 flex-1 flex-col justify-end">
-        {rows.length === 0 && <p className="pb-6 text-center text-sm text-stone-500">No messages yet. Say hi 👋</p>}
+        {rows.length === 0 && (
+          <div className="flex flex-col items-center gap-2 pb-8 text-center text-sm text-stone-500">
+            <MessageCircle className="size-8 text-stone-400" strokeWidth={1.6} />
+            No messages yet. Say hello!
+          </div>
+        )}
         <VList
           ref={list}
           data={rows}

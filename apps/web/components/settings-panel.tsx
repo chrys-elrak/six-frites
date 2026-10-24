@@ -1,0 +1,32 @@
+"use client";
+
+import { LogOut } from "lucide-react";
+import { six } from "@/lib/six";
+import { Devices } from "./devices";
+import { Invites, Referrals } from "./invites";
+import { ProfileCard } from "./profile-card";
+
+export function SettingsPanel() {
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <header className="flex items-center gap-2 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:border-stone-800">
+        <h1 className="flex-1 text-xl font-semibold tracking-tight">Settings</h1>
+        <button
+          onClick={() => void six.auth.logout()}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
+        >
+          <LogOut className="size-4" />
+          Sign out
+        </button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4">
+          <ProfileCard />
+          <Invites />
+          <Referrals />
+          <Devices />
+        </div>
+      </div>
+    </div>
+  );
+}

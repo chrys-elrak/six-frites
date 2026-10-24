@@ -53,8 +53,8 @@ export function chatHelpers(ctx: { app: FastifyInstance }) {
     const host = await signUp("host");
     const invite = await call(host, "POST", "/v1/invites", {});
     const guest = await signUp("guest", { inviteCode: invite.json().code });
-    const chats = await get(host, "/v1/chats");
-    return { host, guest, chatId: chats.items[0].id as string };
+    const contacts = await get(host, "/v1/contacts");
+    return { host, guest, chatId: contacts.items[0].chatId as string };
   }
 
   return { signUp, get, call, send, makeFriends };

@@ -2,6 +2,7 @@
 
 import { SixApiError, unwrap } from "@six/sdk";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { SearchX } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
 import { Avatar } from "@/components/avatar";
@@ -49,7 +50,9 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
   if (preview.isError) {
     return (
       <Shell>
-        <p className="text-4xl">🤷</p>
+        <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
+          <SearchX className="size-8" strokeWidth={1.6} />
+        </span>
         <h1 className="text-xl font-semibold">This invite doesn't exist</h1>
         <p className="text-sm text-stone-500">Check the link, or ask your friend for a new one.</p>
       </Shell>
