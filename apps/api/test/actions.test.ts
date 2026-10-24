@@ -56,15 +56,12 @@ describe("deleting messages", () => {
     expect((await get(host, `/v1/chats/${chatId}`)).lastMessage.id).toBe(a.id);
   });
 
-  it("tombstones my messages for everyone and scrubs them from sync", async () => {
+  it("lets either person in a direct chat delete any message for everyone, and scrubs it from sync", async () => {
     const { host, guest, chatId } = await makeFriends();
     const secret = (await send(host, chatId, "secret")).json();
     const reply = (await send(guest, chatId, "ok", { replyToId: secret.id })).json();
 
-    expect((await call(guest, "DELETE", `/v1/messages?ids=${secret.id}&scope=all`)).json().error.code).toBe(
-      "NOT_MESSAGE_SENDER",
-    );
-    expect((await call(host, "DELETE", `/v1/messages?ids=${secret.id}&scope=all`)).statusCode).toBe(204);
+    expect((await call(guest, "DELETE", `/v1/messages?ids=${secret.id}&scope=all`)).statusCode).toBe(204);
 
     const page = await get(guest, `/v1/chats/${chatId}/messages`);
     const tomb = page.items.find((m: { id: string }) => m.id === secret.id);

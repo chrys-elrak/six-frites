@@ -107,7 +107,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["messages"],
         summary: "Delete messages",
         description:
-          "`ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes your own messages for everyone.",
+          "`ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes them for everyone. In direct chats either person can delete any message for everyone.",
         security,
         querystring: DeleteMessagesQuery,
         response: { 204: z.null() },

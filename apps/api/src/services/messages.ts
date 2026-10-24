@@ -162,8 +162,13 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
     if (messages.length !== ids.length || memberships !== chatIds.length) throw new AppError("MESSAGE_NOT_FOUND");
 
     if (scope === "all") {
-      if (messages.some((m) => m.senderId !== userId)) {
-        throw new AppError("NOT_MESSAGE_SENDER", "You can only delete your own messages for everyone");
+      const direct = new Set(
+        (await tx.chat.findMany({ where: { id: { in: chatIds }, type: "direct" }, select: { id: true } })).map(
+          (c) => c.id,
+        ),
+      );
+      if (messages.some((m) => m.senderId !== userId && !direct.has(m.chatId))) {
+        throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can delete this message for everyone");
       }
       await tx.message.updateMany({ where: { id: { in: ids }, deletedAt: null }, data: { deletedAt: new Date(), text: null } });
       await scrubMessageEvents(tx, ids);

@@ -352,10 +352,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             title="Delete message?"
             onClose={() => setConfirmDelete(null)}
             actions={[
-              ...(confirmDelete.senderId === meId
+              ...(chat.type === "direct" || confirmDelete.senderId === meId
                 ? [
                     {
-                      label: "Delete for everyone",
+                      label: chat.type === "direct" ? `Delete for me and ${chat.title}` : "Delete for everyone",
                       destructive: true,
                       onSelect: () => void deleteMessage(qc, confirmDelete, "all"),
                     },

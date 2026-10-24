@@ -949,7 +949,7 @@ export interface paths {
         post?: never;
         /**
          * Delete messages
-         * @description `ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes your own messages for everyone.
+         * @description `ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes them for everyone. In direct chats either person can delete any message for everyone.
          */
         delete: {
             parameters: {
