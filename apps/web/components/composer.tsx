@@ -6,6 +6,7 @@ import { Bold, Check, Code, EyeOff, Italic, type LucideIcon, SendHorizontal, Str
 import { useEffect, useRef, useState } from "react";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
+import { EmojiButton } from "./emoji-picker";
 import { useRealtime } from "@/lib/realtime";
 import { sendText } from "@/lib/send";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
@@ -97,6 +98,14 @@ export function Composer({
       setHasSelection(true);
     });
     return true;
+  }
+
+  function insert(emoji: string) {
+    const el = ref.current;
+    const start = el?.selectionStart ?? text.length;
+    const end = el?.selectionEnd ?? text.length;
+    change(text.slice(0, start) + emoji + text.slice(end));
+    requestAnimationFrame(() => el?.setSelectionRange(start + emoji.length, start + emoji.length));
   }
 
   function spoilerButton() {
@@ -215,7 +224,8 @@ export function Composer({
         </div>
       )}
 
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-1">
+        <EmojiButton onPick={insert} />
         <button
           type="button"
           {...keepSelection(spoilerButton)}

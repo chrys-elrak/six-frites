@@ -13,6 +13,8 @@
     "@six/sdk": "*",
     "@six/shared": "*",
     "@tanstack/react-query": "^5.104.5",
+    "frimousse": "^0.4.0",
+    "lottie-web": "^5.13.0",
     "lucide-react": "^1.61.0",
     "next": "^15.5.28",
     "react": "^19.1.10",

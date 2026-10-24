@@ -25,6 +25,27 @@ export function SettingsPanel() {
           <Invites />
           <Referrals />
           <Devices />
+          <p className="px-1 pb-2 text-center text-xs leading-relaxed text-stone-400">
+            Animated emoji from{" "}
+            <a
+              href="https://googlefonts.github.io/noto-emoji-animation/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              Noto Emoji Animation
+            </a>{" "}
+            by Google, licensed{" "}
+            <a
+              href="https://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              CC BY 4.0
+            </a>
+            . Emoji data from Emojibase.
+          </p>
         </div>
       </div>
     </div>

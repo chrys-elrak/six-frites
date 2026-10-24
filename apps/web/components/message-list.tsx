@@ -19,6 +19,7 @@ import { deleteMessage } from "@/lib/actions";
 import { useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { clockTime, dayLabel, sameDay } from "@/lib/format";
+import { emojiOnly } from "@/lib/emoji";
 import { useLongPress } from "@/lib/long-press";
 import { segments } from "@/lib/markup";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
@@ -26,6 +27,7 @@ import { useRealtime } from "@/lib/realtime";
 import { deliver } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
+import { AnimatedEmoji } from "./animated-emoji";
 import { Sheet, type SheetAction } from "./sheet";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
@@ -258,14 +260,18 @@ function Bubble({
   const selectable = selecting && row.message !== null;
   const press = useLongPress(selectable ? onToggle : onMenu);
   const { mine, groupStart, groupEnd } = row;
+  const jumbo =
+    !row.deleted && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text ? emojiOnly(row.text) : null;
   const radius = mine
     ? `rounded-2xl ${groupStart ? "" : "rounded-tr-md"} ${groupEnd ? "" : "rounded-br-md"}`
     : `rounded-2xl ${groupStart ? "" : "rounded-tl-md"} ${groupEnd ? "" : "rounded-bl-md"}`;
-  const tone = row.deleted
-    ? "bg-transparent text-stone-500 ring-1 ring-stone-300 dark:ring-stone-700"
-    : mine
-      ? "bg-brand text-brand-ink"
-      : "bg-white text-stone-900 ring-1 ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
+  const tone = jumbo
+    ? "bg-transparent text-stone-900 dark:text-stone-100"
+    : row.deleted
+      ? "bg-transparent text-stone-500 ring-1 ring-stone-300 dark:ring-stone-700"
+      : mine
+        ? "bg-brand text-brand-ink"
+        : "bg-white text-stone-900 ring-1 ring-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:ring-stone-700";
 
   return (
     <div
@@ -296,7 +302,7 @@ function Bubble({
           <div className="flex min-w-0 flex-col items-end gap-1">
             <div
               {...press}
-              className={`${radius} ${tone} px-3 py-1.5 transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${radius} ${tone} ${jumbo ? "" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -308,20 +314,37 @@ function Bubble({
                   onClick={() => onQuote(row.replyTo!.id)}
                 />
               )}
-              <p className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""}`}>
-                {row.deleted ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Ban className="size-4" /> This message was deleted
+              {jumbo ? (
+                <div className="flex flex-col items-end">
+                  <div className="flex">
+                    {jumbo.map((e, i) => (
+                      <AnimatedEmoji key={`${e}:${i}`} emoji={e} size={jumbo.length === 1 ? 112 : 80} />
+                    ))}
+                  </div>
+                  <span className="flex items-center gap-1 rounded-full bg-stone-900/40 px-2 py-0.5 text-[11px] leading-none text-white">
+                    {row.edited && <span>edited</span>}
+                    {clockTime(row.createdAt)}
+                    {row.delivery && <Ticks delivery={row.delivery} />}
                   </span>
-                ) : (
-                  <MessageText row={row} selectable={selectable} />
-                )}
-                <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none opacity-70">
-                  {row.edited && !row.deleted && <span>edited</span>}
-                  {clockTime(row.createdAt)}
-                  {row.delivery && <Ticks delivery={row.delivery} />}
-                </span>
-              </p>
+                </div>
+              ) : (
+                <p
+                  className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""}`}
+                >
+                  {row.deleted ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Ban className="size-4" /> This message was deleted
+                    </span>
+                  ) : (
+                    <MessageText row={row} selectable={selectable} />
+                  )}
+                  <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none opacity-70">
+                    {row.edited && !row.deleted && <span>edited</span>}
+                    {clockTime(row.createdAt)}
+                    {row.delivery && <Ticks delivery={row.delivery} />}
+                  </span>
+                </p>
+              )}
             </div>
             {row.delivery === "failed" && (
               <button onClick={onMenu} className="text-xs font-medium text-red-600 dark:text-red-400">
