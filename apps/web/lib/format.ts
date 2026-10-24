@@ -8,6 +8,32 @@ export function timeAgo(iso: string) {
   return new Date(iso).toLocaleDateString();
 }
 
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+export function clockTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+export function listTime(iso: string) {
+  const d = new Date(iso);
+  const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 864e5);
+  if (days === 0) return clockTime(iso);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return d.toLocaleDateString([], { weekday: "short" });
+  return d.toLocaleDateString([], { day: "numeric", month: "short" });
+}
+
+export function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 864e5);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return d.toLocaleDateString([], { weekday: "long" });
+  return d.toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
+}
+
+export const sameDay = (a: string, b: string) => startOfDay(new Date(a)) === startOfDay(new Date(b));
+
 export function inviteUrl(code: string) {
   return `${window.location.origin}/invite/${code}`;
 }

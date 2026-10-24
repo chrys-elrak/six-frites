@@ -11,5 +11,6 @@ body {
 }
 
 body {
+  overscroll-behavior: none;
   @apply bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100;
 }
