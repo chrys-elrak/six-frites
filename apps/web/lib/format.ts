@@ -34,6 +34,24 @@ export function dayLabel(iso: string) {
 
 export const sameDay = (a: string, b: string) => startOfDay(new Date(a)) === startOfDay(new Date(b));
 
+export function sendAtLabel(iso: string) {
+  const d = new Date(iso);
+  const days = Math.round((startOfDay(d) - startOfDay(new Date())) / 864e5);
+  const day =
+    days === 0
+      ? "Today"
+      : days === 1
+        ? "Tomorrow"
+        : d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+  return `${day} at ${clockTime(iso)}`;
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Formats a date for `<input type="datetime-local">`, which works in local time. */
+export const toLocalInput = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
 export function inviteUrl(code: string) {
   return `${window.location.origin}/invite/${code}`;
 }

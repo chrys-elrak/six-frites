@@ -25,13 +25,18 @@ export function mediaQueue() {
 export type TimerJob =
   | { messageId: string; cycle: number }
   | { purgeMessageId: string; cycle: number }
-  | { uploadIds: string[] };
+  | { uploadIds: string[] }
+  | { sweep: true };
 
 export const TIMERS_QUEUE = "timers";
 
+/** How often the worker sends due scheduled messages and deletes auto-deleted ones. */
+// ponytail: polling sweep, so scheduled messages go out up to 10s late; use per-message delayed jobs if that matters
+export const SWEEP_EVERY_MS = 10_000;
+
 let timers: Queue<TimerJob> | null = null;
 
-/** Delayed jobs: destroying self-destructing messages and the files they leave behind. */
+/** Delayed jobs: destroying self-destructing messages and the files they leave behind, and the sweep. */
 export function timersQueue() {
   timers ??= new Queue<TimerJob>(TIMERS_QUEUE, {
     connection: redisConnection(),

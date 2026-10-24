@@ -5,7 +5,7 @@ import type { ChangeEventDTO, ChatDTO } from "@six/shared";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { applyChatDeleted, applyDeleted, applyEdited } from "./actions";
+import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
 import { useOutbox } from "./outbox";
 import { notifyIncoming } from "./notify";
@@ -64,6 +64,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (cha
     case "chat.updated":
       upsertChat(qc, e.data);
       void qc.invalidateQueries({ queryKey: ["contacts"] });
+      void qc.invalidateQueries({ queryKey: scheduledKey(e.data.id) });
       break;
     case "chat.deleted":
       applyChatDeleted(qc, e.data.chatId, e.data.scope);

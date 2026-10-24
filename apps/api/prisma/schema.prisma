@@ -16,17 +16,18 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  sessions    Session[]
-  invites     Invite[]
-  referredBy  Referral? @relation("referee")
-  referrals   Referral[] @relation("referrer")
+  sessions       Session[]
+  invites        Invite[]
+  referredBy     Referral?          @relation("referee")
+  referrals      Referral[]         @relation("referrer")
   memberships    ChatMember[]
   messages       Message[]
   hiddenMessages MessageHidden[]
   uploads        Upload[]
   messageViews   MessageView[]
-  contactsSaved  ContactOverride[] @relation("owner")
-  savedAs        ContactOverride[] @relation("contact")
+  contactsSaved  ContactOverride[]  @relation("owner")
+  savedAs        ContactOverride[]  @relation("contact")
+  scheduled      ScheduledMessage[]
 }
 
 model Invite {
@@ -55,13 +56,13 @@ model Referral {
 }
 
 model Session {
-  id               String      @id @default(cuid())
+  id               String    @id @default(cuid())
   userId           String
   platform         String
   deviceName       String?
-  refreshTokenHash String      @unique
-  createdAt        DateTime    @default(now())
-  lastUsedAt       DateTime    @default(now())
+  refreshTokenHash String    @unique
+  createdAt        DateTime  @default(now())
+  lastUsedAt       DateTime  @default(now())
   expiresAt        DateTime
   revokedAt        DateTime?
 
@@ -72,10 +73,10 @@ model Session {
 }
 
 model PushToken {
-  id        String  @id @default(cuid())
+  id        String @id @default(cuid())
   sessionId String
   provider  String
-  token     String  @db.Text
+  token     String @db.Text
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -93,30 +94,31 @@ model ChangeEvent {
 }
 
 model Chat {
-  id            String   @id @default(cuid())
-  type          String   @default("direct")
-  directKey     String?  @unique
-  createdAt     DateTime @default(now())
-  lastMessageAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  type           String   @default("direct")
+  directKey      String?  @unique
+  createdAt      DateTime @default(now())
+  lastMessageAt  DateTime @default(now())
+  autoDeleteSecs Int?
 
-  members  ChatMember[]
-  messages Message[]
+  members   ChatMember[]
+  messages  Message[]
+  scheduled ScheduledMessage[]
 }
 
 model ChatMember {
-  chatId            String
-  userId            String
-  joinedAt          DateTime  @default(now())
-  archived          Boolean   @default(false)
-  muted             Boolean   @default(false)
-  pinned            Boolean   @default(false)
-  autoDeleteSecs    Int?
+  chatId                 String
+  userId                 String
+  joinedAt               DateTime  @default(now())
+  archived               Boolean   @default(false)
+  muted                  Boolean   @default(false)
+  pinned                 Boolean   @default(false)
   lastDeliveredMessageId String?
   lastDeliveredAt        DateTime?
-  lastReadMessageId String?
-  lastReadAt        DateTime?
-  hidden            Boolean   @default(false)
-  clearedAt         DateTime?
+  lastReadMessageId      String?
+  lastReadAt             DateTime?
+  hidden                 Boolean   @default(false)
+  clearedAt              DateTime?
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -126,35 +128,64 @@ model ChatMember {
 }
 
 model Message {
-  id        String    @id @default(cuid())
-  chatId    String
-  senderId  String
-  clientId  String
-  type      String    @default("text")
-  text      String?
-  entities  Json?
-  spoiler   Boolean   @default(false)
-  maxViews   Int?
-  ttlSeconds Int?
-  expiredAt  DateTime?
-  resendCount Int      @default(0)
-  purgedAt   DateTime?
+  id           String    @id @default(cuid())
+  chatId       String
+  senderId     String
+  clientId     String
+  type         String    @default("text")
+  text         String?
+  entities     Json?
+  spoiler      Boolean   @default(false)
+  maxViews     Int?
+  ttlSeconds   Int?
+  expiredAt    DateTime?
+  resendCount  Int       @default(0)
+  purgedAt     DateTime?
   attachmentId String?
-  replyToId String?
-  createdAt DateTime  @default(now())
-  editedAt  DateTime?
-  deletedAt DateTime?
+  replyToId    String?
+  action       Json?
+  createdAt    DateTime  @default(now())
+  editedAt     DateTime?
+  deletedAt    DateTime?
+  expiresAt    DateTime?
 
-  chat    Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  sender  User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  replyTo Message?        @relation("replies", fields: [replyToId], references: [id], onDelete: SetNull)
-  attachment Upload?      @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
-  replies Message[]       @relation("replies")
-  hidden  MessageHidden[]
-  views   MessageView[]
+  chat             Chat               @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender           User               @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo          Message?           @relation("replies", fields: [replyToId], references: [id], onDelete: SetNull)
+  attachment       Upload?            @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
+  replies          Message[]          @relation("replies")
+  scheduledReplies ScheduledMessage[]
+  hidden           MessageHidden[]
+  views            MessageView[]
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
+  @@index([expiresAt])
+}
+
+model ScheduledMessage {
+  id           String   @id @default(cuid())
+  chatId       String
+  senderId     String
+  clientId     String
+  text         String?
+  entities     Json?
+  spoiler      Boolean  @default(false)
+  maxViews     Int?
+  ttlSeconds   Int?
+  attachmentId String?  @unique
+  replyToId    String?
+  sendAt       DateTime
+  createdAt    DateTime @default(now())
+
+  chat       Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender     User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  attachment Upload?  @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
+  replyTo    Message? @relation(fields: [replyToId], references: [id], onDelete: SetNull)
+
+  @@unique([senderId, clientId])
+  @@index([chatId, senderId])
+  @@index([sendAt])
 }
 
 model MessageHidden {
@@ -202,8 +233,9 @@ model Upload {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  messages Message[]
+  owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  scheduled ScheduledMessage?
 
   @@index([ownerId])
   @@index([status, createdAt])

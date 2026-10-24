@@ -1,3 +1,4 @@
+import { createId } from "@paralleldrive/cuid2";
 import type { Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
@@ -11,7 +12,14 @@ import {
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
-import { assertMember, messageInclude, scrubMessageEvents, toMessageDTO, visibleTo } from "./messages.js";
+import {
+  assertMember,
+  createMessage,
+  messageInclude,
+  scrubMessageEvents,
+  toMessageDTO,
+  visibleTo,
+} from "./messages.js";
 import { applyOverride, loadOverrides } from "./contacts.js";
 import { purgeUploads } from "./uploads.js";
 import { toPublicUser } from "./users.js";
@@ -32,12 +40,15 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     viewerId,
     chat.members.filter((m) => m.userId !== viewerId).map((m) => m.userId),
   );
-  const members = chat.members.map((m) => ({ ...m, shown: applyOverride(toPublicUser(m.user), overrides.get(m.userId)) }));
+  const members = chat.members.map((m) => ({
+    ...m,
+    shown: applyOverride(toPublicUser(m.user), overrides.get(m.userId)),
+  }));
   const others = members.filter((m) => m.userId !== viewerId);
 
   const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
   const readFloor = [me.lastReadAt, me.clearedAt].filter((d): d is Date => d !== null).sort((a, b) => +b - +a)[0];
-  const [lastMessage, unreadCount] = await Promise.all([
+  const [lastMessage, unreadCount, scheduledCount] = await Promise.all([
     db.message.findFirst({ where: visible, orderBy: newestFirst, include: messageInclude }),
     db.message.count({
       where: {
@@ -47,6 +58,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
         ...(readFloor && { createdAt: { gt: readFloor } }),
       },
     }),
+    db.scheduledMessage.count({ where: { chatId: chat.id, senderId: viewerId } }),
   ]);
 
   return {
@@ -65,7 +77,8 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     archived: me.archived,
     muted: me.muted,
     pinned: me.pinned,
-    autoDeleteSecs: me.autoDeleteSecs,
+    autoDeleteSecs: chat.autoDeleteSecs,
+    scheduledCount,
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
   };
@@ -155,7 +168,10 @@ export async function markDelivered(
       lastDeliveredMessageId: target.id,
       lastDeliveredAt: target.createdAt.toISOString(),
     };
-    const members = await tx.chatMember.findMany({ where: { chatId, userId: { not: userId } }, select: { userId: true } });
+    const members = await tx.chatMember.findMany({
+      where: { chatId, userId: { not: userId } },
+      select: { userId: true },
+    });
     for (const m of members) emit(m.userId, "chat.delivered", delivered);
     return delivered;
   });
@@ -189,13 +205,30 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
   });
 }
 
-export async function updateChat(userId: string, chatId: string, input: UpdateChatInput) {
+/**
+ * Archive, mute and pin only change this member's view. The auto-delete timer is shared: changing it
+ * posts a service message and updates the chat for everyone.
+ */
+export async function updateChat(userId: string, chatId: string, { autoDeleteSecs, ...mine }: UpdateChatInput) {
   return withEvents(async (tx, emit) => {
     await assertMember(tx, chatId, userId);
-    await tx.chatMember.update({ where: { chatId_userId: { chatId, userId } }, data: input });
-    const dto = await getChat(userId, chatId, tx);
-    emit(userId, "chat.updated", dto);
-    return dto;
+    if (Object.values(mine).some((v) => v !== undefined)) {
+      await tx.chatMember.update({ where: { chatId_userId: { chatId, userId } }, data: mine });
+    }
+
+    const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
+    if (autoDeleteSecs === undefined || autoDeleteSecs === chat.autoDeleteSecs) {
+      const dto = await getChat(userId, chatId, tx);
+      emit(userId, "chat.updated", dto);
+      return dto;
+    }
+
+    await tx.chat.update({ where: { id: chatId }, data: { autoDeleteSecs } });
+    const action = { type: "auto_delete" as const, secs: autoDeleteSecs };
+    await createMessage(tx, emit, userId, chatId, { clientId: `auto-delete-${createId()}`, action });
+    const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
+    for (const m of members) emit(m.userId, "chat.updated", await getChat(m.userId, chatId, tx));
+    return getChat(userId, chatId, tx);
   });
 }
 

@@ -4,6 +4,7 @@ import { type EntityType, type EphemeralInput, type UploadKind, maskSpoilers } f
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bold,
+  CalendarClock,
   Check,
   Code,
   EyeOff,
@@ -18,13 +19,15 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { editMessage } from "@/lib/actions";
+import { editMessage, scheduleMessage } from "@/lib/actions";
+import { useLongPress } from "@/lib/long-press";
 import { useComposerMode } from "@/lib/composer";
 import { isTouch } from "@/lib/camera";
 import { shortRule } from "@/lib/ephemeral";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { CameraDialog } from "./camera-dialog";
+import { ScheduleDialog, ScheduledPanel } from "./scheduled";
 import { Sheet } from "./sheet";
 import { VideoNoteRecorder } from "./video-note-recorder";
 import { EmojiButton } from "./emoji-picker";
@@ -78,10 +81,12 @@ function ModeBar({ label, text, onCancel }: { label: string; text: string; onCan
 export function Composer({
   chatId,
   nameOf,
+  scheduledCount,
   onSent,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
+  scheduledCount: number;
   onSent: () => void;
 }) {
   const qc = useQueryClient();
@@ -106,6 +111,10 @@ export function Composer({
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
   const closeCamera = useCallback(() => setCamera(false), []);
   const closeNoteRecorder = useCallback(() => setNoteRecorder(false), []);
+  const [scheduling, setScheduling] = useState(false);
+  const [showScheduled, setShowScheduled] = useState(false);
+  const closeScheduling = useCallback(() => setScheduling(false), []);
+  const closeScheduled = useCallback(() => setShowScheduled(false), []);
 
   function sendVideoNote(file: File, chosen: EphemeralInput | null) {
     setNoteRecorder(false);
@@ -200,6 +209,7 @@ export function Composer({
 
   const parsed = parseMarkup(text);
   const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
+  const sendPress = useLongPress(() => canSubmit && !editing && setScheduling(true));
 
   function cancel() {
     setError(null);
@@ -246,6 +256,34 @@ export function Composer({
     setText("");
     if (mode) cancel();
     onSent();
+  }
+
+  async function schedule(at: Date) {
+    setScheduling(false);
+    setError(null);
+    try {
+      await scheduleMessage(
+        qc,
+        chatId,
+        {
+          text: parsed.text,
+          entities: parsed.entities.length ? parsed.entities : undefined,
+          replyToId: mode?.kind === "reply" ? mode.message.id : undefined,
+          spoiler: spoiler || undefined,
+          ephemeral: ephemeral ?? undefined,
+        },
+        at,
+      );
+    } catch {
+      setError("Couldn't schedule your message. Try again.");
+      return;
+    }
+    realtime?.setTyping(chatId, false);
+    setSpoiler(false);
+    setEphemeral(null);
+    drafts.delete(chatId);
+    setText("");
+    if (mode) cancel();
   }
 
   function sendFiles(files: FileList | File[]) {
@@ -467,6 +505,18 @@ export function Composer({
               >
                 <EyeOff className="size-5" />
               </button>
+              {!editing && scheduledCount > 0 && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setShowScheduled(true)}
+                  aria-label={`${scheduledCount} scheduled message${scheduledCount === 1 ? "" : "s"}`}
+                  title="Scheduled messages"
+                  className="grid size-10 shrink-0 place-items-center rounded-full text-brand"
+                >
+                  <CalendarClock className="size-5" />
+                </button>
+              )}
               {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
             </div>
             {showMic ? (
@@ -483,8 +533,10 @@ export function Composer({
               <button
                 type="submit"
                 disabled={!canSubmit}
+                {...(editing ? {} : sendPress)}
                 onMouseDown={(e) => e.preventDefault()}
                 aria-label={editing ? "Save" : "Send"}
+                title={editing ? undefined : "Hold or right-click to schedule"}
                 className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
               >
                 {editing ? (
@@ -498,6 +550,10 @@ export function Composer({
         )}
       </form>
       {attachMenu && <Sheet title="Send" actions={attachActions} onClose={() => setAttachMenu(false)} />}
+      {scheduling && (
+        <ScheduleDialog title="Schedule message" onClose={closeScheduling} onPick={(at) => void schedule(at)} />
+      )}
+      {showScheduled && <ScheduledPanel chatId={chatId} onClose={closeScheduled} />}
       {camera && (
         <CameraDialog
           onClose={closeCamera}

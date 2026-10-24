@@ -642,7 +642,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -697,11 +697,17 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
                                         deleted: boolean;
+                                    } | null;
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                    action: {
+                                        /** @enum {string} */
+                                        type: "auto_delete";
+                                        secs: number | null;
                                     } | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -709,12 +715,20 @@ export interface paths {
                                     editedAt: string | null;
                                     /** Format: date-time */
                                     deletedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the chat's auto-delete timer removes it for everyone
+                                     */
+                                    expiresAt: string | null;
                                 } | null;
                                 unreadCount: number;
                                 archived: boolean;
                                 muted: boolean;
                                 pinned: boolean;
+                                /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                 autoDeleteSecs: number | null;
+                                /** @description Your scheduled messages waiting to be sent in this chat */
+                                scheduledCount: number;
                                 /** Format: date-time */
                                 lastActivityAt: string;
                                 /** Format: date-time */
@@ -784,7 +798,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -839,11 +853,17 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                action: {
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -851,12 +871,20 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
                             } | null;
                             unreadCount: number;
                             archived: boolean;
                             muted: boolean;
                             pinned: boolean;
+                            /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
+                            /** @description Your scheduled messages waiting to be sent in this chat */
+                            scheduledCount: number;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -898,7 +926,10 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Archive, mute or pin a chat (your settings only) */
+        /**
+         * Archive, mute or pin a chat, or set its auto-delete timer
+         * @description `archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` applies to both people: it posts a `service` message, and messages sent afterwards are deleted for everyone that long after sending.
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -914,6 +945,8 @@ export interface paths {
                         archived?: boolean;
                         muted?: boolean;
                         pinned?: boolean;
+                        /** @description For both people: delete messages sent from now on this many seconds after sending. null turns it off. */
+                        autoDeleteSecs?: number | null;
                     };
                 };
             };
@@ -949,7 +982,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1004,11 +1037,17 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                action: {
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1016,12 +1055,20 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
                             } | null;
                             unreadCount: number;
                             archived: boolean;
                             muted: boolean;
                             pinned: boolean;
+                            /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
+                            /** @description Your scheduled messages waiting to be sent in this chat */
+                            scheduledCount: number;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -1083,7 +1130,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1138,11 +1185,17 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                            action: {
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
                             } | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1150,6 +1203,11 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
                         };
                     };
                 };
@@ -1194,7 +1252,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1249,11 +1307,17 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                action: {
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1261,6 +1325,11 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
                             };
                             /**
                              * Format: date-time
@@ -1314,7 +1383,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1369,11 +1438,17 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                            action: {
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
                             } | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1381,6 +1456,11 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
                         };
                     };
                 };
@@ -1470,7 +1550,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1525,11 +1605,17 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                action: {
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1537,6 +1623,11 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -1598,7 +1689,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -1653,11 +1744,17 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                            action: {
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
                             } | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1665,6 +1762,470 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chats/{id}/scheduled-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Your scheduled messages in a chat, soonest first
+         * @description At most 100, so `nextCursor` is always null.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                chatId: string;
+                                /** @description Becomes the clientId of the message once it is sent */
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
+                                spoiler: boolean;
+                                attachment: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file";
+                                    /** @enum {string} */
+                                    status: "pending" | "processing" | "ready" | "failed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                } | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                    text: string | null;
+                                    spoiler: boolean;
+                                    ephemeral: boolean;
+                                    deleted: boolean;
+                                } | null;
+                                /** Format: date-time */
+                                sendAt: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Schedule a message
+         * @description Same body as sending, plus `sendAt`. Only you see it until then; it is sent as a normal message, with this clientId. Idempotent per `clientId`. Your other devices get `chat.updated` with the new `scheduledCount`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        clientId: string;
+                        /** @description Required unless attachmentId is set, in which case it is the caption */
+                        text?: string;
+                        /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
+                        entities?: {
+                            /** @enum {string} */
+                            type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                            offset: number;
+                            length: number;
+                        }[];
+                        /** @description A completed upload from POST /v1/uploads/{id}/complete */
+                        attachmentId?: string;
+                        replyToId?: string;
+                        spoiler?: boolean;
+                        /** @description Self-destruct after viewing, like Telegram's view-once and timers */
+                        ephemeral?: {
+                            /** @description Destroy after this many views by the recipient */
+                            maxViews?: number;
+                            /** @description Destroy this many seconds after the recipient first opens it */
+                            ttlSeconds?: number;
+                        };
+                        /**
+                         * Format: date-time
+                         * @description When to send it, in the future and at most a year ahead
+                         */
+                        sendAt: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            /** @description Becomes the clientId of the message once it is sent */
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                            } | null;
+                            /** Format: date-time */
+                            sendAt: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/scheduled-messages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel a scheduled message */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Change the text or time of a scheduled message */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        text?: string;
+                        /** @description Replaces the formatting; send it together with text */
+                        entities?: {
+                            /** @enum {string} */
+                            type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                            offset: number;
+                            length: number;
+                        }[];
+                        /** Format: date-time */
+                        sendAt?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            /** @description Becomes the clientId of the message once it is sent */
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                            } | null;
+                            /** Format: date-time */
+                            sendAt: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/scheduled-messages/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a scheduled message now */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "image" | "video" | "video_note" | "voice" | "file";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                            action: {
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
                         };
                     };
                 };
@@ -1974,7 +2535,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -2029,11 +2590,17 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
                                         deleted: boolean;
+                                    } | null;
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                    action: {
+                                        /** @enum {string} */
+                                        type: "auto_delete";
+                                        secs: number | null;
                                     } | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -2041,6 +2608,11 @@ export interface paths {
                                     editedAt: string | null;
                                     /** Format: date-time */
                                     deletedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the chat's auto-delete timer removes it for everyone
+                                     */
+                                    expiresAt: string | null;
                                 };
                                 createdAt: string;
                             } | {
@@ -2053,7 +2625,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -2108,11 +2680,17 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
                                         deleted: boolean;
+                                    } | null;
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                    action: {
+                                        /** @enum {string} */
+                                        type: "auto_delete";
+                                        secs: number | null;
                                     } | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -2120,6 +2698,11 @@ export interface paths {
                                     editedAt: string | null;
                                     /** Format: date-time */
                                     deletedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the chat's auto-delete timer removes it for everyone
+                                     */
+                                    expiresAt: string | null;
                                 };
                                 createdAt: string;
                             } | {
@@ -2165,7 +2748,7 @@ export interface paths {
                                         senderId: string;
                                         clientId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                         text: string | null;
                                         entities: {
                                             /** @enum {string} */
@@ -2220,11 +2803,17 @@ export interface paths {
                                             id: string;
                                             senderId: string;
                                             /** @enum {string} */
-                                            type: "text" | "image" | "video" | "video_note" | "voice" | "file";
+                                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "service";
                                             text: string | null;
                                             spoiler: boolean;
                                             ephemeral: boolean;
                                             deleted: boolean;
+                                        } | null;
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off) */
+                                        action: {
+                                            /** @enum {string} */
+                                            type: "auto_delete";
+                                            secs: number | null;
                                         } | null;
                                         /** Format: date-time */
                                         createdAt: string;
@@ -2232,12 +2821,20 @@ export interface paths {
                                         editedAt: string | null;
                                         /** Format: date-time */
                                         deletedAt: string | null;
+                                        /**
+                                         * Format: date-time
+                                         * @description When the chat's auto-delete timer removes it for everyone
+                                         */
+                                        expiresAt: string | null;
                                     } | null;
                                     unreadCount: number;
                                     archived: boolean;
                                     muted: boolean;
                                     pinned: boolean;
+                                    /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                     autoDeleteSecs: number | null;
+                                    /** @description Your scheduled messages waiting to be sent in this chat */
+                                    scheduledCount: number;
                                     /** Format: date-time */
                                     lastActivityAt: string;
                                     /** Format: date-time */

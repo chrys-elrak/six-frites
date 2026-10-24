@@ -9,6 +9,7 @@ import {
   type MessageEntity,
   type ReplyPreview,
   type ViewMessageResult,
+  durationLabel,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,6 +28,7 @@ import {
   MoreHorizontal,
   Paperclip,
   RotateCcw,
+  Timer,
   Video,
   X,
 } from "lucide-react";
@@ -85,7 +87,7 @@ interface MsgRow {
   delivery: Delivery | null;
 }
 
-type Row = { kind: "day"; key: string; label: string } | MsgRow;
+type Row = { kind: "day"; key: string; label: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
 
 interface Item {
   senderId: string;
@@ -171,12 +173,17 @@ function buildRows(
     if (!prev || !sameDay(prev.createdAt, it.createdAt)) {
       rows.push({ kind: "day", key: `day:${it.createdAt}`, label: dayLabel(it.createdAt) });
     }
+    const r = it.row;
+    if (r.message?.type === "service") {
+      rows.push({ kind: "service", key: r.key, message: r.message });
+      return;
+    }
     const close = (a?: Item) =>
       !!a &&
+      a.row.type !== "service" &&
       a.senderId === it.senderId &&
       sameDay(a.createdAt, it.createdAt) &&
       Math.abs(Date.parse(a.createdAt) - Date.parse(it.createdAt)) < 5 * 60_000;
-    const r = it.row;
     rows.push({
       ...r,
       kind: "msg",
@@ -243,7 +250,7 @@ function Quote({
           <span className="inline-flex items-center gap-1">
             <EyeOff className="size-3.5" /> Spoiler
           </span>
-        ) : reply.type !== "text" ? (
+        ) : reply.type !== "text" && reply.type !== "service" ? (
           <span className="inline-flex items-center gap-1">
             <MediaLabel type={reply.type} />
             {reply.text && <span className="truncate">· {reply.text}</span>}
@@ -264,7 +271,7 @@ const mediaLabels = {
   file: { Icon: Paperclip, label: "File" },
 } as const;
 
-export function MediaLabel({ type }: { type: Exclude<MessageDTO["type"], "text"> }) {
+export function MediaLabel({ type }: { type: keyof typeof mediaLabels }) {
   const { Icon, label } = mediaLabels[type];
   return (
     <>
@@ -312,7 +319,7 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
 
 function Sealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
   const e = row.ephemeral!;
-  const kind = row.type === "text" ? "Message" : mediaLabels[row.type].label;
+  const kind = row.type === "text" || row.type === "service" ? "Message" : mediaLabels[row.type].label;
   return (
     <button
       type="button"
@@ -786,6 +793,16 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
               <div key={row.key} className="flex justify-center py-3">
                 <span className="rounded-full bg-stone-200/80 px-3 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
                   {row.label}
+                </span>
+              </div>
+            ) : row.kind === "service" ? (
+              <div key={row.key} className="flex justify-center px-6 py-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-200/80 px-3 py-1 text-center text-xs text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                  <Timer className="size-3.5 shrink-0" />
+                  {nameOf(row.message.senderId)}{" "}
+                  {row.message.action?.secs
+                    ? `set messages to auto-delete after ${durationLabel(row.message.action.secs)}`
+                    : "turned off auto-delete"}
                 </span>
               </div>
             ) : (

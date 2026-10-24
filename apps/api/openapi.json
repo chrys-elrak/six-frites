@@ -1128,7 +1128,8 @@
                                   "video",
                                   "video_note",
                                   "voice",
-                                  "file"
+                                  "file",
+                                  "service"
                                 ]
                               },
                               "text": {
@@ -1352,7 +1353,8 @@
                                       "video",
                                       "video_note",
                                       "voice",
-                                      "file"
+                                      "file",
+                                      "service"
                                     ]
                                   },
                                   "text": {
@@ -1380,6 +1382,30 @@
                                 ],
                                 "additionalProperties": false
                               },
+                              "action": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "auto_delete"
+                                    ]
+                                  },
+                                  "secs": {
+                                    "nullable": true,
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "secs"
+                                ],
+                                "additionalProperties": false,
+                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                              },
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time",
@@ -1393,6 +1419,13 @@
                               },
                               "deletedAt": {
                                 "nullable": true,
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "expiresAt": {
+                                "nullable": true,
+                                "description": "When the chat's auto-delete timer removes it for everyone",
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -1410,9 +1443,11 @@
                               "attachment",
                               "ephemeral",
                               "replyTo",
+                              "action",
                               "createdAt",
                               "editedAt",
-                              "deletedAt"
+                              "deletedAt",
+                              "expiresAt"
                             ],
                             "additionalProperties": false
                           },
@@ -1432,9 +1467,16 @@
                           },
                           "autoDeleteSecs": {
                             "nullable": true,
+                            "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "scheduledCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Your scheduled messages waiting to be sent in this chat"
                           },
                           "lastActivityAt": {
                             "type": "string",
@@ -1458,6 +1500,7 @@
                           "muted",
                           "pinned",
                           "autoDeleteSecs",
+                          "scheduledCount",
                           "lastActivityAt",
                           "createdAt"
                         ],
@@ -1612,7 +1655,8 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
+                            "file",
+                            "service"
                           ]
                         },
                         "text": {
@@ -1836,7 +1880,8 @@
                                 "video",
                                 "video_note",
                                 "voice",
-                                "file"
+                                "file",
+                                "service"
                               ]
                             },
                             "text": {
@@ -1864,6 +1909,30 @@
                           ],
                           "additionalProperties": false
                         },
+                        "action": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false,
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -1877,6 +1946,13 @@
                         },
                         "deletedAt": {
                           "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "expiresAt": {
+                          "nullable": true,
+                          "description": "When the chat's auto-delete timer removes it for everyone",
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -1894,9 +1970,11 @@
                         "attachment",
                         "ephemeral",
                         "replyTo",
+                        "action",
                         "createdAt",
                         "editedAt",
-                        "deletedAt"
+                        "deletedAt",
+                        "expiresAt"
                       ],
                       "additionalProperties": false
                     },
@@ -1916,9 +1994,16 @@
                     },
                     "autoDeleteSecs": {
                       "nullable": true,
+                      "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "scheduledCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Your scheduled messages waiting to be sent in this chat"
                     },
                     "lastActivityAt": {
                       "type": "string",
@@ -1942,6 +2027,7 @@
                     "muted",
                     "pinned",
                     "autoDeleteSecs",
+                    "scheduledCount",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -1953,10 +2039,11 @@
         }
       },
       "patch": {
-        "summary": "Archive, mute or pin a chat (your settings only)",
+        "summary": "Archive, mute or pin a chat, or set its auto-delete timer",
         "tags": [
           "chats"
         ],
+        "description": "`archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` applies to both people: it posts a `service` message, and messages sent afterwards are deleted for everyone that long after sending.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1972,6 +2059,13 @@
                   },
                   "pinned": {
                     "type": "boolean"
+                  },
+                  "autoDeleteSecs": {
+                    "description": "For both people: delete messages sent from now on this many seconds after sending. null turns it off.",
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 3600,
+                    "maximum": 31536000
                   }
                 }
               }
@@ -2103,7 +2197,8 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
+                            "file",
+                            "service"
                           ]
                         },
                         "text": {
@@ -2327,7 +2422,8 @@
                                 "video",
                                 "video_note",
                                 "voice",
-                                "file"
+                                "file",
+                                "service"
                               ]
                             },
                             "text": {
@@ -2355,6 +2451,30 @@
                           ],
                           "additionalProperties": false
                         },
+                        "action": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false,
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -2368,6 +2488,13 @@
                         },
                         "deletedAt": {
                           "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "expiresAt": {
+                          "nullable": true,
+                          "description": "When the chat's auto-delete timer removes it for everyone",
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -2385,9 +2512,11 @@
                         "attachment",
                         "ephemeral",
                         "replyTo",
+                        "action",
                         "createdAt",
                         "editedAt",
-                        "deletedAt"
+                        "deletedAt",
+                        "expiresAt"
                       ],
                       "additionalProperties": false
                     },
@@ -2407,9 +2536,16 @@
                     },
                     "autoDeleteSecs": {
                       "nullable": true,
+                      "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "scheduledCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Your scheduled messages waiting to be sent in this chat"
                     },
                     "lastActivityAt": {
                       "type": "string",
@@ -2433,6 +2569,7 @@
                     "muted",
                     "pinned",
                     "autoDeleteSecs",
+                    "scheduledCount",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -2604,7 +2741,8 @@
                         "video",
                         "video_note",
                         "voice",
-                        "file"
+                        "file",
+                        "service"
                       ]
                     },
                     "text": {
@@ -2828,7 +2966,8 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
+                            "file",
+                            "service"
                           ]
                         },
                         "text": {
@@ -2856,6 +2995,30 @@
                       ],
                       "additionalProperties": false
                     },
+                    "action": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "auto_delete"
+                          ]
+                        },
+                        "secs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "secs"
+                      ],
+                      "additionalProperties": false,
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -2869,6 +3032,13 @@
                     },
                     "deletedAt": {
                       "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -2886,9 +3056,11 @@
                     "attachment",
                     "ephemeral",
                     "replyTo",
+                    "action",
                     "createdAt",
                     "editedAt",
-                    "deletedAt"
+                    "deletedAt",
+                    "expiresAt"
                   ],
                   "additionalProperties": false
                 }
@@ -2955,7 +3127,8 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
+                            "file",
+                            "service"
                           ]
                         },
                         "text": {
@@ -3179,7 +3352,8 @@
                                 "video",
                                 "video_note",
                                 "voice",
-                                "file"
+                                "file",
+                                "service"
                               ]
                             },
                             "text": {
@@ -3207,6 +3381,30 @@
                           ],
                           "additionalProperties": false
                         },
+                        "action": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false,
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -3220,6 +3418,13 @@
                         },
                         "deletedAt": {
                           "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "expiresAt": {
+                          "nullable": true,
+                          "description": "When the chat's auto-delete timer removes it for everyone",
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -3237,9 +3442,11 @@
                         "attachment",
                         "ephemeral",
                         "replyTo",
+                        "action",
                         "createdAt",
                         "editedAt",
-                        "deletedAt"
+                        "deletedAt",
+                        "expiresAt"
                       ],
                       "additionalProperties": false
                     },
@@ -3317,7 +3524,8 @@
                         "video",
                         "video_note",
                         "voice",
-                        "file"
+                        "file",
+                        "service"
                       ]
                     },
                     "text": {
@@ -3541,7 +3749,8 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
+                            "file",
+                            "service"
                           ]
                         },
                         "text": {
@@ -3569,6 +3778,30 @@
                       ],
                       "additionalProperties": false
                     },
+                    "action": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "auto_delete"
+                          ]
+                        },
+                        "secs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "secs"
+                      ],
+                      "additionalProperties": false,
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3582,6 +3815,13 @@
                     },
                     "deletedAt": {
                       "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -3599,9 +3839,11 @@
                     "attachment",
                     "ephemeral",
                     "replyTo",
+                    "action",
                     "createdAt",
                     "editedAt",
-                    "deletedAt"
+                    "deletedAt",
+                    "expiresAt"
                   ],
                   "additionalProperties": false
                 }
@@ -3743,7 +3985,8 @@
                               "video",
                               "video_note",
                               "voice",
-                              "file"
+                              "file",
+                              "service"
                             ]
                           },
                           "text": {
@@ -3967,7 +4210,8 @@
                                   "video",
                                   "video_note",
                                   "voice",
-                                  "file"
+                                  "file",
+                                  "service"
                                 ]
                               },
                               "text": {
@@ -3995,6 +4239,30 @@
                             ],
                             "additionalProperties": false
                           },
+                          "action": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "auto_delete"
+                                ]
+                              },
+                              "secs": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "secs"
+                            ],
+                            "additionalProperties": false,
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -4008,6 +4276,13 @@
                           },
                           "deletedAt": {
                             "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "expiresAt": {
+                            "nullable": true,
+                            "description": "When the chat's auto-delete timer removes it for everyone",
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -4025,9 +4300,11 @@
                           "attachment",
                           "ephemeral",
                           "replyTo",
+                          "action",
                           "createdAt",
                           "editedAt",
-                          "deletedAt"
+                          "deletedAt",
+                          "expiresAt"
                         ],
                         "additionalProperties": false
                       }
@@ -4192,7 +4469,8 @@
                         "video",
                         "video_note",
                         "voice",
-                        "file"
+                        "file",
+                        "service"
                       ]
                     },
                     "text": {
@@ -4416,7 +4694,8 @@
                             "video",
                             "video_note",
                             "voice",
-                            "file"
+                            "file",
+                            "service"
                           ]
                         },
                         "text": {
@@ -4444,6 +4723,30 @@
                       ],
                       "additionalProperties": false
                     },
+                    "action": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "auto_delete"
+                          ]
+                        },
+                        "secs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "secs"
+                      ],
+                      "additionalProperties": false,
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4457,6 +4760,13 @@
                     },
                     "deletedAt": {
                       "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -4474,9 +4784,1482 @@
                     "attachment",
                     "ephemeral",
                     "replyTo",
+                    "action",
                     "createdAt",
                     "editedAt",
-                    "deletedAt"
+                    "deletedAt",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chats/{id}/scheduled-messages": {
+      "get": {
+        "summary": "Your scheduled messages in a chat, soonest first",
+        "tags": [
+          "scheduled"
+        ],
+        "description": "At most 100, so `nextCursor` is always null.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "chatId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "clientId": {
+                            "type": "string",
+                            "description": "Becomes the clientId of the message once it is sent"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "image",
+                              "video",
+                              "video_note",
+                              "voice",
+                              "file",
+                              "service"
+                            ]
+                          },
+                          "text": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "entities": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "bold",
+                                    "italic",
+                                    "strike",
+                                    "code",
+                                    "spoiler"
+                                  ]
+                                },
+                                "offset": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "length": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "offset",
+                                "length"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "spoiler": {
+                            "type": "boolean"
+                          },
+                          "attachment": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "image",
+                                  "video",
+                                  "video_note",
+                                  "voice",
+                                  "file"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "processing",
+                                  "ready",
+                                  "failed"
+                                ]
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "mime": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "url": {
+                                "nullable": true,
+                                "description": "Signed link to the playable or viewable file, once ready",
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "thumbUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "width": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "height": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "durationMs": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "waveform": {
+                                "nullable": true,
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                }
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "kind",
+                              "status",
+                              "name",
+                              "mime",
+                              "size",
+                              "url",
+                              "thumbUrl",
+                              "width",
+                              "height",
+                              "durationMs",
+                              "waveform"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "ephemeral": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "maxViews": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "ttlSeconds": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "maxViews",
+                              "ttlSeconds"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "replyTo": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "senderId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "image",
+                                  "video",
+                                  "video_note",
+                                  "voice",
+                                  "file",
+                                  "service"
+                                ]
+                              },
+                              "text": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "spoiler": {
+                                "type": "boolean"
+                              },
+                              "ephemeral": {
+                                "type": "boolean"
+                              },
+                              "deleted": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "senderId",
+                              "type",
+                              "text",
+                              "spoiler",
+                              "ephemeral",
+                              "deleted"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "sendAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "chatId",
+                          "clientId",
+                          "type",
+                          "text",
+                          "entities",
+                          "spoiler",
+                          "attachment",
+                          "ephemeral",
+                          "replyTo",
+                          "sendAt",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Schedule a message",
+        "tags": [
+          "scheduled"
+        ],
+        "description": "Same body as sending, plus `sendAt`. Only you see it until then; it is sent as a normal message, with this clientId. Idempotent per `clientId`. Your other devices get `chat.updated` with the new `scheduledCount`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "text": {
+                    "description": "Required unless attachmentId is set, in which case it is the caption",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "entities": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "bold",
+                            "italic",
+                            "strike",
+                            "code",
+                            "spoiler"
+                          ]
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "length": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "offset",
+                        "length"
+                      ]
+                    },
+                    "description": "Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not."
+                  },
+                  "attachmentId": {
+                    "description": "A completed upload from POST /v1/uploads/{id}/complete",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "replyToId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "spoiler": {
+                    "type": "boolean"
+                  },
+                  "ephemeral": {
+                    "description": "Self-destruct after viewing, like Telegram's view-once and timers",
+                    "type": "object",
+                    "properties": {
+                      "maxViews": {
+                        "description": "Destroy after this many views by the recipient",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10
+                      },
+                      "ttlSeconds": {
+                        "description": "Destroy this many seconds after the recipient first opens it",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 604800
+                      }
+                    }
+                  },
+                  "sendAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    "description": "When to send it, in the future and at most a year ahead"
+                  }
+                },
+                "required": [
+                  "clientId",
+                  "sendAt"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string",
+                      "description": "Becomes the clientId of the message once it is sent"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file",
+                        "service"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ephemeral": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ttlSeconds": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "replyTo": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "service"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sendAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "ephemeral",
+                    "replyTo",
+                    "sendAt",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/scheduled-messages/{id}": {
+      "patch": {
+        "summary": "Change the text or time of a scheduled message",
+        "tags": [
+          "scheduled"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "entities": {
+                    "description": "Replaces the formatting; send it together with text",
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "bold",
+                            "italic",
+                            "strike",
+                            "code",
+                            "spoiler"
+                          ]
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "length": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "offset",
+                        "length"
+                      ]
+                    }
+                  },
+                  "sendAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string",
+                      "description": "Becomes the clientId of the message once it is sent"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file",
+                        "service"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ephemeral": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ttlSeconds": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "replyTo": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "service"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sendAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "ephemeral",
+                    "replyTo",
+                    "sendAt",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Cancel a scheduled message",
+        "tags": [
+          "scheduled"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/scheduled-messages/{id}/send": {
+      "post": {
+        "summary": "Send a scheduled message now",
+        "tags": [
+          "scheduled"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file",
+                        "service"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ephemeral": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ttlSeconds": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "views": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired",
+                        "purged",
+                        "resendsLeft",
+                        "resendUntil"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "replyTo": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "service"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "action": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "auto_delete"
+                          ]
+                        },
+                        "secs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "secs"
+                      ],
+                      "additionalProperties": false,
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "editedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "deletedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "senderId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "ephemeral",
+                    "replyTo",
+                    "action",
+                    "createdAt",
+                    "editedAt",
+                    "deletedAt",
+                    "expiresAt"
                   ],
                   "additionalProperties": false
                 }
@@ -5043,7 +6826,8 @@
                                       "video",
                                       "video_note",
                                       "voice",
-                                      "file"
+                                      "file",
+                                      "service"
                                     ]
                                   },
                                   "text": {
@@ -5267,7 +7051,8 @@
                                           "video",
                                           "video_note",
                                           "voice",
-                                          "file"
+                                          "file",
+                                          "service"
                                         ]
                                       },
                                       "text": {
@@ -5295,6 +7080,30 @@
                                     ],
                                     "additionalProperties": false
                                   },
+                                  "action": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "auto_delete"
+                                        ]
+                                      },
+                                      "secs": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "secs"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -5308,6 +7117,13 @@
                                   },
                                   "deletedAt": {
                                     "nullable": true,
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  },
+                                  "expiresAt": {
+                                    "nullable": true,
+                                    "description": "When the chat's auto-delete timer removes it for everyone",
                                     "type": "string",
                                     "format": "date-time",
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -5325,9 +7141,11 @@
                                   "attachment",
                                   "ephemeral",
                                   "replyTo",
+                                  "action",
                                   "createdAt",
                                   "editedAt",
-                                  "deletedAt"
+                                  "deletedAt",
+                                  "expiresAt"
                                 ],
                                 "additionalProperties": false
                               },
@@ -5381,7 +7199,8 @@
                                       "video",
                                       "video_note",
                                       "voice",
-                                      "file"
+                                      "file",
+                                      "service"
                                     ]
                                   },
                                   "text": {
@@ -5605,7 +7424,8 @@
                                           "video",
                                           "video_note",
                                           "voice",
-                                          "file"
+                                          "file",
+                                          "service"
                                         ]
                                       },
                                       "text": {
@@ -5633,6 +7453,30 @@
                                     ],
                                     "additionalProperties": false
                                   },
+                                  "action": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "auto_delete"
+                                        ]
+                                      },
+                                      "secs": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "secs"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -5646,6 +7490,13 @@
                                   },
                                   "deletedAt": {
                                     "nullable": true,
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  },
+                                  "expiresAt": {
+                                    "nullable": true,
+                                    "description": "When the chat's auto-delete timer removes it for everyone",
                                     "type": "string",
                                     "format": "date-time",
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -5663,9 +7514,11 @@
                                   "attachment",
                                   "ephemeral",
                                   "replyTo",
+                                  "action",
                                   "createdAt",
                                   "editedAt",
-                                  "deletedAt"
+                                  "deletedAt",
+                                  "expiresAt"
                                 ],
                                 "additionalProperties": false
                               },
@@ -5851,7 +7704,8 @@
                                           "video",
                                           "video_note",
                                           "voice",
-                                          "file"
+                                          "file",
+                                          "service"
                                         ]
                                       },
                                       "text": {
@@ -6075,7 +7929,8 @@
                                               "video",
                                               "video_note",
                                               "voice",
-                                              "file"
+                                              "file",
+                                              "service"
                                             ]
                                           },
                                           "text": {
@@ -6103,6 +7958,30 @@
                                         ],
                                         "additionalProperties": false
                                       },
+                                      "action": {
+                                        "nullable": true,
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "auto_delete"
+                                            ]
+                                          },
+                                          "secs": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "secs"
+                                        ],
+                                        "additionalProperties": false,
+                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time",
@@ -6116,6 +7995,13 @@
                                       },
                                       "deletedAt": {
                                         "nullable": true,
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      },
+                                      "expiresAt": {
+                                        "nullable": true,
+                                        "description": "When the chat's auto-delete timer removes it for everyone",
                                         "type": "string",
                                         "format": "date-time",
                                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
@@ -6133,9 +8019,11 @@
                                       "attachment",
                                       "ephemeral",
                                       "replyTo",
+                                      "action",
                                       "createdAt",
                                       "editedAt",
-                                      "deletedAt"
+                                      "deletedAt",
+                                      "expiresAt"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -6155,9 +8043,16 @@
                                   },
                                   "autoDeleteSecs": {
                                     "nullable": true,
+                                    "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
                                     "type": "integer",
                                     "minimum": -9007199254740991,
                                     "maximum": 9007199254740991
+                                  },
+                                  "scheduledCount": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Your scheduled messages waiting to be sent in this chat"
                                   },
                                   "lastActivityAt": {
                                     "type": "string",
@@ -6181,6 +8076,7 @@
                                   "muted",
                                   "pinned",
                                   "autoDeleteSecs",
+                                  "scheduledCount",
                                   "lastActivityAt",
                                   "createdAt"
                                 ],

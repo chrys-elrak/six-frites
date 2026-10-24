@@ -1,7 +1,15 @@
 import { unwrap } from "@six/sdk";
-import { type ChatDTO, type DeleteScope, type MessageDTO, type MessageEntity, maskSpoilers } from "@six/shared";
+import {
+  type ChatDTO,
+  type DeleteScope,
+  type MessageDTO,
+  type MessageEntity,
+  type ScheduleMessageInput,
+  type ScheduledMessageDTO,
+  maskSpoilers,
+} from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
-import { chatKeys, mapMessages, patchChat, removeChat, resetMessages, upsertChat } from "./chats";
+import { chatKeys, insertMessage, mapMessages, patchChat, removeChat, resetMessages, upsertChat } from "./chats";
 import { six } from "./six";
 
 export function applyEdited(qc: QueryClient, m: MessageDTO) {
@@ -95,11 +103,41 @@ export async function updateContact(
 export async function updateChatSettings(
   qc: QueryClient,
   chatId: string,
-  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned">>,
+  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned" | "autoDeleteSecs">>,
 ) {
   const chat = unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input }));
   upsertChat(qc, chat);
   return chat;
+}
+
+export const scheduledKey = (chatId: string) => ["scheduled", chatId] as const;
+
+export async function scheduleMessage(
+  qc: QueryClient,
+  chatId: string,
+  input: Omit<ScheduleMessageInput, "clientId" | "sendAt">,
+  sendAt: Date,
+) {
+  const body = { ...input, clientId: crypto.randomUUID(), sendAt: sendAt.toISOString() };
+  unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params: { path: { id: chatId } }, body }));
+  void qc.invalidateQueries({ queryKey: scheduledKey(chatId) });
+}
+
+export async function rescheduleMessage(qc: QueryClient, s: ScheduledMessageDTO, sendAt: Date) {
+  const body = { sendAt: sendAt.toISOString() };
+  unwrap(await six.api.PATCH("/v1/scheduled-messages/{id}", { params: { path: { id: s.id } }, body }));
+  void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
+}
+
+export async function cancelScheduled(qc: QueryClient, s: ScheduledMessageDTO) {
+  unwrap(await six.api.DELETE("/v1/scheduled-messages/{id}", { params: { path: { id: s.id } } }));
+  void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
+}
+
+export async function sendScheduledNow(qc: QueryClient, s: ScheduledMessageDTO) {
+  const m = unwrap(await six.api.POST("/v1/scheduled-messages/{id}/send", { params: { path: { id: s.id } } }));
+  insertMessage(qc, m);
+  void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
 }
 
 export async function deleteChat(qc: QueryClient, chatId: string, scope: DeleteScope) {

@@ -1,4 +1,4 @@
-import { Prisma } from "../generated/prisma/client.js";
+import { type Message, Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   type DeleteMessagesQuery,
@@ -7,7 +7,9 @@ import {
   type MessageEntity,
   type MessageType,
   type PageQuery,
+  type ReplyPreview,
   type SendMessageInput,
+  type ServiceAction,
   type ViewMessageResult,
   EPHEMERAL_RESEND,
   maskSpoilers,
@@ -24,8 +26,8 @@ export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclu
 
 const SNIPPET = 200;
 
-const entitiesOf = (m: { entities: Prisma.JsonValue }) => (m.entities as MessageEntity[] | null) ?? [];
-const storedEntities = (entities: MessageEntity[] | undefined) =>
+export const entitiesOf = (m: { entities: Prisma.JsonValue }) => (m.entities as MessageEntity[] | null) ?? [];
+export const storedEntities = (entities: MessageEntity[] | undefined) =>
   entities?.length ? (entities as Prisma.InputJsonValue) : Prisma.DbNull;
 
 const isEphemeral = (m: { maxViews: number | null; ttlSeconds: number | null }) =>
@@ -33,6 +35,21 @@ const isEphemeral = (m: { maxViews: number | null; ttlSeconds: number | null }) 
 
 /** How long download links for opened self-destructing media stay valid. */
 export const EPHEMERAL_LINK_SECONDS = 5 * 60;
+
+export function toReplyPreview(r: Message): ReplyPreview {
+  return {
+    id: r.id,
+    senderId: r.senderId,
+    type: r.type as MessageType,
+    text:
+      r.deletedAt || r.expiredAt || isEphemeral(r) || r.text === null
+        ? null
+        : maskSpoilers(r.text, entitiesOf(r)).slice(0, SNIPPET),
+    spoiler: r.spoiler,
+    ephemeral: isEphemeral(r),
+    deleted: r.deletedAt !== null,
+  };
+}
 
 /**
  * Builds a message as `viewerId` may see it. Self-destructing messages are locked for everyone but
@@ -48,7 +65,8 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
   const hideContent = m.deletedAt !== null || purged || locked || (expired && !isSender);
   const others = m.views.filter((v) => v.userId !== m.senderId);
   const mine = m.views.find((v) => v.userId === viewerId);
-  const firstView = viewerId === m.senderId ? others.map((v) => v.firstViewedAt).sort((a, b) => +a - +b)[0] : mine?.firstViewedAt;
+  const firstView =
+    viewerId === m.senderId ? others.map((v) => v.firstViewedAt).sort((a, b) => +a - +b)[0] : mine?.firstViewedAt;
 
   return {
     id: m.id,
@@ -79,23 +97,12 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
               : null,
         }
       : null,
-    replyTo: r
-      ? {
-          id: r.id,
-          senderId: r.senderId,
-          type: r.type as MessageType,
-          text:
-            r.deletedAt || r.expiredAt || isEphemeral(r) || r.text === null
-              ? null
-              : maskSpoilers(r.text, entitiesOf(r)).slice(0, SNIPPET),
-          spoiler: r.spoiler,
-          ephemeral: isEphemeral(r),
-          deleted: r.deletedAt !== null,
-        }
-      : null,
+    replyTo: r ? toReplyPreview(r) : null,
+    action: (m.action as ServiceAction | null) ?? null,
     createdAt: m.createdAt.toISOString(),
     editedAt: m.editedAt?.toISOString() ?? null,
     deletedAt: m.deletedAt?.toISOString() ?? null,
+    expiresAt: m.expiresAt?.toISOString() ?? null,
   };
 }
 
@@ -133,53 +140,71 @@ async function findByClientId(senderId: string, chatId: string, clientId: string
   return existing;
 }
 
+/**
+ * Stores a new message, bumps the chat and tells every member. Messages get the chat's auto-delete
+ * deadline, except service messages, which announce changes to it. Returns who should get a push.
+ */
+export async function createMessage(
+  tx: Tx,
+  emit: Emit,
+  userId: string,
+  chatId: string,
+  input: SendMessageInput | { clientId: string; action: ServiceAction },
+) {
+  await assertMember(tx, chatId, userId);
+  const content = "action" in input ? null : input;
+  if (content?.replyToId) {
+    const original = await tx.message.findFirst({ where: { id: content.replyToId, chatId }, select: { id: true } });
+    if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
+  }
+  const upload = content?.attachmentId ? await claimForMessage(tx, userId, content.attachmentId) : null;
+  const { autoDeleteSecs } = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
+  const createdAt = new Date();
+
+  const message = await tx.message.create({
+    data: {
+      chatId,
+      senderId: userId,
+      clientId: input.clientId,
+      type: content ? (upload?.kind ?? "text") : "service",
+      text: content?.text ?? null,
+      entities: storedEntities(content?.entities),
+      attachmentId: upload?.id ?? null,
+      spoiler: content?.spoiler ?? false,
+      maxViews: content?.ephemeral?.maxViews ?? null,
+      ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
+      replyToId: content?.replyToId ?? null,
+      ...("action" in input && { action: input.action }),
+      createdAt,
+      expiresAt: content && autoDeleteSecs ? new Date(createdAt.getTime() + autoDeleteSecs * 1000) : null,
+    },
+    include: messageInclude,
+  });
+  await tx.chat.update({ where: { id: chatId }, data: { lastMessageAt: message.createdAt } });
+  await tx.chatMember.updateMany({ where: { chatId, hidden: true }, data: { hidden: false } });
+  await tx.chatMember.update({
+    where: { chatId_userId: { chatId, userId } },
+    data: {
+      lastReadMessageId: message.id,
+      lastReadAt: message.createdAt,
+      lastDeliveredMessageId: message.id,
+      lastDeliveredAt: message.createdAt,
+    },
+  });
+
+  const members = await memberIds(tx, chatId);
+  for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
+  return { message, recipients: members.filter((id) => id !== userId) };
+}
+
 export async function sendMessage(userId: string, chatId: string, input: SendMessageInput): Promise<MessageDTO> {
   const existing = await findByClientId(userId, chatId, input.clientId);
   if (existing) return toMessageDTO(existing, userId);
 
   try {
-    const { dto, recipients } = await withEvents(async (tx, emit) => {
-      await assertMember(tx, chatId, userId);
-      if (input.replyToId) {
-        const original = await tx.message.findFirst({ where: { id: input.replyToId, chatId }, select: { id: true } });
-        if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
-      }
-      const upload = input.attachmentId ? await claimForMessage(tx, userId, input.attachmentId) : null;
-
-      const message = await tx.message.create({
-        data: {
-          chatId,
-          senderId: userId,
-          clientId: input.clientId,
-          type: upload?.kind ?? "text",
-          text: input.text ?? null,
-          entities: storedEntities(input.entities),
-          attachmentId: upload?.id ?? null,
-          spoiler: input.spoiler ?? false,
-          maxViews: input.ephemeral?.maxViews ?? null,
-          ttlSeconds: input.ephemeral?.ttlSeconds ?? null,
-          replyToId: input.replyToId ?? null,
-        },
-        include: messageInclude,
-      });
-      await tx.chat.update({ where: { id: chatId }, data: { lastMessageAt: message.createdAt } });
-      await tx.chatMember.updateMany({ where: { chatId, hidden: true }, data: { hidden: false } });
-      await tx.chatMember.update({
-        where: { chatId_userId: { chatId, userId } },
-        data: {
-          lastReadMessageId: message.id,
-          lastReadAt: message.createdAt,
-          lastDeliveredMessageId: message.id,
-          lastDeliveredAt: message.createdAt,
-        },
-      });
-
-      const members = await memberIds(tx, chatId);
-      for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
-      return { dto: toMessageDTO(message, userId), recipients: members.filter((id) => id !== userId) };
-    });
-    await queuePush(dto.id, recipients).catch((err) => console.error("could not queue push:", err.message));
-    return dto;
+    const { message, recipients } = await withEvents((tx, emit) => createMessage(tx, emit, userId, chatId, input));
+    await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
+    return toMessageDTO(message, userId);
   } catch (err) {
     if ((err as { code?: string }).code !== "P2002") throw err;
     const raced = await findByClientId(userId, chatId, input.clientId);
@@ -196,7 +221,9 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
-    if (message.deletedAt || isEphemeral(message)) throw new AppError("MESSAGE_NOT_EDITABLE");
+    if (message.deletedAt || isEphemeral(message) || message.type === "service") {
+      throw new AppError("MESSAGE_NOT_EDITABLE");
+    }
     const entities = input.entities ?? [];
     if (message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
       return toMessageDTO(message, userId);
@@ -249,7 +276,10 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
         where: { id: { in: live.map((m) => m.id) } },
         data: { deletedAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
       });
-      await scrubMessageEvents(tx, live.map((m) => m.id));
+      await scrubMessageEvents(
+        tx,
+        live.map((m) => m.id),
+      );
 
       for (const chatId of chatIds) {
         const members = await memberIds(tx, chatId);
@@ -277,6 +307,27 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
     return [];
   });
   await purgeUploads(detached);
+}
+
+/** Permanently deletes, for everyone, messages whose chat auto-delete deadline has passed. */
+export async function deleteExpiredMessages(batch = 500) {
+  const doomed = await withEvents(async (tx, emit) => {
+    const rows = await tx.message.findMany({
+      where: { expiresAt: { lte: new Date() } },
+      select: { id: true, chatId: true, attachmentId: true },
+      take: batch,
+    });
+    const ids = rows.map((m) => m.id);
+    await scrubMessageEvents(tx, ids);
+    await tx.message.deleteMany({ where: { id: { in: ids } } });
+    for (const chatId of new Set(rows.map((m) => m.chatId))) {
+      const messageIds = rows.filter((m) => m.chatId === chatId).map((m) => m.id);
+      for (const id of await memberIds(tx, chatId)) emit(id, "message.deleted", { chatId, messageIds, scope: "me" });
+    }
+    return rows;
+  });
+  await purgeUploads(doomed.map((m) => m.attachmentId).filter((a): a is string => !!a));
+  return doomed.length;
 }
 
 async function notifyMembers(tx: Tx, emit: Emit, messageId: string) {
@@ -365,7 +416,9 @@ export async function resendMessage(userId: string, messageId: string): Promise<
     const recipients = (await memberIds(tx, m.chatId)).filter((id) => id !== userId);
     return { dto: toMessageDTO(fresh, userId), recipients, round: fresh.resendCount };
   });
-  await queuePush(messageId, recipients, `r${round}`).catch((err) => console.error("could not queue push:", err.message));
+  await queuePush(messageId, recipients, `r${round}`).catch((err) =>
+    console.error("could not queue push:", err.message),
+  );
   return dto;
 }
 

@@ -6,6 +6,7 @@ import {
   type MediaJob,
   PUSH_QUEUE,
   type PushJob,
+  SWEEP_EVERY_MS,
   TIMERS_QUEUE,
   type TimerJob,
   mediaQueue,
@@ -15,8 +16,9 @@ import {
 } from "./lib/queue.js";
 import { ensureBucket } from "./lib/storage.js";
 import { processUpload } from "./media/process.js";
-import { expireMessage, purgeMessage } from "./services/messages.js";
+import { deleteExpiredMessages, expireMessage, purgeMessage } from "./services/messages.js";
 import { deliverPush } from "./services/push.js";
+import { sendDueScheduled } from "./services/scheduled.js";
 import { finishUpload, purgeAbandonedUploads, purgeUploads } from "./services/uploads.js";
 
 await ensureBucket();
@@ -33,6 +35,7 @@ const worker = new Worker<MediaJob>(
 const timers = new Worker<TimerJob>(
   TIMERS_QUEUE,
   async (job) => {
+    if ("sweep" in job.data) return { sent: await sendDueScheduled(), deleted: await deleteExpiredMessages() };
     if ("messageId" in job.data) await expireMessage(job.data.messageId, job.data.cycle);
     else if ("purgeMessageId" in job.data) await purgeMessage(job.data.purgeMessageId, job.data.cycle);
     else await purgeUploads(job.data.uploadIds);
@@ -63,6 +66,11 @@ await mediaQueue().upsertJobScheduler(
   "purge-abandoned",
   { every: 60 * 60 * 1000 },
   { name: "purge-abandoned", data: { uploadId: "" } },
+);
+await timersQueue().upsertJobScheduler(
+  "sweep",
+  { every: SWEEP_EVERY_MS },
+  { name: "sweep", data: { sweep: true }, opts: { attempts: 1, removeOnComplete: 100, removeOnFail: 100 } },
 );
 console.log("media worker ready");
 

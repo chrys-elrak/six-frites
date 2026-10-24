@@ -1,6 +1,6 @@
 "use client";
 
-import type { MessageDTO } from "@six/shared";
+import { type MessageDTO, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, MoreVertical, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -134,9 +134,15 @@ export function Conversation({ chatId }: { chatId: string }) {
               {typing ? (
                 <span className="block text-xs font-medium text-brand">typing…</span>
               ) : (
-                (c.muted || c.archived) && (
+                (c.muted || c.archived || c.autoDeleteSecs) && (
                   <span className="block text-xs text-stone-500">
-                    {[c.muted && "Muted", c.archived && "Archived"].filter(Boolean).join(" · ")}
+                    {[
+                      c.autoDeleteSecs && `Auto-delete: ${durationLabel(c.autoDeleteSecs)}`,
+                      c.muted && "Muted",
+                      c.archived && "Archived",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 )
               )}
@@ -153,6 +159,7 @@ export function Conversation({ chatId }: { chatId: string }) {
         <Composer
           chatId={chatId}
           nameOf={nameOf}
+          scheduledCount={c.scheduledCount}
           onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
         />
       )}

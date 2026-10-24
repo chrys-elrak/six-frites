@@ -3,7 +3,7 @@ import { Id, IsoDate } from "./common.js";
 import { AttachmentDTO } from "./uploads.js";
 import { PublicUser } from "./invites.js";
 
-export const MessageType = z.enum(["text", "image", "video", "video_note", "voice", "file"]);
+export const MessageType = z.enum(["text", "image", "video", "video_note", "voice", "file", "service"]);
 export type MessageType = z.infer<typeof MessageType>;
 
 export const EntityType = z.enum(["bold", "italic", "strike", "code", "spoiler"]);
@@ -92,6 +92,14 @@ export const EphemeralDTO = z.object({
 });
 export type EphemeralDTO = z.infer<typeof EphemeralDTO>;
 
+export const ServiceAction = z
+  .object({ type: z.literal("auto_delete"), secs: z.number().int().nullable() })
+  .describe("What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off)");
+export type ServiceAction = z.infer<typeof ServiceAction>;
+
+/** Allowed range for a chat's auto-delete timer, in seconds. */
+export const AUTO_DELETE = { min: 60 * 60, max: 365 * 24 * 60 * 60 } as const;
+
 export const MessageDTO = z.object({
   id: Id,
   chatId: Id,
@@ -104,9 +112,11 @@ export const MessageDTO = z.object({
   attachment: AttachmentDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
   replyTo: ReplyPreview.nullable(),
+  action: ServiceAction.nullable(),
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
   deletedAt: IsoDate.nullable(),
+  expiresAt: IsoDate.nullable().describe("When the chat's auto-delete timer removes it for everyone"),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 
@@ -125,7 +135,14 @@ export const DeleteMessagesQuery = z.object({
     .string()
     .max(4000)
     .describe("Comma-separated message ids, at most 100")
-    .transform((s) => [...new Set(s.split(",").map((x) => x.trim()).filter(Boolean))])
+    .transform((s) => [
+      ...new Set(
+        s
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean),
+      ),
+    ])
     .refine((ids) => ids.length >= 1 && ids.length <= 100, "Provide between 1 and 100 ids"),
   scope: DeleteScope.default("me"),
 });
@@ -154,7 +171,10 @@ export const SendMessageInput = z
     message: "Send text, an attachment, or both",
     path: ["text"],
   })
-  .refine((v) => entitiesFit(v.text ?? "", v.entities), { message: "Entities fall outside the text", path: ["entities"] });
+  .refine((v) => entitiesFit(v.text ?? "", v.entities), {
+    message: "Entities fall outside the text",
+    path: ["entities"],
+  });
 export type SendMessageInput = z.infer<typeof SendMessageInput>;
 
 export const ChatMemberDTO = z.object({
@@ -176,7 +196,12 @@ export const ChatDTO = z.object({
   archived: z.boolean(),
   muted: z.boolean(),
   pinned: z.boolean(),
-  autoDeleteSecs: z.number().int().nullable(),
+  autoDeleteSecs: z
+    .number()
+    .int()
+    .nullable()
+    .describe("Shared by both people: new messages are deleted for everyone this long after they are sent"),
+  scheduledCount: z.number().int().describe("Your scheduled messages waiting to be sent in this chat"),
   lastActivityAt: IsoDate,
   createdAt: IsoDate,
 });
@@ -227,6 +252,16 @@ export const UpdateChatInput = z
     archived: z.boolean().optional(),
     muted: z.boolean().optional(),
     pinned: z.boolean().optional(),
+    autoDeleteSecs: z
+      .number()
+      .int()
+      .min(AUTO_DELETE.min)
+      .max(AUTO_DELETE.max)
+      .nullable()
+      .optional()
+      .describe(
+        "For both people: delete messages sent from now on this many seconds after sending. null turns it off.",
+      ),
   })
   .refine((v) => Object.values(v).some((x) => x !== undefined), "Provide at least one field");
 export type UpdateChatInput = z.infer<typeof UpdateChatInput>;
@@ -242,3 +277,44 @@ export const ViewMessageResult = z.object({
   expiresAt: IsoDate.nullable().describe("When the content will be destroyed, if a timer is running"),
 });
 export type ViewMessageResult = z.infer<typeof ViewMessageResult>;
+
+/** How many messages one person can have waiting in a chat, and how far ahead they can be scheduled. */
+export const SCHEDULE_LIMITS = { perChat: 100, maxAheadSeconds: 365 * 24 * 60 * 60 } as const;
+
+export const ScheduleMessageInput = SendMessageInput.safeExtend({
+  sendAt: IsoDate.describe("When to send it, in the future and at most a year ahead"),
+});
+export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
+
+export const ScheduledMessageDTO = z.object({
+  id: Id,
+  chatId: Id,
+  clientId: z.string().describe("Becomes the clientId of the message once it is sent"),
+  type: MessageType,
+  text: z.string().nullable(),
+  entities: z.array(MessageEntity),
+  spoiler: z.boolean(),
+  attachment: AttachmentDTO.nullable(),
+  ephemeral: z.object({ maxViews: z.number().int().nullable(), ttlSeconds: z.number().int().nullable() }).nullable(),
+  replyTo: ReplyPreview.nullable(),
+  sendAt: IsoDate,
+  createdAt: IsoDate,
+});
+export type ScheduledMessageDTO = z.infer<typeof ScheduledMessageDTO>;
+
+export const EditScheduledInput = z
+  .object({
+    text: MessageText.optional(),
+    entities: Entities.optional().describe("Replaces the formatting; send it together with text"),
+    sendAt: IsoDate.optional(),
+  })
+  .refine((v) => v.text !== undefined || v.sendAt !== undefined, "Provide text, sendAt or both")
+  .refine((v) => v.text !== undefined || v.entities === undefined, {
+    message: "Send entities together with text",
+    path: ["entities"],
+  })
+  .refine((v) => entitiesFit(v.text ?? "", v.entities), {
+    message: "Entities fall outside the text",
+    path: ["entities"],
+  });
+export type EditScheduledInput = z.infer<typeof EditScheduledInput>;

@@ -72,13 +72,16 @@ export async function completeUpload(ownerId: string, id: string) {
   return toAttachmentDTO(updated);
 }
 
-/** Checks an upload can be attached to a new message by this sender. */
+/** Checks an upload can be attached to a new (or scheduled) message by this sender. */
 export async function claimForMessage(tx: Tx, senderId: string, uploadId: string) {
-  const upload = await tx.upload.findUnique({ where: { id: uploadId }, include: { messages: { select: { id: true } } } });
+  const upload = await tx.upload.findUnique({
+    where: { id: uploadId },
+    include: { messages: { select: { id: true } }, scheduled: { select: { id: true } } },
+  });
   if (!upload || upload.ownerId !== senderId) throw new AppError("UPLOAD_NOT_FOUND");
   if (upload.status === "pending") throw new AppError("UPLOAD_NOT_READY", "Complete the upload before sending it");
   if (upload.status === "failed") throw new AppError("UPLOAD_NOT_READY", "This file could not be processed");
-  if (upload.messages.length) throw new AppError("UPLOAD_IN_USE");
+  if (upload.messages.length || upload.scheduled) throw new AppError("UPLOAD_IN_USE");
   return upload;
 }
 
@@ -107,10 +110,10 @@ export async function purgeUploads(ids: string[]) {
   await prisma.upload.deleteMany({ where: { id: { in: uploads.map((u) => u.id) } } });
 }
 
-/** Deletes uploads that were never attached to a message within a day. */
+/** Deletes uploads that were never attached to a message (or scheduled one) within a day. */
 export async function purgeAbandonedUploads(olderThanMs = 24 * 60 * 60 * 1000) {
   const stale = await prisma.upload.findMany({
-    where: { createdAt: { lt: new Date(Date.now() - olderThanMs) }, messages: { none: {} } },
+    where: { createdAt: { lt: new Date(Date.now() - olderThanMs) }, messages: { none: {} }, scheduled: null },
     select: { id: true },
   });
   await purgeUploads(stale.map((u) => u.id));

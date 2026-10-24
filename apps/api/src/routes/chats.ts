@@ -11,11 +11,14 @@ import {
   DeleteChatQuery,
   DeleteMessagesQuery,
   EditMessageInput,
+  EditScheduledInput,
   Id,
   MarkDeliveredInput,
   MarkReadInput,
   MessageDTO,
   PageQuery,
+  ScheduleMessageInput,
+  ScheduledMessageDTO,
   SendMessageInput,
   SyncQuery,
   SyncResult,
@@ -33,6 +36,13 @@ import {
   sendMessage,
   viewMessage,
 } from "../services/messages.js";
+import {
+  cancelScheduled,
+  editScheduled,
+  listScheduled,
+  scheduleMessage,
+  sendScheduledNow,
+} from "../services/scheduled.js";
 import { sync } from "../services/sync.js";
 
 const ChatParams = z.object({ id: Id });
@@ -69,7 +79,9 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         tags: ["chats"],
-        summary: "Archive, mute or pin a chat (your settings only)",
+        summary: "Archive, mute or pin a chat, or set its auto-delete timer",
+        description:
+          "`archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` applies to both people: it posts a `service` message, and messages sent afterwards are deleted for everyone that long after sending.",
         security,
         params: ChatParams,
         body: UpdateChatInput,
@@ -197,6 +209,85 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => reply.status(201).send(await sendMessage(req.auth.userId, req.params.id, req.body)),
   );
 
+  app.get(
+    "/chats/:id/scheduled-messages",
+    {
+      schema: {
+        tags: ["scheduled"],
+        summary: "Your scheduled messages in a chat, soonest first",
+        description: "At most 100, so `nextCursor` is always null.",
+        security,
+        params: ChatParams,
+        response: { 200: page(ScheduledMessageDTO) },
+      },
+    },
+    (req) => listScheduled(req.auth.userId, req.params.id),
+  );
+
+  app.post(
+    "/chats/:id/scheduled-messages",
+    {
+      config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["scheduled"],
+        summary: "Schedule a message",
+        description:
+          "Same body as sending, plus `sendAt`. Only you see it until then; it is sent as a normal message, with this clientId. Idempotent per `clientId`. Your other devices get `chat.updated` with the new `scheduledCount`.",
+        security,
+        params: ChatParams,
+        body: ScheduleMessageInput,
+        response: { 201: ScheduledMessageDTO },
+      },
+    },
+    async (req, reply) => reply.status(201).send(await scheduleMessage(req.auth.userId, req.params.id, req.body)),
+  );
+
+  app.patch(
+    "/scheduled-messages/:id",
+    {
+      schema: {
+        tags: ["scheduled"],
+        summary: "Change the text or time of a scheduled message",
+        security,
+        params: MessageParams,
+        body: EditScheduledInput,
+        response: { 200: ScheduledMessageDTO },
+      },
+    },
+    (req) => editScheduled(req.auth.userId, req.params.id, req.body),
+  );
+
+  app.delete(
+    "/scheduled-messages/:id",
+    {
+      schema: {
+        tags: ["scheduled"],
+        summary: "Cancel a scheduled message",
+        security,
+        params: MessageParams,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await cancelScheduled(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.post(
+    "/scheduled-messages/:id/send",
+    {
+      schema: {
+        tags: ["scheduled"],
+        summary: "Send a scheduled message now",
+        security,
+        params: MessageParams,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => sendScheduledNow(req.auth.userId, req.params.id),
+  );
+
   app.post(
     "/chats/:id/read",
     {
@@ -219,7 +310,8 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["chats"],
         summary: "Acknowledge that this device received messages up to `messageId` (or the latest)",
-        description: "Clients call this automatically when they receive someone else's message. Returns null when nothing changed.",
+        description:
+          "Clients call this automatically when they receive someone else's message. Returns null when nothing changed.",
         security,
         params: ChatParams,
         body: MarkDeliveredInput.nullish(),
@@ -235,7 +327,8 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["contacts"],
         summary: "People you are connected with, A to Z",
-        description: "Everyone you share a direct chat with, including chats with no messages yet. `q` filters by name.",
+        description:
+          "Everyone you share a direct chat with, including chats with no messages yet. `q` filters by name.",
         security,
         querystring: ContactListQuery,
         response: { 200: page(ContactDTO) },

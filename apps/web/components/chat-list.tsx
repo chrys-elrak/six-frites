@@ -1,7 +1,18 @@
 "use client";
 
-import { type ChatDTO, maskSpoilers } from "@six/shared";
-import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
+import { type ChatDTO, maskSpoilers, serviceText } from "@six/shared";
+import {
+  Archive,
+  Ban,
+  BellOff,
+  ChevronLeft,
+  EyeOff,
+  Flame,
+  MessageCircle,
+  MoreHorizontal,
+  Pin,
+  Timer,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -43,6 +54,13 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
         {m.senderId === meId && "You: "}
         <Flame className="size-3.5 shrink-0 text-orange-500" />
         {m.ephemeral.expired ? "Opened" : `Self-destructing ${kind}`}
+      </span>
+    );
+  }
+  if (m.type === "service") {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <Timer className="size-3.5 shrink-0" /> {serviceText(m)}
       </span>
     );
   }
