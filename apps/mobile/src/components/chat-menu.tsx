@@ -1,7 +1,8 @@
-import type { ChatDTO, DeleteScope } from "@six/shared";
+import { AUTO_DELETE_PRESETS, type ChatDTO, type DeleteScope, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { deleteChat, updateChatSettings } from "@/lib/actions";
+import { AutoDeleteCustom } from "./auto-delete-custom";
 import { Sheet } from "./sheet";
 
 export function ChatMenu({
@@ -16,7 +17,7 @@ export function ChatMenu({
   onDeleted?: (scope: DeleteScope) => void;
 }) {
   const qc = useQueryClient();
-  const [confirming, setConfirming] = useState(false);
+  const [view, setView] = useState<"menu" | "delete" | "autoDelete" | "custom">("menu");
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
 
@@ -29,7 +30,43 @@ export function ChatMenu({
     }
   }
 
-  if (confirming) {
+  if (view === "custom") {
+    return (
+      <AutoDeleteCustom
+        current={chat.autoDeleteSecs}
+        peerName={peerName}
+        onSet={(secs) => settings({ autoDeleteSecs: secs })}
+        onClose={onClose}
+      />
+    );
+  }
+
+  if (view === "autoDelete") {
+    const current = chat.autoDeleteSecs;
+    const custom = current !== null && !(AUTO_DELETE_PRESETS as readonly number[]).includes(current);
+    return (
+      <Sheet
+        title={`Delete new messages for you and ${peerName} after`}
+        onClose={onClose}
+        actions={[
+          ...AUTO_DELETE_PRESETS.map((secs) => ({
+            label: `${durationLabel(secs)}${current === secs ? " ✓" : ""}`,
+            onSelect: () => settings({ autoDeleteSecs: secs }),
+          })),
+          {
+            label: custom ? `Custom: ${durationLabel(current)} ✓` : "Custom…",
+            keepOpen: true,
+            onSelect: () => setView("custom"),
+          },
+          ...(chat.autoDeleteSecs
+            ? [{ label: "Off", destructive: true, onSelect: () => settings({ autoDeleteSecs: null }) }]
+            : []),
+        ]}
+      />
+    );
+  }
+
+  if (view === "delete") {
     return (
       <Sheet
         title="Delete this chat?"
@@ -54,7 +91,12 @@ export function ChatMenu({
         { label: chat.pinned ? "Unpin" : "Pin", onSelect: () => settings({ pinned: !chat.pinned }) },
         { label: chat.muted ? "Unmute" : "Mute", onSelect: () => settings({ muted: !chat.muted }) },
         { label: chat.archived ? "Unarchive" : "Archive", onSelect: () => settings({ archived: !chat.archived }) },
-        { label: "Delete chat", destructive: true, keepOpen: true, onSelect: () => setConfirming(true) },
+        {
+          label: `Auto-delete: ${chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs) : "Off"}`,
+          keepOpen: true,
+          onSelect: () => setView("autoDelete"),
+        },
+        { label: "Delete chat", destructive: true, keepOpen: true, onSelect: () => setView("delete") },
       ]}
     />
   );

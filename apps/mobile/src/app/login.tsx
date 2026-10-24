@@ -1,5 +1,5 @@
 import { SixApiError } from "@six/sdk";
-import { useLocalSearchParams } from "expo-router";
+import { type Href, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { isErrorWithCode, statusCodes } from "react-native-nitro-google-signin";
@@ -46,7 +46,7 @@ function GoogleMark() {
 
 export default function Login() {
   const t = useTheme();
-  const { invite } = useLocalSearchParams<{ invite?: string }>();
+  const { invite, next } = useLocalSearchParams<{ invite?: string; next?: string }>();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -55,11 +55,17 @@ export default function Login() {
     setError(null);
     try {
       const idToken = await googleIdToken();
-      if (!idToken) return;
+      if (!idToken) {
+        setError(
+          "Google sign-in didn't finish. If you picked an account, this build isn't registered with Google yet (its package name and SHA-1 must be added as an Android OAuth client).",
+        );
+        return;
+      }
       await six.auth.loginWithGoogle(idToken, { inviteCode: invite, deviceName: deviceName() });
       if (invite) {
         await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: invite } } }).catch(() => null);
       }
+      if (next?.startsWith("/")) router.replace(next as Href);
     } catch (err) {
       const code = err instanceof SixApiError || isErrorWithCode(err) ? err.code : null;
       setError((code && errorText[code]) ?? (err instanceof Error ? err.message : "Something went wrong."));
@@ -74,7 +80,11 @@ export default function Login() {
         <Logo size={80} />
         <Text style={[styles.title, { color: t.text }]}>Six Frites</Text>
         <Text style={{ color: t.muted, fontSize: 14 }}>
-          {invite ? "You've been invited. Sign in to accept." : "Sign in to continue."}
+          {invite
+            ? "You've been invited. Sign in to accept."
+            : next?.startsWith("/add/")
+              ? "Sign in to add this contact."
+              : "Sign in to continue."}
         </Text>
       </View>
 

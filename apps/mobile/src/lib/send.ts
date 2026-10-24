@@ -1,5 +1,5 @@
 import type { Realtime } from "@six/sdk";
-import { type MessageDTO, type MessageEntity, type UploadKind, maskSpoilers } from "@six/shared";
+import { type EphemeralInput, type MessageDTO, type MessageEntity, type UploadKind, maskSpoilers } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { insertMessage, patchChat } from "./chats";
@@ -22,6 +22,7 @@ export interface Draft {
   entities?: MessageEntity[];
   replyTo?: MessageDTO;
   spoiler?: boolean;
+  ephemeral?: EphemeralInput | null;
   file?: LocalFile;
 }
 
@@ -51,6 +52,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       attachmentId,
       replyToId: pending.replyTo?.id,
       spoiler: pending.spoiler || undefined,
+      ephemeral: pending.ephemeral ?? undefined,
     });
     insertMessage(qc, m);
     patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
@@ -72,12 +74,14 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
           id: replyTo.id,
           senderId: replyTo.senderId,
           type: replyTo.type,
-          text: replyTo.text === null ? null : maskSpoilers(replyTo.text, replyTo.entities),
+          text: replyTo.text === null || replyTo.ephemeral ? null : maskSpoilers(replyTo.text, replyTo.entities),
           spoiler: replyTo.spoiler,
+          ephemeral: replyTo.ephemeral !== null,
           deleted: false,
         }
       : null,
     spoiler: draft.spoiler ?? false,
+    ephemeral: draft.ephemeral ?? null,
     attachment: file
       ? {
           kind: file.kind,

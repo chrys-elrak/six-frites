@@ -1,7 +1,16 @@
 import { unwrap } from "@six/sdk";
-import { type ChatDTO, type DeleteScope, type MessageDTO, type MessageEntity, maskSpoilers } from "@six/shared";
+import {
+  type ChatDTO,
+  type DeleteScope,
+  type MessageDTO,
+  type MessageEntity,
+  type ScheduleMessageInput,
+  type ScheduledMessageDTO,
+  maskSpoilers,
+} from "@six/shared";
+import { randomUUID } from "expo-crypto";
 import type { QueryClient } from "@tanstack/react-query";
-import { chatKeys, mapMessages, patchChat, removeChat, resetMessages, upsertChat } from "./chats";
+import { chatKeys, insertMessage, mapMessages, patchChat, removeChat, resetMessages, upsertChat } from "./chats";
 import { six } from "./six";
 
 export function applyEdited(qc: QueryClient, m: MessageDTO) {
@@ -13,6 +22,49 @@ export function applyEdited(qc: QueryClient, m: MessageDTO) {
         : x,
   );
   patchChat(qc, m.chatId, (c) => (c.lastMessage?.id === m.id ? { ...c, lastMessage: m } : c));
+}
+
+/** Toggles one emoji reaction of yours on a message, showing it straight away. */
+export async function react(qc: QueryClient, m: MessageDTO, meId: string, emoji: string) {
+  const current = m.reactions ?? [];
+  const on = !current.some((r) => r.emoji === emoji && r.userIds.includes(meId));
+  const reactions = on
+    ? current.some((r) => r.emoji === emoji)
+      ? current.map((r) => (r.emoji === emoji ? { ...r, userIds: [...r.userIds, meId] } : r))
+      : [...current, { emoji, userIds: [meId] }]
+    : current
+        .map((r) => (r.emoji === emoji ? { ...r, userIds: r.userIds.filter((id) => id !== meId) } : r))
+        .filter((r) => r.userIds.length);
+  applyEdited(qc, { ...m, reactions });
+  try {
+    const params = { path: { id: m.id } };
+    applyEdited(
+      qc,
+      unwrap(
+        on
+          ? await six.api.POST("/v1/messages/{id}/reactions", { params, body: { emoji } })
+          : await six.api.DELETE("/v1/messages/{id}/reactions/{emoji}", { params: { path: { id: m.id, emoji } } }),
+      ),
+    );
+  } catch {
+    void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
+  }
+}
+
+/** Shows a self-destructing message as opened straight away instead of waiting for the server's update. */
+export function markOpenedLocally(qc: QueryClient, chatId: string, messageId: string) {
+  const expire = (m: MessageDTO): MessageDTO =>
+    m.id !== messageId || !m.ephemeral
+      ? m
+      : {
+          ...m,
+          text: null,
+          entities: [],
+          attachment: null,
+          ephemeral: { ...m.ephemeral, locked: false, expired: true },
+        };
+  mapMessages(qc, chatId, expire);
+  patchChat(qc, chatId, (c) => (c.lastMessage ? { ...c, lastMessage: expire(c.lastMessage) } : c));
 }
 
 export function applyDeleted(qc: QueryClient, chatId: string, ids: string[], scope: DeleteScope) {
@@ -79,7 +131,7 @@ export async function updateContact(
 export async function updateChatSettings(
   qc: QueryClient,
   chatId: string,
-  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned">>,
+  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned" | "autoDeleteSecs">>,
 ) {
   const chat = unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input }));
   upsertChat(qc, chat);
@@ -89,4 +141,34 @@ export async function updateChatSettings(
 export async function deleteChat(qc: QueryClient, chatId: string, scope: DeleteScope) {
   unwrap(await six.api.DELETE("/v1/chats/{id}", { params: { path: { id: chatId }, query: { scope } } }));
   applyChatDeleted(qc, chatId, scope);
+}
+
+export const scheduledKey = (chatId: string) => ["scheduled", chatId] as const;
+
+export async function scheduleMessage(
+  qc: QueryClient,
+  chatId: string,
+  input: Omit<ScheduleMessageInput, "clientId" | "sendAt">,
+  sendAt: Date,
+) {
+  const body = { ...input, clientId: randomUUID(), sendAt: sendAt.toISOString() };
+  unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params: { path: { id: chatId } }, body }));
+  void qc.invalidateQueries({ queryKey: scheduledKey(chatId) });
+}
+
+export async function rescheduleMessage(qc: QueryClient, s: ScheduledMessageDTO, sendAt: Date) {
+  const body = { sendAt: sendAt.toISOString() };
+  unwrap(await six.api.PATCH("/v1/scheduled-messages/{id}", { params: { path: { id: s.id } }, body }));
+  void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
+}
+
+export async function cancelScheduled(qc: QueryClient, s: ScheduledMessageDTO) {
+  unwrap(await six.api.DELETE("/v1/scheduled-messages/{id}", { params: { path: { id: s.id } } }));
+  void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
+}
+
+export async function sendScheduledNow(qc: QueryClient, s: ScheduledMessageDTO) {
+  const m = unwrap(await six.api.POST("/v1/scheduled-messages/{id}/send", { params: { path: { id: s.id } } }));
+  insertMessage(qc, m);
+  void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
 }

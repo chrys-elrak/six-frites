@@ -1,10 +1,12 @@
 import type { Realtime } from "@six/sdk";
-import type { ChangeEventDTO } from "@six/shared";
+import type { ChangeEventDTO, ChatDTO, MessageDTO } from "@six/shared";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
-import { applyChatDeleted, applyDeleted, applyEdited } from "./actions";
+import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
+import { notifyIncoming, notifyReaction } from "./notify";
+import { usePresenceStore } from "./presence";
 import { useOutbox } from "./outbox";
 import { useSession } from "./session";
 import { six } from "./six";
@@ -26,6 +28,14 @@ export function setActiveChat(id: string | null) {
   activeChatId = id;
 }
 
+function cachedChat(qc: QueryClient, chatId: string) {
+  return (
+    qc.getQueryData<ChatDTO[]>(chatKeys.list(false))?.find((c) => c.id === chatId) ??
+    qc.getQueryData<ChatDTO[]>(chatKeys.list(true))?.find((c) => c.id === chatId) ??
+    qc.getQueryData<ChatDTO>(chatKeys.chat(chatId))
+  );
+}
+
 function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
   switch (e.type) {
     case "message.new": {
@@ -34,6 +44,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
       else useTypingStore.getState().set(m.chatId, m.senderId, false);
       const viewing = activeChatId === m.chatId && AppState.currentState === "active";
+      if (m.senderId !== meId) notifyIncoming(m, cachedChat(qc, m.chatId), viewing);
       const found = patchChat(qc, m.chatId, (c) => ({
         ...c,
         lastMessage: m,
@@ -46,12 +57,26 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
     case "message.edited":
       applyEdited(qc, e.data);
       break;
+    case "message.reacted": {
+      const r = e.data;
+      if (r.userId === meId) break;
+      const chat = cachedChat(qc, r.chatId);
+      const message =
+        qc
+          .getQueryData<{ pages: { items: MessageDTO[] }[] }>(chatKeys.messages(r.chatId))
+          ?.pages.flatMap((p) => p.items)
+          .find((m) => m.id === r.messageId) ?? (chat?.lastMessage?.id === r.messageId ? chat.lastMessage : undefined);
+      const viewing = activeChatId === r.chatId && AppState.currentState === "active";
+      notifyReaction(r, e.createdAt, chat, message, viewing);
+      break;
+    }
     case "message.deleted":
       applyDeleted(qc, e.data.chatId, e.data.messageIds, e.data.scope);
       break;
     case "chat.updated":
       upsertChat(qc, e.data);
       void qc.invalidateQueries({ queryKey: ["contacts"] });
+      void qc.invalidateQueries({ queryKey: scheduledKey(e.data.id) });
       break;
     case "chat.deleted":
       applyChatDeleted(qc, e.data.chatId, e.data.scope);
@@ -112,9 +137,12 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       onStatus: setStatus,
       onResyncRequired: () => void qc.invalidateQueries(),
     });
+    rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
     rt.start();
+    rt.setPresence(AppState.currentState === "active");
     setRealtime(rt);
     const sub = AppState.addEventListener("change", (state) => {
+      rt.setPresence(state === "active");
       if (state === "active" && !rt.socket.connected) rt.socket.connect();
     });
     return () => {

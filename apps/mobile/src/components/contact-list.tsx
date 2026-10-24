@@ -1,12 +1,13 @@
 import { unwrap } from "@six/sdk";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { Pencil, Search, UserPlus, Users } from "lucide-react-native";
+import { Pencil, Search, Share2, UserPlus, Users } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { shareInvite } from "@/lib/format";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
+import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ContactEditor } from "./contact-editor";
 import { EmptyState, IconButton, ScreenHeader } from "./ui";
@@ -27,6 +28,7 @@ export function ContactList() {
   const [query, setQuery] = useState("");
   const q = useDebounced(query.trim());
   const [editing, setEditing] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const contacts = useInfiniteQuery({
     queryKey: contactKeys.list(q),
@@ -45,7 +47,7 @@ export function ContactList() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScreenHeader>
+      <ScreenHeader inset={false}>
         <View style={{ flex: 1, gap: 10, paddingHorizontal: 4 }}>
           <Text style={[styles.title, { color: t.text }]}>Contacts</Text>
           <View style={[styles.search, { backgroundColor: t.chip }]}>
@@ -68,16 +70,27 @@ export function ContactList() {
         keyboardShouldPersistTaps="handled"
         onEndReached={() => contacts.hasNextPage && !contacts.isFetchingNextPage && void contacts.fetchNextPage()}
         ListHeaderComponent={
+          <>
+          <Pressable
+            onPress={() => setAdding(true)}
+            style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
+          >
+            <View style={[styles.inviteIcon, { backgroundColor: "rgba(235,138,0,0.15)" }]}>
+              <UserPlus size={20} color={brand} />
+            </View>
+            <Text style={{ color: brand, fontSize: 15, fontWeight: "600" }}>Add contact</Text>
+          </Pressable>
           <Pressable
             onPress={() => invite.mutate()}
             disabled={invite.isPending}
             style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
           >
             <View style={[styles.inviteIcon, { backgroundColor: "rgba(235,138,0,0.15)" }]}>
-              <UserPlus size={20} color={brand} />
+              <Share2 size={20} color={brand} />
             </View>
             <Text style={{ color: brand, fontSize: 15, fontWeight: "600" }}>Invite a friend</Text>
           </Pressable>
+          </>
         }
         ListEmptyComponent={
           contacts.isPending ? (
@@ -86,7 +99,7 @@ export function ContactList() {
             <Text style={[styles.note, { color: t.danger }]}>Couldn't load contacts.</Text>
           ) : (
             <EmptyState Icon={Users}>
-              {q ? `No contacts match “${q}”.` : "No contacts yet. People who join with your invite link show up here."}
+              {q ? `No contacts match “${q}”.` : "No contacts yet. Add someone with their contact code, or invite a friend."}
             </EmptyState>
           )
         }
@@ -120,6 +133,7 @@ export function ContactList() {
         )}
       />
 
+      {adding && <AddContact onClose={() => setAdding(false)} />}
       {editing && <ContactEditor userId={editing} onClose={() => setEditing(null)} />}
     </View>
   );

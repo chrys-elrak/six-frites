@@ -1,7 +1,7 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Shuffle, Trash2, X } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { type ComponentRef, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,7 +32,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [suggestions, setSuggestions] = useState(() => suggestAvatars());
   const [picked, setPicked] = useState<number | null>(null);
   const [rendering, setRendering] = useState<string | null>(null);
-  const shot = useRef<View>(null);
+  const shot = useRef<ComponentRef<typeof View>>(null);
 
   const c = contact.data;
   if (c && name === null) setName(c.customName ?? "");
@@ -192,7 +192,11 @@ const styles = StyleSheet.create({
   head: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   heading: { flex: 1, fontSize: 18, fontWeight: "700" },
   cameraBadge: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     borderRadius: 40,
     backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",

@@ -1,14 +1,15 @@
-import { type ChatDTO, maskSpoilers } from "@six/shared";
+import { type ChatDTO, maskSpoilers, serviceText } from "@six/shared";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { Archive, Ban, BellOff, ChevronLeft, EyeOff, MessageCircle, Pin } from "lucide-react-native";
+import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, MessageCircle, Pin, Timer } from "lucide-react-native";
 import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useChats } from "@/lib/chats";
 import { formatDuration, listTime } from "@/lib/format";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
-import { brand, brandInk, stone, useTheme } from "@/lib/theme";
+import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
+import { usePresence, useWatchPresence } from "@/lib/presence";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
@@ -31,6 +32,26 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
 
   if (!m) return line(null, "No messages");
   if (m.deletedAt) return line(<Ban size={14} color={color} />, "Message deleted", true);
+  if (m.type === "service") return line(<Timer size={14} color={color} />, serviceText(m));
+  if (m.ephemeral) {
+    const kind =
+      m.type === "text"
+        ? "message"
+        : m.type === "video_note"
+          ? "video message"
+          : m.type === "voice"
+            ? "voice message"
+            : m.type === "image"
+              ? "photo"
+              : m.type;
+    return line(
+      <>
+        {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
+        <Flame size={14} color={flame} />
+      </>,
+      m.ephemeral.expired ? "Opened" : `Self-destructing ${kind}`,
+    );
+  }
   if (m.type !== "text") {
     const voiceLength =
       m.type === "voice" && m.attachment?.durationMs ? ` (${formatDuration(m.attachment.durationMs)})` : "";
@@ -66,6 +87,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const [menu, setMenu] = useState(false);
   const typing = useIsTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
+  const online = usePresence(peer.id === meId ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
 
   return (
@@ -78,7 +100,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
         }}
         style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
       >
-        <Avatar user={peer} size="md" />
+        <Avatar user={peer} size="md" online={!!online} />
         <View style={styles.rowBody}>
           <View style={styles.rowLine}>
             <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
@@ -129,6 +151,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const { status } = useRealtime();
 
   const visible = chats.data?.filter((c) => c.lastMessage !== null) ?? [];
+  useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
   const archivedCount = archivedChats.data?.filter((c) => c.lastMessage !== null).length ?? 0;
 
   const header =
@@ -143,11 +166,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         <Text style={[styles.archiveText, { color: t.textSoft }]}>Archived</Text>
         <Text style={{ color: t.muted }}>{archivedCount}</Text>
       </Pressable>
-    ) : null;
+    ) : undefined;
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScreenHeader>
+      <ScreenHeader inset={false}>
         {archived && <IconButton Icon={ChevronLeft} label="Back to chats" onPress={() => router.back()} size={26} />}
         <View style={{ flex: 1, paddingHorizontal: archived ? 0 : 4 }}>
           <Text style={[styles.title, { color: t.text }]}>{archived ? "Archived" : "Chats"}</Text>
@@ -187,7 +210,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
                 </View>
               )}
             </EmptyState>
-          ) : null
+          ) : undefined
         }
       />
     </View>

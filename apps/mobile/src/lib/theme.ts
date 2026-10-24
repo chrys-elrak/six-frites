@@ -16,6 +16,7 @@ export const stone = {
 
 export const brand = "#eb8a00";
 export const brandInk = "#3e2104";
+export const flame = "#f97316";
 
 const light = {
   dark: false,

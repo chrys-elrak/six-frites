@@ -45,6 +45,16 @@ export async function shareInvite(code: string) {
   await Share.share({ message: `Join me on Six Frites: ${inviteUrl(code)}` }).catch(() => null);
 }
 
+export function contactUrl(code: string) {
+  return `${WEB_URL}/add/${code}`;
+}
+
+export const formatCode = (code: string) => `${code.slice(0, 4)}-${code.slice(4)}`;
+
+export async function shareContact(code: string) {
+  await Share.share({ message: `Add me on Six Frites: ${contactUrl(code)}` }).catch(() => null);
+}
+
 export function formatDuration(ms: number | null | undefined) {
   const total = Math.max(0, Math.round((ms ?? 0) / 1000));
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
@@ -54,4 +64,16 @@ export function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+export function sendAtLabel(iso: string) {
+  const d = new Date(iso);
+  const days = Math.round((startOfDay(d) - startOfDay(new Date())) / 864e5);
+  const day =
+    days === 0
+      ? "Today"
+      : days === 1
+        ? "Tomorrow"
+        : d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+  return `${day} at ${clockTime(iso)}`;
 }

@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from "expo-router";
+import { usePreventScreenCapture } from "expo-screen-capture";
 import { StatusBar } from "expo-status-bar";
 import { WifiOff } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -34,6 +35,7 @@ function Unreachable() {
 }
 
 export default function RootLayout() {
+  usePreventScreenCapture();
   const t = useTheme();
   const [client] = useState(
     () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }),
@@ -77,6 +79,7 @@ export default function RootLayout() {
                     <Stack.Screen name="login" />
                   </Stack.Protected>
                   <Stack.Screen name="invite/[code]" />
+                  <Stack.Screen name="add/[code]" />
                 </Stack>
               )}
             </ThemeProvider>

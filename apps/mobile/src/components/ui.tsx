@@ -120,14 +120,22 @@ export function IconButton({
   );
 }
 
-export function ScreenHeader({ children, border = true }: { children: React.ReactNode; border?: boolean }) {
+export function ScreenHeader({
+  children,
+  border = true,
+  inset = true,
+}: {
+  children: React.ReactNode;
+  border?: boolean;
+  inset?: boolean;
+}) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View
       style={[
         styles.header,
-        { paddingTop: Math.max(insets.top, 8) + 4, backgroundColor: t.bg, borderColor: t.border },
+        { paddingTop: inset ? Math.max(insets.top, 8) + 4 : 12, backgroundColor: t.bg, borderColor: t.border },
         border && { borderBottomWidth: StyleSheet.hairlineWidth },
       ]}
     >
