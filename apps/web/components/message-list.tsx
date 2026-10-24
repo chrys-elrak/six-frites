@@ -301,7 +301,18 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       }
       const m = row.message!;
       if (row.deleted) {
-        return [{ label: "Delete for me", destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) }];
+        return [
+          ...(chat.type === "direct" || row.mine
+            ? [
+                {
+                  label: chat.type === "direct" ? `Remove for me and ${chat.title}` : "Remove for everyone",
+                  destructive: true,
+                  onSelect: () => void deleteMessage(qc, m, "all").catch(() => null),
+                },
+              ]
+            : []),
+          { label: "Remove for me", destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) },
+        ];
       }
       return [
         { label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) },

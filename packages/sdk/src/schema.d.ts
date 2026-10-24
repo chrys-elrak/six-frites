@@ -1247,7 +1247,10 @@ export interface paths {
                                 data: {
                                     chatId: string;
                                     messageIds: string[];
-                                    /** @enum {string} */
+                                    /**
+                                     * @description `all`: the messages became deleted placeholders. `me`: remove them from this user's view entirely.
+                                     * @enum {string}
+                                     */
                                     scope: "me" | "all";
                                 };
                                 createdAt: string;

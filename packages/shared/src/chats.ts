@@ -50,7 +50,9 @@ export type DeleteMessagesQuery = z.infer<typeof DeleteMessagesQuery>;
 export const MessagesDeletedDTO = z.object({
   chatId: Id,
   messageIds: z.array(Id),
-  scope: DeleteScope,
+  scope: DeleteScope.describe(
+    "`all`: the messages became deleted placeholders. `me`: remove them from this user's view entirely.",
+  ),
 });
 export type MessagesDeletedDTO = z.infer<typeof MessagesDeletedDTO>;
 

@@ -77,6 +77,25 @@ describe("deleting messages", () => {
     expect(replay).toContain("message.deleted");
   });
 
+  it("removes a deleted placeholder for me, or for both people", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const a = (await send(host, chatId, "first")).json();
+    const b = (await send(host, chatId, "second")).json();
+    await call(host, "DELETE", `/v1/messages?ids=${a.id},${b.id}&scope=all`);
+
+    await call(guest, "DELETE", `/v1/messages?ids=${a.id}&scope=me`);
+    expect((await get(guest, `/v1/chats/${chatId}/messages`)).items.map((m: { id: string }) => m.id)).toEqual([b.id]);
+    expect((await get(host, `/v1/chats/${chatId}/messages`)).items).toHaveLength(2);
+
+    const head = (await get(host, "/v1/sync")).cursor;
+    expect((await call(guest, "DELETE", `/v1/messages?ids=${b.id}&scope=all`)).statusCode).toBe(204);
+    expect((await get(guest, `/v1/chats/${chatId}/messages`)).items).toEqual([]);
+    expect((await get(host, `/v1/chats/${chatId}/messages`)).items.map((m: { id: string }) => m.id)).toEqual([a.id]);
+
+    const events = await get(host, `/v1/sync?since=${head}`);
+    expect(events.events).toMatchObject([{ type: "message.deleted", data: { messageIds: [b.id], scope: "me" } }]);
+  });
+
   it("rejects unknown ids without deleting anything", async () => {
     const { host, chatId } = await makeFriends();
     const m = (await send(host, chatId, "still here")).json();

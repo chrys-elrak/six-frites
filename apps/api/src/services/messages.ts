@@ -170,16 +170,36 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
       if (messages.some((m) => m.senderId !== userId && !direct.has(m.chatId))) {
         throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can delete this message for everyone");
       }
-      await tx.message.updateMany({ where: { id: { in: ids }, deletedAt: null }, data: { deletedAt: new Date(), text: null } });
-      await scrubMessageEvents(tx, ids);
-    } else {
-      await tx.messageHidden.createMany({ data: ids.map((messageId) => ({ userId, messageId })), skipDuplicates: true });
+      const live = messages.filter((m) => !m.deletedAt);
+      const tombstones = messages.filter((m) => m.deletedAt);
+      await tx.message.updateMany({
+        where: { id: { in: live.map((m) => m.id) } },
+        data: { deletedAt: new Date(), text: null },
+      });
+      await scrubMessageEvents(tx, live.map((m) => m.id));
+
+      for (const chatId of chatIds) {
+        const members = await memberIds(tx, chatId);
+        const deleted = live.filter((m) => m.chatId === chatId).map((m) => m.id);
+        const removed = tombstones.filter((m) => m.chatId === chatId).map((m) => m.id);
+        if (removed.length) {
+          await tx.messageHidden.createMany({
+            data: members.flatMap((memberId) => removed.map((messageId) => ({ userId: memberId, messageId }))),
+            skipDuplicates: true,
+          });
+        }
+        for (const id of members) {
+          if (deleted.length) emit(id, "message.deleted", { chatId, messageIds: deleted, scope: "all" });
+          if (removed.length) emit(id, "message.deleted", { chatId, messageIds: removed, scope: "me" });
+        }
+      }
+      return;
     }
 
+    await tx.messageHidden.createMany({ data: ids.map((messageId) => ({ userId, messageId })), skipDuplicates: true });
     for (const chatId of chatIds) {
       const data = { chatId, messageIds: messages.filter((m) => m.chatId === chatId).map((m) => m.id), scope };
-      const recipients = scope === "all" ? await memberIds(tx, chatId) : [userId];
-      for (const id of recipients) emit(id, "message.deleted", data);
+      emit(userId, "message.deleted", data);
     }
   });
 }

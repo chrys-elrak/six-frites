@@ -2666,7 +2666,8 @@
                                     "enum": [
                                       "me",
                                       "all"
-                                    ]
+                                    ],
+                                    "description": "`all`: the messages became deleted placeholders. `me`: remove them from this user's view entirely."
                                   }
                                 },
                                 "required": [

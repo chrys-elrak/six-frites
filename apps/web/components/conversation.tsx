@@ -4,14 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { deleteChat, updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { Avatar } from "./avatar";
+import { ChatMenu } from "./chat-menu";
 import { Composer } from "./composer";
 import { MessageList, type MessageListHandle } from "./message-list";
-import { Sheet } from "./sheet";
 
 export function Conversation({ chatId }: { chatId: string }) {
   const qc = useQueryClient();
@@ -20,7 +19,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const chat = useChat(qc, chatId);
   const { realtime } = useRealtime();
   const list = useRef<MessageListHandle>(null);
-  const [menu, setMenu] = useState<"chat" | "delete" | null>(null);
+  const [menu, setMenu] = useState(false);
 
   useEffect(() => {
     setActiveChat(chatId);
@@ -62,13 +61,6 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   const c = chat.data;
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
-  const settings = (input: Parameters<typeof updateChatSettings>[2]) => void updateChatSettings(qc, chatId, input);
-
-  async function remove(scope: "me" | "all") {
-    await deleteChat(qc, chatId, scope);
-    if (scope === "me") router.replace("/");
-  }
-
   return (
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex items-center gap-2 border-b border-stone-200 bg-stone-50/90 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90">
@@ -87,7 +79,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           )}
         </div>
         <button
-          onClick={() => setMenu("chat")}
+          onClick={() => setMenu(true)}
           aria-label="Chat options"
           className="grid size-10 place-items-center rounded-full text-xl text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
         >
@@ -102,30 +94,12 @@ export function Conversation({ chatId }: { chatId: string }) {
         onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
       />
 
-      {menu === "chat" && (
-        <Sheet
-          title={c.title}
-          onClose={() => setMenu(null)}
-          actions={[
-            { label: c.pinned ? "Unpin" : "Pin", onSelect: () => settings({ pinned: !c.pinned }) },
-            { label: c.muted ? "Unmute" : "Mute", onSelect: () => settings({ muted: !c.muted }) },
-            { label: c.archived ? "Unarchive" : "Archive", onSelect: () => settings({ archived: !c.archived }) },
-            { label: "Delete chat", destructive: true, onSelect: () => setMenu("delete") },
-          ]}
-        />
-      )}
-      {menu === "delete" && (
-        <Sheet
-          title="Delete this chat?"
-          onClose={() => setMenu(null)}
-          actions={[
-            { label: "Delete for me", destructive: true, onSelect: () => void remove("me") },
-            {
-              label: `Delete all messages for me and ${peer.displayName}`,
-              destructive: true,
-              onSelect: () => void remove("all"),
-            },
-          ]}
+      {menu && (
+        <ChatMenu
+          chat={c}
+          peerName={peer.displayName}
+          onClose={() => setMenu(false)}
+          onDeleted={(scope) => scope === "me" && router.replace("/")}
         />
       )}
     </div>

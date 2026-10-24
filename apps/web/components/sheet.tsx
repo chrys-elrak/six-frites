@@ -6,6 +6,7 @@ export interface SheetAction {
   label: string;
   onSelect: () => void;
   destructive?: boolean;
+  keepOpen?: boolean;
 }
 
 export function Sheet({
@@ -38,7 +39,7 @@ export function Sheet({
               key={a.label}
               autoFocus={i === 0}
               onClick={() => {
-                onClose();
+                if (!a.keepOpen) onClose();
                 a.onSelect();
               }}
               className={`block w-full border-b border-stone-100 px-4 py-3.5 text-center text-[17px] last:border-0 hover:bg-stone-50 focus:bg-stone-50 focus:outline-none dark:border-stone-800 dark:hover:bg-stone-800 dark:focus:bg-stone-800 ${

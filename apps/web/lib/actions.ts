@@ -37,7 +37,7 @@ export async function editMessage(qc: QueryClient, messageId: string, text: stri
 }
 
 export async function deleteMessage(qc: QueryClient, m: MessageDTO, scope: DeleteScope) {
-  applyDeleted(qc, m.chatId, [m.id], scope);
+  applyDeleted(qc, m.chatId, [m.id], m.deletedAt ? "me" : scope);
   try {
     unwrap(await six.api.DELETE("/v1/messages", { params: { query: { ids: m.id, scope } } }));
   } catch (err) {
