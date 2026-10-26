@@ -114,11 +114,6 @@ export function ContactList() {
                 <Text numberOfLines={1} style={{ color: t.text, fontSize: 15, fontWeight: "500" }}>
                   {c.user.displayName}
                 </Text>
-                {c.customName && (
-                  <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12 }}>
-                    {c.originalName}
-                  </Text>
-                )}
               </View>
             </Pressable>
             <IconButton

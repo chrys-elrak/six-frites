@@ -108,7 +108,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 18 }}>
               <View style={{ alignItems: "center", gap: 10 }}>
                 <Pressable onPress={choosePhoto} accessibilityLabel="Choose a photo">
-                  <Avatar user={{ displayName: name || c.originalName, avatarUrl: shownPhoto }} size="lg" />
+                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto }} size="lg" />
                   <View style={styles.cameraBadge}>
                     <Camera size={22} color="#fff" />
                   </View>
@@ -156,7 +156,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 <TextInput
                   value={name ?? ""}
                   onChangeText={setName}
-                  placeholder={c.originalName}
+                  placeholder="Name"
                   placeholderTextColor={t.muted}
                   maxLength={64}
                   style={[styles.input, { backgroundColor: t.field, color: t.text }]}
