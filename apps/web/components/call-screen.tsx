@@ -17,6 +17,34 @@ function Media({ stream, muted, className }: { stream: MediaStream | null; muted
   return <video ref={ref} autoPlay playsInline muted={muted} className={className} />;
 }
 
+/** Plays the other side's voice, with a button for browsers that block sound until a tap. */
+function RemoteAudio({ stream }: { stream: MediaStream | null }) {
+  const ref = useRef<HTMLAudioElement>(null);
+  const [blocked, setBlocked] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !stream) return;
+    el.srcObject = stream;
+    el.play().then(
+      () => setBlocked(false),
+      () => setBlocked(true),
+    );
+  }, [stream]);
+  return (
+    <>
+      <audio ref={ref} autoPlay />
+      {blocked && (
+        <button
+          onClick={() => void ref.current?.play().then(() => setBlocked(false))}
+          className="relative z-20 mx-auto mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-stone-900 shadow"
+        >
+          Tap to turn on sound
+        </button>
+      )}
+    </>
+  );
+}
+
 function Elapsed({ since }: { since: number }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -96,6 +124,7 @@ function CallView({ call }: { call: Call }) {
       >
         <Media
           stream={call.remote}
+          muted
           className={
             showRemoteVideo
               ? "absolute inset-0 size-full object-cover"
@@ -125,6 +154,8 @@ function CallView({ call }: { call: Call }) {
             {status ?? (call.connectedAt ? <Elapsed since={call.connectedAt} /> : null)}
           </p>
         </div>
+
+        {call.phase !== "ended" && <RemoteAudio stream={call.remote} />}
 
         <div className="relative z-10 mt-auto flex items-center justify-center gap-6 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
           {call.phase === "incoming" ? (

@@ -72,7 +72,7 @@ async function connect(video: boolean) {
   const remote = new MediaStream();
   pc.ontrack = (e) => {
     remote.addTrack(e.track);
-    patch({ remote });
+    patch({ remote: new MediaStream(remote.getTracks()) });
   };
   pc.onicecandidate = (e) => {
     const c = e.candidate;
