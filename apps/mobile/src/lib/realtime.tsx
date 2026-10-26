@@ -88,6 +88,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       break;
     case "chat.deleted":
       applyChatDeleted(qc, e.data.chatId, e.data.scope);
+      void qc.invalidateQueries({ queryKey: ["contacts"] });
       break;
     case "devices.changed":
       void qc.invalidateQueries({ queryKey: ["safety-number"] });

@@ -15350,6 +15350,45 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Remove a contact, for both of you",
+        "tags": [
+          "contacts"
+        ],
+        "description": "Deletes your direct chat with its messages and files, and the names and photos you gave each other. You disappear from each other's contacts; both get chat.deleted with scope `me`. Either of you can add the other again.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/contacts/{userId}/reveal": {

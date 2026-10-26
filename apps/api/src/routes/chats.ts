@@ -34,7 +34,7 @@ import {
   page,
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
-import { findContact, listContacts, revealContact, updateContact } from "../services/contacts.js";
+import { findContact, listContacts, removeContact, revealContact, updateContact } from "../services/contacts.js";
 import { blockUser, unblockUser } from "../services/blocks.js";
 import { addContact, findUser } from "../services/discovery.js";
 import {
@@ -479,6 +479,26 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => updateContact(req.auth.userId, req.params.userId, req.body),
+  );
+
+  app.delete(
+    "/contacts/:userId",
+    {
+      schema: {
+        tags: ["contacts"],
+        summary: "Remove a contact, for both of you",
+        description:
+          "Deletes your direct chat with its messages and files, and the names and photos you gave each other. " +
+          "You disappear from each other's contacts; both get chat.deleted with scope `me`. Either of you can add the other again.",
+        security,
+        params: z.object({ userId: Id }),
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await removeContact(req.auth.userId, req.params.userId);
+      return reply.status(204).send(null);
+    },
   );
 
   app.post(

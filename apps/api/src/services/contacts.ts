@@ -11,6 +11,8 @@ import { type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
+import { scrubMessageEvents } from "./messages.js";
+import { purgeUploads } from "./uploads.js";
 import { avatarOf, checkContactPin } from "./users.js";
 
 interface Override {
@@ -167,4 +169,27 @@ export async function updateContact(ownerId: string, contactId: string, input: U
     await deleteObjects([previousKey]).catch(() => null);
   }
   return toContactDTO(await getContact(ownerId, contactId));
+}
+
+/**
+ * Removes a contact for both people: their direct chat goes, with its messages and files, and so
+ * do the names and photos they gave each other. Either one can add the other again later.
+ */
+export async function removeContact(userId: string, contactId: string) {
+  const { chatId } = await getContact(userId, contactId);
+  const pair = { OR: [{ ownerId: userId, contactId }, { ownerId: contactId, contactId: userId }] };
+  const { uploads, photos } = await withEvents(async (tx, emit) => {
+    const doomed = await tx.message.findMany({ where: { chatId }, select: { id: true, attachmentId: true } });
+    await scrubMessageEvents(tx, doomed.map((m) => m.id));
+    const overrides = await tx.contactOverride.findMany({ where: pair });
+    await tx.contactOverride.deleteMany({ where: pair });
+    await tx.chat.delete({ where: { id: chatId } });
+    for (const id of [userId, contactId]) emit(id, "chat.deleted", { chatId, scope: "me" });
+    return {
+      uploads: doomed.map((m) => m.attachmentId).filter((a): a is string => !!a),
+      photos: overrides.map((o) => o.photoKey).filter((k): k is string => !!k),
+    };
+  });
+  await purgeUploads(uploads);
+  if (photos.length) await deleteObjects(photos).catch(() => null);
 }

@@ -14,7 +14,7 @@ import {
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { deleteChat, setBlocked, updateChatSettings } from "@/lib/actions";
+import { deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
 import { sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -36,7 +36,7 @@ export function ChatMenu({
   const tr = useT();
   const qc = useQueryClient();
   const [view, setView] = useState<
-    "menu" | "delete" | "mute" | "autoDelete" | "custom" | "theme" | "customTheme" | "block"
+    "menu" | "delete" | "mute" | "autoDelete" | "custom" | "theme" | "customTheme" | "block" | "removeContact"
   >(
     "menu",
   );
@@ -54,6 +54,26 @@ export function ChatMenu({
     } catch {
       void qc.invalidateQueries({ queryKey: ["chats"] });
     }
+  }
+
+  async function removeFromContacts() {
+    if (!peerId) return;
+    try {
+      await removeContact(qc, chat.id, peerId);
+      onDeleted?.("me");
+    } catch {
+      void qc.invalidateQueries({ queryKey: ["chats"] });
+    }
+  }
+
+  if (view === "removeContact") {
+    return (
+      <Sheet
+        title={tr.chat.removeContactConfirm(peerName)}
+        onClose={onClose}
+        actions={[{ label: tr.chat.removeContact(peerName), destructive: true, onSelect: () => void removeFromContacts() }]}
+      />
+    );
   }
 
   if (view === "delete") {
@@ -205,6 +225,16 @@ export function ChatMenu({
           : chat.blockedByMe
             ? [{ label: tr.chat.unblockName(peerName), onSelect: () => block(false) }]
             : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+        ...(chat.peerDeleted
+          ? []
+          : [
+              {
+                label: tr.chat.removeContact(peerName),
+                destructive: true,
+                keepOpen: true,
+                onSelect: () => setView("removeContact"),
+              },
+            ]),
         { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
       ]}
     />

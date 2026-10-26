@@ -5634,7 +5634,32 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Remove a contact, for both of you
+         * @description Deletes your direct chat with its messages and files, and the names and photos you gave each other. You disappear from each other's contacts; both get chat.deleted with scope `me`. Either of you can add the other again.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         /**

@@ -156,6 +156,13 @@ export async function updateContact(
   return contact;
 }
 
+/** Removes a contact for both people; the server deletes the direct chat and tells both with chat.deleted. */
+export async function removeContact(qc: QueryClient, chatId: string, userId: string) {
+  unwrap(await six.api.DELETE("/v1/contacts/{userId}", { params: { path: { userId } } }));
+  removeChat(qc, chatId);
+  void qc.invalidateQueries({ queryKey: ["contacts"] });
+}
+
 export async function updateChatSettings(
   qc: QueryClient,
   chatId: string,

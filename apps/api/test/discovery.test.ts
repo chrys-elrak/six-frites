@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
-const { signUp, get, call } = chatHelpers(ctx);
+const { signUp, get, call, send } = chatHelpers(ctx);
 
 const find = async (who: Parameters<typeof get>[0], q: string) =>
   ctx.app.inject({ url: `/v1/users/find?q=${encodeURIComponent(q)}`, headers: { authorization: `Bearer ${who.accessToken}` } });
@@ -86,5 +86,34 @@ describe("contact discovery", () => {
     expect(await hidden()).toBe(true);
     await call(host, "POST", "/v1/contacts", { q: contactCode });
     expect(await hidden()).toBe(false);
+  });
+
+  it("removes a contact for both people, who can add each other again", async () => {
+    const host = await signUp("remover");
+    const guest = await signUp("removed");
+    const { contactCode } = await get(guest, "/v1/me");
+    const { chatId } = (await call(host, "POST", "/v1/contacts", { q: contactCode })).json();
+    await send(host, chatId, "see you");
+    await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { displayName: "Old friend" });
+    await call(guest, "PATCH", `/v1/contacts/${host.user.id}`, { displayName: "Them" });
+
+    expect((await call(host, "DELETE", `/v1/contacts/${guest.user.id}`)).statusCode).toBe(204);
+    expect((await get(host, "/v1/contacts")).items).toEqual([]);
+    expect((await get(guest, "/v1/contacts")).items).toEqual([]);
+    expect((await get(guest, `/v1/chats/${chatId}`)).error.code).toBe("CHAT_NOT_FOUND");
+    expect(await prisma.contactOverride.count({ where: { contactId: { in: [host.user.id, guest.user.id] } } })).toBe(0);
+
+    const events = await prisma.changeEvent.findMany({ where: { payload: { path: ["chatId"], equals: chatId } } });
+    expect(events.filter((e) => e.type === "message.new")).toEqual([]);
+    expect(events.filter((e) => e.type === "chat.deleted").map((e) => e.userId).sort()).toEqual(
+      [host.user.id, guest.user.id].sort(),
+    );
+
+    expect((await call(guest, "DELETE", `/v1/contacts/${host.user.id}`)).json().error.code).toBe("CONTACT_NOT_FOUND");
+
+    const again = (await call(host, "POST", "/v1/contacts", { q: contactCode })).json();
+    expect(again).toMatchObject({ user: { id: guest.user.id }, customName: null });
+    expect(again.chatId).not.toBe(chatId);
+    expect((await get(guest, "/v1/contacts")).items.map((c: { user: { id: string } }) => c.user.id)).toEqual([host.user.id]);
   });
 });

@@ -10,7 +10,7 @@ import {
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { deleteChat, setBlocked, updateChatSettings } from "@/lib/actions";
+import { deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
 import { isFrozen } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { AutoDeleteCustom } from "./auto-delete-custom";
@@ -32,7 +32,9 @@ export function ChatMenu({
 }) {
   const tr = useT();
   const qc = useQueryClient();
-  const [view, setView] = useState<"menu" | "delete" | "block" | "autoDelete" | "custom" | "theme" | "customTheme">("menu");
+  const [view, setView] = useState<
+    "menu" | "delete" | "block" | "autoDelete" | "custom" | "theme" | "customTheme" | "removeContact"
+  >("menu");
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
 
@@ -43,6 +45,25 @@ export function ChatMenu({
     } catch {
       void qc.invalidateQueries({ queryKey: ["chats"] });
     }
+  }
+
+  async function removeFromContacts() {
+    try {
+      await removeContact(qc, chat.id, peerId);
+      onDeleted?.("me");
+    } catch {
+      void qc.invalidateQueries({ queryKey: ["chats"] });
+    }
+  }
+
+  if (view === "removeContact") {
+    return (
+      <Sheet
+        title={tr.chat.removeContactConfirm(peerName)}
+        onClose={onClose}
+        actions={[{ label: tr.chat.removeContact(peerName), destructive: true, onSelect: () => void removeFromContacts() }]}
+      />
+    );
   }
 
   if (view === "custom") {
@@ -179,6 +200,16 @@ export function ChatMenu({
           : chat.blockedByMe
             ? [{ label: tr.chat.unblockName(peerName), onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
             : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+        ...(chat.type !== "direct" || chat.peerDeleted
+          ? []
+          : [
+              {
+                label: tr.chat.removeContact(peerName),
+                destructive: true,
+                keepOpen: true,
+                onSelect: () => setView("removeContact"),
+              },
+            ]),
         { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
       ]}
     />

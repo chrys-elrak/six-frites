@@ -32,6 +32,9 @@ const en = {
   deleteAllFor: (name: string) => `Delete all messages for me and ${name}`,
   blockConfirm: (name: string) =>
     `Block ${name}? Neither of you will be able to send messages here, and ${name} will see that you blocked them.`,
+  removeContact: (name: string) => `Remove ${name} from contacts`,
+  removeContactConfirm: (name: string) =>
+    `Remove ${name}? You'll disappear from each other's contacts, and this chat and its messages will be deleted for both of you.`,
   muteFor: "Mute notifications for",
   muteForever: "Until I turn it back on",
   backgroundFor: (name: string) => `Chat background for you and ${name}`,
@@ -139,6 +142,9 @@ const fr: typeof en = {
   deleteAllFor: (name) => `Supprimer tous les messages pour moi et ${name}`,
   blockConfirm: (name) =>
     `Bloquer ${name} ? Aucun de vous deux ne pourra envoyer de messages ici, et ${name} verra que vous l'avez bloqué(e).`,
+  removeContact: (name) => `Retirer ${name} des contacts`,
+  removeContactConfirm: (name) =>
+    `Retirer ${name} ? Vous disparaîtrez de vos contacts respectifs, et cette discussion et ses messages seront supprimés pour vous deux.`,
   muteFor: "Mettre les notifications en sourdine pendant",
   muteForever: "Jusqu'à ce que je les réactive",
   backgroundFor: (name) => `Fond de la discussion pour vous et ${name}`,
@@ -246,6 +252,9 @@ const mg: typeof en = {
   deleteAllFor: (name) => `Fafao ny hafatra rehetra amiko sy amin'i ${name}`,
   blockConfirm: (name) =>
     `Hosakanana ve i ${name}? Samy tsy afaka handefa hafatra eto intsony ianareo roa, ary ho hitan'i ${name} fa nosakananao izy.`,
+  removeContact: (name) => `Esory amin'ny mpifandray i ${name}`,
+  removeContactConfirm: (name) =>
+    `Hesorina ve i ${name}? Samy tsy ho hita ao amin'ny mpifandray intsony ianareo roa, ary hofafana ho anareo roa ity resaka ity sy ny hafatra rehetra ao aminy.`,
   muteFor: "Ampangino ny fampandrenesana mandritra ny",
   muteForever: "Mandra-pamerinako azy",
   backgroundFor: (name) => `Sary aorian'ny resaka ho anao sy i ${name}`,
