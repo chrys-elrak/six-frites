@@ -68,7 +68,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         microphonePermission: "Allow $(PRODUCT_NAME) to use the microphone for calls.",
       },
     ],
-    ["expo-build-properties", { android: { minSdkVersion: 26 } }],
+    ["expo-build-properties", { android: { minSdkVersion: 26, extraProguardRules: "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**" } }],
     ...(iosUrlScheme ? [["react-native-nitro-google-signin", { iosUrlScheme }] as [string, object]] : []),
   ],
   experiments: {
