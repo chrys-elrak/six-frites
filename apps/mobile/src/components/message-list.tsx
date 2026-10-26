@@ -23,6 +23,9 @@ import {
   Flame,
   Lock,
   Palette,
+  Phone,
+  PhoneMissed,
+  Video,
   RotateCcw,
   Timer,
   X,
@@ -94,6 +97,13 @@ interface Item {
   senderId: string;
   createdAt: string;
   row: Omit<MsgRow, "kind" | "groupStart" | "groupEnd" | "delivery">;
+}
+
+/** "Outgoing video call · 2:31", "Missed voice call" or, for the caller, "Unanswered voice call". */
+function callLine(a: { video: boolean; secs: number | null }, mine: boolean) {
+  const kind = a.video ? "video call" : "voice call";
+  if (a.secs === null) return `${mine ? "Unanswered" : "Missed"} ${kind}`;
+  return `${mine ? "Outgoing" : "Incoming"} ${kind} · ${Math.floor(a.secs / 60)}:${String(a.secs % 60).padStart(2, "0")}`;
 }
 
 const lockOf = (m: MessageDTO & { undecryptable?: boolean; decrypting?: boolean }): MsgRow["locked"] =>
@@ -873,13 +883,23 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                       <Palette size={14} color="#fff" />
                     ) : row.message.action?.type === "e2ee" ? (
                       <Lock size={14} color="#fff" />
+                    ) : row.message.action?.type === "call" ? (
+                      row.message.action.secs === null ? (
+                        <PhoneMissed size={14} color="#fff" />
+                      ) : row.message.action.video ? (
+                        <Video size={14} color="#fff" />
+                      ) : (
+                        <Phone size={14} color="#fff" />
+                      )
                     ) : (
                       <Timer size={14} color="#fff" />
                     )}
                     <Text style={{ color: "#fff", fontSize: 12, textAlign: "center", flexShrink: 1 }}>
                       {row.message.action?.type === "e2ee"
                         ? "Messages are end-to-end encrypted. No one outside this chat, not even Six Frites, can read them."
-                        : `${nameOf(row.message.senderId)} ${serviceSentence(row.message)}`}
+                        : row.message.action?.type === "call"
+                          ? callLine(row.message.action, row.message.senderId === meId)
+                          : `${nameOf(row.message.senderId)} ${serviceSentence(row.message)}`}
                     </Text>
                   </View>
                 </View>

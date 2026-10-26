@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
+import { attachCalls, onCallSignal } from "./calls";
 import { hydrateNow, startE2EE } from "./e2ee";
 import { notifyIncoming, notifyReaction } from "./notify";
 import { usePresenceStore } from "./presence";
@@ -149,6 +150,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       onResyncRequired: () => void qc.invalidateQueries(),
     });
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
+    rt.socket.on("call:signal", (dto) => void onCallSignal(dto, (chatId) => cachedChat(qc, chatId)).catch(() => null));
+    attachCalls(meId, rt);
     rt.start();
     rt.setPresence(AppState.currentState === "active");
     setRealtime(rt);

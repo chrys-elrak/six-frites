@@ -1,7 +1,22 @@
 import { type ChatDTO, maskSpoilers, serviceText } from "@six/shared";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, Lock, MessageCircle, Palette, Pin, Timer } from "lucide-react-native";
+import {
+  Archive,
+  Ban,
+  BellOff,
+  ChevronLeft,
+  EyeOff,
+  Flame,
+  Lock,
+  MessageCircle,
+  Palette,
+  Phone,
+  PhoneMissed,
+  Pin,
+  Timer,
+  Video,
+} from "lucide-react-native";
 import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { isFrozen, useChats } from "@/lib/chats";
@@ -41,6 +56,14 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         <Palette size={14} color={color} />
       ) : m.action?.type === "e2ee" ? (
         <Lock size={14} color={color} />
+      ) : m.action?.type === "call" ? (
+        m.action.secs === null ? (
+          <PhoneMissed size={14} color={color} />
+        ) : m.action.video ? (
+          <Video size={14} color={color} />
+        ) : (
+          <Phone size={14} color={color} />
+        )
       ) : (
         <Timer size={14} color={color} />
       );

@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 
-const sizes = { sm: 36, md: 56, lg: 80 };
+const sizes = { sm: 36, md: 56, lg: 80, xl: 120 };
 
 export function Avatar({
   user,

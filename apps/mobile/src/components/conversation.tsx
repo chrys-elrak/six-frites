@@ -1,7 +1,7 @@
 import { type MessageDTO, chatTheme, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ChevronLeft, MoreVertical, ShieldAlert, Trash2, X } from "lucide-react-native";
+import { ChevronLeft, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -13,6 +13,7 @@ import { useSession } from "@/lib/session";
 import { brand, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { BubbleColorsContext } from "@/lib/bubble-colors";
+import { startCall, useCall } from "@/lib/calls";
 import { useChatTheme } from "@/lib/chat-themes";
 import { useKeyChanges } from "@/lib/e2ee";
 import { useIsTyping } from "@/lib/typing";
@@ -38,6 +39,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const typing = useIsTyping(chatId);
+  const inCall = useCall((s) => s.call !== null);
   const keyChanges = useKeyChanges((s) => s.userIds);
   const dismissKeyChange = useKeyChanges((s) => s.dismiss);
   const peerId = chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
@@ -157,6 +159,12 @@ export function Conversation({ chatId }: { chatId: string }) {
               )}
             </View>
           </Pressable>
+          {c.encrypted && !frozen && (
+            <>
+              <IconButton Icon={Phone} label="Voice call" disabled={inCall} onPress={() => void startCall(c, false)} />
+              <IconButton Icon={Video} label="Video call" disabled={inCall} onPress={() => void startCall(c, true)} />
+            </>
+          )}
           <IconButton Icon={MoreVertical} label="Chat options" onPress={() => setMenu(true)} />
         </ScreenHeader>
       )}

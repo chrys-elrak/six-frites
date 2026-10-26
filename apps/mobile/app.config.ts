@@ -61,6 +61,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         cameraPermission: "Allow $(PRODUCT_NAME) to take photos to send.",
       },
     ],
+    [
+      "@config-plugins/react-native-webrtc",
+      {
+        cameraPermission: "Allow $(PRODUCT_NAME) to use the camera for video calls.",
+        microphonePermission: "Allow $(PRODUCT_NAME) to use the microphone for calls.",
+      },
+    ],
     ["expo-build-properties", { android: { minSdkVersion: 26 } }],
     ...(iosUrlScheme ? [["react-native-nitro-google-signin", { iosUrlScheme }] as [string, object]] : []),
   ],
