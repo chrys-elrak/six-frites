@@ -263,6 +263,9 @@ export const ChatDTO = z.object({
     .nullable()
     .describe("Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default"),
   scheduledCount: z.number().int().describe("Your scheduled messages waiting to be sent in this chat"),
+  blockedByMe: z.boolean().describe("You blocked the other person: nobody can send, react or edit until you unblock"),
+  blockedByThem: z.boolean().describe("The other person blocked you"),
+  peerDeleted: z.boolean().describe("The other person deleted their account"),
   lastActivityAt: IsoDate,
   createdAt: IsoDate,
 });

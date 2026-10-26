@@ -13,6 +13,11 @@ export const UserDTO = z.object({
 });
 export type UserDTO = z.infer<typeof UserDTO>;
 
+export const DeleteAccountInput = z.object({
+  confirm: z.literal("DELETE").describe('Type "DELETE" to confirm'),
+});
+export type DeleteAccountInput = z.infer<typeof DeleteAccountInput>;
+
 export const USERNAME_PATTERN = /^[a-z][a-z0-9_]{2,19}$/;
 
 export const Username = z

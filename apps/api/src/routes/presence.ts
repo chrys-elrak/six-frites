@@ -2,6 +2,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { PresenceList, PresenceQuery } from "@six/shared";
 import { presenceOf } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
+import { blockedWith } from "../services/blocks.js";
 
 const presenceRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -24,7 +25,8 @@ const presenceRoutes: FastifyPluginAsyncZod = async (app) => {
         select: { userId: true },
         distinct: ["userId"],
       });
-      return { items: await presenceOf(known.map((m) => m.userId)) };
+      const blocked = await blockedWith(prisma, req.auth.userId);
+      return { items: await presenceOf(known.map((m) => m.userId).filter((id) => !blocked.has(id))) };
     },
   );
 };

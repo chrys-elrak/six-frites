@@ -33,6 +33,7 @@ import {
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
 import { findContact, listContacts, updateContact } from "../services/contacts.js";
+import { blockUser, unblockUser } from "../services/blocks.js";
 import { addContact, findUser } from "../services/discovery.js";
 import {
   deleteMessages,
@@ -410,6 +411,36 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => addContact(req.auth.userId, req.body.q),
+  );
+
+  app.post(
+    "/users/:id/block",
+    {
+      schema: {
+        tags: ["contacts"],
+        summary: "Block someone you share a chat with",
+        description:
+          "Neither of you can send, react, edit or change the chat's timer or background until you unblock. They see that you blocked them (ChatDTO.blockedByThem), and online status and typing stop flowing both ways. Both get chat.updated.",
+        security,
+        params: z.object({ id: Id }),
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await blockUser(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.delete(
+    "/users/:id/block",
+    {
+      schema: { tags: ["contacts"], summary: "Unblock someone", security, params: z.object({ id: Id }), response: { 204: z.null() } },
+    },
+    async (req, reply) => {
+      await unblockUser(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
   );
 
   app.get(

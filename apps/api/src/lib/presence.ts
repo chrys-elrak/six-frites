@@ -4,6 +4,7 @@ import { env } from "../env.js";
 import { prisma } from "./prisma.js";
 import { redisConnection } from "./queue.js";
 import { broadcaster, rooms } from "./realtime.js";
+import { blockedWith } from "../services/blocks.js";
 
 const TTL_SECONDS = 75;
 const key = (sessionId: string) => `${env.QUEUE_PREFIX}:active:${sessionId}`;
@@ -35,7 +36,8 @@ async function audience(userId: string) {
     select: { userId: true },
     distinct: ["userId"],
   });
-  return rows.map((r) => r.userId);
+  const blocked = await blockedWith(prisma, userId);
+  return rows.map((r) => r.userId).filter((id) => !blocked.has(id));
 }
 
 async function announce(dto: PresenceDTO) {

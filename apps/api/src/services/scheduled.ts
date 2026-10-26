@@ -20,6 +20,7 @@ import {
   toMessageDTO,
   toReplyPreview,
 } from "./messages.js";
+import { assertCanMessage } from "./blocks.js";
 import { queuePush } from "./push.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
@@ -88,6 +89,7 @@ export async function scheduleMessage(userId: string, chatId: string, input: Sch
 
   return withEvents(async (tx, emit) => {
     await assertMember(tx, chatId, userId);
+    await assertCanMessage(tx, chatId, userId);
     if ((await tx.scheduledMessage.count({ where: { chatId, senderId: userId } })) >= SCHEDULE_LIMITS.perChat) {
       throw new AppError("SCHEDULE_LIMIT_REACHED", `At most ${SCHEDULE_LIMITS.perChat} scheduled messages per chat`);
     }

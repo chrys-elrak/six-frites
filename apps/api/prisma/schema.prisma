@@ -21,6 +21,7 @@ model User {
   bannedAt    DateTime?
   banReason   String?
   lastSeenAt  DateTime?
+  deletedAt   DateTime?
 
   sessions       Session[]
   invites        Invite[]
@@ -32,6 +33,8 @@ model User {
   uploads        Upload[]
   messageViews   MessageView[]
   reactions      MessageReaction[]
+  blocking       Block[]            @relation("blocker")
+  blockedBy      Block[]            @relation("blocked")
   contactsSaved  ContactOverride[]  @relation("owner")
   savedAs        ContactOverride[]  @relation("contact")
   scheduled      ScheduledMessage[]
@@ -345,4 +348,16 @@ model MessageReaction {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([messageId, userId, emoji])
+}
+
+model Block {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
 }

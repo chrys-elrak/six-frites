@@ -1249,7 +1249,40 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete your account
+         * @description Signs out every device and removes your name, photo, email, username, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people's chats under "Deleted account". Signing in with the same Google account afterwards creates a new account. Send `{ "confirm": "DELETE" }`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Type "DELETE" to confirm
+                         * @enum {string}
+                         */
+                        confirm: "DELETE";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         /**
@@ -1349,6 +1382,56 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** People you blocked */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                };
+                                /**
+                                 * Format: date-time
+                                 * @description When you blocked them
+                                 */
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1867,6 +1950,12 @@ export interface paths {
                                 theme: string | null;
                                 /** @description Your scheduled messages waiting to be sent in this chat */
                                 scheduledCount: number;
+                                /** @description You blocked the other person: nobody can send, react or edit until you unblock */
+                                blockedByMe: boolean;
+                                /** @description The other person blocked you */
+                                blockedByThem: boolean;
+                                /** @description The other person deleted their account */
+                                peerDeleted: boolean;
                                 /** Format: date-time */
                                 lastActivityAt: string;
                                 /** Format: date-time */
@@ -2054,6 +2143,12 @@ export interface paths {
                             theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
                             scheduledCount: number;
+                            /** @description You blocked the other person: nobody can send, react or edit until you unblock */
+                            blockedByMe: boolean;
+                            /** @description The other person blocked you */
+                            blockedByThem: boolean;
+                            /** @description The other person deleted their account */
+                            peerDeleted: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -2271,6 +2366,12 @@ export interface paths {
                             theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
                             scheduledCount: number;
+                            /** @description You blocked the other person: nobody can send, react or edit until you unblock */
+                            blockedByMe: boolean;
+                            /** @description The other person blocked you */
+                            blockedByThem: boolean;
+                            /** @description The other person deleted their account */
+                            peerDeleted: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -4204,6 +4305,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/users/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Block someone you share a chat with
+         * @description Neither of you can send, react, edit or change the chat's timer or background until you unblock. They see that you blocked them (ChatDTO.blockedByThem), and online status and typing stop flowing both ways. Both get chat.updated.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        /** Unblock someone */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/contacts/{userId}": {
         parameters: {
             query?: never;
@@ -4739,6 +4903,12 @@ export interface paths {
                                     theme: string | null;
                                     /** @description Your scheduled messages waiting to be sent in this chat */
                                     scheduledCount: number;
+                                    /** @description You blocked the other person: nobody can send, react or edit until you unblock */
+                                    blockedByMe: boolean;
+                                    /** @description The other person blocked you */
+                                    blockedByThem: boolean;
+                                    /** @description The other person deleted their account */
+                                    peerDeleted: boolean;
                                     /** Format: date-time */
                                     lastActivityAt: string;
                                     /** Format: date-time */

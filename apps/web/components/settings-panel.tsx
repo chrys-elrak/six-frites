@@ -2,6 +2,7 @@
 
 import { LogOut } from "lucide-react";
 import { six } from "@/lib/six";
+import { BlockedPeople, DeleteAccount } from "./account-settings";
 import { AdminLink } from "./admin/admin-link";
 import { ChatBackgroundPicker } from "./chat-background";
 import { Devices } from "./devices";
@@ -32,6 +33,8 @@ export function SettingsPanel() {
           <Invites />
           <Referrals />
           <Devices />
+          <BlockedPeople />
+          <DeleteAccount />
           <AdminLink />
           <p className="px-1 pb-2 text-center text-xs leading-relaxed text-stone-400">
             Animated emoji from{" "}

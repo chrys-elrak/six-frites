@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Id } from "./common.js";
+import { Id, IsoDate } from "./common.js";
 import { PublicUser } from "./invites.js";
 
 export const ContactDTO = z.object({
@@ -47,3 +47,9 @@ export type FoundUserDTO = z.infer<typeof FoundUserDTO>;
 
 export const AddContactInput = FindUserQuery;
 export type AddContactInput = FindUserQuery;
+
+export const BlockedUserDTO = z.object({
+  user: PublicUser,
+  createdAt: IsoDate.describe("When you blocked them"),
+});
+export type BlockedUserDTO = z.infer<typeof BlockedUserDTO>;

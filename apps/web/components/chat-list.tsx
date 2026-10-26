@@ -105,7 +105,8 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
   const press = useLongPress(() => setMenu(true));
   const typing = useIsTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
-  const online = usePresence(peer.id === meId ? undefined : peer.id)?.online;
+  const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
+  const online = usePresence(peer.id === meId || frozen ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
 
   return (

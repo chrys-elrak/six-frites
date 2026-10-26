@@ -2830,6 +2830,56 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Delete your account",
+        "tags": [
+          "me"
+        ],
+        "description": "Signs out every device and removes your name, photo, email, username, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people's chats under \"Deleted account\". Signing in with the same Google account afterwards creates a new account. Send `{ \"confirm\": \"DELETE\" }`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "confirm": {
+                    "type": "string",
+                    "enum": [
+                      "DELETE"
+                    ],
+                    "description": "Type \"DELETE\" to confirm"
+                  }
+                },
+                "required": [
+                  "confirm"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/me/contact-code": {
@@ -2896,6 +2946,79 @@
                     "contactCode",
                     "findByEmail",
                     "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/blocks": {
+      "get": {
+        "summary": "People you blocked",
+        "tags": [
+          "me"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                            "description": "When you blocked them"
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
                   ],
                   "additionalProperties": false
                 }
@@ -4109,6 +4232,18 @@
                             "maximum": 9007199254740991,
                             "description": "Your scheduled messages waiting to be sent in this chat"
                           },
+                          "blockedByMe": {
+                            "type": "boolean",
+                            "description": "You blocked the other person: nobody can send, react or edit until you unblock"
+                          },
+                          "blockedByThem": {
+                            "type": "boolean",
+                            "description": "The other person blocked you"
+                          },
+                          "peerDeleted": {
+                            "type": "boolean",
+                            "description": "The other person deleted their account"
+                          },
                           "lastActivityAt": {
                             "type": "string",
                             "format": "date-time",
@@ -4133,6 +4268,9 @@
                           "autoDeleteSecs",
                           "theme",
                           "scheduledCount",
+                          "blockedByMe",
+                          "blockedByThem",
+                          "peerDeleted",
                           "lastActivityAt",
                           "createdAt"
                         ],
@@ -4752,6 +4890,18 @@
                       "maximum": 9007199254740991,
                       "description": "Your scheduled messages waiting to be sent in this chat"
                     },
+                    "blockedByMe": {
+                      "type": "boolean",
+                      "description": "You blocked the other person: nobody can send, react or edit until you unblock"
+                    },
+                    "blockedByThem": {
+                      "type": "boolean",
+                      "description": "The other person blocked you"
+                    },
+                    "peerDeleted": {
+                      "type": "boolean",
+                      "description": "The other person deleted their account"
+                    },
                     "lastActivityAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4776,6 +4926,9 @@
                     "autoDeleteSecs",
                     "theme",
                     "scheduledCount",
+                    "blockedByMe",
+                    "blockedByThem",
+                    "peerDeleted",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -5415,6 +5568,18 @@
                       "maximum": 9007199254740991,
                       "description": "Your scheduled messages waiting to be sent in this chat"
                     },
+                    "blockedByMe": {
+                      "type": "boolean",
+                      "description": "You blocked the other person: nobody can send, react or edit until you unblock"
+                    },
+                    "blockedByThem": {
+                      "type": "boolean",
+                      "description": "The other person blocked you"
+                    },
+                    "peerDeleted": {
+                      "type": "boolean",
+                      "description": "The other person deleted their account"
+                    },
                     "lastActivityAt": {
                       "type": "string",
                       "format": "date-time",
@@ -5439,6 +5604,9 @@
                     "autoDeleteSecs",
                     "theme",
                     "scheduledCount",
+                    "blockedByMe",
+                    "blockedByThem",
+                    "peerDeleted",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -11312,6 +11480,85 @@
         }
       }
     },
+    "/v1/users/{id}/block": {
+      "post": {
+        "summary": "Block someone you share a chat with",
+        "tags": [
+          "contacts"
+        ],
+        "description": "Neither of you can send, react, edit or change the chat's timer or background until you unblock. They see that you blocked them (ChatDTO.blockedByThem), and online status and typing stop flowing both ways. Both get chat.updated.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unblock someone",
+        "tags": [
+          "contacts"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/contacts/{userId}": {
       "get": {
         "summary": "One contact, with your custom name and photo",
@@ -13201,6 +13448,18 @@
                                     "maximum": 9007199254740991,
                                     "description": "Your scheduled messages waiting to be sent in this chat"
                                   },
+                                  "blockedByMe": {
+                                    "type": "boolean",
+                                    "description": "You blocked the other person: nobody can send, react or edit until you unblock"
+                                  },
+                                  "blockedByThem": {
+                                    "type": "boolean",
+                                    "description": "The other person blocked you"
+                                  },
+                                  "peerDeleted": {
+                                    "type": "boolean",
+                                    "description": "The other person deleted their account"
+                                  },
                                   "lastActivityAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -13225,6 +13484,9 @@
                                   "autoDeleteSecs",
                                   "theme",
                                   "scheduledCount",
+                                  "blockedByMe",
+                                  "blockedByThem",
+                                  "peerDeleted",
                                   "lastActivityAt",
                                   "createdAt"
                                 ],

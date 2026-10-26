@@ -438,6 +438,7 @@ function Bubble({
   onReact,
   onLongPress,
   onReactButton,
+  frozen,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -456,13 +457,14 @@ function Bubble({
   onReact: (emoji: string) => void;
   onLongPress: (anchor: DOMRect) => void;
   onReactButton: (anchor: DOMRect) => void;
+  frozen: boolean;
 }) {
   const selectable = selecting && row.message !== null;
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
   const anchor = () => bubble.current!.getBoundingClientRect();
   const press = useLongPress(selectable ? onToggle : () => onLongPress(anchor()));
-  const reactable = !selecting && canReact(row);
+  const reactable = !selecting && !frozen && canReact(row);
 
   function onTap(e: React.MouseEvent) {
     if (!reactable || (e.target as Element).closest("a, button, video, audio, input")) return;
@@ -657,6 +659,7 @@ export interface MessageListHandle {
 
 export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: string; onSeen: () => void }>(
   function MessageList({ chat, meId, onSeen }, handle) {
+    const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
     const qc = useQueryClient();
     const { realtime } = useRealtime();
     const messages = useMessages(chat.id);
@@ -830,7 +833,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ];
       }
       return [
-        { label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) },
+        ...(frozen ? [] : [{ label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
         { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: "Resend so they can open it again", onSelect: () => void resendEphemeral(m) }]
@@ -839,7 +842,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           ? []
           : [
               ...(m.text ? [{ label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") }] : []),
-              ...(row.mine && m.type !== "sticker"
+              ...(row.mine && m.type !== "sticker" && !frozen
                 ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
                 : []),
             ]),
@@ -904,10 +907,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onResend={() => row.message && void resendEphemeral(row.message)}
                 onOpenPack={setPackFor}
                 meId={meId}
-                onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
+                onReact={(emoji) => !frozen && row.message && void react(qc, row.message, meId, emoji)}
+                frozen={frozen}
                 onLongPress={(anchor) => {
                   setMenuFor(row);
-                  if (canReact(row)) setReactAt({ row, anchor });
+                  if (!frozen && canReact(row)) setReactAt({ row, anchor });
                 }}
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
               />

@@ -12,6 +12,7 @@ import {
 } from "@six/shared";
 import { env } from "../env.js";
 import { setUserPresence } from "../lib/presence.js";
+import { blockedWith } from "../services/blocks.js";
 import { prisma } from "../lib/prisma.js";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { redisConnection } from "../lib/queue.js";
@@ -100,10 +101,10 @@ export function createSocketServer(http: HttpServer) {
       handle(async (p) => {
         const { chatId, typing } = TypingInput.parse(p);
         await assertMember(prisma, chatId, userId);
-        const others = await prisma.chatMember.findMany({
-          where: { chatId, userId: { not: userId } },
-          select: { userId: true },
-        });
+        const blocked = await blockedWith(prisma, userId);
+        const others = (
+          await prisma.chatMember.findMany({ where: { chatId, userId: { not: userId } }, select: { userId: true } })
+        ).filter((m) => !blocked.has(m.userId));
         if (others.length) {
           io.to(others.map((m) => rooms.user(m.userId))).emit("typing", { chatId, userId, typing });
         }

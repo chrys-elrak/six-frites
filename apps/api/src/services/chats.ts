@@ -21,6 +21,7 @@ import {
   toMessageDTO,
   visibleTo,
 } from "./messages.js";
+import { blockState } from "./blocks.js";
 import { applyOverride, loadOverrides } from "./contacts.js";
 import { purgeUploads } from "./uploads.js";
 import { toPublicUser } from "./users.js";
@@ -46,6 +47,8 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     shown: applyOverride(toPublicUser(m.user), overrides.get(m.userId)),
   }));
   const others = members.filter((m) => m.userId !== viewerId);
+  const peer = others[0];
+  const blocks = peer ? await blockState(db, viewerId, peer.userId) : { byMe: false, byThem: false };
 
   const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
   const readFloor = [me.lastReadAt, me.clearedAt].filter((d): d is Date => d !== null).sort((a, b) => +b - +a)[0];
@@ -81,6 +84,9 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     autoDeleteSecs: chat.autoDeleteSecs,
     theme: chat.theme,
     scheduledCount,
+    blockedByMe: blocks.byMe,
+    blockedByThem: blocks.byThem,
+    peerDeleted: others.some((m) => m.user.deletedAt !== null),
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
   };

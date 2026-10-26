@@ -20,6 +20,7 @@ import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { timersQueue } from "../lib/queue.js";
 import { saveGif } from "./gifs.js";
+import { assertCanMessage } from "./blocks.js";
 import { queuePush, queueReactionPush } from "./push.js";
 import { toStickerDTO } from "./stickers.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
@@ -169,6 +170,7 @@ export async function createMessage(
   input: SendMessageInput | { clientId: string; action: ServiceAction },
 ) {
   await assertMember(tx, chatId, userId);
+  await assertCanMessage(tx, chatId, userId);
   const content = "action" in input ? null : input;
   if (content?.replyToId) {
     const original = await tx.message.findFirst({ where: { id: content.replyToId, chatId }, select: { id: true } });
@@ -251,6 +253,7 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
+    await assertCanMessage(tx, message.chatId, userId);
     if (message.deletedAt || isEphemeral(message) || message.type === "service" || message.type === "sticker") {
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
@@ -275,6 +278,7 @@ async function reactableMessage(tx: Tx, userId: string, messageId: string) {
   const visible = member && (await tx.message.count({ where: { id: messageId, ...visibleTo(userId, member.clearedAt) } }));
   if (!message || !visible) throw new AppError("MESSAGE_NOT_FOUND");
   if (message.deletedAt || message.purgedAt || message.type === "service") throw new AppError("REACTION_NOT_ALLOWED");
+  await assertCanMessage(tx, message.chatId, userId);
   return message;
 }
 

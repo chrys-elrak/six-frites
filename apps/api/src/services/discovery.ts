@@ -31,7 +31,7 @@ export function searchConditions(raw: string): Prisma.UserWhereInput[] {
 
 async function resolve(userId: string, q: string) {
   const conditions = searchConditions(q);
-  const user = conditions.length ? await prisma.user.findFirst({ where: { OR: conditions } }) : null;
+  const user = conditions.length ? await prisma.user.findFirst({ where: { OR: conditions, deletedAt: null } }) : null;
   if (!user) throw new AppError("USER_NOT_FOUND", "No one matches that code, username or email");
   if (user.id === userId) throw new AppError("CONTACT_SELF", "That's you");
   return user;
