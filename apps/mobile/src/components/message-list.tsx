@@ -60,6 +60,7 @@ import { brand, brandInk, flame, stone, type Theme, useTheme } from "@/lib/theme
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { EmojiPicker } from "./emoji-picker";
+import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { type Anchor, ReactionChips, ReactionPopover } from "./reactions";
 import { styleFor } from "./rich-text";
@@ -84,7 +85,6 @@ interface MsgRow {
   attachment: ShownAttachment | null;
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
-  reveal: { expiresAt: string | null } | null;
   locked: "decrypting" | "undecryptable" | null;
   groupStart: boolean;
   groupEnd: boolean;
@@ -137,7 +137,6 @@ function buildRows(
         attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
         type: m.type,
         ephemeral: m.ephemeral,
-        reveal: null,
         locked: lockOf(m),
       },
     })),
@@ -163,7 +162,6 @@ function buildRows(
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
             : null,
           type: (p.attachment?.kind ?? "text") as MessageDTO["type"],
-          reveal: null,
           locked: null,
           ephemeral: p.ephemeral
             ? {
@@ -365,34 +363,6 @@ function toLocalDeadline(result: ViewMessageResult, response: Response) {
   return new Date(ttl ? Math.min(local, Date.now() + ttl * 1000) : local).toISOString();
 }
 
-function RevealBar({ expiresAt, onHide }: { expiresAt: string | null; onHide: () => void }) {
-  const deadline = expiresAt ? Date.parse(expiresAt) : null;
-  const [now, setNow] = useState(Date.now());
-  const left = deadline ? Math.max(0, deadline - now) : null;
-
-  useEffect(() => {
-    if (!deadline) return;
-    const timer = setInterval(() => setNow(Date.now()), 200);
-    return () => clearInterval(timer);
-  }, [deadline]);
-
-  useEffect(() => {
-    if (left === 0) onHide();
-  }, [left, onHide]);
-
-  return (
-    <View style={styles.badge}>
-      <Flame size={14} color={flame} fill={flame} />
-      <Text style={{ flex: 1, color: flame, fontSize: 11, fontWeight: "600" }}>
-        {left === null ? "Disappears when you hide it" : `${Math.ceil(left / 1000)}s`}
-      </Text>
-      <Pressable onPress={onHide} accessibilityLabel="Hide" hitSlop={10} style={styles.hide}>
-        <X size={14} color={flame} />
-      </Pressable>
-    </View>
-  );
-}
-
 function SenderBadge({ e, color, onResend }: { e: EphemeralDTO; color: string; onResend: () => void }) {
   return (
     <View style={styles.badge}>
@@ -422,7 +392,6 @@ function Bubble({
   onToggle,
   onOpen,
   onOpenEphemeral,
-  onHideReveal,
   onResend,
   meId,
   onReact,
@@ -439,7 +408,6 @@ function Bubble({
   onToggle: () => void;
   onOpen: (item: LightboxItem) => void;
   onOpenEphemeral: () => void;
-  onHideReveal: () => void;
   onResend: () => void;
   meId: string;
   onReact: (emoji: string) => void;
@@ -557,11 +525,7 @@ function Bubble({
           {row.replyTo && !row.deleted && (
             <Quote reply={row.replyTo} mine={mine && !bare} name={nameOf(row.replyTo.senderId)} onPress={() => onQuote(row.replyTo!.id)} />
           )}
-          {row.reveal ? (
-            <RevealBar expiresAt={row.reveal.expiresAt} onHide={onHideReveal} />
-          ) : (
-            row.ephemeral && !sealed && !row.deleted && <SenderBadge e={row.ephemeral} color={fg} onResend={onResend} />
-          )}
+          {row.ephemeral && !sealed && !row.deleted && <SenderBadge e={row.ephemeral} color={fg} onResend={onResend} />}
           {row.attachment && !row.deleted && !sealed && (
             <AttachmentView
               attachment={row.attachment}
@@ -570,7 +534,6 @@ function Bubble({
               hidden={row.spoiler && !mediaRevealed}
               onReveal={() => revealMedia(row.key)}
               maxWidth={maxWidth - 8}
-              autoPlay={!!row.reveal}
             />
           )}
           {sealed ? (
@@ -668,24 +631,21 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
     const [reactingTo, setReactingTo] = useState<MessageDTO | null>(null);
-    const [opened, setOpened] = useState<Record<string, ViewMessageResult>>({});
-    const openedRef = useRef(opened);
-    openedRef.current = opened;
-    const hideReveal = useCallback(
-      (id: string) => {
-        const shown = openedRef.current[id];
-        const e = shown?.message.ephemeral;
-        const endsAt = shown?.expiresAt ? Date.parse(shown.expiresAt) : null;
-        const viewsUsed = !!e?.maxViews && e.views >= e.maxViews;
-        if (viewsUsed || (endsAt !== null && Date.now() >= endsAt - 250)) markOpenedLocally(qc, chat.id, id);
-        else if (endsAt !== null) setTimeout(() => markOpenedLocally(qc, chat.id, id), endsAt - Date.now());
-        setOpened((all) => {
-          const { [id]: _gone, ...rest } = all;
-          return rest;
-        });
-      },
-      [qc, chat.id],
-    );
+    const [viewing, setViewing] = useState<ViewMessageResult | null>(null);
+    const viewingRef = useRef(viewing);
+    viewingRef.current = viewing;
+    const closeViewer = useCallback(() => {
+      const shown = viewingRef.current;
+      if (!shown) return;
+      viewingRef.current = null;
+      setViewing(null);
+      const id = shown.message.id;
+      const e = shown.message.ephemeral;
+      const endsAt = shown.expiresAt ? Date.parse(shown.expiresAt) : null;
+      const viewsUsed = !!e?.maxViews && e.views >= e.maxViews;
+      if (viewsUsed || (endsAt !== null && Date.now() >= endsAt - 250)) markOpenedLocally(qc, chat.id, id);
+      else if (endsAt !== null) setTimeout(() => markOpenedLocally(qc, chat.id, id), endsAt - Date.now());
+    }, [qc, chat.id]);
 
     async function resendEphemeral(m: MessageDTO) {
       try {
@@ -702,7 +662,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         const res = await six.api.POST("/v1/messages/{id}/view", { params: { path: { id } } });
         const result = unwrap(res);
         const message = await revealNow(meId, result.message);
-        setOpened((all) => ({ ...all, [id]: { message, expiresAt: toLocalDeadline(result, res.response) } }));
+        setViewing({ message, expiresAt: toLocalDeadline(result, res.response) });
       } catch {
         void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
       }
@@ -721,29 +681,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const loaded = useMemo(() => messages.data?.pages.flatMap((p) => p.items) ?? [], [messages.data]);
     const shown = useHydratedMessages(meId, loaded);
     const ordered = useMemo(() => shown.slice().reverse(), [shown]);
-    const baseRows = useMemo(
+    const rows = useMemo(
       () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt).reverse(),
       [ordered, pending, meId, peerDeliveredAt, peerReadAt],
     );
-    const rows = useMemo(
-      () =>
-        baseRows.map((row): Row => {
-          const shown = row.kind === "msg" && row.id ? opened[row.id] : undefined;
-          if (!shown || row.kind !== "msg") return row;
-          const m = shown.message;
-          return {
-            ...row,
-            text: m.text,
-            entities: m.entities,
-            attachment: m.attachment ? { source: "server", data: m.attachment } : null,
-            ephemeral: m.ephemeral && { ...m.ephemeral, locked: false, expired: false },
-            reveal: { expiresAt: shown.expiresAt },
-            locked: null,
-          };
-        }),
-      [baseRows, opened],
-    );
-
     const scrollToBottom = () => list.current?.scrollToOffset({ offset: 0, animated: true });
     useImperativeHandle(handle, () => ({ scrollToBottom }));
 
@@ -919,7 +860,6 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   onToggle={() => row.id && toggleSelected(row.id)}
                   onOpen={setLightbox}
                   onOpenEphemeral={() => void openEphemeral(row)}
-                  onHideReveal={() => row.id && hideReveal(row.id)}
                   onResend={() => row.message && void resendEphemeral(row.message)}
                   meId={meId}
                   onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
@@ -946,6 +886,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           }}
         />
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
+        {viewing && <EphemeralViewer message={viewing.message} expiresAt={viewing.expiresAt} onClose={closeViewer} />}
         {confirmDelete && (
           <Sheet
             title="Delete message?"

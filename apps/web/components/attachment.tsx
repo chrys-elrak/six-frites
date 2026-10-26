@@ -48,6 +48,11 @@ function useDecrypted(a: ShownAttachment, enabled: boolean): Decrypted | null {
   return sealed.file ? state : { url: null, failed: true };
 }
 
+/** The attachment's file URL, decrypting it first when it's encrypted. */
+export function useAttachmentUrl(a: ShownAttachment) {
+  return view(a, useDecrypted(a, true)).url;
+}
+
 function view(a: ShownAttachment, decrypted: Decrypted | null) {
   if (a.source === "local") {
     const d = a.data;

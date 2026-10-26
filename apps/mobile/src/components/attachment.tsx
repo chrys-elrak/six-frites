@@ -527,7 +527,7 @@ export function AttachmentView({
   );
 }
 
-function LightboxVideo({ url }: { url: string }) {
+export function LightboxVideo({ url }: { url: string }) {
   const player = useVideoPlayer(url, (p) => p.play());
   useEffect(() => claimPlayback(() => player.pause()), [player]);
   return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="contain" nativeControls />;
