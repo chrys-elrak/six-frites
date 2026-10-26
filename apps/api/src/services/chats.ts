@@ -87,6 +87,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     blockedByMe: blocks.byMe,
     blockedByThem: blocks.byThem,
     peerDeleted: others.some((m) => m.user.deletedAt !== null),
+    encrypted: chat.encryptedAt !== null,
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
   };

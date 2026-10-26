@@ -95,6 +95,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           spoiler: replyTo.spoiler,
           ephemeral: replyTo.ephemeral !== null,
           deleted: false,
+          encrypted: replyTo.encryption !== null,
         }
       : null,
     spoiler: draft.spoiler ?? false,

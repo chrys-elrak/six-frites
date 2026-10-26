@@ -2,6 +2,7 @@ import type { Session } from "../generated/prisma/client.js";
 import { AppError, type Platform, type SessionDTO } from "@six/shared";
 import { prisma } from "../lib/prisma.js";
 import { getIo, rooms } from "../lib/realtime.js";
+import { dropDevice } from "./devices.js";
 
 function toSessionDTO(s: Session, currentId: string): SessionDTO {
   return {
@@ -27,6 +28,7 @@ export async function revokeSession(sessionId: string) {
     where: { id: sessionId, revokedAt: null },
     data: { revokedAt: new Date() },
   });
+  await dropDevice(sessionId);
   const io = getIo();
   if (io) {
     const room = rooms.session(sessionId);

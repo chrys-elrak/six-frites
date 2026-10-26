@@ -37,6 +37,7 @@ export function reactionText(emoji: string, m: MessageDTO) {
 export function serviceText(m: Pick<MessageDTO, "action">) {
   const a = m.action;
   if (a?.type === "theme") return a.theme ? `Background: ${chatTheme(a.theme).name}` : "Background reset";
+  if (a?.type === "e2ee") return "Messages are end-to-end encrypted";
   return a?.secs ? `Messages auto-delete after ${durationLabel(a.secs)}` : "Auto-delete turned off";
 }
 
@@ -49,6 +50,7 @@ export function serviceSentence(m: Pick<MessageDTO, "action">) {
       ? "set a custom chat background"
       : `changed the chat background to ${chatTheme(a.theme).name}`;
   }
+  if (a?.type === "e2ee") return "turned on end-to-end encryption";
   return a?.secs ? `set messages to auto-delete after ${durationLabel(a.secs)}` : "turned off auto-delete";
 }
 

@@ -9,6 +9,10 @@ export const UserDTO = z.object({
   username: z.string().nullable(),
   contactCode: z.string().describe("Share it (or its QR code) so people can find you"),
   findByEmail: z.boolean().describe("Whether people who type your exact email can find you"),
+  backupKeyId: z
+    .string()
+    .nullable()
+    .describe("Identifies the key from your recovery key; null until you set up a recovery key"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;

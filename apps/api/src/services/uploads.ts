@@ -1,6 +1,13 @@
 import { createId } from "@paralleldrive/cuid2";
 import type { Prisma, Upload } from "../generated/prisma/client.js";
-import { type AttachmentDTO, AppError, MAX_UPLOAD_BYTES, type PresignUploadInput, type UploadKind } from "@six/shared";
+import {
+  type AttachmentDTO,
+  AppError,
+  MAX_UPLOAD_BYTES,
+  type PresignUploadInput,
+  type UploadKind,
+  encryptedSize,
+} from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { mediaQueue } from "../lib/queue.js";
@@ -17,12 +24,13 @@ export function toAttachmentDTO(u: Upload, linkSeconds?: number): AttachmentDTO 
     name: u.name,
     mime: u.mainMime ?? u.mime,
     size: u.size,
-    url: ready ? presignGet(mainKey, u.kind === "file" ? u.name : undefined, linkSeconds) : null,
+    url: ready ? presignGet(mainKey, u.kind === "file" && !u.encrypted ? u.name : undefined, linkSeconds) : null,
     thumbUrl: ready && u.thumbKey ? presignGet(u.thumbKey, undefined, linkSeconds) : null,
     width: u.width,
     height: u.height,
     durationMs: u.durationMs,
     waveform: (u.waveform as number[] | null) ?? null,
+    encrypted: u.encrypted,
   };
 }
 
@@ -39,7 +47,16 @@ export async function presignUpload(ownerId: string, input: PresignUploadInput) 
   const id = createId();
   const key = `u/${ownerId}/${id}/original`;
   const upload = await prisma.upload.create({
-    data: { id, ownerId, kind: input.kind, name: input.name, mime: input.mime, size: input.size, key },
+    data: {
+      id,
+      ownerId,
+      kind: input.kind,
+      name: input.name,
+      mime: input.mime,
+      size: input.size,
+      key,
+      encrypted: input.encrypted ?? false,
+    },
   });
   return {
     upload: toAttachmentDTO(upload),
@@ -58,19 +75,19 @@ export async function getUpload(ownerId: string, id: string) {
   return toAttachmentDTO(await ownUpload(ownerId, id));
 }
 
-/** Confirms the file reached storage and queues it for processing (plain files are ready as-is). */
+/** Confirms the file reached storage and queues it for processing (plain and encrypted files are ready as-is). */
 export async function completeUpload(ownerId: string, id: string) {
   const upload = await ownUpload(ownerId, id);
   if (upload.status !== "pending") return toAttachmentDTO(upload);
 
   const stored = await headObject(upload.key);
   if (!stored) throw new AppError("UPLOAD_MISSING", "The file has not been uploaded yet");
-  if (stored.size !== upload.size || stored.size > MAX_UPLOAD_BYTES) {
+  if (stored.size !== upload.size || stored.size > encryptedSize(MAX_UPLOAD_BYTES)) {
     await deleteObjects([upload.key]);
     throw new AppError("UPLOAD_MISSING", "The uploaded file does not match what was announced");
   }
 
-  if (upload.kind === "file") {
+  if (upload.kind === "file" || upload.encrypted) {
     return toAttachmentDTO(await prisma.upload.update({ where: { id }, data: { status: "ready" } }));
   }
   const updated = await prisma.upload.update({ where: { id }, data: { status: "processing" } });

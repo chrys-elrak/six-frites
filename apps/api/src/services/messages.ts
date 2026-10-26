@@ -2,6 +2,8 @@ import { type Message, Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   type DeleteMessagesQuery,
+  type EncryptedInput,
+  type EncryptionDTO,
   type EditMessageInput,
   type MessageDTO,
   type MessageEntity,
@@ -21,6 +23,7 @@ import { prisma } from "../lib/prisma.js";
 import { timersQueue } from "../lib/queue.js";
 import { saveGif } from "./gifs.js";
 import { assertCanMessage } from "./blocks.js";
+import { activeDevices, checkEnvelopes } from "./devices.js";
 import { queuePush, queueReactionPush } from "./push.js";
 import { toStickerDTO } from "./stickers.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
@@ -31,6 +34,8 @@ export const messageInclude = {
   views: true,
   sticker: { include: { upload: true } },
   reactions: { orderBy: { createdAt: "asc" } },
+  envelopes: { include: { device: { select: { userId: true } } } },
+  backups: true,
 } satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
 
@@ -64,6 +69,19 @@ export function toReplyPreview(r: Message): ReplyPreview {
     spoiler: r.spoiler,
     ephemeral: isEphemeral(r),
     deleted: r.deletedAt !== null,
+    encrypted: r.encrypted,
+  };
+}
+
+/** The viewer's own envelopes and backup copy of an encrypted message, or nothing while it is hidden. */
+function encryptionFor(m: MessageRow, viewerId: string, hidden: boolean): EncryptionDTO | null {
+  if (!m.encrypted) return null;
+  if (hidden) return { envelopes: [], backup: null };
+  return {
+    envelopes: m.envelopes
+      .filter((e) => e.device.userId === viewerId)
+      .map((e) => ({ deviceId: e.deviceId, envelope: e.envelope as EncryptionDTO["envelopes"][number]["envelope"] })),
+    backup: m.backups.find((b) => b.userId === viewerId)?.sealed ?? null,
   };
 }
 
@@ -121,6 +139,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     deletedAt: m.deletedAt?.toISOString() ?? null,
     expiresAt: m.expiresAt?.toISOString() ?? null,
     reactions: m.deletedAt || purged ? [] : groupReactions(m.reactions),
+    encryption: encryptionFor(m, viewerId, hideContent),
   };
 }
 
@@ -159,8 +178,46 @@ async function findByClientId(senderId: string, chatId: string, clientId: string
 }
 
 /**
+ * Checks the message fits the chat's encryption: encrypted content only carries encrypted files,
+ * and once a chat is encrypted, text and files must be encrypted too (GIFs and stickers, which
+ * carry nothing personal, may still be sent as they are).
+ */
+export function checkEncryption(
+  chat: { encryptedAt: Date | null },
+  content: SendMessageInput,
+  upload: { encrypted: boolean; kind: string } | null,
+) {
+  if (content.encrypted) {
+    if (upload && !upload.encrypted) {
+      throw new AppError("VALIDATION_FAILED", "Encrypted messages carry encrypted files");
+    }
+    return;
+  }
+  if (upload?.encrypted) throw new AppError("VALIDATION_FAILED", "This file is encrypted; send it in encrypted content");
+  if (chat.encryptedAt && (content.text !== undefined || (upload && upload.kind !== "gif"))) {
+    throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
+  }
+}
+
+/** Keeps the envelopes of a scheduled message whose devices are still signed in. */
+async function liveEnvelopes(tx: Tx, chatId: string, envelopes: EncryptedInput["envelopes"]) {
+  const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
+  const live = new Set((await activeDevices(tx, members.map((m) => m.userId))).map((d) => d.id));
+  return envelopes.filter((e) => live.has(e.deviceId));
+}
+
+export interface CreateOptions {
+  /** The session sending, whose device must be registered for encrypted content. */
+  sessionId?: string;
+  /** Sending a scheduled message: envelopes were checked when it was scheduled. */
+  scheduled?: boolean;
+}
+
+/**
  * Stores a new message, bumps the chat and tells every member. Messages get the chat's auto-delete
- * deadline, except service messages, which announce changes to it. Returns who should get a push.
+ * deadline, except service messages, which announce changes to it. The first encrypted message in
+ * a chat turns encryption on for good, after a service message marking where it starts. Returns
+ * who should get a push.
  */
 export async function createMessage(
   tx: Tx,
@@ -168,6 +225,7 @@ export async function createMessage(
   userId: string,
   chatId: string,
   input: SendMessageInput | { clientId: string; action: ServiceAction },
+  opts: CreateOptions = {},
 ) {
   await assertMember(tx, chatId, userId);
   await assertCanMessage(tx, chatId, userId);
@@ -180,8 +238,29 @@ export async function createMessage(
   if (content?.stickerId && !(await tx.sticker.findFirst({ where: { id: content.stickerId, removedAt: null } }))) {
     throw new AppError("STICKER_NOT_FOUND");
   }
-  const { autoDeleteSecs } = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
-  const createdAt = new Date();
+  const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
+  if (content) checkEncryption(chat, content, upload);
+
+  const encrypted = content?.encrypted;
+  let envelopes = encrypted?.envelopes ?? [];
+  let createdAt = new Date();
+  let started = false;
+  if (encrypted) {
+    if (opts.scheduled) envelopes = await liveEnvelopes(tx, chatId, envelopes);
+    else {
+      if (!opts.sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
+      await checkEnvelopes(tx, chatId, opts.sessionId, envelopes);
+    }
+    if (!chat.encryptedAt) {
+      await tx.chat.update({ where: { id: chatId }, data: { encryptedAt: new Date() } });
+      const notice = await createMessage(tx, emit, userId, chatId, {
+        clientId: `e2ee:${chatId}`,
+        action: { type: "e2ee" },
+      });
+      createdAt = new Date(Math.max(Date.now(), notice.message.createdAt.getTime() + 1));
+      started = true;
+    }
+  }
 
   const message = await tx.message.create({
     data: {
@@ -198,8 +277,13 @@ export async function createMessage(
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,
       ...("action" in input && { action: input.action }),
+      encrypted: !!encrypted,
+      ...(envelopes.length && {
+        envelopes: { create: envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
+      }),
+      ...(encrypted?.backup && { backups: { create: { userId, sealed: encrypted.backup } } }),
       createdAt,
-      expiresAt: content && autoDeleteSecs ? new Date(createdAt.getTime() + autoDeleteSecs * 1000) : null,
+      expiresAt: content && chat.autoDeleteSecs ? new Date(createdAt.getTime() + chat.autoDeleteSecs * 1000) : null,
     },
     include: messageInclude,
   });
@@ -217,6 +301,10 @@ export async function createMessage(
 
   const members = await memberIds(tx, chatId);
   for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
+  if (started) {
+    const { getChat } = await import("./chats.js");
+    for (const id of members) emit(id, "chat.updated", await getChat(id, chatId, tx));
+  }
   return { message, recipients: members.filter((id) => id !== userId) };
 }
 
@@ -228,13 +316,20 @@ export async function resolveGif<T extends SendMessageInput>(userId: string, cha
   return { ...input, gifId: undefined, attachmentId: upload.id };
 }
 
-export async function sendMessage(userId: string, chatId: string, input: SendMessageInput): Promise<MessageDTO> {
+export async function sendMessage(
+  userId: string,
+  chatId: string,
+  input: SendMessageInput,
+  sessionId?: string,
+): Promise<MessageDTO> {
   const existing = await findByClientId(userId, chatId, input.clientId);
   if (existing) return toMessageDTO(existing, userId);
 
   try {
     const ready = await resolveGif(userId, chatId, input);
-    const { message, recipients } = await withEvents((tx, emit) => createMessage(tx, emit, userId, chatId, ready));
+    const { message, recipients } = await withEvents((tx, emit) =>
+      createMessage(tx, emit, userId, chatId, ready, { sessionId }),
+    );
     await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
     return toMessageDTO(message, userId);
   } catch (err) {
@@ -245,7 +340,7 @@ export async function sendMessage(userId: string, chatId: string, input: SendMes
   }
 }
 
-export async function editMessage(userId: string, messageId: string, input: EditMessageInput) {
+export async function editMessage(userId: string, messageId: string, input: EditMessageInput, sessionId?: string) {
   return withEvents(async (tx, emit) => {
     const message = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
     if (!message) throw new AppError("MESSAGE_NOT_FOUND");
@@ -257,16 +352,45 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     if (message.deletedAt || isEphemeral(message) || message.type === "service" || message.type === "sticker") {
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
-    const entities = input.entities ?? [];
-    if (message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
-      return toMessageDTO(message, userId);
-    }
+    const chat = await tx.chat.findUniqueOrThrow({ where: { id: message.chatId }, select: { encryptedAt: true } });
 
-    const updated = await tx.message.update({
-      where: { id: messageId },
-      data: { text: input.text, entities: storedEntities(entities), editedAt: new Date() },
-      include: messageInclude,
-    });
+    let updated: MessageRow;
+    if (input.encrypted) {
+      if (message.attachment && !message.attachment.encrypted) {
+        throw new AppError("MESSAGE_NOT_EDITABLE", "A plain file can't get an encrypted caption");
+      }
+      if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
+      const { envelopes, backup } = input.encrypted;
+      await checkEnvelopes(tx, message.chatId, sessionId, envelopes);
+      await tx.messageEnvelope.deleteMany({ where: { messageId } });
+      await tx.messageBackup.deleteMany({ where: { messageId } });
+      updated = await tx.message.update({
+        where: { id: messageId },
+        data: {
+          encrypted: true,
+          text: null,
+          entities: Prisma.DbNull,
+          spoiler: false,
+          editedAt: new Date(),
+          envelopes: { create: envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
+          ...(backup && { backups: { create: { userId, sealed: backup } } }),
+        },
+        include: messageInclude,
+      });
+    } else {
+      if (message.encrypted || chat.encryptedAt) {
+        throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
+      }
+      const entities = input.entities ?? [];
+      if (message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
+        return toMessageDTO(message, userId);
+      }
+      updated = await tx.message.update({
+        where: { id: messageId },
+        data: { text: input.text, entities: storedEntities(entities), editedAt: new Date() },
+        include: messageInclude,
+      });
+    }
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
   });
@@ -320,6 +444,13 @@ export async function scrubMessageEvents(tx: Tx, messageIds: string[]) {
     WHERE type IN ('message.new', 'message.edited') AND payload->'replyTo'->>'id' = ANY(${messageIds}::text[])`;
 }
 
+/** Deletes every copy of encrypted content: the envelopes for each device and everyone's backups. */
+async function dropEncryptedContent(tx: Tx, messageIds: string[]) {
+  if (!messageIds.length) return;
+  await tx.messageEnvelope.deleteMany({ where: { messageId: { in: messageIds } } });
+  await tx.messageBackup.deleteMany({ where: { messageId: { in: messageIds } } });
+}
+
 export async function deleteMessages(userId: string, { ids, scope }: DeleteMessagesQuery) {
   const detached = await withEvents(async (tx, emit): Promise<string[]> => {
     const messages = await tx.message.findMany({ where: { id: { in: ids } } });
@@ -342,6 +473,7 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
         where: { id: { in: live.map((m) => m.id) } },
         data: { deletedAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
       });
+      await dropEncryptedContent(tx, live.map((m) => m.id));
       await scrubMessageEvents(
         tx,
         live.map((m) => m.id),
@@ -410,6 +542,7 @@ async function wipeContent(tx: Tx, emit: Emit, m: MessageRow, filesAfterMs: numb
     where: { id: m.id },
     data: { purgedAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
   });
+  await dropEncryptedContent(tx, [m.id]);
   await scrubMessageEvents(tx, [m.id]);
   await notifyMembers(tx, emit, m.id);
   if (m.attachmentId) {

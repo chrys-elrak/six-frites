@@ -83,7 +83,7 @@ export function createSocketServer(http: HttpServer) {
 
     socket.on(
       "message:send",
-      handle((p) => sendMessage(userId, ChatRef.parse(p).chatId, SendMessageInput.parse(p))),
+      handle((p) => sendMessage(userId, ChatRef.parse(p).chatId, SendMessageInput.parse(p), sessionId)),
     );
 
     socket.on(

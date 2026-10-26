@@ -2,6 +2,7 @@ import type { Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   type EditScheduledInput,
+  type EncryptedInput,
   type MessageDTO,
   type MessageType,
   SCHEDULE_LIMITS,
@@ -11,8 +12,10 @@ import {
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { getChat } from "./chats.js";
+import { checkEnvelopes } from "./devices.js";
 import {
   assertMember,
+  checkEncryption,
   createMessage,
   entitiesOf,
   resolveGif,
@@ -42,8 +45,16 @@ function toScheduledDTO(s: ScheduledRow): ScheduledMessageDTO {
     replyTo: s.replyTo ? toReplyPreview(s.replyTo) : null,
     sendAt: s.sendAt.toISOString(),
     createdAt: s.createdAt.toISOString(),
+    encryption: encryptedOf(s) && { envelopes: [], backup: encryptedOf(s)!.backup ?? null },
   };
 }
+
+/**
+ * The stored encrypted content of a scheduled message. Its envelopes stay on the server until it is
+ * sent, so each device decrypts it once, as a normal message; until then the sender's devices read
+ * it from the backup copy.
+ */
+const encryptedOf = (s: { encrypted: Prisma.JsonValue }) => s.encrypted as EncryptedInput | null;
 
 function checkSendAt(iso: string) {
   const at = new Date(iso);
@@ -74,7 +85,12 @@ export async function listScheduled(userId: string, chatId: string) {
   return { items: rows.map(toScheduledDTO), nextCursor: null };
 }
 
-export async function scheduleMessage(userId: string, chatId: string, input: ScheduleMessageInput) {
+export async function scheduleMessage(
+  userId: string,
+  chatId: string,
+  input: ScheduleMessageInput,
+  sessionId?: string,
+) {
   const key = { senderId_clientId: { senderId: userId, clientId: input.clientId } };
   const existing = await prisma.scheduledMessage.findUnique({ where: key, include: scheduledInclude });
   if (existing) {
@@ -97,7 +113,12 @@ export async function scheduleMessage(userId: string, chatId: string, input: Sch
       const original = await tx.message.findFirst({ where: { id: input.replyToId, chatId }, select: { id: true } });
       if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
     }
-    if (input.attachmentId) await claimForMessage(tx, userId, input.attachmentId);
+    const upload = input.attachmentId ? await claimForMessage(tx, userId, input.attachmentId) : null;
+    checkEncryption(await tx.chat.findUniqueOrThrow({ where: { id: chatId } }), input, upload);
+    if (input.encrypted) {
+      if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
+      await checkEnvelopes(tx, chatId, sessionId, input.encrypted.envelopes);
+    }
 
     const s = await tx.scheduledMessage.create({
       data: {
@@ -111,6 +132,7 @@ export async function scheduleMessage(userId: string, chatId: string, input: Sch
         ttlSeconds: input.ephemeral?.ttlSeconds ?? null,
         attachmentId: input.attachmentId ?? null,
         replyToId: input.replyToId ?? null,
+        ...(input.encrypted && { encrypted: input.encrypted }),
         sendAt,
       },
       include: scheduledInclude,
@@ -120,13 +142,28 @@ export async function scheduleMessage(userId: string, chatId: string, input: Sch
   });
 }
 
-export async function editScheduled(userId: string, id: string, input: EditScheduledInput) {
+export async function editScheduled(userId: string, id: string, input: EditScheduledInput, sessionId?: string) {
   const sendAt = input.sendAt ? checkSendAt(input.sendAt) : undefined;
   return withEvents(async (tx, emit) => {
     const s = await lockOwn(tx, userId, id);
+    if (input.encrypted) {
+      if (!encryptedOf(s)) throw new AppError("MESSAGE_NOT_EDITABLE", "This scheduled message is not encrypted");
+      if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
+      await checkEnvelopes(tx, s.chatId, sessionId, input.encrypted.envelopes);
+    }
+    if (input.text !== undefined) {
+      const chat = await tx.chat.findUniqueOrThrow({ where: { id: s.chatId } });
+      if (encryptedOf(s) || chat.encryptedAt) {
+        throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
+      }
+    }
     const updated = await tx.scheduledMessage.update({
       where: { id },
-      data: { sendAt, ...(input.text !== undefined && { text: input.text, entities: storedEntities(input.entities) }) },
+      data: {
+        sendAt,
+        ...(input.text !== undefined && { text: input.text, entities: storedEntities(input.entities) }),
+        ...(input.encrypted && { encrypted: input.encrypted }),
+      },
       include: scheduledInclude,
     });
     await announce(tx, emit, userId, s.chatId);
@@ -155,15 +192,23 @@ async function deliverScheduled(id: string, ownerId?: string) {
     if (!s || (ownerId && s.senderId !== ownerId)) throw new AppError("SCHEDULED_NOT_FOUND");
     await tx.scheduledMessage.delete({ where: { id } });
     const ephemeral = s.maxViews !== null || s.ttlSeconds !== null;
-    const out = await createMessage(tx, emit, s.senderId, s.chatId, {
-      clientId: s.clientId,
-      text: s.text ?? undefined,
-      entities: entitiesOf(s),
-      attachmentId: s.attachmentId ?? undefined,
-      replyToId: s.replyToId ?? undefined,
-      spoiler: s.spoiler,
-      ephemeral: ephemeral ? { maxViews: s.maxViews ?? undefined, ttlSeconds: s.ttlSeconds ?? undefined } : undefined,
-    });
+    const encrypted = encryptedOf(s);
+    const out = await createMessage(
+      tx,
+      emit,
+      s.senderId,
+      s.chatId,
+      {
+        clientId: s.clientId,
+        attachmentId: s.attachmentId ?? undefined,
+        replyToId: s.replyToId ?? undefined,
+        ephemeral: ephemeral ? { maxViews: s.maxViews ?? undefined, ttlSeconds: s.ttlSeconds ?? undefined } : undefined,
+        ...(encrypted
+          ? { encrypted }
+          : { text: s.text ?? undefined, entities: entitiesOf(s), spoiler: s.spoiler }),
+      },
+      { scheduled: true },
+    );
     await announce(tx, emit, s.senderId, s.chatId);
     return out;
   });

@@ -131,7 +131,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: MessageDTO },
       },
     },
-    (req) => editMessage(req.auth.userId, req.params.id, req.body),
+    (req) => editMessage(req.auth.userId, req.params.id, req.body, req.auth.sessionId),
   );
 
   app.post(
@@ -241,14 +241,16 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["messages"],
         summary: "Send a message",
-        description: "Idempotent per `clientId`: retrying with the same clientId returns the original message.",
+        description:
+          "Idempotent per `clientId`: retrying with the same clientId returns the original message. Send `encrypted` with one envelope per device of every member (your other devices included, not this one); DEVICES_CHANGED lists what to fix. The first encrypted message turns encryption on for the chat, after which plain text is refused with ENCRYPTION_REQUIRED.",
         security,
         params: ChatParams,
         body: SendMessageInput,
         response: { 201: MessageDTO },
       },
     },
-    async (req, reply) => reply.status(201).send(await sendMessage(req.auth.userId, req.params.id, req.body)),
+    async (req, reply) =>
+      reply.status(201).send(await sendMessage(req.auth.userId, req.params.id, req.body, req.auth.sessionId)),
   );
 
   app.get(
@@ -281,7 +283,8 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 201: ScheduledMessageDTO },
       },
     },
-    async (req, reply) => reply.status(201).send(await scheduleMessage(req.auth.userId, req.params.id, req.body)),
+    async (req, reply) =>
+      reply.status(201).send(await scheduleMessage(req.auth.userId, req.params.id, req.body, req.auth.sessionId)),
   );
 
   app.patch(
@@ -296,7 +299,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: ScheduledMessageDTO },
       },
     },
-    (req) => editScheduled(req.auth.userId, req.params.id, req.body),
+    (req) => editScheduled(req.auth.userId, req.params.id, req.body, req.auth.sessionId),
   );
 
   app.delete(

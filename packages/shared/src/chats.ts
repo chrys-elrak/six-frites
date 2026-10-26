@@ -4,6 +4,7 @@ import { AttachmentDTO } from "./uploads.js";
 import { PublicUser } from "./invites.js";
 import { StickerDTO } from "./stickers.js";
 import { isChatThemeId } from "./chat-themes.js";
+import { EncryptedInput, EncryptionDTO } from "./e2ee.js";
 
 export const MessageType = z.enum([
   "text",
@@ -71,6 +72,7 @@ export const ReplyPreview = z.object({
   spoiler: z.boolean(),
   ephemeral: z.boolean(),
   deleted: z.boolean(),
+  encrypted: z.boolean().describe("The quoted text is encrypted; show it from your own copy of that message"),
 });
 export type ReplyPreview = z.infer<typeof ReplyPreview>;
 
@@ -108,9 +110,10 @@ export const ServiceAction = z
   .discriminatedUnion("type", [
     z.object({ type: z.literal("auto_delete"), secs: z.number().int().nullable() }),
     z.object({ type: z.literal("theme"), theme: z.string().nullable() }),
+    z.object({ type: z.literal("e2ee") }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default)",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 
@@ -163,14 +166,22 @@ export const MessageDTO = z.object({
   reactions: z
     .array(z.object({ emoji: z.string(), userIds: z.array(Id) }))
     .describe("One entry per emoji, oldest first; a person can add several different emoji"),
+  encryption: EncryptionDTO.nullable().describe(
+    "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+  ),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 
 const MessageText = z.string().trim().min(1).max(4000);
 
 export const EditMessageInput = z
-  .object({ text: MessageText, entities: Entities.optional() })
-  .refine((v) => entitiesFit(v.text, v.entities), { message: "Entities fall outside the text", path: ["entities"] });
+  .object({ text: MessageText.optional(), entities: Entities.optional(), encrypted: EncryptedInput.optional() })
+  .refine((v) => (v.text === undefined) !== (v.encrypted === undefined), {
+    message: "Send either text or encrypted content",
+    path: ["text"],
+  })
+  .refine((v) => !v.encrypted || v.entities === undefined, { message: "Entities go inside the encrypted content", path: ["entities"] })
+  .refine((v) => entitiesFit(v.text ?? "", v.entities), { message: "Entities fall outside the text", path: ["entities"] });
 export type EditMessageInput = z.infer<typeof EditMessageInput>;
 
 export const DeleteScope = z.enum(["me", "all"]);
@@ -218,11 +229,18 @@ export const SendMessageInput = z
     replyToId: Id.optional(),
     spoiler: z.boolean().optional(),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
+    encrypted: EncryptedInput.optional(),
   })
-  .refine((v) => v.text !== undefined || v.attachmentId !== undefined || v.gifId !== undefined || v.stickerId, {
-    message: "Send text, an attachment, a GIF or a sticker",
-    path: ["text"],
-  })
+  .refine(
+    (v) => v.text !== undefined || v.attachmentId !== undefined || v.gifId !== undefined || v.stickerId || v.encrypted,
+    { message: "Send text, an attachment, a GIF, a sticker or encrypted content", path: ["text"] },
+  )
+  .refine(
+    (v) =>
+      !v.encrypted ||
+      (v.text === undefined && v.entities === undefined && v.spoiler === undefined && !v.gifId && !v.stickerId),
+    { message: "Text, entities and spoilers go inside the encrypted content; GIFs and stickers are sent on their own", path: ["encrypted"] },
+  )
   .refine((v) => [v.attachmentId, v.gifId, v.stickerId].filter((x) => x !== undefined).length <= 1, {
     message: "Send one attachment, GIF or sticker at a time",
     path: ["attachmentId"],
@@ -266,6 +284,9 @@ export const ChatDTO = z.object({
   blockedByMe: z.boolean().describe("You blocked the other person: nobody can send, react or edit until you unblock"),
   blockedByThem: z.boolean().describe("The other person blocked you"),
   peerDeleted: z.boolean().describe("The other person deleted their account"),
+  encrypted: z
+    .boolean()
+    .describe("Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"),
   lastActivityAt: IsoDate,
   createdAt: IsoDate,
 });
@@ -394,6 +415,7 @@ export const ScheduledMessageDTO = z.object({
   replyTo: ReplyPreview.nullable(),
   sendAt: IsoDate,
   createdAt: IsoDate,
+  encryption: EncryptionDTO.nullable(),
 });
 export type ScheduledMessageDTO = z.infer<typeof ScheduledMessageDTO>;
 
@@ -401,9 +423,17 @@ export const EditScheduledInput = z
   .object({
     text: MessageText.optional(),
     entities: Entities.optional().describe("Replaces the formatting; send it together with text"),
+    encrypted: EncryptedInput.optional().describe("Replaces the encrypted content of an encrypted scheduled message"),
     sendAt: IsoDate.optional(),
   })
-  .refine((v) => v.text !== undefined || v.sendAt !== undefined, "Provide text, sendAt or both")
+  .refine(
+    (v) => v.text !== undefined || v.encrypted !== undefined || v.sendAt !== undefined,
+    "Provide text or encrypted content, sendAt, or both",
+  )
+  .refine((v) => v.text === undefined || v.encrypted === undefined, {
+    message: "Send either text or encrypted content",
+    path: ["encrypted"],
+  })
   .refine((v) => v.text !== undefined || v.entities === undefined, {
     message: "Send entities together with text",
     path: ["entities"],

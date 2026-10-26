@@ -61,6 +61,8 @@ export interface paths {
                                 contactCode: string;
                                 /** @description Whether people who type your exact email can find you */
                                 findByEmail: boolean;
+                                /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                                backupKeyId: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -126,6 +128,8 @@ export interface paths {
                                 contactCode: string;
                                 /** @description Whether people who type your exact email can find you */
                                 findByEmail: boolean;
+                                /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                                backupKeyId: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -682,6 +686,8 @@ export interface paths {
                                         height: number | null;
                                         durationMs: number | null;
                                         waveform: number[] | null;
+                                        /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                        encrypted: boolean;
                                     } | null;
                                     sticker: {
                                         id: string;
@@ -827,6 +833,8 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
                                 } | null;
                                 sticker: {
                                     id: string;
@@ -1240,6 +1248,8 @@ export interface paths {
                             contactCode: string;
                             /** @description Whether people who type your exact email can find you */
                             findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1326,6 +1336,8 @@ export interface paths {
                             contactCode: string;
                             /** @description Whether people who type your exact email can find you */
                             findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1375,6 +1387,8 @@ export interface paths {
                             contactCode: string;
                             /** @description Whether people who type your exact email can find you */
                             findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1864,6 +1878,8 @@ export interface paths {
                                         height: number | null;
                                         durationMs: number | null;
                                         waveform: number[] | null;
+                                        /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                        encrypted: boolean;
                                     } | null;
                                     sticker: {
                                         id: string;
@@ -1912,8 +1928,10 @@ export interface paths {
                                         spoiler: boolean;
                                         ephemeral: boolean;
                                         deleted: boolean;
+                                        /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                        encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -1922,6 +1940,9 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "theme";
                                         theme: string | null;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "e2ee";
                                     }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -1939,6 +1960,35 @@ export interface paths {
                                         emoji: string;
                                         userIds: string[];
                                     }[];
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                    encryption: {
+                                        /** @description Only the envelopes for your own devices */
+                                        envelopes: {
+                                            deviceId: string;
+                                            envelope: {
+                                                /** @enum {number} */
+                                                v: 1;
+                                                x3dh?: {
+                                                    identity: {
+                                                        /** @description Ed25519 identity key */
+                                                        signPub: string;
+                                                        /** @description X25519 identity key, signed by signPub */
+                                                        dhPub: string;
+                                                        /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                        dhSig: string;
+                                                    };
+                                                    /** @description A 32-byte public key, base64url without padding */
+                                                    ephemeral: string;
+                                                    signedPreKeyId: number;
+                                                    oneTimePreKeyId: number | null;
+                                                };
+                                                header: string;
+                                                body: string;
+                                            };
+                                        }[];
+                                        /** @description Your backup copy, if you stored one */
+                                        backup: string | null;
+                                    } | null;
                                 } | null;
                                 unreadCount: number;
                                 archived: boolean;
@@ -1956,6 +2006,8 @@ export interface paths {
                                 blockedByThem: boolean;
                                 /** @description The other person deleted their account */
                                 peerDeleted: boolean;
+                                /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
+                                encrypted: boolean;
                                 /** Format: date-time */
                                 lastActivityAt: string;
                                 /** Format: date-time */
@@ -2057,6 +2109,8 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
                                 } | null;
                                 sticker: {
                                     id: string;
@@ -2105,8 +2159,10 @@ export interface paths {
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -2115,6 +2171,9 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "theme";
                                     theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2132,6 +2191,35 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                } | null;
                             } | null;
                             unreadCount: number;
                             archived: boolean;
@@ -2149,6 +2237,8 @@ export interface paths {
                             blockedByThem: boolean;
                             /** @description The other person deleted their account */
                             peerDeleted: boolean;
+                            /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
+                            encrypted: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -2280,6 +2370,8 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
                                 } | null;
                                 sticker: {
                                     id: string;
@@ -2328,8 +2420,10 @@ export interface paths {
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -2338,6 +2432,9 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "theme";
                                     theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2355,6 +2452,35 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                } | null;
                             } | null;
                             unreadCount: number;
                             archived: boolean;
@@ -2372,6 +2498,8 @@ export interface paths {
                             blockedByThem: boolean;
                             /** @description The other person deleted their account */
                             peerDeleted: boolean;
+                            /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
+                            encrypted: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -2409,7 +2537,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        text: string;
+                        text?: string;
                         /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
                         entities?: {
                             /** @enum {string} */
@@ -2417,6 +2545,35 @@ export interface paths {
                             offset: number;
                             length: number;
                         }[];
+                        /** @description End-to-end encrypted content. The server rejects it with DEVICES_CHANGED if a device is missing or unknown. */
+                        encrypted?: {
+                            /** @description One per device of every member, your other devices included, except the one sending */
+                            envelopes: {
+                                deviceId: string;
+                                envelope: {
+                                    /** @enum {number} */
+                                    v: 1;
+                                    x3dh?: {
+                                        identity: {
+                                            /** @description Ed25519 identity key */
+                                            signPub: string;
+                                            /** @description X25519 identity key, signed by signPub */
+                                            dhPub: string;
+                                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                            dhSig: string;
+                                        };
+                                        /** @description A 32-byte public key, base64url without padding */
+                                        ephemeral: string;
+                                        signedPreKeyId: number;
+                                        oneTimePreKeyId: number | null;
+                                    };
+                                    header: string;
+                                    body: string;
+                                };
+                            }[];
+                            /** @description The content sealed with your backup key (@six/crypto sealBackup) */
+                            backup?: string;
+                        };
                     };
                 };
             };
@@ -2465,6 +2622,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             sticker: {
                                 id: string;
@@ -2513,8 +2672,10 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -2523,6 +2684,9 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "theme";
                                 theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2540,6 +2704,35 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -2621,6 +2814,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             sticker: {
                                 id: string;
@@ -2669,8 +2864,10 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -2679,6 +2876,9 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "theme";
                                 theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2696,6 +2896,35 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -2777,6 +3006,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             sticker: {
                                 id: string;
@@ -2825,8 +3056,10 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -2835,6 +3068,9 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "theme";
                                 theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2852,6 +3088,35 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -2931,6 +3196,8 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
                                 } | null;
                                 sticker: {
                                     id: string;
@@ -2979,8 +3246,10 @@ export interface paths {
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -2989,6 +3258,9 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "theme";
                                     theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -3006,6 +3278,35 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                } | null;
                             };
                             /**
                              * Format: date-time
@@ -3091,6 +3392,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             sticker: {
                                 id: string;
@@ -3139,8 +3442,10 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -3149,6 +3454,9 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "theme";
                                 theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -3166,6 +3474,35 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -3287,6 +3624,8 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
                                 } | null;
                                 sticker: {
                                     id: string;
@@ -3335,8 +3674,10 @@ export interface paths {
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -3345,6 +3686,9 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "theme";
                                     theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -3362,6 +3706,35 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                } | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -3372,7 +3745,7 @@ export interface paths {
         put?: never;
         /**
          * Send a message
-         * @description Idempotent per `clientId`: retrying with the same clientId returns the original message.
+         * @description Idempotent per `clientId`: retrying with the same clientId returns the original message. Send `encrypted` with one envelope per device of every member (your other devices included, not this one); DEVICES_CHANGED lists what to fix. The first encrypted message turns encryption on for the chat, after which plain text is refused with ENCRYPTION_REQUIRED.
          */
         post: {
             parameters: {
@@ -3410,6 +3783,35 @@ export interface paths {
                             maxViews?: number;
                             /** @description Destroy this many seconds after the recipient first opens it */
                             ttlSeconds?: number;
+                        };
+                        /** @description End-to-end encrypted content. The server rejects it with DEVICES_CHANGED if a device is missing or unknown. */
+                        encrypted?: {
+                            /** @description One per device of every member, your other devices included, except the one sending */
+                            envelopes: {
+                                deviceId: string;
+                                envelope: {
+                                    /** @enum {number} */
+                                    v: 1;
+                                    x3dh?: {
+                                        identity: {
+                                            /** @description Ed25519 identity key */
+                                            signPub: string;
+                                            /** @description X25519 identity key, signed by signPub */
+                                            dhPub: string;
+                                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                            dhSig: string;
+                                        };
+                                        /** @description A 32-byte public key, base64url without padding */
+                                        ephemeral: string;
+                                        signedPreKeyId: number;
+                                        oneTimePreKeyId: number | null;
+                                    };
+                                    header: string;
+                                    body: string;
+                                };
+                            }[];
+                            /** @description The content sealed with your backup key (@six/crypto sealBackup) */
+                            backup?: string;
                         };
                     };
                 };
@@ -3459,6 +3861,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             sticker: {
                                 id: string;
@@ -3507,8 +3911,10 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -3517,6 +3923,9 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "theme";
                                 theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -3534,6 +3943,35 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -3612,6 +4050,8 @@ export interface paths {
                                     height: number | null;
                                     durationMs: number | null;
                                     waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
                                 } | null;
                                 ephemeral: {
                                     maxViews: number | null;
@@ -3626,11 +4066,41 @@ export interface paths {
                                     spoiler: boolean;
                                     ephemeral: boolean;
                                     deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
                                 } | null;
                                 /** Format: date-time */
                                 sendAt: string;
                                 /** Format: date-time */
                                 createdAt: string;
+                                encryption: {
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                } | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -3679,6 +4149,35 @@ export interface paths {
                             maxViews?: number;
                             /** @description Destroy this many seconds after the recipient first opens it */
                             ttlSeconds?: number;
+                        };
+                        /** @description End-to-end encrypted content. The server rejects it with DEVICES_CHANGED if a device is missing or unknown. */
+                        encrypted?: {
+                            /** @description One per device of every member, your other devices included, except the one sending */
+                            envelopes: {
+                                deviceId: string;
+                                envelope: {
+                                    /** @enum {number} */
+                                    v: 1;
+                                    x3dh?: {
+                                        identity: {
+                                            /** @description Ed25519 identity key */
+                                            signPub: string;
+                                            /** @description X25519 identity key, signed by signPub */
+                                            dhPub: string;
+                                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                            dhSig: string;
+                                        };
+                                        /** @description A 32-byte public key, base64url without padding */
+                                        ephemeral: string;
+                                        signedPreKeyId: number;
+                                        oneTimePreKeyId: number | null;
+                                    };
+                                    header: string;
+                                    body: string;
+                                };
+                            }[];
+                            /** @description The content sealed with your backup key (@six/crypto sealBackup) */
+                            backup?: string;
                         };
                         /**
                          * Format: date-time
@@ -3733,6 +4232,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             ephemeral: {
                                 maxViews: number | null;
@@ -3747,11 +4248,41 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
                             /** Format: date-time */
                             sendAt: string;
                             /** Format: date-time */
                             createdAt: string;
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -3819,6 +4350,35 @@ export interface paths {
                             offset: number;
                             length: number;
                         }[];
+                        /** @description Replaces the encrypted content of an encrypted scheduled message */
+                        encrypted?: {
+                            /** @description One per device of every member, your other devices included, except the one sending */
+                            envelopes: {
+                                deviceId: string;
+                                envelope: {
+                                    /** @enum {number} */
+                                    v: 1;
+                                    x3dh?: {
+                                        identity: {
+                                            /** @description Ed25519 identity key */
+                                            signPub: string;
+                                            /** @description X25519 identity key, signed by signPub */
+                                            dhPub: string;
+                                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                            dhSig: string;
+                                        };
+                                        /** @description A 32-byte public key, base64url without padding */
+                                        ephemeral: string;
+                                        signedPreKeyId: number;
+                                        oneTimePreKeyId: number | null;
+                                    };
+                                    header: string;
+                                    body: string;
+                                };
+                            }[];
+                            /** @description The content sealed with your backup key (@six/crypto sealBackup) */
+                            backup?: string;
+                        };
                         /** Format: date-time */
                         sendAt?: string;
                     };
@@ -3869,6 +4429,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             ephemeral: {
                                 maxViews: number | null;
@@ -3883,11 +4445,41 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
                             /** Format: date-time */
                             sendAt: string;
                             /** Format: date-time */
                             createdAt: string;
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -3960,6 +4552,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             } | null;
                             sticker: {
                                 id: string;
@@ -4008,8 +4602,10 @@ export interface paths {
                                 spoiler: boolean;
                                 ephemeral: boolean;
                                 deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -4018,6 +4614,9 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "theme";
                                 theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -4035,6 +4634,35 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
                         };
                     };
                 };
@@ -4534,6 +5162,8 @@ export interface paths {
                                         height: number | null;
                                         durationMs: number | null;
                                         waveform: number[] | null;
+                                        /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                        encrypted: boolean;
                                     } | null;
                                     sticker: {
                                         id: string;
@@ -4582,8 +5212,10 @@ export interface paths {
                                         spoiler: boolean;
                                         ephemeral: boolean;
                                         deleted: boolean;
+                                        /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                        encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -4592,6 +5224,9 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "theme";
                                         theme: string | null;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "e2ee";
                                     }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -4609,6 +5244,35 @@ export interface paths {
                                         emoji: string;
                                         userIds: string[];
                                     }[];
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                    encryption: {
+                                        /** @description Only the envelopes for your own devices */
+                                        envelopes: {
+                                            deviceId: string;
+                                            envelope: {
+                                                /** @enum {number} */
+                                                v: 1;
+                                                x3dh?: {
+                                                    identity: {
+                                                        /** @description Ed25519 identity key */
+                                                        signPub: string;
+                                                        /** @description X25519 identity key, signed by signPub */
+                                                        dhPub: string;
+                                                        /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                        dhSig: string;
+                                                    };
+                                                    /** @description A 32-byte public key, base64url without padding */
+                                                    ephemeral: string;
+                                                    signedPreKeyId: number;
+                                                    oneTimePreKeyId: number | null;
+                                                };
+                                                header: string;
+                                                body: string;
+                                            };
+                                        }[];
+                                        /** @description Your backup copy, if you stored one */
+                                        backup: string | null;
+                                    } | null;
                                 };
                                 createdAt: string;
                             } | {
@@ -4653,6 +5317,8 @@ export interface paths {
                                         height: number | null;
                                         durationMs: number | null;
                                         waveform: number[] | null;
+                                        /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                        encrypted: boolean;
                                     } | null;
                                     sticker: {
                                         id: string;
@@ -4701,8 +5367,10 @@ export interface paths {
                                         spoiler: boolean;
                                         ephemeral: boolean;
                                         deleted: boolean;
+                                        /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                        encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -4711,6 +5379,9 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "theme";
                                         theme: string | null;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "e2ee";
                                     }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -4728,6 +5399,35 @@ export interface paths {
                                         emoji: string;
                                         userIds: string[];
                                     }[];
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                    encryption: {
+                                        /** @description Only the envelopes for your own devices */
+                                        envelopes: {
+                                            deviceId: string;
+                                            envelope: {
+                                                /** @enum {number} */
+                                                v: 1;
+                                                x3dh?: {
+                                                    identity: {
+                                                        /** @description Ed25519 identity key */
+                                                        signPub: string;
+                                                        /** @description X25519 identity key, signed by signPub */
+                                                        dhPub: string;
+                                                        /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                        dhSig: string;
+                                                    };
+                                                    /** @description A 32-byte public key, base64url without padding */
+                                                    ephemeral: string;
+                                                    signedPreKeyId: number;
+                                                    oneTimePreKeyId: number | null;
+                                                };
+                                                header: string;
+                                                body: string;
+                                            };
+                                        }[];
+                                        /** @description Your backup copy, if you stored one */
+                                        backup: string | null;
+                                    } | null;
                                 };
                                 createdAt: string;
                             } | {
@@ -4817,6 +5517,8 @@ export interface paths {
                                             height: number | null;
                                             durationMs: number | null;
                                             waveform: number[] | null;
+                                            /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                            encrypted: boolean;
                                         } | null;
                                         sticker: {
                                             id: string;
@@ -4865,8 +5567,10 @@ export interface paths {
                                             spoiler: boolean;
                                             ephemeral: boolean;
                                             deleted: boolean;
+                                            /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                            encrypted: boolean;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default) */
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
                                         action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
@@ -4875,6 +5579,9 @@ export interface paths {
                                             /** @enum {string} */
                                             type: "theme";
                                             theme: string | null;
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "e2ee";
                                         }) | null;
                                         /** Format: date-time */
                                         createdAt: string;
@@ -4892,6 +5599,35 @@ export interface paths {
                                             emoji: string;
                                             userIds: string[];
                                         }[];
+                                        /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                        encryption: {
+                                            /** @description Only the envelopes for your own devices */
+                                            envelopes: {
+                                                deviceId: string;
+                                                envelope: {
+                                                    /** @enum {number} */
+                                                    v: 1;
+                                                    x3dh?: {
+                                                        identity: {
+                                                            /** @description Ed25519 identity key */
+                                                            signPub: string;
+                                                            /** @description X25519 identity key, signed by signPub */
+                                                            dhPub: string;
+                                                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                            dhSig: string;
+                                                        };
+                                                        /** @description A 32-byte public key, base64url without padding */
+                                                        ephemeral: string;
+                                                        signedPreKeyId: number;
+                                                        oneTimePreKeyId: number | null;
+                                                    };
+                                                    header: string;
+                                                    body: string;
+                                                };
+                                            }[];
+                                            /** @description Your backup copy, if you stored one */
+                                            backup: string | null;
+                                        } | null;
                                     } | null;
                                     unreadCount: number;
                                     archived: boolean;
@@ -4909,6 +5645,8 @@ export interface paths {
                                     blockedByThem: boolean;
                                     /** @description The other person deleted their account */
                                     peerDeleted: boolean;
+                                    /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
+                                    encrypted: boolean;
                                     /** Format: date-time */
                                     lastActivityAt: string;
                                     /** Format: date-time */
@@ -4949,6 +5687,14 @@ export interface paths {
                                     scope: "me" | "all";
                                 };
                                 createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "devices.changed";
+                                data: {
+                                    userId: string;
+                                };
+                                createdAt: string;
                             })[];
                             cursor: string;
                             hasMore: boolean;
@@ -4959,6 +5705,513 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * This device's key status
+         * @description DEVICE_NOT_REGISTERED until keys are published. Add one-time prekeys when fewer than 20 are left and rotate the signed prekey weekly.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            userId: string;
+                            identity: {
+                                /** @description Ed25519 identity key */
+                                signPub: string;
+                                /** @description X25519 identity key, signed by signPub */
+                                dhPub: string;
+                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                dhSig: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            signedPreKeyId: number;
+                            /**
+                             * Format: date-time
+                             * @description Rotate the signed prekey about once a week
+                             */
+                            signedPreKeyAt: string;
+                            /** @description One-time prekeys left; add more when under 20 */
+                            oneTimePreKeys: number;
+                        };
+                    };
+                };
+            };
+        };
+        /**
+         * Publish this device's public keys
+         * @description The device is the signed-in session. Send its identity key, a signed prekey and up to 200 one-time prekeys. The same identity again only refreshes prekeys; a new identity replaces the device (new id), and everyone who shares a chat with you gets `devices.changed`. Signing out removes the device.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        identity: {
+                            /** @description Ed25519 identity key */
+                            signPub: string;
+                            /** @description X25519 identity key, signed by signPub */
+                            dhPub: string;
+                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                            dhSig: string;
+                        };
+                        signedPreKey: {
+                            id: number;
+                            /** @description A 32-byte public key, base64url without padding */
+                            pub: string;
+                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                            sig: string;
+                        };
+                        oneTimePreKeys: {
+                            id: number;
+                            /** @description A 32-byte public key, base64url without padding */
+                            pub: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            userId: string;
+                            identity: {
+                                /** @description Ed25519 identity key */
+                                signPub: string;
+                                /** @description X25519 identity key, signed by signPub */
+                                dhPub: string;
+                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                dhSig: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            signedPreKeyId: number;
+                            /**
+                             * Format: date-time
+                             * @description Rotate the signed prekey about once a week
+                             */
+                            signedPreKeyAt: string;
+                            /** @description One-time prekeys left; add more when under 20 */
+                            oneTimePreKeys: number;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices/me/prekeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add one-time prekeys */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        oneTimePreKeys: {
+                            id: number;
+                            /** @description A 32-byte public key, base64url without padding */
+                            pub: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            userId: string;
+                            identity: {
+                                /** @description Ed25519 identity key */
+                                signPub: string;
+                                /** @description X25519 identity key, signed by signPub */
+                                dhPub: string;
+                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                dhSig: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            signedPreKeyId: number;
+                            /**
+                             * Format: date-time
+                             * @description Rotate the signed prekey about once a week
+                             */
+                            signedPreKeyAt: string;
+                            /** @description One-time prekeys left; add more when under 20 */
+                            oneTimePreKeys: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices/me/signed-prekey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Rotate the signed prekey
+         * @description Keep the previous one for a while: messages started with it can still arrive.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        signedPreKey: {
+                            id: number;
+                            /** @description A 32-byte public key, base64url without padding */
+                            pub: string;
+                            /** @description A 64-byte Ed25519 signature, base64url without padding */
+                            sig: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            userId: string;
+                            identity: {
+                                /** @description Ed25519 identity key */
+                                signPub: string;
+                                /** @description X25519 identity key, signed by signPub */
+                                dhPub: string;
+                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                dhSig: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            signedPreKeyId: number;
+                            /**
+                             * Format: date-time
+                             * @description Rotate the signed prekey about once a week
+                             */
+                            signedPreKeyAt: string;
+                            /** @description One-time prekeys left; add more when under 20 */
+                            oneTimePreKeys: number;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Signed-in devices of people
+         * @description Yourself and people you share a chat with. Encrypt every message for all of them.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Comma-separated user ids, at most 20: yourself or people you share a chat with */
+                    userIds: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                userId: string;
+                                identity: {
+                                    /** @description Ed25519 identity key */
+                                    signPub: string;
+                                    /** @description X25519 identity key, signed by signPub */
+                                    dhPub: string;
+                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                    dhSig: string;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices/prekeys/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get prekey bundles to start sessions
+         * @description Each one-time prekey is handed out once. Only claim for devices you have no session with.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        deviceIds: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                deviceId: string;
+                                userId: string;
+                                identity: {
+                                    /** @description Ed25519 identity key */
+                                    signPub: string;
+                                    /** @description X25519 identity key, signed by signPub */
+                                    dhPub: string;
+                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                    dhSig: string;
+                                };
+                                signedPreKey: {
+                                    id: number;
+                                    /** @description A 32-byte public key, base64url without padding */
+                                    pub: string;
+                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                    sig: string;
+                                };
+                                /** @description Handed out once; null when the device ran out */
+                                oneTimePreKey: {
+                                    id: number;
+                                    /** @description A 32-byte public key, base64url without padding */
+                                    pub: string;
+                                } | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/backup-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set which recovery key your backups use
+         * @description Send the id of the backup key derived from your recovery key. Changing it deletes the backups sealed with the previous key.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description @six/crypto backupKeyId of the key derived from your recovery key */
+                        backupKeyId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Store your backup copies of encrypted messages
+         * @description After decrypting a message, seal its content with your backup key and store it here, so a new device with your recovery key can read your history.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        items: {
+                            messageId: string;
+                            /** @description The content sealed with your backup key (@six/crypto sealBackup) */
+                            sealed: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -4996,6 +6249,8 @@ export interface paths {
                         name: string;
                         mime: string;
                         size: number;
+                        /** @description The file is encrypted end to end: send mime application/octet-stream and a neutral name. The server stores it as-is, with no thumbnail or processing */
+                        encrypted?: boolean;
                     };
                 };
             };
@@ -5030,6 +6285,8 @@ export interface paths {
                                 height: number | null;
                                 durationMs: number | null;
                                 waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
                             };
                             /**
                              * Format: uri
@@ -5104,6 +6361,8 @@ export interface paths {
                             height: number | null;
                             durationMs: number | null;
                             waveform: number[] | null;
+                            /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                            encrypted: boolean;
                         };
                     };
                 };
@@ -5163,6 +6422,8 @@ export interface paths {
                             height: number | null;
                             durationMs: number | null;
                             waveform: number[] | null;
+                            /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                            encrypted: boolean;
                         };
                     };
                 };

@@ -3,6 +3,11 @@ import { Id } from "./common.js";
 
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
+/** What @six/crypto encryptMedia adds to a file: a 16-byte prefix and a 16-byte tag per 64 KB chunk. */
+export const encryptedSize = (plainBytes: number) => 16 + plainBytes + 16 * Math.max(1, Math.ceil(plainBytes / 65536));
+
+export const ENCRYPTED_MIME = "application/octet-stream";
+
 export const UploadKind = z
   .enum(["image", "video", "video_note", "voice", "file", "gif", "sticker"])
   .describe("`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs");
@@ -37,9 +42,23 @@ export const PresignUploadInput = z
     kind: UploadKind,
     name: z.string().trim().min(1).max(200),
     mime: z.preprocess((v) => (typeof v === "string" ? v.split(";")[0] : v), MimeType),
-    size: z.number().int().min(1).max(MAX_UPLOAD_BYTES),
+    size: z.number().int().min(1).max(encryptedSize(MAX_UPLOAD_BYTES)),
+    encrypted: z
+      .boolean()
+      .optional()
+      .describe(
+        `The file is encrypted end to end: send mime ${ENCRYPTED_MIME} and a neutral name. The server stores it as-is, with no thumbnail or processing`,
+      ),
   })
-  .refine((v) => v.kind === "file" || ACCEPTED_TYPES[v.kind].includes(v.mime), {
+  .refine((v) => (v.encrypted ? v.mime === ENCRYPTED_MIME : v.size <= MAX_UPLOAD_BYTES), {
+    message: `Encrypted files use ${ENCRYPTED_MIME}; plain files can be at most 25 MB`,
+    path: ["mime"],
+  })
+  .refine((v) => !v.encrypted || (v.kind !== "gif" && v.kind !== "sticker"), {
+    message: "GIFs and stickers are not encrypted",
+    path: ["kind"],
+  })
+  .refine((v) => v.encrypted || v.kind === "file" || ACCEPTED_TYPES[v.kind].includes(v.mime), {
     message: "This file type is not supported for that kind of upload",
     path: ["mime"],
   })
@@ -62,6 +81,7 @@ export const AttachmentDTO = z.object({
   height: z.number().int().nullable(),
   durationMs: z.number().int().nullable(),
   waveform: z.array(z.number().int().min(0).max(100)).nullable(),
+  encrypted: z.boolean().describe("The file is encrypted; its key, name, type and preview are in the message content"),
 });
 export type AttachmentDTO = z.infer<typeof AttachmentDTO>;
 

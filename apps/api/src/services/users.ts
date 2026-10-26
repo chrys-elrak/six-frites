@@ -18,6 +18,7 @@ export function toUserDTO(u: User): UserDTO {
     username: u.username,
     contactCode: u.contactCode,
     findByEmail: u.findByEmail,
+    backupKeyId: u.backupKeyId,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -76,6 +77,7 @@ export async function deleteAccount(userId: string) {
     await tx.invite.deleteMany({ where: { creatorId: userId } });
     await tx.scheduledMessage.deleteMany({ where: { senderId: userId } });
     await tx.pushToken.deleteMany({ where: { session: { userId } } });
+    await tx.messageBackup.deleteMany({ where: { userId } });
     await tx.user.update({
       where: { id: userId },
       data: {
@@ -87,6 +89,7 @@ export async function deleteAccount(userId: string) {
         contactCode: generateCode(),
         findByEmail: false,
         lastSeenAt: null,
+        backupKeyId: null,
         deletedAt: new Date(),
       },
     });

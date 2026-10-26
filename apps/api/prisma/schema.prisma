@@ -22,6 +22,7 @@ model User {
   banReason   String?
   lastSeenAt  DateTime?
   deletedAt   DateTime?
+  backupKeyId String?
 
   sessions       Session[]
   invites        Invite[]
@@ -42,6 +43,8 @@ model User {
   savedPacks     SavedStickerPack[]
   reportsMade    Report[]           @relation("reporter")
   reportsAgainst Report[]           @relation("target")
+  devices        Device[]
+  messageBackups MessageBackup[]
 }
 
 model Report {
@@ -103,7 +106,64 @@ model Session {
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   pushTokens PushToken[]
+  device     Device?
 
+  @@index([userId])
+}
+
+model Device {
+  id              String   @id @default(cuid())
+  userId          String
+  sessionId       String   @unique
+  signPub         String
+  dhPub           String
+  dhSig           String
+  signedPreKeyId  Int
+  signedPreKey    String
+  signedPreKeySig String
+  signedPreKeyAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session        Session           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  oneTimePreKeys OneTimePreKey[]
+  envelopes      MessageEnvelope[]
+
+  @@index([userId])
+}
+
+model OneTimePreKey {
+  deviceId String
+  keyId    Int
+  pub      String
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, keyId])
+}
+
+model MessageEnvelope {
+  messageId String
+  deviceId  String
+  envelope  Json
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  device  Device  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, deviceId])
+  @@index([deviceId])
+}
+
+model MessageBackup {
+  messageId String
+  userId    String
+  sealed    String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
   @@index([userId])
 }
 
@@ -136,6 +196,7 @@ model Chat {
   lastMessageAt  DateTime @default(now())
   autoDeleteSecs Int?
   theme          String?
+  encryptedAt    DateTime?
 
   members   ChatMember[]
   messages  Message[]
@@ -181,6 +242,7 @@ model Message {
   stickerId    String?
   replyToId    String?
   action       Json?
+  encrypted    Boolean   @default(false)
   createdAt    DateTime  @default(now())
   editedAt     DateTime?
   deletedAt    DateTime?
@@ -196,6 +258,8 @@ model Message {
   hidden           MessageHidden[]
   views            MessageView[]
   reactions        MessageReaction[]
+  envelopes        MessageEnvelope[]
+  backups          MessageBackup[]
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
@@ -214,6 +278,7 @@ model ScheduledMessage {
   ttlSeconds   Int?
   attachmentId String?  @unique
   replyToId    String?
+  encrypted    Json?
   sendAt       DateTime
   createdAt    DateTime @default(now())
 
@@ -269,6 +334,7 @@ model Upload {
   height      Int?
   durationMs  Int?
   waveform    Json?
+  encrypted   Boolean  @default(false)
   error       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
