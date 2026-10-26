@@ -74,7 +74,7 @@ export function EncryptionSettings() {
   );
 }
 
-function Dialog({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+export function Dialog({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (

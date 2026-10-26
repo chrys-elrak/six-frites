@@ -20,6 +20,7 @@ import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
+import { PrivacyCodeSettings } from "./privacy-code";
 import { Avatar } from "./avatar";
 import { Wallpaper } from "./chat-background";
 import { CustomThemePicker } from "./custom-theme";
@@ -519,6 +520,7 @@ export function SettingsPanel() {
         <Referrals />
         <Devices />
         <EncryptionSettings />
+        <PrivacyCodeSettings />
         <BlockedPeople />
         <AccountCard />
         <Text style={[styles.credits, { color: t.faint }]}>

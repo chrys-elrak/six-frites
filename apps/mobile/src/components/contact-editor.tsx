@@ -10,11 +10,13 @@ import { captureRef } from "react-native-view-shot";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { pickAvatar } from "@/lib/media";
+import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
 import { SafetyNumber } from "./encryption-settings";
-import { IconButton, Notice, PrimaryButton } from "./ui";
+import { CodeInput, codeError } from "./privacy-code";
+import { IconButton, Notice, PrimaryButton, TextButton } from "./ui";
 
 const MAX_BYTES = 64 * 1024;
 
@@ -34,6 +36,11 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [picked, setPicked] = useState<number | null>(null);
   const [rendering, setRendering] = useState<string | null>(null);
   const shot = useRef<ComponentRef<typeof View>>(null);
+  const hasCode = useSession((s) => s.user!.hasContactPin);
+  const [unlocking, setUnlocking] = useState(false);
+  const [pin, setPin] = useState("");
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [revealError, setRevealError] = useState<string | null>(null);
 
   const c = contact.data;
   if (c && name === null) setName(c.customName ?? "");
@@ -72,15 +79,35 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     }
   }
 
+  async function reveal() {
+    setRevealError(null);
+    try {
+      const { originalName } = unwrap(
+        await six.api.POST("/v1/contacts/{userId}/reveal", { params: { path: { userId } }, body: { pin } }),
+      );
+      setRevealed(originalName);
+      setUnlocking(false);
+    } catch (err) {
+      setRevealError(codeError(err));
+    }
+  }
+
   async function save() {
     if (!c) return;
     setSaving(true);
     setError(null);
     try {
       const trimmed = (name ?? "").trim();
+      const showingRealName = !(trimmed && trimmed !== c.originalName);
+      if (showingRealName && c.customName && hasCode && !revealed) {
+        setUnlocking(true);
+        setRevealError("Enter your privacy code to show their real name again.");
+        return;
+      }
       await updateContact(qc, userId, {
-        displayName: trimmed && trimmed !== c.originalName ? trimmed : null,
+        displayName: showingRealName ? null : trimmed,
         ...(photo !== undefined && { photo }),
+        ...(revealed && { pin }),
       });
       onClose();
     } catch (err) {
@@ -171,6 +198,35 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 </View>
               </View>
 
+              {c.customName && (
+                <View style={[styles.reveal, { backgroundColor: t.field }]}>
+                  {revealed ? (
+                    <Text style={{ color: t.text, fontSize: 14 }}>
+                      <Text style={{ color: t.muted }}>Real name: </Text>
+                      <Text style={{ fontWeight: "600" }}>{revealed}</Text>
+                    </Text>
+                  ) : !hasCode ? (
+                    <Text style={{ color: t.muted, fontSize: 14, lineHeight: 20 }}>
+                      Their real name is hidden. Set a privacy code in Settings to see it.
+                    </Text>
+                  ) : unlocking ? (
+                    <View style={{ gap: 8 }}>
+                      <CodeInput
+                        label="Privacy code"
+                        value={pin}
+                        onChange={setPin}
+                        autoFocus
+                        onSubmit={() => pin.length >= 4 && void reveal()}
+                      />
+                      <PrimaryButton title="Show" disabled={pin.length < 4} onPress={() => void reveal()} />
+                    </View>
+                  ) : (
+                    <TextButton title="Show real name" color={brand} onPress={() => setUnlocking(true)} />
+                  )}
+                  {revealError && <Notice tone="error">{revealError}</Notice>}
+                </View>
+              )}
+
               {error && <Notice tone="error">{error}</Notice>}
               <PrimaryButton title={saving ? "Saving…" : "Save"} disabled={saving} onPress={() => void save()} />
               <SafetyNumber userId={userId} />
@@ -210,6 +266,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   suggestion: { width: "14.5%", aspectRatio: 1, borderRadius: 999, borderWidth: 2, borderColor: "transparent", padding: 1 },
   suggestionClip: { flex: 1, borderRadius: 999, overflow: "hidden" },
+  reveal: { borderRadius: 12, padding: 12, gap: 8 },
   input: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
   offscreen: { position: "absolute", left: -1000, top: 0, width: 192, height: 192, backgroundColor: "#fff" },
 });
