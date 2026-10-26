@@ -5,6 +5,7 @@ import { useState } from "react";
 import { signOut } from "@/lib/e2ee";
 import { BlockedPeople, DeleteAccount } from "./account-settings";
 import { AdminLink } from "./admin/admin-link";
+import { AndroidDownload } from "./android-download";
 import { ChatBackgroundPicker } from "./chat-background";
 import { Devices } from "./devices";
 import { EncryptionSettings, useHasRecoveryKey } from "./encryption-settings";
@@ -33,6 +34,7 @@ export function SettingsPanel() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4">
           <ProfileCard />
+          <AndroidDownload />
           <FindMe />
           <ChatBackgroundPicker />
           <NotificationSettings />

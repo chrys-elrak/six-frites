@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
 import { Logo } from "@/components/logo";
 import { deviceName, useSession } from "@/lib/session";
+import { AndroidDownload } from "@/components/android-download";
 import { six } from "@/lib/six";
 
 const errorText: Record<string, string> = {
@@ -72,6 +73,8 @@ function LoginForm() {
           </p>
         )}
       </div>
+
+      <AndroidDownload compact />
     </main>
   );
 }
