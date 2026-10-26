@@ -6,6 +6,8 @@ import {
   type GifDTO,
   type StickerDTO,
   type UploadKind,
+  emojifyEnd,
+  emojifyTyped,
   maskSpoilers,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
@@ -163,6 +165,13 @@ export function Composer({
     if (!editing) drafts.set(chatId, value);
   }
 
+  function typeText(value: string) {
+    const swapped = emojifyTyped(text, value);
+    if (!swapped) return change(value);
+    change(swapped.text);
+    requestAnimationFrame(() => ref.current?.setSelectionRange(swapped.caret, swapped.caret));
+  }
+
   function wrap(type: EntityType) {
     const el = ref.current;
     if (!el || el.selectionEnd <= el.selectionStart) return false;
@@ -219,7 +228,7 @@ export function Composer({
     if (window.matchMedia("(pointer: fine)").matches) ref.current?.focus();
   }, [chatId]);
 
-  const parsed = parseMarkup(text);
+  const parsed = parseMarkup(emojifyEnd(text));
   const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
   const sendPress = useLongPress(() => canSubmit && !editing && setScheduling(true));
 
@@ -319,7 +328,7 @@ export function Composer({
   function sendPicked(items: PickedFile[], caption: string, chosen: EphemeralInput | null) {
     setPicked(null);
     if (!realtime) return;
-    const { text: captionText, entities } = parseMarkup(caption);
+    const { text: captionText, entities } = parseMarkup(emojifyEnd(caption));
     realtime.setTyping(chatId, false);
     items.forEach(({ file, kind, spoiler: hidden }, i) => {
       const first = i === 0;
@@ -495,7 +504,7 @@ export function Composer({
               <textarea
                 ref={ref}
                 value={text}
-                onChange={(e) => change(e.target.value)}
+                onChange={(e) => typeText(e.target.value)}
                 onSelect={(e) => setHasSelection(e.currentTarget.selectionEnd > e.currentTarget.selectionStart)}
                 onBlur={() => setHasSelection(false)}
                 onPaste={(e) => {

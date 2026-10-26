@@ -12,6 +12,7 @@ export * from "./sync.js";
 export * from "./uploads.js";
 export * from "./stickers.js";
 export * from "./preview.js";
+export * from "./emoticons.js";
 export * from "./push.js";
 export * from "./presence.js";
 export * from "./chat-themes.js";

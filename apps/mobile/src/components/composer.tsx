@@ -1,4 +1,4 @@
-import { type EntityType, type EphemeralInput, maskSpoilers } from "@six/shared";
+import { type EntityType, type EphemeralInput, emojifyEnd, emojifyTyped, maskSpoilers } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   RecordingPresets,
@@ -140,6 +140,13 @@ export function Composer({
     if (!editing) drafts.set(chatId, value);
   }
 
+  function typeText(value: string) {
+    const swapped = emojifyTyped(text, value);
+    if (!swapped) return change(value);
+    change(swapped.text);
+    setForced({ start: swapped.caret, end: swapped.caret });
+  }
+
   function wrap(type: EntityType) {
     const { start, end } = selection.current;
     if (end <= start) return false;
@@ -159,7 +166,7 @@ export function Composer({
     if (!wrap("spoiler") && !editing) setSpoiler((v) => !v);
   }
 
-  const parsed = parseMarkup(text);
+  const parsed = parseMarkup(emojifyEnd(text));
   const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
 
   function cancel() {
@@ -248,7 +255,7 @@ export function Composer({
   function sendPicked(items: PickedFile[], caption: string, chosen: EphemeralInput | null) {
     setPicked(null);
     if (!realtime) return;
-    const { text: captionText, entities } = parseMarkup(caption);
+    const { text: captionText, entities } = parseMarkup(emojifyEnd(caption));
     realtime.setTyping(chatId, false);
     items.forEach(({ file, spoiler: hidden }, i) => {
       const first = i === 0;
@@ -406,7 +413,7 @@ export function Composer({
               <TextInput
                 ref={input}
                 value={text}
-                onChangeText={change}
+                onChangeText={typeText}
                 selection={forced}
                 onSelectionChange={(e) => {
                   selection.current = e.nativeEvent.selection;
