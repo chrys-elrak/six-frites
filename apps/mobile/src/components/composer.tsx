@@ -208,7 +208,7 @@ export function Composer({
         setSaving(true);
         setError(null);
         try {
-          await editMessage(qc, editing.id, parsed.text, parsed.entities);
+          await editMessage(qc, editing, parsed.text, parsed.entities);
         } catch {
           setError("Couldn't save your edit. Try again.");
           return;

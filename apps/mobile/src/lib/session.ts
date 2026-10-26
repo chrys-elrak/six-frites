@@ -2,6 +2,7 @@ import type { UserDTO } from "@six/shared";
 import { Platform } from "react-native";
 import { GoogleOneTapSignIn } from "react-native-nitro-google-signin";
 import { create } from "zustand";
+import { forgetE2EE } from "./e2ee";
 import { six } from "./six";
 
 type Status = "loading" | "authed" | "anon" | "unreachable";
@@ -54,6 +55,7 @@ export async function googleIdToken(): Promise<string | null> {
 }
 
 export async function logout() {
+  await forgetE2EE();
   await six.auth.logout().catch(() => null);
   await GoogleOneTapSignIn.signOut().catch(() => null);
 }

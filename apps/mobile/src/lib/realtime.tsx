@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
+import { hydrateNow, startE2EE } from "./e2ee";
 import { notifyIncoming, notifyReaction } from "./notify";
 import { usePresenceStore } from "./presence";
 import { useOutbox } from "./outbox";
@@ -44,7 +45,10 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
       else useTypingStore.getState().set(m.chatId, m.senderId, false);
       const viewing = activeChatId === m.chatId && AppState.currentState === "active";
-      if (m.senderId !== meId) notifyIncoming(m, cachedChat(qc, m.chatId), viewing);
+      if (m.senderId !== meId) {
+        const chat = cachedChat(qc, m.chatId);
+        void hydrateNow(meId, m).then((shown) => notifyIncoming(shown, chat, viewing), () => notifyIncoming(m, chat, viewing));
+      }
       const found = patchChat(qc, m.chatId, (c) => ({
         ...c,
         lastMessage: m,
@@ -67,7 +71,10 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
           ?.pages.flatMap((p) => p.items)
           .find((m) => m.id === r.messageId) ?? (chat?.lastMessage?.id === r.messageId ? chat.lastMessage : undefined);
       const viewing = activeChatId === r.chatId && AppState.currentState === "active";
-      notifyReaction(r, e.createdAt, chat, message, viewing);
+      void (message ? hydrateNow(meId, message) : Promise.resolve(undefined)).then(
+        (shown) => notifyReaction(r, e.createdAt, chat, shown, viewing),
+        () => notifyReaction(r, e.createdAt, chat, undefined, viewing),
+      );
       break;
     }
     case "message.deleted":
@@ -131,6 +138,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!meId) return;
+    startE2EE(meId);
     const rt = six.realtime({
       onEvent: (e) => me.current && applyEvent(qc, me.current, e),
       onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing),

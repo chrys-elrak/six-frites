@@ -38,12 +38,21 @@ export function useChats(archived = false) {
   });
 }
 
-function findCached(qc: QueryClient, chatId: string) {
+export function findCached(qc: QueryClient, chatId: string) {
   for (const archived of [false, true]) {
     const hit = qc.getQueryData<ChatDTO[]>(chatKeys.list(archived))?.find((c) => c.id === chatId);
     if (hit) return hit;
   }
   return undefined;
+}
+
+/** The chat from the cache, or from the server when it isn't loaded. */
+export async function chatFor(qc: QueryClient, chatId: string): Promise<ChatDTO> {
+  return (
+    findCached(qc, chatId) ??
+    qc.getQueryData<ChatDTO>(chatKeys.chat(chatId)) ??
+    unwrap(await six.api.GET("/v1/chats/{id}", { params: { path: { id: chatId } } }))
+  );
 }
 
 export function useChat(qc: QueryClient, chatId: string) {

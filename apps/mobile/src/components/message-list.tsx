@@ -12,7 +12,21 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { GestureDetector, useLongPressGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
-import { Ban, Check, CheckCheck, CheckCircle2, Circle, Clock, EyeOff, Flame, Palette, RotateCcw, Timer, X } from "lucide-react-native";
+import {
+  Ban,
+  Check,
+  CheckCheck,
+  CheckCircle2,
+  Circle,
+  Clock,
+  EyeOff,
+  Flame,
+  Lock,
+  Palette,
+  RotateCcw,
+  Timer,
+  X,
+} from "lucide-react-native";
 import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -26,6 +40,7 @@ import {
 } from "react-native";
 import { applyEdited, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
 import { isFrozen, useMessages } from "@/lib/chats";
+import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
 import { emojiOnly } from "@/lib/emoji";
 import { canResend, shortRule } from "@/lib/ephemeral";
@@ -67,6 +82,7 @@ interface MsgRow {
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   reveal: { expiresAt: string | null } | null;
+  locked: "decrypting" | "undecryptable" | null;
   groupStart: boolean;
   groupEnd: boolean;
   delivery: Delivery | null;
@@ -79,6 +95,9 @@ interface Item {
   createdAt: string;
   row: Omit<MsgRow, "kind" | "groupStart" | "groupEnd" | "delivery">;
 }
+
+const lockOf = (m: MessageDTO & { undecryptable?: boolean; decrypting?: boolean }): MsgRow["locked"] =>
+  m.deletedAt || m.type === "service" ? null : m.undecryptable ? "undecryptable" : m.decrypting ? "decrypting" : null;
 
 function buildRows(
   messages: MessageDTO[],
@@ -109,6 +128,7 @@ function buildRows(
         type: m.type,
         ephemeral: m.ephemeral,
         reveal: null,
+        locked: lockOf(m),
       },
     })),
     ...pending
@@ -134,6 +154,7 @@ function buildRows(
             : null,
           type: (p.attachment?.kind ?? "text") as MessageDTO["type"],
           reveal: null,
+          locked: null,
           ephemeral: p.ephemeral
             ? {
                 maxViews: p.ephemeral.maxViews ?? null,
@@ -428,7 +449,7 @@ function Bubble({
       : null;
   const visual = !sealed && row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
-  const hasText = !!row.text || row.deleted;
+  const hasText = !!row.text || row.deleted || !!row.locked;
   const big = 18;
   const small = 6;
   const radius = mine
@@ -571,6 +592,13 @@ function Bubble({
                   <Ban size={14} color={fg} />
                   <Text style={[styles.text, { color: fg, fontStyle: "italic" }]}>This message was deleted</Text>
                 </View>
+              ) : row.locked ? (
+                <View style={styles.deleted}>
+                  <Lock size={14} color={fg} />
+                  <Text style={[styles.text, { color: fg, fontStyle: "italic", flexShrink: 1 }]}>
+                    {row.locked === "decrypting" ? "Decrypting…" : "Couldn't decrypt this message on this phone"}
+                  </Text>
+                </View>
               ) : (
                 hasText && (
                   <Text style={[styles.text, { color: fg, flexShrink: 1 }]}>
@@ -663,7 +691,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       try {
         const res = await six.api.POST("/v1/messages/{id}/view", { params: { path: { id } } });
         const result = unwrap(res);
-        setOpened((all) => ({ ...all, [id]: { ...result, expiresAt: toLocalDeadline(result, res.response) } }));
+        const message = await revealNow(meId, result.message);
+        setOpened((all) => ({ ...all, [id]: { message, expiresAt: toLocalDeadline(result, res.response) } }));
       } catch {
         void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
       }
@@ -679,10 +708,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       return { peerDeliveredAt: earliest((m) => m.lastDeliveredAt), peerReadAt: earliest((m) => m.lastReadAt) };
     }, [chat.members, meId]);
 
-    const ordered = useMemo(
-      () => (messages.data?.pages.flatMap((p) => p.items) ?? []).slice().reverse(),
-      [messages.data],
-    );
+    const loaded = useMemo(() => messages.data?.pages.flatMap((p) => p.items) ?? [], [messages.data]);
+    const shown = useHydratedMessages(meId, loaded);
+    const ordered = useMemo(() => shown.slice().reverse(), [shown]);
     const baseRows = useMemo(
       () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt).reverse(),
       [ordered, pending, meId, peerDeliveredAt, peerReadAt],
@@ -700,6 +728,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             attachment: m.attachment ? { source: "server", data: m.attachment } : null,
             ephemeral: m.ephemeral && { ...m.ephemeral, locked: false, expired: false },
             reveal: { expiresAt: shown.expiresAt },
+            locked: null,
           };
         }),
       [baseRows, opened],
@@ -842,11 +871,15 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   <View style={[styles.serviceChip, styles.onWallpaper]}>
                     {row.message.action?.type === "theme" ? (
                       <Palette size={14} color="#fff" />
+                    ) : row.message.action?.type === "e2ee" ? (
+                      <Lock size={14} color="#fff" />
                     ) : (
                       <Timer size={14} color="#fff" />
                     )}
                     <Text style={{ color: "#fff", fontSize: 12, textAlign: "center", flexShrink: 1 }}>
-                      {nameOf(row.message.senderId)} {serviceSentence(row.message)}
+                      {row.message.action?.type === "e2ee"
+                        ? "Messages are end-to-end encrypted. No one outside this chat, not even Six Frites, can read them."
+                        : `${nameOf(row.message.senderId)} ${serviceSentence(row.message)}`}
                     </Text>
                   </View>
                 </View>

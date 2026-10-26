@@ -364,7 +364,10 @@ export class E2EE {
     if (cached && cached.editedAt === m.editedAt) return { status: "ok", content: cached.content };
     await this.ready();
 
-    const fromEnvelope = await this.serial(() => this.openEnvelope(m));
+    const fromEnvelope = await this.serial(async () => {
+      const opened = await this.getJSON<Cached>(`plain:${m.id}`);
+      return opened && opened.editedAt === m.editedAt ? opened.content : this.openEnvelope(m);
+    });
     const content =
       fromEnvelope ??
       (m.senderId === this.userId && m.encryption.senderDeviceId === this.deviceId

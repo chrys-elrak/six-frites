@@ -1,4 +1,4 @@
-import { unwrap } from "@six/sdk";
+import { type Hydrated, unwrap } from "@six/sdk";
 import {
   type ChatDTO,
   type DeleteScope,
@@ -10,7 +10,18 @@ import {
 } from "@six/shared";
 import { randomUUID } from "expo-crypto";
 import type { QueryClient } from "@tanstack/react-query";
-import { chatKeys, insertMessage, mapMessages, patchChat, removeChat, resetMessages, upsertChat } from "./chats";
+import {
+  chatFor,
+  chatKeys,
+  insertMessage,
+  mapMessages,
+  patchChat,
+  removeChat,
+  resetMessages,
+  upsertChat,
+} from "./chats";
+import { e2eeFor, shouldEncrypt } from "./e2ee";
+import { useSession } from "./session";
 import { six } from "./six";
 
 export function applyEdited(qc: QueryClient, m: MessageDTO) {
@@ -87,10 +98,27 @@ export function applyChatDeleted(qc: QueryClient, chatId: string, scope: DeleteS
   else resetMessages(qc, chatId);
 }
 
-export async function editMessage(qc: QueryClient, messageId: string, text: string, entities: MessageEntity[]) {
-  const m = unwrap(
-    await six.api.PATCH("/v1/messages/{id}", { params: { path: { id: messageId } }, body: { text, entities } }),
-  );
+/** Saves an edit. Encrypted messages get new content for every device, keeping their quote and file. */
+export async function editMessage(qc: QueryClient, message: Hydrated, text: string, entities: MessageEntity[]) {
+  const params = { path: { id: message.id } };
+  const meId = useSession.getState().user!.id;
+  const chat = await chatFor(qc, message.chatId);
+  const m =
+    message.encryption || chat.encrypted
+      ? await e2eeFor(meId)!.send(
+          message.chatId,
+          chat.members.map((x) => x.user.id),
+          message.clientId,
+          {
+            text,
+            entities: entities.length ? entities : undefined,
+            spoiler: message.spoiler || undefined,
+            replyText: message.replyTo ? message.replyTo.text : undefined,
+            file: message.file,
+          },
+          async (encrypted) => unwrap(await six.api.PATCH("/v1/messages/{id}", { params, body: { encrypted } })),
+        )
+      : unwrap(await six.api.PATCH("/v1/messages/{id}", { params, body: { text, entities } }));
   applyEdited(qc, m);
   return m;
 }
@@ -169,8 +197,29 @@ export async function scheduleMessage(
   input: Omit<ScheduleMessageInput, "clientId" | "sendAt">,
   sendAt: Date,
 ) {
-  const body = { ...input, clientId: randomUUID(), sendAt: sendAt.toISOString() };
-  unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params: { path: { id: chatId } }, body }));
+  const clientId = randomUUID();
+  const params = { path: { id: chatId } };
+  const meId = useSession.getState().user!.id;
+  const chat = await chatFor(qc, chatId);
+  if (await shouldEncrypt(meId, chat)) {
+    const { text, entities, spoiler, ...rest } = input;
+    await e2eeFor(meId)!.send(
+      chatId,
+      chat.members.map((x) => x.user.id),
+      clientId,
+      { text, entities, spoiler },
+      async (encrypted) =>
+        unwrap(
+          await six.api.POST("/v1/chats/{id}/scheduled-messages", {
+            params,
+            body: { ...rest, clientId, encrypted, sendAt: sendAt.toISOString() },
+          }),
+        ),
+    );
+  } else {
+    const body = { ...input, clientId, sendAt: sendAt.toISOString() };
+    unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params, body }));
+  }
   void qc.invalidateQueries({ queryKey: scheduledKey(chatId) });
 }
 

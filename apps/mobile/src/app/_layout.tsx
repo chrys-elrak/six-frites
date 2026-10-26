@@ -1,3 +1,4 @@
+import "@/lib/polyfills";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from "expo-router";
 import { usePreventScreenCapture } from "expo-screen-capture";

@@ -1,9 +1,19 @@
-import type { Realtime } from "@six/sdk";
-import { type EphemeralInput, type MessageDTO, type MessageEntity, type UploadKind, maskSpoilers } from "@six/shared";
+import { type Realtime, encryptFile } from "@six/sdk";
+import {
+  type EncryptedFile,
+  type EphemeralInput,
+  type MessageDTO,
+  type MessageEntity,
+  type UploadKind,
+  maskSpoilers,
+} from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
-import { insertMessage, patchChat } from "./chats";
+import { File, Paths } from "expo-file-system";
+import { chatFor, insertMessage, patchChat } from "./chats";
+import { e2eeFor, shouldEncrypt } from "./e2ee";
 import { type PendingMessage, useOutbox } from "./outbox";
+import { useSession } from "./session";
 import { six } from "./six";
 
 export interface LocalFile {
@@ -26,34 +36,79 @@ export interface Draft {
   file?: LocalFile;
 }
 
+/** Encrypts a picked file into the cache so it can be uploaded like any other file. */
+async function sealFile(localUrl: string, a: NonNullable<PendingMessage["attachment"]>) {
+  const sealed = encryptFile(await new File(localUrl).bytes());
+  const out = new File(Paths.cache, `sealed-${randomUUID()}`);
+  out.create();
+  await out.write(sealed.data);
+  const file: EncryptedFile = {
+    key: sealed.key,
+    digest: sealed.digest,
+    name: a.name,
+    mime: a.mime,
+    size: a.size,
+    width: a.width,
+    height: a.height,
+    durationMs: a.durationMs,
+  };
+  return { uri: out.uri, file };
+}
+
 export async function deliver(qc: QueryClient, realtime: Realtime, pending: PendingMessage) {
   const outbox = useOutbox.getState();
   const { chatId, clientId } = pending;
   outbox.setStatus(chatId, clientId, "sending");
   try {
+    const meId = useSession.getState().user!.id;
+    const chat = await chatFor(qc, chatId);
+    const encrypt = await shouldEncrypt(meId, chat);
+
     let attachmentId = pending.attachment?.uploadId ?? undefined;
-    if (pending.attachment && !attachmentId) {
+    let file = pending.attachment?.file;
+    if (pending.attachment && (!attachmentId || (encrypt && !file))) {
       const { kind, name, mime, localUrl } = pending.attachment;
-      const blob = await (await fetch(localUrl)).blob();
+      const sealed = encrypt ? await sealFile(localUrl, pending.attachment) : null;
+      const blob = await (await fetch(sealed?.uri ?? localUrl)).blob();
       const upload = await six.upload(blob, {
         kind,
         name,
         mime,
+        encrypted: !!sealed,
         onProgress: (progress) => outbox.patchAttachment(chatId, clientId, { progress }),
       });
+      if (sealed) new File(sealed.uri).delete();
       attachmentId = upload.id;
-      outbox.patchAttachment(chatId, clientId, { uploadId: upload.id, progress: 1 });
+      file = sealed?.file;
+      outbox.patchAttachment(chatId, clientId, { uploadId: upload.id, progress: 1, file });
     }
 
-    const m = await realtime.sendMessage(chatId, {
+    const base = {
       clientId,
-      text: pending.text || undefined,
-      entities: pending.entities.length ? pending.entities : undefined,
       attachmentId,
       replyToId: pending.replyTo?.id,
-      spoiler: pending.spoiler || undefined,
       ephemeral: pending.ephemeral ?? undefined,
-    });
+    };
+    const m = encrypt
+      ? await e2eeFor(meId)!.send(
+          chatId,
+          chat.members.map((x) => x.user.id),
+          clientId,
+          {
+            text: pending.text || undefined,
+            entities: pending.entities.length ? pending.entities : undefined,
+            spoiler: pending.spoiler || undefined,
+            replyText: pending.replyTo ? pending.replyTo.text : undefined,
+            file,
+          },
+          (encrypted) => realtime.sendMessage(chatId, { ...base, encrypted }),
+        )
+      : await realtime.sendMessage(chatId, {
+          ...base,
+          text: pending.text || undefined,
+          entities: pending.entities.length ? pending.entities : undefined,
+          spoiler: pending.spoiler || undefined,
+        });
     insertMessage(qc, m);
     patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
     outbox.remove(chatId, clientId);
@@ -78,7 +133,7 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
           spoiler: replyTo.spoiler,
           ephemeral: replyTo.ephemeral !== null,
           deleted: false,
-          encrypted: replyTo.encryption !== null,
+          encrypted: false,
         }
       : null,
     spoiler: draft.spoiler ?? false,

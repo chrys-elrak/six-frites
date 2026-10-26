@@ -1,4 +1,4 @@
-import type { EphemeralInput, MessageEntity, ReplyPreview, UploadKind } from "@six/shared";
+import type { EncryptedFile, EphemeralInput, MessageEntity, ReplyPreview, UploadKind } from "@six/shared";
 import { create } from "zustand";
 
 export interface PendingAttachment {
@@ -12,6 +12,8 @@ export interface PendingAttachment {
   durationMs: number | null;
   progress: number;
   uploadId: string | null;
+  /** Set once an encrypted copy was uploaded: what the recipient needs to decrypt it. */
+  file?: EncryptedFile;
 }
 
 export interface PendingMessage {

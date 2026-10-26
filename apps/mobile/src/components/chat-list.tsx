@@ -1,10 +1,11 @@
 import { type ChatDTO, maskSpoilers, serviceText } from "@six/shared";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, MessageCircle, Palette, Pin, Timer } from "lucide-react-native";
+import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, Lock, MessageCircle, Palette, Pin, Timer } from "lucide-react-native";
 import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { isFrozen, useChats } from "@/lib/chats";
+import { useHydratedMessage } from "@/lib/e2ee";
 import { formatDuration, listTime } from "@/lib/format";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
@@ -19,7 +20,9 @@ import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
 const statusText = { connecting: "Connecting…", syncing: "Updating…", offline: "Waiting for network…", live: null };
 
 function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: string }) {
-  const m = chat.lastMessage;
+  const m = useHydratedMessage(meId, chat.lastMessage) as
+    | (NonNullable<ChatDTO["lastMessage"]> & { undecryptable?: boolean; decrypting?: boolean })
+    | null;
   const line = (icon: React.ReactNode, text: string, italic = false) => (
     <View style={styles.previewRow}>
       {icon}
@@ -33,8 +36,18 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
   if (!m) return line(null, "No messages");
   if (m.deletedAt) return line(<Ban size={14} color={color} />, "Message deleted", true);
   if (m.type === "service") {
-    const icon = m.action?.type === "theme" ? <Palette size={14} color={color} /> : <Timer size={14} color={color} />;
+    const icon =
+      m.action?.type === "theme" ? (
+        <Palette size={14} color={color} />
+      ) : m.action?.type === "e2ee" ? (
+        <Lock size={14} color={color} />
+      ) : (
+        <Timer size={14} color={color} />
+      );
     return line(icon, serviceText(m));
+  }
+  if (m.undecryptable || m.decrypting) {
+    return line(<Lock size={14} color={color} />, m.decrypting ? "Decrypting…" : "Encrypted message", true);
   }
   if (m.ephemeral) {
     const kind =
