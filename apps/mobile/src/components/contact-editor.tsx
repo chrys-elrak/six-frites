@@ -13,6 +13,7 @@ import { pickAvatar } from "@/lib/media";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { SafetyNumber } from "./encryption-settings";
 import { IconButton, Notice, PrimaryButton } from "./ui";
 
 const MAX_BYTES = 64 * 1024;
@@ -172,6 +173,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
 
               {error && <Notice tone="error">{error}</Notice>}
               <PrimaryButton title={saving ? "Saving…" : "Save"} disabled={saving} onPress={() => void save()} />
+              <SafetyNumber userId={userId} />
             </ScrollView>
           )}
         </View>

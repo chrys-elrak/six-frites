@@ -19,6 +19,7 @@ import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
+import { EncryptionSettings } from "./encryption-settings";
 import { Avatar } from "./avatar";
 import { Wallpaper } from "./chat-background";
 import { CustomThemePicker } from "./custom-theme";
@@ -517,6 +518,7 @@ export function SettingsPanel() {
         <Invites />
         <Referrals />
         <Devices />
+        <EncryptionSettings />
         <BlockedPeople />
         <AccountCard />
         <Text style={[styles.credits, { color: t.faint }]}>

@@ -88,6 +88,9 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
     case "chat.deleted":
       applyChatDeleted(qc, e.data.chatId, e.data.scope);
       break;
+    case "devices.changed":
+      void qc.invalidateQueries({ queryKey: ["safety-number"] });
+      break;
     case "chat.delivered": {
       const d = e.data;
       patchChat(qc, d.chatId, (c) => ({

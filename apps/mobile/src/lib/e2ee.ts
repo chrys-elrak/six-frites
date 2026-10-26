@@ -9,10 +9,21 @@ import { six } from "./six";
 let current: E2EE | null = null;
 let readyFor: string | null = null;
 
+/** People whose devices changed since this phone last talked to them, until the notice is dismissed. */
+export const useKeyChanges = create<{ userIds: string[]; dismiss: (id: string) => void }>((set) => ({
+  userIds: [],
+  dismiss: (id) => set((s) => ({ userIds: s.userIds.filter((x) => x !== id) })),
+}));
+
 /** The encryption client of the signed-in account, or null while signed out. */
 export function e2eeFor(userId: string | undefined) {
   if (!userId) return null;
-  if (current?.userId !== userId) current = new E2EE(six.api, new DeviceSecretStore(userId), userId);
+  if (current?.userId !== userId) {
+    current = new E2EE(six.api, new DeviceSecretStore(userId), userId);
+    current.onIdentityChange((id) =>
+      useKeyChanges.setState((s) => (s.userIds.includes(id) ? s : { userIds: [...s.userIds, id] })),
+    );
+  }
   return current;
 }
 

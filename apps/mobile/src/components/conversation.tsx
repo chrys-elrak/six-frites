@@ -1,7 +1,7 @@
 import { type MessageDTO, chatTheme, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ChevronLeft, MoreVertical, Trash2, X } from "lucide-react-native";
+import { ChevronLeft, MoreVertical, ShieldAlert, Trash2, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -14,6 +14,7 @@ import { brand, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { BubbleColorsContext } from "@/lib/bubble-colors";
 import { useChatTheme } from "@/lib/chat-themes";
+import { useKeyChanges } from "@/lib/e2ee";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
@@ -37,6 +38,8 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const typing = useIsTyping(chatId);
+  const keyChanges = useKeyChanges((s) => s.userIds);
+  const dismissKeyChange = useKeyChanges((s) => s.dismiss);
   const peerId = chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
   const frozen = !!chat.data && isFrozen(chat.data);
   useWatchPresence(peerId && !frozen ? [peerId] : []);
@@ -158,6 +161,21 @@ export function Conversation({ chatId }: { chatId: string }) {
         </ScreenHeader>
       )}
 
+      {keyChanges.includes(peer.id) && !selecting && (
+        <Pressable
+          onPress={() => {
+            dismissKeyChange(peer.id);
+            setEditing(true);
+          }}
+          style={[styles.keyChange, { backgroundColor: t.surfaceAlt, borderColor: t.border }]}
+        >
+          <ShieldAlert size={18} color={brand} />
+          <Text style={{ flex: 1, color: t.textSoft, fontSize: 13 }}>
+            {peer.displayName}'s safety number changed, probably a new phone. Tap to compare it.
+          </Text>
+          <X size={16} color={t.muted} onPress={() => dismissKeyChange(peer.id)} />
+        </Pressable>
+      )}
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
           <ChatBackground themeId={c.theme} />
@@ -207,5 +225,13 @@ export function Conversation({ chatId }: { chatId: string }) {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
   title: { flex: 1, fontSize: 16, fontWeight: "700" },
+  keyChange: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   peer: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 12, paddingVertical: 2, paddingRight: 8 },
 });
