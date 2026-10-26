@@ -41,7 +41,7 @@ import { EmojiButton } from "./emoji-picker";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration } from "@/lib/format";
 import { useRecorder } from "@/lib/recorder";
-import { queueMessage } from "@/lib/send";
+import { queueMessage, replyQuote } from "@/lib/send";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 
 const drafts = new Map<string, string>();
@@ -232,7 +232,7 @@ export function Composer({
         setSaving(true);
         setError(null);
         try {
-          await editMessage(qc, editing.id, parsed.text, parsed.entities);
+          await editMessage(qc, editing, parsed.text, parsed.entities);
         } catch {
           setError("Couldn't save your edit. Try again.");
           return;
@@ -276,6 +276,7 @@ export function Composer({
           text: parsed.text,
           entities: parsed.entities.length ? parsed.entities : undefined,
           replyToId: mode?.kind === "reply" ? mode.message.id : undefined,
+          replyText: mode?.kind === "reply" ? replyQuote(mode.message) : undefined,
           spoiler: spoiler || undefined,
           ephemeral: ephemeral ?? undefined,
         },

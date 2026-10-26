@@ -1,4 +1,12 @@
-import type { EphemeralInput, GifDTO, MessageEntity, ReplyPreview, StickerDTO, UploadKind } from "@six/shared";
+import type {
+  EncryptedFile,
+  EphemeralInput,
+  GifDTO,
+  MessageEntity,
+  ReplyPreview,
+  StickerDTO,
+  UploadKind,
+} from "@six/shared";
 import { create } from "zustand";
 
 export interface PendingAttachment {
@@ -66,3 +74,6 @@ export const usePending = (chatId: string) => useOutbox((s) => s.byChat[chatId] 
 
 /** The raw files behind pending attachments, kept outside the store because they are not serializable. */
 export const pendingFiles = new Map<string, Blob>();
+
+/** Encrypted copies of pending files and the keys inside them, so a retry sends the same upload. */
+export const sealedFiles = new Map<string, { file: EncryptedFile; blob: Blob }>();

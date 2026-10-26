@@ -1,23 +1,12 @@
 "use client";
 
 import { type ChatDTO, maskSpoilers, serviceText } from "@six/shared";
-import {
-  Archive,
-  Ban,
-  BellOff,
-  ChevronLeft,
-  EyeOff,
-  Flame,
-  MessageCircle,
-  MoreHorizontal,
-  Pin,
-  Palette,
-  Timer,
-} from "lucide-react";
+import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, Lock, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useChats } from "@/lib/chats";
+import type { Hydrated } from "@/lib/e2ee";
 import { usePresence, useWatchPresence } from "@/lib/presence";
 import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
@@ -27,6 +16,7 @@ import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { MediaLabel } from "./message-list";
+import { ServiceIcon, callLabel } from "./service-icon";
 
 const statusText = { connecting: "Connecting…", syncing: "Updating…", offline: "Waiting for network…", live: null };
 
@@ -62,12 +52,16 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   if (m.type === "service") {
     return (
       <span className="inline-flex items-center gap-1">
-        {m.action?.type === "theme" ? (
-          <Palette className="size-3.5 shrink-0" />
-        ) : (
-          <Timer className="size-3.5 shrink-0" />
-        )}{" "}
-        {serviceText(m)}
+        <ServiceIcon action={m.action} />{" "}
+        {m.action?.type === "call" ? callLabel(m.action, m.senderId === meId) : serviceText(m)}
+      </span>
+    );
+  }
+  if ((m as Hydrated).undecryptable && m.type === "text") {
+    return (
+      <span className="inline-flex items-center gap-1 italic">
+        {m.senderId === meId && "You: "}
+        <Lock className="size-3.5" /> Encrypted message
       </span>
     );
   }

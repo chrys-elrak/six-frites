@@ -9,7 +9,17 @@ import {
   maskSpoilers,
 } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
-import { chatKeys, insertMessage, mapMessages, patchChat, removeChat, resetMessages, upsertChat } from "./chats";
+import {
+  chatKeys,
+  findCached,
+  insertMessage,
+  mapMessages,
+  patchChat,
+  removeChat,
+  resetMessages,
+  upsertChat,
+} from "./chats";
+import { type Hydrated, e2ee, hydrate, shouldEncrypt } from "./e2ee";
 import { six } from "./six";
 
 export function applyEdited(qc: QueryClient, m: MessageDTO) {
@@ -37,14 +47,12 @@ export async function react(qc: QueryClient, m: MessageDTO, meId: string, emoji:
   applyEdited(qc, { ...m, reactions });
   try {
     const params = { path: { id: m.id } };
-    applyEdited(
-      qc,
-      unwrap(
-        on
-          ? await six.api.POST("/v1/messages/{id}/reactions", { params, body: { emoji } })
-          : await six.api.DELETE("/v1/messages/{id}/reactions/{emoji}", { params: { path: { id: m.id, emoji } } }),
-      ),
+    const updated = unwrap(
+      on
+        ? await six.api.POST("/v1/messages/{id}/reactions", { params, body: { emoji } })
+        : await six.api.DELETE("/v1/messages/{id}/reactions/{emoji}", { params: { path: { id: m.id, emoji } } }),
     );
+    applyEdited(qc, await hydrate(updated));
   } catch {
     void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
   }
@@ -86,12 +94,38 @@ export function applyChatDeleted(qc: QueryClient, chatId: string, scope: DeleteS
   else resetMessages(qc, chatId);
 }
 
-export async function editMessage(qc: QueryClient, messageId: string, text: string, entities: MessageEntity[]) {
-  const m = unwrap(
-    await six.api.PATCH("/v1/messages/{id}", { params: { path: { id: messageId } }, body: { text, entities } }),
-  );
-  applyEdited(qc, m);
-  return m;
+function chatOf(qc: QueryClient, chatId: string) {
+  const chat = findCached(qc, chatId) ?? qc.getQueryData<ChatDTO>(chatKeys.chat(chatId));
+  const client = e2ee();
+  if (!chat || !client) throw new Error("Encryption is not ready");
+  return { client, memberIds: chat.members.map((m) => m.user.id) };
+}
+
+/** Saves an edit. Encrypted messages are sealed again with the same clientId, keeping their quote and file. */
+export async function editMessage(qc: QueryClient, original: Hydrated, text: string, entities: MessageEntity[]) {
+  const path = { id: original.id };
+  let m: MessageDTO;
+  if (original.encryption) {
+    const { client, memberIds } = chatOf(qc, original.chatId);
+    m = await client.send(
+      original.chatId,
+      memberIds,
+      original.clientId,
+      {
+        text,
+        entities: entities.length ? entities : undefined,
+        spoiler: original.spoiler || undefined,
+        replyText: original.replyTo ? original.replyTo.text : undefined,
+        file: original.file,
+      },
+      async (encrypted) => unwrap(await six.api.PATCH("/v1/messages/{id}", { params: { path }, body: { encrypted } })),
+    );
+  } else {
+    m = unwrap(await six.api.PATCH("/v1/messages/{id}", { params: { path }, body: { text, entities } }));
+  }
+  const hydrated = await hydrate(m);
+  applyEdited(qc, hydrated);
+  return hydrated;
 }
 
 export async function deleteMessages(qc: QueryClient, chatId: string, messages: MessageDTO[], scope: DeleteScope) {
@@ -150,11 +184,32 @@ export const scheduledKey = (chatId: string) => ["scheduled", chatId] as const;
 export async function scheduleMessage(
   qc: QueryClient,
   chatId: string,
-  input: Omit<ScheduleMessageInput, "clientId" | "sendAt">,
+  { replyText, ...input }: Omit<ScheduleMessageInput, "clientId" | "sendAt"> & { replyText?: string | null },
   sendAt: Date,
 ) {
-  const body = { ...input, clientId: crypto.randomUUID(), sendAt: sendAt.toISOString() };
-  unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params: { path: { id: chatId } }, body }));
+  const clientId = crypto.randomUUID();
+  const params = { path: { id: chatId } };
+  const chat = findCached(qc, chatId) ?? qc.getQueryData<ChatDTO>(chatKeys.chat(chatId));
+  if (await shouldEncrypt(chat)) {
+    const { client, memberIds } = chatOf(qc, chatId);
+    const { text, entities, spoiler, ...rest } = input;
+    await client.send(
+      chatId,
+      memberIds,
+      clientId,
+      { text, entities, spoiler, replyText: input.replyToId ? (replyText?.slice(0, 200) ?? null) : undefined },
+      async (encrypted) =>
+        unwrap(
+          await six.api.POST("/v1/chats/{id}/scheduled-messages", {
+            params,
+            body: { ...rest, clientId, sendAt: sendAt.toISOString(), encrypted },
+          }),
+        ),
+    );
+  } else {
+    const body = { ...input, clientId, sendAt: sendAt.toISOString() };
+    unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params, body }));
+  }
   void qc.invalidateQueries({ queryKey: scheduledKey(chatId) });
 }
 
@@ -171,7 +226,7 @@ export async function cancelScheduled(qc: QueryClient, s: ScheduledMessageDTO) {
 
 export async function sendScheduledNow(qc: QueryClient, s: ScheduledMessageDTO) {
   const m = unwrap(await six.api.POST("/v1/scheduled-messages/{id}/send", { params: { path: { id: s.id } } }));
-  insertMessage(qc, m);
+  insertMessage(qc, await hydrate(m));
   void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
 }
 

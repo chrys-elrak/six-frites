@@ -4,6 +4,7 @@ import { SixApiError, unwrap } from "@six/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { signOut } from "@/lib/e2ee";
 import { timeAgo } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
@@ -78,7 +79,7 @@ function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
   const remove = useMutation({
     mutationFn: async () => {
       unwrap(await six.api.DELETE("/v1/me", { body: { confirm: "DELETE" } }));
-      await six.auth.logout().catch(() => null);
+      await signOut();
     },
   });
 

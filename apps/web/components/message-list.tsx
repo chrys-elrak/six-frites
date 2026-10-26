@@ -25,14 +25,13 @@ import {
   Film,
   Flame,
   Image as ImageIcon,
+  Lock,
   Mic,
   MoreHorizontal,
   SmilePlus,
   Paperclip,
   RotateCcw,
   Sticker as StickerIcon,
-  Palette,
-  Timer,
   Video,
   X,
 } from "lucide-react";
@@ -48,6 +47,7 @@ import {
 } from "react";
 import { VList, type VListHandle } from "virtua";
 import { applyEdited, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
+import { type Hydrated, hydrate } from "@/lib/e2ee";
 import { shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
 import { useMessages } from "@/lib/chats";
@@ -68,6 +68,7 @@ import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
 import { ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
 import { Sheet, type SheetAction } from "./sheet";
+import { ServiceIcon, callLabel } from "./service-icon";
 import { StickerView } from "./sticker";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
@@ -76,7 +77,7 @@ interface MsgRow {
   kind: "msg";
   key: string;
   id: string | null;
-  message: MessageDTO | null;
+  message: Hydrated | null;
   pending: PendingMessage | null;
   text: string | null;
   entities: MessageEntity[];
@@ -91,6 +92,7 @@ interface MsgRow {
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   reveal: { expiresAt: string | null } | null;
+  locked: boolean;
   groupStart: boolean;
   groupEnd: boolean;
   delivery: Delivery | null;
@@ -105,7 +107,7 @@ interface Item {
 }
 
 function buildRows(
-  messages: MessageDTO[],
+  messages: Hydrated[],
   pending: PendingMessage[],
   meId: string,
   peerDeliveredAt: number,
@@ -129,11 +131,12 @@ function buildRows(
         mine: m.senderId === meId,
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
-        attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
+        attachment: m.attachment ? { source: "server" as const, data: m.attachment, file: m.file } : null,
         sticker: m.sticker,
         type: m.type,
         ephemeral: m.ephemeral,
         reveal: null,
+        locked: !!m.undecryptable,
       },
     })),
     ...pending
@@ -160,6 +163,7 @@ function buildRows(
           sticker: p.sticker,
           type: (p.sticker ? "sticker" : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           reveal: null,
+          locked: false,
           ephemeral: p.ephemeral
             ? {
                 maxViews: p.ephemeral.maxViews ?? null,
@@ -491,7 +495,7 @@ function Bubble({
   const visual = !sealed && row.attachment && ["image", "video", "gif"].includes(row.attachment.data.kind);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const sticker = !sealed && !row.deleted ? row.sticker : null;
-  const hasText = !!row.text || row.deleted;
+  const hasText = !!row.text || row.deleted || row.locked;
   const radius = mine
     ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
     : `rounded-tr-2xl rounded-br-2xl ${groupStart ? "rounded-tl-2xl" : "rounded-tl-md"} ${groupEnd ? "rounded-bl-2xl" : "rounded-bl-md"}`;
@@ -608,6 +612,13 @@ function Bubble({
                     <span className="inline-flex items-center gap-1.5">
                       <Ban className="size-4" /> This message was deleted
                     </span>
+                  ) : row.locked ? (
+                    <span
+                      className="inline-flex items-center gap-1.5 italic opacity-80"
+                      title="This device can't read it yet. Ask the sender to open the app, or add your recovery key in Settings."
+                    >
+                      <Lock className="size-4" /> Waiting for this message
+                    </span>
                   ) : (
                     <MessageText row={row} selectable={selectable} />
                   )}
@@ -681,7 +692,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [reactFor, setReactFor] = useState<MessageDTO | null>(null);
     const [reactAt, setReactAt] = useState<{ row: MsgRow; anchor: DOMRect } | null>(null);
     const closeReactBar = useCallback(() => setReactAt(null), []);
-    const [opened, setOpened] = useState<Record<string, ViewMessageResult>>({});
+    const [opened, setOpened] = useState<Record<string, ViewMessageResult & { message: Hydrated }>>({});
     const openedRef = useRef(opened);
     openedRef.current = opened;
     const hideReveal = useCallback(
@@ -702,7 +713,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 
     async function resendEphemeral(m: MessageDTO) {
       try {
-        applyEdited(qc, unwrap(await six.api.POST("/v1/messages/{id}/resend", { params: { path: { id: m.id } } })));
+        applyEdited(
+          qc,
+          await hydrate(unwrap(await six.api.POST("/v1/messages/{id}/resend", { params: { path: { id: m.id } } }))),
+        );
       } catch {
         void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
       }
@@ -713,7 +727,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       if (!id) return;
       try {
         const result = unwrap(await six.api.POST("/v1/messages/{id}/view", { params: { path: { id } } }));
-        setOpened((all) => ({ ...all, [id]: result }));
+        setOpened((all) => ({ ...all, [id]: { ...result, message: result.message } }));
+        const message = await hydrate(result.message);
+        setOpened((all) => (all[id] ? { ...all, [id]: { ...result, message } } : all));
       } catch {
         void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
       }
@@ -747,9 +763,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             ...row,
             text: m.text,
             entities: m.entities,
-            attachment: m.attachment ? { source: "server", data: m.attachment } : null,
+            attachment: m.attachment ? { source: "server", data: m.attachment, file: m.file } : null,
             ephemeral: m.ephemeral && { ...m.ephemeral, locked: false, expired: false },
             reveal: { expiresAt: shown.expiresAt },
+            locked: !!m.undecryptable,
           };
         }),
       [baseRows, opened],
@@ -842,7 +859,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           ? []
           : [
               ...(m.text ? [{ label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") }] : []),
-              ...(row.mine && m.type !== "sticker" && !frozen
+              ...(row.mine && m.type !== "sticker" && !frozen && !m.undecryptable
                 ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
                 : []),
             ]),
@@ -882,12 +899,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             ) : row.kind === "service" ? (
               <div key={row.key} className="flex justify-center px-6 py-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-center text-xs text-white backdrop-blur-sm">
-                  {row.message.action?.type === "theme" ? (
-                    <Palette className="size-3.5 shrink-0" />
-                  ) : (
-                    <Timer className="size-3.5 shrink-0" />
-                  )}
-                  {nameOf(row.message.senderId)} {serviceSentence(row.message)}
+                  <ServiceIcon action={row.message.action} />
+                  {row.message.action?.type === "call"
+                    ? callLabel(row.message.action, row.message.senderId === meId)
+                    : `${nameOf(row.message.senderId)} ${serviceSentence(row.message)}`}
                 </span>
               </div>
             ) : (

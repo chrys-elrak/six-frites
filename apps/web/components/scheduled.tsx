@@ -5,6 +5,7 @@ import { SCHEDULE_LIMITS, type ScheduledMessageDTO, maskSpoilers } from "@six/sh
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EyeOff, Flame, X } from "lucide-react";
 import { useState } from "react";
+import { hydrateScheduled } from "@/lib/e2ee";
 import { cancelScheduled, rescheduleMessage, scheduledKey, sendScheduledNow } from "@/lib/actions";
 import { shortRule } from "@/lib/ephemeral";
 import { sendAtLabel, toLocalInput } from "@/lib/format";
@@ -109,7 +110,11 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
   const list = useQuery({
     queryKey: scheduledKey(chatId),
     queryFn: async () =>
-      unwrap(await six.api.GET("/v1/chats/{id}/scheduled-messages", { params: { path: { id: chatId } } })).items,
+      Promise.all(
+        unwrap(await six.api.GET("/v1/chats/{id}/scheduled-messages", { params: { path: { id: chatId } } })).items.map(
+          hydrateScheduled,
+        ),
+      ),
   });
 
   const run = (action: () => Promise<unknown>) =>

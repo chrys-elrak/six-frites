@@ -1,5 +1,7 @@
-import type { Realtime } from "@six/sdk";
+import { type Realtime, encryptFile } from "@six/sdk";
 import {
+  type ChatDTO,
+  type EncryptedFile,
   type EphemeralInput,
   type GifDTO,
   type MessageDTO,
@@ -9,8 +11,10 @@ import {
   maskSpoilers,
 } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
-import { insertMessage, patchChat } from "./chats";
-import { type PendingMessage, pendingFiles, useOutbox } from "./outbox";
+import { chatKeys, findCached, insertMessage, patchChat } from "./chats";
+import { e2ee, hydrate, shouldEncrypt } from "./e2ee";
+import { mediaMeta } from "./media-meta";
+import { type PendingMessage, pendingFiles, sealedFiles, useOutbox } from "./outbox";
 import { six } from "./six";
 
 export interface Draft {
@@ -24,6 +28,10 @@ export interface Draft {
   sticker?: StickerDTO;
 }
 
+/** What a reply shows of the message it quotes: no spoilers, nothing from self-destructing messages. */
+export const replyQuote = (m: MessageDTO) =>
+  m.text === null || m.ephemeral ? null : maskSpoilers(m.text, m.entities);
+
 async function imageSize(blob: Blob) {
   try {
     const bitmap = await createImageBitmap(blob);
@@ -35,43 +43,87 @@ async function imageSize(blob: Blob) {
   }
 }
 
+/** Encrypts a pending file once, so retries and re-seals reuse the same upload and key. */
+async function sealFile(pending: PendingMessage, blob: Blob) {
+  const saved = sealedFiles.get(pending.clientId);
+  if (saved) return saved;
+  const { kind, name, mime, width, height } = pending.attachment!;
+  const [bytes, meta] = await Promise.all([blob.arrayBuffer(), mediaMeta(blob, kind)]);
+  const { data, key, digest } = encryptFile(new Uint8Array(bytes));
+  const file: EncryptedFile = { key, digest, name, mime, size: blob.size, width, height, ...meta };
+  const sealed = { file, blob: new Blob([data as Uint8Array<ArrayBuffer>]) };
+  sealedFiles.set(pending.clientId, sealed);
+  return sealed;
+}
+
 export async function deliver(qc: QueryClient, realtime: Realtime, pending: PendingMessage) {
   const outbox = useOutbox.getState();
   const { chatId, clientId } = pending;
   outbox.setStatus(chatId, clientId, "sending");
   try {
+    const chat = findCached(qc, chatId) ?? qc.getQueryData<ChatDTO>(chatKeys.chat(chatId));
+    const encrypt = !pending.gif && !pending.sticker && (await shouldEncrypt(chat));
+    const client = e2ee();
+    if (encrypt && (!client || !chat)) throw new Error("Encryption is not ready");
+
+    let file: EncryptedFile | undefined;
     let attachmentId = pending.attachment?.uploadId ?? undefined;
-    if (pending.attachment && !attachmentId && !pending.gif) {
+    if (pending.attachment && !pending.gif) {
       const blob = pendingFiles.get(clientId);
-      if (!blob) throw new Error("The file is no longer available");
-      const { kind, name, mime } = pending.attachment;
-      const upload = await six.upload(blob, {
-        kind,
-        name,
-        mime,
-        onProgress: (progress) => outbox.patchAttachment(chatId, clientId, { progress }),
-      });
-      attachmentId = upload.id;
-      outbox.patchAttachment(chatId, clientId, { uploadId: upload.id, progress: 1 });
+      const sealed = encrypt && blob ? await sealFile(pending, blob) : null;
+      file = sealed?.file;
+      if (!attachmentId) {
+        if (!blob) throw new Error("The file is no longer available");
+        const { kind, name, mime } = pending.attachment;
+        const upload = await six.upload(sealed?.blob ?? blob, {
+          kind,
+          name,
+          mime,
+          encrypted: !!sealed,
+          onProgress: (progress) => outbox.patchAttachment(chatId, clientId, { progress }),
+        });
+        attachmentId = upload.id;
+        outbox.patchAttachment(chatId, clientId, { uploadId: upload.id, progress: 1 });
+      }
     }
 
-    const m = await realtime.sendMessage(chatId, {
+    const base = {
       clientId,
-      text: pending.text || undefined,
-      entities: pending.entities.length ? pending.entities : undefined,
       attachmentId,
-      gifId: pending.gif?.id,
-      stickerId: pending.sticker?.id,
       replyToId: pending.replyTo?.id,
-      spoiler: pending.spoiler || undefined,
       ephemeral: pending.ephemeral ?? undefined,
-    });
+    };
+    const sent = encrypt
+      ? await client!.send(
+          chatId,
+          chat!.members.map((m) => m.user.id),
+          clientId,
+          {
+            text: pending.text || undefined,
+            entities: pending.entities.length ? pending.entities : undefined,
+            spoiler: pending.spoiler || undefined,
+            replyText: pending.replyTo ? (pending.replyTo.text?.slice(0, 200) ?? null) : undefined,
+            file,
+          },
+          (encrypted) => realtime.sendMessage(chatId, { ...base, encrypted }),
+        )
+      : await realtime.sendMessage(chatId, {
+          ...base,
+          text: pending.text || undefined,
+          entities: pending.entities.length ? pending.entities : undefined,
+          gifId: pending.gif?.id,
+          stickerId: pending.sticker?.id,
+          spoiler: pending.spoiler || undefined,
+        });
+    const m = await hydrate(sent);
     insertMessage(qc, m);
     patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
     outbox.remove(chatId, clientId);
     pendingFiles.delete(clientId);
+    sealedFiles.delete(clientId);
     if (pending.attachment) setTimeout(() => URL.revokeObjectURL(pending.attachment!.localUrl), 60_000);
-  } catch {
+  } catch (err) {
+    console.error("could not send:", err);
     outbox.setStatus(chatId, clientId, "failed");
   }
 }
@@ -91,7 +143,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           id: replyTo.id,
           senderId: replyTo.senderId,
           type: replyTo.type,
-          text: replyTo.text === null || replyTo.ephemeral ? null : maskSpoilers(replyTo.text, replyTo.entities),
+          text: replyQuote(replyTo),
           spoiler: replyTo.spoiler,
           ephemeral: replyTo.ephemeral !== null,
           deleted: false,

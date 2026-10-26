@@ -6,7 +6,9 @@ import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
+import { receiveSignal, setCallRealtime } from "./call";
 import { chatKeys, findMessage, insertMessage, patchChat, upsertChat } from "./chats";
+import { hydrate, hydrateChat } from "./e2ee";
 import { useOutbox } from "./outbox";
 import { notifyIncoming, notifyReaction } from "./notify";
 import { usePresenceStore } from "./presence";
@@ -36,6 +38,18 @@ function cachedChat(qc: QueryClient, chatId: string) {
     qc.getQueryData<ChatDTO[]>(chatKeys.list(true))?.find((c) => c.id === chatId) ??
     qc.getQueryData<ChatDTO>(chatKeys.chat(chatId))
   );
+}
+
+async function hydrateEvent(e: ChangeEventDTO): Promise<ChangeEventDTO> {
+  switch (e.type) {
+    case "message.new":
+    case "message.edited":
+      return { ...e, data: await hydrate(e.data) };
+    case "chat.updated":
+      return { ...e, data: await hydrateChat(e.data) };
+    default:
+      return e;
+  }
 }
 
 function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (chatId: string) => void) {
@@ -76,6 +90,9 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (cha
       break;
     case "chat.deleted":
       applyChatDeleted(qc, e.data.chatId, e.data.scope);
+      break;
+    case "devices.changed":
+      void qc.invalidateQueries({ queryKey: ["safety-number", e.data.userId] });
       break;
     case "chat.delivered": {
       const d = e.data;
@@ -128,15 +145,23 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!meId) return;
+    let queue: Promise<unknown> = Promise.resolve();
     const rt = six.realtime({
-      onEvent: (e) => me.current && applyEvent(qc, me.current, e, (chatId) => router.push(`/chats/${chatId}`)),
+      onEvent: (e) => {
+        queue = queue
+          .then(() => hydrateEvent(e))
+          .then((h) => me.current && applyEvent(qc, me.current, h, (chatId) => router.push(`/chats/${chatId}`)))
+          .catch((err) => console.error("could not apply event:", err));
+      },
       onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing),
       onStatus: setStatus,
       onResyncRequired: () => void qc.invalidateQueries(),
     });
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
+    rt.socket.on("call:signal", (dto) => me.current && receiveSignal(dto, me.current, (id) => cachedChat(qc, id)));
     rt.start();
     setRealtime(rt);
+    setCallRealtime(rt);
     const presence = () => rt.setPresence(document.visibilityState === "visible");
     presence();
     document.addEventListener("visibilitychange", presence);
@@ -144,6 +169,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", presence);
       rt.stop();
       setRealtime(null);
+      setCallRealtime(null);
     };
   }, [meId, qc, router]);
 

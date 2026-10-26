@@ -1,10 +1,11 @@
 import { unwrap } from "@six/sdk";
 import type { ChatDTO, MessageDTO } from "@six/shared";
 import { type InfiniteData, type QueryClient, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { type Hydrated, hydrateAll, hydrateChat } from "./e2ee";
 import { six } from "./six";
 
 export interface MessagePage {
-  items: MessageDTO[];
+  items: Hydrated[];
   nextCursor: string | null;
 }
 
@@ -26,16 +27,16 @@ export function sortChats(chats: ChatDTO[]) {
 export function useChats(archived = false) {
   return useQuery({
     queryKey: chatKeys.list(archived),
-    queryFn: async () =>
-      sortChats(
-        unwrap(
-          await six.api.GET("/v1/chats", { params: { query: { archived: archived ? "true" : "false", limit: 100 } } }),
-        ).items,
-      ),
+    queryFn: async () => {
+      const { items } = unwrap(
+        await six.api.GET("/v1/chats", { params: { query: { archived: archived ? "true" : "false", limit: 100 } } }),
+      );
+      return sortChats(await Promise.all(items.map(hydrateChat)));
+    },
   });
 }
 
-function findCached(qc: QueryClient, chatId: string) {
+export function findCached(qc: QueryClient, chatId: string) {
   for (const archived of [false, true]) {
     const hit = qc.getQueryData<ChatDTO[]>(chatKeys.list(archived))?.find((c) => c.id === chatId);
     if (hit) return hit;
@@ -46,7 +47,7 @@ function findCached(qc: QueryClient, chatId: string) {
 export function useChat(qc: QueryClient, chatId: string) {
   return useQuery({
     queryKey: chatKeys.chat(chatId),
-    queryFn: async () => unwrap(await six.api.GET("/v1/chats/{id}", { params: { path: { id: chatId } } })),
+    queryFn: async () => hydrateChat(unwrap(await six.api.GET("/v1/chats/{id}", { params: { path: { id: chatId } } }))),
     initialData: () => findCached(qc, chatId),
     retry: false,
   });
@@ -56,12 +57,14 @@ export function useMessages(chatId: string) {
   return useInfiniteQuery({
     queryKey: chatKeys.messages(chatId),
     initialPageParam: undefined as string | undefined,
-    queryFn: async ({ pageParam }) =>
-      unwrap(
+    queryFn: async ({ pageParam }) => {
+      const page = unwrap(
         await six.api.GET("/v1/chats/{id}/messages", {
           params: { path: { id: chatId }, query: { limit: 50, cursor: pageParam } },
         }),
-      ),
+      );
+      return { ...page, items: await hydrateAll(page.items) };
+    },
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: Infinity,
   });

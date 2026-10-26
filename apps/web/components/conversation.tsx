@@ -2,11 +2,13 @@
 
 import { type MessageDTO, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, MoreVertical, Trash2, X } from "lucide-react";
+import { ChevronLeft, Lock, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { deleteMessages } from "@/lib/actions";
+import { startCall, useCall } from "@/lib/call";
+import { useIdentityChanges } from "@/lib/e2ee";
 import { useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
@@ -78,6 +80,9 @@ export function Conversation({ chatId }: { chatId: string }) {
   }, [members, meId]);
   const peerId = members?.find((m) => m.user.id !== meId)?.user.id;
   const presence = usePresence(peerId);
+  const inCall = useCall((s) => s.call !== null);
+  const keysChanged = useIdentityChanges((s) => !!peerId && !!s.changed[peerId]);
+  const dismissKeys = useIdentityChanges((s) => s.dismiss);
   useWatchPresence(peerId ? [peerId] : []);
 
   if (chat.isPending) return <div className="grid h-full place-items-center text-sm text-stone-500">Loading…</div>;
@@ -138,7 +143,10 @@ export function Conversation({ chatId }: { chatId: string }) {
           >
             <Avatar user={peer} online={shownPresence?.online} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-semibold">{c.title}</span>
+              <span className="flex items-center gap-1 font-semibold">
+                <span className="truncate">{c.title}</span>
+                {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label="End-to-end encrypted" />}
+              </span>
               {typing ? (
                 <span className="block text-xs font-medium text-brand">typing…</span>
               ) : (
@@ -159,6 +167,26 @@ export function Conversation({ chatId }: { chatId: string }) {
               )}
             </span>
           </button>
+          {!frozen && (
+            <>
+              <button
+                onClick={() => void startCall(c, meId, false)}
+                disabled={inCall || !realtime}
+                aria-label="Voice call"
+                className={`${iconButton} disabled:opacity-40`}
+              >
+                <Phone className="size-5" />
+              </button>
+              <button
+                onClick={() => void startCall(c, meId, true)}
+                disabled={inCall || !realtime}
+                aria-label="Video call"
+                className={`${iconButton} disabled:opacity-40`}
+              >
+                <Video className="size-5" />
+              </button>
+            </>
+          )}
           <button onClick={() => setMenu(true)} aria-label="Chat options" className={iconButton}>
             <MoreVertical className="size-5" />
           </button>
@@ -172,6 +200,20 @@ export function Conversation({ chatId }: { chatId: string }) {
           <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
         </div>
       </div>
+      {!selecting && keysChanged && (
+        <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          <ShieldAlert className="size-4 shrink-0" />
+          <p className="min-w-0 flex-1">
+            {peer.displayName}'s security code changed, probably because they signed in on a new device.
+          </p>
+          <button onClick={() => setEditing(true)} className="shrink-0 font-semibold underline-offset-2 hover:underline">
+            Verify
+          </button>
+          <button onClick={() => dismissKeys(peer.id)} aria-label="Dismiss" className="shrink-0 rounded-full p-1">
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
       {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
       {!selecting && !frozen && (
         <Composer

@@ -1,16 +1,17 @@
 "use client";
 
-import type { AttachmentDTO } from "@six/shared";
+import type { AttachmentDTO, EncryptedFile } from "@six/shared";
 import { AlertCircle, Download, EyeOff, FileText, Loader2, Pause, Play, X } from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useEffect, useRef, useState } from "react";
+import { decryptedUrl } from "@/lib/e2ee";
 import { formatBytes, formatDuration } from "@/lib/format";
 import type { PendingAttachment } from "@/lib/outbox";
 import { usePlaybackRate } from "@/lib/playback";
 import { Portal } from "./portal";
 
 export type ShownAttachment =
-  | { source: "server"; data: AttachmentDTO }
+  | { source: "server"; data: AttachmentDTO; file?: EncryptedFile }
   | { source: "local"; data: PendingAttachment; failed: boolean };
 
 export interface LightboxItem {
@@ -20,7 +21,34 @@ export interface LightboxItem {
   name: string;
 }
 
-function view(a: ShownAttachment) {
+interface Decrypted {
+  url: string | null;
+  failed: boolean;
+}
+
+/** The decrypted copy of an encrypted attachment, fetched once `enabled` turns true. */
+function useDecrypted(a: ShownAttachment, enabled: boolean): Decrypted | null {
+  const sealed = a.source === "server" && a.data.encrypted ? a : null;
+  const [state, setState] = useState<Decrypted>({ url: null, failed: false });
+  const id = sealed?.data.id;
+  const url = sealed?.data.url;
+  const file = sealed?.file;
+  useEffect(() => {
+    if (!id || !file || !enabled) return;
+    let live = true;
+    decryptedUrl({ id, url: url ?? null }, file).then(
+      (u) => live && setState({ url: u, failed: false }),
+      () => live && setState({ url: null, failed: true }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [id, url, file, enabled]);
+  if (!sealed) return null;
+  return sealed.file ? state : { url: null, failed: true };
+}
+
+function view(a: ShownAttachment, decrypted: Decrypted | null) {
   if (a.source === "local") {
     const d = a.data;
     return {
@@ -38,6 +66,26 @@ function view(a: ShownAttachment) {
     };
   }
   const d = a.data;
+  if (decrypted) {
+    return {
+      kind: d.kind,
+      name: d.name,
+      size: d.size,
+      url: decrypted.url,
+      thumbUrl: (d.kind === "image" && decrypted.url) || a.file?.thumb || null,
+      width: d.width,
+      height: d.height,
+      durationMs: d.durationMs,
+      waveform: d.waveform,
+      state:
+        decrypted.failed || d.status === "failed"
+          ? ("failed" as const)
+          : d.status === "ready"
+            ? ("ready" as const)
+            : ("processing" as const),
+      progress: 1,
+    };
+  }
   return {
     kind: d.kind,
     name: d.name,
@@ -347,7 +395,23 @@ export function AttachmentView({
   onReveal?: () => void;
   autoPlay?: boolean;
 }) {
-  const a = view(attachment);
+  const kind = attachment.data.kind;
+  const [wanted, setWanted] = useState(false);
+  const decrypted = useDecrypted(attachment, wanted || kind === "image" || kind === "voice" || kind === "video_note");
+  const a = view(attachment, decrypted);
+  const fetching = wanted && !!decrypted && !decrypted.url && !decrypted.failed;
+
+  useEffect(() => {
+    if (!wanted || !decrypted?.url) return;
+    setWanted(false);
+    if (a.kind === "video") onOpen({ kind: "video", url: decrypted.url, poster: a.thumbUrl, name: a.name });
+    if (a.kind === "file") {
+      const link = document.createElement("a");
+      link.href = decrypted.url;
+      link.download = a.name;
+      link.click();
+    }
+  }, [wanted, decrypted?.url, a.kind, a.name, a.thumbUrl, onOpen]);
 
   if (a.kind === "gif") {
     const size = boxSize(a.width, a.height);
@@ -391,9 +455,12 @@ export function AttachmentView({
 
   if (a.kind === "image" || a.kind === "video") {
     const size = boxSize(a.width, a.height);
-    const ready = a.state === "ready" && a.url;
-    const open = () =>
-      ready && onOpen({ kind: a.kind as "image" | "video", url: a.url!, poster: a.thumbUrl, name: a.name });
+    const ready = a.state === "ready" && (a.url || decrypted);
+    const open = () => {
+      if (!ready) return;
+      if (!a.url) setWanted(true);
+      else onOpen({ kind: a.kind as "image" | "video", url: a.url, poster: a.thumbUrl, name: a.name });
+    };
     return (
       <button
         type="button"
@@ -423,7 +490,7 @@ export function AttachmentView({
           <>
             <span className="absolute inset-0 grid place-items-center">
               <span className="grid size-12 place-items-center rounded-full bg-black/50 text-white">
-                <Play className="ml-0.5 size-6 fill-current" />
+                {fetching ? <Loader2 className="size-6 animate-spin" /> : <Play className="ml-0.5 size-6 fill-current" />}
               </span>
             </span>
             <span className="absolute top-1.5 left-1.5 rounded-full bg-black/50 px-1.5 py-0.5 text-[11px] text-white">
@@ -479,7 +546,11 @@ export function AttachmentView({
     <a
       href={ready ? a.url! : undefined}
       download={a.name}
-      onClick={(e) => !ready && e.preventDefault()}
+      onClick={(e) => {
+        if (ready) return;
+        e.preventDefault();
+        if (decrypted && a.state === "ready") setWanted(true);
+      }}
       className="flex w-64 max-w-full items-center gap-3 py-1"
     >
       <span
@@ -487,9 +558,9 @@ export function AttachmentView({
           mine ? "bg-brand-ink/15" : "bg-brand/15 text-brand"
         }`}
       >
-        {a.state === "uploading" ? (
+        {a.state === "uploading" || fetching ? (
           <Loader2 className="size-5 animate-spin" />
-        ) : ready ? (
+        ) : ready || (decrypted && a.state === "ready") ? (
           <Download className="size-5" />
         ) : (
           <FileText className="size-5" />

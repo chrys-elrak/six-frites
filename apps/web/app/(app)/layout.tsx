@@ -15,6 +15,7 @@ import { primeAudio, useNotifyPrefs } from "@/lib/notify";
 import { relinkPush } from "@/lib/push";
 import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
+import { CallScreen } from "@/components/call-screen";
 import { useChats } from "@/lib/chats";
 
 const tabRoutes: Record<string, Tab> = {
@@ -92,6 +93,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <Toasts />
+      <CallScreen />
       <UnreadTitle />
     </RealtimeProvider>
   );

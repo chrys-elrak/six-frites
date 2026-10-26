@@ -12,6 +12,7 @@ import { Avatar } from "./avatar";
 import { PrimaryButton } from "./ui";
 import { Portal } from "./portal";
 import { ReportDialog } from "./report-dialog";
+import { SafetyNumber } from "./safety-number";
 
 export function ContactEditor({ userId, onClose }: { userId: string; onClose: () => void }) {
   const qc = useQueryClient();
@@ -202,6 +203,8 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                   )}
                 </span>
               </label>
+
+              <SafetyNumber userId={userId} name={c.originalName} />
 
               {error && (
                 <p
