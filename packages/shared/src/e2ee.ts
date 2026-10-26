@@ -117,6 +117,7 @@ export const EncryptedInput = z
 export type EncryptedInput = z.infer<typeof EncryptedInput>;
 
 export const EncryptionDTO = z.object({
+  senderDeviceId: Id.nullable().describe("The device that encrypted it; open the envelope with your session with it"),
   envelopes: z.array(DeviceEnvelope).describe("Only the envelopes for your own devices"),
   backup: SealedBackup.nullable().describe("Your backup copy, if you stored one"),
 });

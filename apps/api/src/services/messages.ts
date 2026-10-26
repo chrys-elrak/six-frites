@@ -76,8 +76,9 @@ export function toReplyPreview(r: Message): ReplyPreview {
 /** The viewer's own envelopes and backup copy of an encrypted message, or nothing while it is hidden. */
 function encryptionFor(m: MessageRow, viewerId: string, hidden: boolean): EncryptionDTO | null {
   if (!m.encrypted) return null;
-  if (hidden) return { envelopes: [], backup: null };
+  if (hidden) return { senderDeviceId: m.senderDevice, envelopes: [], backup: null };
   return {
+    senderDeviceId: m.senderDevice,
     envelopes: m.envelopes
       .filter((e) => e.device.userId === viewerId)
       .map((e) => ({ deviceId: e.deviceId, envelope: e.envelope as EncryptionDTO["envelopes"][number]["envelope"] })),
@@ -209,8 +210,8 @@ async function liveEnvelopes(tx: Tx, chatId: string, envelopes: EncryptedInput["
 export interface CreateOptions {
   /** The session sending, whose device must be registered for encrypted content. */
   sessionId?: string;
-  /** Sending a scheduled message: envelopes were checked when it was scheduled. */
-  scheduled?: boolean;
+  /** Sending a scheduled message: envelopes were checked when it was scheduled, from this device. */
+  scheduled?: { senderDevice: string | null };
 }
 
 /**
@@ -243,13 +244,16 @@ export async function createMessage(
 
   const encrypted = content?.encrypted;
   let envelopes = encrypted?.envelopes ?? [];
+  let senderDevice: string | null = null;
   let createdAt = new Date();
   let started = false;
   if (encrypted) {
-    if (opts.scheduled) envelopes = await liveEnvelopes(tx, chatId, envelopes);
-    else {
+    if (opts.scheduled) {
+      envelopes = await liveEnvelopes(tx, chatId, envelopes);
+      senderDevice = opts.scheduled.senderDevice;
+    } else {
       if (!opts.sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
-      await checkEnvelopes(tx, chatId, opts.sessionId, envelopes);
+      senderDevice = await checkEnvelopes(tx, chatId, opts.sessionId, envelopes);
     }
     if (!chat.encryptedAt) {
       await tx.chat.update({ where: { id: chatId }, data: { encryptedAt: new Date() } });
@@ -278,6 +282,7 @@ export async function createMessage(
       replyToId: content?.replyToId ?? null,
       ...("action" in input && { action: input.action }),
       encrypted: !!encrypted,
+      senderDevice,
       ...(envelopes.length && {
         envelopes: { create: envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
       }),
@@ -361,13 +366,14 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       }
       if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
       const { envelopes, backup } = input.encrypted;
-      await checkEnvelopes(tx, message.chatId, sessionId, envelopes);
+      const senderDevice = await checkEnvelopes(tx, message.chatId, sessionId, envelopes);
       await tx.messageEnvelope.deleteMany({ where: { messageId } });
       await tx.messageBackup.deleteMany({ where: { messageId } });
       updated = await tx.message.update({
         where: { id: messageId },
         data: {
           encrypted: true,
+          senderDevice,
           text: null,
           entities: Prisma.DbNull,
           spoiler: false,

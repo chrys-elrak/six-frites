@@ -243,6 +243,7 @@ model Message {
   replyToId    String?
   action       Json?
   encrypted    Boolean   @default(false)
+  senderDevice String?
   createdAt    DateTime  @default(now())
   editedAt     DateTime?
   deletedAt    DateTime?
@@ -279,6 +280,7 @@ model ScheduledMessage {
   attachmentId String?  @unique
   replyToId    String?
   encrypted    Json?
+  senderDevice String?
   sendAt       DateTime
   createdAt    DateTime @default(now())
 

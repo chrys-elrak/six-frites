@@ -45,7 +45,11 @@ function toScheduledDTO(s: ScheduledRow): ScheduledMessageDTO {
     replyTo: s.replyTo ? toReplyPreview(s.replyTo) : null,
     sendAt: s.sendAt.toISOString(),
     createdAt: s.createdAt.toISOString(),
-    encryption: encryptedOf(s) && { envelopes: [], backup: encryptedOf(s)!.backup ?? null },
+    encryption: encryptedOf(s) && {
+      senderDeviceId: s.senderDevice,
+      envelopes: [],
+      backup: encryptedOf(s)!.backup ?? null,
+    },
   };
 }
 
@@ -115,9 +119,10 @@ export async function scheduleMessage(
     }
     const upload = input.attachmentId ? await claimForMessage(tx, userId, input.attachmentId) : null;
     checkEncryption(await tx.chat.findUniqueOrThrow({ where: { id: chatId } }), input, upload);
+    let senderDevice: string | null = null;
     if (input.encrypted) {
       if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
-      await checkEnvelopes(tx, chatId, sessionId, input.encrypted.envelopes);
+      senderDevice = await checkEnvelopes(tx, chatId, sessionId, input.encrypted.envelopes);
     }
 
     const s = await tx.scheduledMessage.create({
@@ -132,7 +137,7 @@ export async function scheduleMessage(
         ttlSeconds: input.ephemeral?.ttlSeconds ?? null,
         attachmentId: input.attachmentId ?? null,
         replyToId: input.replyToId ?? null,
-        ...(input.encrypted && { encrypted: input.encrypted }),
+        ...(input.encrypted && { encrypted: input.encrypted, senderDevice }),
         sendAt,
       },
       include: scheduledInclude,
@@ -146,10 +151,11 @@ export async function editScheduled(userId: string, id: string, input: EditSched
   const sendAt = input.sendAt ? checkSendAt(input.sendAt) : undefined;
   return withEvents(async (tx, emit) => {
     const s = await lockOwn(tx, userId, id);
+    let senderDevice = s.senderDevice;
     if (input.encrypted) {
       if (!encryptedOf(s)) throw new AppError("MESSAGE_NOT_EDITABLE", "This scheduled message is not encrypted");
       if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
-      await checkEnvelopes(tx, s.chatId, sessionId, input.encrypted.envelopes);
+      senderDevice = await checkEnvelopes(tx, s.chatId, sessionId, input.encrypted.envelopes);
     }
     if (input.text !== undefined) {
       const chat = await tx.chat.findUniqueOrThrow({ where: { id: s.chatId } });
@@ -162,7 +168,7 @@ export async function editScheduled(userId: string, id: string, input: EditSched
       data: {
         sendAt,
         ...(input.text !== undefined && { text: input.text, entities: storedEntities(input.entities) }),
-        ...(input.encrypted && { encrypted: input.encrypted }),
+        ...(input.encrypted && { encrypted: input.encrypted, senderDevice }),
       },
       include: scheduledInclude,
     });
@@ -207,7 +213,7 @@ async function deliverScheduled(id: string, ownerId?: string) {
           ? { encrypted }
           : { text: s.text ?? undefined, entities: entitiesOf(s), spoiler: s.spoiler }),
       },
-      { scheduled: true },
+      { scheduled: { senderDevice: s.senderDevice } },
     );
     await announce(tx, emit, s.senderId, s.chatId);
     return out;

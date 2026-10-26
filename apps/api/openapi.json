@@ -4247,6 +4247,12 @@
                                 "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                 "type": "object",
                                 "properties": {
+                                  "senderDeviceId": {
+                                    "nullable": true,
+                                    "description": "The device that encrypted it; open the envelope with your session with it",
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
                                   "envelopes": {
                                     "type": "array",
                                     "items": {
@@ -4355,6 +4361,7 @@
                                   }
                                 },
                                 "required": [
+                                  "senderDeviceId",
                                   "envelopes",
                                   "backup"
                                 ],
@@ -5054,6 +5061,12 @@
                           "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
+                            "senderDeviceId": {
+                              "nullable": true,
+                              "description": "The device that encrypted it; open the envelope with your session with it",
+                              "type": "string",
+                              "minLength": 1
+                            },
                             "envelopes": {
                               "type": "array",
                               "items": {
@@ -5162,6 +5175,7 @@
                             }
                           },
                           "required": [
+                            "senderDeviceId",
                             "envelopes",
                             "backup"
                           ],
@@ -5881,6 +5895,12 @@
                           "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
+                            "senderDeviceId": {
+                              "nullable": true,
+                              "description": "The device that encrypted it; open the envelope with your session with it",
+                              "type": "string",
+                              "minLength": 1
+                            },
                             "envelopes": {
                               "type": "array",
                               "items": {
@@ -5989,6 +6009,7 @@
                             }
                           },
                           "required": [
+                            "senderDeviceId",
                             "envelopes",
                             "backup"
                           ],
@@ -6813,6 +6834,12 @@
                       "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -6921,6 +6948,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -7470,6 +7498,12 @@
                       "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -7578,6 +7612,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -8117,6 +8152,12 @@
                       "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -8225,6 +8266,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -8757,6 +8799,12 @@
                           "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
+                            "senderDeviceId": {
+                              "nullable": true,
+                              "description": "The device that encrypted it; open the envelope with your session with it",
+                              "type": "string",
+                              "minLength": 1
+                            },
                             "envelopes": {
                               "type": "array",
                               "items": {
@@ -8865,6 +8913,7 @@
                             }
                           },
                           "required": [
+                            "senderDeviceId",
                             "envelopes",
                             "backup"
                           ],
@@ -9408,6 +9457,12 @@
                       "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -9516,6 +9571,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -10123,6 +10179,12 @@
                             "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
+                              "senderDeviceId": {
+                                "nullable": true,
+                                "description": "The device that encrypted it; open the envelope with your session with it",
+                                "type": "string",
+                                "minLength": 1
+                              },
                               "envelopes": {
                                 "type": "array",
                                 "items": {
@@ -10231,6 +10293,7 @@
                               }
                             },
                             "required": [
+                              "senderDeviceId",
                               "envelopes",
                               "backup"
                             ],
@@ -10982,6 +11045,12 @@
                       "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -11090,6 +11159,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -11422,6 +11492,12 @@
                             "nullable": true,
                             "type": "object",
                             "properties": {
+                              "senderDeviceId": {
+                                "nullable": true,
+                                "description": "The device that encrypted it; open the envelope with your session with it",
+                                "type": "string",
+                                "minLength": 1
+                              },
                               "envelopes": {
                                 "type": "array",
                                 "items": {
@@ -11530,6 +11606,7 @@
                               }
                             },
                             "required": [
+                              "senderDeviceId",
                               "envelopes",
                               "backup"
                             ],
@@ -12080,6 +12157,12 @@
                       "nullable": true,
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -12188,6 +12271,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -12676,6 +12760,12 @@
                       "nullable": true,
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -12784,6 +12874,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -13344,6 +13435,12 @@
                       "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "envelopes": {
                           "type": "array",
                           "items": {
@@ -13452,6 +13549,7 @@
                         }
                       },
                       "required": [
+                        "senderDeviceId",
                         "envelopes",
                         "backup"
                       ],
@@ -14737,6 +14835,12 @@
                                     "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                     "type": "object",
                                     "properties": {
+                                      "senderDeviceId": {
+                                        "nullable": true,
+                                        "description": "The device that encrypted it; open the envelope with your session with it",
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
                                       "envelopes": {
                                         "type": "array",
                                         "items": {
@@ -14845,6 +14949,7 @@
                                       }
                                     },
                                     "required": [
+                                      "senderDeviceId",
                                       "envelopes",
                                       "backup"
                                     ],
@@ -15364,6 +15469,12 @@
                                     "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                     "type": "object",
                                     "properties": {
+                                      "senderDeviceId": {
+                                        "nullable": true,
+                                        "description": "The device that encrypted it; open the envelope with your session with it",
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
                                       "envelopes": {
                                         "type": "array",
                                         "items": {
@@ -15472,6 +15583,7 @@
                                       }
                                     },
                                     "required": [
+                                      "senderDeviceId",
                                       "envelopes",
                                       "backup"
                                     ],
@@ -16175,6 +16287,12 @@
                                         "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                         "type": "object",
                                         "properties": {
+                                          "senderDeviceId": {
+                                            "nullable": true,
+                                            "description": "The device that encrypted it; open the envelope with your session with it",
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
                                           "envelopes": {
                                             "type": "array",
                                             "items": {
@@ -16283,6 +16401,7 @@
                                           }
                                         },
                                         "required": [
+                                          "senderDeviceId",
                                           "envelopes",
                                           "backup"
                                         ],

@@ -9,6 +9,7 @@ export { SixApiError, unwrap } from "./errors.js";
 export { kindFor, type UploadOptions } from "./uploads.js";
 export type { paths, components } from "./schema.js";
 export type { RefreshTokenStore } from "./tokens.js";
+export { E2EE, type ContentInput, type Opened, type SecretStore, decryptFile, encryptFile } from "./e2ee.js";
 export type { CursorStore, Realtime, RealtimeOptions, SixSocket } from "./socket.js";
 
 export interface SixClientOptions {

@@ -5,9 +5,18 @@ import { type PublicIdentity, identityBytes } from "./keys.js";
 const ITERATIONS = 5200;
 const VERSION = Uint8Array.of(0, 0);
 
-/** 30 digits identifying one person's identity key, computed the way Signal's safety numbers are. */
-function fingerprint(identity: PublicIdentity, userId: string) {
-  const key = identityBytes(identity);
+const compare = (a: Uint8Array, b: Uint8Array) => {
+  for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i]! - b[i]!;
+  return a.length - b.length;
+};
+
+/**
+ * 30 digits identifying one person's identity keys, computed the way Signal's safety numbers are.
+ * Each device has its own identity, so all of them are hashed together, in a fixed order; adding or
+ * replacing a device changes the number.
+ */
+function fingerprint(identities: PublicIdentity[], userId: string) {
+  const key = concatBytes(...identities.map(identityBytes).sort(compare));
   let hash = sha512(concatBytes(VERSION, key, utf8(userId)));
   for (let i = 1; i < ITERATIONS; i++) hash = sha512(concatBytes(hash, key));
   let digits = "";
@@ -23,9 +32,9 @@ function fingerprint(identity: PublicIdentity, userId: string) {
  * digits because the two halves are sorted. Shown as 12 groups of 5.
  */
 export function safetyNumber(
-  mine: { identity: PublicIdentity; userId: string },
-  theirs: { identity: PublicIdentity; userId: string },
+  mine: { identities: PublicIdentity[]; userId: string },
+  theirs: { identities: PublicIdentity[]; userId: string },
 ) {
-  const parts = [fingerprint(mine.identity, mine.userId), fingerprint(theirs.identity, theirs.userId)].sort();
+  const parts = [fingerprint(mine.identities, mine.userId), fingerprint(theirs.identities, theirs.userId)].sort();
   return (parts[0]! + parts[1]!).match(/.{5}/g)!.join(" ");
 }

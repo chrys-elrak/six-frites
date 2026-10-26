@@ -200,6 +200,7 @@ describe("encrypted messages", () => {
     const [message, notice] = (await get(guest.auth, `/v1/chats/${chatId}/messages`)).items;
     expect(notice).toMatchObject({ type: "service", action: { type: "e2ee" } });
     expect(message.encryption.envelopes.map((e: DeviceEnvelope) => e.deviceId)).toEqual([guest.id]);
+    expect(message.encryption.senderDeviceId).toBe(phone.id);
     expect(guest.read(message, phone.id)).toBe("hello, privately");
 
     const onLaptop = (await get(laptop.auth, `/v1/chats/${chatId}/messages`)).items[0];
@@ -247,7 +248,7 @@ describe("encrypted messages", () => {
     expect((await call(phone.auth, "DELETE", `/v1/messages?ids=${id}&scope=all`)).statusCode).toBe(204);
     expect(await prisma.messageEnvelope.count({ where: { messageId: id } })).toBe(0);
     const gone = (await get(guest.auth, `/v1/chats/${chatId}/messages`)).items[0];
-    expect(gone.encryption).toEqual({ envelopes: [], backup: null });
+    expect(gone.encryption).toEqual({ senderDeviceId: phone.id, envelopes: [], backup: null });
   });
 
   it("keeps backups per person, sealed with their recovery key", async () => {
@@ -343,6 +344,7 @@ describe("encrypted messages", () => {
     const now = await call(phone.auth, "POST", `/v1/scheduled-messages/${scheduled.json().id}/send`);
     expect(now.statusCode, now.body).toBe(200);
     const message = (await get(guest.auth, `/v1/chats/${chatId}/messages`)).items[0];
+    expect(message.encryption.senderDeviceId).toBe(phone.id);
     expect(guest.read(message, phone.id)).toBe("see you tomorrow");
     expect(await prisma.messageEnvelope.count({ where: { messageId: message.id } })).toBe(1);
   });

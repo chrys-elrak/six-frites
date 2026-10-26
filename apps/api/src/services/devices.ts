@@ -197,7 +197,12 @@ export async function dropDevice(sessionId: string) {
  * device of every chat member except the one sending. Anything else means the sender's device list
  * is stale, so it gets DEVICES_CHANGED with what to fix and retries.
  */
-export async function checkEnvelopes(tx: Tx, chatId: string, sessionId: string, envelopes: DeviceEnvelope[]) {
+export async function checkEnvelopes(
+  tx: Tx,
+  chatId: string,
+  sessionId: string,
+  envelopes: DeviceEnvelope[],
+): Promise<string> {
   const sender = await myDevice(tx, sessionId);
   const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
   const expected = new Set(
@@ -212,4 +217,5 @@ export async function checkEnvelopes(tx: Tx, chatId: string, sessionId: string, 
       extra,
     });
   }
+  return sender.id;
 }

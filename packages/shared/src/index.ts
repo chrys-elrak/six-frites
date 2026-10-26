@@ -5,6 +5,7 @@ export * from "./auth.js";
 export * from "./invites.js";
 export * from "./chats.js";
 export * from "./e2ee.js";
+export * from "./content.js";
 export * from "./contacts.js";
 export * from "./sync.js";
 export * from "./uploads.js";

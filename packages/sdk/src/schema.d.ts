@@ -1962,6 +1962,8 @@ export interface paths {
                                     }[];
                                     /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                     encryption: {
+                                        /** @description The device that encrypted it; open the envelope with your session with it */
+                                        senderDeviceId: string | null;
                                         /** @description Only the envelopes for your own devices */
                                         envelopes: {
                                             deviceId: string;
@@ -2193,6 +2195,8 @@ export interface paths {
                                 }[];
                                 /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
                                     /** @description Only the envelopes for your own devices */
                                     envelopes: {
                                         deviceId: string;
@@ -2454,6 +2458,8 @@ export interface paths {
                                 }[];
                                 /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
                                     /** @description Only the envelopes for your own devices */
                                     envelopes: {
                                         deviceId: string;
@@ -2706,6 +2712,8 @@ export interface paths {
                             }[];
                             /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -2898,6 +2906,8 @@ export interface paths {
                             }[];
                             /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -3090,6 +3100,8 @@ export interface paths {
                             }[];
                             /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -3280,6 +3292,8 @@ export interface paths {
                                 }[];
                                 /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
                                     /** @description Only the envelopes for your own devices */
                                     envelopes: {
                                         deviceId: string;
@@ -3476,6 +3490,8 @@ export interface paths {
                             }[];
                             /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -3708,6 +3724,8 @@ export interface paths {
                                 }[];
                                 /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
                                     /** @description Only the envelopes for your own devices */
                                     envelopes: {
                                         deviceId: string;
@@ -3945,6 +3963,8 @@ export interface paths {
                             }[];
                             /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -4074,6 +4094,8 @@ export interface paths {
                                 /** Format: date-time */
                                 createdAt: string;
                                 encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
                                     /** @description Only the envelopes for your own devices */
                                     envelopes: {
                                         deviceId: string;
@@ -4256,6 +4278,8 @@ export interface paths {
                             /** Format: date-time */
                             createdAt: string;
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -4453,6 +4477,8 @@ export interface paths {
                             /** Format: date-time */
                             createdAt: string;
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -4636,6 +4662,8 @@ export interface paths {
                             }[];
                             /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
                                 /** @description Only the envelopes for your own devices */
                                 envelopes: {
                                     deviceId: string;
@@ -5246,6 +5274,8 @@ export interface paths {
                                     }[];
                                     /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                     encryption: {
+                                        /** @description The device that encrypted it; open the envelope with your session with it */
+                                        senderDeviceId: string | null;
                                         /** @description Only the envelopes for your own devices */
                                         envelopes: {
                                             deviceId: string;
@@ -5401,6 +5431,8 @@ export interface paths {
                                     }[];
                                     /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                     encryption: {
+                                        /** @description The device that encrypted it; open the envelope with your session with it */
+                                        senderDeviceId: string | null;
                                         /** @description Only the envelopes for your own devices */
                                         envelopes: {
                                             deviceId: string;
@@ -5601,6 +5633,8 @@ export interface paths {
                                         }[];
                                         /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                         encryption: {
+                                            /** @description The device that encrypted it; open the envelope with your session with it */
+                                            senderDeviceId: string | null;
                                             /** @description Only the envelopes for your own devices */
                                             envelopes: {
                                                 deviceId: string;

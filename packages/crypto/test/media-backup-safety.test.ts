@@ -111,13 +111,16 @@ describe("padding", () => {
 });
 
 describe("safety numbers", () => {
-  it("match on both sides and change when an identity changes", () => {
-    const alice = { identity: publicIdentity(generateIdentity()), userId: "alice" };
-    const bob = { identity: publicIdentity(generateIdentity()), userId: "bob" };
+  it("match on both sides, ignore device order and change when a device changes", () => {
+    const id = () => publicIdentity(generateIdentity());
+    const [phone, laptop] = [id(), id()];
+    const alice = { identities: [phone, laptop], userId: "alice" };
+    const bob = { identities: [id()], userId: "bob" };
     const number = safetyNumber(alice, bob);
     expect(number).toMatch(/^(\d{5} ){11}\d{5}$/);
     expect(safetyNumber(bob, alice)).toBe(number);
-    const bob2 = { identity: publicIdentity(generateIdentity()), userId: "bob" };
-    expect(safetyNumber(alice, bob2)).not.toBe(number);
+    expect(safetyNumber({ identities: [laptop, phone], userId: "alice" }, bob)).toBe(number);
+    expect(safetyNumber(alice, { identities: [id()], userId: "bob" })).not.toBe(number);
+    expect(safetyNumber({ identities: [phone], userId: "alice" }, bob)).not.toBe(number);
   });
 });
