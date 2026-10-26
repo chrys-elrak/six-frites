@@ -171,6 +171,20 @@ describe("E2EE client", () => {
     expect(await textOf(newGuest, theirs[0])).toBe("reply before");
   });
 
+  it("backs up messages read before the recovery key was made", async () => {
+    const { sub, phone, guest, chatId, members } = await setup();
+    await say(guest, chatId, members, "read before the key");
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("read before the key");
+
+    const words = await phone.e2ee.createRecoveryKey();
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("read before the key");
+    await new Promise((r) => setTimeout(r, 2300));
+
+    const newPhone = appFor((await loginAs(ctx.app, sub)).json());
+    await newPhone.e2ee.restoreRecoveryKey(words, (await get(newPhone.auth, "/v1/me")).backupKeyId);
+    expect(await textOf(newPhone, await latest(newPhone, chatId))).toBe("read before the key");
+  });
+
   it("agrees on safety numbers and reports a reinstall", async () => {
     const { guestSub, phone, laptop, guest, chatId, members } = await setup();
     const number = await phone.e2ee.safetyNumber(guest.auth.user.id);

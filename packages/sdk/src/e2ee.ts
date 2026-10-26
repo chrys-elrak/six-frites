@@ -397,7 +397,10 @@ export class E2EE {
     if (!m.encryption) return { status: "plain" };
     if (m.deletedAt || m.ephemeral?.locked || m.ephemeral?.purged) return { status: "unavailable", reason: "hidden" };
     const cached = await this.getJSON<Cached>(`plain:${m.id}`);
-    if (cached && cached.editedAt === m.editedAt) return { status: "ok", content: cached.content };
+    if (cached && cached.editedAt === m.editedAt) {
+      if (!m.encryption.backup) void this.queueBackup(m, cached.content);
+      return { status: "ok", content: cached.content };
+    }
     await this.ready();
 
     const fromEnvelope = await this.serial(async () => {
