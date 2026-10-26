@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { Logo } from "@/components/logo";
 import { Notice } from "@/components/ui";
+import { unlock } from "@/lib/app-lock";
 import { useT } from "@/lib/i18n";
 import { deviceName, GOOGLE_WEB_CLIENT_ID, googleIdToken } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -51,6 +52,7 @@ export default function Login() {
         setError(tr.auth.googleNotFinished);
         return;
       }
+      unlock();
       await six.auth.loginWithGoogle(idToken, { inviteCode: invite, deviceName: deviceName() });
       if (invite) {
         await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: invite } } }).catch(() => null);

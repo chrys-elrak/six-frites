@@ -25,6 +25,7 @@ model User {
   deletedAt   DateTime?
   backupKeyId String?
   contactPinHash String?
+  appLockHash    String?
 
   sessions       Session[]
   invite         Invite?

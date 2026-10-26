@@ -32,6 +32,7 @@ import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
+import { AppLockSettings } from "./app-lock";
 import { PrivacyCodeSettings } from "./privacy-code";
 import { Avatar } from "./avatar";
 import { Wallpaper } from "./chat-background";
@@ -598,6 +599,7 @@ export function SettingsPanel() {
         <Referrals />
         <Devices />
         <EncryptionSettings />
+        <AppLockSettings />
         <PrivacyCodeSettings />
         <BlockedPeople />
         <AccountCard />

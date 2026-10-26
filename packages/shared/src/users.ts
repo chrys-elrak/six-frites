@@ -15,6 +15,7 @@ export const UserDTO = z.object({
     .nullable()
     .describe("Identifies the key from your recovery key; null until you set up a recovery key"),
   hasContactPin: z.boolean().describe("Whether seeing the real name of a renamed contact needs your code"),
+  hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;
@@ -53,3 +54,6 @@ export type SetContactPinInput = z.infer<typeof SetContactPinInput>;
 
 export const RemoveContactPinInput = z.object({ currentPin: z.string() });
 export type RemoveContactPinInput = z.infer<typeof RemoveContactPinInput>;
+
+export const AppLockInput = z.object({ code: ContactPin });
+export type AppLockInput = z.infer<typeof AppLockInput>;

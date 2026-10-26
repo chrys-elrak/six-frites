@@ -4,11 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { LockScreen } from "@/components/app-lock";
 import { ChatList } from "@/components/chat-list";
 import { ContactList } from "@/components/contact-list";
 import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
 import { type Tab, TabBar } from "@/components/tab-bar";
+import { useAppLock, useAutoLock } from "@/lib/app-lock";
 import { RealtimeProvider } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { primeAudio, useNotifyPrefs } from "@/lib/notify";
@@ -51,8 +53,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const qc = useQueryClient();
   const status = useSession((s) => s.status);
+  const hasAppLock = useSession((s) => !!s.user?.hasAppLock);
+  const locked = useAppLock((s) => s.locked) && hasAppLock;
   const tr = useT();
   useAppHeight();
+  useAutoLock();
   useEffect(primeAudio, []);
   usePushLinks(status === "authed");
 
@@ -72,7 +77,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <RealtimeProvider>
-      <div className="fixed inset-x-0 top-0 flex h-[var(--app-height,100dvh)] flex-col overflow-hidden">
+      <div inert={locked} className="fixed inset-x-0 top-0 flex h-[var(--app-height,100dvh)] flex-col overflow-hidden">
         <Link
           href="/"
           className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-2 border-b border-stone-200 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:flex dark:border-stone-800`}
@@ -94,9 +99,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col md:flex`}>{children}</section>
         </div>
       </div>
-      <Toasts />
+      {!locked && <Toasts />}
       <CallScreen />
       <UnreadTitle />
+      {locked && <LockScreen />}
     </RealtimeProvider>
   );
 }

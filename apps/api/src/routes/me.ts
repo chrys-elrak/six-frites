@@ -2,6 +2,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import {
   BlockedUserDTO,
   DeleteAccountInput,
+  AppLockInput,
   RemoveContactPinInput,
   SetContactPinInput,
   UpdateMeInput,
@@ -12,9 +13,12 @@ import { listBlocked } from "../services/blocks.js";
 import {
   deleteAccount,
   getMe,
+  removeAppLock,
   removeContactPin,
   resetContactCode,
+  setAppLock,
   setContactPin,
+  unlockApp,
   updateMe,
 } from "../services/users.js";
 
@@ -87,6 +91,54 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => removeContactPin(req.auth.userId, req.body),
+  );
+
+  app.put(
+    "/me/app-lock",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["me"],
+        summary: "Set the code the apps ask for when they open",
+        description: "4 to 8 digits. Replaces any code already set.",
+        security: [{ bearer: [] }],
+        body: AppLockInput,
+        response: { 200: UserDTO },
+      },
+    },
+    (req) => setAppLock(req.auth.userId, req.body),
+  );
+
+  app.delete(
+    "/me/app-lock",
+    {
+      schema: {
+        tags: ["me"],
+        summary: "Remove the app lock",
+        security: [{ bearer: [] }],
+        response: { 200: UserDTO },
+      },
+    },
+    (req) => removeAppLock(req.auth.userId),
+  );
+
+  app.post(
+    "/me/app-lock/unlock",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["me"],
+        summary: "Check the app lock code",
+        description: "WRONG_APP_LOCK_CODE if it doesn't match. Always passes when no app lock is set.",
+        security: [{ bearer: [] }],
+        body: AppLockInput,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await unlockApp(req.auth.userId, req.body);
+      return reply.status(204).send(null);
+    },
   );
 
   app.get(

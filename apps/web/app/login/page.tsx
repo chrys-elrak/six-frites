@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
 import { Logo } from "@/components/logo";
+import { unlock } from "@/lib/app-lock";
 import { deviceName, useSession } from "@/lib/session";
 import { AndroidDownload } from "@/components/android-download";
 import { useT } from "@/lib/i18n";
@@ -32,6 +33,7 @@ function LoginForm() {
     setBusy(true);
     setError(null);
     try {
+      unlock();
       await six.auth.loginWithGoogle(idToken, { inviteCode, deviceName: deviceName() });
       if (inviteCode) {
         await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);

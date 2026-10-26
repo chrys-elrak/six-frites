@@ -11,9 +11,8 @@ import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
 import { Card, PrimaryButton, SectionTitle } from "./ui";
 
-export function codeError(err: unknown, tr: Dict) {
+export function codeError(err: unknown, tr: Dict, errors: Record<string, string | undefined> = tr.contacts.privacy.errors) {
   const code = err instanceof SixApiError ? err.code : undefined;
-  const errors: Record<string, string | undefined> = tr.contacts.privacy.errors;
   return (code && errors[code]) ?? tr.common.somethingWrongRetry;
 }
 

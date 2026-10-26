@@ -7,6 +7,7 @@ import { signOut } from "@/lib/e2ee";
 import { useLocale, useT } from "@/lib/i18n";
 import { relinkPush } from "@/lib/push";
 import { BlockedPeople, DeleteAccount } from "./account-settings";
+import { AppLockSettings } from "./app-lock";
 import { AdminLink } from "./admin/admin-link";
 import { AndroidDownload } from "./android-download";
 import { ChatBackgroundPicker } from "./chat-background";
@@ -77,6 +78,7 @@ export function SettingsPanel() {
           <NotificationSettings />
           <Invites />
           <Referrals />
+          <AppLockSettings />
           <PrivacyCodeSettings />
           <EncryptionSettings />
           <Devices />

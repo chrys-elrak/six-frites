@@ -332,3 +332,24 @@ describe("deleting chats", () => {
     expect(JSON.stringify(await get(host, "/v1/sync?since=0"))).not.toContain("gone soon");
   });
 });
+
+describe("app lock", () => {
+  it("checks the code the apps ask for when they open", async () => {
+    const me = await signUp("locked");
+    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(204);
+
+    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "12ab" })).json().error.code).toBe("VALIDATION_FAILED");
+    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "1234" })).json().hasAppLock).toBe(true);
+    expect((await get(me, "/v1/me")).hasAppLock).toBe(true);
+    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "0000" })).json().error.code).toBe(
+      "WRONG_APP_LOCK_CODE",
+    );
+    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(204);
+
+    await call(me, "PUT", "/v1/me/app-lock", { code: "56789" });
+    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(403);
+    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "56789" })).statusCode).toBe(204);
+
+    expect((await call(me, "DELETE", "/v1/me/app-lock")).json().hasAppLock).toBe(false);
+  });
+});

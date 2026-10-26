@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import type { User } from "../generated/prisma/client.js";
 import {
   AppError,
+  type AppLockInput,
   type RemoveContactPinInput,
   type SetContactPinInput,
   type UpdateMeInput,
@@ -33,6 +34,7 @@ export function toUserDTO(u: User): UserDTO {
     findByEmail: u.findByEmail,
     backupKeyId: u.backupKeyId,
     hasContactPin: u.contactPinHash !== null,
+    hasAppLock: u.appLockHash !== null,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -184,4 +186,18 @@ export async function setContactPin(userId: string, input: SetContactPinInput) {
 export async function removeContactPin(userId: string, input: RemoveContactPinInput) {
   await checkContactPin(userId, input.currentPin, true);
   return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { contactPinHash: null } }));
+}
+
+/** Sets or replaces the app lock code. No old code is needed: only an unlocked app reaches this. */
+export async function setAppLock(userId: string, input: AppLockInput) {
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: await hashPin(input.code) } }));
+}
+
+export async function removeAppLock(userId: string) {
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: null } }));
+}
+
+export async function unlockApp(userId: string, input: AppLockInput) {
+  const { appLockHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true } });
+  if (appLockHash && !(await pinMatches(appLockHash, input.code))) throw new AppError("WRONG_APP_LOCK_CODE");
 }

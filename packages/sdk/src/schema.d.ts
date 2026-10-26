@@ -65,6 +65,8 @@ export interface paths {
                                 backupKeyId: string | null;
                                 /** @description Whether seeing the real name of a renamed contact needs your code */
                                 hasContactPin: boolean;
+                                /** @description Whether the apps ask for your app lock code when they open */
+                                hasAppLock: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -134,6 +136,8 @@ export interface paths {
                                 backupKeyId: string | null;
                                 /** @description Whether seeing the real name of a renamed contact needs your code */
                                 hasContactPin: boolean;
+                                /** @description Whether the apps ask for your app lock code when they open */
+                                hasAppLock: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -1517,6 +1521,8 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1609,6 +1615,8 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1662,6 +1670,8 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1726,6 +1736,8 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1772,6 +1784,8 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1779,6 +1793,156 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/app-lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set the code the apps ask for when they open
+         * @description 4 to 8 digits. Replaces any code already set.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remove the app lock */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/app-lock/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check the app lock code
+         * @description WRONG_APP_LOCK_CODE if it doesn't match. Always passes when no app lock is set.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6857,6 +7021,8 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };

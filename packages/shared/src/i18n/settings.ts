@@ -142,6 +142,25 @@ const en = {
   pickAnyColour: "Pick any colour",
   colourCode: "Colour code",
   useColours: "Use these colours",
+  appLock: {
+    title: "App lock",
+    onHint: "Six Frites asks for your code when it opens and after 5 minutes away, on all your devices.",
+    offHint: "Ask for a code when Six Frites opens and after 5 minutes away, on all your devices.",
+    set: "Set code",
+    change: "Change code",
+    setTitle: "Lock the app",
+    changeTitle: "Change app lock code",
+    hint: "4 to 8 digits. If you forget it, sign out, sign in again with Google and change it here.",
+    locked: "Six Frites is locked",
+    enterCode: "Enter your app lock code.",
+    unlock: "Unlock",
+    forgot: "Forgot your code? Sign out",
+    errors: {
+      WRONG_APP_LOCK_CODE: "That's not your app lock code.",
+      RATE_LIMITED: "Too many tries. Wait a minute.",
+      VALIDATION_FAILED: "Use 4 to 8 digits.",
+    } as ByCode<"WRONG_APP_LOCK_CODE">,
+  },
 };
 
 const fr: typeof en = {
@@ -288,6 +307,25 @@ const fr: typeof en = {
   pickAnyColour: "Choisir une couleur",
   colourCode: "Code couleur",
   useColours: "Utiliser ces couleurs",
+  appLock: {
+    title: "Verrouillage de l'app",
+    onHint: "Six Frites demande votre code à l'ouverture et après 5 minutes d'absence, sur tous vos appareils.",
+    offHint: "Demandez un code à l'ouverture de Six Frites et après 5 minutes d'absence, sur tous vos appareils.",
+    set: "Définir un code",
+    change: "Modifier le code",
+    setTitle: "Verrouiller l'app",
+    changeTitle: "Modifier le code de verrouillage",
+    hint: "4 à 8 chiffres. Si vous l'oubliez, déconnectez-vous, reconnectez-vous avec Google et modifiez-le ici.",
+    locked: "Six Frites est verrouillé",
+    enterCode: "Saisissez votre code de verrouillage.",
+    unlock: "Déverrouiller",
+    forgot: "Code oublié ? Se déconnecter",
+    errors: {
+      WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de verrouillage.",
+      RATE_LIMITED: "Trop de tentatives. Patientez une minute.",
+      VALIDATION_FAILED: "Utilisez 4 à 8 chiffres.",
+    },
+  },
 };
 
 const mg: typeof en = {
@@ -432,6 +470,25 @@ const mg: typeof en = {
   pickAnyColour: "Misafidiana loko",
   colourCode: "Kaodin'ny loko",
   useColours: "Ampiasao ireo loko ireo",
+  appLock: {
+    title: "Hidin'ny fampiharana",
+    onHint: "Angatahin'ny Six Frites ny kaodinao rehefa sokafana sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
+    offHint: "Mangataha kaody rehefa sokafana ny Six Frites sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
+    set: "Mametraha kaody",
+    change: "Ovay ny kaody",
+    setTitle: "Hidio ny fampiharana",
+    changeTitle: "Ovay ny kaody hidy",
+    hint: "Isa 4 ka hatramin'ny 8. Raha hadinonao izy, mivoaha, midira indray amin'ny Google ary ovay eto.",
+    locked: "Mihidy ny Six Frites",
+    enterCode: "Ampidiro ny kaody hidinao.",
+    unlock: "Sokafy",
+    forgot: "Hadinonao ny kaody? Hivoaka",
+    errors: {
+      WRONG_APP_LOCK_CODE: "Tsy io no kaody hidinao.",
+      RATE_LIMITED: "Be loatra ny andrana. Andraso iray minitra.",
+      VALIDATION_FAILED: "Mampiasà isa 4 ka hatramin'ny 8.",
+    },
+  },
 };
 
 export default { en, fr, mg };
