@@ -63,7 +63,7 @@ function Media({ attachment }: { attachment: ShownAttachment }) {
     );
   }
   return (
-    <div className="rounded-2xl bg-white/10 p-3">
+    <div className="rounded-2xl bg-stone-900 p-3">
       <AttachmentView attachment={attachment} mine={false} onOpen={() => undefined} autoPlay />
     </div>
   );
@@ -108,7 +108,7 @@ export function EphemeralViewer({
   return (
     <Portal>
       <div
-        className="fixed inset-0 z-[60] flex flex-col bg-black/95 text-white"
+        className="fixed inset-0 z-[60] flex flex-col bg-black text-white"
         role="dialog"
         aria-modal
         aria-label={tr.summary.selfDestructing}

@@ -4,12 +4,15 @@ import { Flame, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { type BubbleColors, BubbleColorsContext } from "@/lib/bubble-colors";
 import { shortRule } from "@/lib/ephemeral";
 import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
-import { flame } from "@/lib/theme";
+import { brand, brandInk, flame, stone } from "@/lib/theme";
 import { AttachmentView, LightboxVideo } from "./attachment";
 import { styleFor } from "./rich-text";
+
+const ON_DARK: BubbleColors = { bg: brand, ink: brandInk, theirBg: null, theirInk: "#ffffff" };
 
 /** Full-screen view of an opened self-destructing message; closing it, or its timer running out, ends it. */
 export function EphemeralViewer({
@@ -67,13 +70,15 @@ export function EphemeralViewer({
           )}
           {a && (a.kind === "voice" || a.kind === "video_note" || a.kind === "file") && (
             <View style={styles.card}>
-              <AttachmentView
-                attachment={{ source: "server", data: a }}
-                mine={false}
-                onOpen={() => undefined}
-                maxWidth={width - 64}
-                autoPlay
-              />
+              <BubbleColorsContext.Provider value={ON_DARK}>
+                <AttachmentView
+                  attachment={{ source: "server", data: a }}
+                  mine={false}
+                  onOpen={() => undefined}
+                  maxWidth={width - 64}
+                  autoPlay
+                />
+              </BubbleColorsContext.Provider>
             </View>
           )}
           {!!text && (
@@ -104,13 +109,13 @@ export function EphemeralViewer({
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "rgba(0,0,0,0.96)" },
+  screen: { flex: 1, backgroundColor: "#000" },
   bar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, height: 56 },
   rule: { flex: 1, color: "rgba(255,255,255,0.8)", fontSize: 14 },
   countdown: { color: flame, fontSize: 16, fontWeight: "700", fontVariant: ["tabular-nums"] },
   close: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   body: { flexGrow: 1, alignItems: "center", justifyContent: "center", gap: 16, padding: 16 },
-  card: { borderRadius: 16, backgroundColor: "rgba(255,255,255,0.1)", padding: 12 },
+  card: { borderRadius: 16, backgroundColor: stone[900], padding: 12 },
   text: { color: "#fff", fontSize: 19, lineHeight: 28, textAlign: "center" },
   footer: { color: "rgba(255,255,255,0.6)", fontSize: 12, textAlign: "center", paddingHorizontal: 16 },
 });
