@@ -49,6 +49,9 @@ const en = {
   couldNotReadImage: "Couldn't read that image.",
   encryptionNotReady: "Encryption is not ready",
   unreachable: "Can't reach Six Frites",
+  newVersion: (v: string) => `Six Frites ${v} is available`,
+  tapToUpdate: "Tap to download and install it.",
+  update: "Update",
   checkConnection: "Check your connection and try again.",
 };
 
@@ -103,6 +106,9 @@ const fr: typeof en = {
   couldNotReadImage: "Impossible de lire cette image.",
   encryptionNotReady: "Le chiffrement n'est pas prêt",
   unreachable: "Impossible de joindre Six Frites",
+  newVersion: (v) => `Six Frites ${v} est disponible`,
+  tapToUpdate: "Touchez pour la télécharger et l'installer.",
+  update: "Mettre à jour",
   checkConnection: "Vérifiez votre connexion et réessayez.",
 };
 
@@ -157,6 +163,9 @@ const mg: typeof en = {
   couldNotReadImage: "Tsy voavaky io sary io.",
   encryptionNotReady: "Tsy vonona ny fiarovana",
   unreachable: "Tsy tratra ny Six Frites",
+  newVersion: (v) => `Efa misy ny Six Frites ${v}`,
+  tapToUpdate: "Tsindrio mba haka sy hametraka azy.",
+  update: "Havaozy",
   checkConnection: "Hamarino ny fifandraisanao dia andramo indray.",
 };
 

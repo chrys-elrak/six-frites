@@ -32,6 +32,7 @@ import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
+import { UpdateBanner } from "./update-banner";
 
 function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: string }) {
   const tr = useT();
@@ -192,19 +193,23 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
   const archivedCount = archivedChats.data?.filter((c) => c.lastMessage !== null).length ?? 0;
 
-  const header =
-    !archived && archivedCount > 0 ? (
-      <Pressable
-        onPress={() => router.push("/archived")}
-        style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
-      >
-        <View style={[styles.archiveIcon, { backgroundColor: t.chip }]}>
-          <Archive size={20} color={t.muted} />
-        </View>
-        <Text style={[styles.archiveText, { color: t.textSoft }]}>{tr.common.archived}</Text>
-        <Text style={{ color: t.muted }}>{archivedCount}</Text>
-      </Pressable>
-    ) : undefined;
+  const header = archived ? undefined : (
+    <>
+      <UpdateBanner />
+      {archivedCount > 0 && (
+        <Pressable
+          onPress={() => router.push("/archived")}
+          style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
+        >
+          <View style={[styles.archiveIcon, { backgroundColor: t.chip }]}>
+            <Archive size={20} color={t.muted} />
+          </View>
+          <Text style={[styles.archiveText, { color: t.textSoft }]}>{tr.common.archived}</Text>
+          <Text style={{ color: t.muted }}>{archivedCount}</Text>
+        </Pressable>
+      )}
+    </>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>

@@ -141,3 +141,18 @@ export async function deliverReactionPush(
     url: `/chats/${m.chatId}`,
   }));
 }
+
+/** Tells every signed-in Android phone that a new version of the app is out. */
+export async function deliverReleasePush(version: string, downloadUrl: string) {
+  const targets = await prisma.pushToken.findMany({
+    where: { provider: "fcm", session: { revokedAt: null, expiresAt: { gt: new Date() } } },
+  });
+  return sendToAll(targets, (t) => ({
+    title: t.common.newVersion(version),
+    body: t.common.tapToUpdate,
+    icon: null,
+    chatId: null,
+    messageId: null,
+    url: downloadUrl,
+  }));
+}

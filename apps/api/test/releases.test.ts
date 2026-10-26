@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import type { PushPayload } from "@six/shared";
+import { describe, expect, it, vi } from "vitest";
+import { setPushProviders } from "../src/push/providers.js";
 import { type Auth, chatHelpers, loginAs, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -13,6 +15,12 @@ describe("android releases", () => {
       "FORBIDDEN",
     );
 
+    const phone = await signUp("android-fan");
+    const token = `fcm-${phone.user.id}`;
+    await call(phone, "POST", "/v1/devices/push-token", { provider: "fcm", token, locale: "fr" });
+    const pushed: { token: string; payload: PushPayload }[] = [];
+    setPushProviders({ fcm: { send: async (to, payload) => (pushed.push({ token: to, payload }), "sent") } });
+
     const boss = await admin();
     const apk = Buffer.from("PK\u0003\u0004 fake apk");
     const created = await call(boss, "POST", "/v1/admin/releases", { version: "1.2.0", notes: "Calls", size: apk.length });
@@ -23,6 +31,14 @@ describe("android releases", () => {
     expect((await call(boss, "POST", `/v1/admin/releases/${release.id}/publish`)).json().error.code).toBe("UPLOAD_MISSING");
     expect((await fetch(url, { method: "PUT", headers, body: apk })).ok).toBe(true);
     expect((await call(boss, "POST", `/v1/admin/releases/${release.id}/publish`)).json()).toMatchObject({ published: true });
+    await vi.waitFor(() => expect(pushed.find((p) => p.token === token)).toBeDefined());
+    expect(pushed.find((p) => p.token === token)!.payload).toMatchObject({
+      title: "Six Frites 1.2.0 est disponible",
+      chatId: null,
+      url: expect.stringMatching(/\/v1\/app\/android\/download$/),
+    });
+    await call(boss, "POST", `/v1/admin/releases/${release.id}/publish`);
+    expect(pushed.filter((p) => p.token === token)).toHaveLength(1);
 
     const latest = (await ctx.app.inject({ method: "GET", url: "/v1/app/android" })).json();
     expect(latest).toMatchObject({ version: "1.2.0", notes: "Calls", size: apk.length });

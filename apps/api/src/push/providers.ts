@@ -61,7 +61,7 @@ export class FcmProvider implements PushProvider {
             message: payload.body,
             body: JSON.stringify({ chatId: payload.chatId, messageId: payload.messageId, url: payload.url }),
             channelId: "messages",
-            tag: payload.chatId,
+            tag: payload.chatId ?? "app",
           },
         },
       }),

@@ -2,7 +2,7 @@ import { unwrap } from "@six/sdk";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import { getLocale, getT } from "./i18n";
 import { six } from "./six";
 
@@ -37,9 +37,10 @@ export function usePush() {
   }, []);
 
   useEffect(() => {
-    const chatId = response?.notification.request.content.data?.chatId;
-    if (typeof chatId !== "string") return;
+    const data = response?.notification.request.content.data;
+    if (typeof data?.chatId === "string") router.push(`/chats/${data.chatId}`);
+    else if (typeof data?.url === "string" && data.url.startsWith("https://")) void Linking.openURL(data.url);
+    else return;
     Notifications.clearLastNotificationResponse();
-    router.push(`/chats/${chatId}`);
   }, [response]);
 }

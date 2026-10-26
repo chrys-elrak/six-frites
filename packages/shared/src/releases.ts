@@ -36,3 +36,13 @@ export const CreatedReleaseDTO = z.object({
   headers: z.record(z.string(), z.string()),
 });
 export type CreatedReleaseDTO = z.infer<typeof CreatedReleaseDTO>;
+
+/** Whether dotted version `a` (such as 1.10.0) comes after `b`. */
+export function isNewerVersion(a: string, b: string) {
+  const x = a.split(".").map(Number);
+  const y = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0);
+  }
+  return false;
+}

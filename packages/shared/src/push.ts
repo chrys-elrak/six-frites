@@ -22,12 +22,12 @@ export const PushConfigDTO = z.object({
 });
 export type PushConfigDTO = z.infer<typeof PushConfigDTO>;
 
-/** What a push notification carries; clients show title/body and open `url` when tapped. */
+/** What a push notification carries; clients show title/body and open the chat, or `url` when there is none, when tapped. */
 export interface PushPayload {
   title: string;
   body: string;
   icon: string | null;
-  chatId: string;
-  messageId: string;
+  chatId: string | null;
+  messageId: string | null;
   url: string;
 }

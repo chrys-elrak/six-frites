@@ -4,8 +4,11 @@ import { APK_MIME, type AppReleaseDTO, AppError, type CreateReleaseInput, type L
 import { env } from "../env.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects, headObject, presignGet, presignPut } from "../lib/storage.js";
+import { deliverReleasePush } from "./push.js";
 
 const DOWNLOAD_LINK_SECONDS = 60 * 60;
+
+const downloadLink = `${env.PUBLIC_URL}/v1/app/android/download`;
 
 const toDTO = (r: AppRelease): AppReleaseDTO => ({
   id: r.id,
@@ -43,12 +46,17 @@ async function findRelease(id: string) {
   return release;
 }
 
-/** Offers an uploaded APK for download, once storage confirms the whole file arrived. */
+/**
+ * Offers an uploaded APK for download, once storage confirms the whole file arrived, and the first
+ * time round tells Android phones about it in the background.
+ */
 export async function publishRelease(id: string) {
   const release = await findRelease(id);
   const head = await headObject(release.key);
   if (!head || head.size !== release.size) throw new AppError("UPLOAD_MISSING", "The APK hasn't finished uploading");
-  return toDTO(await prisma.appRelease.update({ where: { id }, data: { publishedAt: release.publishedAt ?? new Date() } }));
+  const published = await prisma.appRelease.update({ where: { id }, data: { publishedAt: release.publishedAt ?? new Date() } });
+  if (!release.publishedAt) void deliverReleasePush(release.version, downloadLink).catch(() => null);
+  return toDTO(published);
 }
 
 export async function listReleases() {
@@ -76,7 +84,7 @@ export async function latestRelease(): Promise<LatestAppDTO | null> {
     notes: release.notes,
     size: release.size,
     publishedAt: release.publishedAt!.toISOString(),
-    downloadUrl: `${env.PUBLIC_URL}/v1/app/android/download`,
+    downloadUrl: downloadLink,
   };
 }
 
