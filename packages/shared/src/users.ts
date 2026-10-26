@@ -13,6 +13,7 @@ export const UserDTO = z.object({
     .string()
     .nullable()
     .describe("Identifies the key from your recovery key; null until you set up a recovery key"),
+  hasContactPin: z.boolean().describe("Whether seeing the real name of a renamed contact needs your code"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;
@@ -37,3 +38,14 @@ export const UpdateMeInput = z.object({
   findByEmail: z.boolean().optional(),
 });
 export type UpdateMeInput = z.infer<typeof UpdateMeInput>;
+
+export const ContactPin = z.string().regex(/^\d{4,8}$/, "Use 4 to 8 digits");
+
+export const SetContactPinInput = z.object({
+  pin: ContactPin,
+  currentPin: z.string().optional().describe("Needed to change a code you already set"),
+});
+export type SetContactPinInput = z.infer<typeof SetContactPinInput>;
+
+export const RemoveContactPinInput = z.object({ currentPin: z.string() });
+export type RemoveContactPinInput = z.infer<typeof RemoveContactPinInput>;

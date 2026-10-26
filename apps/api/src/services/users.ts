@@ -1,5 +1,13 @@
+import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { promisify } from "node:util";
 import type { User } from "../generated/prisma/client.js";
-import { AppError, type UpdateMeInput, type UserDTO } from "@six/shared";
+import {
+  AppError,
+  type RemoveContactPinInput,
+  type SetContactPinInput,
+  type UpdateMeInput,
+  type UserDTO,
+} from "@six/shared";
 import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
@@ -19,6 +27,7 @@ export function toUserDTO(u: User): UserDTO {
     contactCode: u.contactCode,
     findByEmail: u.findByEmail,
     backupKeyId: u.backupKeyId,
+    hasContactPin: u.contactPinHash !== null,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -108,4 +117,43 @@ export async function deleteAccount(userId: string) {
 
   await Promise.all(sessionIds.map(revokeSession));
   if (photoKeys.length) await deleteObjects(photoKeys).catch(() => null);
+}
+
+const scryptAsync = promisify(scrypt) as (pin: string, salt: Buffer, len: number) => Promise<Buffer>;
+
+async function hashPin(pin: string) {
+  const salt = randomBytes(16);
+  return `${salt.toString("base64")}:${(await scryptAsync(pin, salt, 32)).toString("base64")}`;
+}
+
+async function pinMatches(stored: string, pin: string) {
+  const [salt, hash] = stored.split(":") as [string, string];
+  const expected = Buffer.from(hash, "base64");
+  const actual = await scryptAsync(pin, Buffer.from(salt, "base64"), expected.length);
+  return timingSafeEqual(actual, expected);
+}
+
+/**
+ * Checks the code that guards the real names of renamed contacts. Passes when no code is set,
+ * unless `required`, since there is then nothing to protect.
+ */
+export async function checkContactPin(userId: string, pin: string | undefined, required = false) {
+  const { contactPinHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { contactPinHash: true } });
+  if (!contactPinHash) {
+    if (required) throw new AppError("CONTACT_PIN_NOT_SET");
+    return;
+  }
+  if (pin === undefined) throw new AppError("CONTACT_PIN_REQUIRED");
+  if (!(await pinMatches(contactPinHash, pin))) throw new AppError("WRONG_CONTACT_PIN");
+}
+
+export async function setContactPin(userId: string, input: SetContactPinInput) {
+  await checkContactPin(userId, input.currentPin);
+  const user = await prisma.user.update({ where: { id: userId }, data: { contactPinHash: await hashPin(input.pin) } });
+  return toUserDTO(user);
+}
+
+export async function removeContactPin(userId: string, input: RemoveContactPinInput) {
+  await checkContactPin(userId, input.currentPin, true);
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { contactPinHash: null } }));
 }

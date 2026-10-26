@@ -11,6 +11,7 @@ import { type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
+import { checkContactPin } from "./users.js";
 
 interface Override {
   displayName: string | null;
@@ -59,7 +60,7 @@ function toContactDTO(r: ContactRow): ContactDTO {
   return {
     user: applyOverride({ id: r.id, displayName: r.originalName, avatarUrl: r.avatarUrl }, o),
     chatId: r.chatId,
-    originalName: r.originalName,
+    originalName: r.customName === null ? r.originalName : null,
     customName: r.customName,
     hasCustomPhoto: r.photoKey !== null,
   };
@@ -94,7 +95,7 @@ export async function listContacts(userId: string, q: ContactListQuery) {
   const filters: Prisma.Sql[] = [Prisma.sql`TRUE`];
   if (q.q) {
     const like = `%${escapeLike(q.q)}%`;
-    filters.push(Prisma.sql`(name ILIKE ${like} OR "originalName" ILIKE ${like})`);
+    filters.push(Prisma.sql`name ILIKE ${like}`);
   }
   if (after) filters.push(Prisma.sql`(name, id) > (${after.name}, ${after.id})`);
 
@@ -124,9 +125,17 @@ function parsePhoto(dataUrl: string) {
   return { mime, bytes: Buffer.from(data, "base64"), ext: mime.split("/")[1] === "jpeg" ? "jpg" : mime.split("/")[1]! };
 }
 
+/** The real name of a contact shown under a custom name, once the owner's code checks out. */
+export async function revealContact(ownerId: string, contactId: string, pin: string) {
+  const contact = await getContact(ownerId, contactId);
+  await checkContactPin(ownerId, pin, true);
+  return { originalName: contact.originalName };
+}
+
 /** Sets or clears the name and photo only `ownerId` sees for this contact. */
 export async function updateContact(ownerId: string, contactId: string, input: UpdateContactInput) {
   const contact = await getContact(ownerId, contactId);
+  if (input.displayName === null && contact.customName !== null) await checkContactPin(ownerId, input.pin);
   const previousKey = contact.photoKey;
 
   let photoKey: string | null | undefined;

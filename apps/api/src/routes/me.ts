@@ -1,8 +1,22 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { BlockedUserDTO, DeleteAccountInput, UpdateMeInput, UserDTO } from "@six/shared";
+import {
+  BlockedUserDTO,
+  DeleteAccountInput,
+  RemoveContactPinInput,
+  SetContactPinInput,
+  UpdateMeInput,
+  UserDTO,
+} from "@six/shared";
 import { z } from "zod";
 import { listBlocked } from "../services/blocks.js";
-import { deleteAccount, getMe, resetContactCode, updateMe } from "../services/users.js";
+import {
+  deleteAccount,
+  getMe,
+  removeContactPin,
+  resetContactCode,
+  setContactPin,
+  updateMe,
+} from "../services/users.js";
 
 const meRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook("onRequest", app.requireAuth);
@@ -41,6 +55,38 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => resetContactCode(req.auth.userId),
+  );
+
+  app.put(
+    "/me/contact-pin",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["me"],
+        summary: "Set the code that shows renamed contacts' real names",
+        description:
+          "4 to 8 digits. To change it, send the old one as `currentPin` (CONTACT_PIN_REQUIRED or WRONG_CONTACT_PIN otherwise).",
+        security: [{ bearer: [] }],
+        body: SetContactPinInput,
+        response: { 200: UserDTO },
+      },
+    },
+    (req) => setContactPin(req.auth.userId, req.body),
+  );
+
+  app.delete(
+    "/me/contact-pin",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["me"],
+        summary: "Remove the contact code",
+        security: [{ bearer: [] }],
+        body: RemoveContactPinInput,
+        response: { 200: UserDTO },
+      },
+    },
+    (req) => removeContactPin(req.auth.userId, req.body),
   );
 
   app.get(

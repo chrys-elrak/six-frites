@@ -23,6 +23,7 @@ model User {
   lastSeenAt  DateTime?
   deletedAt   DateTime?
   backupKeyId String?
+  contactPinHash String?
 
   sessions       Session[]
   invites        Invite[]

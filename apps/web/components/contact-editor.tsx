@@ -7,8 +7,10 @@ import { useEffect, useRef, useState } from "react";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { toAvatarDataUrl, urlToAvatarDataUrl } from "@/lib/image";
+import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
+import { CodeInput, codeError } from "./privacy-code";
 import { PrimaryButton } from "./ui";
 import { Portal } from "./portal";
 import { ReportDialog } from "./report-dialog";
@@ -28,6 +30,24 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
+  const hasCode = useSession((s) => s.user!.hasContactPin);
+  const [unlocking, setUnlocking] = useState(false);
+  const [pin, setPin] = useState("");
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [revealError, setRevealError] = useState<string | null>(null);
+
+  async function reveal() {
+    setRevealError(null);
+    try {
+      const { originalName } = unwrap(
+        await six.api.POST("/v1/contacts/{userId}/reveal", { params: { path: { userId } }, body: { pin } }),
+      );
+      setRevealed(originalName);
+      setUnlocking(false);
+    } catch (err) {
+      setRevealError(codeError(err));
+    }
+  }
 
   const shuffle = () =>
     void suggestAvatars()
@@ -76,9 +96,16 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     setError(null);
     try {
       const trimmed = (name ?? "").trim();
+      const showingRealName = !(trimmed && trimmed !== c.originalName);
+      if (showingRealName && c.customName && hasCode && !revealed) {
+        setUnlocking(true);
+        setRevealError("Enter your privacy code to show their real name again.");
+        return;
+      }
       await updateContact(qc, userId, {
-        displayName: trimmed && trimmed !== c.originalName ? trimmed : null,
+        displayName: showingRealName ? null : trimmed,
         ...(photo !== undefined && { photo }),
+        ...(revealed && { pin }),
       });
       onClose();
     } catch (err) {
@@ -128,7 +155,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                   className="group relative rounded-full"
                   aria-label="Choose a photo"
                 >
-                  <Avatar user={{ displayName: name || c.originalName, avatarUrl: shownPhoto }} size="lg" />
+                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto }} size="lg" />
                   <span className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
                     <Camera className="size-6" />
                   </span>
@@ -190,7 +217,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 <input
                   value={name ?? ""}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder={c.originalName}
+                  placeholder="Name"
                   maxLength={64}
                   className="w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
                 />
@@ -204,7 +231,45 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 </span>
               </label>
 
-              <SafetyNumber userId={userId} name={c.originalName} />
+              {c.customName && (
+                <div className="space-y-2 rounded-xl bg-stone-50 p-3 text-sm dark:bg-stone-800/50">
+                  {revealed ? (
+                    <p>
+                      <span className="text-stone-500">Real name: </span>
+                      <span className="font-medium">{revealed}</span>
+                    </p>
+                  ) : !hasCode ? (
+                    <p className="text-stone-500">Their real name is hidden. Set a privacy code in Settings to see it.</p>
+                  ) : unlocking ? (
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <CodeInput
+                          label="Privacy code"
+                          value={pin}
+                          onChange={setPin}
+                          autoFocus
+                          onEnter={() => pin.length >= 4 && void reveal()}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void reveal()}
+                        disabled={pin.length < 4}
+                        className="rounded-xl bg-stone-200 px-4 py-2.5 text-sm font-semibold disabled:opacity-50 dark:bg-stone-700"
+                      >
+                        Show
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => setUnlocking(true)} className="font-medium text-brand">
+                      Show real name
+                    </button>
+                  )}
+                  {revealError && <p className="text-red-600 dark:text-red-400">{revealError}</p>}
+                </div>
+              )}
+
+              <SafetyNumber userId={userId} name={c.user.displayName} />
 
               {error && (
                 <p
@@ -223,14 +288,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 onClick={() => setReporting(true)}
                 className="block w-full text-center text-sm font-medium text-red-600 dark:text-red-400"
               >
-                Report {c.originalName}
+                Report {c.user.displayName}
               </button>
             </form>
           )}
           {reporting && (
             <ReportDialog
               target={{ userId }}
-              title={`Report ${contact.data?.originalName ?? "this person"}`}
+              title={`Report ${contact.data?.user.displayName ?? "this person"}`}
               onClose={() => setReporting(false)}
             />
           )}

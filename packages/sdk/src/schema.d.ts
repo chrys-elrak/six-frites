@@ -63,6 +63,8 @@ export interface paths {
                                 findByEmail: boolean;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
+                                /** @description Whether seeing the real name of a renamed contact needs your code */
+                                hasContactPin: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -130,6 +132,8 @@ export interface paths {
                                 findByEmail: boolean;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
+                                /** @description Whether seeing the real name of a renamed contact needs your code */
+                                hasContactPin: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -1511,6 +1515,8 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1599,6 +1605,8 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1650,6 +1658,8 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1658,6 +1668,115 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contact-pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set the code that shows renamed contacts' real names
+         * @description 4 to 8 digits. To change it, send the old one as `currentPin` (CONTACT_PIN_REQUIRED or WRONG_CONTACT_PIN otherwise).
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        pin: string;
+                        /** @description Needed to change a code you already set */
+                        currentPin?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remove the contact code */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        currentPin: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -5175,7 +5294,8 @@ export interface paths {
                                     avatarUrl: string | null;
                                 };
                                 chatId: string;
-                                originalName: string;
+                                /** @description Their own name; null while you show them under a name you gave them */
+                                originalName: string | null;
                                 customName: string | null;
                                 hasCustomPhoto: boolean;
                             }[];
@@ -5221,7 +5341,8 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            originalName: string;
+                            /** @description Their own name; null while you show them under a name you gave them */
+                            originalName: string | null;
                             customName: string | null;
                             hasCustomPhoto: boolean;
                         };
@@ -5385,7 +5506,8 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            originalName: string;
+                            /** @description Their own name; null while you show them under a name you gave them */
+                            originalName: string | null;
                             customName: string | null;
                             hasCustomPhoto: boolean;
                         };
@@ -5416,6 +5538,8 @@ export interface paths {
                     "application/json": {
                         displayName?: string | null;
                         photo?: string | null;
+                        /** @description Your contact code; needed to go back to their own name once you set one */
+                        pin?: string;
                     };
                 };
             };
@@ -5435,7 +5559,8 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            originalName: string;
+                            /** @description Their own name; null while you show them under a name you gave them */
+                            originalName: string | null;
                             customName: string | null;
                             hasCustomPhoto: boolean;
                         };
@@ -5443,6 +5568,55 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/contacts/{userId}/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * See the real name of a contact you renamed
+         * @description Needs your contact code: CONTACT_PIN_NOT_SET if you have none, WRONG_CONTACT_PIN if it doesn't match.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        pin: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            originalName: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/sync": {
@@ -6534,6 +6708,8 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };

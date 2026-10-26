@@ -105,7 +105,6 @@ export function ContactList() {
               <Avatar user={c.user} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{c.user.displayName}</span>
-                {c.customName && <span className="block truncate text-xs text-stone-500">{c.originalName}</span>}
               </span>
             </Link>
             <button
