@@ -1,4 +1,4 @@
-import type { AttachmentDTO, UploadKind } from "@six/shared";
+import { type AttachmentDTO, ENCRYPTED_MIME, type UploadKind } from "@six/shared";
 import { SixApiError, unwrap } from "./errors.js";
 import type { RestClient } from "./rest.js";
 
@@ -6,6 +6,8 @@ export interface UploadOptions {
   kind: UploadKind;
   name: string;
   mime: string;
+  /** The body is already encrypted (see encryptFile): name and type stay out of the server's view. */
+  encrypted?: boolean;
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
 }
@@ -31,7 +33,9 @@ function put(url: string, body: Blob, headers: Record<string, string>, opts: Upl
 export async function uploadFile(api: RestClient, body: Blob, opts: UploadOptions): Promise<AttachmentDTO> {
   const presigned = unwrap(
     await api.POST("/v1/uploads/presign", {
-      body: { kind: opts.kind, name: opts.name, mime: opts.mime, size: body.size },
+      body: opts.encrypted
+        ? { kind: opts.kind, name: "encrypted", mime: ENCRYPTED_MIME, size: body.size, encrypted: true }
+        : { kind: opts.kind, name: opts.name, mime: opts.mime, size: body.size },
     }),
   );
   await put(presigned.url, body, presigned.headers, opts);

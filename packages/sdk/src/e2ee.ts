@@ -35,6 +35,7 @@ import {
   utf8,
 } from "@six/crypto";
 import {
+  type ChatDTO,
   type DeviceDTO,
   type EncryptedFile,
   type EncryptedInput,
@@ -60,6 +61,14 @@ export interface SecretStore {
 
 /** What goes into a message besides the fields that tie it to its chat. */
 export type ContentInput = Omit<MessageContent, "v" | "chatId" | "clientId">;
+
+/** A message with its encrypted content filled in, as the UI shows it. */
+export type Hydrated<T extends MessageDTO = MessageDTO> = T & {
+  /** The encrypted file's key and preview, for downloading and decrypting it. */
+  file?: EncryptedFile;
+  /** It is encrypted and this device could not read it. */
+  undecryptable?: boolean;
+};
 
 export type Opened =
   | { status: "ok"; content: MessageContent }
@@ -121,6 +130,48 @@ export class E2EE {
 
   private setJSON(key: string, value: unknown) {
     return this.store.set(key, JSON.stringify(value));
+  }
+
+  /**
+   * Whether to encrypt in this chat: always once it is encrypted, and before that as soon as
+   * everyone else in it has a device with keys (otherwise they could not read it).
+   */
+  async shouldEncrypt(chat: Pick<ChatDTO, "encrypted" | "members">) {
+    if (chat.encrypted) return true;
+    await this.ready();
+    const others = chat.members.map((m) => m.user.id).filter((id) => id !== this.userId);
+    if (!others.length) return false;
+    const devices = await this.devicesOf(others);
+    return others.every((id) => devices.some((d) => d.userId === id));
+  }
+
+  /** Fills an encrypted message's text, formatting, quote and file details in from its content. */
+  async hydrate<T extends MessageDTO>(m: T): Promise<Hydrated<T>> {
+    const opened = await this.open(m);
+    if (opened.status === "plain") return m;
+    if (opened.status === "unavailable") return { ...m, undecryptable: opened.reason !== "hidden" };
+    const c = opened.content;
+    return {
+      ...m,
+      text: c.text ?? null,
+      entities: c.entities ?? [],
+      spoiler: c.spoiler ?? false,
+      replyTo: m.replyTo?.encrypted ? { ...m.replyTo, text: c.replyText ?? null } : m.replyTo,
+      attachment:
+        m.attachment && c.file
+          ? {
+              ...m.attachment,
+              name: c.file.name,
+              mime: c.file.mime,
+              size: c.file.size,
+              width: c.file.width ?? null,
+              height: c.file.height ?? null,
+              durationMs: c.file.durationMs ?? null,
+              waveform: c.file.waveform ?? null,
+            }
+          : m.attachment,
+      ...(c.file && { file: c.file }),
+    };
   }
 
   /** Calls `fn` with the user id whenever someone's set of devices changes after we first saw it. */
