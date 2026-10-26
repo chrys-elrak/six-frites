@@ -9,6 +9,7 @@ import { hydrateScheduled } from "@/lib/e2ee";
 import { cancelScheduled, rescheduleMessage, scheduledKey, sendScheduledNow } from "@/lib/actions";
 import { shortRule } from "@/lib/ephemeral";
 import { sendAtLabel, toLocalInput } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
 import { MediaLabel } from "./message-list";
@@ -25,15 +26,16 @@ export function ScheduleDialog({
   onPick: (at: Date) => void;
   onClose: () => void;
 }) {
+  const tr = useT();
   const [value, setValue] = useState(() => toLocalInput(initial ?? new Date(Date.now() + 60 * 60 * 1000)));
   const [error, setError] = useState<string | null>(null);
   const now = new Date();
 
   function submit() {
     const at = new Date(value);
-    if (Number.isNaN(at.getTime()) || at <= new Date()) return setError("Pick a time in the future.");
+    if (Number.isNaN(at.getTime()) || at <= new Date()) return setError(tr.chat.pickFuture);
     if (at.getTime() - Date.now() > SCHEDULE_LIMITS.maxAheadSeconds * 1000)
-      return setError("Pick a time within a year.");
+      return setError(tr.chat.pickWithinYear);
     onPick(at);
   }
 
@@ -58,7 +60,7 @@ export function ScheduleDialog({
           }}
           required
           autoFocus
-          aria-label="Send at"
+          aria-label={tr.chat.sendAt}
           className="block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800"
         />
         {error && (
@@ -72,10 +74,10 @@ export function ScheduleDialog({
             onClick={onClose}
             className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
           >
-            Cancel
+            {tr.common.cancel}
           </button>
           <PrimaryButton type="submit" className="flex-1">
-            Schedule
+            {tr.chat.schedule}
           </PrimaryButton>
         </div>
       </form>
@@ -84,13 +86,14 @@ export function ScheduleDialog({
 }
 
 function Preview({ s }: { s: ScheduledMessageDTO }) {
+  const tr = useT();
   return (
     <span className="flex min-w-0 items-center gap-1 text-[15px]">
       {s.ephemeral && <Flame className="size-3.5 shrink-0 text-orange-500" aria-label={shortRule(s.ephemeral)} />}
       {s.type !== "text" && s.type !== "service" && <MediaLabel type={s.type} />}
       {s.spoiler && s.type === "text" ? (
         <span className="inline-flex items-center gap-1 italic">
-          <EyeOff className="size-3.5" /> Spoiler
+          <EyeOff className="size-3.5" /> {tr.summary.spoiler}
         </span>
       ) : (
         s.text && (
@@ -105,6 +108,7 @@ function Preview({ s }: { s: ScheduledMessageDTO }) {
 }
 
 export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: () => void }) {
+  const tr = useT();
   const qc = useQueryClient();
   const [rescheduling, setRescheduling] = useState<ScheduledMessageDTO | null>(null);
   const list = useQuery({
@@ -123,7 +127,7 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
   if (rescheduling) {
     return (
       <ScheduleDialog
-        title="Reschedule"
+        title={tr.chat.reschedule}
         initial={new Date(rescheduling.sendAt)}
         onClose={() => setRescheduling(null)}
         onPick={(at) => {
@@ -138,20 +142,20 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
   return (
     <Dialog onClose={onClose}>
       <div className="flex items-center border-b border-stone-200 px-4 py-3 dark:border-stone-800">
-        <h2 className="flex-1 font-semibold">Scheduled messages</h2>
+        <h2 className="flex-1 font-semibold">{tr.chat.scheduledMessages}</h2>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={tr.common.close}
           className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
         >
           <X className="size-4" />
         </button>
       </div>
       {list.isPending ? (
-        <p className="p-6 text-center text-sm text-stone-500">Loading…</p>
+        <p className="p-6 text-center text-sm text-stone-500">{tr.common.loading}</p>
       ) : items.length === 0 ? (
-        <p className="p-6 text-center text-sm text-stone-500">No scheduled messages.</p>
+        <p className="p-6 text-center text-sm text-stone-500">{tr.chat.noScheduled}</p>
       ) : (
         <ul>
           {items.map((s) => (
@@ -163,17 +167,17 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
               <Preview s={s} />
               <div className="flex gap-4 text-sm font-medium">
                 <button type="button" onClick={() => run(() => sendScheduledNow(qc, s))} className="hover:underline">
-                  Send now
+                  {tr.chat.sendNow}
                 </button>
                 <button type="button" onClick={() => setRescheduling(s)} className="hover:underline">
-                  Reschedule
+                  {tr.chat.reschedule}
                 </button>
                 <button
                   type="button"
                   onClick={() => run(() => cancelScheduled(qc, s))}
                   className="text-red-600 hover:underline dark:text-red-400"
                 >
-                  Delete
+                  {tr.common.delete}
                 </button>
               </div>
             </li>

@@ -150,6 +150,20 @@ export const AUTO_DELETE_UNITS = [
   ["months", 30 * DAY],
 ] as const;
 
+export const MUTE_PRESETS = [
+  { label: "1 hour", secs: 60 * 60 },
+  { label: "8 hours", secs: 8 * 60 * 60 },
+  { label: "1 day", secs: 24 * 60 * 60 },
+  { label: "1 week", secs: 7 * 24 * 60 * 60 },
+] as const;
+
+export const MAX_MUTE_SECS = 365 * 24 * 60 * 60;
+
+/** Whether a chat is muted right now; a timed mute counts as over once its end has passed. */
+export function isMuted(chat: { muted: boolean; mutedUntil: string | null }, now = Date.now()) {
+  return chat.muted && (chat.mutedUntil === null || Date.parse(chat.mutedUntil) > now);
+}
+
 export const MessageDTO = z.object({
   id: Id,
   chatId: Id,
@@ -275,6 +289,7 @@ export const ChatDTO = z.object({
   unreadCount: z.number().int(),
   archived: z.boolean(),
   muted: z.boolean(),
+  mutedUntil: IsoDate.nullable().describe("When a timed mute ends; null while muted for good or not muted"),
   pinned: z.boolean(),
   autoDeleteSecs: z
     .number()
@@ -341,6 +356,9 @@ export const UpdateChatInput = z
   .object({
     archived: z.boolean().optional(),
     muted: z.boolean().optional(),
+    mutedUntil: IsoDate.nullable()
+      .optional()
+      .describe("With `muted: true`, unmute on its own at this time. Leave out or null to stay muted."),
     pinned: z.boolean().optional(),
     autoDeleteSecs: z
       .number()

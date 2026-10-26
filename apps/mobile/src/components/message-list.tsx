@@ -47,8 +47,9 @@ import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
 import { emojiOnly } from "@/lib/emoji";
 import { canResend, shortRule } from "@/lib/ephemeral";
-import { clockTime, dayLabel, sameDay } from "@/lib/format";
+import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
+import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
 import { six } from "@/lib/six";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
@@ -91,19 +92,12 @@ interface MsgRow {
   delivery: Delivery | null;
 }
 
-type Row = { kind: "day"; key: string; label: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
+type Row = { kind: "day"; key: string; at: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
 
 interface Item {
   senderId: string;
   createdAt: string;
   row: Omit<MsgRow, "kind" | "groupStart" | "groupEnd" | "delivery">;
-}
-
-/** "Outgoing video call · 2:31", "Missed voice call" or, for the caller, "Unanswered voice call". */
-function callLine(a: { video: boolean; secs: number | null }, mine: boolean) {
-  const kind = a.video ? "video call" : "voice call";
-  if (a.secs === null) return `${mine ? "Unanswered" : "Missed"} ${kind}`;
-  return `${mine ? "Outgoing" : "Incoming"} ${kind} · ${Math.floor(a.secs / 60)}:${String(a.secs % 60).padStart(2, "0")}`;
 }
 
 const lockOf = (m: MessageDTO & { undecryptable?: boolean; decrypting?: boolean }): MsgRow["locked"] =>
@@ -185,7 +179,7 @@ function buildRows(
     const prev = items[i - 1];
     const next = items[i + 1];
     if (!prev || !sameDay(prev.createdAt, it.createdAt)) {
-      rows.push({ kind: "day", key: `day:${it.createdAt}`, label: dayLabel(it.createdAt) });
+      rows.push({ kind: "day", key: `day:${it.createdAt}`, at: it.createdAt });
     }
     const r = it.row;
     if (r.message?.type === "service") {
@@ -219,20 +213,22 @@ function buildRows(
 }
 
 function Ticks({ delivery, color, readColor }: { delivery: Delivery; color: string; readColor: string }) {
-  if (delivery === "sending") return <Clock size={12} color={color} accessibilityLabel="Sending" />;
+  const tr = useT();
+  if (delivery === "sending") return <Clock size={12} color={color} accessibilityLabel={tr.messages.status.sending} />;
   if (delivery === "failed") return null;
-  const label = { sent: "Sent", delivered: "Delivered", read: "Read" }[delivery];
+  const label = tr.messages.status[delivery];
   const Icon = delivery === "sent" ? Check : CheckCheck;
   return <Icon size={14} strokeWidth={2.5} color={delivery === "read" ? readColor : color} accessibilityLabel={label} />;
 }
 
 function Meta({ row, color, t }: { row: MsgRow; color: string; t: Theme }) {
+  const tr = useT();
   const bubble = useBubbleColors();
   const onPill = color === "#fff";
   const readColor = !row.mine ? t.read : onPill ? "#7dd3fc" : bubble.ink;
   return (
     <>
-      {row.edited && !row.deleted && <Text style={[styles.meta, { color }]}>edited</Text>}
+      {row.edited && !row.deleted && <Text style={[styles.meta, { color }]}>{tr.messages.edited}</Text>}
       <Text style={[styles.meta, { color }]}>{clockTime(row.createdAt)}</Text>
       {row.delivery && <Ticks delivery={row.delivery} color={color} readColor={readColor} />}
     </>
@@ -251,6 +247,7 @@ function Quote({
   onPress: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const bubble = useBubbleColors();
   const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
   const dim = reply.deleted || reply.spoiler;
@@ -278,13 +275,13 @@ function Quote({
         ) : null}
         <Text numberOfLines={2} style={{ color: fg, fontSize: 13, opacity: dim ? 0.7 : 0.8, fontStyle: dim ? "italic" : "normal", flexShrink: 1 }}>
           {reply.deleted
-            ? "Message deleted"
+            ? tr.summary.messageDeleted
             : reply.ephemeral
-              ? "Self-destructing message"
+              ? tr.summary.selfDestructing
               : reply.spoiler
-              ? "Spoiler"
+              ? tr.summary.spoiler
               : reply.type !== "text"
-                ? `${mediaLabel(reply.type)}${reply.text ? ` · ${reply.text}` : ""}`
+                ? `${mediaLabel(reply.type, tr)}${reply.text ? ` · ${reply.text}` : ""}`
                 : reply.text}
         </Text>
       </View>
@@ -294,6 +291,7 @@ function Quote({
 
 function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolean; color: string }) {
   const t = useTheme();
+  const tr = useT();
   const revealed = useSpoilers((s) => !!s.revealed[row.key]);
   const reveal = useSpoilers((s) => s.reveal);
   const text = row.text ?? "";
@@ -319,7 +317,7 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
         return (
           <Text
             key={i}
-            accessibilityLabel="Spoiler, tap to reveal"
+            accessibilityLabel={tr.messages.revealSpoiler}
             onPress={selecting ? undefined : () => reveal(row.key)}
             style={[style, { color: spoilerInk, backgroundColor: spoilerInk }]}
           >
@@ -333,17 +331,18 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
 
 function Sealed({ row, color, onOpen }: { row: MsgRow; color: string; onOpen: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const e = row.ephemeral!;
-  const kind = row.type === "text" ? "Message" : mediaLabel(row.type);
+  const kind = row.type === "text" ? tr.common.message : mediaLabel(row.type, tr);
   return (
     <Pressable onPress={onOpen} disabled={e.expired} style={styles.sealed}>
       <View style={[styles.sealedIcon, { backgroundColor: e.expired ? "rgba(120,113,108,0.15)" : "rgba(249,115,22,0.15)" }]}>
         <Flame size={20} color={e.expired ? t.muted : flame} fill={e.expired ? "none" : flame} />
       </View>
       <View style={{ flexShrink: 1 }}>
-        <Text style={{ color, fontWeight: "700", fontSize: 15 }}>{e.expired ? "Opened" : "Tap to view"}</Text>
+        <Text style={{ color, fontWeight: "700", fontSize: 15 }}>{e.expired ? tr.messages.opened : tr.messages.tapToView}</Text>
         <Text style={{ color, opacity: 0.7, fontSize: 12 }}>
-          {kind} · {shortRule(e)}
+          {kind} · {shortRule(e, tr)}
         </Text>
       </View>
     </Pressable>
@@ -364,16 +363,22 @@ function toLocalDeadline(result: ViewMessageResult, response: Response) {
 }
 
 function SenderBadge({ e, color, onResend }: { e: EphemeralDTO; color: string; onResend: () => void }) {
+  const tr = useT();
   return (
     <View style={styles.badge}>
       <Flame size={12} color={color} />
       <Text style={{ color, fontSize: 11, opacity: 0.8 }}>
-        {shortRule(e)} · {e.expired || e.views ? `Opened${e.views > 1 ? ` ${e.views}×` : ""}` : "Not opened"}
+        {shortRule(e, tr)} ·{" "}
+        {e.expired || e.views
+          ? e.views > 1
+            ? tr.messages.openedTimes(e.views)
+            : tr.messages.opened
+          : tr.messages.notOpened}
       </Text>
       {canResend(e) && (
         <Pressable onPress={onResend} hitSlop={6} style={styles.resend}>
           <RotateCcw size={12} color={color} />
-          <Text style={{ color, fontSize: 11, fontWeight: "700" }}>Resend ({e.resendsLeft} left)</Text>
+          <Text style={{ color, fontSize: 11, fontWeight: "700" }}>{tr.messages.resendLeft(e.resendsLeft)}</Text>
         </Pressable>
       )}
     </View>
@@ -414,6 +419,7 @@ function Bubble({
   frozen: boolean;
 }) {
   const t = useTheme();
+  const tr = useT();
   const bubble = useBubbleColors();
   const selectable = selecting && row.message !== null;
   const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
@@ -563,13 +569,13 @@ function Bubble({
               {row.deleted ? (
                 <View style={styles.deleted}>
                   <Ban size={14} color={fg} />
-                  <Text style={[styles.text, { color: fg, fontStyle: "italic" }]}>This message was deleted</Text>
+                  <Text style={[styles.text, { color: fg, fontStyle: "italic" }]}>{tr.messages.deleted}</Text>
                 </View>
               ) : row.locked ? (
                 <View style={styles.deleted}>
                   <Lock size={14} color={fg} />
                   <Text style={[styles.text, { color: fg, fontStyle: "italic", flexShrink: 1 }]}>
-                    {row.locked === "decrypting" ? "Decrypting…" : "Couldn't decrypt this message on this phone"}
+                    {row.locked === "decrypting" ? tr.messages.decrypting : tr.messages.cantDecrypt}
                   </Text>
                 </View>
               ) : (
@@ -596,7 +602,7 @@ function Bubble({
         )}
         {row.delivery === "failed" && (
           <Pressable onPress={() => onMenu()} hitSlop={6}>
-            <Text style={{ color: t.danger, fontSize: 12, fontWeight: "600", marginTop: 2 }}>Not sent · Tap for options</Text>
+            <Text style={{ color: t.danger, fontSize: 12, fontWeight: "600", marginTop: 2 }}>{tr.messages.notSent}</Text>
           </Pressable>
         )}
       </View>
@@ -612,6 +618,7 @@ export interface MessageListHandle {
 export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: string; onSeen: () => void }>(
   function MessageList({ chat, meId, onSeen }, handle) {
     const t = useTheme();
+    const tr = useT();
     const qc = useQueryClient();
     const { width } = useWindowDimensions();
     const { realtime } = useRealtime();
@@ -669,7 +676,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     }
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
-    const nameOf = (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
+    const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {
       const peers = chat.members.filter((m) => m.user.id !== meId);
@@ -739,48 +746,48 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         const p = row.pending;
         return [
           ...(p.status === "failed" && realtime
-            ? [{ label: "Retry", onSelect: () => void deliver(qc, realtime, p) }]
+            ? [{ label: tr.common.retry, onSelect: () => void deliver(qc, realtime, p) }]
             : []),
-          { label: "Discard", destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
+          { label: tr.messages.discard, destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
         ];
       }
       const m = row.message!;
       if (row.deleted) {
         return [
-          { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
+          { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
           ...(chat.type === "direct" || row.mine
             ? [
                 {
-                  label: chat.type === "direct" ? `Remove for me and ${chat.title}` : "Remove for everyone",
+                  label: chat.type === "direct" ? tr.messages.removeForMeAnd(chat.title) : tr.messages.removeForEveryone,
                   destructive: true,
                   onSelect: () => void deleteMessage(qc, m, "all").catch(() => null),
                 },
               ]
             : []),
-          { label: "Remove for me", destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) },
+          { label: tr.messages.removeForMe, destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) },
         ];
       }
       return [
-        ...(frozen ? [] : [{ label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
-        { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
+        ...(frozen ? [] : [{ label: tr.messages.reply, onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
+        { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
         ...(m.ephemeral || frozen
           ? []
           : [
               ...(row.mine && m.text !== null
-                ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
+                ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
                 : []),
             ]),
         ...(m.ephemeral && canResend(m.ephemeral)
-          ? [{ label: "Resend so they can open it again", onSelect: () => void resendEphemeral(m) }]
+          ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
           : []),
-        { label: "Delete", destructive: true, onSelect: () => setConfirmDelete(m) },
+        { label: tr.common.delete, destructive: true, onSelect: () => setConfirmDelete(m) },
       ];
     }
 
     if (messages.isPending) {
       return (
         <View style={styles.center}>
-          <Text style={{ color: t.muted }}>Loading…</Text>
+          <Text style={{ color: t.muted }}>{tr.common.loading}</Text>
         </View>
       );
     }
@@ -791,7 +798,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       <View style={{ flex: 1 }}>
         {rows.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={[styles.onWallpaper, styles.emptyChip]}>No messages yet. Say hello!</Text>
+            <Text style={[styles.onWallpaper, styles.emptyChip]}>{tr.messages.empty}</Text>
           </View>
         ) : (
           <FlatList
@@ -815,7 +822,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             renderItem={({ item: row }) =>
               row.kind === "day" ? (
                 <View style={styles.day}>
-                  <Text style={[styles.dayText, styles.onWallpaper]}>{row.label}</Text>
+                  <Text style={[styles.dayText, styles.onWallpaper]}>{dayLabel(row.at)}</Text>
                 </View>
               ) : row.kind === "service" ? (
                 <View style={styles.service}>
@@ -837,10 +844,18 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                     )}
                     <Text style={{ color: "#fff", fontSize: 12, textAlign: "center", flexShrink: 1 }}>
                       {row.message.action?.type === "e2ee"
-                        ? "Messages are end-to-end encrypted. No one outside this chat, not even Six Frites, can read them."
+                        ? tr.messages.e2eeNotice
                         : row.message.action?.type === "call"
-                          ? callLine(row.message.action, row.message.senderId === meId)
-                          : `${nameOf(row.message.senderId)} ${serviceSentence(row.message)}`}
+                          ? tr.messages.callLog(
+                              row.message.action.video,
+                              row.message.senderId === meId,
+                              row.message.action.secs === null ? null : formatDuration(row.message.action.secs * 1000),
+                            )
+                          : serviceSentence(
+                              row.message,
+                              row.message.senderId === meId ? null : nameOf(row.message.senderId),
+                              tr,
+                            )}
                     </Text>
                   </View>
                 </View>
@@ -889,20 +904,20 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         {viewing && <EphemeralViewer message={viewing.message} expiresAt={viewing.expiresAt} onClose={closeViewer} />}
         {confirmDelete && (
           <Sheet
-            title="Delete message?"
+            title={tr.messages.deleteTitle}
             onClose={() => setConfirmDelete(null)}
             actions={[
               ...(chat.type === "direct" || confirmDelete.senderId === meId
                 ? [
                     {
-                      label: chat.type === "direct" ? `Delete for me and ${chat.title}` : "Delete for everyone",
+                      label: chat.type === "direct" ? tr.messages.deleteForMeAnd(chat.title) : tr.messages.deleteForEveryone,
                       destructive: true,
                       onSelect: () => void deleteMessage(qc, confirmDelete, "all").catch(() => null),
                     },
                   ]
                 : []),
               {
-                label: "Delete for me",
+                label: tr.messages.deleteForMe,
                 destructive: true,
                 onSelect: () => void deleteMessage(qc, confirmDelete, "me").catch(() => null),
               },

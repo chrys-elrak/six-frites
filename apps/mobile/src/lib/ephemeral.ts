@@ -1,24 +1,37 @@
-import type { EphemeralDTO, EphemeralInput } from "@six/shared";
+import { type Dict, type EphemeralDTO, type EphemeralInput, durationLabel } from "@six/shared";
+import { getT } from "@/lib/i18n";
 
 export interface EphemeralOption {
   label: string;
   value: EphemeralInput;
 }
 
-export const EPHEMERAL_OPTIONS: EphemeralOption[] = [
-  { label: "View once", value: { maxViews: 1 } },
-  { label: "View twice", value: { maxViews: 2 } },
-  { label: "3 seconds after opening", value: { ttlSeconds: 3 } },
-  { label: "10 seconds after opening", value: { ttlSeconds: 10 } },
-  { label: "30 seconds after opening", value: { ttlSeconds: 30 } },
-  { label: "1 minute after opening", value: { ttlSeconds: 60 } },
+const RULES: EphemeralInput[] = [
+  { maxViews: 1 },
+  { maxViews: 2 },
+  { ttlSeconds: 3 },
+  { ttlSeconds: 10 },
+  { ttlSeconds: 30 },
+  { ttlSeconds: 60 },
 ];
 
-export function shortRule(e: Pick<EphemeralDTO, "maxViews" | "ttlSeconds">) {
+/** The picker's choices; each label is read in the current language when accessed. */
+export const EPHEMERAL_OPTIONS: EphemeralOption[] = RULES.map((value) => ({
+  value,
+  get label() {
+    const tr = getT();
+    return value.maxViews
+      ? tr.messages.views(value.maxViews)
+      : tr.messages.afterOpening(durationLabel(value.ttlSeconds!, tr));
+  },
+}));
+
+export function shortRule(e: Pick<EphemeralDTO, "maxViews" | "ttlSeconds">, tr: Dict = getT()) {
   const parts: string[] = [];
-  if (e.maxViews === 1) parts.push("View once");
-  else if (e.maxViews) parts.push(`View ${e.maxViews === 2 ? "twice" : `${e.maxViews}×`}`);
-  if (e.ttlSeconds) parts.push(e.ttlSeconds < 60 ? `${e.ttlSeconds}s` : `${Math.round(e.ttlSeconds / 60)} min`);
+  if (e.maxViews) parts.push(tr.messages.views(e.maxViews));
+  if (e.ttlSeconds) {
+    parts.push(e.ttlSeconds < 60 ? tr.messages.seconds(e.ttlSeconds) : tr.messages.minutes(Math.round(e.ttlSeconds / 60)));
+  }
   return parts.join(" · ");
 }
 

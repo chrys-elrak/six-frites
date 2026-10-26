@@ -1,24 +1,19 @@
 import { SixApiError, unwrap } from "@six/sdk";
+import type { Dict } from "@six/shared";
 import { EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Dialog } from "./encryption-settings";
 import { Card, Notice, PrimaryButton, SectionTitle, TextButton } from "./ui";
 
-const codeErrors: Record<string, string> = {
-  WRONG_CONTACT_PIN: "That's not your privacy code.",
-  CONTACT_PIN_REQUIRED: "Enter your privacy code.",
-  CONTACT_PIN_NOT_SET: "Set a privacy code in Settings first.",
-  RATE_LIMITED: "Too many tries. Wait a minute.",
-  VALIDATION_FAILED: "Use 4 to 8 digits.",
-};
-
-export function codeError(err: unknown) {
+export function codeError(err: unknown, tr: Dict) {
   const code = err instanceof SixApiError ? err.code : undefined;
-  return (code && codeErrors[code]) ?? "Something went wrong. Try again.";
+  const errors: Record<string, string | undefined> = tr.contacts.privacy.errors;
+  return (code && errors[code]) ?? tr.common.somethingWrongRetry;
 }
 
 export function CodeInput({
@@ -55,23 +50,22 @@ export function CodeInput({
 
 export function PrivacyCodeSettings() {
   const t = useTheme();
+  const tr = useT();
   const hasCode = useSession((s) => s.user!.hasContactPin);
   const [dialog, setDialog] = useState<"set" | "remove" | null>(null);
 
   return (
     <View>
-      <SectionTitle>Privacy code</SectionTitle>
+      <SectionTitle>{tr.contacts.privacy.title}</SectionTitle>
       <Card style={{ padding: 16, gap: 12 }}>
         <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
           <EyeOff size={22} color={hasCode ? brand : t.muted} />
           <Text style={{ flex: 1, color: t.textSoft, fontSize: 14, lineHeight: 20 }}>
-            {hasCode
-              ? "The real name of a contact you renamed only shows after you enter this code."
-              : "Set a code to see the real name of a contact you renamed. Until then it stays hidden."}
+            {hasCode ? tr.contacts.privacy.onHint : tr.contacts.privacy.offHint}
           </Text>
         </View>
-        <PrimaryButton title={hasCode ? "Change code" : "Set code"} onPress={() => setDialog("set")} />
-        {hasCode && <TextButton title="Remove code" onPress={() => setDialog("remove")} />}
+        <PrimaryButton title={hasCode ? tr.contacts.privacy.change : tr.contacts.privacy.set} onPress={() => setDialog("set")} />
+        {hasCode && <TextButton title={tr.contacts.privacy.remove} onPress={() => setDialog("remove")} />}
       </Card>
       {dialog && <CodeDialog removing={dialog === "remove"} hasCode={hasCode} onClose={() => setDialog(null)} />}
     </View>
@@ -80,6 +74,7 @@ export function PrivacyCodeSettings() {
 
 function CodeDialog({ removing, hasCode, onClose }: { removing: boolean; hasCode: boolean; onClose: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const setUser = useSession((s) => s.setUser);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -103,7 +98,7 @@ function CodeDialog({ removing, hasCode, onClose }: { removing: boolean; hasCode
       setUser(user);
       onClose();
     } catch (err) {
-      setError(codeError(err));
+      setError(codeError(err, tr));
     } finally {
       setBusy(false);
     }
@@ -111,28 +106,32 @@ function CodeDialog({ removing, hasCode, onClose }: { removing: boolean; hasCode
 
   return (
     <Dialog
-      title={removing ? "Remove privacy code" : hasCode ? "Change privacy code" : "Set a privacy code"}
+      title={
+        removing
+          ? tr.contacts.privacy.removeTitle
+          : hasCode
+            ? tr.contacts.privacy.changeTitle
+            : tr.contacts.privacy.setTitle
+      }
       onClose={onClose}
     >
       {!removing && (
-        <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>
-          4 to 8 digits. You'll need it to see the real name of a contact you renamed. Nobody can recover it for you.
-        </Text>
+        <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{tr.contacts.privacy.hint}</Text>
       )}
-      {(removing || hasCode) && <CodeInput label="Current code" value={current} onChange={setCurrent} autoFocus />}
+      {(removing || hasCode) && <CodeInput label={tr.contacts.privacy.current} value={current} onChange={setCurrent} autoFocus />}
       {!removing && (
         <>
-          <CodeInput label="New code" value={next} onChange={setNext} autoFocus={!hasCode} />
-          <CodeInput label="New code again" value={again} onChange={setAgain} onSubmit={() => void save()} />
+          <CodeInput label={tr.contacts.privacy.new} value={next} onChange={setNext} autoFocus={!hasCode} />
+          <CodeInput label={tr.contacts.privacy.again} value={again} onChange={setAgain} onSubmit={() => void save()} />
         </>
       )}
-      {(error || mismatch) && <Notice tone="error">{error ?? "The codes don't match."}</Notice>}
+      {(error || mismatch) && <Notice tone="error">{error ?? tr.contacts.privacy.mismatch}</Notice>}
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
         <View style={{ flex: 1 }}>
-          <TextButton title="Cancel" onPress={onClose} />
+          <TextButton title={tr.common.cancel} onPress={onClose} />
         </View>
         <PrimaryButton
-          title={removing ? "Remove" : "Save"}
+          title={removing ? tr.common.remove : tr.common.save}
           busy={busy}
           disabled={!ready || busy}
           onPress={() => void save()}

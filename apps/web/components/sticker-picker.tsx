@@ -3,11 +3,13 @@
 import type { StickerDTO } from "@six/shared";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { useStickerPacks } from "@/lib/stickers";
 import { NewPackDialog, PackDialog } from "./pack-dialog";
 import { StickerView } from "./sticker";
 
 export function StickerPicker({ onPick }: { onPick: (sticker: StickerDTO) => void }) {
+  const tr = useT();
   const packs = useStickerPacks();
   const [active, setActive] = useState<string | null>(null);
   const [managing, setManaging] = useState<string | null>(null);
@@ -40,8 +42,8 @@ export function StickerPicker({ onPick }: { onPick: (sticker: StickerDTO) => voi
         <button
           type="button"
           onClick={() => setCreating(true)}
-          aria-label="New sticker pack"
-          title="New sticker pack"
+          aria-label={tr.composer.newPack}
+          title={tr.composer.newPack}
           className="grid size-10 shrink-0 place-items-center rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
         >
           <Plus className="size-5" />
@@ -52,15 +54,15 @@ export function StickerPicker({ onPick }: { onPick: (sticker: StickerDTO) => voi
           <span className="min-w-0 flex-1 truncate">{pack.title}</span>
           {!pack.builtin && (
             <button type="button" onClick={() => setManaging(pack.id)} className="hover:underline">
-              {pack.mine ? "Edit" : "Manage"}
+              {pack.mine ? tr.common.edit : tr.composer.manage}
             </button>
           )}
         </div>
       )}
       <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-4 gap-1 overflow-y-auto overscroll-contain p-2">
-        {packs.isPending && <p className="col-span-4 py-8 text-center text-sm text-stone-400">Loading…</p>}
+        {packs.isPending && <p className="col-span-4 py-8 text-center text-sm text-stone-400">{tr.common.loading}</p>}
         {pack?.stickers.length === 0 && (
-          <p className="col-span-4 py-8 text-center text-sm text-stone-400">No stickers in this pack yet.</p>
+          <p className="col-span-4 py-8 text-center text-sm text-stone-400">{tr.composer.noStickersInPack}</p>
         )}
         {pack?.stickers.map((s) => (
           <button

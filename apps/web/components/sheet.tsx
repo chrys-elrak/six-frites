@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 
 export interface SheetAction {
@@ -19,6 +20,7 @@ export function Sheet({
   actions: SheetAction[];
   onClose: () => void;
 }) {
+  const tr = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -30,7 +32,7 @@ export function Sheet({
       <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal>
         <button
           type="button"
-          aria-label="Close"
+          aria-label={tr.common.close}
           onClick={onClose}
           className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
         />
@@ -63,7 +65,7 @@ export function Sheet({
             onClick={onClose}
             className="block w-full rounded-2xl bg-white py-3.5 text-[17px] font-semibold shadow-xl hover:bg-stone-50 dark:bg-stone-900 dark:hover:bg-stone-800"
           >
-            Cancel
+            {tr.common.cancel}
           </button>
         </div>
       </div>

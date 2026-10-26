@@ -10,6 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "@/lib/i18n";
 import { brand, type Theme, useTheme } from "@/lib/theme";
 
 export function Card({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
@@ -179,11 +180,12 @@ export function EmptyState({
   );
 }
 
-export function Loading({ label = "Loading…" }: { label?: string }) {
+export function Loading({ label }: { label?: string }) {
   const t = useTheme();
+  const tr = useT();
   return (
     <View style={styles.center}>
-      <Text style={{ color: t.muted, fontSize: 14 }}>{label}</Text>
+      <Text style={{ color: t.muted, fontSize: 14 }}>{label ?? tr.common.loading}</Text>
     </View>
   );
 }

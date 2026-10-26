@@ -2,6 +2,7 @@ import type { Realtime, SignalInput } from "@six/sdk";
 import type { CallSignal, CallSignalDTO, ChatDTO } from "@six/shared";
 import { create } from "zustand";
 import { e2ee } from "./e2ee";
+import { getT } from "./i18n";
 import { six } from "./six";
 
 const RING_TIMEOUT = 45_000;
@@ -88,7 +89,7 @@ async function connect(video: boolean) {
       const call = useCall.getState().call;
       if (call && !call.connectedAt) patch({ phase: "active", connectedAt: Date.now() });
     }
-    if (pc.connectionState === "failed") void hangup("Connection lost");
+    if (pc.connectionState === "failed") void hangup(getT().calls.connectionLost);
   };
   live!.pc = pc;
   patch({ local, remote, cameraOn: video });
@@ -136,12 +137,13 @@ function ringFor(id: string, onTimeout: () => void) {
 }
 
 function mediaError(err: unknown) {
+  const tr = getT().calls;
   const name = (err as Error).name;
-  if (name === "NotAllowedError") return "Allow the microphone and camera to call";
-  if (name === "NotFoundError") return "No microphone or camera found";
-  if ((err as Error).message === "NO_DEVICES") return "They can't take calls yet";
-  if ((err as { code?: string }).code === "OFFLINE") return "You're offline";
-  return "Couldn't start the call";
+  if (name === "NotAllowedError") return tr.allowMedia;
+  if (name === "NotFoundError") return tr.noMedia;
+  if ((err as Error).message === "NO_DEVICES") return tr.cantTakeCalls;
+  if ((err as { code?: string }).code === "OFFLINE") return tr.offline;
+  return tr.couldNotStart;
 }
 
 export function setCallRealtime(realtime: Realtime | null) {
@@ -184,7 +186,7 @@ export async function startCall(chat: ChatDTO, meId: string, video: boolean) {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     await signal({ type: "offer", sdp: offer.sdp!, video });
-    ringFor(id, () => void hangup("No answer"));
+    ringFor(id, () => void hangup(getT().calls.noAnswer));
   } catch (err) {
     teardown(mediaError(err), false);
   }
@@ -213,7 +215,7 @@ export function declineCall() {
   teardown(null);
 }
 
-export async function hangup(reason = "Call ended") {
+export async function hangup(reason = getT().calls.callEnded) {
   await signal({ type: "hangup" }).catch(() => null);
   teardown(reason);
 }
@@ -325,13 +327,13 @@ async function handle(call: Call, s: CallSignal, fromDeviceId: string) {
       patch({ peerVideo: s.on });
       break;
     case "reject":
-      teardown("Declined");
+      teardown(getT().calls.declined);
       break;
     case "busy":
-      teardown("Busy on another call");
+      teardown(getT().calls.busy);
       break;
     case "hangup":
-      teardown(call.phase === "incoming" ? null : "Call ended");
+      teardown(call.phase === "incoming" ? null : getT().calls.callEnded);
       break;
   }
 }

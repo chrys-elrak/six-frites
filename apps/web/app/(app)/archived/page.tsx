@@ -1,6 +1,10 @@
+"use client";
+
 import { Archive } from "lucide-react";
 import { EmptyPane } from "@/components/empty-pane";
+import { useT } from "@/lib/i18n";
 
 export default function ArchivedIndex() {
-  return <EmptyPane Icon={Archive}>Archived chats stay here until a new message arrives or you unarchive them.</EmptyPane>;
+  const tr = useT();
+  return <EmptyPane Icon={Archive}>{tr.chats.archivedHint}</EmptyPane>;
 }

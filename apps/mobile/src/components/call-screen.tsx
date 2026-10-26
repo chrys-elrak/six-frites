@@ -24,6 +24,7 @@ import {
   toggleSpeaker,
   useCall,
 } from "@/lib/calls";
+import { useT } from "@/lib/i18n";
 import { Avatar } from "./avatar";
 
 const RED = "#dc2626";
@@ -76,6 +77,7 @@ function Round({
 
 /** Full-screen call UI, shown over everything while a call rings, runs or has just ended. */
 export function CallScreen() {
+  const tr = useT();
   const call = useCall((s) => s.call);
   const insets = useSafeAreaInsets();
   const elapsed = useElapsed(call?.status === "active" ? call.startedAt : null);
@@ -89,10 +91,10 @@ export function CallScreen() {
       : call.status === "active"
         ? elapsed
         : call.status === "connecting"
-          ? "Connecting…"
+          ? tr.common.connecting
           : incomingRinging
-            ? `Incoming ${call.video ? "video" : "voice"} call`
-            : "Calling…";
+            ? tr.calls.incoming(call.video)
+            : tr.calls.calling;
 
   return (
     <Modal visible animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={() => undefined}>
@@ -111,7 +113,7 @@ export function CallScreen() {
           <Text style={styles.status}>{status}</Text>
           <View style={styles.e2ee}>
             <Lock size={12} color="#fff" />
-            <Text style={styles.e2eeText}>End-to-end encrypted</Text>
+            <Text style={styles.e2eeText}>{tr.calls.encrypted}</Text>
           </View>
         </View>
 
@@ -128,10 +130,10 @@ export function CallScreen() {
         <View style={[styles.controls, { paddingBottom: insets.bottom + 32 }]}>
           {incomingRinging ? (
             <View style={styles.row}>
-              <Round Icon={PhoneOff} label="Decline" color={RED} size={72} onPress={() => void declineCall()} />
+              <Round Icon={PhoneOff} label={tr.calls.decline} color={RED} size={72} onPress={() => void declineCall()} />
               <Round
                 Icon={call.video ? Video : Phone}
-                label="Accept"
+                label={tr.calls.accept}
                 color={GREEN}
                 size={72}
                 onPress={() => void acceptCall()}
@@ -140,24 +142,24 @@ export function CallScreen() {
           ) : call.status === "ended" ? null : (
             <>
               <View style={styles.row}>
-                <Round Icon={call.muted ? MicOff : Mic} label={call.muted ? "Unmute" : "Mute"} active={call.muted} onPress={toggleMute} />
+                <Round Icon={call.muted ? MicOff : Mic} label={call.muted ? tr.calls.unmute : tr.calls.mute} active={call.muted} onPress={toggleMute} />
                 {call.video && (
                   <Round
                     Icon={call.cameraOff ? VideoOff : Video}
-                    label={call.cameraOff ? "Camera on" : "Camera off"}
+                    label={call.cameraOff ? tr.calls.cameraOn : tr.calls.cameraOff}
                     active={call.cameraOff}
                     onPress={toggleCamera}
                   />
                 )}
-                {call.video && <Round Icon={SwitchCamera} label="Flip" onPress={flipCamera} />}
+                {call.video && <Round Icon={SwitchCamera} label={tr.calls.flip} onPress={flipCamera} />}
                 <Round
                   Icon={call.speaker ? Volume2 : VolumeX}
-                  label="Speaker"
+                  label={tr.calls.speaker}
                   active={call.speaker}
                   onPress={toggleSpeaker}
                 />
               </View>
-              <Round Icon={PhoneOff} label="End" color={RED} size={72} onPress={() => void hangUp()} />
+              <Round Icon={PhoneOff} label={tr.calls.hangUp} color={RED} size={72} onPress={() => void hangUp()} />
             </>
           )}
         </View>

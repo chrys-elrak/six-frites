@@ -6,12 +6,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { findErrorText, FoundUser } from "@/components/found-user";
 import { EmptyState, Loading, PrimaryButton, TextButton } from "@/components/ui";
+import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
 
 export default function AddScreen() {
   const t = useTheme();
+  const tr = useT();
   const { code } = useLocalSearchParams<{ code: string }>();
   const status = useSession((s) => s.status);
   const authed = status === "authed";
@@ -23,14 +25,14 @@ export default function AddScreen() {
     retry: false,
   });
 
-  const home = <TextButton title="Go to Six Frites" onPress={() => router.replace("/")} />;
+  const home = <TextButton title={tr.auth.goHome} onPress={() => router.replace("/")} />;
 
   if (!authed) {
     return (
       <SafeAreaView style={[styles.screen, { backgroundColor: t.bg }]}>
-        <Text style={{ color: t.text, fontSize: 16, textAlign: "center" }}>Sign in to add this contact.</Text>
+        <Text style={{ color: t.text, fontSize: 16, textAlign: "center" }}>{tr.auth.signInToAdd}</Text>
         <PrimaryButton
-          title="Sign in"
+          title={tr.auth.signIn}
           style={{ alignSelf: "stretch" }}
           onPress={() => router.replace({ pathname: "/login", params: { next: `/add/${code}` } })}
         />
@@ -43,7 +45,7 @@ export default function AddScreen() {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: t.bg }]}>
       {find.isError ? (
-        <EmptyState Icon={SearchX}>{findErrorText(find.error)}</EmptyState>
+        <EmptyState Icon={SearchX}>{findErrorText(find.error, tr)}</EmptyState>
       ) : (
         <View style={{ alignSelf: "stretch" }}>
           <FoundUser found={find.data} query={code} />

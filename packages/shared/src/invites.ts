@@ -8,12 +8,6 @@ export const PublicUser = z.object({
 });
 export type PublicUser = z.infer<typeof PublicUser>;
 
-export const CreateInviteInput = z.object({
-  maxUses: z.number().int().min(1).max(1000).nullable().default(null),
-  expiresInDays: z.number().int().min(1).max(365).nullable().default(30),
-});
-export type CreateInviteInput = z.infer<typeof CreateInviteInput>;
-
 export const InviteDTO = z.object({
   code: z.string(),
   maxUses: z.number().int().nullable(),

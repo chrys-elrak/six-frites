@@ -7,16 +7,11 @@ import { GoogleButton } from "@/components/google-button";
 import { Logo } from "@/components/logo";
 import { deviceName, useSession } from "@/lib/session";
 import { AndroidDownload } from "@/components/android-download";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 
-const errorText: Record<string, string> = {
-  INVITE_NOT_FOUND: "That invite link doesn't exist.",
-  INVITE_EXPIRED: "That invite link has expired.",
-  INVITE_EXHAUSTED: "That invite link has already been used up.",
-  INVALID_GOOGLE_TOKEN: "Google sign-in failed. Please try again.",
-};
-
 function LoginForm() {
+  const tr = useT();
   const router = useRouter();
   const params = useSearchParams();
   const inviteCode = params.get("invite") ?? undefined;
@@ -44,7 +39,11 @@ function LoginForm() {
       router.replace(home);
     } catch (err) {
       signingIn.current = false;
-      setError(err instanceof SixApiError ? (errorText[err.code] ?? err.message) : "Something went wrong.");
+      setError(
+        err instanceof SixApiError
+          ? ((tr.auth.errors as Record<string, string | undefined>)[err.code] ?? err.message)
+          : tr.common.somethingWrong,
+      );
     } finally {
       setBusy(false);
     }
@@ -57,16 +56,16 @@ function LoginForm() {
         <h1 className="text-2xl font-semibold tracking-tight">Six Frites</h1>
         <p className="text-sm text-stone-500 dark:text-stone-400">
           {inviteCode
-            ? "You've been invited. Sign in to accept."
+            ? tr.auth.invitedSignIn
             : next?.startsWith("/add/")
-              ? "Sign in to add this contact."
-              : "Sign in to continue."}
+              ? tr.auth.signInToAdd
+              : tr.auth.signInToContinue}
         </p>
       </div>
 
       <div className="space-y-3">
         <GoogleButton onCredential={onCredential} />
-        {busy && <p className="text-center text-sm text-stone-500">Signing in…</p>}
+        {busy && <p className="text-center text-sm text-stone-500">{tr.auth.signingIn}</p>}
         {error && (
           <p role="alert" className="rounded-xl bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
             {error}

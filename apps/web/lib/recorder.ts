@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getT } from "./i18n";
 
 const TYPES = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus", "audio/webm"];
 const MAX_MS = 10 * 60 * 1000;
@@ -57,7 +58,7 @@ export function useRecorder() {
       rec.start(250);
       setRecording(true);
     } catch {
-      setError("Microphone access was denied.");
+      setError(getT().composer.micDenied);
     }
   }
 

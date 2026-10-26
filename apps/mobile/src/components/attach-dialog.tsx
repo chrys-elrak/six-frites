@@ -6,6 +6,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatBytes, formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { LocalFile } from "@/lib/send";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { EphemeralPicker } from "./ephemeral-picker";
@@ -30,6 +31,7 @@ function Preview({
   onRemove: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const { file } = item;
   const ratio = file.width && file.height ? file.width / file.height : 1;
   return (
@@ -50,17 +52,17 @@ function Preview({
       <View style={styles.previewBar}>
         <Pressable
           onPress={onToggleSpoiler}
-          accessibilityLabel={item.spoiler ? "Show normally" : "Hide with spoiler"}
+          accessibilityLabel={item.spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
           style={[styles.spoilerToggle, { backgroundColor: item.spoiler ? brand : "rgba(0,0,0,0.45)" }]}
         >
           <EyeOff size={14} color={item.spoiler ? brandInk : "#fff"} />
           {large && (
             <Text style={{ color: item.spoiler ? brandInk : "#fff", fontSize: 12, fontWeight: "600" }}>
-              {item.spoiler ? "Spoiler on" : "Spoiler"}
+              {item.spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
             </Text>
           )}
         </Pressable>
-        <Pressable onPress={onRemove} accessibilityLabel="Remove" style={styles.remove}>
+        <Pressable onPress={onRemove} accessibilityLabel={tr.common.remove} style={styles.remove}>
           <X size={16} color="#fff" />
         </Pressable>
       </View>
@@ -82,6 +84,7 @@ export function AttachDialog({
   onSend: (items: PickedFile[], caption: string, ephemeral: EphemeralInput | null) => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<PickedFile[]>(() => files.map((file) => ({ file, spoiler: false })));
   const [caption, setCaption] = useState(initialCaption);
@@ -100,8 +103,12 @@ export function AttachDialog({
 
   const title =
     media.length && !others.length
-      ? `Send ${media.length === 1 ? (media[0]!.file.kind === "image" ? "photo" : "video") : `${media.length} items`}`
-      : `Send ${items.length === 1 ? "file" : `${items.length} files`}`;
+      ? media.length === 1
+        ? media[0]!.file.kind === "image"
+          ? tr.composer.sendPhoto
+          : tr.composer.sendVideo
+        : tr.composer.sendItems(media.length)
+      : tr.composer.sendFiles(items.length);
 
   return (
     <Modal transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onCancel}>
@@ -110,7 +117,7 @@ export function AttachDialog({
         <View style={[styles.panel, { backgroundColor: t.surface }]}>
           <View style={styles.head}>
             <Text style={[styles.title, { color: t.text }]}>{title}</Text>
-            <IconButton Icon={X} label="Cancel" onPress={onCancel} />
+            <IconButton Icon={X} label={tr.common.cancel} onPress={onCancel} />
           </View>
 
           <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
@@ -142,16 +149,16 @@ export function AttachDialog({
                   </Text>
                   <Text style={{ color: t.muted, fontSize: 12 }}>{formatBytes(item.file.size)}</Text>
                 </View>
-                <IconButton Icon={X} size={16} label={`Remove ${item.file.name}`} onPress={() => remove(item)} />
+                <IconButton Icon={X} size={16} label={tr.composer.removeNamed(item.file.name)} onPress={() => remove(item)} />
               </View>
             ))}
             {media.length > 0 && (
               <Text style={{ color: t.muted, fontSize: 12, paddingHorizontal: 4 }}>
-                Tap the eye on a photo or video to hide it as a spoiler.
+                {tr.composer.spoilerTip}
               </Text>
             )}
             <View style={styles.ephemeralRow}>
-              <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>Self-destruct after viewing</Text>
+              <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>{tr.composer.selfDestructAfterViewing}</Text>
               <EphemeralPicker value={ephemeral} onChange={setEphemeral} />
             </View>
           </ScrollView>
@@ -162,14 +169,14 @@ export function AttachDialog({
               onChangeText={setCaption}
               multiline
               maxLength={4000}
-              placeholder="Add a caption…"
+              placeholder={tr.composer.addCaption}
               placeholderTextColor={t.muted}
-              accessibilityLabel="Caption"
+              accessibilityLabel={tr.composer.caption}
               style={[styles.caption, { backgroundColor: t.field, color: t.text }]}
             />
             <Pressable
               onPress={() => items.length && onSend(items, caption, ephemeral)}
-              accessibilityLabel="Send"
+              accessibilityLabel={tr.common.send}
               style={({ pressed }) => [styles.send, pressed && { transform: [{ scale: 0.95 }] }]}
             >
               <SendHorizontal size={20} color={brandInk} />

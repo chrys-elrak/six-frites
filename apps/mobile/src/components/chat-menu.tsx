@@ -3,15 +3,16 @@ import {
   CHAT_THEMES,
   type ChatDTO,
   type DeleteScope,
-  chatTheme,
   customThemeColor,
   customThemeId,
   durationLabel,
+  themeName,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { deleteChat, setBlocked, updateChatSettings } from "@/lib/actions";
 import { isFrozen } from "@/lib/chats";
+import { useT } from "@/lib/i18n";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemePicker } from "./custom-theme";
 import { Sheet } from "./sheet";
@@ -29,6 +30,7 @@ export function ChatMenu({
   onClose: () => void;
   onDeleted?: (scope: DeleteScope) => void;
 }) {
+  const tr = useT();
   const qc = useQueryClient();
   const [view, setView] = useState<"menu" | "delete" | "block" | "autoDelete" | "custom" | "theme" | "customTheme">("menu");
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
@@ -57,7 +59,7 @@ export function ChatMenu({
   if (view === "customTheme") {
     return (
       <CustomThemePicker
-        title={`Custom background for you and ${peerName}`}
+        title={tr.chat.customBackgroundFor(peerName)}
         current={chat.theme}
         onPick={(mine, theirs) => settings({ theme: customThemeId(mine, theirs) })}
         onClose={onClose}
@@ -69,16 +71,20 @@ export function ChatMenu({
     const customHex = customThemeColor(chat.theme);
     return (
       <Sheet
-        title={`Chat background for you and ${peerName}`}
+        title={tr.chat.backgroundFor(peerName)}
         onClose={onClose}
         actions={[
           ...CHAT_THEMES.map((t) => ({
-            label: `${t.name}${chat.theme === t.id ? " ✓" : ""}`,
+            label: `${themeName(t.id, tr)}${chat.theme === t.id ? " ✓" : ""}`,
             onSelect: () => settings({ theme: t.id }),
           })),
-          { label: customHex ? "Custom colour ✓" : "Custom colour…", keepOpen: true, onSelect: () => setView("customTheme") },
+          {
+            label: `${tr.chat.customColour}${customHex ? " ✓" : "…"}`,
+            keepOpen: true,
+            onSelect: () => setView("customTheme"),
+          },
           ...(chat.theme
-            ? [{ label: "Back to each person's default", destructive: true, onSelect: () => settings({ theme: null }) }]
+            ? [{ label: tr.chat.defaultEach, destructive: true, onSelect: () => settings({ theme: null }) }]
             : []),
         ]}
       />
@@ -90,20 +96,20 @@ export function ChatMenu({
     const custom = current !== null && !(AUTO_DELETE_PRESETS as readonly number[]).includes(current);
     return (
       <Sheet
-        title={`Delete new messages for you and ${peerName} after`}
+        title={tr.chat.autoDeleteFor(peerName)}
         onClose={onClose}
         actions={[
           ...AUTO_DELETE_PRESETS.map((secs) => ({
-            label: `${durationLabel(secs)}${current === secs ? " ✓" : ""}`,
+            label: `${durationLabel(secs, tr)}${current === secs ? " ✓" : ""}`,
             onSelect: () => settings({ autoDeleteSecs: secs }),
           })),
           {
-            label: custom ? `Custom: ${durationLabel(current)} ✓` : "Custom…",
+            label: custom ? `${tr.chat.customDuration(durationLabel(current, tr))} ✓` : tr.common.custom,
             keepOpen: true,
             onSelect: () => setView("custom"),
           },
           ...(chat.autoDeleteSecs
-            ? [{ label: "Off", destructive: true, onSelect: () => settings({ autoDeleteSecs: null }) }]
+            ? [{ label: tr.chat.turnOff, destructive: true, onSelect: () => settings({ autoDeleteSecs: null }) }]
             : []),
         ]}
       />
@@ -113,10 +119,14 @@ export function ChatMenu({
   if (view === "block") {
     return (
       <Sheet
-        title={`Block ${peerName}? Neither of you will be able to send messages here, and ${peerName} will see that you blocked them.`}
+        title={tr.chat.blockConfirm(peerName)}
         onClose={onClose}
         actions={[
-          { label: `Block ${peerName}`, destructive: true, onSelect: () => void setBlocked(qc, chat, peerId, true).catch(() => null) },
+          {
+            label: tr.chat.blockName(peerName),
+            destructive: true,
+            onSelect: () => void setBlocked(qc, chat, peerId, true).catch(() => null),
+          },
         ]}
       />
     );
@@ -125,12 +135,12 @@ export function ChatMenu({
   if (view === "delete") {
     return (
       <Sheet
-        title="Delete this chat?"
+        title={tr.chat.deleteChatTitle}
         onClose={onClose}
         actions={[
-          { label: "Delete for me", destructive: true, onSelect: () => void remove("me") },
+          { label: tr.chat.deleteForMe, destructive: true, onSelect: () => void remove("me") },
           {
-            label: `Delete all messages for me and ${peerName}`,
+            label: tr.chat.deleteAllFor(peerName),
             destructive: true,
             onSelect: () => void remove("all"),
           },
@@ -144,19 +154,22 @@ export function ChatMenu({
       title={chat.title}
       onClose={onClose}
       actions={[
-        { label: chat.pinned ? "Unpin" : "Pin", onSelect: () => settings({ pinned: !chat.pinned }) },
-        { label: chat.muted ? "Unmute" : "Mute", onSelect: () => settings({ muted: !chat.muted }) },
-        { label: chat.archived ? "Unarchive" : "Archive", onSelect: () => settings({ archived: !chat.archived }) },
+        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+        { label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) },
+        {
+          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
+          onSelect: () => settings({ archived: !chat.archived }),
+        },
         ...(isFrozen(chat)
           ? []
           : [
               {
-                label: `Auto-delete: ${chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs) : "Off"}`,
+                label: tr.chat.autoDelete(chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs, tr) : null),
                 keepOpen: true,
                 onSelect: () => setView("autoDelete"),
               },
               {
-                label: `Background: ${chat.theme ? chatTheme(chat.theme).name : "Default"}`,
+                label: tr.summary.background(chat.theme ? themeName(chat.theme, tr) : tr.chat.defaultBackground),
                 keepOpen: true,
                 onSelect: () => setView("theme"),
               },
@@ -164,9 +177,9 @@ export function ChatMenu({
         ...(chat.type !== "direct" || chat.peerDeleted
           ? []
           : chat.blockedByMe
-            ? [{ label: `Unblock ${peerName}`, onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
-            : [{ label: `Block ${peerName}`, destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
-        { label: "Delete chat", destructive: true, keepOpen: true, onSelect: () => setView("delete") },
+            ? [{ label: tr.chat.unblockName(peerName), onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
+            : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+        { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
       ]}
     />
   );

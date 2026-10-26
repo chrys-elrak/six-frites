@@ -3,6 +3,7 @@ import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES } from "@six/shared";
 import * as DocumentPicker from "expo-document-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import { getT } from "./i18n";
 import type { LocalFile } from "./send";
 
 const EXT_MIME: Record<string, string> = {
@@ -65,7 +66,7 @@ async function fromPickerAsset(a: ImagePicker.ImagePickerAsset): Promise<LocalFi
 
 export class TooLargeError extends Error {
   constructor(public readonly names: string[]) {
-    super(`${names.join(", ")} ${names.length === 1 ? "is" : "are"} larger than 25 MB.`);
+    super(getT().composer.tooLarge(names));
   }
 }
 
@@ -88,7 +89,7 @@ export async function pickMedia(): Promise<LocalFile[]> {
 
 export async function takePhoto(): Promise<LocalFile[]> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
-  if (!perm.granted) throw new Error("Camera access was denied.");
+  if (!perm.granted) throw new Error(getT().composer.cameraDenied);
   const res = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 });
   if (res.canceled) return [];
   return checkSizes(await Promise.all(res.assets.map(fromPickerAsset)));
@@ -121,7 +122,7 @@ export async function toAvatarDataUrl(uri: string, width: number, height: number
       return `data:image/jpeg;base64,${out.base64}`;
     }
   }
-  throw new Error("This photo is too detailed to shrink enough. Try another one.");
+  throw new Error(getT().composer.photoTooDetailed);
 }
 
 export async function pickAvatar(): Promise<string | null> {

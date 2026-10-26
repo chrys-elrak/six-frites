@@ -3,8 +3,10 @@
 import { Download, Smartphone } from "lucide-react";
 import { useAndroidApp } from "@/lib/android-app";
 import { formatBytes } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 
 export function AndroidDownload({ compact = false }: { compact?: boolean }) {
+  const tr = useT();
   const app = useAndroidApp();
   if (!app.data) return null;
   const { version, size, downloadUrl } = app.data;
@@ -16,7 +18,7 @@ export function AndroidDownload({ compact = false }: { compact?: boolean }) {
         className="mx-auto flex items-center justify-center gap-2 text-sm font-medium text-stone-600 underline-offset-4 hover:underline dark:text-stone-300"
       >
         <Smartphone className="size-4" />
-        Get the Android app
+        {tr.auth.getAndroidApp}
       </a>
     );
   }
@@ -28,9 +30,9 @@ export function AndroidDownload({ compact = false }: { compact?: boolean }) {
     >
       <Smartphone className="size-5 text-brand" />
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium">Android app</span>
+        <span className="block text-sm font-medium">{tr.auth.androidApp}</span>
         <span className="block text-xs text-stone-500">
-          Version {version} · {formatBytes(size)}
+          {tr.auth.version(version, formatBytes(size))}
         </span>
       </span>
       <Download className="size-5 text-stone-400" />

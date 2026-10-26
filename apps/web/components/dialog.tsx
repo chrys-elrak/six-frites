@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 
 export function Dialog({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  const tr = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -15,7 +17,7 @@ export function Dialog({ onClose, children }: { onClose: () => void; children: R
       <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal>
         <button
           type="button"
-          aria-label="Close"
+          aria-label={tr.common.close}
           onClick={onClose}
           className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
         />

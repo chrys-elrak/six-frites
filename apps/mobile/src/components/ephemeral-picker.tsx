@@ -3,6 +3,7 @@ import { Flame } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
+import { useT } from "@/lib/i18n";
 import { flame, useTheme } from "@/lib/theme";
 import { Sheet } from "./sheet";
 
@@ -16,15 +17,16 @@ export function EphemeralPicker({
   compact?: boolean;
 }) {
   const t = useTheme();
+  const tr = useT();
   const [open, setOpen] = useState(false);
-  const label = value ? shortRule({ maxViews: value.maxViews ?? null, ttlSeconds: value.ttlSeconds ?? null }) : null;
+  const label = value ? shortRule({ maxViews: value.maxViews ?? null, ttlSeconds: value.ttlSeconds ?? null }, tr) : null;
   const color = value ? flame : compact ? t.faint : t.textSoft;
 
   return (
     <>
       <Pressable
         onPress={() => setOpen(true)}
-        accessibilityLabel={label ? `Self-destruct: ${label}` : "Self-destruct"}
+        accessibilityLabel={label ? tr.composer.selfDestructRule(label) : tr.composer.selfDestruct}
         style={
           compact
             ? styles.compact
@@ -32,15 +34,15 @@ export function EphemeralPicker({
         }
       >
         <Flame size={compact ? 20 : 18} color={color} fill={value ? flame : "none"} />
-        {!compact && <Text style={{ color, fontSize: 14, fontWeight: "600" }}>{label ?? "Self-destruct"}</Text>}
+        {!compact && <Text style={{ color, fontSize: 14, fontWeight: "600" }}>{label ?? tr.composer.selfDestruct}</Text>}
       </Pressable>
       {open && (
         <Sheet
-          title="Self-destruct after viewing"
+          title={tr.composer.selfDestructAfterViewing}
           onClose={() => setOpen(false)}
           actions={[
             ...EPHEMERAL_OPTIONS.map((o) => ({ label: o.label, onSelect: () => onChange(o.value) })),
-            ...(value ? [{ label: "Off", destructive: true, onSelect: () => onChange(null) }] : []),
+            ...(value ? [{ label: tr.common.off, destructive: true, onSelect: () => onChange(null) }] : []),
           ]}
         />
       )}

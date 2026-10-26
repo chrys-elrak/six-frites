@@ -10,7 +10,7 @@ async function signUp(name: string, extra: Record<string, unknown> = {}) {
 
 async function createInvite(token: string, body: Record<string, unknown> = {}) {
   const res = await ctx.app.inject({ method: "POST", url: "/v1/invites", headers: bearer(token), payload: body });
-  expect(res.statusCode).toBe(201);
+  expect(res.statusCode).toBe(200);
   return res.json();
 }
 
@@ -19,29 +19,37 @@ describe("invites", () => {
     const host = await signUp("host");
     const invite = await createInvite(host.accessToken, { maxUses: 2 });
     expect(invite.code).toMatch(/^[2-9A-HJ-NP-Z]{8}$/);
-    expect(invite.expiresAt).not.toBeNull();
+    expect(invite).toMatchObject({ expiresAt: null, maxUses: null });
 
     const preview = await ctx.app.inject({ url: `/v1/invites/${invite.code.toLowerCase()}` });
     expect(preview.json()).toMatchObject({ code: invite.code, status: "valid", inviter: { id: host.user.id } });
     expect(preview.json().inviter.email).toBeUndefined();
   });
 
-  it("paginates my invites newest first with a cursor", async () => {
-    const host = await signUp("pager");
-    const codes = [];
-    for (let i = 0; i < 5; i++) codes.push((await createInvite(host.accessToken)).code);
+  it("gives everyone a single link that can be reset", async () => {
+    const host = await signUp("single");
+    const mine = () => ctx.app.inject({ url: "/v1/me/invite", headers: bearer(host.accessToken) });
+    const first = (await mine()).json();
+    expect((await mine()).json().code).toBe(first.code);
+    expect((await createInvite(host.accessToken)).code).toBe(first.code);
 
-    const first = (await ctx.app.inject({ url: "/v1/invites?limit=3", headers: bearer(host.accessToken) })).json();
-    expect(first.items).toHaveLength(3);
-    expect(first.nextCursor).toBeTypeOf("string");
+    const guest = await signUp("joiner", { inviteCode: first.code });
+    expect(guest.user).toBeDefined();
+    expect((await mine()).json().uses).toBe(1);
 
-    const second = (
-      await ctx.app.inject({ url: `/v1/invites?limit=3&cursor=${first.nextCursor}`, headers: bearer(host.accessToken) })
-    ).json();
-    expect(second.items).toHaveLength(2);
-    expect(second.nextCursor).toBeNull();
-    const seen = [...first.items, ...second.items].map((i: { code: string }) => i.code);
-    expect(seen).toEqual([...codes].reverse());
+    const reset = await ctx.app.inject({
+      method: "POST",
+      url: "/v1/me/invite/reset",
+      headers: bearer(host.accessToken),
+    });
+    expect(reset.json().code).not.toBe(first.code);
+    expect(reset.json().uses).toBe(1);
+    expect((await ctx.app.inject({ url: `/v1/invites/${first.code}` })).json().error.code).toBe("INVITE_NOT_FOUND");
+
+    const listed = (await ctx.app.inject({ url: "/v1/invites", headers: bearer(host.accessToken) })).json();
+    expect(listed.items.map((i: { code: string }) => i.code)).toEqual([reset.json().code]);
+    const referrals = (await ctx.app.inject({ url: "/v1/me/referrals", headers: bearer(host.accessToken) })).json();
+    expect(referrals.items).toHaveLength(1);
   });
 
   it("lets a signed-in user accept once and shows up in referrals", async () => {
@@ -73,14 +81,6 @@ describe("invites", () => {
     const referrals = (await ctx.app.inject({ url: "/v1/me/referrals", headers: bearer(host.accessToken) })).json();
     expect(referrals.items).toHaveLength(1);
     expect(referrals.items[0]).toMatchObject({ user: { id: guest.user.id }, inviteCode: code });
-  });
-
-  it("reports exhausted invites in the preview", async () => {
-    const host = await signUp("solo");
-    const { code } = await createInvite(host.accessToken, { maxUses: 1 });
-    await signUp("first", { inviteCode: code });
-    const preview = await ctx.app.inject({ url: `/v1/invites/${code}` });
-    expect(preview.json().status).toBe("exhausted");
   });
 
   it("returns INVITE_NOT_FOUND for unknown codes", async () => {

@@ -1,4 +1,5 @@
 import { unwrap } from "@six/sdk";
+import { getLocale } from "./i18n";
 import { six } from "./six";
 
 export const pushSupported = () =>
@@ -16,7 +17,11 @@ export async function currentSubscription() {
 }
 
 async function saveSubscription(sub: PushSubscription) {
-  unwrap(await six.api.POST("/v1/devices/push-token", { body: { provider: "webpush", token: JSON.stringify(sub) } }));
+  unwrap(
+    await six.api.POST("/v1/devices/push-token", {
+      body: { provider: "webpush", token: JSON.stringify(sub), locale: getLocale() },
+    }),
+  );
 }
 
 /** Subscribes this browser to push notifications for the signed-in session. */
@@ -44,7 +49,10 @@ export async function disablePush() {
   await six.api.DELETE("/v1/devices/push-token", { params: { query: { provider: "webpush" } } }).catch(() => null);
 }
 
-/** Re-links an existing browser subscription after signing in again, since tokens belong to a session. */
+/**
+ * Re-links an existing browser subscription after signing in again, since tokens belong to a
+ * session, or after changing language so notifications follow it.
+ */
 export async function relinkPush() {
   const sub = await currentSubscription();
   if (sub && Notification.permission === "granted") await saveSubscription(sub);

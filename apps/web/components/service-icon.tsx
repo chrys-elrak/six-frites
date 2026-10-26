@@ -1,5 +1,6 @@
-import type { MessageDTO } from "@six/shared";
+import type { Dict, MessageDTO } from "@six/shared";
 import { Lock, Palette, Phone, PhoneMissed, Timer, Video } from "lucide-react";
+import { getT } from "@/lib/i18n";
 
 export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
   const Icon =
@@ -18,9 +19,10 @@ export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
 }
 
 /** How a logged call reads from my side: "Outgoing video call · 2:31", "Missed voice call", "Unanswered…". */
-export function callLabel(action: { video: boolean; secs: number | null }, outgoing: boolean) {
-  const kind = action.video ? "video call" : "voice call";
-  if (action.secs === null) return `${outgoing ? "Unanswered" : "Missed"} ${kind}`;
+export function callLabel(action: { video: boolean; secs: number | null }, outgoing: boolean, tr: Dict = getT()) {
+  if (action.secs === null) {
+    return outgoing ? tr.chats.unansweredCall(action.video) : tr.summary.missedCall(action.video);
+  }
   const clock = `${Math.floor(action.secs / 60)}:${String(action.secs % 60).padStart(2, "0")}`;
-  return `${outgoing ? "Outgoing" : "Incoming"} ${kind} · ${clock}`;
+  return outgoing ? tr.chats.outgoingCall(action.video, clock) : tr.chats.incomingCall(action.video, clock);
 }

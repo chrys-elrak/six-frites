@@ -27,7 +27,7 @@ model User {
   contactPinHash String?
 
   sessions       Session[]
-  invites        Invite[]
+  invite         Invite?
   referredBy     Referral?          @relation("referee")
   referrals      Referral[]         @relation("referrer")
   memberships    ChatMember[]
@@ -74,7 +74,7 @@ model Report {
 model Invite {
   id        String    @id @default(cuid())
   code      String    @unique
-  creatorId String
+  creatorId String    @unique
   maxUses   Int?
   uses      Int       @default(0)
   expiresAt DateTime?
@@ -175,6 +175,7 @@ model PushToken {
   sessionId String
   provider  String
   token     String @db.Text
+  locale    String @default("en")
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -212,6 +213,7 @@ model ChatMember {
   joinedAt               DateTime  @default(now())
   archived               Boolean   @default(false)
   muted                  Boolean   @default(false)
+  mutedUntil             DateTime?
   pinned                 Boolean   @default(false)
   lastDeliveredMessageId String?
   lastDeliveredAt        DateTime?

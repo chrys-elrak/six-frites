@@ -6,6 +6,7 @@ import { ProtectedImage, noSave } from "./protected-image";
 import { useEffect, useRef, useState } from "react";
 import { decryptedUrl } from "@/lib/e2ee";
 import { formatBytes, formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { PendingAttachment } from "@/lib/outbox";
 import { usePlaybackRate } from "@/lib/playback";
 import { Portal } from "./portal";
@@ -108,10 +109,11 @@ function view(a: ShownAttachment, decrypted: Decrypted | null) {
 }
 
 function ProgressRing({ value }: { value: number }) {
+  const tr = useT();
   const r = 18;
   const c = 2 * Math.PI * r;
   return (
-    <svg viewBox="0 0 44 44" className="size-11 -rotate-90" aria-label={`Uploading ${Math.round(value * 100)}%`}>
+    <svg viewBox="0 0 44 44" className="size-11 -rotate-90" aria-label={tr.messages.uploading(Math.round(value * 100))}>
       <circle cx="22" cy="22" r={r} fill="rgb(0 0 0 / 0.45)" stroke="rgb(255 255 255 / 0.3)" strokeWidth="3" />
       <circle
         cx="22"
@@ -130,6 +132,7 @@ function ProgressRing({ value }: { value: number }) {
 }
 
 function Overlay({ state, progress }: { state: ReturnType<typeof view>["state"]; progress: number }) {
+  const tr = useT();
   if (state === "ready") return null;
   return (
     <div className="absolute inset-0 grid place-items-center bg-black/25 text-white">
@@ -137,11 +140,11 @@ function Overlay({ state, progress }: { state: ReturnType<typeof view>["state"];
         <ProgressRing value={progress} />
       ) : state === "processing" ? (
         <span className="flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-xs">
-          <Loader2 className="size-3.5 animate-spin" /> Processing…
+          <Loader2 className="size-3.5 animate-spin" /> {tr.messages.processing}
         </span>
       ) : (
         <span className="flex items-center gap-1.5 rounded-full bg-red-600/80 px-2.5 py-1 text-xs">
-          <AlertCircle className="size-3.5" /> Failed
+          <AlertCircle className="size-3.5" /> {tr.messages.failed}
         </span>
       )}
     </div>
@@ -160,6 +163,7 @@ function boxSize(width: number | null, height: number | null) {
 let playing: HTMLMediaElement | null = null;
 
 function SpeedButton({ className = "" }: { className?: string }) {
+  const tr = useT();
   const rate = usePlaybackRate((s) => s.rate);
   const next = usePlaybackRate((s) => s.next);
   return (
@@ -169,7 +173,7 @@ function SpeedButton({ className = "" }: { className?: string }) {
         e.stopPropagation();
         next();
       }}
-      aria-label={`Playback speed ${rate}×, tap to change`}
+      aria-label={tr.messages.speed(rate)}
       className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${className}`}
     >
       {rate}×
@@ -190,6 +194,7 @@ export function VoicePlayer({
   waveform: number[] | null;
   mine: boolean;
 }) {
+  const tr = useT();
   const audio = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
@@ -246,7 +251,7 @@ export function VoicePlayer({
         type="button"
         onClick={toggle}
         disabled={!url}
-        aria-label={isPlaying ? "Pause" : "Play voice message"}
+        aria-label={isPlaying ? tr.messages.pause : tr.messages.playVoice}
         className={`grid size-10 shrink-0 place-items-center rounded-full disabled:opacity-50 ${
           mine ? "bg-brand-ink text-brand" : "bg-brand text-brand-ink"
         }`}
@@ -289,6 +294,7 @@ function VideoNote({
   state: ReturnType<typeof view>["state"];
   progress: number;
 }) {
+  const tr = useT();
   const video = useRef<HTMLVideoElement>(null);
   const rate = usePlaybackRate((s) => s.rate);
   const [isPlaying, setPlaying] = useState(false);
@@ -328,7 +334,7 @@ function VideoNote({
         type="button"
         onClick={toggle}
         disabled={!url}
-        aria-label={isPlaying ? "Pause video message" : "Play video message"}
+        aria-label={isPlaying ? tr.messages.pauseVideoNote : tr.messages.playVideoNote}
         className="relative block size-56 shrink-0 md:size-64"
       >
         <span className="absolute inset-0 overflow-hidden rounded-full bg-stone-300 dark:bg-stone-700">
@@ -400,6 +406,7 @@ export function AttachmentView({
   onReveal?: () => void;
   autoPlay?: boolean;
 }) {
+  const tr = useT();
   const kind = attachment.data.kind;
   const [wanted, setWanted] = useState(false);
   const decrypted = useDecrypted(attachment, wanted || kind === "image" || kind === "voice" || kind === "video_note");
@@ -429,11 +436,11 @@ export function AttachmentView({
           <button
             type="button"
             onClick={onReveal}
-            aria-label="Spoiler, tap to reveal"
+            aria-label={tr.messages.revealSpoiler}
             className="spoiler absolute inset-0 grid place-items-center rounded-none text-white/85"
           >
             <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white">
-              <EyeOff className="size-3.5" /> Spoiler
+              <EyeOff className="size-3.5" /> {tr.summary.spoiler}
             </span>
           </button>
         ) : attachment.source === "local" ? (
@@ -473,7 +480,7 @@ export function AttachmentView({
         disabled={!ready && !hidden}
         className="relative block overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700"
         style={{ width: size.width, aspectRatio: size.aspectRatio, maxWidth: "100%" }}
-        aria-label={hidden ? "Spoiler, tap to reveal" : a.kind === "image" ? "Open photo" : "Play video"}
+        aria-label={hidden ? tr.messages.revealSpoiler : a.kind === "image" ? tr.messages.openPhoto : tr.messages.playVideo}
       >
         {a.thumbUrl && (
           <ProtectedImage
@@ -486,7 +493,7 @@ export function AttachmentView({
             <span className="spoiler absolute inset-0 rounded-none text-white/85" aria-hidden />
             <span className="absolute inset-0 grid place-items-center">
               <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                <EyeOff className="size-3.5" /> Spoiler
+                <EyeOff className="size-3.5" /> {tr.summary.spoiler}
               </span>
             </span>
           </>
@@ -536,10 +543,10 @@ export function AttachmentView({
           <p className="flex items-center gap-1 text-[11px] opacity-70">
             {a.state === "failed" ? <AlertCircle className="size-3" /> : <Loader2 className="size-3 animate-spin" />}
             {a.state === "uploading"
-              ? `Uploading ${Math.round(a.progress * 100)}%`
+              ? tr.messages.uploading(Math.round(a.progress * 100))
               : a.state === "failed"
-                ? "Failed"
-                : "Processing…"}
+                ? tr.messages.failed
+                : tr.messages.processing}
           </p>
         )}
       </div>
@@ -574,7 +581,9 @@ export function AttachmentView({
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{a.name}</span>
         <span className="block text-xs opacity-70">
-          {a.state === "uploading" ? `${Math.round(a.progress * 100)}% of ${formatBytes(a.size)}` : formatBytes(a.size)}
+          {a.state === "uploading"
+            ? tr.messages.uploadedOf(Math.round(a.progress * 100), formatBytes(a.size))
+            : formatBytes(a.size)}
         </span>
       </span>
     </a>
@@ -582,6 +591,7 @@ export function AttachmentView({
 }
 
 export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () => void }) {
+  const tr = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -594,7 +604,7 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
         <div className="flex items-center justify-end gap-1 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr.common.close}
             className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"
           >
             <X className="size-6" />

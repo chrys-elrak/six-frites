@@ -164,7 +164,7 @@ export async function updateContact(
 export async function updateChatSettings(
   qc: QueryClient,
   chatId: string,
-  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned" | "autoDeleteSecs" | "theme">>,
+  input: Partial<Pick<ChatDTO, "archived" | "muted" | "mutedUntil" | "pinned" | "autoDeleteSecs" | "theme">>,
 ) {
   const chat = unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input }));
   upsertChat(qc, chat);

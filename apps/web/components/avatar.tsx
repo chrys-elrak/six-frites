@@ -1,4 +1,5 @@
 import type { PublicUser } from "@six/shared";
+import { useT } from "@/lib/i18n";
 
 const sizes = { sm: "size-9 text-sm", md: "size-14 text-xl", lg: "size-20 text-3xl" };
 
@@ -11,12 +12,13 @@ export function Avatar({
   size?: keyof typeof sizes;
   online?: boolean;
 }) {
+  const tr = useT();
   if (!online) return <Picture user={user} size={size} />;
   return (
     <span className="relative shrink-0">
       <Picture user={user} size={size} />
       <span
-        aria-label="Online"
+        aria-label={tr.time.online}
         className={`absolute right-0 bottom-0 rounded-full bg-green-500 ring-2 ring-stone-50 dark:ring-stone-950 ${
           size === "sm" ? "size-2.5" : "size-3.5"
         }`}

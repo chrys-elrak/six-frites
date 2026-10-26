@@ -1,6 +1,6 @@
 "use client";
 
-import { type MessageDTO, durationLabel } from "@six/shared";
+import { type MessageDTO, durationLabel, isMuted } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Lock, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,8 @@ import { useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
+import { sendAtLabel } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
@@ -30,6 +32,7 @@ const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
 
 export function Conversation({ chatId }: { chatId: string }) {
+  const tr = useT();
   const qc = useQueryClient();
   const router = useRouter();
   const meId = useSession((s) => s.user!.id);
@@ -76,8 +79,8 @@ export function Conversation({ chatId }: { chatId: string }) {
   const members = chat.data?.members;
   const nameOf = useMemo(() => {
     const names = new Map(members?.map((m) => [m.user.id, m.user.displayName]));
-    return (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
-  }, [members, meId]);
+    return (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
+  }, [members, meId, tr]);
   const peerId = members?.find((m) => m.user.id !== meId)?.user.id;
   const presence = usePresence(peerId);
   const inCall = useCall((s) => s.call !== null);
@@ -85,14 +88,16 @@ export function Conversation({ chatId }: { chatId: string }) {
   const dismissKeys = useIdentityChanges((s) => s.dismiss);
   useWatchPresence(peerId ? [peerId] : []);
 
-  if (chat.isPending) return <div className="grid h-full place-items-center text-sm text-stone-500">Loading…</div>;
+  if (chat.isPending) {
+    return <div className="grid h-full place-items-center text-sm text-stone-500">{tr.common.loading}</div>;
+  }
   if (!chat.data) {
     return (
       <div className="grid h-full place-items-center p-8 text-center">
         <div className="space-y-2">
-          <p className="font-medium">Chat not found</p>
+          <p className="font-medium">{tr.chat.notFound}</p>
           <Link href="/" className="text-sm text-stone-500 underline">
-            Back to chats
+            {tr.common.backToChats}
           </Link>
         </div>
       </div>
@@ -101,6 +106,7 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   const c = chat.data;
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
+  const muted = isMuted(c);
   const frozen = c.blockedByMe || c.blockedByThem || c.peerDeleted;
   const shownPresence = frozen ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
@@ -118,14 +124,14 @@ export function Conversation({ chatId }: { chatId: string }) {
     <div className="flex h-full min-h-0 flex-col">
       {selecting ? (
         <header className={headerClass}>
-          <button onClick={clearSelection} aria-label="Cancel selection" className={iconButton}>
+          <button onClick={clearSelection} aria-label={tr.chat.cancelSelection} className={iconButton}>
             <X className="size-5" />
           </button>
-          <p className="min-w-0 flex-1 font-semibold">{count} selected</p>
+          <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}</p>
           <button
             onClick={() => setConfirmDelete(true)}
             disabled={count === 0}
-            aria-label="Delete selected messages"
+            aria-label={tr.chat.deleteSelected}
             className={`${iconButton} text-red-600 disabled:opacity-40 dark:text-red-400`}
           >
             <Trash2 className="size-5" />
@@ -133,32 +139,36 @@ export function Conversation({ chatId }: { chatId: string }) {
         </header>
       ) : (
         <header className={headerClass}>
-          <Link href={c.archived ? "/archived" : "/"} aria-label="Back to chats" className={`${iconButton} md:hidden`}>
+          <Link
+            href={c.archived ? "/archived" : "/"}
+            aria-label={tr.common.backToChats}
+            className={`${iconButton} md:hidden`}
+          >
             <ChevronLeft className="size-6" />
           </Link>
           <button
             onClick={() => setEditing(true)}
             className="flex min-w-0 flex-1 items-center gap-2 rounded-xl py-0.5 pr-2 text-left hover:bg-stone-200/60 dark:hover:bg-stone-800/60"
-            aria-label={`Edit contact ${c.title}`}
+            aria-label={tr.chat.editContact(c.title)}
           >
             <Avatar user={peer} online={shownPresence?.online} />
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-1 font-semibold">
                 <span className="truncate">{c.title}</span>
-                {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label="End-to-end encrypted" />}
+                {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
               </span>
               {typing ? (
-                <span className="block text-xs font-medium text-brand">typing…</span>
+                <span className="block text-xs font-medium text-brand">{tr.chats.typing}</span>
               ) : (
-                (shownPresence || c.muted || c.archived || c.autoDeleteSecs) && (
+                (shownPresence || muted || c.archived || c.autoDeleteSecs) && (
                   <span className="block truncate text-xs text-stone-500">
-                    {shownPresence?.online && <span className="font-medium text-brand">online</span>}
-                    {shownPresence?.online && (c.muted || c.archived || c.autoDeleteSecs) && " · "}
+                    {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
+                    {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs) && " · "}
                     {[
                       !shownPresence?.online && presenceLabel(shownPresence),
-                      c.autoDeleteSecs && `Auto-delete: ${durationLabel(c.autoDeleteSecs)}`,
-                      c.muted && "Muted",
-                      c.archived && "Archived",
+                      c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
+                      muted && (c.mutedUntil ? tr.chat.mutedUntil(sendAtLabel(c.mutedUntil)) : tr.common.muted),
+                      c.archived && tr.common.archived,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
@@ -172,7 +182,7 @@ export function Conversation({ chatId }: { chatId: string }) {
               <button
                 onClick={() => void startCall(c, meId, false)}
                 disabled={inCall || !realtime}
-                aria-label="Voice call"
+                aria-label={tr.chat.voiceCall}
                 className={`${iconButton} disabled:opacity-40`}
               >
                 <Phone className="size-5" />
@@ -180,14 +190,14 @@ export function Conversation({ chatId }: { chatId: string }) {
               <button
                 onClick={() => void startCall(c, meId, true)}
                 disabled={inCall || !realtime}
-                aria-label="Video call"
+                aria-label={tr.chat.videoCall}
                 className={`${iconButton} disabled:opacity-40`}
               >
                 <Video className="size-5" />
               </button>
             </>
           )}
-          <button onClick={() => setMenu(true)} aria-label="Chat options" className={iconButton}>
+          <button onClick={() => setMenu(true)} aria-label={tr.chat.options} className={iconButton}>
             <MoreVertical className="size-5" />
           </button>
         </header>
@@ -204,12 +214,16 @@ export function Conversation({ chatId }: { chatId: string }) {
         <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
           <ShieldAlert className="size-4 shrink-0" />
           <p className="min-w-0 flex-1">
-            {peer.displayName}'s security code changed, probably because they signed in on a new device.
+            {tr.chat.securityCodeChanged(peer.displayName)}
           </p>
           <button onClick={() => setEditing(true)} className="shrink-0 font-semibold underline-offset-2 hover:underline">
-            Verify
+            {tr.chat.verify}
           </button>
-          <button onClick={() => dismissKeys(peer.id)} aria-label="Dismiss" className="shrink-0 rounded-full p-1">
+          <button
+            onClick={() => dismissKeys(peer.id)}
+            aria-label={tr.common.dismiss}
+            className="shrink-0 rounded-full p-1"
+          >
             <X className="size-4" />
           </button>
         </div>
@@ -235,19 +249,19 @@ export function Conversation({ chatId }: { chatId: string }) {
       {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}
       {confirmDelete && (
         <Sheet
-          title={`Delete ${count} message${count === 1 ? "" : "s"}?`}
+          title={tr.chat.deleteMessages(count)}
           onClose={() => setConfirmDelete(false)}
           actions={[
             ...(c.type === "direct"
               ? [
                   {
-                    label: `Delete for me and ${peer.displayName}`,
+                    label: tr.chat.deleteForMeAnd(peer.displayName),
                     destructive: true,
                     onSelect: () => removeSelected("all"),
                   },
                 ]
               : []),
-            { label: "Delete for me", destructive: true, onSelect: () => removeSelected("me") },
+            { label: tr.chat.deleteForMe, destructive: true, onSelect: () => removeSelected("me") },
           ]}
         />
       )}

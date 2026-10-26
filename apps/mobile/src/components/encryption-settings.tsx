@@ -6,6 +6,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { e2eeFor } from "@/lib/e2ee";
+import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
@@ -18,6 +19,7 @@ async function refreshMe() {
 /** Settings card for the recovery key that lets a new phone read past encrypted messages. */
 export function EncryptionSettings() {
   const t = useTheme();
+  const tr = useT();
   const user = useSession((s) => s.user)!;
   const local = useQuery({
     queryKey: ["recovery-key", user.id],
@@ -28,29 +30,29 @@ export function EncryptionSettings() {
   const onAccount = user.backupKeyId !== null;
   const onPhone = local.data === true;
   const status = onPhone
-    ? "Your recovery key is set up. New messages are backed up so a new phone can read them."
+    ? tr.settings.keyOnPhone
     : onAccount
-      ? "You have a recovery key. Enter it here to read messages from before this phone."
-      : "Without a recovery key, a new phone can't read your past encrypted messages.";
+      ? tr.settings.keyOnAccountPhone
+      : tr.settings.noKeyPhone;
 
   return (
     <View>
-      <SectionTitle>End-to-end encryption</SectionTitle>
+      <SectionTitle>{tr.settings.e2ee}</SectionTitle>
       <Card style={{ padding: 16, gap: 12 }}>
         <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
           {onPhone ? <ShieldCheck size={22} color={brand} /> : <KeyRound size={22} color={t.muted} />}
           <Text style={{ flex: 1, color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{status}</Text>
         </View>
         {onAccount && !onPhone ? (
-          <PrimaryButton title="Enter recovery key" onPress={() => setDialog("restore")} />
+          <PrimaryButton title={tr.settings.enterRecoveryKey} onPress={() => setDialog("restore")} />
         ) : (
           <PrimaryButton
-            title={onPhone ? "Create a new recovery key" : "Create a recovery key"}
+            title={onPhone ? tr.settings.createNewRecoveryKey : tr.settings.createRecoveryKey}
             onPress={() => setDialog("create")}
           />
         )}
         {onAccount && !onPhone && (
-          <TextButton title="Lost it? Create a new one instead" onPress={() => setDialog("create")} />
+          <TextButton title={tr.settings.lostKey} onPress={() => setDialog("create")} />
         )}
       </Card>
       {dialog === "create" && (
@@ -92,6 +94,7 @@ export function Dialog({ title, children, onClose }: { title: string; children: 
 
 function CreateKey({ replacing, onClose }: { replacing: boolean; onClose: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const user = useSession((s) => s.user)!;
   const [words, setWords] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -104,7 +107,7 @@ function CreateKey({ replacing, onClose }: { replacing: boolean; onClose: () => 
       setWords((await e2eeFor(user.id)!.createRecoveryKey()).split(" "));
       await refreshMe();
     } catch {
-      setError("Couldn't create a recovery key. Try again.");
+      setError(tr.settings.couldNotCreateKey);
     } finally {
       setBusy(false);
     }
@@ -112,21 +115,20 @@ function CreateKey({ replacing, onClose }: { replacing: boolean; onClose: () => 
 
   if (!words) {
     return (
-      <Dialog title="Create a recovery key" onClose={onClose}>
+      <Dialog title={tr.settings.createRecoveryKey} onClose={onClose}>
         <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>
-          You'll see 24 words once. Write them down or save them in a password manager. With them, a new phone can
-          read your encrypted messages. Six Frites can't recover them for you.
-          {replacing ? "\n\nYour old recovery key will stop working and its backups will be deleted." : ""}
+          {tr.settings.createIntroPhone}
+          {replacing ? `\n\n${tr.settings.replaceWarningPhone}` : ""}
         </Text>
         {error && <Notice tone="error">{error}</Notice>}
-        <PrimaryButton title={busy ? "Creating…" : "Show my 24 words"} disabled={busy} onPress={() => void create()} />
-        <TextButton title="Not now" onPress={onClose} />
+        <PrimaryButton title={busy ? tr.settings.creating : tr.settings.showWords} disabled={busy} onPress={() => void create()} />
+        <TextButton title={tr.settings.notNow} onPress={onClose} />
       </Dialog>
     );
   }
 
   return (
-    <Dialog title="Your recovery key" onClose={() => undefined}>
+    <Dialog title={tr.settings.yourRecoveryKey} onClose={() => undefined}>
       <ScrollView style={{ maxHeight: 360 }} contentContainerStyle={styles.words}>
         {words.map((w, i) => (
           <View key={i} style={[styles.word, { backgroundColor: t.field }]}>
@@ -136,15 +138,16 @@ function CreateKey({ replacing, onClose }: { replacing: boolean; onClose: () => 
         ))}
       </ScrollView>
       <Text style={{ color: t.muted, fontSize: 13, textAlign: "center" }}>
-        Screenshots are blocked in Six Frites, so write these down.
+        {tr.settings.screenshotsBlocked}
       </Text>
-      <PrimaryButton title="I've saved them" onPress={onClose} />
+      <PrimaryButton title={tr.settings.savedThem} onPress={onClose} />
     </Dialog>
   );
 }
 
 function RestoreKey({ onClose }: { onClose: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const user = useSession((s) => s.user)!;
   const [words, setWords] = useState("");
   const [busy, setBusy] = useState(false);
@@ -159,8 +162,8 @@ function RestoreKey({ onClose }: { onClose: () => void }) {
     } catch (err) {
       setError(
         err instanceof SixApiError && err.code === "BACKUP_KEY_MISMATCH"
-          ? "That's a valid key, but not this account's."
-          : "Those words aren't a recovery key. Check for typos.",
+          ? tr.settings.restoreErrors.BACKUP_KEY_MISMATCH
+          : tr.settings.restoreErrors.BAD_RECOVERY_KEY,
       );
     } finally {
       setBusy(false);
@@ -168,11 +171,11 @@ function RestoreKey({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Dialog title="Enter your recovery key" onClose={onClose}>
+    <Dialog title={tr.settings.enterYourRecoveryKey} onClose={onClose}>
       <TextInput
         value={words}
         onChangeText={setWords}
-        placeholder="24 words, separated by spaces"
+        placeholder={tr.settings.restorePlaceholder}
         placeholderTextColor={t.faint}
         multiline
         autoCapitalize="none"
@@ -180,8 +183,8 @@ function RestoreKey({ onClose }: { onClose: () => void }) {
         style={[styles.input, { backgroundColor: t.field, color: t.text }]}
       />
       {error && <Notice tone="error">{error}</Notice>}
-      <PrimaryButton title={busy ? "Checking…" : "Unlock my messages"} disabled={busy || !words.trim()} onPress={() => void restore()} />
-      <TextButton title="Cancel" onPress={onClose} />
+      <PrimaryButton title={busy ? tr.settings.checking : tr.settings.unlockMessages} disabled={busy || !words.trim()} onPress={() => void restore()} />
+      <TextButton title={tr.common.cancel} onPress={onClose} />
     </Dialog>
   );
 }
@@ -189,6 +192,7 @@ function RestoreKey({ onClose }: { onClose: () => void }) {
 /** The 60-digit number two people compare in person to make sure nobody is in the middle. */
 export function SafetyNumber({ userId }: { userId: string }) {
   const t = useTheme();
+  const tr = useT();
   const meId = useSession((s) => s.user!.id);
   const number = useQuery({
     queryKey: ["safety-number", userId],
@@ -196,12 +200,12 @@ export function SafetyNumber({ userId }: { userId: string }) {
   });
   if (number.isError) return null;
   if (!number.data) {
-    return <Text style={{ color: t.muted, fontSize: 13, textAlign: "center" }}>Calculating safety number…</Text>;
+    return <Text style={{ color: t.muted, fontSize: 13, textAlign: "center" }}>{tr.settings.calculatingSafetyNumber}</Text>;
   }
   const groups = number.data.split(" ");
   return (
     <View style={{ gap: 8 }}>
-      <Text style={{ color: t.text, fontWeight: "700", fontSize: 15 }}>Safety number</Text>
+      <Text style={{ color: t.text, fontWeight: "700", fontSize: 15 }}>{tr.settings.safetyNumber}</Text>
       <View style={styles.groups}>
         {groups.map((g, i) => (
           <Text key={i} style={[styles.group, { color: t.text }]}>
@@ -210,8 +214,7 @@ export function SafetyNumber({ userId }: { userId: string }) {
         ))}
       </View>
       <Text style={{ color: t.muted, fontSize: 13, lineHeight: 18 }}>
-        Compare these numbers with your contact, in person or on a call. If they match on both phones, your messages
-        are private between you. They change when either of you uses a new phone.
+        {tr.settings.safetyNumberHint}
       </Text>
     </View>
   );

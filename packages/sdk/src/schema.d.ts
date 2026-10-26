@@ -1990,6 +1990,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Your invite link
+         * @description Everyone has exactly one. It's made on first call, never expires and has no use limit.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            maxUses: number | null;
+                            uses: number;
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/invite/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a new invite link
+         * @description The old link stops working. People who already joined with it stay.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            maxUses: number | null;
+                            uses: number;
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/invites": {
         parameters: {
             query?: never;
@@ -2033,7 +2127,11 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create an invite link */
+        /**
+         * Your invite link (deprecated)
+         * @deprecated
+         * @description Kept for older apps: returns the same link as GET /me/invite. The body is ignored.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -2044,16 +2142,13 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @default null */
-                        maxUses?: number | null;
-                        /** @default 30 */
-                        expiresInDays?: number | null;
+                        [key: string]: unknown;
                     };
                 };
             };
             responses: {
                 /** @description Default Response */
-                201: {
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2383,6 +2478,11 @@ export interface paths {
                                 unreadCount: number;
                                 archived: boolean;
                                 muted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When a timed mute ends; null while muted for good or not muted
+                                 */
+                                mutedUntil: string | null;
                                 pinned: boolean;
                                 /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                 autoDeleteSecs: number | null;
@@ -2622,6 +2722,11 @@ export interface paths {
                             unreadCount: number;
                             archived: boolean;
                             muted: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When a timed mute ends; null while muted for good or not muted
+                             */
+                            mutedUntil: string | null;
                             pinned: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
@@ -2696,6 +2801,11 @@ export interface paths {
                     "application/json": {
                         archived?: boolean;
                         muted?: boolean;
+                        /**
+                         * Format: date-time
+                         * @description With `muted: true`, unmute on its own at this time. Leave out or null to stay muted.
+                         */
+                        mutedUntil?: string | null;
                         pinned?: boolean;
                         /** @description For both people: delete messages sent from now on this many seconds after sending. null turns it off. */
                         autoDeleteSecs?: number | null;
@@ -2891,6 +3001,11 @@ export interface paths {
                             unreadCount: number;
                             archived: boolean;
                             muted: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When a timed mute ends; null while muted for good or not muted
+                             */
+                            mutedUntil: string | null;
                             pinned: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
@@ -6187,6 +6302,11 @@ export interface paths {
                                     unreadCount: number;
                                     archived: boolean;
                                     muted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When a timed mute ends; null while muted for good or not muted
+                                     */
+                                    mutedUntil: string | null;
                                     pinned: boolean;
                                     /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                     autoDeleteSecs: number | null;
@@ -7314,6 +7434,11 @@ export interface paths {
                         provider: "webpush" | "fcm" | "apns";
                         /** @description webpush: the JSON PushSubscription; fcm/apns: the device token */
                         token: string;
+                        /**
+                         * @description Language for this device's notifications; English when left out
+                         * @enum {string}
+                         */
+                        locale?: "en" | "fr" | "mg";
                     };
                 };
             };

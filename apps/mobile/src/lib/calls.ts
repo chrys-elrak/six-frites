@@ -11,6 +11,7 @@ import {
 } from "react-native-webrtc";
 import { create } from "zustand";
 import { e2eeFor } from "./e2ee";
+import { getT } from "./i18n";
 import { six } from "./six";
 
 export type CallStatus = "ringing" | "connecting" | "active" | "ended";
@@ -91,7 +92,7 @@ async function connect(call: Call, local: MediaStream) {
       const current = useCall.getState().call;
       if (current && current.status !== "active") patch({ status: "active", startedAt: Date.now() });
     } else if (conn.connectionState === "failed") {
-      void end("Connection lost", true);
+      void end(getT().calls.connectionLost, true);
     }
   });
   return conn;
@@ -145,9 +146,9 @@ export async function startCall(chat: ChatDTO, video: boolean) {
     await conn.setLocalDescription(offer);
     await signal(call, { type: "offer", sdp: offer.sdp, video });
     InCallManager.startRingback("_DTMF_");
-    ringTimer = setTimeout(() => void end("No answer", true), RING_MS);
+    ringTimer = setTimeout(() => void end(getT().calls.noAnswer, true), RING_MS);
   } catch {
-    await end("Couldn't start the call", false);
+    await end(getT().calls.couldNotStart, false);
   }
 }
 
@@ -169,7 +170,7 @@ export async function acceptCall() {
     await signal(call, { type: "answer", sdp: answer.sdp });
     await flushIce();
   } catch {
-    await end("Couldn't connect", true);
+    await end(getT().calls.couldNotConnect, true);
   }
 }
 
@@ -177,7 +178,7 @@ export async function declineCall() {
   const call = useCall.getState().call;
   if (!call) return;
   await signal(call, { type: "reject" }).catch(() => null);
-  await finish(call, "Declined");
+  await finish(call, getT().calls.declined);
 }
 
 /** Hangs up (or cancels a call still ringing on the other side). */
@@ -189,7 +190,8 @@ async function end(reason: string | null, tell: boolean) {
   const call = useCall.getState().call;
   if (!call || call.status === "ended") return;
   if (tell) await signal(call, { type: "hangup" }).catch(() => null);
-  await finish(call, reason ?? (call.status === "active" ? "Call ended" : "Cancelled"));
+  const tr = getT().calls;
+  await finish(call, reason ?? (call.status === "active" ? tr.callEnded : tr.cancelled));
 }
 
 /** Closes the connection, logs the call when we placed it, and closes the screen after a moment. */
@@ -289,7 +291,7 @@ export async function onCallSignal(dto: CallSignalDTO, chatOf: (chatId: string) 
     InCallManager.startRingtone("_DEFAULT_", [0, 600, 900], "playback", RING_MS / 1000);
     ringTimer = setTimeout(() => {
       const c = useCall.getState().call;
-      if (c?.id === s.callId && c.status === "ringing") void finish(c, "Missed call");
+      if (c?.id === s.callId && c.status === "ringing") void finish(c, getT().calls.missed);
     }, RING_MS);
     await signal(target, { type: "ringing" }).catch(() => null);
     return;
@@ -299,7 +301,7 @@ export async function onCallSignal(dto: CallSignalDTO, chatOf: (chatId: string) 
 
   if (fromMe) {
     if (call.direction === "incoming" && call.status === "ringing" && (s.type === "answer" || s.type === "reject")) {
-      await finish(call, s.type === "answer" ? "Answered on another device" : "Declined on another device");
+      await finish(call, s.type === "answer" ? getT().calls.answeredElsewhere : getT().calls.declinedElsewhere);
     }
     return;
   }
@@ -323,13 +325,13 @@ export async function onCallSignal(dto: CallSignalDTO, chatOf: (chatId: string) 
       patch({ peerCameraOff: !s.on });
       break;
     case "reject":
-      await finish(call, "Declined");
+      await finish(call, getT().calls.declined);
       break;
     case "busy":
-      await finish(call, "Busy");
+      await finish(call, getT().calls.busy);
       break;
     case "hangup":
-      await finish(call, call.status === "ringing" && call.direction === "incoming" ? "Missed call" : "Call ended");
+      await finish(call, call.status === "ringing" && call.direction === "incoming" ? getT().calls.missed : getT().calls.callEnded);
       break;
   }
 }

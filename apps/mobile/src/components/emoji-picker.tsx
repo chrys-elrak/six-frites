@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import categories from "@/lib/emojis.json";
+import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 import { IconButton } from "./ui";
 
@@ -16,22 +17,12 @@ interface Emoji {
 const RECENT_KEY = "six:recent-emoji";
 const COLUMNS = 8;
 
-const labels: Record<string, string> = {
-  smileys_emotion: "Smileys",
-  people_body: "People",
-  animals_nature: "Nature",
-  food_drink: "Food",
-  travel_places: "Travel",
-  activities: "Activities",
-  objects: "Objects",
-  symbols: "Symbols",
-  flags: "Flags",
-};
-
 const all = (categories as { title: string; data: Emoji[] }[]).flatMap((c) => c.data);
 
 export function EmojiPicker({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (emoji: string) => void }) {
   const t = useTheme();
+  const tr = useT();
+  const labels: Record<string, string> = tr.composer.emojiCategories;
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [tab, setTab] = useState<string>("recent");
@@ -86,14 +77,14 @@ export function EmojiPicker({ open, onClose, onPick }: { open: boolean; onClose:
               <TextInput
                 value={query}
                 onChangeText={setQuery}
-                placeholder="Search emoji"
+                placeholder={tr.composer.searchEmoji}
                 placeholderTextColor={t.muted}
                 autoCapitalize="none"
                 autoCorrect={false}
                 style={[styles.searchInput, { color: t.text }]}
               />
             </View>
-            <IconButton Icon={X} label="Close" onPress={onClose} />
+            <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
           </View>
 
           {!query && (
@@ -107,7 +98,7 @@ export function EmojiPicker({ open, onClose, onPick }: { open: boolean; onClose:
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => setTab(item.id)}
-                  accessibilityLabel={labels[item.id] ?? "Recent"}
+                  accessibilityLabel={labels[item.id] ?? tr.composer.recent}
                   style={[styles.tab, tab === item.id && { borderBottomColor: brand }]}
                 >
                   <Text style={{ fontSize: 22, opacity: tab === item.id ? 1 : 0.55 }}>{item.icon}</Text>
@@ -125,7 +116,7 @@ export function EmojiPicker({ open, onClose, onPick }: { open: boolean; onClose:
             initialNumToRender={64}
             style={{ height: 300 }}
             contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
-            ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>No emoji found.</Text>}
+            ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => pick(item)}

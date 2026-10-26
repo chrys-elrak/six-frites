@@ -2,6 +2,7 @@ import { createId } from "@paralleldrive/cuid2";
 import type { Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
+  MAX_MUTE_SECS,
   type ChatDTO,
   type ChatListQuery,
   type ChatDeliveredDTO,
@@ -33,6 +34,27 @@ const chatInclude = {
 } satisfies Prisma.ChatInclude;
 
 type ChatWithRelations = Prisma.ChatGetPayload<{ include: typeof chatInclude }>;
+
+/** A timed mute that has run out reads as not muted, without anyone having to clear it. */
+export function memberMuted(m: { muted: boolean; mutedUntil: Date | null }, now = new Date()) {
+  return m.muted && (m.mutedUntil === null || m.mutedUntil > now);
+}
+
+function muteState(m: { muted: boolean; mutedUntil: Date | null }) {
+  const muted = memberMuted(m);
+  return { muted, mutedUntil: muted ? (m.mutedUntil?.toISOString() ?? null) : null };
+}
+
+function muteData({ muted, mutedUntil }: Pick<UpdateChatInput, "muted" | "mutedUntil">) {
+  if (mutedUntil != null && muted !== true) throw new AppError("VALIDATION_FAILED", "mutedUntil needs muted: true");
+  if (muted === undefined) return {};
+  if (!muted) return { muted, mutedUntil: null };
+  const until = mutedUntil ? new Date(mutedUntil) : null;
+  if (until && (until <= new Date() || until.getTime() - Date.now() > MAX_MUTE_SECS * 1000)) {
+    throw new AppError("VALIDATION_FAILED", "mutedUntil must be in the next year");
+  }
+  return { muted, mutedUntil: until };
+}
 
 async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Promise<ChatDTO> {
   const me = chat.members.find((m) => m.userId === viewerId);
@@ -79,7 +101,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     lastMessage: lastMessage ? toMessageDTO(lastMessage, viewerId) : null,
     unreadCount,
     archived: me.archived,
-    muted: me.muted,
+    ...muteState(me),
     pinned: me.pinned,
     autoDeleteSecs: chat.autoDeleteSecs,
     theme: chat.theme,
@@ -221,8 +243,9 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
 export async function updateChat(
   userId: string,
   chatId: string,
-  { autoDeleteSecs, theme, ...mine }: UpdateChatInput,
+  { autoDeleteSecs, theme, muted, mutedUntil, ...view }: UpdateChatInput,
 ) {
+  const mine = { ...view, ...muteData({ muted, mutedUntil }) };
   return withEvents(async (tx, emit) => {
     await assertMember(tx, chatId, userId);
     if (Object.values(mine).some((v) => v !== undefined)) {

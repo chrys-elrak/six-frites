@@ -4,6 +4,7 @@ import { Flame, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Hydrated } from "@/lib/e2ee";
 import { shortRule } from "@/lib/ephemeral";
+import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
 import { AttachmentView, type ShownAttachment, useAttachmentUrl } from "./attachment";
 import { Portal } from "./portal";
@@ -35,13 +36,14 @@ function Countdown({ msLeft, total }: { msLeft: number; total: number }) {
 }
 
 function Media({ attachment }: { attachment: ShownAttachment }) {
+  const tr = useT();
   const url = useAttachmentUrl(attachment);
   const a = attachment.data;
   if (a.kind === "image") {
     return url ? (
       <ProtectedImage src={url} fit="contain" className="h-[70dvh] w-[min(90vw,64rem)]" />
     ) : (
-      <p className="text-sm text-white/60">Loading…</p>
+      <p className="text-sm text-white/60">{tr.common.loading}</p>
     );
   }
   if (a.kind === "video") {
@@ -57,7 +59,7 @@ function Media({ attachment }: { attachment: ShownAttachment }) {
         className="max-h-[70dvh] max-w-full"
       />
     ) : (
-      <p className="text-sm text-white/60">Loading…</p>
+      <p className="text-sm text-white/60">{tr.common.loading}</p>
     );
   }
   return (
@@ -77,6 +79,7 @@ export function EphemeralViewer({
   expiresAt: string | null;
   onClose: () => void;
 }) {
+  const tr = useT();
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
   const [now, setNow] = useState(Date.now());
   const e = message.ephemeral;
@@ -108,17 +111,17 @@ export function EphemeralViewer({
         className="fixed inset-0 z-[60] flex flex-col bg-black/95 text-white"
         role="dialog"
         aria-modal
-        aria-label="Self-destructing message"
+        aria-label={tr.summary.selfDestructing}
       >
         <div className="flex items-center gap-3 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <span className="flex flex-1 items-center gap-2 pl-2 text-sm text-white/80">
             <Flame className="size-4 fill-orange-500 text-orange-500" />
-            {e && shortRule(e)}
+            {e && shortRule(e, tr)}
           </span>
           {msLeft !== null && e?.ttlSeconds && <Countdown msLeft={msLeft} total={e.ttlSeconds * 1000} />}
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr.common.close}
             className="grid size-10 place-items-center rounded-full hover:bg-white/10"
           >
             <X className="size-6" />
@@ -144,11 +147,11 @@ export function EphemeralViewer({
 
         <p className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-white/60">
           {viewsLeft === 0
-            ? "This message disappears when you close it."
+            ? tr.messages.goneOnClose
             : msLeft !== null
-              ? "This message disappears when the timer ends."
+              ? tr.messages.goneOnTimer
               : viewsLeft
-                ? `You can open it ${viewsLeft === 1 ? "once more" : `${viewsLeft} more times`}.`
+                ? tr.messages.opensLeft(viewsLeft)
                 : null}
         </p>
       </div>

@@ -1,15 +1,6 @@
 import { type MessageDTO, maskSpoilers } from "./chats.js";
 import { chatTheme, customThemeColor } from "./chat-themes.js";
-
-const KIND_LABELS: Record<Exclude<MessageDTO["type"], "text" | "service">, string> = {
-  image: "Photo",
-  video: "Video",
-  video_note: "Video message",
-  voice: "Voice message",
-  file: "File",
-  gif: "GIF",
-  sticker: "Sticker",
-};
+import type { Dict } from "./i18n/index.js";
 
 const DURATIONS = [
   ["year", 365 * 86400],
@@ -21,61 +12,63 @@ const DURATIONS = [
 ] as const;
 
 /** Names an auto-delete timer in the largest whole unit, e.g. 604800 → "1 week". */
-export function durationLabel(secs: number) {
+export function durationLabel(secs: number, t: Dict) {
   const [unit, size] = DURATIONS.find(([, size]) => secs % size === 0) ?? ["second", 1];
-  const n = secs / size;
-  return `${n} ${unit}${n === 1 ? "" : "s"}`;
+  return t.time.duration(secs / size, unit);
 }
 
+/** A chat theme's name in the reader's language. */
+export const themeName = (id: string | null | undefined, t: Dict) =>
+  customThemeColor(id) ? t.summary.themes.custom : t.summary.themes[chatTheme(id).id as keyof Dict["summary"]["themes"]];
+
 /** How a notification describes someone reacting to your message. */
-export function reactionText(emoji: string, m: MessageDTO) {
-  const preview = previewText(m);
-  return preview ? `Reacted ${emoji} to “${preview}”` : `Reacted ${emoji} to your message`;
+export function reactionText(emoji: string, m: MessageDTO, t: Dict) {
+  const preview = previewText(m, t);
+  return preview ? t.summary.reacted(emoji, preview) : t.summary.reactedToYours(emoji);
 }
 
 const clock = (secs: number) =>
   `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
 
 /** "Video call · 2:31" or "Missed voice call". */
-export function callText(a: { video: boolean; secs: number | null }) {
-  const kind = a.video ? "video call" : "voice call";
-  return a.secs === null ? `Missed ${kind}` : `${a.video ? "Video" : "Voice"} call · ${clock(a.secs)}`;
+export function callText(a: { video: boolean; secs: number | null }, t: Dict) {
+  return a.secs === null ? t.summary.missedCall(a.video) : t.summary.call(a.video, clock(a.secs));
 }
 
 /** What a service message says, without the sender's name. */
-export function serviceText(m: Pick<MessageDTO, "action">) {
+export function serviceText(m: Pick<MessageDTO, "action">, t: Dict) {
   const a = m.action;
-  if (a?.type === "theme") return a.theme ? `Background: ${chatTheme(a.theme).name}` : "Background reset";
-  if (a?.type === "e2ee") return "Messages are end-to-end encrypted";
-  if (a?.type === "call") return callText(a);
-  return a?.secs ? `Messages auto-delete after ${durationLabel(a.secs)}` : "Auto-delete turned off";
+  if (a?.type === "theme") return a.theme ? t.summary.background(themeName(a.theme, t)) : t.summary.backgroundReset;
+  if (a?.type === "e2ee") return t.summary.encrypted;
+  if (a?.type === "call") return callText(a, t);
+  return a?.secs ? t.summary.autoDeleteAfter(durationLabel(a.secs, t)) : t.summary.autoDeleteOff;
 }
 
-/** What a service message says after the sender's name, e.g. "changed the chat background to Ketchup". */
-export function serviceSentence(m: Pick<MessageDTO, "action">) {
+/** What a service message says as a sentence about its sender; `who` is null when it was you. */
+export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | null, t: Dict) {
   const a = m.action;
   if (a?.type === "theme") {
-    if (!a.theme) return "reset the chat background";
+    if (!a.theme) return t.summary.resetBackground(who);
     return customThemeColor(a.theme)
-      ? "set a custom chat background"
-      : `changed the chat background to ${chatTheme(a.theme).name}`;
+      ? t.summary.customBackground(who)
+      : t.summary.changedBackground(who, themeName(a.theme, t));
   }
-  if (a?.type === "e2ee") return "turned on end-to-end encryption";
-  if (a?.type === "call") return `called: ${callText(a).toLowerCase()}`;
-  return a?.secs ? `set messages to auto-delete after ${durationLabel(a.secs)}` : "turned off auto-delete";
+  if (a?.type === "e2ee") return t.summary.turnedOnEncryption(who);
+  if (a?.type === "call") return t.summary.called(who, callText(a, t));
+  return a?.secs ? t.summary.setAutoDelete(who, durationLabel(a.secs, t)) : t.summary.turnedOffAutoDelete(who);
 }
 
 /**
  * A one-line description of a message for chat previews and notifications. Never reveals spoilers
  * or self-destructing content.
  */
-export function previewText(m: MessageDTO) {
-  if (m.type === "service") return serviceText(m);
-  if (m.ephemeral) return "Self-destructing message";
-  if (m.deletedAt) return "Message deleted";
-  if (m.type === "sticker") return m.sticker ? `${m.sticker.emoji} Sticker` : "Sticker";
-  const caption = m.text ? (m.spoiler && m.type === "text" ? "Spoiler" : maskSpoilers(m.text, m.entities)) : "";
+export function previewText(m: MessageDTO, t: Dict) {
+  if (m.type === "service") return serviceText(m, t);
+  if (m.ephemeral) return t.summary.selfDestructing;
+  if (m.deletedAt) return t.summary.messageDeleted;
+  if (m.type === "sticker") return m.sticker ? `${m.sticker.emoji} ${t.summary.kinds.sticker}` : t.summary.kinds.sticker;
+  const caption = m.text ? (m.spoiler && m.type === "text" ? t.summary.spoiler : maskSpoilers(m.text, m.entities)) : "";
   if (m.type === "text") return caption;
-  const label = m.type === "file" && m.attachment ? `File: ${m.attachment.name}` : KIND_LABELS[m.type];
+  const label = m.type === "file" && m.attachment ? t.summary.fileNamed(m.attachment.name) : t.summary.kinds[m.type];
   return caption ? `${label} · ${caption}` : label;
 }

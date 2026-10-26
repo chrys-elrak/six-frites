@@ -94,6 +94,29 @@ describe("push notifications", () => {
     expect(await deliverPush(muted.id, host.user.id)).toBe(0);
   });
 
+  it("stops muting once a timed mute ends", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await subscribe(guest);
+    const until = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const chat = (await call(guest, "PATCH", `/v1/chats/${chatId}`, { muted: true, mutedUntil: until })).json();
+    expect(chat).toMatchObject({ muted: true, mutedUntil: until });
+    const quiet = (await send(host, chatId, "shh")).json();
+    expect(await deliverPush(quiet.id, guest.user.id)).toBe(0);
+
+    await prisma.chatMember.update({
+      where: { chatId_userId: { chatId, userId: guest.user.id } },
+      data: { mutedUntil: new Date(Date.now() - 1000) },
+    });
+    expect(await get(guest, `/v1/chats/${chatId}`)).toMatchObject({ muted: false, mutedUntil: null });
+    const loud = (await send(host, chatId, "hello again")).json();
+    expect(await deliverPush(loud.id, guest.user.id)).toBe(1);
+
+    const past = await call(guest, "PATCH", `/v1/chats/${chatId}`, { muted: true, mutedUntil: new Date(0).toISOString() });
+    expect(past.json().error.code).toBe("VALIDATION_FAILED");
+    const unmuted = (await call(guest, "PATCH", `/v1/chats/${chatId}`, { muted: false })).json();
+    expect(unmuted).toMatchObject({ muted: false, mutedUntil: null });
+  });
+
   it("tells the author about reactions that are still there", async () => {
     const { host, guest, chatId } = await makeFriends();
     const token = await subscribe(host);
@@ -117,6 +140,20 @@ describe("push notifications", () => {
     await call(guest, "POST", `/v1/messages/${m.id}/reactions`, { emoji: "👍" });
     await call(host, "PATCH", `/v1/chats/${chatId}`, { muted: true });
     expect(await deliverReactionPush(m.id, host.user.id, reaction)).toBe(0);
+  });
+
+  it("writes each device's notifications in the language it registered with", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const res = await call(guest, "POST", "/v1/devices/push-token", { provider: "webpush", token: "fr", locale: "fr" });
+    expect(res.statusCode).toBe(204);
+
+    const secret = (await send(host, chatId, "view me once", { ephemeral: { maxViews: 1 } })).json();
+    await deliverPush(secret.id, guest.user.id);
+    expect(sent.at(-1)).toMatchObject({ token: "fr", payload: { body: "Message autodestructeur" } });
+
+    await subscribe(guest, "fr");
+    await deliverPush((await send(host, chatId, "view me too", { ephemeral: { maxViews: 1 } })).json().id, guest.user.id);
+    expect(sent.at(-1)!.payload.body).toBe("Self-destructing message");
   });
 
   it("forgets subscriptions the push service says are gone, and on request", async () => {

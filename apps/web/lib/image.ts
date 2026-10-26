@@ -1,3 +1,5 @@
+import { getT } from "./i18n";
+
 const MAX_BYTES = 64 * 1024;
 const SIZE = 192;
 
@@ -8,7 +10,7 @@ function squareJpeg(source: CanvasImageSource, width: number, height: number) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = SIZE;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas is not supported");
+  if (!ctx) throw new Error(getT().common.couldNotReadImage);
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, SIZE, SIZE);
   ctx.drawImage(source, (width - side) / 2, (height - side) / 2, side, side, 0, 0, SIZE, SIZE);
@@ -17,7 +19,7 @@ function squareJpeg(source: CanvasImageSource, width: number, height: number) {
     const url = canvas.toDataURL("image/jpeg", quality);
     if (bytesOf(url) <= MAX_BYTES) return url;
   }
-  throw new Error("This photo is too detailed to shrink enough. Try another one.");
+  throw new Error(getT().contacts.photoTooDetailed);
 }
 
 /** Center-crops an image file to a square JPEG data URL small enough to store as a contact photo. */

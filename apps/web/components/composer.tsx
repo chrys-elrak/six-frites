@@ -40,18 +40,20 @@ import { VideoNoteRecorder } from "./video-note-recorder";
 import { EmojiButton } from "./emoji-picker";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useRecorder } from "@/lib/recorder";
+import { useSession } from "@/lib/session";
 import { queueMessage, replyQuote } from "@/lib/send";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 
 const drafts = new Map<string, string>();
 
-const formats: { type: EntityType; label: string; keys: string; Icon: LucideIcon }[] = [
-  { type: "bold", label: "Bold", keys: "B", Icon: Bold },
-  { type: "italic", label: "Italic", keys: "I", Icon: Italic },
-  { type: "strike", label: "Strikethrough", keys: "Shift+X", Icon: Strikethrough },
-  { type: "code", label: "Code", keys: "E", Icon: Code },
-  { type: "spoiler", label: "Spoiler", keys: "Shift+P", Icon: EyeOff },
+const formats: { type: EntityType; keys: string; Icon: LucideIcon }[] = [
+  { type: "bold", keys: "B", Icon: Bold },
+  { type: "italic", keys: "I", Icon: Italic },
+  { type: "strike", keys: "Shift+X", Icon: Strikethrough },
+  { type: "code", keys: "E", Icon: Code },
+  { type: "spoiler", keys: "Shift+P", Icon: EyeOff },
 ];
 
 const modifierKey = () => (/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl+");
@@ -67,6 +69,7 @@ const keepSelection = (onPress: () => void) => ({
 });
 
 function ModeBar({ label, text, onCancel }: { label: string; text: string; onCancel: () => void }) {
+  const tr = useT();
   return (
     <div className="flex items-center gap-3 border-l-4 border-brand py-1 pr-1 pl-3">
       <div className="min-w-0 flex-1">
@@ -76,7 +79,7 @@ function ModeBar({ label, text, onCancel }: { label: string; text: string; onCan
       <button
         type="button"
         onClick={onCancel}
-        aria-label="Cancel"
+        aria-label={tr.common.cancel}
         className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
       >
         <X className="size-4" />
@@ -96,6 +99,8 @@ export function Composer({
   scheduledCount: number;
   onSent: () => void;
 }) {
+  const tr = useT();
+  const meId = useSession((s) => s.user?.id);
   const qc = useQueryClient();
   const { realtime } = useRealtime();
   const mode = useComposerMode((s) => s.byChat[chatId]);
@@ -138,10 +143,10 @@ export function Composer({
   }
 
   const attachActions = [
-    { label: "Photo or video", onSelect: () => mediaInput.current?.click() },
-    { label: "Camera", onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
-    { label: "Video message", onSelect: () => setNoteRecorder(true) },
-    { label: "File", onSelect: () => fileInput.current?.click() },
+    { label: tr.composer.photoOrVideo, onSelect: () => mediaInput.current?.click() },
+    { label: tr.composer.camera, onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
+    { label: tr.summary.kinds.video_note, onSelect: () => setNoteRecorder(true) },
+    { label: tr.summary.kinds.file, onSelect: () => fileInput.current?.click() },
   ];
   const editing = mode?.kind === "edit" ? mode.message : null;
 
@@ -234,7 +239,7 @@ export function Composer({
         try {
           await editMessage(qc, editing, parsed.text, parsed.entities);
         } catch {
-          setError("Couldn't save your edit. Try again.");
+          setError(tr.composer.couldNotSaveEdit);
           return;
         } finally {
           setSaving(false);
@@ -283,7 +288,7 @@ export function Composer({
         at,
       );
     } catch {
-      setError("Couldn't schedule your message. Try again.");
+      setError(tr.composer.couldNotSchedule);
       return;
     }
     realtime?.setTyping(chatId, false);
@@ -360,14 +365,14 @@ export function Composer({
       >
         {mode?.kind === "reply" && (
           <ModeBar
-            label={`Replying to ${nameOf(mode.message.senderId)}`}
-            text={mode.message.spoiler ? "Spoiler" : maskSpoilers(mode.message.text ?? "", mode.message.entities)}
+            label={tr.composer.replyingTo(mode.message.senderId === meId ? null : nameOf(mode.message.senderId))}
+            text={mode.message.spoiler ? tr.summary.spoiler : maskSpoilers(mode.message.text ?? "", mode.message.entities)}
             onCancel={cancel}
           />
         )}
         {editing && (
           <ModeBar
-            label="Editing message"
+            label={tr.composer.editingMessage}
             text={maskSpoilers(editing.text ?? "", editing.entities)}
             onCancel={cancel}
           />
@@ -376,13 +381,14 @@ export function Composer({
           <div className="flex items-center gap-2 px-1 text-sm text-orange-600 dark:text-orange-400">
             <Flame className="size-4 fill-current" />
             <span className="flex-1">
-              Self-destruct:{" "}
-              {shortRule({ maxViews: ephemeral.maxViews ?? null, ttlSeconds: ephemeral.ttlSeconds ?? null })}
+              {tr.composer.selfDestructRule(
+                shortRule({ maxViews: ephemeral.maxViews ?? null, ttlSeconds: ephemeral.ttlSeconds ?? null }, tr),
+              )}
             </span>
             <button
               type="button"
               onClick={() => setEphemeral(null)}
-              aria-label="Turn off self-destruct"
+              aria-label={tr.composer.turnOffSelfDestruct}
               className="grid size-7 place-items-center rounded-full hover:bg-orange-500/10"
             >
               <X className="size-4" />
@@ -396,14 +402,14 @@ export function Composer({
         )}
 
         {hasSelection && (
-          <div role="toolbar" aria-label="Formatting" className="flex gap-1">
-            {formats.map(({ type, label, keys, Icon }) => (
+          <div role="toolbar" aria-label={tr.composer.formatting} className="flex gap-1">
+            {formats.map(({ type, keys, Icon }) => (
               <button
                 key={type}
                 type="button"
                 {...keepSelection(() => wrap(type))}
-                aria-label={label}
-                title={`${label} (${modifierKey()}${keys})`}
+                aria-label={tr.composer.formats[type]}
+                title={`${tr.composer.formats[type]} (${modifierKey()}${keys})`}
                 className="grid size-9 place-items-center rounded-lg bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-100 dark:bg-stone-900 dark:text-stone-200 dark:ring-stone-800 dark:hover:bg-stone-800"
               >
                 <Icon className="size-4" />
@@ -423,7 +429,7 @@ export function Composer({
             <button
               type="button"
               onClick={recorder.cancel}
-              aria-label="Discard recording"
+              aria-label={tr.composer.discardRecording}
               className="grid size-10 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
             >
               <Trash2 className="size-5" />
@@ -431,13 +437,13 @@ export function Composer({
             <div className="flex min-h-10 flex-1 items-center gap-2 rounded-2xl bg-white px-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
               <span className="size-2.5 animate-pulse rounded-full bg-red-500" aria-hidden />
               <span className="font-mono text-sm tabular-nums">{formatDuration(recorder.elapsed)}</span>
-              <span className="text-sm text-stone-500">Recording…</span>
+              <span className="text-sm text-stone-500">{tr.composer.recording}</span>
             </div>
             <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
             <button
               type="button"
               onClick={() => void sendVoice()}
-              aria-label="Send voice message"
+              aria-label={tr.composer.sendVoice}
               className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
             >
               <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
@@ -451,7 +457,7 @@ export function Composer({
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => setAttachMenu(true)}
-                  aria-label="Attach"
+                  aria-label={tr.composer.attach}
                   aria-haspopup="menu"
                   className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
                 >
@@ -514,16 +520,16 @@ export function Composer({
                 rows={1}
                 maxLength={4000}
                 enterKeyHint={editing ? "done" : "send"}
-                placeholder={spoiler ? "Spoiler message" : "Message"}
-                aria-label="Message"
+                placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
+                aria-label={tr.common.message}
                 className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none"
               />
               <button
                 type="button"
                 {...keepSelection(spoilerButton)}
                 aria-pressed={!editing && spoiler}
-                aria-label={spoiler && !editing ? "Send as normal message" : "Spoiler"}
-                title="Select text to hide just that part, or tap to send the whole message as a spoiler"
+                aria-label={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
+                title={tr.composer.spoilerHint}
                 className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
                   spoiler && !editing ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
                 }`}
@@ -535,8 +541,8 @@ export function Composer({
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => setShowScheduled(true)}
-                  aria-label={`${scheduledCount} scheduled message${scheduledCount === 1 ? "" : "s"}`}
-                  title="Scheduled messages"
+                  aria-label={tr.composer.scheduledCount(scheduledCount)}
+                  title={tr.composer.scheduledMessages}
                   className="grid size-10 shrink-0 place-items-center rounded-full text-brand"
                 >
                   <CalendarClock className="size-5" />
@@ -549,7 +555,7 @@ export function Composer({
                 type="button"
                 onClick={() => void recorder.start()}
                 disabled={!realtime}
-                aria-label="Record a voice message"
+                aria-label={tr.composer.recordVoice}
                 className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
               >
                 <Mic className="size-5" />
@@ -560,8 +566,8 @@ export function Composer({
                 disabled={!canSubmit}
                 {...(editing ? {} : sendPress)}
                 onMouseDown={(e) => e.preventDefault()}
-                aria-label={editing ? "Save" : "Send"}
-                title={editing ? undefined : "Hold or right-click to schedule"}
+                aria-label={editing ? tr.common.save : tr.common.send}
+                title={editing ? undefined : tr.composer.holdOrRightClickToSchedule}
                 className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
               >
                 {editing ? (
@@ -574,9 +580,9 @@ export function Composer({
           </div>
         )}
       </form>
-      {attachMenu && <Sheet title="Send" actions={attachActions} onClose={() => setAttachMenu(false)} />}
+      {attachMenu && <Sheet title={tr.common.send} actions={attachActions} onClose={() => setAttachMenu(false)} />}
       {scheduling && (
-        <ScheduleDialog title="Schedule message" onClose={closeScheduling} onPick={(at) => void schedule(at)} />
+        <ScheduleDialog title={tr.composer.scheduleMessage} onClose={closeScheduling} onPick={(at) => void schedule(at)} />
       )}
       {showScheduled && <ScheduledPanel chatId={chatId} onClose={closeScheduled} />}
       {camera && (

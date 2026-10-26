@@ -1,7 +1,15 @@
 import { SixApiError, unwrap } from "@six/sdk";
-import { type InviteDTO, type SessionDTO, type UpdateMeInput, USERNAME_PATTERN } from "@six/shared";
+import {
+  type Dict,
+  type InviteDTO,
+  LOCALES,
+  LOCALE_NAMES,
+  type SessionDTO,
+  type UpdateMeInput,
+  USERNAME_PATTERN,
+} from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, LogOut, Monitor, Smartphone } from "lucide-react-native";
+import { Camera, Check, LogOut, Monitor, Smartphone } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { formatCode, contactUrl, shareContact, shareInvite, timeAgo } from "@/lib/format";
@@ -12,10 +20,13 @@ import {
   customTheme,
   customThemeColor,
   customThemeId,
+  themeName,
 } from "@six/shared";
 import { useChatThemeStore } from "@/lib/chat-themes";
+import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { playChime, useNotifyPrefs } from "@/lib/notify";
 import { pickAvatar } from "@/lib/media";
+import { registerPush } from "@/lib/push";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
@@ -31,6 +42,7 @@ import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextB
 
 function ProfileCard() {
   const t = useTheme();
+  const tr = useT();
   const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
   const [name, setName] = useState(user.displayName);
@@ -39,7 +51,7 @@ function ProfileCard() {
   const save = useMutation({
     mutationFn: async (body: UpdateMeInput) => unwrap(await six.api.PATCH("/v1/me", { body })),
     onSuccess: setUser,
-    onError: (err) => setError(err instanceof SixApiError ? err.message : "Couldn't save. Try again."),
+    onError: (err) => setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave),
   });
 
   async function choosePhoto() {
@@ -48,7 +60,7 @@ function ProfileCard() {
       const photo = await pickAvatar();
       if (photo) save.mutate({ photo });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't read that image.");
+      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
     }
   }
 
@@ -57,7 +69,7 @@ function ProfileCard() {
   return (
     <Card style={{ padding: 16, gap: 10 }}>
       <View style={styles.profile}>
-        <Pressable onPress={choosePhoto} disabled={save.isPending} accessibilityLabel="Change your photo">
+        <Pressable onPress={choosePhoto} disabled={save.isPending} accessibilityLabel={tr.settings.changePhoto}>
           <Avatar user={user} size="md" />
           <View style={styles.cameraBadge}>
             <Camera size={18} color="#fff" />
@@ -69,14 +81,14 @@ function ProfileCard() {
               value={name}
               onChangeText={setName}
               maxLength={64}
-              accessibilityLabel="Display name"
+              accessibilityLabel={tr.settings.displayName}
               returnKeyType="done"
               onSubmitEditing={() => dirty && save.mutate({ displayName: name.trim() })}
               style={[styles.nameInput, { color: t.text }]}
             />
             {dirty && (
               <TextButton
-                title="Save"
+                title={tr.common.save}
                 onPress={() => save.mutate({ displayName: name.trim() })}
                 disabled={save.isPending}
                 color={t.text}
@@ -90,7 +102,7 @@ function ProfileCard() {
       </View>
       {user.avatarUrl && (
         <TextButton
-          title="Remove photo"
+          title={tr.settings.removePhoto}
           onPress={() => save.mutate({ photo: null })}
           disabled={save.isPending}
           color={t.danger}
@@ -169,33 +181,34 @@ function ThemeSwatch({
 }
 
 function ChatBackgroundPicker() {
+  const tr = useT();
   const current = useChatThemeStore((s) => s.id);
   const choose = useChatThemeStore((s) => s.set);
   const [custom, setCustom] = useState(false);
   const customHex = customThemeColor(current);
   return (
     <View>
-      <SectionTitle>Default chat background</SectionTitle>
+      <SectionTitle>{tr.settings.defaultBackground}</SectionTitle>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}>
         {CHAT_THEMES.map((theme) => (
           <ThemeSwatch
             key={theme.id}
             theme={theme}
             on={theme.id === current}
-            label={theme.name}
+            label={themeName(theme.id, tr)}
             onPress={() => choose(theme.id)}
           />
         ))}
         <ThemeSwatch
           theme={customTheme(customHex ?? CUSTOM_THEME_COLORS[3]!)}
           on={!!customHex}
-          label="Custom…"
+          label={tr.common.custom}
           onPress={() => setCustom(true)}
         />
       </ScrollView>
       {custom && (
         <CustomThemePicker
-          title="Default custom background"
+          title={tr.settings.defaultCustomBackground}
           current={current}
           onPick={(mine, theirs) => choose(customThemeId(mine, theirs))}
           onClose={() => setCustom(false)}
@@ -206,14 +219,15 @@ function ChatBackgroundPicker() {
 }
 
 function NotificationSettings() {
+  const tr = useT();
   const prefs = useNotifyPrefs();
   return (
     <View>
-      <SectionTitle>Notifications</SectionTitle>
+      <SectionTitle>{tr.settings.notifications}</SectionTitle>
       <Card>
         <Toggle
-          label="Sound"
-          hint="Plays a short chime for new messages."
+          label={tr.settings.sound}
+          hint={tr.settings.soundHint}
           value={prefs.sound}
           onChange={(on) => {
             prefs.set({ sound: on });
@@ -222,8 +236,8 @@ function NotificationSettings() {
         />
         <Divider />
         <Toggle
-          label="Popups"
-          hint="Shows new messages from other chats while you use the app."
+          label={tr.settings.popups}
+          hint={tr.settings.popupsHint}
           value={prefs.popups}
           onChange={(on) => prefs.set({ popups: on })}
         />
@@ -232,13 +246,39 @@ function NotificationSettings() {
   );
 }
 
-const usernameErrors: Record<string, string> = {
-  USERNAME_TAKEN: "That username is taken.",
-  VALIDATION_FAILED: "3 to 20 letters, digits or _, starting with a letter.",
-};
+function LanguagePicker() {
+  const t = useTheme();
+  const tr = useT();
+  const current = useLocale((s) => s.locale);
+  return (
+    <View>
+      <SectionTitle>{tr.common.language}</SectionTitle>
+      <Card>
+        {LOCALES.map((l, i) => (
+          <View key={l}>
+            {i > 0 && <Divider />}
+            <Pressable
+              onPress={() => {
+                setLocale(l);
+                void registerPush().catch(() => null);
+              }}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: l === current }}
+              style={styles.cardRow}
+            >
+              <Text style={{ flex: 1, color: t.text, fontWeight: "500", fontSize: 15 }}>{LOCALE_NAMES[l]}</Text>
+              {l === current && <Check size={18} color={brand} />}
+            </Pressable>
+          </View>
+        ))}
+      </Card>
+    </View>
+  );
+}
 
 function FindMe() {
   const t = useTheme();
+  const tr = useT();
   const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
   const [username, setUsername] = useState(user.username ?? "");
@@ -274,37 +314,37 @@ function FindMe() {
 
   const hint = update.isError
     ? update.error instanceof SixApiError
-      ? (usernameErrors[update.error.code] ?? update.error.message)
-      : "Couldn't save. Try again."
+      ? (tr.settings.usernameErrors[update.error.code] ?? update.error.message)
+      : tr.common.couldNotSave
     : !valid
-      ? usernameErrors.VALIDATION_FAILED
-      : "Optional. People can type it to find you.";
+      ? tr.settings.usernameErrors.VALIDATION_FAILED
+      : tr.settings.usernameHint;
 
   return (
     <View>
-      <SectionTitle>How people find you</SectionTitle>
+      <SectionTitle>{tr.settings.findMe}</SectionTitle>
       <Card>
         <View style={styles.cardRow}>
           <View style={[styles.qr, { width: 112, height: 112, backgroundColor: "#fff" }]}>
             {user.contactCode && <QrCode value={contactUrl(user.contactCode)} size={112} />}
           </View>
           <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ color: t.muted, fontSize: 13 }}>Your contact code</Text>
+            <Text style={{ color: t.muted, fontSize: 13 }}>{tr.settings.contactCode}</Text>
             <Text style={[styles.code, { color: t.text }]}>{user.contactCode ? formatCode(user.contactCode) : "…"}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", marginLeft: -10 }}>
               <TextButton
-                title="Share link"
+                title={tr.common.shareLink}
                 color={t.text}
                 disabled={!user.contactCode}
                 onPress={() => void shareContact(user.contactCode)}
               />
-              <TextButton title="New code" onPress={() => setConfirmReset(true)} disabled={reset.isPending} />
+              <TextButton title={tr.settings.newCode} onPress={() => setConfirmReset(true)} disabled={reset.isPending} />
             </View>
           </View>
         </View>
         <Divider />
         <View style={[styles.cardRow, { alignItems: "flex-start", flexDirection: "column", gap: 6 }]}>
-          <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>Username</Text>
+          <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.username}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "stretch" }}>
             <View style={[styles.usernameField, { backgroundColor: t.field }]}>
               <Text style={{ color: t.muted, fontSize: 16 }}>@</Text>
@@ -315,27 +355,27 @@ function FindMe() {
                   update.reset();
                 }}
                 onSubmitEditing={save}
-                placeholder="pick one"
+                placeholder={tr.settings.usernamePlaceholder}
                 placeholderTextColor={t.faint}
                 maxLength={21}
                 autoCapitalize="none"
                 autoCorrect={false}
                 spellCheck={false}
                 returnKeyType="done"
-                accessibilityLabel="Username"
+                accessibilityLabel={tr.settings.username}
                 style={{ flex: 1, color: t.text, fontSize: 16, paddingVertical: 8 }}
               />
             </View>
             {dirty && (
-              <TextButton title="Save" color={t.text} onPress={save} disabled={!valid || update.isPending} />
+              <TextButton title={tr.common.save} color={t.text} onPress={save} disabled={!valid || update.isPending} />
             )}
           </View>
           <Text style={{ color: update.isError || !valid ? t.danger : t.muted, fontSize: 13 }}>{hint}</Text>
         </View>
         <Divider />
         <Toggle
-          label="Find me by email"
-          hint={`People who type ${user.email} exactly can find you`}
+          label={tr.settings.findByEmail}
+          hint={tr.settings.findByEmailHint(user.email)}
           value={user.findByEmail}
           disabled={update.isPending}
           onChange={(findByEmail) => update.mutate({ findByEmail })}
@@ -343,8 +383,8 @@ function FindMe() {
       </Card>
       {confirmReset && (
         <Sheet
-          title="Your current code, link and QR code will stop working. People you already chat with stay connected."
-          actions={[{ label: "Get a new code", destructive: true, onSelect: () => reset.mutate() }]}
+          title={tr.settings.resetCodeWarning}
+          actions={[{ label: tr.settings.getNewCode, destructive: true, onSelect: () => reset.mutate() }]}
           onClose={() => setConfirmReset(false)}
         />
       )}
@@ -352,21 +392,21 @@ function FindMe() {
   );
 }
 
-function usesLabel(i: InviteDTO) {
-  const uses = `${i.uses} joined`;
-  return i.maxUses === null ? uses : `${uses} · ${i.maxUses - i.uses} left`;
+function usesLabel(i: InviteDTO, tr: Dict) {
+  const uses = tr.settings.joined(i.uses);
+  return i.maxUses === null ? uses : `${uses} · ${tr.settings.left(i.maxUses - i.uses)}`;
 }
 
-function expiryLabel(i: InviteDTO) {
-  if (!i.expiresAt) return "Never expires";
+function expiryLabel(i: InviteDTO, tr: Dict) {
+  if (!i.expiresAt) return tr.settings.neverExpires;
   const ms = Date.parse(i.expiresAt) - Date.now();
-  if (ms <= 0) return "Expired";
-  const days = Math.ceil(ms / 864e5);
-  return `Expires in ${days} day${days === 1 ? "" : "s"}`;
+  if (ms <= 0) return tr.settings.expired;
+  return tr.settings.expiresIn(tr.time.duration(Math.ceil(ms / 864e5), "day"));
 }
 
 function Invites() {
   const t = useTheme();
+  const tr = useT();
   const qc = useQueryClient();
   const invites = useInfiniteQuery({
     queryKey: ["invites"],
@@ -388,11 +428,11 @@ function Invites() {
 
   return (
     <View>
-      <SectionTitle>Invite friends</SectionTitle>
+      <SectionTitle>{tr.settings.inviteFriends}</SectionTitle>
       <Card>
         <View style={styles.cardRow}>
-          <Text style={{ flex: 1, color: t.textSoft, fontSize: 14 }}>Send a link to someone you want to chat with.</Text>
-          <PrimaryButton title="New link" onPress={() => create.mutate()} disabled={create.isPending} />
+          <Text style={{ flex: 1, color: t.textSoft, fontSize: 14 }}>{tr.settings.inviteHint}</Text>
+          <PrimaryButton title={tr.settings.newLink} onPress={() => create.mutate()} disabled={create.isPending} />
         </View>
         {items.map((i) => {
           const dead =
@@ -404,10 +444,10 @@ function Invites() {
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.code, { color: t.text }]}>{i.code}</Text>
                   <Text style={{ color: t.muted, fontSize: 13 }}>
-                    {usesLabel(i)} · {expiryLabel(i)}
+                    {usesLabel(i, tr)} · {expiryLabel(i, tr)}
                   </Text>
                 </View>
-                {!dead && <TextButton title="Share" onPress={() => void shareInvite(i.code)} />}
+                {!dead && <TextButton title={tr.common.share} onPress={() => void shareInvite(i.code)} />}
               </View>
             </View>
           );
@@ -416,7 +456,7 @@ function Invites() {
           <>
             <Divider />
             <Pressable onPress={() => void invites.fetchNextPage()} style={{ padding: 12, alignItems: "center" }}>
-              <Text style={{ color: t.muted, fontWeight: "600" }}>Show older links</Text>
+              <Text style={{ color: t.muted, fontWeight: "600" }}>{tr.settings.showOlderLinks}</Text>
             </Pressable>
           </>
         )}
@@ -427,6 +467,7 @@ function Invites() {
 
 function Referrals() {
   const t = useTheme();
+  const tr = useT();
   const referrals = useQuery({
     queryKey: ["referrals"],
     queryFn: async () => unwrap(await six.api.GET("/v1/me/referrals", { params: { query: { limit: 50 } } })),
@@ -436,7 +477,7 @@ function Referrals() {
 
   return (
     <View>
-      <SectionTitle>Joined with your links</SectionTitle>
+      <SectionTitle>{tr.settings.joinedWithLinks}</SectionTitle>
       <Card>
         {items.map((r, i) => (
           <View key={r.id}>
@@ -459,6 +500,7 @@ const platformIcon: Record<SessionDTO["platform"], typeof Monitor> = { web: Moni
 
 function Devices() {
   const t = useTheme();
+  const tr = useT();
   const qc = useQueryClient();
   const sessions = useQuery({
     queryKey: ["sessions"],
@@ -480,7 +522,7 @@ function Devices() {
         action={
           others > 0 && (
             <TextButton
-              title="Log out other devices"
+              title={tr.settings.logOutOthers}
               color={t.danger}
               onPress={() => revokeOthers.mutate()}
               disabled={revokeOthers.isPending}
@@ -488,11 +530,11 @@ function Devices() {
           )
         }
       >
-        Devices
+        {tr.settings.devices}
       </SectionTitle>
       <Card>
-        {sessions.isPending && <Text style={[styles.cardRow, { color: t.muted }]}>Loading…</Text>}
-        {sessions.isError && <Text style={[styles.cardRow, { color: t.danger }]}>Couldn't load devices.</Text>}
+        {sessions.isPending && <Text style={[styles.cardRow, { color: t.muted }]}>{tr.common.loading}</Text>}
+        {sessions.isError && <Text style={[styles.cardRow, { color: t.danger }]}>{tr.settings.couldNotLoadDevices}</Text>}
         {sessions.data?.map((s, i) => {
           const Icon = platformIcon[s.platform];
           return (
@@ -509,15 +551,15 @@ function Devices() {
                     </Text>
                     {s.current && (
                       <View style={[styles.pill, { backgroundColor: t.successBg }]}>
-                        <Text style={{ color: t.success, fontSize: 12, fontWeight: "600" }}>This device</Text>
+                        <Text style={{ color: t.success, fontSize: 12, fontWeight: "600" }}>{tr.settings.thisDevice}</Text>
                       </View>
                     )}
                   </View>
-                  <Text style={{ color: t.muted, fontSize: 13 }}>Active {timeAgo(s.lastUsedAt)}</Text>
+                  <Text style={{ color: t.muted, fontSize: 13 }}>{tr.settings.lastActive(timeAgo(s.lastUsedAt))}</Text>
                 </View>
                 {!s.current && (
                   <TextButton
-                    title="Log out"
+                    title={tr.settings.logOut}
                     color={t.danger}
                     onPress={() => revoke.mutate(s.id)}
                     disabled={revoke.isPending && revoke.variables === s.id}
@@ -534,19 +576,21 @@ function Devices() {
 
 export function SettingsPanel() {
   const t = useTheme();
+  const tr = useT();
   const link = (url: string) => () => void Linking.openURL(url);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScreenHeader inset={false}>
-        <Text style={[styles.title, { color: t.text }]}>Settings</Text>
+        <Text style={[styles.title, { color: t.text }]}>{tr.common.settings}</Text>
         <Pressable onPress={() => void logout()} style={styles.signOut} hitSlop={6}>
           <LogOut size={16} color={t.textSoft} />
-          <Text style={{ color: t.textSoft, fontWeight: "600" }}>Sign out</Text>
+          <Text style={{ color: t.textSoft, fontWeight: "600" }}>{tr.settings.signOut}</Text>
         </Pressable>
       </ScreenHeader>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ProfileCard />
+        <LanguagePicker />
         <FindMe />
         <ChatBackgroundPicker />
         <NotificationSettings />
@@ -558,11 +602,11 @@ export function SettingsPanel() {
         <BlockedPeople />
         <AccountCard />
         <Text style={[styles.credits, { color: t.faint }]}>
-          Animated emoji from{" "}
+          {tr.settings.creditsFrom}{" "}
           <Text style={styles.link} onPress={link("https://googlefonts.github.io/noto-emoji-animation/")}>
             Noto Emoji Animation
           </Text>{" "}
-          by Google, licensed{" "}
+          {tr.settings.creditsBy}{" "}
           <Text style={styles.link} onPress={link("https://creativecommons.org/licenses/by/4.0/")}>
             CC BY 4.0
           </Text>

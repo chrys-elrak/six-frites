@@ -32,10 +32,12 @@ import { editMessage, scheduleMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
 import { shortRule } from "@/lib/ephemeral";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 import { pickFiles, pickMedia, takePhoto } from "@/lib/media";
 import { useRealtime } from "@/lib/realtime";
 import { type LocalFile, queueMessage } from "@/lib/send";
+import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { EmojiPicker } from "./emoji-picker";
@@ -46,12 +48,12 @@ import { VideoNoteRecorder } from "./video-note-recorder";
 
 const drafts = new Map<string, string>();
 
-const formats: { type: EntityType; label: string; Icon: LucideIcon }[] = [
-  { type: "bold", label: "Bold", Icon: Bold },
-  { type: "italic", label: "Italic", Icon: Italic },
-  { type: "strike", label: "Strikethrough", Icon: Strikethrough },
-  { type: "code", label: "Code", Icon: Code },
-  { type: "spoiler", label: "Spoiler", Icon: EyeOff },
+const formats: { type: EntityType; Icon: LucideIcon }[] = [
+  { type: "bold", Icon: Bold },
+  { type: "italic", Icon: Italic },
+  { type: "strike", Icon: Strikethrough },
+  { type: "code", Icon: Code },
+  { type: "spoiler", Icon: EyeOff },
 ];
 
 interface Range {
@@ -61,6 +63,7 @@ interface Range {
 
 function ModeBar({ label, text, onCancel }: { label: string; text: string; onCancel: () => void }) {
   const t = useTheme();
+  const tr = useT();
   return (
     <View style={styles.modeBar}>
       <View style={{ flex: 1 }}>
@@ -69,7 +72,7 @@ function ModeBar({ label, text, onCancel }: { label: string; text: string; onCan
           {text}
         </Text>
       </View>
-      <Pressable onPress={onCancel} accessibilityLabel="Cancel" hitSlop={8} style={styles.round32}>
+      <Pressable onPress={onCancel} accessibilityLabel={tr.common.cancel} hitSlop={8} style={styles.round32}>
         <X size={16} color={t.muted} />
       </Pressable>
     </View>
@@ -88,6 +91,8 @@ export function Composer({
   onSent: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
+  const meId = useSession((s) => s.user?.id);
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const { realtime } = useRealtime();
@@ -188,7 +193,7 @@ export function Composer({
         when,
       );
     } catch {
-      setError("Couldn't schedule your message. Try again.");
+      setError(tr.composer.couldNotSchedule);
       return;
     }
     realtime?.setTyping(chatId, false);
@@ -210,7 +215,7 @@ export function Composer({
         try {
           await editMessage(qc, editing, parsed.text, parsed.entities);
         } catch {
-          setError("Couldn't save your edit. Try again.");
+          setError(tr.composer.couldNotSaveEdit);
           return;
         } finally {
           setSaving(false);
@@ -265,7 +270,7 @@ export function Composer({
       const files = await source();
       if (files.length) setPicked(files);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't open that.");
+      setError(err instanceof Error ? err.message : tr.composer.couldNotOpen);
     }
   }
 
@@ -273,7 +278,7 @@ export function Composer({
     setError(null);
     const perm = await requestRecordingPermissionsAsync();
     if (!perm.granted) {
-      setError("Microphone access was denied.");
+      setError(tr.composer.micDenied);
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -313,21 +318,23 @@ export function Composer({
       >
         {mode?.kind === "reply" && (
           <ModeBar
-            label={`Replying to ${nameOf(mode.message.senderId)}`}
-            text={mode.message.spoiler ? "Spoiler" : maskSpoilers(mode.message.text ?? "", mode.message.entities)}
+            label={tr.composer.replyingTo(mode.message.senderId === meId ? null : nameOf(mode.message.senderId))}
+            text={mode.message.spoiler ? tr.summary.spoiler : maskSpoilers(mode.message.text ?? "", mode.message.entities)}
             onCancel={cancel}
           />
         )}
         {editing && (
-          <ModeBar label="Editing message" text={maskSpoilers(editing.text ?? "", editing.entities)} onCancel={cancel} />
+          <ModeBar label={tr.composer.editingMessage} text={maskSpoilers(editing.text ?? "", editing.entities)} onCancel={cancel} />
         )}
         {ephemeral && !editing && (
           <View style={styles.ephemeralBar}>
             <Flame size={16} color={flame} fill={flame} />
             <Text style={{ flex: 1, color: flame, fontSize: 14 }}>
-              Self-destruct: {shortRule({ maxViews: ephemeral.maxViews ?? null, ttlSeconds: ephemeral.ttlSeconds ?? null })}
+              {tr.composer.selfDestructRule(
+                shortRule({ maxViews: ephemeral.maxViews ?? null, ttlSeconds: ephemeral.ttlSeconds ?? null }, tr),
+              )}
             </Text>
-            <Pressable onPress={() => setEphemeral(null)} accessibilityLabel="Turn off self-destruct" hitSlop={8} style={styles.round32}>
+            <Pressable onPress={() => setEphemeral(null)} accessibilityLabel={tr.composer.turnOffSelfDestruct} hitSlop={8} style={styles.round32}>
               <X size={16} color={flame} />
             </Pressable>
           </View>
@@ -336,11 +343,11 @@ export function Composer({
 
         {hasSelection && (
           <View style={styles.toolbar} accessibilityRole="toolbar">
-            {formats.map(({ type, label, Icon }) => (
+            {formats.map(({ type, Icon }) => (
               <Pressable
                 key={type}
                 onPress={() => wrap(type)}
-                accessibilityLabel={label}
+                accessibilityLabel={tr.composer.formats[type]}
                 style={[styles.format, { backgroundColor: t.surface, borderColor: t.border }]}
               >
                 <Icon size={16} color={t.textSoft} />
@@ -353,7 +360,7 @@ export function Composer({
           <View style={styles.row}>
             <Pressable
               onPress={() => void stopRecording(false)}
-              accessibilityLabel="Discard recording"
+              accessibilityLabel={tr.composer.discardRecording}
               style={styles.round40}
             >
               <Trash2 size={20} color={t.danger} />
@@ -361,12 +368,12 @@ export function Composer({
             <View style={[styles.field, styles.recordingField, { backgroundColor: t.surface, borderColor: t.border }]}>
               <View style={styles.redDot} />
               <Text style={{ color: t.text, fontFamily: "monospace" }}>{formatDuration(recState.durationMillis)}</Text>
-              <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>Recording…</Text>
+              <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>{tr.composer.recording}</Text>
               <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
             </View>
             <Pressable
               onPress={() => void stopRecording(true)}
-              accessibilityLabel="Send voice message"
+              accessibilityLabel={tr.composer.sendVoice}
               style={[styles.round40, { backgroundColor: brand }]}
             >
               <SendHorizontal size={20} color={brandInk} />
@@ -375,14 +382,14 @@ export function Composer({
         ) : (
           <View style={styles.row}>
             {!editing && (
-              <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel="Attach" style={styles.round40}>
+              <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel={tr.composer.attach} style={styles.round40}>
                 <Paperclip size={22} color={t.muted} />
               </Pressable>
             )}
             {!editing && scheduledCount > 0 && (
               <Pressable
                 onPress={() => setShowScheduled(true)}
-                accessibilityLabel={`${scheduledCount} scheduled message${scheduledCount === 1 ? "" : "s"}`}
+                accessibilityLabel={tr.composer.scheduledCount(scheduledCount)}
                 style={styles.round40}
               >
                 <CalendarClock size={22} color={brand} />
@@ -391,7 +398,7 @@ export function Composer({
             <View style={[styles.field, { backgroundColor: t.surface, borderColor: t.border }]}>
               <Pressable
                 onPress={() => setEmoji(true)}
-                accessibilityLabel="Emoji"
+                accessibilityLabel={tr.composer.pickerTabs.emoji}
                 style={[styles.round40, emoji && { backgroundColor: "rgba(235,138,0,0.2)" }]}
               >
                 <Smile size={22} color={emoji ? brand : t.muted} />
@@ -408,14 +415,14 @@ export function Composer({
                 }}
                 multiline
                 maxLength={4000}
-                placeholder={spoiler ? "Spoiler message" : "Message"}
+                placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
                 placeholderTextColor={t.muted}
-                accessibilityLabel="Message"
+                accessibilityLabel={tr.common.message}
                 style={[styles.input, { color: t.text }]}
               />
               <Pressable
                 onPress={spoilerButton}
-                accessibilityLabel={spoiler && !editing ? "Send as normal message" : "Spoiler"}
+                accessibilityLabel={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
                 accessibilityState={{ selected: !editing && spoiler }}
                 style={styles.round40}
               >
@@ -427,7 +434,7 @@ export function Composer({
               <Pressable
                 onPress={() => void startRecording()}
                 disabled={!realtime}
-                accessibilityLabel="Record a voice message"
+                accessibilityLabel={tr.composer.recordVoice}
                 style={[styles.round40, { backgroundColor: brand, opacity: realtime ? 1 : 0.4 }]}
               >
                 <Mic size={20} color={brandInk} />
@@ -436,9 +443,9 @@ export function Composer({
               <Pressable
                 onPress={() => void submit()}
                 onLongPress={editing ? undefined : () => canSubmit && setScheduling(true)}
-                accessibilityHint={editing ? undefined : "Hold to schedule"}
+                accessibilityHint={editing ? undefined : tr.composer.holdToSchedule}
                 disabled={!canSubmit}
-                accessibilityLabel={editing ? "Save" : "Send"}
+                accessibilityLabel={editing ? tr.common.save : tr.common.send}
                 style={[styles.round40, { backgroundColor: brand, opacity: canSubmit ? 1 : 0.4 }]}
               >
                 {editing ? (
@@ -454,13 +461,13 @@ export function Composer({
 
       {attachMenu && (
         <Sheet
-          title="Send"
+          title={tr.common.send}
           onClose={() => setAttachMenu(false)}
           actions={[
-            { label: "Photo or video", onSelect: () => void pick(pickMedia) },
-            { label: "Camera", onSelect: () => void pick(takePhoto) },
-            { label: "Video message", onSelect: () => setNoteRecorder(true) },
-            { label: "File", onSelect: () => void pick(pickFiles) },
+            { label: tr.composer.photoOrVideo, onSelect: () => void pick(pickMedia) },
+            { label: tr.composer.camera, onSelect: () => void pick(takePhoto) },
+            { label: tr.summary.kinds.video_note, onSelect: () => setNoteRecorder(true) },
+            { label: tr.summary.kinds.file, onSelect: () => void pick(pickFiles) },
           ]}
         />
       )}
@@ -476,7 +483,7 @@ export function Composer({
         />
       )}
       {scheduling && (
-        <ScheduleDialog title="Schedule message" onClose={() => setScheduling(false)} onPick={(when) => void schedule(when)} />
+        <ScheduleDialog title={tr.composer.scheduleMessage} onClose={() => setScheduling(false)} onPick={(when) => void schedule(when)} />
       )}
       {showScheduled && <ScheduledPanel chatId={chatId} onClose={() => setShowScheduled(false)} />}
       {picked && (

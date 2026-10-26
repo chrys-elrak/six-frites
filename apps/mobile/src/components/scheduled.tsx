@@ -1,5 +1,5 @@
 import { unwrap } from "@six/sdk";
-import { SCHEDULE_LIMITS, type ScheduledMessageDTO, maskSpoilers } from "@six/shared";
+import { type Dict, SCHEDULE_LIMITS, type ScheduledMessageDTO, maskSpoilers } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, EyeOff, Flame, Minus, Plus, X } from "lucide-react-native";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cancelScheduled, rescheduleMessage, scheduledKey, sendScheduledNow } from "@/lib/actions";
 import { shortRule } from "@/lib/ephemeral";
 import { clockTime, sendAtLabel } from "@/lib/format";
+import { getLocale, useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { brand, flame, type Theme, useTheme } from "@/lib/theme";
 import { MediaIcon, mediaLabel } from "./media-label";
@@ -34,38 +35,39 @@ function at(day: Date, hour: number, minute: number) {
   return d;
 }
 
-function presets(now: Date) {
+function presets(now: Date, tr: Dict) {
   const today = startOfDay(now);
   const tomorrow = new Date(today.getTime() + 864e5);
   const inHour = new Date(now.getTime() + 60 * 60 * 1000);
   return [
-    { label: "In 1 hour", date: inHour },
-    ...(now.getHours() < 19 ? [{ label: "Tonight at 20:00", date: at(today, 20, 0) }] : []),
-    { label: "Tomorrow at 09:00", date: at(tomorrow, 9, 0) },
+    { label: tr.chat.inOneHour, date: inHour },
+    ...(now.getHours() < 19 ? [{ label: tr.chat.tonightAt("20:00"), date: at(today, 20, 0) }] : []),
+    { label: tr.chat.tomorrowAt("09:00"), date: at(tomorrow, 9, 0) },
   ];
 }
 
 function Stepper({
-  label,
+  kind,
   value,
   onMinus,
   onPlus,
   t,
 }: {
-  label: string;
+  kind: "day" | "hour" | "minute";
   value: string;
   onMinus: () => void;
   onPlus: () => void;
   t: Theme;
 }) {
+  const step = useT().chat.steps[kind];
   return (
     <View style={[styles.stepper, { backgroundColor: t.field }]}>
-      <IconButton Icon={label === "Day" ? ChevronLeft : Minus} label={`Earlier ${label.toLowerCase()}`} onPress={onMinus} />
+      <IconButton Icon={kind === "day" ? ChevronLeft : Minus} label={step.earlier} onPress={onMinus} />
       <View style={{ flex: 1, alignItems: "center" }}>
-        <Text style={{ color: t.muted, fontSize: 11 }}>{label}</Text>
+        <Text style={{ color: t.muted, fontSize: 11 }}>{step.label}</Text>
         <Text style={{ color: t.text, fontSize: 16, fontWeight: "600" }}>{value}</Text>
       </View>
-      <IconButton Icon={label === "Day" ? ChevronRight : Plus} label={`Later ${label.toLowerCase()}`} onPress={onPlus} />
+      <IconButton Icon={kind === "day" ? ChevronRight : Plus} label={step.later} onPress={onPlus} />
     </View>
   );
 }
@@ -83,6 +85,7 @@ export function ScheduleDialog({
   onClose: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const [value, setValue] = useState(() => {
     const d = initial ?? new Date(Date.now() + 60 * 60 * 1000);
     d.setSeconds(0, 0);
@@ -97,8 +100,8 @@ export function ScheduleDialog({
   };
 
   function submit() {
-    if (value.getTime() <= Date.now()) return setError("Pick a time in the future.");
-    if (value.getTime() - Date.now() > SCHEDULE_LIMITS.maxAheadSeconds * 1000) return setError("Pick a time within a year.");
+    if (value.getTime() <= Date.now()) return setError(tr.chat.pickFuture);
+    if (value.getTime() - Date.now() > SCHEDULE_LIMITS.maxAheadSeconds * 1000) return setError(tr.chat.pickWithinYear);
     onPick(value);
   }
 
@@ -107,7 +110,7 @@ export function ScheduleDialog({
       <View style={{ padding: 16, gap: 14 }}>
         <Text style={[styles.title, { color: t.text }]}>{title}</Text>
         <View style={styles.presets}>
-          {presets(now).map((p) => (
+          {presets(now, tr).map((p) => (
             <Pressable
               key={p.label}
               onPress={() => {
@@ -125,8 +128,8 @@ export function ScheduleDialog({
         </Text>
         <Stepper
           t={t}
-          label="Day"
-          value={value.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" })}
+          kind="day"
+          value={value.toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}
           onMinus={() => shift(-864e5)}
           onPlus={() => shift(864e5)}
         />
@@ -134,7 +137,7 @@ export function ScheduleDialog({
           <View style={{ flex: 1 }}>
             <Stepper
               t={t}
-              label="Hour"
+              kind="hour"
               value={clockTime(value.toISOString()).split(":")[0] ?? ""}
               onMinus={() => shift(-36e5)}
               onPlus={() => shift(36e5)}
@@ -143,7 +146,7 @@ export function ScheduleDialog({
           <View style={{ flex: 1 }}>
             <Stepper
               t={t}
-              label="Minute"
+              kind="minute"
               value={String(value.getMinutes()).padStart(2, "0")}
               onMinus={() => shift(-5 * 6e4)}
               onPlus={() => shift(5 * 6e4)}
@@ -153,9 +156,9 @@ export function ScheduleDialog({
         {error && <Notice tone="error">{error}</Notice>}
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <TextButton title="Cancel" onPress={onClose} />
+            <TextButton title={tr.common.cancel} onPress={onClose} />
           </View>
-          <PrimaryButton title="Schedule" onPress={submit} style={{ flex: 1 }} />
+          <PrimaryButton title={tr.chat.schedule} onPress={submit} style={{ flex: 1 }} />
         </View>
       </View>
     </Overlay>
@@ -164,10 +167,11 @@ export function ScheduleDialog({
 
 function Preview({ s }: { s: ScheduledMessageDTO }) {
   const t = useTheme();
+  const tr = useT();
   const media = s.type !== "text" && s.type !== "service";
   const text =
     s.spoiler && s.type === "text"
-      ? "Spoiler"
+      ? tr.summary.spoiler
       : s.text
         ? `${media ? "· " : ""}${maskSpoilers(s.text, s.entities)}`
         : "";
@@ -177,7 +181,7 @@ function Preview({ s }: { s: ScheduledMessageDTO }) {
       {s.spoiler && s.type === "text" && <EyeOff size={14} color={t.muted} />}
       {media && <MediaIcon type={s.type as Exclude<typeof s.type, "text">} color={t.text} />}
       <Text numberOfLines={2} style={{ color: t.text, fontSize: 15, flexShrink: 1 }}>
-        {media ? `${mediaLabel(s.type as Exclude<typeof s.type, "text">)} ` : ""}
+        {media ? `${mediaLabel(s.type as Exclude<typeof s.type, "text">, tr)} ` : ""}
         {text}
       </Text>
     </View>
@@ -186,6 +190,7 @@ function Preview({ s }: { s: ScheduledMessageDTO }) {
 
 export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const qc = useQueryClient();
   const [rescheduling, setRescheduling] = useState<ScheduledMessageDTO | null>(null);
   const list = useQuery({
@@ -200,7 +205,7 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
   if (rescheduling) {
     return (
       <ScheduleDialog
-        title="Reschedule"
+        title={tr.chat.reschedule}
         initial={new Date(rescheduling.sendAt)}
         onClose={() => setRescheduling(null)}
         onPick={(when) => {
@@ -215,13 +220,13 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
   return (
     <Overlay onClose={onClose}>
       <View style={[styles.head, { borderColor: t.border }]}>
-        <Text style={[styles.title, { color: t.text, flex: 1, textAlign: "left" }]}>Scheduled messages</Text>
-        <IconButton Icon={X} label="Close" onPress={onClose} />
+        <Text style={[styles.title, { color: t.text, flex: 1, textAlign: "left" }]}>{tr.chat.scheduledMessages}</Text>
+        <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
       </View>
       {list.isPending ? (
-        <Text style={[styles.empty, { color: t.muted }]}>Loading…</Text>
+        <Text style={[styles.empty, { color: t.muted }]}>{tr.common.loading}</Text>
       ) : items.length === 0 ? (
-        <Text style={[styles.empty, { color: t.muted }]}>No scheduled messages.</Text>
+        <Text style={[styles.empty, { color: t.muted }]}>{tr.chat.noScheduled}</Text>
       ) : (
         <ScrollView style={{ maxHeight: 480 }}>
           {items.map((s, i) => (
@@ -229,9 +234,9 @@ export function ScheduledPanel({ chatId, onClose }: { chatId: string; onClose: (
               <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{sendAtLabel(s.sendAt)}</Text>
               <Preview s={s} />
               <View style={styles.actions}>
-                <TextButton title="Send now" color={t.text} onPress={() => run(() => sendScheduledNow(qc, s))} />
-                <TextButton title="Reschedule" color={t.text} onPress={() => setRescheduling(s)} />
-                <TextButton title="Delete" color={t.danger} onPress={() => run(() => cancelScheduled(qc, s))} />
+                <TextButton title={tr.chat.sendNow} color={t.text} onPress={() => run(() => sendScheduledNow(qc, s))} />
+                <TextButton title={tr.chat.reschedule} color={t.text} onPress={() => setRescheduling(s)} />
+                <TextButton title={tr.common.delete} color={t.danger} onPress={() => run(() => cancelScheduled(qc, s))} />
               </View>
             </View>
           ))}

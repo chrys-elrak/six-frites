@@ -13,11 +13,13 @@ import {
   customThemeColor,
   customThemeColors,
   customThemeId,
+  themeName,
   type Wallpaper as WallpaperColors,
 } from "@six/shared";
 import { Check } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useChatTheme, useChatThemeStore } from "@/lib/chat-themes";
+import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 import { Card, PrimaryButton, SectionTitle } from "./ui";
 
@@ -168,6 +170,7 @@ export function CustomThemeDialog({
   onPick: (mine: string, theirs: string | null) => void;
   onClose: () => void;
 }) {
+  const tr = useT();
   const start = customThemeColors(current);
   const [mine, setMine] = useState(start?.mine ?? CUSTOM_THEME_COLORS[0]!);
   const [theirs, setTheirs] = useState<string | null>(start?.theirs ?? null);
@@ -214,17 +217,17 @@ export function CustomThemeDialog({
   return (
     <Portal>
       <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal aria-label={title}>
-        <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <button type="button" aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         <div className="relative w-full max-w-sm space-y-4 rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-4 dark:bg-stone-900">
           <h2 className="text-center font-semibold">{title}</h2>
 
           <div className="relative h-36 overflow-hidden rounded-2xl ring-1 ring-stone-200 dark:ring-stone-800">
             <Wallpaper theme={theme} id="custom-preview" />
             <div className="relative flex h-full flex-col justify-center gap-2 p-3 text-sm">
-              {bubble("light", "theirs", "Fries tonight? 🍟")}
-              {bubble("dark", "theirs", "Fries tonight? 🍟")}
-              {bubble("light", "mine", "Always. Extra ketchup!")}
-              {bubble("dark", "mine", "Always. Extra ketchup!")}
+              {bubble("light", "theirs", tr.settings.previewTheirs)}
+              {bubble("dark", "theirs", tr.settings.previewTheirs)}
+              {bubble("light", "mine", tr.settings.previewMine)}
+              {bubble("dark", "mine", tr.settings.previewMine)}
             </div>
           </div>
 
@@ -240,7 +243,7 @@ export function CustomThemeDialog({
                   target === k ? "bg-brand text-brand-ink" : "text-stone-600 dark:text-stone-300"
                 }`}
               >
-                {k === "mine" ? "Your messages" : "Their messages"}
+                {k === "mine" ? tr.settings.yourMessages : tr.settings.theirMessages}
               </button>
             ))}
           </div>
@@ -255,7 +258,7 @@ export function CustomThemeDialog({
                   theirs === null ? "ring-brand" : "ring-stone-200 dark:ring-stone-700"
                 }`}
               >
-                Auto
+                {tr.settings.autoColour}
               </button>
             )}
             {CUSTOM_THEME_COLORS.map((c) => (
@@ -263,7 +266,7 @@ export function CustomThemeDialog({
                 key={c}
                 type="button"
                 onClick={() => choose(c)}
-                aria-label={`Colour ${c}`}
+                aria-label={tr.settings.colour(c)}
                 aria-pressed={c === hex}
                 className="grid size-10 place-items-center rounded-full transition hover:scale-105"
                 style={{ background: c, color: customTheme(c).light.bubbleInk }}
@@ -278,12 +281,12 @@ export function CustomThemeDialog({
               type="color"
               value={hex ?? theme.light.theirBubble}
               onChange={(e) => choose(e.target.value)}
-              aria-label="Pick any colour"
+              aria-label={tr.settings.pickAnyColour}
               className="size-7 cursor-pointer rounded-full border-0 bg-transparent p-0"
             />
             <input
               value={typed}
-              placeholder={target === "theirs" ? "Auto" : "#eb8a00"}
+              placeholder={target === "theirs" ? tr.settings.autoColour : "#eb8a00"}
               onChange={(e) => {
                 setTyped(e.target.value);
                 const m = HEX.exec(e.target.value.trim());
@@ -294,7 +297,7 @@ export function CustomThemeDialog({
               }}
               maxLength={7}
               spellCheck={false}
-              aria-label="Colour code"
+              aria-label={tr.settings.colourCode}
               className="min-w-0 flex-1 bg-transparent font-mono text-[16px] outline-none md:text-sm"
             />
           </label>
@@ -305,7 +308,7 @@ export function CustomThemeDialog({
               onClick={onClose}
               className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
             >
-              Cancel
+              {tr.common.cancel}
             </button>
             <PrimaryButton
               className="flex-1"
@@ -314,7 +317,7 @@ export function CustomThemeDialog({
                 onClose();
               }}
             >
-              Use these colours
+              {tr.settings.useColours}
             </PrimaryButton>
           </div>
         </div>
@@ -324,35 +327,36 @@ export function CustomThemeDialog({
 }
 
 export function ChatBackgroundPicker() {
+  const tr = useT();
   const current = useChatThemeStore((s) => s.id);
   const choose = useChatThemeStore((s) => s.set);
   const [custom, setCustom] = useState(false);
   const customHex = customThemeColor(current);
   return (
     <section className="space-y-3">
-      <SectionTitle>Default chat background</SectionTitle>
+      <SectionTitle>{tr.settings.defaultBackground}</SectionTitle>
       <Card className="p-3">
-        <div role="radiogroup" aria-label="Default chat background" className="flex gap-3 overflow-x-auto pb-1">
+        <div role="radiogroup" aria-label={tr.settings.defaultBackground} className="flex gap-3 overflow-x-auto pb-1">
           {CHAT_THEMES.map((theme) => (
             <ThemeSwatch
               key={theme.id}
               theme={theme}
               on={theme.id === current}
-              label={theme.name}
+              label={themeName(theme.id, tr)}
               onClick={() => choose(theme.id)}
             />
           ))}
           <ThemeSwatch
             theme={customTheme(customHex ?? CUSTOM_THEME_COLORS[3]!)}
             on={!!customHex}
-            label="Custom…"
+            label={tr.common.custom}
             onClick={() => setCustom(true)}
           />
         </div>
       </Card>
       {custom && (
         <CustomThemeDialog
-          title="Default custom background"
+          title={tr.settings.defaultCustomBackground}
           current={current}
           onPick={(mine, theirs) => choose(customThemeId(mine, theirs))}
           onClose={() => setCustom(false)}

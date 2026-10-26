@@ -5,6 +5,7 @@ import type { SessionDTO } from "@six/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type LucideIcon, Monitor, Smartphone } from "lucide-react";
 import { timeAgo } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { Card, SectionTitle } from "./ui";
 
@@ -20,6 +21,7 @@ function PlatformIcon({ platform }: { platform: SessionDTO["platform"] }) {
 }
 
 export function Devices() {
+  const tr = useT();
   const qc = useQueryClient();
   const sessions = useQuery({
     queryKey: ["sessions"],
@@ -48,17 +50,17 @@ export function Devices() {
               disabled={revokeOthers.isPending}
               className="text-sm font-medium text-red-600 disabled:opacity-50 dark:text-red-400"
             >
-              Log out other devices
+              {tr.settings.logOutOthers}
             </button>
           )
         }
       >
-        Devices
+        {tr.settings.devices}
       </SectionTitle>
 
       <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
-        {sessions.isPending && <p className="p-4 text-sm text-stone-500">Loading…</p>}
-        {sessions.isError && <p className="p-4 text-sm text-red-600">Couldn't load devices.</p>}
+        {sessions.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
+        {sessions.isError && <p className="p-4 text-sm text-red-600">{tr.settings.couldNotLoadDevices}</p>}
         {sessions.data?.map((s) => (
           <div key={s.id} className="flex items-center gap-3 p-4">
             <PlatformIcon platform={s.platform} />
@@ -67,11 +69,11 @@ export function Devices() {
                 {s.deviceName ?? s.platform}
                 {s.current && (
                   <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    This device
+                    {tr.settings.thisDevice}
                   </span>
                 )}
               </p>
-              <p className="text-sm text-stone-500 dark:text-stone-400">Active {timeAgo(s.lastUsedAt)}</p>
+              <p className="text-sm text-stone-500 dark:text-stone-400">{tr.settings.lastActive(timeAgo(s.lastUsedAt))}</p>
             </div>
             {!s.current && (
               <button
@@ -79,7 +81,7 @@ export function Devices() {
                 disabled={revoke.isPending && revoke.variables === s.id}
                 className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950"
               >
-                Log out
+                {tr.settings.logOut}
               </button>
             )}
           </div>

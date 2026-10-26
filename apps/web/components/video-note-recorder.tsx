@@ -6,6 +6,7 @@ import type { EphemeralInput } from "@six/shared";
 import { useCamera } from "@/lib/camera";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 
 const MAX_MS = 60_000;
@@ -41,6 +42,7 @@ export function VideoNoteRecorder({
   onClose: () => void;
   onSend: (file: File, ephemeral: EphemeralInput | null) => void;
 }) {
+  const tr = useT();
   const cam = useCamera("user", { audio: true, square: true });
   const [ephemeral, setEphemeral] = useState(initialEphemeral);
   const recorder = useRef<MediaRecorder | null>(null);
@@ -103,12 +105,12 @@ export function VideoNoteRecorder({
         className="fixed inset-0 z-50 flex flex-col items-center bg-black/90 backdrop-blur"
         role="dialog"
         aria-modal
-        aria-label="Record a video message"
+        aria-label={tr.composer.recordVideoNote}
       >
         <div className="flex w-full items-center justify-between p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr.common.close}
             className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"
           >
             <X className="size-6" />
@@ -116,7 +118,7 @@ export function VideoNoteRecorder({
           {cam.canSwitch && !recording && !result && (
             <button
               onClick={cam.switchCamera}
-              aria-label="Switch camera"
+              aria-label={tr.composer.switchCamera}
               className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"
             >
               <RefreshCw className="size-5" />
@@ -143,9 +145,9 @@ export function VideoNoteRecorder({
                 <span className="size-2.5 animate-pulse rounded-full bg-red-500" /> {formatDuration(elapsed)} / 1:00
               </span>
             ) : result ? (
-              "Preview"
+              tr.composer.preview
             ) : (
-              "Up to 1 minute"
+              tr.composer.upToOneMinute
             )}
           </p>
         </div>
@@ -158,14 +160,14 @@ export function VideoNoteRecorder({
             <>
               <button
                 onClick={() => setResult(null)}
-                aria-label="Record again"
+                aria-label={tr.composer.recordAgain}
                 className="grid size-14 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
               >
                 <Trash2 className="size-6" />
               </button>
               <button
                 onClick={() => onSend(result.file, ephemeral)}
-                aria-label="Send video message"
+                aria-label={tr.composer.sendVideoNote}
                 className="grid size-16 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
               >
                 <SendHorizontal className="size-7" />
@@ -175,7 +177,7 @@ export function VideoNoteRecorder({
             <button
               onClick={recording ? () => recorder.current?.stop() : start}
               disabled={!cam.stream}
-              aria-label={recording ? "Stop recording" : "Start recording"}
+              aria-label={recording ? tr.composer.stopRecording : tr.composer.startRecording}
               className="grid size-18 place-items-center rounded-full border-4 border-white transition active:scale-95 disabled:opacity-40"
             >
               <span

@@ -4,6 +4,7 @@ import { type ComponentRef, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 
 type Reaction = MessageDTO["reactions"][number];
@@ -19,6 +20,7 @@ export function ReactionBar({
   onMore: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const chosen = { backgroundColor: "rgba(235,138,0,0.2)" };
   return (
     <View style={styles.bar}>
@@ -26,7 +28,7 @@ export function ReactionBar({
         <Pressable
           key={e}
           onPress={() => onPick(e)}
-          accessibilityLabel={mine.includes(e) ? `Remove ${e}` : `React ${e}`}
+          accessibilityLabel={mine.includes(e) ? tr.messages.removeReaction(e) : tr.messages.reactWith(e)}
           style={({ pressed }) => [styles.quick, mine.includes(e) && chosen, pressed && { backgroundColor: t.pressed }]}
         >
           <Text style={{ fontSize: 24 }}>{e}</Text>
@@ -34,7 +36,7 @@ export function ReactionBar({
       ))}
       <Pressable
         onPress={onMore}
-        accessibilityLabel="More reactions"
+        accessibilityLabel={tr.messages.moreReactions}
         style={[styles.quick, { backgroundColor: t.field }]}
       >
         <Plus size={20} color={t.textSoft} />
@@ -142,6 +144,7 @@ export function ReactionChips({
   onReact: (emoji: string) => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const more = useRef<ComponentRef<typeof Pressable>>(null);
   const [listAt, setListAt] = useState<Anchor | null>(null);
   if (!reactions.length) return null;
@@ -165,7 +168,7 @@ export function ReactionChips({
           onPress={() =>
             more.current?.measureInWindow((x, y, width, height) => setListAt({ x, y, width, height }))
           }
-          accessibilityLabel={`${hidden} more reactions`}
+          accessibilityLabel={tr.messages.nMoreReactions(hidden)}
           style={[styles.chip, { backgroundColor: t.surface, borderColor: t.border }]}
         >
           <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: "700" }}>+{hidden}</Text>

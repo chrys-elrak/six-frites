@@ -9,6 +9,7 @@ import { SvgXml } from "react-native-svg";
 import { captureRef } from "react-native-view-shot";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
+import { useT } from "@/lib/i18n";
 import { pickAvatar } from "@/lib/media";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -22,6 +23,7 @@ const MAX_BYTES = 64 * 1024;
 
 export function ContactEditor({ userId, onClose }: { userId: string; onClose: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const contact = useQuery({
@@ -56,7 +58,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
         setPicked(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't read that image.");
+      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
     }
   }
 
@@ -75,7 +77,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       }
       throw new Error("too big");
     } catch {
-      setError("Couldn't use that picture.");
+      setError(tr.contacts.couldNotUsePicture);
     }
   }
 
@@ -88,7 +90,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       setRevealed(originalName);
       setUnlocking(false);
     } catch (err) {
-      setRevealError(codeError(err));
+      setRevealError(codeError(err, tr));
     }
   }
 
@@ -101,7 +103,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       const showingRealName = !(trimmed && trimmed !== c.originalName);
       if (showingRealName && c.customName && hasCode && !revealed) {
         setUnlocking(true);
-        setRevealError("Enter your privacy code to show their real name again.");
+        setRevealError(tr.contacts.enterCodeToShow);
         return;
       }
       await updateContact(qc, userId, {
@@ -111,7 +113,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       });
       onClose();
     } catch (err) {
-      setError(err instanceof SixApiError ? err.message : "Couldn't save. Try again.");
+      setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave);
     } finally {
       setSaving(false);
     }
@@ -123,18 +125,18 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
           <View style={styles.head}>
-            <Text style={[styles.heading, { color: t.text }]}>Edit contact</Text>
-            <IconButton Icon={X} label="Close" onPress={onClose} />
+            <Text style={[styles.heading, { color: t.text }]}>{tr.contacts.editContact}</Text>
+            <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
           </View>
 
           {!c ? (
             <Text style={{ color: t.muted, textAlign: "center", paddingVertical: 32 }}>
-              {contact.isError ? "Contact not found." : "Loading…"}
+              {contact.isError ? tr.contacts.notFound : tr.common.loading}
             </Text>
           ) : (
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 18 }}>
               <View style={{ alignItems: "center", gap: 10 }}>
-                <Pressable onPress={choosePhoto} accessibilityLabel="Choose a photo">
+                <Pressable onPress={choosePhoto} accessibilityLabel={tr.contacts.choosePhoto}>
                   <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto }} size="lg" />
                   <View style={styles.cameraBadge}>
                     <Camera size={22} color="#fff" />
@@ -149,17 +151,17 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                     style={styles.removePhoto}
                   >
                     <Trash2 size={16} color={t.danger} />
-                    <Text style={{ color: t.danger, fontWeight: "600" }}>Remove photo</Text>
+                    <Text style={{ color: t.danger, fontWeight: "600" }}>{tr.contacts.removePhoto}</Text>
                   </Pressable>
                 )}
               </View>
 
               <View style={{ gap: 8 }}>
                 <View style={styles.suggestHead}>
-                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>Or pick a picture</Text>
+                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.orPickPicture}</Text>
                   <Pressable onPress={() => setSuggestions(suggestAvatars())} style={styles.shuffle} hitSlop={6}>
                     <Shuffle size={16} color={brand} />
-                    <Text style={{ color: brand, fontWeight: "600" }}>Shuffle</Text>
+                    <Text style={{ color: brand, fontWeight: "600" }}>{tr.contacts.shuffle}</Text>
                   </Pressable>
                 </View>
                 <View style={styles.grid}>
@@ -167,7 +169,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                     <Pressable
                       key={i}
                       onPress={() => void chooseSuggestion(i)}
-                      accessibilityLabel="Use this picture"
+                      accessibilityLabel={tr.contacts.usePicture}
                       style={[styles.suggestion, picked === i && { borderColor: brand }]}
                     >
                       <View style={styles.suggestionClip}>
@@ -179,20 +181,20 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               </View>
 
               <View style={{ gap: 6 }}>
-                <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>Name</Text>
+                <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.name}</Text>
                 <TextInput
                   value={name ?? ""}
                   onChangeText={setName}
-                  placeholder="Name"
+                  placeholder={tr.contacts.name}
                   placeholderTextColor={t.muted}
                   maxLength={64}
                   style={[styles.input, { backgroundColor: t.field, color: t.text }]}
                 />
                 <View style={styles.suggestHead}>
-                  <Text style={{ color: t.muted, fontSize: 12 }}>Only you see this.</Text>
+                  <Text style={{ color: t.muted, fontSize: 12 }}>{tr.contacts.onlyYouSee}</Text>
                   {!!name && (
                     <Pressable onPress={() => setName("")} hitSlop={6}>
-                      <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>Use their name</Text>
+                      <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.contacts.useTheirName}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -202,33 +204,31 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 <View style={[styles.reveal, { backgroundColor: t.field }]}>
                   {revealed ? (
                     <Text style={{ color: t.text, fontSize: 14 }}>
-                      <Text style={{ color: t.muted }}>Real name: </Text>
+                      <Text style={{ color: t.muted }}>{tr.contacts.realName}</Text>
                       <Text style={{ fontWeight: "600" }}>{revealed}</Text>
                     </Text>
                   ) : !hasCode ? (
-                    <Text style={{ color: t.muted, fontSize: 14, lineHeight: 20 }}>
-                      Their real name is hidden. Set a privacy code in Settings to see it.
-                    </Text>
+                    <Text style={{ color: t.muted, fontSize: 14, lineHeight: 20 }}>{tr.contacts.realNameHidden}</Text>
                   ) : unlocking ? (
                     <View style={{ gap: 8 }}>
                       <CodeInput
-                        label="Privacy code"
+                        label={tr.contacts.privacy.title}
                         value={pin}
                         onChange={setPin}
                         autoFocus
                         onSubmit={() => pin.length >= 4 && void reveal()}
                       />
-                      <PrimaryButton title="Show" disabled={pin.length < 4} onPress={() => void reveal()} />
+                      <PrimaryButton title={tr.contacts.show} disabled={pin.length < 4} onPress={() => void reveal()} />
                     </View>
                   ) : (
-                    <TextButton title="Show real name" color={brand} onPress={() => setUnlocking(true)} />
+                    <TextButton title={tr.contacts.showRealName} color={brand} onPress={() => setUnlocking(true)} />
                   )}
                   {revealError && <Notice tone="error">{revealError}</Notice>}
                 </View>
               )}
 
               {error && <Notice tone="error">{error}</Notice>}
-              <PrimaryButton title={saving ? "Saving…" : "Save"} disabled={saving} onPress={() => void save()} />
+              <PrimaryButton title={saving ? tr.common.saving : tr.common.save} disabled={saving} onPress={() => void save()} />
               <SafetyNumber userId={userId} />
             </ScrollView>
           )}

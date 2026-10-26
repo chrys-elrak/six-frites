@@ -1,25 +1,20 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
+import type { Dict } from "@six/shared";
 import { useMutation } from "@tanstack/react-query";
 import { EyeOff } from "lucide-react";
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
 import { Card, PrimaryButton, SectionTitle } from "./ui";
 
-const codeErrors: Record<string, string> = {
-  WRONG_CONTACT_PIN: "That's not your privacy code.",
-  CONTACT_PIN_REQUIRED: "Enter your privacy code.",
-  CONTACT_PIN_NOT_SET: "Set a privacy code in Settings first.",
-  RATE_LIMITED: "Too many tries. Wait a minute.",
-  VALIDATION_FAILED: "Use 4 to 8 digits.",
-};
-
-export function codeError(err: unknown) {
+export function codeError(err: unknown, tr: Dict) {
   const code = err instanceof SixApiError ? err.code : undefined;
-  return (code && codeErrors[code]) ?? "Something went wrong. Try again.";
+  const errors: Record<string, string | undefined> = tr.contacts.privacy.errors;
+  return (code && errors[code]) ?? tr.common.somethingWrongRetry;
 }
 
 export function CodeInput({
@@ -62,35 +57,34 @@ export function CodeInput({
 }
 
 export function PrivacyCodeSettings() {
+  const tr = useT();
   const hasCode = useSession((s) => s.user!.hasContactPin);
   const [dialog, setDialog] = useState<"set" | "remove" | null>(null);
 
   return (
     <section className="space-y-3">
-      <SectionTitle>Privacy code</SectionTitle>
+      <SectionTitle>{tr.contacts.privacy.title}</SectionTitle>
       <Card className="flex items-start gap-3 p-4">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand/15 text-brand">
           <EyeOff className="size-5" />
         </span>
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-sm text-stone-500 dark:text-stone-400">
-            {hasCode
-              ? "The real name of a contact you renamed only shows after you enter this code."
-              : "Set a code to see the real name of a contact you renamed. Until then it stays hidden."}
+            {hasCode ? tr.contacts.privacy.onHint : tr.contacts.privacy.offHint}
           </p>
           <div className="flex flex-wrap gap-1">
             <button
               onClick={() => setDialog("set")}
               className="rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
             >
-              {hasCode ? "Change code" : "Set code"}
+              {hasCode ? tr.contacts.privacy.change : tr.contacts.privacy.set}
             </button>
             {hasCode && (
               <button
                 onClick={() => setDialog("remove")}
                 className="rounded-lg px-3 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
               >
-                Remove
+                {tr.common.remove}
               </button>
             )}
           </div>
@@ -116,6 +110,7 @@ function CodeDialog({
   hasCode: boolean;
   onClose: () => void;
 }) {
+  const tr = useT();
   const setUser = useSession((s) => s.setUser);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -154,20 +149,19 @@ function CodeDialog({
       >
         <h2 className="text-lg font-semibold">
           {removing
-            ? "Remove privacy code"
+            ? tr.contacts.privacy.removeTitle
             : hasCode
-              ? "Change privacy code"
-              : "Set a privacy code"}
+              ? tr.contacts.privacy.changeTitle
+              : tr.contacts.privacy.setTitle}
         </h2>
         {!removing && (
           <p className="text-sm text-stone-600 dark:text-stone-300">
-            4 to 8 digits. You'll need it to see the real name of a contact you
-            renamed. Nobody can recover it for you.
+            {tr.contacts.privacy.hint}
           </p>
         )}
         {(removing || hasCode) && (
           <CodeInput
-            label="Current code"
+            label={tr.contacts.privacy.current}
             value={current}
             onChange={setCurrent}
             autoFocus
@@ -176,13 +170,13 @@ function CodeDialog({
         {!removing && (
           <>
             <CodeInput
-              label="New code"
+              label={tr.contacts.privacy.new}
               value={next}
               onChange={setNext}
               autoFocus={!hasCode}
             />
             <CodeInput
-              label="New code again"
+              label={tr.contacts.privacy.again}
               value={again}
               onChange={setAgain}
             />
@@ -190,7 +184,7 @@ function CodeDialog({
         )}
         {(save.isError || (mismatch && again.length > 0)) && (
           <p className="text-sm text-red-600 dark:text-red-400">
-            {save.isError ? codeError(save.error) : "The codes don't match."}
+            {save.isError ? codeError(save.error, tr) : tr.contacts.privacy.mismatch}
           </p>
         )}
         <div className="flex gap-2">
@@ -199,14 +193,14 @@ function CodeDialog({
             onClick={onClose}
             className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
           >
-            Cancel
+            {tr.common.cancel}
           </button>
           <PrimaryButton
             type="submit"
             className="flex-1"
             disabled={!ready || save.isPending}
           >
-            {removing ? "Remove" : "Save"}
+            {removing ? tr.common.remove : tr.common.save}
           </PrimaryButton>
         </div>
       </form>

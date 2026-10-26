@@ -3,6 +3,7 @@ import type { PresenceDTO } from "@six/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { clockTime } from "./format";
+import { getLocale, getT } from "./i18n";
 import { six } from "./six";
 
 interface PresenceState {
@@ -48,15 +49,17 @@ const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDat
 /** "online", "last seen just now", "last seen 5 min ago", "last seen today at 14:03", … */
 export function presenceLabel(p: PresenceDTO | undefined) {
   if (!p) return null;
-  if (p.online) return "online";
-  if (!p.lastSeenAt) return "last seen a long time ago";
+  const t = getT().time;
+  if (p.online) return t.online;
+  if (!p.lastSeenAt) return t.lastSeenLongAgo;
   const at = new Date(p.lastSeenAt);
   const mins = Math.round((Date.now() - at.getTime()) / 60_000);
-  if (mins < 1) return "last seen just now";
-  if (mins < 60) return `last seen ${mins} min ago`;
+  if (mins < 1) return t.lastSeenJustNow;
+  if (mins < 60) return t.lastSeenMinAgo(mins);
   const days = Math.round((startOfDay(new Date()) - startOfDay(at)) / 864e5);
-  if (days === 0) return `last seen today at ${clockTime(p.lastSeenAt)}`;
-  if (days === 1) return `last seen yesterday at ${clockTime(p.lastSeenAt)}`;
-  if (days < 7) return `last seen ${at.toLocaleDateString([], { weekday: "long" })} at ${clockTime(p.lastSeenAt)}`;
-  return `last seen ${at.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })}`;
+  const time = clockTime(p.lastSeenAt);
+  if (days === 0) return t.lastSeenTodayAt(time);
+  if (days === 1) return t.lastSeenYesterdayAt(time);
+  if (days < 7) return t.lastSeenDayAt(at.toLocaleDateString(getLocale(), { weekday: "long" }), time);
+  return t.lastSeenOn(at.toLocaleDateString(getLocale(), { day: "numeric", month: "short", year: "numeric" }));
 }

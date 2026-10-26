@@ -6,6 +6,7 @@ import { Camera, Shuffle, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
+import { useT } from "@/lib/i18n";
 import { toAvatarDataUrl, urlToAvatarDataUrl } from "@/lib/image";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -17,6 +18,7 @@ import { ReportDialog } from "./report-dialog";
 import { SafetyNumber } from "./safety-number";
 
 export function ContactEditor({ userId, onClose }: { userId: string; onClose: () => void }) {
+  const tr = useT();
   const qc = useQueryClient();
   const contact = useQuery({
     queryKey: ["contact", userId],
@@ -45,7 +47,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       setRevealed(originalName);
       setUnlocking(false);
     } catch (err) {
-      setRevealError(codeError(err));
+      setRevealError(codeError(err, tr));
     }
   }
 
@@ -76,7 +78,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       setPhoto(await toAvatarDataUrl(f));
       setPicked(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't read that image.");
+      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
     }
   }
 
@@ -86,7 +88,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       setPhoto(await urlToAvatarDataUrl(src));
       setPicked(src);
     } catch {
-      setError("Couldn't use that picture.");
+      setError(tr.contacts.couldNotUsePicture);
     }
   }
 
@@ -99,7 +101,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       const showingRealName = !(trimmed && trimmed !== c.originalName);
       if (showingRealName && c.customName && hasCode && !revealed) {
         setUnlocking(true);
-        setRevealError("Enter your privacy code to show their real name again.");
+        setRevealError(tr.contacts.enterCodeToShow);
         return;
       }
       await updateContact(qc, userId, {
@@ -109,7 +111,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       });
       onClose();
     } catch (err) {
-      setError(err instanceof SixApiError ? err.message : "Couldn't save. Try again.");
+      setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave);
     } finally {
       setSaving(false);
     }
@@ -121,15 +123,15 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
         className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
         role="dialog"
         aria-modal
-        aria-label="Edit contact"
+        aria-label={tr.contacts.editContact}
       >
-        <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <button aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         <div className="relative w-full max-w-sm rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900">
           <div className="mb-4 flex items-center">
-            <h2 className="flex-1 text-lg font-semibold">Edit contact</h2>
+            <h2 className="flex-1 text-lg font-semibold">{tr.contacts.editContact}</h2>
             <button
               onClick={onClose}
-              aria-label="Close"
+              aria-label={tr.common.close}
               className="grid size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
             >
               <X className="size-5" />
@@ -138,7 +140,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
 
           {!c ? (
             <p className="py-8 text-center text-sm text-stone-500">
-              {contact.isError ? "Contact not found." : "Loading…"}
+              {contact.isError ? tr.contacts.notFound : tr.common.loading}
             </p>
           ) : (
             <form
@@ -153,7 +155,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                   type="button"
                   onClick={() => file.current?.click()}
                   className="group relative rounded-full"
-                  aria-label="Choose a photo"
+                  aria-label={tr.contacts.choosePhoto}
                 >
                   <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto }} size="lg" />
                   <span className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
@@ -176,7 +178,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                     }}
                     className="flex items-center gap-1.5 text-sm font-medium text-red-600 dark:text-red-400"
                   >
-                    <Trash2 className="size-4" /> Remove photo
+                    <Trash2 className="size-4" /> {tr.contacts.removePhoto}
                   </button>
                 )}
               </div>
@@ -184,13 +186,13 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               {suggestions.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Or pick a picture</span>
+                    <span className="text-sm font-medium text-stone-600 dark:text-stone-300">{tr.contacts.orPickPicture}</span>
                     <button
                       type="button"
                       onClick={shuffle}
                       className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-brand hover:bg-brand/10"
                     >
-                      <Shuffle className="size-4" /> Shuffle
+                      <Shuffle className="size-4" /> {tr.contacts.shuffle}
                     </button>
                   </div>
                   <div className="grid grid-cols-6 gap-2">
@@ -199,7 +201,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                         key={src}
                         type="button"
                         onClick={() => void choose(src)}
-                        aria-label="Use this picture"
+                        aria-label={tr.contacts.usePicture}
                         aria-pressed={picked === src}
                         className={`aspect-square overflow-hidden rounded-full ring-offset-2 transition hover:scale-105 dark:ring-offset-stone-900 ${
                           picked === src ? "ring-2 ring-brand" : ""
@@ -213,19 +215,19 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               )}
 
               <label className="block space-y-1.5">
-                <span className="text-sm font-medium text-stone-600 dark:text-stone-300">Name</span>
+                <span className="text-sm font-medium text-stone-600 dark:text-stone-300">{tr.contacts.name}</span>
                 <input
                   value={name ?? ""}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Name"
+                  placeholder={tr.contacts.name}
                   maxLength={64}
                   className="w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
                 />
                 <span className="flex items-center justify-between text-xs text-stone-500">
-                  Only you see this.
+                  {tr.contacts.onlyYouSee}
                   {name && (
                     <button type="button" onClick={() => setName("")} className="font-medium text-brand">
-                      Use their name
+                      {tr.contacts.useTheirName}
                     </button>
                   )}
                 </span>
@@ -235,16 +237,16 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 <div className="space-y-2 rounded-xl bg-stone-50 p-3 text-sm dark:bg-stone-800/50">
                   {revealed ? (
                     <p>
-                      <span className="text-stone-500">Real name: </span>
+                      <span className="text-stone-500">{tr.contacts.realName}</span>
                       <span className="font-medium">{revealed}</span>
                     </p>
                   ) : !hasCode ? (
-                    <p className="text-stone-500">Their real name is hidden. Set a privacy code in Settings to see it.</p>
+                    <p className="text-stone-500">{tr.contacts.realNameHidden}</p>
                   ) : unlocking ? (
                     <div className="flex items-end gap-2">
                       <div className="flex-1">
                         <CodeInput
-                          label="Privacy code"
+                          label={tr.contacts.privacy.title}
                           value={pin}
                           onChange={setPin}
                           autoFocus
@@ -257,12 +259,12 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                         disabled={pin.length < 4}
                         className="rounded-xl bg-stone-200 px-4 py-2.5 text-sm font-semibold disabled:opacity-50 dark:bg-stone-700"
                       >
-                        Show
+                        {tr.contacts.show}
                       </button>
                     </div>
                   ) : (
                     <button type="button" onClick={() => setUnlocking(true)} className="font-medium text-brand">
-                      Show real name
+                      {tr.contacts.showRealName}
                     </button>
                   )}
                   {revealError && <p className="text-red-600 dark:text-red-400">{revealError}</p>}
@@ -281,21 +283,21 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               )}
 
               <PrimaryButton type="submit" disabled={saving} className="w-full">
-                {saving ? "Saving…" : "Save"}
+                {saving ? tr.common.saving : tr.common.save}
               </PrimaryButton>
               <button
                 type="button"
                 onClick={() => setReporting(true)}
                 className="block w-full text-center text-sm font-medium text-red-600 dark:text-red-400"
               >
-                Report {c.user.displayName}
+                {tr.contacts.report(c.user.displayName)}
               </button>
             </form>
           )}
           {reporting && (
             <ReportDialog
               target={{ userId }}
-              title={`Report ${contact.data?.user.displayName ?? "this person"}`}
+              title={c ? tr.contacts.report(c.user.displayName) : tr.contacts.reportPerson}
               onClose={() => setReporting(false)}
             />
           )}

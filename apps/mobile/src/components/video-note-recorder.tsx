@@ -7,6 +7,7 @@ import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "r
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { LocalFile } from "@/lib/send";
 import { brand, brandInk } from "@/lib/theme";
 import { EphemeralPicker } from "./ephemeral-picker";
@@ -73,6 +74,7 @@ export function VideoNoteRecorder({
   onClose: () => void;
   onSend: (file: LocalFile, ephemeral: EphemeralInput | null) => void;
 }) {
+  const tr = useT();
   const [ephemeral, setEphemeral] = useState(initialEphemeral);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -132,13 +134,13 @@ export function VideoNoteRecorder({
     <Modal animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
       <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <View style={styles.top}>
-          <Pressable onPress={onClose} accessibilityLabel="Close" style={styles.topButton}>
+          <Pressable onPress={onClose} accessibilityLabel={tr.common.close} style={styles.topButton}>
             <X size={26} color="#fff" />
           </Pressable>
           {!recording && !result && allowed && (
             <Pressable
               onPress={() => setFacing((f) => (f === "front" ? "back" : "front"))}
-              accessibilityLabel="Switch camera"
+              accessibilityLabel={tr.composer.switchCamera}
               style={styles.topButton}
             >
               <RefreshCw size={22} color="#fff" />
@@ -151,7 +153,7 @@ export function VideoNoteRecorder({
             {(recording || result) && <Ring size={size} progress={result ? 1 : Math.min(elapsed / MAX_MS, 1)} />}
             {denied ? (
               <View style={[styles.denied, { borderRadius: size / 2 }]}>
-                <Text style={styles.deniedText}>Camera or microphone access was denied. Allow it in system settings.</Text>
+                <Text style={styles.deniedText}>{tr.composer.cameraMicDenied}</Text>
               </View>
             ) : result ? (
               <Replay uri={result.uri} size={size} />
@@ -172,7 +174,7 @@ export function VideoNoteRecorder({
             )}
           </View>
           <Text style={styles.status}>
-            {recording ? `● ${formatDuration(elapsed)} / 1:00` : result ? "Preview" : "Up to 1 minute"}
+            {recording ? `● ${formatDuration(elapsed)} / 1:00` : result ? tr.composer.preview : tr.composer.upToOneMinute}
           </Text>
         </View>
 
@@ -182,10 +184,10 @@ export function VideoNoteRecorder({
           </View>
           {result ? (
             <>
-              <Pressable onPress={() => setResult(null)} accessibilityLabel="Record again" style={styles.secondary}>
+              <Pressable onPress={() => setResult(null)} accessibilityLabel={tr.composer.recordAgain} style={styles.secondary}>
                 <Trash2 size={24} color="#fff" />
               </Pressable>
-              <Pressable onPress={() => void send()} accessibilityLabel="Send video message" style={styles.sendButton}>
+              <Pressable onPress={() => void send()} accessibilityLabel={tr.composer.sendVideoNote} style={styles.sendButton}>
                 <SendHorizontal size={28} color={brandInk} />
               </Pressable>
             </>
@@ -193,7 +195,7 @@ export function VideoNoteRecorder({
             <Pressable
               onPress={recording ? () => camera.current?.stopRecording() : () => void start()}
               disabled={!ready}
-              accessibilityLabel={recording ? "Stop recording" : "Start recording"}
+              accessibilityLabel={recording ? tr.composer.stopRecording : tr.composer.startRecording}
               style={[styles.shutter, !ready && { opacity: 0.4 }]}
             >
               <View style={recording ? styles.stopDot : styles.recDot} />

@@ -1,4 +1,13 @@
-import { type PushPayload, type RegisterPushTokenInput, previewText, reactionText, type PushProvider } from "@six/shared";
+import {
+  type Dict,
+  type PushPayload,
+  type PushProvider,
+  type RegisterPushTokenInput,
+  dict,
+  isLocale,
+  previewText,
+  reactionText,
+} from "@six/shared";
 import { env } from "../env.js";
 import { activeSessions } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
@@ -6,6 +15,7 @@ import { pushQueue } from "../lib/queue.js";
 import { pushProviders } from "../push/providers.js";
 import { applyOverride, loadOverrides } from "./contacts.js";
 import { messageInclude, toMessageDTO } from "./messages.js";
+import { memberMuted } from "./chats.js";
 import { toPublicUser } from "./users.js";
 
 /** Delay before pushing, so a message read straight away in an open app doesn't also buzz a phone. */
@@ -18,8 +28,8 @@ export function pushConfig() {
 export async function registerPushToken(sessionId: string, input: RegisterPushTokenInput) {
   await prisma.pushToken.upsert({
     where: { sessionId_provider: { sessionId, provider: input.provider } },
-    create: { sessionId, provider: input.provider, token: input.token },
-    update: { token: input.token },
+    create: { sessionId, provider: input.provider, token: input.token, locale: input.locale },
+    update: { token: input.token, locale: input.locale ?? "en" },
   });
 }
 
@@ -60,13 +70,14 @@ async function targetsFor(userId: string) {
   return sessions.filter((s) => !active.has(s.id)).flatMap((s) => s.pushTokens);
 }
 
-async function sendToAll(targets: Awaited<ReturnType<typeof targetsFor>>, payload: PushPayload) {
+async function sendToAll(targets: Awaited<ReturnType<typeof targetsFor>>, payload: (t: Dict) => PushPayload) {
   const providers = pushProviders();
   let sent = 0;
   for (const t of targets) {
     const provider = providers[t.provider as PushProvider];
     if (!provider) continue;
-    if ((await provider.send(t.token, payload)) === "gone") await prisma.pushToken.delete({ where: { id: t.id } });
+    const body = payload(dict[isLocale(t.locale) ? t.locale : "en"]);
+    if ((await provider.send(t.token, body)) === "gone") await prisma.pushToken.delete({ where: { id: t.id } });
     else sent++;
   }
   return sent;
@@ -81,7 +92,7 @@ export async function deliverPush(messageId: string, userId: string) {
   if (!m || m.deletedAt || m.expiredAt || m.senderId === userId) return 0;
 
   const member = await prisma.chatMember.findUnique({ where: { chatId_userId: { chatId: m.chatId, userId } } });
-  if (!member || member.muted || member.hidden) return 0;
+  if (!member || memberMuted(member) || member.hidden) return 0;
   if (member.lastReadAt && member.lastReadAt >= m.createdAt) return 0;
 
   const targets = await targetsFor(userId);
@@ -89,14 +100,15 @@ export async function deliverPush(messageId: string, userId: string) {
 
   const overrides = await loadOverrides(prisma, userId, [m.senderId]);
   const sender = applyOverride(toPublicUser(m.sender), overrides.get(m.senderId));
-  return sendToAll(targets, {
+  const dto = toMessageDTO(m, userId);
+  return sendToAll(targets, (t) => ({
     title: sender.displayName,
-    body: previewText(toMessageDTO(m, userId)) || "New message",
+    body: previewText(dto, t) || t.summary.newMessage,
     icon: sender.avatarUrl,
     chatId: m.chatId,
     messageId: m.id,
     url: `/chats/${m.chatId}`,
-  });
+  }));
 }
 
 /** Tells the author of a message about a reaction that is still there, unless the chat is muted or they're using the app. */
@@ -110,7 +122,7 @@ export async function deliverReactionPush(
   if (!m.reactions.some((r) => r.userId === reactorId && r.emoji === emoji)) return 0;
 
   const member = await prisma.chatMember.findUnique({ where: { chatId_userId: { chatId: m.chatId, userId } } });
-  if (!member || member.muted || member.hidden) return 0;
+  if (!member || memberMuted(member) || member.hidden) return 0;
 
   const targets = await targetsFor(userId);
   if (!targets.length) return 0;
@@ -119,12 +131,13 @@ export async function deliverReactionPush(
   if (!reactor) return 0;
   const overrides = await loadOverrides(prisma, userId, [reactorId]);
   const who = applyOverride(toPublicUser(reactor), overrides.get(reactorId));
-  return sendToAll(targets, {
+  const dto = toMessageDTO(m, userId);
+  return sendToAll(targets, (t) => ({
     title: who.displayName,
-    body: reactionText(emoji, toMessageDTO(m, userId)),
+    body: reactionText(emoji, dto, t),
     icon: who.avatarUrl,
     chatId: m.chatId,
     messageId: m.id,
     url: `/chats/${m.chatId}`,
-  });
+  }));
 }

@@ -3,10 +3,12 @@ import { View } from "react-native";
 import { BrandBar } from "@/components/brand-bar";
 import { MessageCircle, Settings, Users } from "lucide-react-native";
 import { useChats } from "@/lib/chats";
+import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 
 export default function TabsLayout() {
   const t = useTheme();
+  const tr = useT();
   const chats = useChats();
   const unread = chats.data?.filter((c) => !c.muted && c.unreadCount > 0).length ?? 0;
 
@@ -25,7 +27,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Chats",
+            title: tr.common.chats,
             tabBarBadge: unread > 0 ? (unread > 99 ? "99+" : unread) : undefined,
             tabBarIcon: ({ color, focused }) => (
               <MessageCircle color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />
@@ -35,14 +37,14 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="contacts"
           options={{
-            title: "Contacts",
+            title: tr.common.contacts,
             tabBarIcon: ({ color, focused }) => <Users color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />,
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
-            title: "Settings",
+            title: tr.common.settings,
             tabBarIcon: ({ color, focused }) => <Settings color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />,
           }}
         />

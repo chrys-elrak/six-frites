@@ -1,6 +1,7 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const iosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
+const googleServicesFile = process.env.GOOGLE_SERVICES_FILE;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -26,6 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     softwareKeyboardLayoutMode: "resize",
     predictiveBackGestureEnabled: false,
+    ...(googleServicesFile && { googleServicesFile }),
   },
   plugins: [
     "expo-router",
@@ -33,6 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-image",
     "expo-video",
     "expo-sharing",
+    ["expo-notifications", { icon: "./assets/android-icon-monochrome.png", color: "#eb8a00" }],
     [
       "expo-splash-screen",
       {

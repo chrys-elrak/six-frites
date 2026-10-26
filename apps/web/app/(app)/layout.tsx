@@ -17,6 +17,7 @@ import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
 import { CallScreen } from "@/components/call-screen";
 import { useChats } from "@/lib/chats";
+import { useT } from "@/lib/i18n";
 
 const tabRoutes: Record<string, Tab> = {
   "/": "chats",
@@ -50,6 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const qc = useQueryClient();
   const status = useSession((s) => s.status);
+  const tr = useT();
   useAppHeight();
   useEffect(primeAudio, []);
   usePushLinks(status === "authed");
@@ -62,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [status, router, qc, pathname]);
 
   if (status !== "authed") {
-    return <main className="grid h-dvh place-items-center text-sm text-stone-500">Loading…</main>;
+    return <main className="grid h-dvh place-items-center text-sm text-stone-500">{tr.common.loading}</main>;
   }
 
   const topLevel = tabRoutes[pathname];

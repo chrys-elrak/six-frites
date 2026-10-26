@@ -1,23 +1,21 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import type { FoundUserDTO } from "@six/shared";
+import type { Dict, FoundUserDTO } from "@six/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
 import { PrimaryButton } from "./ui";
 
-export const findErrors: Record<string, string> = {
-  USER_NOT_FOUND: "No one matches that code, username or email.",
-  CONTACT_SELF: "That's you.",
-  RATE_LIMITED: "Too many searches. Wait a minute and try again.",
-};
-
-export const findErrorText = (err: unknown) =>
-  err instanceof SixApiError ? (findErrors[err.code] ?? err.message) : "Something went wrong.";
+export const findErrorText = (err: unknown, tr: Dict) =>
+  err instanceof SixApiError
+    ? ((tr.contacts.findErrors as Record<string, string | undefined>)[err.code] ?? err.message)
+    : tr.common.somethingWrong;
 
 export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; query: string; onAdded?: () => void }) {
+  const tr = useT();
   const qc = useQueryClient();
   const router = useRouter();
 
@@ -38,11 +36,11 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
         {found.username && <p className="text-sm text-stone-500">@{found.username}</p>}
       </div>
       <PrimaryButton className="w-full" onClick={() => add.mutate()} disabled={add.isPending}>
-        {found.chatId ? "Open chat" : "Message"}
+        {found.chatId ? tr.contacts.openChat : tr.common.message}
       </PrimaryButton>
       {add.isError && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {findErrorText(add.error)}
+          {findErrorText(add.error, tr)}
         </p>
       )}
     </div>

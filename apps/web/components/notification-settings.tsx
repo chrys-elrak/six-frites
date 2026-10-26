@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { playChime, unlockAudio, useNotifyPrefs } from "@/lib/notify";
 import { disablePush, enablePush, pushSupported } from "@/lib/push";
 import { Card, SectionTitle, Toggle } from "./ui";
 
 export function NotificationSettings() {
+  const tr = useT();
   const prefs = useNotifyPrefs();
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
 
@@ -42,18 +44,18 @@ export function NotificationSettings() {
 
   const systemHint =
     permission === "unsupported"
-      ? "Not supported in this browser."
+      ? tr.settings.notSupported
       : permission === "denied"
-        ? "Blocked in your browser's site settings."
-        : "Shows a notification when Six Frites is in the background.";
+        ? tr.settings.blockedInBrowser
+        : tr.settings.systemHint;
 
   return (
     <section className="space-y-3">
-      <SectionTitle>Notifications</SectionTitle>
+      <SectionTitle>{tr.settings.notifications}</SectionTitle>
       <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
         <Toggle
-          label="Sound"
-          hint="Plays a short chime for new messages."
+          label={tr.settings.sound}
+          hint={tr.settings.soundHint}
           checked={prefs.sound}
           onChange={(on) => {
             prefs.set({ sound: on });
@@ -61,26 +63,26 @@ export function NotificationSettings() {
           }}
         />
         <Toggle
-          label="Popups"
-          hint="Shows new messages from other chats while you use the app."
+          label={tr.settings.popups}
+          hint={tr.settings.popupsHint}
           checked={prefs.popups}
           onChange={(on) => prefs.set({ popups: on })}
         />
         <Toggle
-          label="When Six Frites is closed"
+          label={tr.settings.whenClosed}
           hint={
             pushState === "unavailable" || !pushSupported()
-              ? "Not available in this browser."
+              ? tr.settings.notAvailable
               : pushState === "denied" || permission === "denied"
-                ? "Blocked in your browser's site settings."
-                : "Get notified even when no Six Frites tab is open."
+                ? tr.settings.blockedInBrowser
+                : tr.settings.whenClosedHint
           }
           checked={prefs.push}
           disabled={pushState === "working" || !pushSupported() || permission === "denied"}
           onChange={(on) => void setPush(on)}
         />
         <Toggle
-          label="System notifications"
+          label={tr.settings.systemNotifications}
           hint={systemHint}
           checked={prefs.system && permission === "granted"}
           disabled={permission === "unsupported" || permission === "denied"}

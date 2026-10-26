@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { shortRule } from "@/lib/ephemeral";
+import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
 import { flame } from "@/lib/theme";
 import { AttachmentView, LightboxVideo } from "./attachment";
@@ -20,6 +21,7 @@ export function EphemeralViewer({
   expiresAt: string | null;
   onClose: () => void;
 }) {
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
@@ -47,9 +49,9 @@ export function EphemeralViewer({
       <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View style={styles.bar}>
           <Flame size={18} color={flame} fill={flame} />
-          <Text style={styles.rule}>{e ? shortRule(e) : ""}</Text>
-          {left !== null && <Text style={styles.countdown}>{Math.ceil(left / 1000)}s</Text>}
-          <Pressable accessibilityLabel="Close" onPress={onClose} hitSlop={8} style={styles.close}>
+          <Text style={styles.rule}>{e ? shortRule(e, tr) : ""}</Text>
+          {left !== null && <Text style={styles.countdown}>{tr.messages.seconds(Math.ceil(left / 1000))}</Text>}
+          <Pressable accessibilityLabel={tr.common.close} onPress={onClose} hitSlop={8} style={styles.close}>
             <X size={26} color="#fff" />
           </Pressable>
         </View>
@@ -89,11 +91,11 @@ export function EphemeralViewer({
 
         <Text style={styles.footer}>
           {viewsLeft === 0
-            ? "This message disappears when you close it."
+            ? tr.messages.goneOnClose
             : left !== null
-              ? "This message disappears when the timer ends."
+              ? tr.messages.goneOnTimer
               : viewsLeft
-                ? `You can open it ${viewsLeft === 1 ? "once more" : `${viewsLeft} more times`}.`
+                ? tr.messages.opensLeft(viewsLeft)
                 : ""}
         </Text>
       </View>

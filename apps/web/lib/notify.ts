@@ -1,5 +1,6 @@
 import { type ChatDTO, type MessageDTO, type MessageReactedDTO, previewText, reactionText } from "@six/shared";
 import { create } from "zustand";
+import { getT } from "./i18n";
 
 const PREFS_KEY = "six:notifications";
 
@@ -106,8 +107,14 @@ export function notifyIncoming(
 ) {
   if (chat?.muted || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
   const sender = chat?.members.find((x) => x.user.id === m.senderId)?.user;
+  const t = getT();
   alertUser(
-    { id: m.id, chatId: m.chatId, title: sender?.displayName ?? chat?.title ?? "New message", body: previewText(m) || "New message" },
+    {
+      id: m.id,
+      chatId: m.chatId,
+      title: sender?.displayName ?? chat?.title ?? t.summary.newMessage,
+      body: previewText(m, t) || t.summary.newMessage,
+    },
     sender?.avatarUrl ?? null,
     open,
   );
@@ -124,12 +131,13 @@ export function notifyReaction(
 ) {
   if (chat?.muted || viewing || Date.now() - Date.parse(at) > FRESH_MS) return;
   const reactor = chat?.members.find((x) => x.user.id === r.userId)?.user;
+  const t = getT();
   alertUser(
     {
       id: `${r.messageId}:${r.userId}:${r.emoji}`,
       chatId: r.chatId,
-      title: reactor?.displayName ?? chat?.title ?? "New reaction",
-      body: message ? reactionText(r.emoji, message) : `Reacted ${r.emoji} to your message`,
+      title: reactor?.displayName ?? chat?.title ?? t.summary.newReaction,
+      body: message ? reactionText(r.emoji, message, t) : t.summary.reactedToYours(r.emoji),
     },
     reactor?.avatarUrl ?? null,
     open,

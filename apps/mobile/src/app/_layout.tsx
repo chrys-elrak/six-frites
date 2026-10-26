@@ -10,21 +10,23 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { EmptyState, PrimaryButton } from "@/components/ui";
+import { useLocale, useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { brand, useTheme } from "@/lib/theme";
 
 void SplashScreen.preventAutoHideAsync();
 
 function Unreachable() {
+  const tr = useT();
   const bootstrap = useSession((s) => s.bootstrap);
   const [busy, setBusy] = useState(false);
   return (
     <View style={styles.center}>
-      <EmptyState Icon={WifiOff} title="Can't reach Six Frites">
-        Check your connection and try again.
+      <EmptyState Icon={WifiOff} title={tr.common.unreachable}>
+        {tr.common.checkConnection}
       </EmptyState>
       <PrimaryButton
-        title="Try again"
+        title={tr.common.retry}
         busy={busy}
         onPress={() => {
           setBusy(true);
@@ -44,17 +46,18 @@ export default function RootLayout() {
   const status = useSession((s) => s.status);
   const bootstrap = useSession((s) => s.bootstrap);
   const authed = status === "authed";
+  const localeReady = useLocale((s) => s.ready);
 
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
 
   useEffect(() => {
-    if (status !== "loading") void SplashScreen.hideAsync();
+    if (status !== "loading" && localeReady) void SplashScreen.hideAsync();
     if (status === "anon") client.clear();
-  }, [status, client]);
+  }, [status, localeReady, client]);
 
-  if (status === "loading") return null;
+  if (status === "loading" || !localeReady) return null;
 
   const base = t.dark ? DarkTheme : DefaultTheme;
   const navTheme = {

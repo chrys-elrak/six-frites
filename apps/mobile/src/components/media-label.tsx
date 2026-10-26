@@ -1,4 +1,4 @@
-import type { MessageDTO } from "@six/shared";
+import type { Dict, MessageDTO } from "@six/shared";
 import {
   CircleUserRound,
   Film,
@@ -11,25 +11,25 @@ import {
   Timer,
   Video,
 } from "lucide-react-native";
+import { getT } from "@/lib/i18n";
 
-const mediaLabels: Record<string, { Icon: LucideIcon; label: string }> = {
-  image: { Icon: ImageIcon, label: "Photo" },
-  video: { Icon: Video, label: "Video" },
-  video_note: { Icon: CircleUserRound, label: "Video message" },
-  voice: { Icon: Mic, label: "Voice message" },
-  file: { Icon: Paperclip, label: "File" },
-  gif: { Icon: Film, label: "GIF" },
-  sticker: { Icon: Sticker, label: "Sticker" },
-  service: { Icon: Timer, label: "Message" },
+const mediaIcons: Record<string, LucideIcon> = {
+  image: ImageIcon,
+  video: Video,
+  video_note: CircleUserRound,
+  voice: Mic,
+  file: Paperclip,
+  gif: Film,
+  sticker: Sticker,
+  service: Timer,
 };
-
-const fallback = { Icon: MessageSquare, label: "Message" };
 
 export type MediaType = Exclude<MessageDTO["type"], "text">;
 
-export const mediaLabel = (type: MediaType) => (mediaLabels[type] ?? fallback).label;
+export const mediaLabel = (type: MediaType, tr: Dict = getT()) =>
+  type in tr.summary.kinds ? tr.summary.kinds[type as keyof Dict["summary"]["kinds"]] : tr.common.message;
 
 export function MediaIcon({ type, color, size = 14 }: { type: MediaType; color: string; size?: number }) {
-  const { Icon } = mediaLabels[type] ?? fallback;
+  const Icon = mediaIcons[type] ?? MessageSquare;
   return <Icon size={size} color={color} />;
 }

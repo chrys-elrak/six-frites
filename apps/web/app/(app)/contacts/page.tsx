@@ -1,6 +1,10 @@
+"use client";
+
 import { Users } from "lucide-react";
 import { EmptyPane } from "@/components/empty-pane";
+import { useT } from "@/lib/i18n";
 
 export default function ContactsIndex() {
-  return <EmptyPane Icon={Users}>Pick a contact to open your conversation.</EmptyPane>;
+  const tr = useT();
+  return <EmptyPane Icon={Users}>{tr.chats.pickContact}</EmptyPane>;
 }

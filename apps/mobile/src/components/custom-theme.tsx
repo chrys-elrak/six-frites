@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { Wallpaper } from "./chat-background";
 import { PrimaryButton, TextButton } from "./ui";
@@ -26,6 +27,7 @@ export function CustomThemePicker({
   onClose: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const start = customThemeColors(current);
   const [mine, setMine] = useState(start?.mine ?? CUSTOM_THEME_COLORS[0]!);
@@ -56,10 +58,10 @@ export function CustomThemePicker({
           <View style={[styles.preview, { borderColor: t.border }]}>
             <Wallpaper theme={theme} dark={t.dark} id="custom-preview" />
             <View style={[styles.bubble, styles.incoming, { backgroundColor: w.theirBubble }]}>
-              <Text style={{ color: w.theirBubbleInk, fontSize: 14 }}>Fries tonight? 🍟</Text>
+              <Text style={{ color: w.theirBubbleInk, fontSize: 14 }}>{tr.chat.previewTheirs}</Text>
             </View>
             <View style={[styles.bubble, styles.outgoing, { backgroundColor: w.bubble }]}>
-              <Text style={{ color: w.bubbleInk, fontSize: 14 }}>Always. Extra ketchup!</Text>
+              <Text style={{ color: w.bubbleInk, fontSize: 14 }}>{tr.chat.previewMine}</Text>
             </View>
           </View>
 
@@ -72,7 +74,7 @@ export function CustomThemePicker({
                 style={[styles.tab, target === k && { backgroundColor: brand }]}
               >
                 <Text style={{ color: target === k ? brandInk : t.textSoft, fontWeight: "600", fontSize: 14 }}>
-                  {k === "mine" ? "Your messages" : "Their messages"}
+                  {k === "mine" ? tr.chat.yourMessages : tr.chat.theirMessages}
                 </Text>
               </Pressable>
             ))}
@@ -82,18 +84,18 @@ export function CustomThemePicker({
             {target === "theirs" && (
               <Pressable
                 onPress={() => choose(null)}
-                accessibilityLabel="Automatic"
+                accessibilityLabel={tr.chat.automatic}
                 accessibilityState={{ selected: theirs === null }}
                 style={[styles.swatch, styles.auto, { borderColor: theirs === null ? brand : t.border }]}
               >
-                <Text style={{ color: t.textSoft, fontSize: 11, fontWeight: "700" }}>Auto</Text>
+                <Text style={{ color: t.textSoft, fontSize: 11, fontWeight: "700" }}>{tr.chat.auto}</Text>
               </Pressable>
             )}
             {CUSTOM_THEME_COLORS.map((c) => (
               <Pressable
                 key={c}
                 onPress={() => choose(c)}
-                accessibilityLabel={`Colour ${c}`}
+                accessibilityLabel={tr.chat.colour(c)}
                 accessibilityState={{ selected: c === hex }}
                 style={[styles.swatch, { backgroundColor: c }]}
               >
@@ -118,19 +120,19 @@ export function CustomThemePicker({
               autoCapitalize="none"
               autoCorrect={false}
               maxLength={7}
-              placeholder={target === "theirs" ? "Auto" : "#eb8a00"}
+              placeholder={target === "theirs" ? tr.chat.auto : "#eb8a00"}
               placeholderTextColor={t.muted}
-              accessibilityLabel="Colour code"
+              accessibilityLabel={tr.chat.colourCode}
               style={{ flex: 1, color: t.text, fontSize: 16, fontFamily: "monospace", paddingVertical: 8 }}
             />
           </View>
 
           <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-              <TextButton title="Cancel" onPress={onClose} />
+              <TextButton title={tr.common.cancel} onPress={onClose} />
             </View>
             <PrimaryButton
-              title="Use these colours"
+              title={tr.chat.useColours}
               style={{ flex: 1 }}
               onPress={() => {
                 onPick(mine, theirs);

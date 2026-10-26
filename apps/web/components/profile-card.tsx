@@ -5,6 +5,7 @@ import type { UpdateMeInput } from "@six/shared";
 import { useMutation } from "@tanstack/react-query";
 import { Camera } from "lucide-react";
 import { useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { toAvatarDataUrl } from "@/lib/image";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -12,6 +13,7 @@ import { Avatar } from "./avatar";
 import { Card } from "./ui";
 
 export function ProfileCard() {
+  const tr = useT();
   const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
   const [name, setName] = useState(user.displayName);
@@ -21,7 +23,7 @@ export function ProfileCard() {
   const save = useMutation({
     mutationFn: async (body: UpdateMeInput) => unwrap(await six.api.PATCH("/v1/me", { body })),
     onSuccess: setUser,
-    onError: (err) => setError(err instanceof SixApiError ? err.message : "Couldn't save. Try again."),
+    onError: (err) => setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave),
   });
 
   async function pick(f: File | undefined) {
@@ -30,7 +32,7 @@ export function ProfileCard() {
     try {
       save.mutate({ photo: await toAvatarDataUrl(f) });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't read that image.");
+      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
     }
   }
 
@@ -44,7 +46,7 @@ export function ProfileCard() {
           onClick={() => file.current?.click()}
           disabled={save.isPending}
           className="group relative shrink-0 rounded-full"
-          aria-label="Change your photo"
+          aria-label={tr.settings.changePhoto}
         >
           <Avatar user={user} size="md" />
           <span className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full bg-brand text-brand-ink ring-2 ring-white transition group-hover:scale-110 dark:ring-stone-900">
@@ -73,7 +75,7 @@ export function ProfileCard() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={64}
-              aria-label="Display name"
+              aria-label={tr.settings.displayName}
               className="min-w-0 flex-1 rounded-lg bg-transparent px-2 py-1 text-lg font-medium outline-none ring-stone-300 focus:ring-2 dark:ring-stone-700"
             />
             {dirty && (
@@ -81,7 +83,7 @@ export function ProfileCard() {
                 disabled={save.isPending}
                 className="rounded-lg bg-stone-900 px-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-stone-100 dark:text-stone-900"
               >
-                Save
+                {tr.common.save}
               </button>
             )}
           </div>
@@ -95,7 +97,7 @@ export function ProfileCard() {
           disabled={save.isPending}
           className="text-sm font-medium text-red-600 disabled:opacity-50 dark:text-red-400"
         >
-          Remove photo
+          {tr.settings.removePhoto}
         </button>
       )}
       {error && (

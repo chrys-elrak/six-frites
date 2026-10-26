@@ -1,6 +1,7 @@
 import type { PublicUser } from "@six/shared";
 import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
+import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 
 const sizes = { sm: 36, md: 56, lg: 80, xl: 120 };
@@ -15,6 +16,7 @@ export function Avatar({
   online?: boolean;
 }) {
   const t = useTheme();
+  const tr = useT();
   const side = sizes[size];
   const box = { width: side, height: side, borderRadius: side / 2 };
   const dot = Math.round(side * 0.28);
@@ -29,7 +31,7 @@ export function Avatar({
       )}
       {online && (
         <View
-          accessibilityLabel="Online"
+          accessibilityLabel={tr.time.online}
           style={[
             styles.dot,
             { width: dot, height: dot, borderRadius: dot / 2, borderColor: t.bg, borderWidth: Math.max(2, dot * 0.18) },

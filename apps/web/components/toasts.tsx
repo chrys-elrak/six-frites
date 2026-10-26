@@ -2,11 +2,13 @@
 
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n";
 import { useToasts } from "@/lib/notify";
 import { Avatar } from "./avatar";
 import { Portal } from "./portal";
 
 export function Toasts() {
+  const tr = useT();
   const router = useRouter();
   const { toasts, dismiss } = useToasts();
   if (!toasts.length) return null;
@@ -39,7 +41,7 @@ export function Toasts() {
             <button
               type="button"
               onClick={() => dismiss(t.id)}
-              aria-label="Dismiss"
+              aria-label={tr.common.dismiss}
               className="grid size-7 shrink-0 place-items-center rounded-full text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"
             >
               <X className="size-4" />

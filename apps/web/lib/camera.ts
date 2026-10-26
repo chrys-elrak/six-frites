@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getT } from "./i18n";
 
 export type Facing = "user" | "environment";
 
@@ -36,7 +37,7 @@ export function useCamera(initial: Facing, opts: { audio?: boolean; square?: boo
         const cams = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "videoinput");
         setCanSwitch(cams.length > 1);
       })
-      .catch(() => setError("Camera access was denied or no camera is available."));
+      .catch(() => setError(getT().composer.noCamera));
     return () => {
       cancelled = true;
       active?.getTracks().forEach((t) => t.stop());

@@ -4,6 +4,7 @@ import { STICKER_LIMITS, type StickerDTO } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { STICKER_ACCEPT, addStickers, createPack, removeSticker, setPackSaved, useStickerPack } from "@/lib/stickers";
 import { Dialog } from "./dialog";
 import { StickerView } from "./sticker";
@@ -20,6 +21,7 @@ export function UploadForm({
   label: string;
   onSubmit: (title: string, files: File[], emoji: string) => Promise<void>;
 }) {
+  const tr = useT();
   const [title, setTitle] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [emoji, setEmoji] = useState("🙂");
@@ -36,7 +38,7 @@ export function UploadForm({
           await onSubmit(title.trim(), files, emoji.trim());
           setFiles([]);
         } catch (err) {
-          setError((err as Error).message || "Something went wrong. Try again.");
+          setError((err as Error).message || tr.common.somethingWrongRetry);
         } finally {
           setBusy(false);
         }
@@ -47,8 +49,8 @@ export function UploadForm({
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Pack name"
-          aria-label="Pack name"
+          placeholder={tr.composer.packName}
+          aria-label={tr.composer.packName}
           maxLength={64}
           required
           className={field}
@@ -59,21 +61,21 @@ export function UploadForm({
         accept={STICKER_ACCEPT}
         multiple
         onChange={(e) => setFiles([...(e.target.files ?? [])])}
-        aria-label="Sticker files"
+        aria-label={tr.composer.stickerFiles}
         className="block w-full text-sm"
       />
-      <p className="text-xs text-stone-500">Telegram .tgs, Lottie .json, or WebP/PNG images, 512 KB each at most.</p>
+      <p className="text-xs text-stone-500">{tr.composer.stickerFormats}</p>
       <div className="flex gap-2">
         <input
           value={emoji}
           onChange={(e) => setEmoji(e.target.value)}
-          aria-label="Emoji for these stickers"
+          aria-label={tr.composer.stickerEmoji}
           maxLength={16}
           required
           className={`${field} w-20 text-center`}
         />
         <PrimaryButton type="submit" disabled={busy || (!withTitle && files.length === 0)} className="flex-1">
-          {busy ? "Uploading…" : label}
+          {busy ? tr.composer.uploading : label}
         </PrimaryButton>
       </div>
       {error && (
@@ -86,13 +88,14 @@ export function UploadForm({
 }
 
 function Header({ title, onClose }: { title: string; onClose: () => void }) {
+  const tr = useT();
   return (
     <div className="flex items-center border-b border-stone-200 px-4 py-3 dark:border-stone-800">
       <h2 className="flex-1 truncate font-semibold">{title}</h2>
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close"
+        aria-label={tr.common.close}
         className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
       >
         <X className="size-4" />
@@ -102,13 +105,14 @@ function Header({ title, onClose }: { title: string; onClose: () => void }) {
 }
 
 export function NewPackDialog({ onClose, onCreated }: { onClose: () => void; onCreated: (packId: string) => void }) {
+  const tr = useT();
   const qc = useQueryClient();
   return (
     <Dialog onClose={onClose}>
-      <Header title="New sticker pack" onClose={onClose} />
+      <Header title={tr.composer.newPack} onClose={onClose} />
       <UploadForm
         withTitle
-        label="Create"
+        label={tr.composer.create}
         onSubmit={async (title, files, emoji) => {
           const pack = await createPack(qc, title);
           await addStickers(qc, pack.id, files, emoji);
@@ -128,6 +132,7 @@ export function PackDialog({
   onClose: () => void;
   onSend?: (sticker: StickerDTO) => void;
 }) {
+  const tr = useT();
   const qc = useQueryClient();
   const pack = useStickerPack(packId);
   const p = pack.data;
@@ -135,11 +140,11 @@ export function PackDialog({
 
   return (
     <Dialog onClose={onClose}>
-      <Header title={p?.title ?? "Stickers"} onClose={onClose} />
+      <Header title={p?.title ?? tr.composer.pickerTabs.sticker} onClose={onClose} />
       {pack.isPending ? (
-        <p className="p-6 text-center text-sm text-stone-500">Loading…</p>
+        <p className="p-6 text-center text-sm text-stone-500">{tr.common.loading}</p>
       ) : !p ? (
-        <p className="p-6 text-center text-sm text-stone-500">This sticker pack is no longer available.</p>
+        <p className="p-6 text-center text-sm text-stone-500">{tr.composer.packUnavailable}</p>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-1 p-3">
@@ -160,7 +165,7 @@ export function PackDialog({
                   <button
                     type="button"
                     onClick={() => void removeSticker(qc, p.id, s.id).catch(() => null)}
-                    aria-label={`Remove ${s.emoji} sticker`}
+                    aria-label={tr.composer.removeSticker(s.emoji)}
                     className="absolute top-0 right-0 grid size-6 place-items-center rounded-full bg-stone-900/70 text-white"
                   >
                     <X className="size-3.5" />
@@ -169,14 +174,14 @@ export function PackDialog({
               </div>
             ))}
             {p.stickers.length === 0 && (
-              <p className="col-span-4 py-6 text-center text-sm text-stone-500">No stickers yet.</p>
+              <p className="col-span-4 py-6 text-center text-sm text-stone-500">{tr.composer.noStickers}</p>
             )}
           </div>
           {p.mine
             ? !full && (
                 <UploadForm
                   withTitle={false}
-                  label="Add stickers"
+                  label={tr.composer.addStickers}
                   onSubmit={(_, files, emoji) => addStickers(qc, p.id, files, emoji)}
                 />
               )
@@ -187,7 +192,7 @@ export function PackDialog({
                     onClick={() => void setPackSaved(qc, p.id, !p.saved).catch(() => null)}
                     className="w-full"
                   >
-                    {p.saved ? "Remove from my stickers" : "Add to my stickers"}
+                    {p.saved ? tr.composer.removeFromMine : tr.composer.addToMine}
                   </PrimaryButton>
                 </div>
               )}

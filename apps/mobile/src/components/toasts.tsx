@@ -3,12 +3,14 @@ import { X } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "@/lib/i18n";
 import { useToasts } from "@/lib/notify";
 import { useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
 
 export function Toasts() {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const { toasts, dismiss } = useToasts();
   if (!toasts.length) return null;
@@ -39,7 +41,7 @@ export function Toasts() {
               </Text>
             </View>
           </Pressable>
-          <Pressable onPress={() => dismiss(toast.id)} accessibilityLabel="Dismiss" hitSlop={8} style={styles.close}>
+          <Pressable onPress={() => dismiss(toast.id)} accessibilityLabel={tr.common.dismiss} hitSlop={8} style={styles.close}>
             <X size={16} color={t.faint} />
           </Pressable>
         </Animated.View>

@@ -2,7 +2,6 @@ import type { FastifyPluginAsyncZod, ZodTypeProvider } from "fastify-type-provid
 import { z } from "zod";
 import {
   AcceptInviteResult,
-  CreateInviteInput,
   InviteDTO,
   InvitePreview,
   PageQuery,
@@ -11,10 +10,11 @@ import {
 } from "@six/shared";
 import {
   acceptInvite,
-  createInvite,
+  getInvite,
   listInvites,
   listReferrals,
   previewInvite,
+  resetInvite,
 } from "../services/referrals.js";
 
 const Code = z.object({ code: z.string().min(1).max(32) });
@@ -39,18 +39,49 @@ const inviteRoutes: FastifyPluginAsyncZod = async (app) => {
     const authed = scope.withTypeProvider<ZodTypeProvider>();
     authed.addHook("onRequest", app.requireAuth);
 
+    authed.get(
+      "/me/invite",
+      {
+        schema: {
+          tags: ["invites"],
+          summary: "Your invite link",
+          description: "Everyone has exactly one. It's made on first call, never expires and has no use limit.",
+          security: bearer,
+          response: { 200: InviteDTO },
+        },
+      },
+      (req) => getInvite(req.auth.userId),
+    );
+
+    authed.post(
+      "/me/invite/reset",
+      {
+        config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+        schema: {
+          tags: ["invites"],
+          summary: "Get a new invite link",
+          description: "The old link stops working. People who already joined with it stay.",
+          security: bearer,
+          response: { 200: InviteDTO },
+        },
+      },
+      (req) => resetInvite(req.auth.userId),
+    );
+
     authed.post(
       "/invites",
       {
         schema: {
           tags: ["invites"],
-          summary: "Create an invite link",
+          summary: "Your invite link (deprecated)",
+          description: "Kept for older apps: returns the same link as GET /me/invite. The body is ignored.",
+          deprecated: true,
           security: bearer,
-          body: CreateInviteInput,
-          response: { 201: InviteDTO },
+          body: z.object({}).passthrough().optional(),
+          response: { 200: InviteDTO },
         },
       },
-      async (req, reply) => reply.status(201).send(await createInvite(req.auth.userId, req.body)),
+      (req) => getInvite(req.auth.userId),
     );
 
     authed.get(

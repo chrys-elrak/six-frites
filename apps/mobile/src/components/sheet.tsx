@@ -1,5 +1,6 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 
 export interface SheetAction {
@@ -24,6 +25,7 @@ export function Sheet({
   onClose: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
 
@@ -64,7 +66,7 @@ export function Sheet({
           onPress={onClose}
           style={({ pressed }) => [styles.group, styles.action, { backgroundColor: pressed ? t.pressed : t.surface }]}
         >
-          <Text style={[styles.label, { color: t.text, fontWeight: "600" }]}>Cancel</Text>
+          <Text style={[styles.label, { color: t.text, fontWeight: "600" }]}>{tr.common.cancel}</Text>
         </Pressable>
       </View>
     </Modal>

@@ -5,6 +5,7 @@ import type { EphemeralInput, UploadKind } from "@six/shared";
 import { EyeOff, FileText, SendHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { formatBytes } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { Portal } from "./portal";
 
@@ -33,6 +34,7 @@ function Preview({
   onToggleSpoiler: () => void;
   onRemove: () => void;
 }) {
+  const tr = useT();
   const fit = large ? "max-h-full max-w-full object-contain" : "size-full object-cover";
   const media = !url ? null : item.kind === "image" ? (
     <img src={url} alt="" className={fit} />
@@ -61,18 +63,18 @@ function Preview({
           type="button"
           onClick={onToggleSpoiler}
           aria-pressed={item.spoiler}
-          title={item.spoiler ? "Show normally" : "Hide with spoiler"}
+          title={item.spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
           className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium backdrop-blur ${
             item.spoiler ? "bg-brand text-brand-ink" : "bg-black/45 text-white hover:bg-black/60"
           }`}
         >
           <EyeOff className="size-3.5" />
-          {large && (item.spoiler ? "Spoiler on" : "Spoiler")}
+          {large && (item.spoiler ? tr.composer.spoilerOn : tr.summary.spoiler)}
         </button>
         <button
           type="button"
           onClick={onRemove}
-          aria-label="Remove"
+          aria-label={tr.common.remove}
           className="grid size-7 place-items-center rounded-full bg-black/45 text-white backdrop-blur hover:bg-black/60"
         >
           <X className="size-4" />
@@ -95,6 +97,7 @@ export function AttachDialog({
   onCancel: () => void;
   onSend: (items: PickedFile[], caption: string, ephemeral: EphemeralInput | null) => void;
 }) {
+  const tr = useT();
   const [items, setItems] = useState<Item[]>(() =>
     files.map((file) => ({
       id: crypto.randomUUID(),
@@ -141,8 +144,12 @@ export function AttachDialog({
 
   const title =
     media.length && !others.length
-      ? `Send ${media.length === 1 ? (media[0]!.kind === "image" ? "photo" : "video") : `${media.length} items`}`
-      : `Send ${items.length === 1 ? "file" : `${items.length} files`}`;
+      ? media.length === 1
+        ? media[0]!.kind === "image"
+          ? tr.composer.sendPhoto
+          : tr.composer.sendVideo
+        : tr.composer.sendItems(media.length)
+      : tr.composer.sendFiles(items.length);
 
   return (
     <Portal>
@@ -152,13 +159,13 @@ export function AttachDialog({
         aria-modal
         aria-label={title}
       >
-        <button aria-label="Cancel" onClick={onCancel} className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
+        <button aria-label={tr.common.cancel} onClick={onCancel} className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
         <div className="relative flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-white shadow-xl md:rounded-3xl dark:bg-stone-900">
           <div className="flex items-center px-4 pt-4 pb-2">
             <h2 className="flex-1 text-lg font-semibold">{title}</h2>
             <button
               onClick={onCancel}
-              aria-label="Cancel"
+              aria-label={tr.common.cancel}
               className="grid size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
             >
               <X className="size-5" />
@@ -202,7 +209,7 @@ export function AttachDialog({
                 <button
                   type="button"
                   onClick={() => remove(item.id)}
-                  aria-label={`Remove ${item.file.name}`}
+                  aria-label={tr.composer.removeNamed(item.file.name)}
                   className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-700"
                 >
                   <X className="size-4" />
@@ -210,10 +217,10 @@ export function AttachDialog({
               </div>
             ))}
             {media.length > 0 && (
-              <p className="px-1 text-xs text-stone-500">Tap the eye on a photo or video to hide it as a spoiler.</p>
+              <p className="px-1 text-xs text-stone-500">{tr.composer.spoilerTip}</p>
             )}
             <div className="flex items-center justify-between gap-2 pt-1">
-              <span className="text-sm text-stone-500">Self-destruct after viewing</span>
+              <span className="text-sm text-stone-500">{tr.composer.selfDestructAfterViewing}</span>
               <EphemeralPicker value={ephemeral} onChange={setEphemeral} />
             </div>
           </div>
@@ -242,13 +249,13 @@ export function AttachDialog({
               }}
               rows={1}
               maxLength={4000}
-              placeholder="Add a caption…"
-              aria-label="Caption"
+              placeholder={tr.composer.addCaption}
+              aria-label={tr.composer.caption}
               className="max-h-32 min-h-10 flex-1 resize-none rounded-2xl bg-stone-100 px-4 py-2 text-[16px] leading-6 outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
             />
             <button
               type="submit"
-              aria-label="Send"
+              aria-label={tr.common.send}
               className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
             >
               <SendHorizontal className="size-5" strokeWidth={2.2} />

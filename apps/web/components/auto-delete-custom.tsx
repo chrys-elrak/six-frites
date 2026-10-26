@@ -3,6 +3,7 @@
 import { AUTO_DELETE, AUTO_DELETE_UNITS, durationLabel } from "@six/shared";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 import { PrimaryButton } from "./ui";
 
@@ -25,6 +26,7 @@ export function AutoDeleteCustom({
   onSave: (secs: number) => void;
   onClose: () => void;
 }) {
+  const tr = useT();
   const [amount, setAmount] = useState(() => initial(value).amount);
   const [unit, setUnit] = useState<Unit>(() => initial(value).unit);
 
@@ -44,9 +46,9 @@ export function AutoDeleteCustom({
         className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
         role="dialog"
         aria-modal
-        aria-label="Custom auto-delete"
+        aria-label={tr.chat.customAutoDelete}
       >
-        <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <button aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         <form
           className="relative w-full max-w-sm space-y-4 rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900"
           onSubmit={(e) => {
@@ -57,11 +59,11 @@ export function AutoDeleteCustom({
           }}
         >
           <div className="flex items-center">
-            <h2 className="flex-1 text-lg font-semibold">Custom auto-delete</h2>
+            <h2 className="flex-1 text-lg font-semibold">{tr.chat.customAutoDelete}</h2>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={tr.common.close}
               className="grid size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
             >
               <X className="size-5" />
@@ -76,29 +78,29 @@ export function AutoDeleteCustom({
               step={1}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              aria-label="Amount"
+              aria-label={tr.chat.amount}
               className="w-24 rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
             />
             <select
               value={unit}
               onChange={(e) => setUnit(e.target.value as Unit)}
-              aria-label="Unit"
+              aria-label={tr.chat.unit}
               className="min-w-0 flex-1 rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
             >
               {AUTO_DELETE_UNITS.map(([u]) => (
                 <option key={u} value={u}>
-                  {u}
+                  {tr.chat.units[u]}
                 </option>
               ))}
             </select>
           </div>
           <p className={`text-sm ${valid ? "text-stone-500" : "text-red-600 dark:text-red-400"}`}>
             {valid
-              ? `New messages will be deleted for you and ${peerName} ${durationLabel(secs)} after they're sent.`
-              : "Pick between 1 hour and 1 year."}
+              ? tr.chat.autoDeleteHint(peerName, durationLabel(secs, tr))
+              : tr.chat.autoDeleteRange}
           </p>
           <PrimaryButton type="submit" className="w-full" disabled={!valid}>
-            Set timer
+            {tr.chat.setTimer}
           </PrimaryButton>
         </form>
       </div>

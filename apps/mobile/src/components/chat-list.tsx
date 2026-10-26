@@ -22,6 +22,7 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "rea
 import { isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
 import { formatDuration, listTime } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
@@ -32,9 +33,8 @@ import { ChatMenu } from "./chat-menu";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
 
-const statusText = { connecting: "Connecting…", syncing: "Updating…", offline: "Waiting for network…", live: null };
-
 function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: string }) {
+  const tr = useT();
   const m = useHydratedMessage(meId, chat.lastMessage) as
     | (NonNullable<ChatDTO["lastMessage"]> & { undecryptable?: boolean; decrypting?: boolean })
     | null;
@@ -46,10 +46,10 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
       </Text>
     </View>
   );
-  const you = m?.senderId === meId ? "You: " : "";
+  const you = m?.senderId === meId ? tr.chats.youPrefix : "";
 
-  if (!m) return line(null, "No messages");
-  if (m.deletedAt) return line(<Ban size={14} color={color} />, "Message deleted", true);
+  if (!m) return line(null, tr.chats.noMessages);
+  if (m.deletedAt) return line(<Ban size={14} color={color} />, tr.summary.messageDeleted, true);
   if (m.type === "service") {
     const icon =
       m.action?.type === "theme" ? (
@@ -67,28 +67,18 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
       ) : (
         <Timer size={14} color={color} />
       );
-    return line(icon, serviceText(m));
+    return line(icon, serviceText(m, tr));
   }
   if (m.undecryptable || m.decrypting) {
-    return line(<Lock size={14} color={color} />, m.decrypting ? "Decrypting…" : "Encrypted message", true);
+    return line(<Lock size={14} color={color} />, m.decrypting ? tr.chats.decrypting : tr.chats.encryptedMessage, true);
   }
   if (m.ephemeral) {
-    const kind =
-      m.type === "text"
-        ? "message"
-        : m.type === "video_note"
-          ? "video message"
-          : m.type === "voice"
-            ? "voice message"
-            : m.type === "image"
-              ? "photo"
-              : m.type;
     return line(
       <>
         {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
         <Flame size={14} color={flame} />
       </>,
-      m.ephemeral.expired ? "Opened" : `Self-destructing ${kind}`,
+      m.ephemeral.expired ? tr.chats.opened : tr.chats.selfDestructing[m.type],
     );
   }
   if (m.type !== "text") {
@@ -105,7 +95,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
         <MediaIcon type={m.type} color={color} />
       </>,
-      `${mediaLabel(m.type)}${voiceLength}${extra}`,
+      `${mediaLabel(m.type, tr)}${voiceLength}${extra}`,
     );
   }
   if (m.spoiler) {
@@ -114,7 +104,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
         <EyeOff size={14} color={color} />
       </>,
-      "Spoiler",
+      tr.summary.spoiler,
       true,
     );
   }
@@ -123,6 +113,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
 
 function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const t = useTheme();
+  const tr = useT();
   const [menu, setMenu] = useState(false);
   const typing = useIsTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
@@ -145,7 +136,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
             <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
               {chat.title}
             </Text>
-            {chat.muted && <BellOff size={14} color={t.faint} accessibilityLabel="Muted" />}
+            {chat.muted && <BellOff size={14} color={t.faint} accessibilityLabel={tr.common.muted} />}
             <Text style={[styles.time, unread ? { color: brand, fontWeight: "600" } : { color: t.muted }]}>
               {listTime(chat.lastActivityAt)}
             </Text>
@@ -153,13 +144,13 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
           <View style={styles.rowLine}>
             <View style={{ flex: 1 }}>
               {typing ? (
-                <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>typing…</Text>
+                <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing}</Text>
               ) : (
                 <Preview chat={chat} meId={meId} color={unread ? t.text : t.muted} />
               )}
             </View>
             {chat.pinned && !unread && (
-              <Pin size={14} color={t.faint} style={{ transform: [{ rotate: "45deg" }] }} accessibilityLabel="Pinned" />
+              <Pin size={14} color={t.faint} style={{ transform: [{ rotate: "45deg" }] }} accessibilityLabel={tr.chats.pinned} />
             )}
             {unread && (
               <View style={[styles.badge, { backgroundColor: chat.muted ? (t.dark ? stone[700] : stone[300]) : brand }]}>
@@ -185,10 +176,17 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
 
 export function ChatList({ archived = false }: { archived?: boolean }) {
   const t = useTheme();
+  const tr = useT();
   const meId = useSession((s) => s.user!.id);
   const chats = useChats(archived);
   const archivedChats = useChats(true);
   const { status } = useRealtime();
+  const statusText = {
+    connecting: tr.common.connecting,
+    syncing: tr.chats.updating,
+    offline: tr.chats.waitingForNetwork,
+    live: null,
+  }[status];
 
   const visible = chats.data?.filter((c) => c.lastMessage !== null) ?? [];
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
@@ -203,7 +201,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         <View style={[styles.archiveIcon, { backgroundColor: t.chip }]}>
           <Archive size={20} color={t.muted} />
         </View>
-        <Text style={[styles.archiveText, { color: t.textSoft }]}>Archived</Text>
+        <Text style={[styles.archiveText, { color: t.textSoft }]}>{tr.common.archived}</Text>
         <Text style={{ color: t.muted }}>{archivedCount}</Text>
       </Pressable>
     ) : undefined;
@@ -211,10 +209,12 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScreenHeader inset={false}>
-        {archived && <IconButton Icon={ChevronLeft} label="Back to chats" onPress={() => router.back()} size={26} />}
+        {archived && (
+          <IconButton Icon={ChevronLeft} label={tr.common.backToChats} onPress={() => router.back()} size={26} />
+        )}
         <View style={{ flex: 1, paddingHorizontal: archived ? 0 : 4 }}>
-          <Text style={[styles.title, { color: t.text }]}>{archived ? "Archived" : "Chats"}</Text>
-          {statusText[status] && <Text style={{ color: t.muted, fontSize: 12 }}>{statusText[status]}</Text>}
+          <Text style={[styles.title, { color: t.text }]}>{archived ? tr.common.archived : tr.common.chats}</Text>
+          {statusText && <Text style={{ color: t.muted, fontSize: 12 }}>{statusText}</Text>}
         </View>
       </ScreenHeader>
 
@@ -233,20 +233,20 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         }
         ListEmptyComponent={
           chats.isPending ? (
-            <Text style={[styles.note, { color: t.muted }]}>Loading…</Text>
+            <Text style={[styles.note, { color: t.muted }]}>{tr.common.loading}</Text>
           ) : chats.isError ? (
-            <Text style={[styles.note, { color: t.danger }]}>Couldn't load chats.</Text>
+            <Text style={[styles.note, { color: t.danger }]}>{tr.chats.couldNotLoad}</Text>
           ) : archived || archivedCount === 0 ? (
             <EmptyState
               Icon={archived ? Archive : MessageCircle}
-              title={archived ? "No archived chats" : "No conversations yet"}
+              title={archived ? tr.chats.noArchived : tr.chats.noChats}
             >
               {!archived && (
                 <View style={{ alignItems: "center", gap: 12 }}>
                   <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
-                    Pick someone from your contacts to start chatting.
+                    {tr.chats.noChatsHint}
                   </Text>
-                  <PrimaryButton title="Open contacts" onPress={() => router.navigate("/contacts")} />
+                  <PrimaryButton title={tr.chats.openContacts} onPress={() => router.navigate("/contacts")} />
                 </View>
               )}
             </EmptyState>

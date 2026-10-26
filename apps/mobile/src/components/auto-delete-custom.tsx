@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { PrimaryButton, TextButton } from "./ui";
 
@@ -24,6 +25,7 @@ export function AutoDeleteCustom({
   onClose: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const start = initial(current);
   const [amount, setAmount] = useState(start.amount);
@@ -38,14 +40,14 @@ export function AutoDeleteCustom({
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
       <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, marginBottom: Math.max(insets.bottom, 12) }]}>
-          <Text style={[styles.title, { color: t.text }]}>Custom auto-delete</Text>
+          <Text style={[styles.title, { color: t.text }]}>{tr.chat.customAutoDelete}</Text>
           <TextInput
             value={amount}
             onChangeText={(v) => setAmount(v.replace(/\D/g, ""))}
             keyboardType="number-pad"
             autoFocus
             maxLength={4}
-            accessibilityLabel="Amount"
+            accessibilityLabel={tr.chat.amount}
             style={[styles.input, { backgroundColor: t.field, color: t.text }]}
           />
           <View style={styles.units}>
@@ -56,21 +58,23 @@ export function AutoDeleteCustom({
                 accessibilityState={{ selected: unit === size }}
                 style={[styles.unit, { backgroundColor: unit === size ? brand : t.field }]}
               >
-                <Text style={{ color: unit === size ? brandInk : t.text, fontWeight: "600", fontSize: 14 }}>{label}</Text>
+                <Text style={{ color: unit === size ? brandInk : t.text, fontWeight: "600", fontSize: 14 }}>
+                  {tr.chat.units[label]}
+                </Text>
               </Pressable>
             ))}
           </View>
           <Text style={{ color: valid ? t.muted : t.danger, fontSize: 13, textAlign: "center" }}>
             {valid
-              ? `New messages will be deleted for you and ${peerName} ${durationLabel(secs)} after they're sent.`
-              : "Pick between 1 hour and 1 year."}
+              ? tr.chat.autoDeleteHint(peerName, durationLabel(secs, tr))
+              : tr.chat.autoDeleteRange}
           </Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-              <TextButton title="Cancel" onPress={onClose} />
+              <TextButton title={tr.common.cancel} onPress={onClose} />
             </View>
             <PrimaryButton
-              title="Set timer"
+              title={tr.chat.setTimer}
               disabled={!valid}
               style={{ flex: 1 }}
               onPress={() => {

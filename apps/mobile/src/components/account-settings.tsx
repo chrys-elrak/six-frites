@@ -6,6 +6,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { deleteAccount, unblockUser } from "@/lib/actions";
 import { timeAgo } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { logout } from "@/lib/session";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
@@ -14,6 +15,7 @@ import { Card, Divider, SectionTitle, TextButton } from "./ui";
 
 export function BlockedPeople() {
   const t = useTheme();
+  const tr = useT();
   const qc = useQueryClient();
   const blocks = useQuery({
     queryKey: ["blocks"],
@@ -25,7 +27,7 @@ export function BlockedPeople() {
 
   return (
     <View>
-      <SectionTitle>Blocked people</SectionTitle>
+      <SectionTitle>{tr.settings.blockedPeople}</SectionTitle>
       <Card>
         {items.map((b, i) => (
           <View key={b.user.id}>
@@ -36,10 +38,10 @@ export function BlockedPeople() {
                 <Text numberOfLines={1} style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>
                   {b.user.displayName}
                 </Text>
-                <Text style={{ color: t.muted, fontSize: 13 }}>Blocked {timeAgo(b.createdAt)}</Text>
+                <Text style={{ color: t.muted, fontSize: 13 }}>{tr.settings.blockedAgo(timeAgo(b.createdAt))}</Text>
               </View>
               <TextButton
-                title="Unblock"
+                title={tr.common.unblock}
                 onPress={() => unblock.mutate(b.user.id)}
                 disabled={unblock.isPending && unblock.variables === b.user.id}
               />
@@ -53,23 +55,24 @@ export function BlockedPeople() {
 
 export function AccountCard() {
   const t = useTheme();
+  const tr = useT();
   const [open, setOpen] = useState(false);
 
   return (
     <View>
-      <SectionTitle>Account</SectionTitle>
+      <SectionTitle>{tr.settings.account}</SectionTitle>
       <Card>
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>Delete account</Text>
-            <Text style={{ color: t.muted, fontSize: 13 }}>Signs you out everywhere and removes your profile.</Text>
+            <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.deleteAccount}</Text>
+            <Text style={{ color: t.muted, fontSize: 13 }}>{tr.settings.deleteAccountHint}</Text>
           </View>
           <Pressable
             onPress={() => setOpen(true)}
             accessibilityRole="button"
             style={({ pressed }) => [styles.danger, { backgroundColor: t.danger, opacity: pressed ? 0.85 : 1 }]}
           >
-            <Text style={styles.dangerText}>Delete…</Text>
+            <Text style={styles.dangerText}>{tr.settings.deleteEllipsis}</Text>
           </Pressable>
         </View>
       </Card>
@@ -78,15 +81,9 @@ export function AccountCard() {
   );
 }
 
-const CONSEQUENCES = [
-  "You'll be signed out on every device.",
-  "Your name, photo, email, username and contact code are removed, so nobody can find you.",
-  'Messages you sent stay in other people\'s chats, shown as "Deleted account".',
-  "This can't be undone. Signing in again starts a brand new account.",
-];
-
 function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const [typed, setTyped] = useState("");
   const remove = useMutation({
@@ -102,9 +99,9 @@ function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
       <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, marginBottom: Math.max(insets.bottom, 12) }]}>
-          <Text style={[styles.title, { color: t.text }]}>Delete your account?</Text>
+          <Text style={[styles.title, { color: t.text }]}>{tr.settings.deleteAccountTitle}</Text>
           <ScrollView style={{ maxHeight: 220 }} contentContainerStyle={{ gap: 8 }}>
-            {CONSEQUENCES.map((line) => (
+            {tr.settings.deleteConsequences.map((line) => (
               <View key={line} style={{ flexDirection: "row", gap: 8 }}>
                 <Text style={{ color: t.muted }}>•</Text>
                 <Text style={{ flex: 1, color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{line}</Text>
@@ -114,21 +111,21 @@ function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
           <TextInput
             value={typed}
             onChangeText={setTyped}
-            placeholder="Type DELETE to confirm"
+            placeholder={tr.settings.typeDelete}
             placeholderTextColor={t.faint}
             autoCapitalize="characters"
             autoCorrect={false}
-            accessibilityLabel="Type DELETE to confirm"
+            accessibilityLabel={tr.settings.typeDelete}
             style={[styles.input, { backgroundColor: t.field, color: t.text }]}
           />
           {remove.isError && (
             <Text style={{ color: t.danger, fontSize: 13, textAlign: "center" }}>
-              {remove.error instanceof SixApiError ? remove.error.message : "Couldn't delete your account. Try again."}
+              {remove.error instanceof SixApiError ? remove.error.message : tr.settings.couldNotDeleteAccount}
             </Text>
           )}
           <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-              <TextButton title="Cancel" onPress={onClose} />
+              <TextButton title={tr.common.cancel} onPress={onClose} />
             </View>
             <Pressable
               onPress={() => remove.mutate()}
@@ -136,7 +133,7 @@ function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
               accessibilityRole="button"
               style={[styles.danger, styles.confirm, { backgroundColor: t.danger, opacity: ready && !remove.isPending ? 1 : 0.5 }]}
             >
-              <Text style={styles.dangerText}>{remove.isPending ? "Deleting…" : "Delete my account"}</Text>
+              <Text style={styles.dangerText}>{remove.isPending ? tr.settings.deleting : tr.settings.deleteMyAccount}</Text>
             </Pressable>
           </View>
         </View>

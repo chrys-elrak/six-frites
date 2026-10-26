@@ -3,6 +3,7 @@
 import type { StickerDTO } from "@six/shared";
 import type { AnimationItem } from "lottie-web";
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 export function LottieView({
   url,
@@ -62,6 +63,7 @@ export function LottieView({
 
 /** A sticker: plays once in a chat (again on hover), or sits still in a picker until hovered. */
 export function StickerView({ sticker, size, still = false }: { sticker: StickerDTO; size: number; still?: boolean }) {
+  const tr = useT();
   const anim = useRef<AnimationItem | null>(null);
   const placeholder = (
     <span aria-hidden style={{ fontSize: size * 0.6, lineHeight: 1 }} className="opacity-40">
@@ -72,7 +74,7 @@ export function StickerView({ sticker, size, still = false }: { sticker: Sticker
   return (
     <span
       role="img"
-      aria-label={`${sticker.emoji} sticker`}
+      aria-label={tr.messages.sticker(sticker.emoji)}
       onPointerEnter={(e) => e.pointerType === "mouse" && anim.current?.goToAndPlay(0, true)}
       className="inline-grid place-items-center"
       style={{ width: size, height: size }}

@@ -11,6 +11,7 @@ import Svg, { Circle } from "react-native-svg";
 import { shareRemoteFile } from "@/lib/download";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
+import { useT } from "@/lib/i18n";
 import { usePlaybackRate } from "@/lib/playback";
 import type { PendingAttachment } from "@/lib/outbox";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
@@ -101,6 +102,7 @@ function ProgressRing({ value, size = 44 }: { value: number; size?: number }) {
 }
 
 function Overlay({ state, progress }: { state: State; progress: number }) {
+  const tr = useT();
   if (state === "ready") return null;
   return (
     <View style={[StyleSheet.absoluteFill, styles.overlay]}>
@@ -109,12 +111,12 @@ function Overlay({ state, progress }: { state: State; progress: number }) {
       ) : state === "processing" ? (
         <View style={styles.chip}>
           <ActivityIndicator size="small" color="#fff" />
-          <Text style={styles.chipText}>Processing…</Text>
+          <Text style={styles.chipText}>{tr.messages.processing}</Text>
         </View>
       ) : (
         <View style={[styles.chip, { backgroundColor: "rgba(220,38,38,0.85)" }]}>
           <AlertCircle size={14} color="#fff" />
-          <Text style={styles.chipText}>Failed</Text>
+          <Text style={styles.chipText}>{tr.messages.failed}</Text>
         </View>
       )}
     </View>
@@ -130,13 +132,14 @@ function boxSize(width: number | null, height: number | null, maxW: number) {
 }
 
 function SpeedButton({ tint, bg }: { tint: string; bg: string }) {
+  const tr = useT();
   const rate = usePlaybackRate((s) => s.rate);
   const next = usePlaybackRate((s) => s.next);
   return (
     <Pressable
       onPress={next}
       hitSlop={6}
-      accessibilityLabel={`Playback speed ${rate}×, tap to change`}
+      accessibilityLabel={tr.messages.speed(rate)}
       style={[styles.speed, { backgroundColor: bg }]}
     >
       <Text style={{ color: tint, fontSize: 11, fontWeight: "700" }}>{rate}×</Text>
@@ -157,6 +160,7 @@ function VoicePlayer({
   mine: boolean;
   autoPlay?: boolean;
 }) {
+  const tr = useT();
   const player = useAudioPlayer(null);
   const rate = usePlaybackRate((s) => s.rate);
   const status = useAudioPlayerStatus(player);
@@ -212,7 +216,7 @@ function VoicePlayer({
       <Pressable
         onPress={toggle}
         disabled={!url}
-        accessibilityLabel={status.playing ? "Pause" : "Play voice message"}
+        accessibilityLabel={status.playing ? tr.messages.pause : tr.messages.playVoice}
         style={[styles.voiceButton, { backgroundColor: mine ? bubble.ink : brand, opacity: url ? 1 : 0.5 }]}
       >
         {status.playing ? (
@@ -357,11 +361,12 @@ function VideoNoteCover({
   progress: number;
   onPlay: () => void;
 }) {
+  const tr = useT();
   return (
     <Pressable
       onPress={() => url && onPlay()}
       disabled={!url}
-      accessibilityLabel="Play video message"
+      accessibilityLabel={tr.messages.playVideoNote}
       style={styles.note}
     >
       <View style={[styles.noteClip, { backgroundColor: stone[700] }]}>
@@ -400,6 +405,7 @@ export function AttachmentView({
   autoPlay?: boolean;
 }) {
   const t = useTheme();
+  const tr = useT();
   const bubble = useBubbleColors();
   const a = view(attachment);
   const [busy, setBusy] = useState(false);
@@ -414,7 +420,7 @@ export function AttachmentView({
       <Pressable
         onPress={hidden ? onReveal : open}
         disabled={!ready && !hidden}
-        accessibilityLabel={hidden ? "Spoiler, tap to reveal" : a.kind === "image" ? "Open photo" : "Play video"}
+        accessibilityLabel={hidden ? tr.messages.revealSpoiler : a.kind === "image" ? tr.messages.openPhoto : tr.messages.playVideo}
         style={[styles.visual, size, { backgroundColor: t.dark ? stone[700] : stone[200] }]}
       >
         {a.thumbUrl && (
@@ -430,7 +436,7 @@ export function AttachmentView({
           <View style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: "rgba(0,0,0,0.25)" }]}>
             <View style={styles.chip}>
               <EyeOff size={14} color="#fff" />
-              <Text style={styles.chipText}>Spoiler</Text>
+              <Text style={styles.chipText}>{tr.summary.spoiler}</Text>
             </View>
           </View>
         )}
@@ -483,10 +489,10 @@ export function AttachmentView({
             )}
             <Text style={[styles.small, mine && { color: bubble.ink }]}>
               {a.state === "uploading"
-                ? `Uploading ${Math.round(a.progress * 100)}%`
+                ? tr.messages.uploading(Math.round(a.progress * 100))
                 : a.state === "failed"
-                  ? "Failed"
-                  : "Processing…"}
+                  ? tr.messages.failed
+                  : tr.messages.processing}
             </Text>
           </View>
         )}
@@ -520,7 +526,9 @@ export function AttachmentView({
           {a.name}
         </Text>
         <Text style={[styles.small, { color: fg }]}>
-          {a.state === "uploading" ? `${Math.round(a.progress * 100)}% of ${formatBytes(a.size)}` : formatBytes(a.size)}
+          {a.state === "uploading"
+            ? tr.messages.uploadedOf(Math.round(a.progress * 100), formatBytes(a.size))
+            : formatBytes(a.size)}
         </Text>
       </View>
     </Pressable>
@@ -534,6 +542,7 @@ export function LightboxVideo({ url }: { url: string }) {
 }
 
 export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () => void }) {
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
@@ -548,7 +557,7 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
           )}
         </View>
         <View style={[styles.lightboxBar, { top: insets.top }]}>
-          <Pressable accessibilityLabel="Close" onPress={onClose} style={styles.lightboxButton}>
+          <Pressable accessibilityLabel={tr.common.close} onPress={onClose} style={styles.lightboxButton}>
             <X size={26} color="#fff" />
           </Pressable>
         </View>

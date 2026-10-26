@@ -1,4 +1,6 @@
+import { LOCALE_COOKIE, pickLocale } from "@six/shared";
 import type { Metadata, Viewport } from "next";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -18,11 +20,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const accepted = (await headers()).get("accept-language")?.split(",").map((tag) => tag.split(";")[0]!.trim()) ?? [];
+  const locale = pickLocale([(await cookies()).get(LOCALE_COOKIE)?.value, ...accepted]);
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>
-        <Providers>{children}</Providers>
+        <Providers locale={locale}>{children}</Providers>
       </body>
     </html>
   );

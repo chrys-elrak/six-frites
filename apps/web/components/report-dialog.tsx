@@ -5,6 +5,7 @@ import type { ReportReason } from "@six/shared";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { REPORT_REASONS } from "@/lib/admin";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
 import { PrimaryButton } from "./ui";
@@ -18,6 +19,7 @@ export function ReportDialog({
   title: string;
   onClose: () => void;
 }) {
+  const tr = useT();
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [note, setNote] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "failed">("idle");
@@ -40,7 +42,7 @@ export function ReportDialog({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={tr.common.close}
           className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
         >
           <X className="size-4" />
@@ -48,9 +50,9 @@ export function ReportDialog({
       </div>
       {state === "sent" ? (
         <div className="space-y-4 p-4">
-          <p className="text-sm">Thanks. The moderators will take a look.</p>
+          <p className="text-sm">{tr.chat.reportThanks}</p>
           <PrimaryButton type="button" onClick={onClose} className="w-full">
-            Done
+            {tr.common.done}
           </PrimaryButton>
         </div>
       ) : (
@@ -62,7 +64,7 @@ export function ReportDialog({
           className="space-y-3 p-4"
         >
           <fieldset className="space-y-1">
-            <legend className="mb-2 text-sm text-stone-500">What's wrong?</legend>
+            <legend className="mb-2 text-sm text-stone-500">{tr.chat.whatsWrong}</legend>
             {REPORT_REASONS.map((r) => (
               <label
                 key={r.value}
@@ -76,7 +78,7 @@ export function ReportDialog({
                   onChange={() => setReason(r.value)}
                   className="accent-brand"
                 />
-                <span className="text-[15px]">{r.label}</span>
+                <span className="text-[15px]">{tr.chat.reportReasons[r.value]}</span>
               </label>
             ))}
           </fieldset>
@@ -85,22 +87,22 @@ export function ReportDialog({
             onChange={(e) => setNote(e.target.value)}
             maxLength={500}
             rows={2}
-            placeholder="Anything to add? (optional)"
-            aria-label="Details"
+            placeholder={tr.chat.reportNote}
+            aria-label={tr.chat.reportDetails}
             className="block w-full resize-none rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800 md:text-sm"
           />
           <p className="text-xs text-stone-500">
             {"messageId" in target
-              ? "The moderators will see this message and the few around it."
-              : "The moderators will see your report, not your messages."}
+              ? tr.chat.reportMessageHint
+              : tr.chat.reportUserHint}
           </p>
           {state === "failed" && (
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-              Couldn't send your report. Try again.
+              {tr.chat.reportFailed}
             </p>
           )}
           <PrimaryButton type="submit" disabled={!reason || state === "sending"} className="w-full">
-            {state === "sending" ? "Sending…" : "Report"}
+            {state === "sending" ? tr.chat.sending : tr.common.report}
           </PrimaryButton>
         </form>
       )}

@@ -52,8 +52,9 @@ import { shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
 import { useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
-import { clockTime, dayLabel, sameDay } from "@/lib/format";
+import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
 import { emojiOnly } from "@/lib/emoji";
+import { useT } from "@/lib/i18n";
 import { useLongPress } from "@/lib/long-press";
 import { segments } from "@/lib/markup";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
@@ -69,7 +70,7 @@ import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
 import { ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
 import { Sheet, type SheetAction } from "./sheet";
-import { ServiceIcon, callLabel } from "./service-icon";
+import { ServiceIcon } from "./service-icon";
 import { StickerView } from "./sticker";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
@@ -98,7 +99,7 @@ interface MsgRow {
   delivery: Delivery | null;
 }
 
-type Row = { kind: "day"; key: string; label: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
+type Row = { kind: "day"; key: string; at: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
 
 interface Item {
   senderId: string;
@@ -184,7 +185,7 @@ function buildRows(
     const prev = items[i - 1];
     const next = items[i + 1];
     if (!prev || !sameDay(prev.createdAt, it.createdAt)) {
-      rows.push({ kind: "day", key: `day:${it.createdAt}`, label: dayLabel(it.createdAt) });
+      rows.push({ kind: "day", key: `day:${it.createdAt}`, at: it.createdAt });
     }
     const r = it.row;
     if (r.message?.type === "service") {
@@ -219,9 +220,10 @@ function buildRows(
 
 /** On a white-on-dark pill read ticks turn sky blue; inside a bubble they keep its text colour at full strength. */
 function Ticks({ delivery, pill = false }: { delivery: Delivery; pill?: boolean }) {
-  if (delivery === "sending") return <Clock aria-label="Sending" className="size-3" />;
+  const tr = useT();
+  if (delivery === "sending") return <Clock aria-label={tr.messages.status.sending} className="size-3" />;
   if (delivery === "failed") return null;
-  const label = { sent: "Sent", delivered: "Delivered", read: "Read" }[delivery];
+  const label = tr.messages.status[delivery];
   return (
     <span
       aria-label={label}
@@ -248,6 +250,7 @@ function Quote({
   mine: boolean;
   onClick: () => void;
 }) {
+  const tr = useT();
   return (
     <button
       type="button"
@@ -259,14 +262,14 @@ function Quote({
       <span className="block font-semibold">{name}</span>
       <span className={`line-clamp-2 ${reply.deleted || reply.spoiler ? "italic opacity-70" : "opacity-80"}`}>
         {reply.deleted ? (
-          "Message deleted"
+          tr.summary.messageDeleted
         ) : reply.ephemeral ? (
           <span className="inline-flex items-center gap-1">
-            <Flame className="size-3.5" /> Self-destructing message
+            <Flame className="size-3.5" /> {tr.summary.selfDestructing}
           </span>
         ) : reply.spoiler ? (
           <span className="inline-flex items-center gap-1">
-            <EyeOff className="size-3.5" /> Spoiler
+            <EyeOff className="size-3.5" /> {tr.summary.spoiler}
           </span>
         ) : reply.type !== "text" && reply.type !== "service" ? (
           <span className="inline-flex items-center gap-1">
@@ -281,26 +284,28 @@ function Quote({
   );
 }
 
-const mediaLabels = {
-  image: { Icon: ImageIcon, label: "Photo" },
-  video: { Icon: Video, label: "Video" },
-  video_note: { Icon: CircleUserRound, label: "Video message" },
-  voice: { Icon: Mic, label: "Voice message" },
-  file: { Icon: Paperclip, label: "File" },
-  gif: { Icon: Film, label: "GIF" },
-  sticker: { Icon: StickerIcon, label: "Sticker" },
+const mediaIcons = {
+  image: ImageIcon,
+  video: Video,
+  video_note: CircleUserRound,
+  voice: Mic,
+  file: Paperclip,
+  gif: Film,
+  sticker: StickerIcon,
 } as const;
 
-export function MediaLabel({ type }: { type: keyof typeof mediaLabels }) {
-  const { Icon, label } = mediaLabels[type];
+export function MediaLabel({ type }: { type: keyof typeof mediaIcons }) {
+  const tr = useT();
+  const Icon = mediaIcons[type];
   return (
     <>
-      <Icon className="size-3.5 shrink-0" /> {label}
+      <Icon className="size-3.5 shrink-0" /> {tr.summary.kinds[type]}
     </>
   );
 }
 
 function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) {
+  const tr = useT();
   const revealed = useSpoilers((s) => !!s.revealed[row.key]);
   const reveal = useSpoilers((s) => s.reveal);
   const text = row.text ?? "";
@@ -320,7 +325,7 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
             key={i}
             role="button"
             tabIndex={0}
-            aria-label="Spoiler, tap to reveal"
+            aria-label={tr.messages.revealSpoiler}
             onClick={(e) => {
               if (selectable) return;
               e.stopPropagation();
@@ -338,8 +343,9 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
 }
 
 function Sealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
+  const tr = useT();
   const e = row.ephemeral!;
-  const kind = row.type === "text" || row.type === "service" ? "Message" : mediaLabels[row.type].label;
+  const kind = row.type === "text" || row.type === "service" ? tr.common.message : tr.summary.kinds[row.type];
   return (
     <button
       type="button"
@@ -355,9 +361,9 @@ function Sealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
         <Flame className={`size-5 ${e.expired ? "" : "fill-current"}`} />
       </span>
       <span className="min-w-0">
-        <span className="block font-semibold">{e.expired ? "Opened" : "Tap to view"}</span>
+        <span className="block font-semibold">{e.expired ? tr.messages.opened : tr.messages.tapToView}</span>
         <span className="block text-xs opacity-70">
-          {kind} · {shortRule(e)}
+          {kind} · {shortRule(e, tr)}
         </span>
       </span>
     </button>
@@ -368,10 +374,16 @@ export const canResend = (e: EphemeralDTO) =>
   e.expired && !e.purged && e.resendsLeft > 0 && !!e.resendUntil && Date.now() < Date.parse(e.resendUntil);
 
 function SenderBadge({ e, onResend }: { e: EphemeralDTO; onResend: () => void }) {
+  const tr = useT();
   return (
     <span className="mb-0.5 flex items-center gap-1 text-[11px] opacity-80">
       <Flame className="size-3" />
-      {shortRule(e)} · {e.expired || e.views ? `Opened${e.views > 1 ? ` ${e.views}×` : ""}` : "Not opened"}
+      {shortRule(e, tr)} ·{" "}
+      {e.expired || e.views
+        ? e.views > 1
+          ? tr.messages.openedTimes(e.views)
+          : tr.messages.opened
+        : tr.messages.notOpened}
       {canResend(e) && (
         <button
           type="button"
@@ -381,7 +393,7 @@ function SenderBadge({ e, onResend }: { e: EphemeralDTO; onResend: () => void })
           }}
           className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-black/10 px-1.5 py-0.5 font-semibold hover:bg-black/20 dark:bg-white/10"
         >
-          <RotateCcw className="size-3" /> Resend ({e.resendsLeft} left)
+          <RotateCcw className="size-3" /> {tr.messages.resendLeft(e.resendsLeft)}
         </button>
       )}
     </span>
@@ -425,6 +437,7 @@ function Bubble({
   onReactButton: (anchor: DOMRect) => void;
   frozen: boolean;
 }) {
+  const tr = useT();
   const selectable = selecting && row.message !== null;
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
@@ -537,7 +550,7 @@ function Bubble({
                   <button
                     type="button"
                     onClick={() => onOpenPack(sticker.packId)}
-                    aria-label={`${sticker.emoji} sticker, see its pack`}
+                    aria-label={tr.messages.stickerPack(sticker.emoji)}
                   >
                     <StickerView sticker={sticker} size={160} />
                   </button>
@@ -554,7 +567,7 @@ function Bubble({
                     ))}
                   </div>
                   <span className="flex items-center gap-1 rounded-full bg-stone-900/40 px-2 py-0.5 text-[11px] leading-none text-white">
-                    {row.edited && <span>edited</span>}
+                    {row.edited && <span>{tr.messages.edited}</span>}
                     {clockTime(row.createdAt)}
                     {row.delivery && <Ticks delivery={row.delivery} pill />}
                   </span>
@@ -567,20 +580,20 @@ function Bubble({
                 >
                   {!hasText ? null : row.deleted ? (
                     <span className="inline-flex items-center gap-1.5">
-                      <Ban className="size-4" /> This message was deleted
+                      <Ban className="size-4" /> {tr.messages.deleted}
                     </span>
                   ) : row.locked ? (
                     <span
                       className="inline-flex items-center gap-1.5 italic opacity-80"
-                      title="It was encrypted for the devices you had when it was sent. Read it there, or enter your recovery key in Settings to restore it if one of them backed it up."
+                      title={tr.messages.waitingHint}
                     >
-                      <Lock className="size-4" /> Waiting for this message
+                      <Lock className="size-4" /> {tr.messages.waiting}
                     </span>
                   ) : (
                     <MessageText row={row} selectable={selectable} />
                   )}
                   <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none">
-                    {row.edited && !row.deleted && <span className="opacity-70">edited</span>}
+                    {row.edited && !row.deleted && <span className="opacity-70">{tr.messages.edited}</span>}
                     <span className="opacity-70">{clockTime(row.createdAt)}</span>
                     {row.delivery && <Ticks delivery={row.delivery} />}
                   </span>
@@ -592,14 +605,14 @@ function Bubble({
             )}
             {row.delivery === "failed" && (
               <button onClick={onMenu} className="text-xs font-medium text-red-600 dark:text-red-400">
-                Not sent · Tap for options
+                {tr.messages.notSent}
               </button>
             )}
           </div>
           {reactable && (
             <button
               onClick={() => onReactButton(anchor())}
-              aria-label="React"
+              aria-label={tr.messages.react}
               className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
             >
               <SmilePlus className="size-4" />
@@ -607,7 +620,7 @@ function Bubble({
           )}
           <button
             onClick={onMenu}
-            aria-label="Message options"
+            aria-label={tr.messages.options}
             className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
           >
             <MoreHorizontal className="size-4" />
@@ -628,6 +641,7 @@ export interface MessageListHandle {
 export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: string; onSeen: () => void }>(
   function MessageList({ chat, meId, onSeen }, handle) {
     const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
+    const tr = useT();
     const qc = useQueryClient();
     const { realtime } = useRealtime();
     const messages = useMessages(chat.id);
@@ -688,7 +702,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     }
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
-    const nameOf = (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
+    const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {
       const peers = chat.members.filter((m) => m.user.id !== meId);
@@ -757,52 +771,52 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         const p = row.pending;
         return [
           ...(p.status === "failed" && realtime
-            ? [{ label: "Retry", onSelect: () => void deliver(qc, realtime, p) }]
+            ? [{ label: tr.common.retry, onSelect: () => void deliver(qc, realtime, p) }]
             : []),
-          { label: "Discard", destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
+          { label: tr.messages.discard, destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
         ];
       }
       const m = row.message!;
       if (row.deleted) {
         return [
-          { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
+          { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
           ...(chat.type === "direct" || row.mine
             ? [
                 {
-                  label: chat.type === "direct" ? `Remove for me and ${chat.title}` : "Remove for everyone",
+                  label: chat.type === "direct" ? tr.messages.removeForMeAnd(chat.title) : tr.messages.removeForEveryone,
                   destructive: true,
                   onSelect: () => void deleteMessage(qc, m, "all").catch(() => null),
                 },
               ]
             : []),
           {
-            label: "Remove for me",
+            label: tr.messages.removeForMe,
             destructive: true,
             onSelect: () => void deleteMessage(qc, m, "me").catch(() => null),
           },
         ];
       }
       return [
-        ...(frozen ? [] : [{ label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
-        { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
+        ...(frozen ? [] : [{ label: tr.messages.reply, onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
+        { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
         ...(m.ephemeral && canResend(m.ephemeral)
-          ? [{ label: "Resend so they can open it again", onSelect: () => void resendEphemeral(m) }]
+          ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
           : []),
         ...(m.ephemeral
           ? []
           : [
-              ...(m.text ? [{ label: "Copy", onSelect: () => void navigator.clipboard.writeText(m.text ?? "") }] : []),
+              ...(m.text ? [{ label: tr.common.copy, onSelect: () => void navigator.clipboard.writeText(m.text ?? "") }] : []),
               ...(row.mine && m.type !== "sticker" && !frozen && !m.undecryptable
-                ? [{ label: "Edit", onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
+                ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
                 : []),
             ]),
-        ...(row.mine ? [] : [{ label: "Report", onSelect: () => setReporting(m) }]),
-        { label: "Delete", destructive: true, onSelect: () => setConfirmDelete(m) },
+        ...(row.mine ? [] : [{ label: tr.common.report, onSelect: () => setReporting(m) }]),
+        { label: tr.common.delete, destructive: true, onSelect: () => setConfirmDelete(m) },
       ];
     }
 
     if (messages.isPending) {
-      return <div className="grid flex-1 place-items-center text-sm text-stone-500">Loading…</div>;
+      return <div className="grid flex-1 place-items-center text-sm text-stone-500">{tr.common.loading}</div>;
     }
 
     return (
@@ -810,7 +824,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         {rows.length === 0 && (
           <div className="flex flex-col items-center pb-8 text-center text-sm">
             <span className="rounded-full bg-black/25 px-4 py-1.5 text-white backdrop-blur-sm">
-              No messages yet. Say hello!
+              {tr.messages.empty}
             </span>
           </div>
         )}
@@ -826,7 +840,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             row.kind === "day" ? (
               <div key={row.key} className="flex justify-center py-3">
                 <span className="rounded-full bg-black/25 px-3 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
-                  {row.label}
+                  {dayLabel(row.at)}
                 </span>
               </div>
             ) : row.kind === "service" ? (
@@ -834,8 +848,16 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-center text-xs text-white backdrop-blur-sm">
                   <ServiceIcon action={row.message.action} />
                   {row.message.action?.type === "call"
-                    ? callLabel(row.message.action, row.message.senderId === meId)
-                    : `${nameOf(row.message.senderId)} ${serviceSentence(row.message)}`}
+                    ? tr.messages.callLog(
+                        row.message.action.video,
+                        row.message.senderId === meId,
+                        row.message.action.secs === null ? null : formatDuration(row.message.action.secs * 1000),
+                      )
+                    : serviceSentence(
+                        row.message,
+                        row.message.senderId === meId ? null : nameOf(row.message.senderId),
+                        tr,
+                      )}
                 </span>
               </div>
             ) : (
@@ -905,27 +927,27 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         {reporting && (
           <ReportDialog
             target={{ messageId: reporting.id }}
-            title="Report message"
+            title={tr.messages.reportMessage}
             onClose={() => setReporting(null)}
           />
         )}
         {packFor && <PackDialog packId={packFor} onClose={() => setPackFor(null)} />}
         {confirmDelete && (
           <Sheet
-            title="Delete message?"
+            title={tr.messages.deleteTitle}
             onClose={() => setConfirmDelete(null)}
             actions={[
               ...(chat.type === "direct" || confirmDelete.senderId === meId
                 ? [
                     {
-                      label: chat.type === "direct" ? `Delete for me and ${chat.title}` : "Delete for everyone",
+                      label: chat.type === "direct" ? tr.messages.deleteForMeAnd(chat.title) : tr.messages.deleteForEveryone,
                       destructive: true,
                       onSelect: () => void deleteMessage(qc, confirmDelete, "all").catch(() => null),
                     },
                   ]
                 : []),
               {
-                label: "Delete for me",
+                label: tr.messages.deleteForMe,
                 destructive: true,
                 onSelect: () => void deleteMessage(qc, confirmDelete, "me").catch(() => null),
               },

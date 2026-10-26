@@ -7,19 +7,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { EmptyState, Loading, Notice, PrimaryButton, TextButton } from "@/components/ui";
 import { shareInvite } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
 
-const acceptErrors: Record<string, string> = {
-  ALREADY_REFERRED: "You've already joined through an invite.",
-  INVITE_OWN: "This is your own invite.",
-  INVITE_EXPIRED: "This invite has expired.",
-  INVITE_EXHAUSTED: "This invite has already been used up.",
-};
-
 export default function InviteScreen() {
   const t = useTheme();
+  const tr = useT();
   const { code } = useLocalSearchParams<{ code: string }>();
   const { status, user } = useSession();
 
@@ -33,15 +28,15 @@ export default function InviteScreen() {
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
   });
 
-  const home = <TextButton title="Go to Six Frites" onPress={() => router.replace("/")} />;
+  const home = <TextButton title={tr.auth.goHome} onPress={() => router.replace("/")} />;
 
   if (preview.isPending) return <Loading />;
 
   if (preview.isError) {
     return (
       <SafeAreaView style={[styles.screen, { backgroundColor: t.bg }]}>
-        <EmptyState Icon={SearchX} title="This invite doesn't exist">
-          Check the link, or ask your friend for a new one.
+        <EmptyState Icon={SearchX} title={tr.auth.inviteNotFound}>
+          {tr.auth.inviteNotFoundHint}
         </EmptyState>
         {home}
       </SafeAreaView>
@@ -55,10 +50,10 @@ export default function InviteScreen() {
     <SafeAreaView style={[styles.screen, { backgroundColor: t.bg }]}>
       <Avatar user={inviter} size="lg" />
       <View style={{ gap: 4 }}>
-        <Text style={[styles.title, { color: t.text }]}>{inviter.displayName} invited you to Six Frites</Text>
+        <Text style={[styles.title, { color: t.text }]}>{tr.auth.invitedYou(inviter.displayName)}</Text>
         {inviteStatus !== "valid" && (
           <Text style={{ color: t.danger, textAlign: "center" }}>
-            {inviteStatus === "expired" ? "This invite has expired." : "This invite has already been used up."}
+            {inviteStatus === "expired" ? tr.auth.inviteExpired : tr.auth.inviteUsedUp}
           </Text>
         )}
       </View>
@@ -67,27 +62,28 @@ export default function InviteScreen() {
         <View style={styles.actions}>
           {status !== "authed" && (
             <PrimaryButton
-              title="Sign in to accept"
+              title={tr.auth.signInToAccept}
               onPress={() => router.replace({ pathname: "/login", params: { invite: preview.data.code } })}
             />
           )}
           {status === "authed" && isMine && (
             <>
-              <Text style={{ color: t.muted, textAlign: "center" }}>
-                This is your invite link. Share it with a friend.
-              </Text>
-              <PrimaryButton title="Share link" onPress={() => void shareInvite(preview.data.code)} />
+              <Text style={{ color: t.muted, textAlign: "center" }}>{tr.auth.yourInvite}</Text>
+              <PrimaryButton title={tr.common.shareLink} onPress={() => void shareInvite(preview.data.code)} />
             </>
           )}
           {status === "authed" && !isMine && !accept.isSuccess && (
-            <PrimaryButton title="Accept invite" onPress={() => accept.mutate()} disabled={accept.isPending} />
+            <PrimaryButton title={tr.auth.acceptInvite} onPress={() => accept.mutate()} disabled={accept.isPending} />
           )}
-          {accept.isSuccess && <Notice tone="success">You're connected with {accept.data.referrer.displayName}.</Notice>}
+          {accept.isSuccess && (
+            <Notice tone="success">{tr.auth.connectedWith(accept.data.referrer.displayName)}</Notice>
+          )}
           {accept.isError && (
             <Notice tone="error">
               {accept.error instanceof SixApiError
-                ? (acceptErrors[accept.error.code] ?? accept.error.message)
-                : "Something went wrong."}
+                ? ((tr.auth.acceptErrors as Record<string, string | undefined>)[accept.error.code] ??
+                  accept.error.message)
+                : tr.common.somethingWrong}
             </Notice>
           )}
         </View>

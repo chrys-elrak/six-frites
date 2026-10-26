@@ -4,34 +4,34 @@ import type { GifDTO, StickerDTO } from "@six/shared";
 import { EmojiPicker } from "frimousse";
 import { Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLocale, useT } from "@/lib/i18n";
 import { GifPicker } from "./gif-picker";
 import { StickerPicker } from "./sticker-picker";
 
 type Tab = "emoji" | "gif" | "sticker";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "emoji", label: "Emoji" },
-  { id: "gif", label: "GIFs" },
-  { id: "sticker", label: "Stickers" },
-];
+const TABS: Tab[] = ["emoji", "gif", "sticker"];
 
 export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
+  const tr = useT();
+  const { locale } = useLocale();
   return (
     <EmojiPicker.Root
+      locale={locale === "fr" ? "fr" : "en"}
       onEmojiSelect={({ emoji }) => onPick(emoji)}
       columns={8}
       className="isolate flex min-h-0 flex-1 flex-col"
     >
       <EmojiPicker.Search
         autoFocus={window.matchMedia("(pointer: fine)").matches}
-        placeholder="Search emoji"
+        placeholder={tr.composer.searchEmoji}
         className="z-10 mx-2 mt-2 appearance-none rounded-lg bg-stone-100 px-3 py-2 text-[16px] outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-stone-800"
       />
       <EmojiPicker.Viewport className="relative flex-1 outline-none">
         <EmojiPicker.Loading className="absolute inset-0 grid place-items-center text-sm text-stone-400">
-          Loading…
+          {tr.common.loading}
         </EmojiPicker.Loading>
         <EmojiPicker.Empty className="absolute inset-0 grid place-items-center text-sm text-stone-400">
-          No emoji found.
+          {tr.composer.noEmoji}
         </EmojiPicker.Empty>
         <EmojiPicker.List
           className="select-none pb-1.5"
@@ -73,6 +73,7 @@ export function EmojiButton({
   onGif: (gif: GifDTO) => void;
   onSticker: (sticker: StickerDTO) => void;
 }) {
+  const tr = useT();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("emoji");
   const root = useRef<HTMLDivElement>(null);
@@ -99,7 +100,7 @@ export function EmojiButton({
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen((v) => !v)}
-        aria-label="Emoji, GIFs and stickers"
+        aria-label={tr.composer.emojiGifsStickers}
         aria-expanded={open}
         className={`grid size-10 place-items-center rounded-full transition ${
           open ? "bg-brand/20 text-brand" : "text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
@@ -128,18 +129,18 @@ export function EmojiButton({
             />
           )}
           <div role="tablist" className="flex shrink-0 border-t border-stone-200 dark:border-stone-800">
-            {TABS.map((t) => (
+            {TABS.map((id) => (
               <button
-                key={t.id}
+                key={id}
                 type="button"
                 role="tab"
-                aria-selected={tab === t.id}
-                onClick={() => setTab(t.id)}
+                aria-selected={tab === id}
+                onClick={() => setTab(id)}
                 className={`flex-1 py-2 text-sm font-medium ${
-                  tab === t.id ? "text-brand" : "text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
+                  tab === id ? "text-brand" : "text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
                 }`}
               >
-                {t.label}
+                {tr.composer.pickerTabs[id]}
               </button>
             ))}
           </div>

@@ -3,24 +3,23 @@ import { type ChatDTO, type MessageDTO, type MessageReactedDTO, previewText, rea
 import { type AudioPlayer, createAudioPlayer } from "expo-audio";
 import { AppState } from "react-native";
 import { create } from "zustand";
+import { getT } from "./i18n";
 
 const PREFS_KEY = "six:notifications";
 
 export interface NotifyPrefs {
   sound: boolean;
   popups: boolean;
-  system: boolean;
 }
 
 /** Notification settings for this device. */
 export const useNotifyPrefs = create<NotifyPrefs & { set: (patch: Partial<NotifyPrefs>) => void }>((set, get) => ({
   sound: true,
   popups: true,
-  system: false,
   set(patch) {
     set(patch);
-    const { sound, popups, system } = get();
-    void AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups, system })).catch(() => null);
+    const { sound, popups } = get();
+    void AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups })).catch(() => null);
   },
 }));
 
@@ -54,50 +53,24 @@ export function playChime() {
   void chimePlayer.seekTo(0).then(() => chimePlayer?.play());
 }
 
-type SystemNotifier = (title: string, body: string, chatId: string) => void;
-let systemNotifier: SystemNotifier | null = null;
-
-/** Lets the system-notification module plug in without this file depending on it. */
-export function setSystemNotifier(fn: SystemNotifier | null) {
-  systemNotifier = fn;
-}
-
 const FRESH_MS = 60_000;
 
 /**
  * Sounds and shows a new message from someone else, unless its chat is muted, it is the chat on
- * screen, or it is an old message caught up after being offline.
+ * screen, or it is an old message caught up after being offline. In the background the push
+ * notification covers it.
  */
 export function notifyIncoming(m: MessageDTO, chat: ChatDTO | undefined, viewing: boolean) {
   if (chat?.muted || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
-  const prefs = useNotifyPrefs.getState();
   const sender = chat?.members.find((x) => x.user.id === m.senderId)?.user;
-  const title = sender?.displayName ?? chat?.title ?? "New message";
-  const body = previewText(m) || "New message";
-  const background = AppState.currentState !== "active";
-
-  if (background) {
-    if (prefs.system) systemNotifier?.(title, body, m.chatId);
-    return;
-  }
-  if (prefs.sound) playChime();
-  if (prefs.popups) {
-    useToasts.getState().push({
-      id: m.id,
-      chatId: m.chatId,
-      title,
-      body,
-      avatar: { displayName: title, avatarUrl: sender?.avatarUrl ?? null },
-    });
-  }
+  const t = getT();
+  const title = sender?.displayName ?? chat?.title ?? t.summary.newMessage;
+  alert(m.id, m.chatId, title, previewText(m, t) || t.summary.newMessage, sender?.avatarUrl ?? null);
 }
 
 function alert(id: string, chatId: string, title: string, body: string, avatarUrl: string | null) {
+  if (AppState.currentState !== "active") return;
   const prefs = useNotifyPrefs.getState();
-  if (AppState.currentState !== "active") {
-    if (prefs.system) systemNotifier?.(title, body, chatId);
-    return;
-  }
   if (prefs.sound) playChime();
   if (prefs.popups) useToasts.getState().push({ id, chatId, title, body, avatar: { displayName: title, avatarUrl } });
 }
@@ -112,7 +85,8 @@ export function notifyReaction(
 ) {
   if (chat?.muted || viewing || Date.now() - Date.parse(createdAt) > FRESH_MS) return;
   const reactor = chat?.members.find((x) => x.user.id === e.userId)?.user;
-  const title = reactor?.displayName ?? chat?.title ?? "Someone";
-  const body = message ? reactionText(e.emoji, message) : `Reacted ${e.emoji} to your message`;
+  const t = getT();
+  const title = reactor?.displayName ?? chat?.title ?? t.common.someone;
+  const body = message ? reactionText(e.emoji, message, t) : t.summary.reactedToYours(e.emoji);
   alert(`${e.messageId}:${e.userId}:${e.emoji}`, e.chatId, title, body, reactor?.avatarUrl ?? null);
 }

@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
 import { FoundUser, findErrorText } from "./found-user";
@@ -13,6 +14,7 @@ import { IconButton, PrimaryButton } from "./ui";
 
 function QrScanner({ onScan }: { onScan: (value: string) => void }) {
   const t = useTheme();
+  const tr = useT();
   const { width } = useWindowDimensions();
   const [permission, request] = useCameraPermissions();
   const done = useRef(false);
@@ -23,11 +25,9 @@ function QrScanner({ onScan }: { onScan: (value: string) => void }) {
     return (
       <View style={{ alignItems: "center", gap: 12, paddingVertical: 24 }}>
         <Text style={{ color: t.muted, textAlign: "center" }}>
-          {permission.canAskAgain
-            ? "Allow camera access to scan a QR code."
-            : "Camera access was denied. Allow it in system settings to scan QR codes."}
+          {permission.canAskAgain ? tr.contacts.allowCameraToScan : tr.contacts.cameraDenied}
         </Text>
-        {permission.canAskAgain && <PrimaryButton title="Allow camera" onPress={() => void request()} />}
+        {permission.canAskAgain && <PrimaryButton title={tr.contacts.allowCamera} onPress={() => void request()} />}
       </View>
     );
   }
@@ -51,6 +51,7 @@ function QrScanner({ onScan }: { onScan: (value: string) => void }) {
 
 export function AddContact({ onClose }: { onClose: () => void }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [scanning, setScanning] = useState(false);
@@ -74,9 +75,9 @@ export function AddContact({ onClose }: { onClose: () => void }) {
       <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
           <View style={styles.head}>
-            {scanning && <IconButton Icon={ArrowLeft} label="Back" onPress={() => setScanning(false)} />}
-            <Text style={[styles.title, { color: t.text }]}>{scanning ? "Scan a QR code" : "Add contact"}</Text>
-            <IconButton Icon={X} label="Close" onPress={onClose} />
+            {scanning && <IconButton Icon={ArrowLeft} label={tr.common.back} onPress={() => setScanning(false)} />}
+            <Text style={[styles.title, { color: t.text }]}>{scanning ? tr.contacts.scanQr : tr.contacts.addContact}</Text>
+            <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
           </View>
 
           {scanning ? (
@@ -97,26 +98,23 @@ export function AddContact({ onClose }: { onClose: () => void }) {
                     }}
                     onSubmitEditing={() => query.trim() && find.mutate(query.trim())}
                     returnKeyType="search"
-                    placeholder="Code, @username or email"
+                    placeholder={tr.contacts.findPlaceholder}
                     placeholderTextColor={t.muted}
-                    accessibilityLabel="Contact code, username or email"
+                    accessibilityLabel={tr.contacts.findLabel}
                     autoCapitalize="none"
                     autoCorrect={false}
                     spellCheck={false}
                     style={[styles.input, { color: t.text }]}
                   />
                 </View>
-                <IconButton Icon={QrCode} label="Scan a QR code" onPress={() => setScanning(true)} />
+                <IconButton Icon={QrCode} label={tr.contacts.scanQr} onPress={() => setScanning(true)} />
               </View>
 
-              {find.isPending && <Text style={[styles.hint, { color: t.muted }]}>Searching…</Text>}
-              {find.isError && <Text style={[styles.hint, { color: t.danger }]}>{findErrorText(find.error)}</Text>}
+              {find.isPending && <Text style={[styles.hint, { color: t.muted }]}>{tr.contacts.searching}</Text>}
+              {find.isError && <Text style={[styles.hint, { color: t.danger }]}>{findErrorText(find.error, tr)}</Text>}
               {find.data && <FoundUser found={find.data.found} query={find.data.q} onAdded={onClose} />}
               {find.isIdle && (
-                <Text style={[styles.hint, { color: t.muted }]}>
-                  Ask for their contact code or QR code, which they can find in Settings. You can also type their
-                  @username or email.
-                </Text>
+                <Text style={[styles.hint, { color: t.muted }]}>{tr.contacts.findHint}</Text>
               )}
             </View>
           )}

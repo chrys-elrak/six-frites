@@ -5,9 +5,11 @@ import type { GifDTO } from "@six/shared";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 
 export function GifPicker({ onPick }: { onPick: (gif: GifDTO) => void }) {
+  const tr = useT();
   const [input, setInput] = useState("");
   const [q, setQ] = useState("");
 
@@ -29,13 +31,13 @@ export function GifPicker({ onPick }: { onPick: (gif: GifDTO) => void }) {
   const items = gifs.data?.pages.flatMap((p) => p.items) ?? [];
   const unavailable = gifs.error instanceof SixApiError && gifs.error.code === "GIFS_UNAVAILABLE";
   const notice = unavailable
-    ? "GIF search isn't set up on this server."
+    ? tr.composer.gifsUnavailable
     : gifs.isError
-      ? "Couldn't load GIFs."
+      ? tr.composer.couldNotLoadGifs
       : gifs.isPending
-        ? "Loading…"
+        ? tr.common.loading
         : items.length === 0
-          ? "No GIFs found."
+          ? tr.composer.noGifs
           : null;
 
   return (
@@ -46,8 +48,8 @@ export function GifPicker({ onPick }: { onPick: (gif: GifDTO) => void }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           autoFocus={window.matchMedia("(pointer: fine)").matches}
-          placeholder="Search GIPHY"
-          aria-label="Search GIFs"
+          placeholder={tr.composer.searchGiphy}
+          aria-label={tr.composer.searchGifs}
           className="w-full appearance-none rounded-lg bg-stone-100 py-2 pr-3 pl-9 text-[16px] outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-stone-800"
         />
       </label>
@@ -80,7 +82,7 @@ export function GifPicker({ onPick }: { onPick: (gif: GifDTO) => void }) {
             </button>
           ))}
         </div>
-        {items.length > 0 && <p className="py-2 text-center text-[11px] text-stone-400">Powered by GIPHY</p>}
+        {items.length > 0 && <p className="py-2 text-center text-[11px] text-stone-400">{tr.composer.poweredByGiphy}</p>}
       </div>
     </div>
   );

@@ -3,9 +3,11 @@
 import { Camera, RefreshCw, X } from "lucide-react";
 import { useEffect } from "react";
 import { useCamera } from "@/lib/camera";
+import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 
 export function CameraDialog({ onClose, onCapture }: { onClose: () => void; onCapture: (file: File) => void }) {
+  const tr = useT();
   const cam = useCamera("environment");
 
   useEffect(() => {
@@ -38,11 +40,11 @@ export function CameraDialog({ onClose, onCapture }: { onClose: () => void; onCa
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-50 flex flex-col bg-black" role="dialog" aria-modal aria-label="Take a photo">
+      <div className="fixed inset-0 z-50 flex flex-col bg-black" role="dialog" aria-modal aria-label={tr.composer.takePhoto}>
         <div className="flex items-center justify-between p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr.common.close}
             className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"
           >
             <X className="size-6" />
@@ -50,7 +52,7 @@ export function CameraDialog({ onClose, onCapture }: { onClose: () => void; onCa
           {cam.canSwitch && (
             <button
               onClick={cam.switchCamera}
-              aria-label="Switch camera"
+              aria-label={tr.composer.switchCamera}
               className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"
             >
               <RefreshCw className="size-5" />
@@ -73,7 +75,7 @@ export function CameraDialog({ onClose, onCapture }: { onClose: () => void; onCa
           <button
             onClick={shoot}
             disabled={!cam.stream}
-            aria-label="Take photo"
+            aria-label={tr.composer.takePhoto}
             className="grid size-18 place-items-center rounded-full border-4 border-white bg-white/20 text-white transition active:scale-95 disabled:opacity-40"
           >
             <Camera className="size-7" />

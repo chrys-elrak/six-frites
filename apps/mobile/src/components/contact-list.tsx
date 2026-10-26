@@ -5,6 +5,7 @@ import { Pencil, Search, Share2, UserPlus, Users } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { shareInvite } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { AddContact } from "./add-contact";
@@ -25,6 +26,7 @@ function useDebounced(value: string, ms = 250) {
 
 export function ContactList() {
   const t = useTheme();
+  const tr = useT();
   const [query, setQuery] = useState("");
   const q = useDebounced(query.trim());
   const [editing, setEditing] = useState<string | null>(null);
@@ -49,15 +51,15 @@ export function ContactList() {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScreenHeader inset={false}>
         <View style={{ flex: 1, gap: 10, paddingHorizontal: 4 }}>
-          <Text style={[styles.title, { color: t.text }]}>Contacts</Text>
+          <Text style={[styles.title, { color: t.text }]}>{tr.common.contacts}</Text>
           <View style={[styles.search, { backgroundColor: t.chip }]}>
             <Search size={16} color={t.muted} />
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Search"
+              placeholder={tr.contacts.search}
               placeholderTextColor={t.muted}
-              accessibilityLabel="Search contacts"
+              accessibilityLabel={tr.contacts.searchContacts}
               style={[styles.searchInput, { color: t.text }]}
             />
           </View>
@@ -78,7 +80,7 @@ export function ContactList() {
             <View style={[styles.inviteIcon, { backgroundColor: "rgba(235,138,0,0.15)" }]}>
               <UserPlus size={20} color={brand} />
             </View>
-            <Text style={{ color: brand, fontSize: 15, fontWeight: "600" }}>Add contact</Text>
+            <Text style={{ color: brand, fontSize: 15, fontWeight: "600" }}>{tr.contacts.addContact}</Text>
           </Pressable>
           <Pressable
             onPress={() => invite.mutate()}
@@ -88,18 +90,18 @@ export function ContactList() {
             <View style={[styles.inviteIcon, { backgroundColor: "rgba(235,138,0,0.15)" }]}>
               <Share2 size={20} color={brand} />
             </View>
-            <Text style={{ color: brand, fontSize: 15, fontWeight: "600" }}>Invite a friend</Text>
+            <Text style={{ color: brand, fontSize: 15, fontWeight: "600" }}>{tr.contacts.inviteFriend}</Text>
           </Pressable>
           </>
         }
         ListEmptyComponent={
           contacts.isPending ? (
-            <Text style={[styles.note, { color: t.muted }]}>Loading…</Text>
+            <Text style={[styles.note, { color: t.muted }]}>{tr.common.loading}</Text>
           ) : contacts.isError ? (
-            <Text style={[styles.note, { color: t.danger }]}>Couldn't load contacts.</Text>
+            <Text style={[styles.note, { color: t.danger }]}>{tr.contacts.loadFailed}</Text>
           ) : (
             <EmptyState Icon={Users}>
-              {q ? `No contacts match “${q}”.` : "No contacts yet. Add someone with their contact code, or invite a friend."}
+              {q ? tr.contacts.noMatch(q) : tr.contacts.empty}
             </EmptyState>
           )
         }
@@ -120,7 +122,7 @@ export function ContactList() {
               Icon={Pencil}
               size={16}
               color={t.faint}
-              label={`Edit ${c.user.displayName}`}
+              label={tr.contacts.editName(c.user.displayName)}
               onPress={() => setEditing(c.user.id)}
               style={{ marginRight: 8 }}
             />

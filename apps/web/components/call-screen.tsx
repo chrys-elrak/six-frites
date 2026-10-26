@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Call, acceptCall, declineCall, hangup, toggleCamera, toggleMute, useCall } from "@/lib/call";
 import { useChat } from "@/lib/chats";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { Avatar } from "./avatar";
 import { Portal } from "./portal";
 
@@ -19,6 +20,7 @@ function Media({ stream, muted, className }: { stream: MediaStream | null; muted
 
 /** Plays the other side's voice, with a button for browsers that block sound until a tap. */
 function RemoteAudio({ stream }: { stream: MediaStream | null }) {
+  const tr = useT();
   const ref = useRef<HTMLAudioElement>(null);
   const [blocked, setBlocked] = useState(false);
   useEffect(() => {
@@ -38,7 +40,7 @@ function RemoteAudio({ stream }: { stream: MediaStream | null }) {
           onClick={() => void ref.current?.play().then(() => setBlocked(false))}
           className="relative z-20 mx-auto mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-stone-900 shadow"
         >
-          Tap to turn on sound
+          {tr.calls.tapForSound}
         </button>
       )}
     </>
@@ -94,24 +96,25 @@ export function CallScreen() {
 }
 
 function CallView({ call }: { call: Call }) {
+  const tr = useT();
   const qc = useQueryClient();
   const chat = useChat(qc, call.chatId);
   useRingtone(call.phase === "incoming");
 
   const peer = chat.data?.members.find((m) => m.user.id === call.peerId)?.user;
-  const name = chat.data?.title ?? peer?.displayName ?? "Call";
+  const name = chat.data?.title ?? peer?.displayName ?? tr.calls.call;
   const showRemoteVideo = call.video && call.peerVideo && call.phase === "active";
   const status =
     call.phase === "ended"
       ? call.ended
       : call.phase === "incoming"
-        ? `Incoming ${call.video ? "video" : "voice"} call`
+        ? tr.calls.incoming(call.video)
         : call.phase === "calling"
-          ? "Calling…"
+          ? tr.calls.calling
           : call.phase === "ringing"
-            ? "Ringing…"
+            ? tr.calls.ringing
             : call.phase === "connecting"
-              ? "Connecting…"
+              ? tr.common.connecting
               : null;
 
   return (
@@ -120,7 +123,7 @@ function CallView({ call }: { call: Call }) {
         className="fixed inset-0 z-[70] flex flex-col bg-stone-950 text-white"
         role="dialog"
         aria-modal
-        aria-label={`Call with ${name}`}
+        aria-label={tr.calls.callWith(name)}
       >
         <Media
           stream={call.remote}
@@ -160,12 +163,12 @@ function CallView({ call }: { call: Call }) {
         <div className="relative z-10 mt-auto flex items-center justify-center gap-6 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
           {call.phase === "incoming" ? (
             <>
-              <button onClick={declineCall} aria-label="Decline" className={`${roundButton} size-16 bg-red-600`}>
+              <button onClick={declineCall} aria-label={tr.calls.decline} className={`${roundButton} size-16 bg-red-600`}>
                 <PhoneOff className="size-7" />
               </button>
               <button
                 onClick={() => void acceptCall()}
-                aria-label="Answer"
+                aria-label={tr.calls.accept}
                 className={`${roundButton} size-16 bg-green-600`}
               >
                 {call.video ? <Video className="size-7" /> : <Phone className="size-7" />}
@@ -175,7 +178,7 @@ function CallView({ call }: { call: Call }) {
             <>
               <button
                 onClick={toggleMute}
-                aria-label={call.muted ? "Unmute" : "Mute"}
+                aria-label={call.muted ? tr.calls.unmute : tr.calls.mute}
                 aria-pressed={call.muted}
                 className={`${roundButton} ${call.muted ? "bg-white text-stone-900" : "bg-white/15"}`}
               >
@@ -184,14 +187,14 @@ function CallView({ call }: { call: Call }) {
               {call.video && (
                 <button
                   onClick={toggleCamera}
-                  aria-label={call.cameraOn ? "Turn camera off" : "Turn camera on"}
+                  aria-label={call.cameraOn ? tr.calls.cameraOff : tr.calls.cameraOn}
                   aria-pressed={!call.cameraOn}
                   className={`${roundButton} ${call.cameraOn ? "bg-white/15" : "bg-white text-stone-900"}`}
                 >
                   {call.cameraOn ? <Video className="size-6" /> : <VideoOff className="size-6" />}
                 </button>
               )}
-              <button onClick={() => void hangup()} aria-label="Hang up" className={`${roundButton} bg-red-600`}>
+              <button onClick={() => void hangup()} aria-label={tr.calls.hangUp} className={`${roundButton} bg-red-600`}>
                 <PhoneOff className="size-6" />
               </button>
             </>

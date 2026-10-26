@@ -1,7 +1,6 @@
 import type { Invite } from "../generated/prisma/client.js";
 import {
   AppError,
-  type CreateInviteInput,
   type InviteDTO,
   type InvitePreview,
   type InviteStatus,
@@ -35,19 +34,31 @@ function inviteStatus(i: Invite): InviteStatus {
   return "valid";
 }
 
-export async function createInvite(userId: string, input: CreateInviteInput) {
-  const expiresAt = input.expiresInDays ? new Date(Date.now() + input.expiresInDays * 864e5) : null;
+async function withFreshCode(write: (code: string) => Promise<Invite>) {
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      const invite = await prisma.invite.create({
-        data: { code: generateCode(), creatorId: userId, maxUses: input.maxUses, expiresAt },
-      });
-      return toInviteDTO(invite);
+      return toInviteDTO(await write(generateCode()));
     } catch (err) {
       if (!isUniqueViolation(err)) throw err;
     }
   }
   throw new AppError("CONFLICT", "Could not generate a unique invite code");
+}
+
+/** The user's one invite link, made on first use. It never expires and has no use limit. */
+export async function getInvite(userId: string) {
+  const existing = await prisma.invite.findUnique({ where: { creatorId: userId } });
+  if (existing) return toInviteDTO(existing);
+  return withFreshCode((code) =>
+    prisma.invite.upsert({ where: { creatorId: userId }, create: { code, creatorId: userId }, update: {} }),
+  );
+}
+
+/** Gives the user's invite link a new code; the old link stops working. */
+export async function resetInvite(userId: string) {
+  return withFreshCode((code) =>
+    prisma.invite.upsert({ where: { creatorId: userId }, create: { code, creatorId: userId }, update: { code } }),
+  );
 }
 
 export async function listInvites(userId: string, q: PageQuery) {

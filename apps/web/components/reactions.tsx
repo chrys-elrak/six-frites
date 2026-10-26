@@ -3,6 +3,7 @@
 import { type MessageDTO, QUICK_REACTIONS } from "@six/shared";
 import { Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { Emojis } from "./emoji-picker";
 import { Portal } from "./portal";
 
@@ -20,8 +21,9 @@ export function ReactionBar({
   onReact: (emoji: string) => void;
   onMore: () => void;
 }) {
+  const tr = useT();
   return (
-    <div className="flex items-center justify-between gap-1" role="group" aria-label="React">
+    <div className="flex items-center justify-between gap-1" role="group" aria-label={tr.messages.react}>
       {QUICK_REACTIONS.map((emoji) => {
         const mine = isMine(message, meId, emoji);
         return (
@@ -29,7 +31,7 @@ export function ReactionBar({
             key={emoji}
             type="button"
             onClick={() => onReact(emoji)}
-            aria-label={mine ? `Remove ${emoji}` : `React ${emoji}`}
+            aria-label={mine ? tr.messages.removeReaction(emoji) : tr.messages.reactWith(emoji)}
             aria-pressed={mine}
             className={`grid size-10 place-items-center rounded-full text-2xl transition hover:scale-110 hover:bg-stone-100 dark:hover:bg-stone-800 ${
               mine ? "bg-brand/20" : ""
@@ -42,7 +44,7 @@ export function ReactionBar({
       <button
         type="button"
         onClick={onMore}
-        aria-label="More reactions"
+        aria-label={tr.messages.moreReactions}
         className="grid size-10 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
       >
         <Plus className="size-5" />
@@ -132,6 +134,7 @@ export function ReactionPopover({
 }
 
 export function ReactionPicker({ onPick, onClose }: { onPick: (emoji: string) => void; onClose: () => void }) {
+  const tr = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -140,14 +143,14 @@ export function ReactionPicker({ onPick, onClose }: { onPick: (emoji: string) =>
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal aria-label="Pick a reaction">
-        <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal aria-label={tr.messages.pickReaction}>
+        <button aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         <div className="relative flex h-[420px] w-full max-w-sm flex-col overflow-hidden rounded-t-3xl bg-white pb-[env(safe-area-inset-bottom)] shadow-xl md:rounded-3xl dark:bg-stone-900">
           <div className="flex items-center px-4 pt-3">
-            <h2 className="flex-1 font-semibold">React</h2>
+            <h2 className="flex-1 font-semibold">{tr.messages.react}</h2>
             <button
               onClick={onClose}
-              aria-label="Close"
+              aria-label={tr.common.close}
               className="grid size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
             >
               <X className="size-5" />
@@ -204,11 +207,12 @@ export function ReactionChips({
   nameOf: (userId: string) => string;
   onReact: (emoji: string) => void;
 }) {
+  const tr = useT();
   const [listAt, setListAt] = useState<DOMRect | null>(null);
   const closeList = useCallback(() => setListAt(null), []);
   if (!message.reactions?.length) return null;
 
-  const names = (r: Reaction) => r.userIds.map((id) => (id === meId ? "You" : nameOf(id))).join(", ");
+  const names = (r: Reaction) => r.userIds.map((id) => (id === meId ? tr.common.you : nameOf(id))).join(", ");
   const ranked = [...message.reactions].sort((a, b) => b.userIds.length - a.userIds.length);
   const shown = ranked.length > VISIBLE_CHIPS + 1 ? ranked.slice(0, VISIBLE_CHIPS) : ranked;
   const hidden = ranked.length - shown.length;
@@ -222,7 +226,7 @@ export function ReactionChips({
             key={r.emoji}
             r={r}
             own={own}
-            label={`${r.emoji} ${names(r)}${own ? " (tap to remove yours)" : ""}`}
+            label={`${r.emoji} ${names(r)}${own ? ` ${tr.messages.tapToRemoveYours}` : ""}`}
             onClick={() => onReact(r.emoji)}
           />
         );
@@ -231,7 +235,7 @@ export function ReactionChips({
         <button
           type="button"
           onClick={(e) => setListAt(e.currentTarget.getBoundingClientRect())}
-          aria-label={`${hidden} more reactions`}
+          aria-label={tr.messages.nMoreReactions(hidden)}
           aria-expanded={!!listAt}
           className="flex h-6 items-center rounded-full bg-white px-2 text-xs font-semibold text-stone-600 shadow-sm ring-1 ring-stone-200 transition active:scale-95 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700"
         >
@@ -270,6 +274,7 @@ function ReactionList({
   onReact: (emoji: string) => void;
   onClose: () => void;
 }) {
+  const tr = useT();
   const root = useRef<HTMLDivElement>(null);
   useDismiss(root, onClose);
   const height = Math.min(reactions.length * LIST_ROW + 16, 320);
@@ -280,7 +285,7 @@ function ReactionList({
       <div
         ref={root}
         role="menu"
-        aria-label="All reactions"
+        aria-label={tr.messages.allReactions}
         style={{ top, left, width, maxHeight: height }}
         className="reaction-pop fixed z-[60] overflow-y-auto overscroll-contain rounded-2xl bg-white p-2 shadow-xl ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"
       >

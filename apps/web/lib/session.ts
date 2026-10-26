@@ -1,6 +1,7 @@
 import type { UserDTO } from "@six/shared";
 import { create } from "zustand";
 import { startE2EE } from "./e2ee";
+import { getT } from "./i18n";
 import { six } from "./six";
 
 type Status = "loading" | "authed" | "anon";
@@ -42,6 +43,7 @@ export const useSession = create<SessionState>((set) => {
 
 export function deviceName() {
   if (typeof navigator === "undefined") return undefined;
+  const tr = getT();
   const ua = navigator.userAgent;
   const browser = /Edg\//.test(ua)
     ? "Edge"
@@ -51,7 +53,7 @@ export function deviceName() {
         ? "Chrome"
         : /Safari\//.test(ua)
           ? "Safari"
-          : "Browser";
+          : tr.auth.browser;
   const os = /iPhone|iPad/.test(ua)
     ? "iOS"
     : /Android/.test(ua)
@@ -62,6 +64,6 @@ export function deviceName() {
           ? "Windows"
           : /Linux/.test(ua)
             ? "Linux"
-            : "Unknown OS";
-  return `${browser} on ${os}`;
+            : tr.auth.unknownOs;
+  return tr.auth.deviceName(browser, os);
 }

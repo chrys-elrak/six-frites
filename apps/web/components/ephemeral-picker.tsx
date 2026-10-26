@@ -4,6 +4,7 @@ import type { EphemeralInput } from "@six/shared";
 import { Flame } from "lucide-react";
 import { useState } from "react";
 import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
+import { useT } from "@/lib/i18n";
 import { Sheet } from "./sheet";
 
 export function EphemeralPicker({
@@ -15,8 +16,11 @@ export function EphemeralPicker({
   onChange: (value: EphemeralInput | null) => void;
   compact?: boolean;
 }) {
+  const tr = useT();
   const [open, setOpen] = useState(false);
-  const label = value ? shortRule({ maxViews: value.maxViews ?? null, ttlSeconds: value.ttlSeconds ?? null }) : null;
+  const label = value
+    ? shortRule({ maxViews: value.maxViews ?? null, ttlSeconds: value.ttlSeconds ?? null }, tr)
+    : null;
 
   return (
     <>
@@ -24,8 +28,8 @@ export function EphemeralPicker({
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen(true)}
-        aria-label={label ? `Self-destruct: ${label}` : "Self-destruct"}
-        title="Self-destruct after viewing"
+        aria-label={label ? tr.composer.selfDestructRule(label) : tr.composer.selfDestruct}
+        title={tr.composer.selfDestructAfterViewing}
         className={
           compact
             ? `grid size-10 shrink-0 place-items-center rounded-full transition ${
@@ -39,15 +43,15 @@ export function EphemeralPicker({
         }
       >
         <Flame className={`size-5 ${value ? "fill-current" : ""}`} />
-        {!compact && (label ?? "Self-destruct")}
+        {!compact && (label ?? tr.composer.selfDestruct)}
       </button>
       {open && (
         <Sheet
-          title="Self-destruct after viewing"
+          title={tr.composer.selfDestructAfterViewing}
           onClose={() => setOpen(false)}
           actions={[
             ...EPHEMERAL_OPTIONS.map((o) => ({ label: o.label, onSelect: () => onChange(o.value) })),
-            ...(value ? [{ label: "Off", destructive: true, onSelect: () => onChange(null) }] : []),
+            ...(value ? [{ label: tr.common.off, destructive: true, onSelect: () => onChange(null) }] : []),
           ]}
         />
       )}

@@ -5,15 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { e2ee } from "@/lib/e2ee";
+import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
 import { Card, PrimaryButton, SectionTitle } from "./ui";
-
-const restoreErrors: Record<string, string> = {
-  BAD_RECOVERY_KEY: "Those words aren't a recovery key. Check for typos.",
-  BACKUP_KEY_MISMATCH: "That's a valid key, but not the one for this account.",
-};
 
 export const recoveryKeyQuery = ["recovery-key"] as const;
 
@@ -25,27 +21,28 @@ export function useHasRecoveryKey() {
 }
 
 export function EncryptionSettings() {
+  const tr = useT();
   const user = useSession((s) => s.user)!;
   const hasKey = useHasRecoveryKey();
   const [dialog, setDialog] = useState<"create" | "restore" | null>(null);
 
   const accountHasKey = user.backupKeyId !== null;
   const status = hasKey.data
-    ? "Your recovery key is set up on this browser. New messages are backed up with it."
+    ? tr.settings.keyOnBrowser
     : accountHasKey
-      ? "Enter your recovery key to read your older encrypted messages on this browser."
-      : "Create a recovery key so you can read your messages again after signing out or on a new device.";
+      ? tr.settings.keyOnAccount
+      : tr.settings.noKey;
 
   return (
     <section className="space-y-3">
-      <SectionTitle>Encryption</SectionTitle>
+      <SectionTitle>{tr.settings.encryption}</SectionTitle>
       <Card className="flex items-start gap-3 p-4">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand/15 text-brand">
           {hasKey.data ? <ShieldCheck className="size-5" /> : <KeyRound className="size-5" />}
         </span>
         <div className="min-w-0 flex-1 space-y-2">
           <div>
-            <p className="font-medium">Recovery key</p>
+            <p className="font-medium">{tr.settings.recoveryKey}</p>
             <p className="text-sm text-stone-500 dark:text-stone-400">{status}</p>
           </div>
           {!hasKey.isPending && !hasKey.data && (
@@ -55,7 +52,7 @@ export function EncryptionSettings() {
                   onClick={() => setDialog("restore")}
                   className="rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
                 >
-                  Enter recovery key
+                  {tr.settings.enterRecoveryKey}
                 </button>
               )}
               <button
@@ -66,7 +63,7 @@ export function EncryptionSettings() {
                     : "rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
                 }
               >
-                {accountHasKey ? "I lost it, make a new one" : "Create recovery key"}
+                {accountHasKey ? tr.settings.lostKey : tr.settings.createRecoveryKey}
               </button>
             </div>
           )}
@@ -79,6 +76,7 @@ export function EncryptionSettings() {
 }
 
 function CreateKeyDialog({ replacing, onClose }: { replacing: boolean; onClose: () => void }) {
+  const tr = useT();
   const qc = useQueryClient();
   const setUser = useSession((s) => s.setUser);
   const [saved, setSaved] = useState(false);
@@ -99,29 +97,24 @@ function CreateKeyDialog({ replacing, onClose }: { replacing: boolean; onClose: 
   return (
     <Dialog onClose={() => (!words || saved) && onClose()}>
       <div className="space-y-4 p-5">
-        <h2 className="text-lg font-semibold">{words ? "Your recovery key" : "Create a recovery key"}</h2>
+        <h2 className="text-lg font-semibold">{words ? tr.settings.yourRecoveryKey : tr.settings.createRecoveryKey}</h2>
         {!words ? (
           <>
-            <p className="text-sm text-stone-600 dark:text-stone-300">
-              You'll get 24 words. They're the only way to read your encrypted messages after you sign out or on a new
-              device. Nobody else can recover them for you, not even us.
-            </p>
+            <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.createIntro}</p>
             {replacing && (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                Your old recovery key will stop working, and backups made with it can't be opened anymore.
-              </p>
+              <p className="text-sm text-red-600 dark:text-red-400">{tr.settings.replaceWarning}</p>
             )}
-            {create.isError && <p className="text-sm text-red-600 dark:text-red-400">Couldn't create it. Try again.</p>}
+            {create.isError && <p className="text-sm text-red-600 dark:text-red-400">{tr.settings.couldNotCreateKey}</p>}
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={onClose}
                 className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
               >
-                Cancel
+                {tr.common.cancel}
               </button>
               <PrimaryButton className="flex-1" disabled={create.isPending} onClick={() => create.mutate()}>
-                Show my key
+                {tr.settings.showWords}
               </PrimaryButton>
             </div>
           </>
@@ -143,14 +136,14 @@ function CreateKeyDialog({ replacing, onClose }: { replacing: boolean; onClose: 
               }}
               className="w-full rounded-xl bg-stone-100 px-4 py-2 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
             >
-              {copied ? "Copied" : "Copy to a password manager"}
+              {copied ? tr.common.copied : tr.settings.copyToPasswordManager}
             </button>
             <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="mt-0.5" />I
-              saved these words somewhere safe. They won't be shown again.
+              <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="mt-0.5" />
+              {tr.settings.savedWordsCheck}
             </label>
             <PrimaryButton className="w-full" disabled={!saved} onClick={onClose}>
-              Done
+              {tr.common.done}
             </PrimaryButton>
           </>
         )}
@@ -160,6 +153,7 @@ function CreateKeyDialog({ replacing, onClose }: { replacing: boolean; onClose: 
 }
 
 function RestoreKeyDialog({ onClose }: { onClose: () => void }) {
+  const tr = useT();
   const qc = useQueryClient();
   const backupKeyId = useSession((s) => s.user!.backupKeyId);
   const [words, setWords] = useState("");
@@ -187,8 +181,8 @@ function RestoreKeyDialog({ onClose }: { onClose: () => void }) {
           if (words.trim()) restore.mutate();
         }}
       >
-        <h2 className="text-lg font-semibold">Enter your recovery key</h2>
-        <p className="text-sm text-stone-600 dark:text-stone-300">Type or paste the 24 words, separated by spaces.</p>
+        <h2 className="text-lg font-semibold">{tr.settings.enterYourRecoveryKey}</h2>
+        <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.restoreHint}</p>
         <textarea
           value={words}
           onChange={(e) => {
@@ -203,7 +197,7 @@ function RestoreKeyDialog({ onClose }: { onClose: () => void }) {
         />
         {restore.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">
-            {(code && restoreErrors[code]) ?? "Couldn't use that key. Try again."}
+            {(code && tr.settings.restoreErrors[code]) ?? tr.settings.couldNotUseKey}
           </p>
         )}
         <div className="flex gap-2">
@@ -212,10 +206,10 @@ function RestoreKeyDialog({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
           >
-            Cancel
+            {tr.common.cancel}
           </button>
           <PrimaryButton type="submit" className="flex-1" disabled={!words.trim() || restore.isPending}>
-            Unlock
+            {tr.settings.unlock}
           </PrimaryButton>
         </div>
       </form>

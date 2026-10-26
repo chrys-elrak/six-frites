@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LOCALES } from "./i18n/index.js";
 
 export const PushProvider = z.enum(["webpush", "fcm", "apns"]);
 export type PushProvider = z.infer<typeof PushProvider>;
@@ -10,6 +11,7 @@ export const RegisterPushTokenInput = z.object({
     .min(1)
     .max(4000)
     .describe("webpush: the JSON PushSubscription; fcm/apns: the device token"),
+  locale: z.enum(LOCALES).optional().describe("Language for this device's notifications; English when left out"),
 });
 export type RegisterPushTokenInput = z.infer<typeof RegisterPushTokenInput>;
 

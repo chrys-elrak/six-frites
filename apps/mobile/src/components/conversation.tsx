@@ -7,6 +7,7 @@ import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { deleteMessages } from "@/lib/actions";
 import { isFrozen, useChat, useMessages } from "@/lib/chats";
+import { useT } from "@/lib/i18n";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
 import { useSession } from "@/lib/session";
@@ -29,6 +30,7 @@ import { IconButton, Loading, ScreenHeader, TextButton } from "./ui";
 
 export function Conversation({ chatId }: { chatId: string }) {
   const t = useTheme();
+  const tr = useT();
   const qc = useQueryClient();
   const meId = useSession((s) => s.user!.id);
   const chat = useChat(qc, chatId);
@@ -89,15 +91,15 @@ export function Conversation({ chatId }: { chatId: string }) {
   const members = chat.data?.members;
   const nameOf = useMemo(() => {
     const names = new Map(members?.map((m) => [m.user.id, m.user.displayName]));
-    return (id: string) => (id === meId ? "You" : (names.get(id) ?? "Someone"));
-  }, [members, meId]);
+    return (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
+  }, [members, meId, tr]);
 
   if (chat.isPending) return <Loading />;
   if (!chat.data) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: t.text, fontWeight: "600" }}>Chat not found</Text>
-        <TextButton title="Back to chats" onPress={() => router.replace("/")} />
+        <Text style={{ color: t.text, fontWeight: "600" }}>{tr.chat.notFound}</Text>
+        <TextButton title={tr.common.backToChats} onPress={() => router.replace("/")} />
       </View>
     );
   }
@@ -118,11 +120,11 @@ export function Conversation({ chatId }: { chatId: string }) {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       {selecting ? (
         <ScreenHeader>
-          <IconButton Icon={X} label="Cancel selection" onPress={clearSelection} />
-          <Text style={[styles.title, { color: t.text }]}>{count} selected</Text>
+          <IconButton Icon={X} label={tr.chat.cancelSelection} onPress={clearSelection} />
+          <Text style={[styles.title, { color: t.text }]}>{tr.chat.selected(count)}</Text>
           <IconButton
             Icon={Trash2}
-            label="Delete selected messages"
+            label={tr.chat.deleteSelected}
             color={t.danger}
             disabled={count === 0}
             onPress={() => setConfirmDelete(true)}
@@ -130,10 +132,10 @@ export function Conversation({ chatId }: { chatId: string }) {
         </ScreenHeader>
       ) : (
         <ScreenHeader>
-          <IconButton Icon={ChevronLeft} label="Back to chats" size={26} onPress={goBack} />
+          <IconButton Icon={ChevronLeft} label={tr.common.backToChats} size={26} onPress={goBack} />
           <Pressable
             onPress={() => setEditing(true)}
-            accessibilityLabel={`Edit contact ${c.title}`}
+            accessibilityLabel={tr.chat.editContact(c.title)}
             style={({ pressed }) => [styles.peer, pressed && { backgroundColor: t.pressed }]}
           >
             <Avatar user={peer} online={!!presence?.online} />
@@ -142,15 +144,15 @@ export function Conversation({ chatId }: { chatId: string }) {
                 {c.title}
               </Text>
               {typing ? (
-                <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>typing…</Text>
+                <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing}</Text>
               ) : (
                 (presence || c.muted || c.archived || !!c.autoDeleteSecs) && (
                   <Text numberOfLines={1} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>
                     {[
                       presenceLabel(presence),
-                      c.autoDeleteSecs && `Auto-delete: ${durationLabel(c.autoDeleteSecs)}`,
-                      c.muted && "Muted",
-                      c.archived && "Archived",
+                      c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
+                      c.muted && tr.common.muted,
+                      c.archived && tr.common.archived,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
@@ -161,11 +163,11 @@ export function Conversation({ chatId }: { chatId: string }) {
           </Pressable>
           {c.encrypted && !frozen && (
             <>
-              <IconButton Icon={Phone} label="Voice call" disabled={inCall} onPress={() => void startCall(c, false)} />
-              <IconButton Icon={Video} label="Video call" disabled={inCall} onPress={() => void startCall(c, true)} />
+              <IconButton Icon={Phone} label={tr.chat.voiceCall} disabled={inCall} onPress={() => void startCall(c, false)} />
+              <IconButton Icon={Video} label={tr.chat.videoCall} disabled={inCall} onPress={() => void startCall(c, true)} />
             </>
           )}
-          <IconButton Icon={MoreVertical} label="Chat options" onPress={() => setMenu(true)} />
+          <IconButton Icon={MoreVertical} label={tr.chat.options} onPress={() => setMenu(true)} />
         </ScreenHeader>
       )}
 
@@ -179,7 +181,7 @@ export function Conversation({ chatId }: { chatId: string }) {
         >
           <ShieldAlert size={18} color={brand} />
           <Text style={{ flex: 1, color: t.textSoft, fontSize: 13 }}>
-            {peer.displayName}'s safety number changed, probably a new phone. Tap to compare it.
+            {tr.chat.safetyNumberChanged(peer.displayName)}
           </Text>
           <X size={16} color={t.muted} onPress={() => dismissKeyChange(peer.id)} />
         </Pressable>
@@ -216,13 +218,13 @@ export function Conversation({ chatId }: { chatId: string }) {
       {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}
       {confirmDelete && (
         <Sheet
-          title={`Delete ${count} message${count === 1 ? "" : "s"}?`}
+          title={tr.chat.deleteMessages(count)}
           onClose={() => setConfirmDelete(false)}
           actions={[
             ...(c.type === "direct"
-              ? [{ label: `Delete for me and ${peer.displayName}`, destructive: true, onSelect: () => removeSelected("all") }]
+              ? [{ label: tr.chat.deleteForMeAnd(peer.displayName), destructive: true, onSelect: () => removeSelected("all") }]
               : []),
-            { label: "Delete for me", destructive: true, onSelect: () => removeSelected("me") },
+            { label: tr.chat.deleteForMe, destructive: true, onSelect: () => removeSelected("me") },
           ]}
         />
       )}

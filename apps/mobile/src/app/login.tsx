@@ -2,24 +2,15 @@ import { SixApiError } from "@six/sdk";
 import { type Href, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { isErrorWithCode, statusCodes } from "react-native-nitro-google-signin";
+import { isErrorWithCode } from "react-native-nitro-google-signin";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { Logo } from "@/components/logo";
 import { Notice } from "@/components/ui";
+import { useT } from "@/lib/i18n";
 import { deviceName, GOOGLE_WEB_CLIENT_ID, googleIdToken } from "@/lib/session";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
-
-const errorText: Record<string, string> = {
-  INVITE_NOT_FOUND: "That invite link doesn't exist.",
-  INVITE_EXPIRED: "That invite link has expired.",
-  INVITE_EXHAUSTED: "That invite link has already been used up.",
-  INVALID_GOOGLE_TOKEN: "Google sign-in failed. Please try again.",
-  [statusCodes.DEVELOPER_ERROR]:
-    "Google sign-in isn't set up for this build yet. Its package name and SHA-1 must be registered in Google Cloud.",
-  [statusCodes.PLAY_SERVICES_NOT_AVAILABLE]: "Google Play services are missing or out of date.",
-};
 
 function GoogleMark() {
   return (
@@ -46,6 +37,7 @@ function GoogleMark() {
 
 export default function Login() {
   const t = useTheme();
+  const tr = useT();
   const { invite, next } = useLocalSearchParams<{ invite?: string; next?: string }>();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -56,9 +48,7 @@ export default function Login() {
     try {
       const idToken = await googleIdToken();
       if (!idToken) {
-        setError(
-          "Google sign-in didn't finish. If you picked an account, this build isn't registered with Google yet (its package name and SHA-1 must be added as an Android OAuth client).",
-        );
+        setError(tr.auth.googleNotFinished);
         return;
       }
       await six.auth.loginWithGoogle(idToken, { inviteCode: invite, deviceName: deviceName() });
@@ -68,7 +58,8 @@ export default function Login() {
       if (next?.startsWith("/")) router.replace(next as Href);
     } catch (err) {
       const code = err instanceof SixApiError || isErrorWithCode(err) ? err.code : null;
-      setError((code && errorText[code]) ?? (err instanceof Error ? err.message : "Something went wrong."));
+      const errors: Record<string, string | undefined> = tr.auth.errors;
+      setError((code && errors[code]) ?? (err instanceof Error ? err.message : tr.common.somethingWrong));
     } finally {
       setBusy(false);
     }
@@ -81,10 +72,10 @@ export default function Login() {
         <Text style={[styles.title, { color: t.text }]}>Six Frites</Text>
         <Text style={{ color: t.muted, fontSize: 14 }}>
           {invite
-            ? "You've been invited. Sign in to accept."
+            ? tr.auth.invitedSignIn
             : next?.startsWith("/add/")
-              ? "Sign in to add this contact."
-              : "Sign in to continue."}
+              ? tr.auth.signInToAdd
+              : tr.auth.signInToContinue}
         </Text>
       </View>
 
@@ -100,7 +91,7 @@ export default function Login() {
             ]}
           >
             {busy ? <ActivityIndicator color={t.muted} /> : <GoogleMark />}
-            <Text style={[styles.googleText, { color: t.text }]}>Continue with Google</Text>
+            <Text style={[styles.googleText, { color: t.text }]}>{tr.auth.continueWithGoogle}</Text>
           </Pressable>
         ) : (
           <Notice tone="error">Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in apps/mobile/.env to enable sign-in.</Notice>
