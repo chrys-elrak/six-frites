@@ -23,6 +23,7 @@ import inviteRoutes from "./routes/invites.js";
 import meRoutes from "./routes/me.js";
 import sessionRoutes from "./routes/sessions.js";
 import presenceRoutes from "./routes/presence.js";
+import releaseRoutes, { appRoutes } from "./routes/releases.js";
 import pushRoutes from "./routes/push.js";
 import stickerRoutes from "./routes/stickers.js";
 import uploadRoutes from "./routes/uploads.js";
@@ -68,6 +69,8 @@ export async function buildApp() {
       await v1.register(authRoutes, { prefix: "/auth" });
       await v1.register(adminRoutes);
       await v1.register(reportRoutes);
+      await v1.register(releaseRoutes);
+      await v1.register(appRoutes);
       await v1.register(meRoutes);
       await v1.register(sessionRoutes);
       await v1.register(inviteRoutes);

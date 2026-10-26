@@ -17,3 +17,4 @@ export * from "./presence.js";
 export * from "./chat-themes.js";
 export * from "./socket.js";
 export * from "./admin.js";
+export * from "./releases.js";
