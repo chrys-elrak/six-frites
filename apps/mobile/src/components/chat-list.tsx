@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, MessageCircle, Palette, Pin, Timer } from "lucide-react-native";
 import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
-import { useChats } from "@/lib/chats";
+import { isFrozen, useChats } from "@/lib/chats";
 import { formatDuration, listTime } from "@/lib/format";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
@@ -90,7 +90,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const [menu, setMenu] = useState(false);
   const typing = useIsTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
-  const online = usePresence(peer.id === meId ? undefined : peer.id)?.online;
+  const online = usePresence(peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
 
   return (
@@ -139,6 +139,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
         <ChatMenu
           chat={chat}
           peerName={peer.displayName}
+          peerId={peer.id}
           onClose={() => setMenu(false)}
         />
       )}

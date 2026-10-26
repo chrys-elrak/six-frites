@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { deleteMessages } from "@/lib/actions";
-import { useChat, useMessages } from "@/lib/chats";
+import { isFrozen, useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
 import { useSession } from "@/lib/session";
@@ -17,6 +17,7 @@ import { useChatTheme } from "@/lib/chat-themes";
 import { useIsTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
+import { ChatBlocked } from "./chat-blocked";
 import { ChatMenu } from "./chat-menu";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
@@ -37,8 +38,9 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const typing = useIsTyping(chatId);
   const peerId = chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
-  useWatchPresence(peerId ? [peerId] : []);
-  const presence = usePresence(peerId);
+  const frozen = !!chat.data && isFrozen(chat.data);
+  useWatchPresence(peerId && !frozen ? [peerId] : []);
+  const presence = usePresence(frozen ? undefined : peerId);
   const defaultTheme = useChatTheme();
   const theme = chat.data?.theme ? chatTheme(chat.data.theme) : defaultTheme;
   const colors = t.dark ? theme.dark : theme.light;
@@ -163,18 +165,24 @@ export function Conversation({ chatId }: { chatId: string }) {
             <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
           </BubbleColorsContext.Provider>
         </View>
-        {!selecting && <Composer
-            chatId={chatId}
-            nameOf={nameOf}
-            scheduledCount={c.scheduledCount}
-            onSent={() => list.current?.scrollToBottom()}
-          />}
+        {!selecting &&
+          (frozen ? (
+            <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />
+          ) : (
+            <Composer
+              chatId={chatId}
+              nameOf={nameOf}
+              scheduledCount={c.scheduledCount}
+              onSent={() => list.current?.scrollToBottom()}
+            />
+          ))}
       </KeyboardAvoidingView>
 
       {menu && (
         <ChatMenu
           chat={c}
           peerName={peer.displayName}
+          peerId={peer.id}
           onClose={() => setMenu(false)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
         />

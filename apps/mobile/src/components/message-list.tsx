@@ -25,7 +25,7 @@ import {
   View,
 } from "react-native";
 import { applyEdited, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
-import { useMessages } from "@/lib/chats";
+import { isFrozen, useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { emojiOnly } from "@/lib/emoji";
 import { canResend, shortRule } from "@/lib/ephemeral";
@@ -395,6 +395,7 @@ function Bubble({
   onResend,
   meId,
   onReact,
+  frozen,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -411,6 +412,7 @@ function Bubble({
   onResend: () => void;
   meId: string;
   onReact: (emoji: string) => void;
+  frozen: boolean;
 }) {
   const t = useTheme();
   const bubble = useBubbleColors();
@@ -460,7 +462,7 @@ function Bubble({
     row.deleted || bare ? t.muted : mine ? alpha(bubble.ink, 0.7) : bubble.theirInk ? alpha(theirInk, 0.6) : t.muted;
 
   const bubbleRef = useRef<ComponentRef<typeof View>>(null);
-  const canReact = !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
+  const canReact = !frozen && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
   const latest = useRef({ selectable, selecting, canReact, onToggle, onMenu, onReact });
   latest.current = { selectable, selecting, canReact, onToggle, onMenu, onReact };
   const hold = useLongPressGesture({
@@ -588,7 +590,7 @@ function Bubble({
             meId={meId}
             mine={mine}
             nameOf={nameOf}
-            onReact={onReact}
+            onReact={frozen ? () => {} : onReact}
           />
         )}
         {row.delivery === "failed" && (
@@ -616,6 +618,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const pending = usePending(chat.id);
     const setMode = useComposerMode((s) => s.set);
     const selecting = useSelection((s) => s.chatId === chat.id);
+    const frozen = isFrozen(chat);
     const selectedIds = useSelection((s) => s.ids);
     const startSelection = useSelection((s) => s.start);
     const toggleSelected = useSelection((s) => s.toggle);
@@ -778,9 +781,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ];
       }
       return [
-        { label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) },
+        ...(frozen ? [] : [{ label: "Reply", onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
         { label: "Select", onSelect: () => startSelection(chat.id, m.id) },
-        ...(m.ephemeral
+        ...(m.ephemeral || frozen
           ? []
           : [
               ...(row.mine && m.text !== null
@@ -867,6 +870,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   onResend={() => row.message && void resendEphemeral(row.message)}
                   meId={meId}
                   onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
+                  frozen={frozen}
                 />
               )
             }
@@ -875,7 +879,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 
         {menuFor && (
           <Sheet
-            floating={anchor && reactable(menuFor) ? reactionPopover(menuFor, anchor) : undefined}
+            floating={anchor && !frozen && reactable(menuFor) ? reactionPopover(menuFor, anchor) : undefined}
             actions={actionsFor(menuFor)}
             onClose={() => setMenuFor(null)}
           />

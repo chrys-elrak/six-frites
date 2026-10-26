@@ -18,6 +18,7 @@ import { playChime, useNotifyPrefs } from "@/lib/notify";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
+import { AccountCard, BlockedPeople } from "./account-settings";
 import { Avatar } from "./avatar";
 import { Wallpaper } from "./chat-background";
 import { CustomThemePicker } from "./custom-theme";
@@ -516,6 +517,8 @@ export function SettingsPanel() {
         <Invites />
         <Referrals />
         <Devices />
+        <BlockedPeople />
+        <AccountCard />
         <Text style={[styles.credits, { color: t.faint }]}>
           Animated emoji from{" "}
           <Text style={styles.link} onPress={link("https://googlefonts.github.io/noto-emoji-animation/")}>

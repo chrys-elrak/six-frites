@@ -17,6 +17,9 @@ export const chatKeys = {
   messages: (chatId: string) => ["messages", chatId] as const,
 };
 
+/** Nobody can write in this chat: someone blocked the other, or the other person deleted their account. */
+export const isFrozen = (c: ChatDTO) => c.blockedByMe || c.blockedByThem || c.peerDeleted;
+
 export function sortChats(chats: ChatDTO[]) {
   return [...chats].sort(
     (a, b) => Number(b.pinned) - Number(a.pinned) || Date.parse(b.lastActivityAt) - Date.parse(a.lastActivityAt),

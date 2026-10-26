@@ -10,7 +10,8 @@ import {
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { deleteChat, updateChatSettings } from "@/lib/actions";
+import { deleteChat, setBlocked, updateChatSettings } from "@/lib/actions";
+import { isFrozen } from "@/lib/chats";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemePicker } from "./custom-theme";
 import { Sheet } from "./sheet";
@@ -18,16 +19,18 @@ import { Sheet } from "./sheet";
 export function ChatMenu({
   chat,
   peerName,
+  peerId,
   onClose,
   onDeleted,
 }: {
   chat: ChatDTO;
   peerName: string;
+  peerId: string;
   onClose: () => void;
   onDeleted?: (scope: DeleteScope) => void;
 }) {
   const qc = useQueryClient();
-  const [view, setView] = useState<"menu" | "delete" | "autoDelete" | "custom" | "theme" | "customTheme">("menu");
+  const [view, setView] = useState<"menu" | "delete" | "block" | "autoDelete" | "custom" | "theme" | "customTheme">("menu");
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
 
@@ -107,6 +110,18 @@ export function ChatMenu({
     );
   }
 
+  if (view === "block") {
+    return (
+      <Sheet
+        title={`Block ${peerName}? Neither of you will be able to send messages here, and ${peerName} will see that you blocked them.`}
+        onClose={onClose}
+        actions={[
+          { label: `Block ${peerName}`, destructive: true, onSelect: () => void setBlocked(qc, chat, peerId, true).catch(() => null) },
+        ]}
+      />
+    );
+  }
+
   if (view === "delete") {
     return (
       <Sheet
@@ -132,16 +147,25 @@ export function ChatMenu({
         { label: chat.pinned ? "Unpin" : "Pin", onSelect: () => settings({ pinned: !chat.pinned }) },
         { label: chat.muted ? "Unmute" : "Mute", onSelect: () => settings({ muted: !chat.muted }) },
         { label: chat.archived ? "Unarchive" : "Archive", onSelect: () => settings({ archived: !chat.archived }) },
-        {
-          label: `Auto-delete: ${chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs) : "Off"}`,
-          keepOpen: true,
-          onSelect: () => setView("autoDelete"),
-        },
-        {
-          label: `Background: ${chat.theme ? chatTheme(chat.theme).name : "Default"}`,
-          keepOpen: true,
-          onSelect: () => setView("theme"),
-        },
+        ...(isFrozen(chat)
+          ? []
+          : [
+              {
+                label: `Auto-delete: ${chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs) : "Off"}`,
+                keepOpen: true,
+                onSelect: () => setView("autoDelete"),
+              },
+              {
+                label: `Background: ${chat.theme ? chatTheme(chat.theme).name : "Default"}`,
+                keepOpen: true,
+                onSelect: () => setView("theme"),
+              },
+            ]),
+        ...(chat.type !== "direct" || chat.peerDeleted
+          ? []
+          : chat.blockedByMe
+            ? [{ label: `Unblock ${peerName}`, onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
+            : [{ label: `Block ${peerName}`, destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
         { label: "Delete chat", destructive: true, keepOpen: true, onSelect: () => setView("delete") },
       ]}
     />

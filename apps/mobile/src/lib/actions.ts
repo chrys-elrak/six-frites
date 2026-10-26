@@ -143,6 +143,24 @@ export async function deleteChat(qc: QueryClient, chatId: string, scope: DeleteS
   applyChatDeleted(qc, chatId, scope);
 }
 
+/** Blocks or unblocks the other person in a chat; the server's chat.updated refreshes the chat. */
+export async function setBlocked(qc: QueryClient, chat: ChatDTO, userId: string, blocked: boolean) {
+  const params = { params: { path: { id: userId } } };
+  unwrap(blocked ? await six.api.POST("/v1/users/{id}/block", params) : await six.api.DELETE("/v1/users/{id}/block", params));
+  upsertChat(qc, { ...chat, blockedByMe: blocked });
+  void qc.invalidateQueries({ queryKey: ["blocks"] });
+}
+
+export async function unblockUser(qc: QueryClient, userId: string) {
+  unwrap(await six.api.DELETE("/v1/users/{id}/block", { params: { path: { id: userId } } }));
+  void qc.invalidateQueries({ queryKey: ["blocks"] });
+  void qc.invalidateQueries({ queryKey: chatKeys.lists });
+}
+
+export async function deleteAccount() {
+  unwrap(await six.api.DELETE("/v1/me", { body: { confirm: "DELETE" } }));
+}
+
 export const scheduledKey = (chatId: string) => ["scheduled", chatId] as const;
 
 export async function scheduleMessage(
