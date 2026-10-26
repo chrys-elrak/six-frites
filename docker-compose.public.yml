@@ -1,0 +1,24 @@
+services:
+  gateway:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["8080:8080"]
+    volumes:
+      - ./infra/gateway/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on: [api, web, storage]
+
+  api:
+    environment:
+      PUBLIC_URL: https://${PUBLIC_HOST:?set PUBLIC_HOST to the tunnel host}
+      WEB_ORIGIN: http://localhost:3000,https://${PUBLIC_HOST}
+      S3_PUBLIC_ENDPOINT: https://${PUBLIC_HOST}
+
+  worker:
+    environment:
+      PUBLIC_URL: https://${PUBLIC_HOST}
+      WEB_ORIGIN: http://localhost:3000,https://${PUBLIC_HOST}
+      S3_PUBLIC_ENDPOINT: https://${PUBLIC_HOST}
+
+  web:
+    environment:
+      NEXT_PUBLIC_API_URL: https://${PUBLIC_HOST}

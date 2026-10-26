@@ -1,0 +1,9 @@
+:8080 {
+	@api path /v1/* /socket.io/* /docs* /health
+	reverse_proxy @api api:4000
+
+	@media path /six-media/*
+	reverse_proxy @media storage:8333
+
+	reverse_proxy web:3000
+}

@@ -1,0 +1,59 @@
+http:
+  routers:
+    six-frites-http:
+      rule: "Host(`six-frites.koera.mg`)"
+      entryPoints: [web]
+      middlewares: [six-frites-to-https]
+      service: six-frites-web
+
+    six-frites-api:
+      rule: "Host(`six-frites.koera.mg`) && (PathPrefix(`/v1`) || PathPrefix(`/socket.io`) || PathPrefix(`/docs`) || Path(`/health`))"
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      service: six-frites-api
+      priority: 30
+
+    six-frites-media:
+      rule: "Host(`six-frites.koera.mg`) && PathPrefix(`/six-media`)"
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      service: six-frites-storage
+      priority: 20
+
+    six-frites-web:
+      rule: "Host(`six-frites.koera.mg`)"
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [six-frites-headers]
+      service: six-frites-web
+      priority: 10
+
+  middlewares:
+    six-frites-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    six-frites-headers:
+      headers:
+        stsSeconds: 31536000
+        contentTypeNosniff: true
+        referrerPolicy: strict-origin-when-cross-origin
+
+  services:
+    six-frites-api:
+      loadBalancer:
+        servers:
+          - url: "http://six-frites-api:4000"
+    six-frites-web:
+      loadBalancer:
+        servers:
+          - url: "http://six-frites-web:3000"
+    six-frites-storage:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://six-frites-storage:8333"

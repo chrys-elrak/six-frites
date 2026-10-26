@@ -1,0 +1,136 @@
+x-app-env: &app-env
+  NODE_ENV: production
+  PORT: "4000"
+  PUBLIC_URL: https://${DOMAIN}
+  WEB_ORIGIN: https://${DOMAIN}
+  DATABASE_URL: postgresql://six:${POSTGRES_PASSWORD}@postgres:5432/six
+  REDIS_URL: redis://redis:6379
+  GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS}
+  JWT_SECRET: ${JWT_SECRET}
+  S3_ENDPOINT: http://storage:8333
+  S3_PUBLIC_ENDPOINT: https://${DOMAIN}
+  S3_REGION: us-east-1
+  S3_BUCKET: six-media
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+  S3_SECRET_KEY: ${S3_SECRET_KEY}
+  WEB_PUSH_PUBLIC_KEY: ${WEB_PUSH_PUBLIC_KEY:-}
+  WEB_PUSH_PRIVATE_KEY: ${WEB_PUSH_PRIVATE_KEY:-}
+  WEB_PUSH_SUBJECT: ${WEB_PUSH_SUBJECT:-mailto:admin@example.com}
+  GIPHY_API_KEY: ${GIPHY_API_KEY:-}
+  TURN_URLS: turn:${DOMAIN}:3478?transport=udp,turn:${DOMAIN}:3478?transport=tcp
+  TURN_SECRET: ${TURN_SECRET}
+  ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+
+x-app: &app
+  image: six-frites:latest
+  pull_policy: never
+  restart: unless-stopped
+  working_dir: /repo/apps/api
+  environment: *app-env
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_started }
+    storage: { condition: service_started }
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: six
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: six
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U six"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes: [redisdata:/data]
+
+  storage:
+    image: chrislusf/seaweedfs:4.48
+    restart: unless-stopped
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in .env}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        printf '{"identities":[{"name":"six","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}' "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY" > /tmp/s3.json
+        exec weed server -dir=/data -ip=storage -ip.bind=0.0.0.0 -s3 -s3.port=8333 -s3.config=/tmp/s3.json
+    volumes: [seaweeddata:/data]
+    networks:
+      default:
+      proxy:
+        aliases: [six-frites-storage]
+
+  api:
+    <<: *app
+    pull_policy: build
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_URL: https://${DOMAIN:?set DOMAIN in .env}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:?set GOOGLE_WEB_CLIENT_ID in .env}
+    command: sh -c "npx prisma migrate deploy && exec npx tsx src/server.ts"
+    networks:
+      default:
+      proxy:
+        aliases: [six-frites-api]
+
+  worker:
+    <<: *app
+    command: npx tsx src/worker.ts
+    depends_on: [api]
+
+  web:
+    image: six-frites:latest
+    pull_policy: never
+    restart: unless-stopped
+    working_dir: /repo/apps/web
+    environment:
+      NODE_ENV: production
+    command: npx next start --port 3000 --hostname 0.0.0.0
+    depends_on: [api]
+    networks:
+      default:
+      proxy:
+        aliases: [six-frites-web]
+
+  coturn:
+    image: coturn/coturn:4.7
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -n
+      - --listening-port=3478
+      - --external-ip=${SERVER_IP:?set SERVER_IP in .env}
+      - --realm=${DOMAIN}
+      - --use-auth-secret
+      - --static-auth-secret=${TURN_SECRET:?set TURN_SECRET in .env}
+      - --min-port=49160
+      - --max-port=49200
+      - --fingerprint
+      - --no-cli
+      - --no-tls
+      - --no-dtls
+      - --no-multicast-peers
+      - --denied-peer-ip=10.0.0.0-10.255.255.255
+      - --denied-peer-ip=172.16.0.0-172.31.255.255
+      - --denied-peer-ip=192.168.0.0-192.168.255.255
+      - --log-file=stdout
+
+networks:
+  proxy:
+    name: ${PROXY_NETWORK:-traefik_proxy}
+    external: true
+
+volumes:
+  pgdata:
+  redisdata:
+  seaweeddata:

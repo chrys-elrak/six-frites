@@ -5,3 +5,5 @@
 **/.env.local
 .git
 .vscode
+apps/mobile
+docs
