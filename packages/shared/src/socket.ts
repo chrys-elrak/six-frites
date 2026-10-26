@@ -8,6 +8,7 @@ import type {
   TypingDTO,
   TypingInput,
 } from "./chats.js";
+import type { CallSignalDTO, CallSignalInput } from "./calls.js";
 import type { ErrorBody } from "./errors.js";
 import type { PresenceDTO } from "./presence.js";
 import type { ChangeEventDTO } from "./sync.js";
@@ -26,6 +27,8 @@ export interface ServerToClientEvents {
   /** A contact came online or went offline. */
   presence: (e: PresenceDTO) => void;
   "session:revoked": (e: SocketEnvelope<{ sessionId: string }>) => void;
+  /** Call signalling for this device. */
+  "call:signal": (e: CallSignalDTO) => void;
 }
 
 export interface ClientToServerEvents {
@@ -36,4 +39,5 @@ export interface ClientToServerEvents {
   "chat:typing": (p: TypingInput, cb?: Ack<null>) => void;
   /** Sent by open apps when they become visible or hidden, and every 30s while visible. */
   presence: (p: { active: boolean }) => void;
+  "call:signal": (p: CallSignalInput, cb: Ack<{ delivered: number }>) => void;
 }

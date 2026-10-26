@@ -35,6 +35,8 @@ import {
   utf8,
 } from "@six/crypto";
 import {
+  type CallSignal,
+  type CallSignalDTO,
   type ChatDTO,
   type DeviceDTO,
   type EncryptedFile,
@@ -42,6 +44,7 @@ import {
   type MessageContent,
   type MessageDTO,
   PREKEYS,
+  CallSignal as CallSignalSchema,
   MessageContent as MessageContentSchema,
 } from "@six/shared";
 import { SixApiError, unwrap } from "./errors.js";
@@ -58,6 +61,11 @@ export interface SecretStore {
   /** Removes everything, for signing out. */
   clear(): Promise<void>;
 }
+
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
+/** A call signal without the fields that tie it to its call. */
+export type SignalInput = DistributiveOmit<CallSignal, "v" | "kind" | "chatId" | "callId">;
 
 /** What goes into a message besides the fields that tie it to its chat. */
 export type ContentInput = Omit<MessageContent, "v" | "chatId" | "clientId">;
@@ -294,40 +302,68 @@ export class E2EE {
     await this.ready();
     const content = MessageContentSchema.parse({ v: 1, chatId, clientId, ...input });
     return this.serial(async () => {
-      const devices = (await this.devicesOf(memberIds)).filter((d) => d.id !== this.deviceId);
-      const missing: string[] = [];
-      const sessions = new Map<string, Session>();
-      for (const d of devices) {
-        const s = await this.loadSession(d.id);
-        if (s && sameIdentity(s.remoteIdentity, publicIdentityFromJSON(d.identity))) sessions.set(d.id, s);
-        else missing.push(d.id);
-      }
-      if (missing.length) {
-        const bundles = unwrap(await this.api.POST("/v1/devices/prekeys/claim", { body: { deviceIds: missing } })).items;
-        for (const b of bundles) {
-          sessions.set(
-            b.deviceId,
-            initiateSession(this.identity!, {
-              identity: publicIdentityFromJSON(b.identity),
-              signedPreKey: { id: b.signedPreKey.id, pub: fromB64(b.signedPreKey.pub), sig: fromB64(b.signedPreKey.sig) },
-              oneTimePreKey: b.oneTimePreKey && { id: b.oneTimePreKey.id, pub: fromB64(b.oneTimePreKey.pub) },
-            }),
-          );
-        }
-      }
-
       const plaintext = utf8(JSON.stringify(content));
-      const envelopes: EncryptedInput["envelopes"] = [];
-      for (const [deviceId, session] of sessions) {
-        const out = encrypt(session, plaintext);
-        await this.saveSession(deviceId, out.session);
-        envelopes.push({ deviceId, envelope: out.envelope });
-      }
+      const envelopes = await this.encryptForAll(memberIds, plaintext);
       await this.setJSON(`sent:${chatId}:${clientId}`, content);
       const key = await this.backupKey();
       const backup = key ? sealBackup(key, plaintext, backupLabel(chatId, this.userId, clientId)) : undefined;
       return { envelopes, ...(backup && { backup }) };
     });
+  }
+
+  /** Seals call signalling for every device in the chat but this one, so the other side rings and ours stop. */
+  async sealSignal(chatId: string, memberIds: string[], callId: string, signal: SignalInput) {
+    await this.ready();
+    const payload = CallSignalSchema.parse({ v: 1, kind: "call", chatId, callId, ...signal });
+    return this.serial(() => this.encryptForAll(memberIds, utf8(JSON.stringify(payload))));
+  }
+
+  /** Opens a call signal relayed to this device; null when it can't be read or doesn't belong to its call. */
+  async openSignal(dto: CallSignalDTO): Promise<CallSignal | null> {
+    await this.ready();
+    return this.serial(async () => {
+      try {
+        const plaintext = await this.receive(dto.fromDeviceId, dto.envelope as Envelope, dto.fromUserId);
+        const signal = CallSignalSchema.parse(JSON.parse(fromUtf8(plaintext)));
+        return signal.chatId === dto.chatId && signal.callId === dto.callId ? signal : null;
+      } catch (err) {
+        if (err instanceof CryptoError || err instanceof SyntaxError || (err as Error).name === "ZodError") return null;
+        throw err;
+      }
+    });
+  }
+
+  /** Encrypts for every device of these people but this one, starting sessions as needed. Runs inside serial(). */
+  private async encryptForAll(memberIds: string[], plaintext: Uint8Array) {
+    const devices = (await this.devicesOf(memberIds)).filter((d) => d.id !== this.deviceId);
+    const missing: string[] = [];
+    const sessions = new Map<string, Session>();
+    for (const d of devices) {
+      const s = await this.loadSession(d.id);
+      if (s && sameIdentity(s.remoteIdentity, publicIdentityFromJSON(d.identity))) sessions.set(d.id, s);
+      else missing.push(d.id);
+    }
+    if (missing.length) {
+      const bundles = unwrap(await this.api.POST("/v1/devices/prekeys/claim", { body: { deviceIds: missing } })).items;
+      for (const b of bundles) {
+        sessions.set(
+          b.deviceId,
+          initiateSession(this.identity!, {
+            identity: publicIdentityFromJSON(b.identity),
+            signedPreKey: { id: b.signedPreKey.id, pub: fromB64(b.signedPreKey.pub), sig: fromB64(b.signedPreKey.sig) },
+            oneTimePreKey: b.oneTimePreKey && { id: b.oneTimePreKey.id, pub: fromB64(b.oneTimePreKey.pub) },
+          }),
+        );
+      }
+    }
+
+    const envelopes: EncryptedInput["envelopes"] = [];
+    for (const [deviceId, session] of sessions) {
+      const out = encrypt(session, plaintext);
+      await this.saveSession(deviceId, out.session);
+      envelopes.push({ deviceId, envelope: out.envelope });
+    }
+    return envelopes;
   }
 
   /**

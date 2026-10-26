@@ -5,6 +5,7 @@ import {
   type Ack,
   type AckResult,
   AppError,
+  CallSignalInput,
   MarkDeliveredInput,
   MarkReadInput,
   SendMessageInput,
@@ -18,6 +19,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { redisConnection } from "../lib/queue.js";
 import { type IO, rooms, setIo, socketKey } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
+import { relaySignal } from "../services/calls.js";
 import { markDelivered, markRead } from "../services/chats.js";
 import { assertMember, sendMessage } from "../services/messages.js";
 
@@ -84,6 +86,11 @@ export function createSocketServer(http: HttpServer) {
     socket.on(
       "message:send",
       handle((p) => sendMessage(userId, ChatRef.parse(p).chatId, SendMessageInput.parse(p), sessionId)),
+    );
+
+    socket.on(
+      "call:signal",
+      handle((p) => relaySignal(userId, sessionId, CallSignalInput.parse(p))),
     );
 
     socket.on(

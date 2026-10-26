@@ -16,6 +16,7 @@ import authPlugin from "./plugins/auth.js";
 import errorsPlugin from "./plugins/errors.js";
 import adminRoutes, { reportRoutes } from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
+import callRoutes from "./routes/calls.js";
 import chatRoutes from "./routes/chats.js";
 import deviceRoutes from "./routes/devices.js";
 import inviteRoutes from "./routes/invites.js";
@@ -72,6 +73,7 @@ export async function buildApp() {
       await v1.register(inviteRoutes);
       await v1.register(chatRoutes);
       await v1.register(deviceRoutes);
+      await v1.register(callRoutes);
       await v1.register(uploadRoutes);
       await v1.register(pushRoutes);
       await v1.register(presenceRoutes);

@@ -111,9 +111,14 @@ export const ServiceAction = z
     z.object({ type: z.literal("auto_delete"), secs: z.number().int().nullable() }),
     z.object({ type: z.literal("theme"), theme: z.string().nullable() }),
     z.object({ type: z.literal("e2ee") }),
+    z.object({
+      type: z.literal("call"),
+      video: z.boolean(),
+      secs: z.number().int().nullable().describe("How long it lasted; null if it was missed or declined"),
+    }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 

@@ -33,11 +33,21 @@ export function reactionText(emoji: string, m: MessageDTO) {
   return preview ? `Reacted ${emoji} to “${preview}”` : `Reacted ${emoji} to your message`;
 }
 
+const clock = (secs: number) =>
+  `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+
+/** "Video call · 2:31" or "Missed voice call". */
+export function callText(a: { video: boolean; secs: number | null }) {
+  const kind = a.video ? "video call" : "voice call";
+  return a.secs === null ? `Missed ${kind}` : `${a.video ? "Video" : "Voice"} call · ${clock(a.secs)}`;
+}
+
 /** What a service message says, without the sender's name. */
 export function serviceText(m: Pick<MessageDTO, "action">) {
   const a = m.action;
   if (a?.type === "theme") return a.theme ? `Background: ${chatTheme(a.theme).name}` : "Background reset";
   if (a?.type === "e2ee") return "Messages are end-to-end encrypted";
+  if (a?.type === "call") return callText(a);
   return a?.secs ? `Messages auto-delete after ${durationLabel(a.secs)}` : "Auto-delete turned off";
 }
 
@@ -51,6 +61,7 @@ export function serviceSentence(m: Pick<MessageDTO, "action">) {
       : `changed the chat background to ${chatTheme(a.theme).name}`;
   }
   if (a?.type === "e2ee") return "turned on end-to-end encryption";
+  if (a?.type === "call") return `called: ${callText(a).toLowerCase()}`;
   return a?.secs ? `set messages to auto-delete after ${durationLabel(a.secs)}` : "turned off auto-delete";
 }
 

@@ -15,6 +15,7 @@ export {
   type Hydrated,
   type Opened,
   type SecretStore,
+  type SignalInput,
   decryptFile,
   encryptFile,
 } from "./e2ee.js";

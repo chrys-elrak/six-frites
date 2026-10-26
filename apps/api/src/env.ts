@@ -20,6 +20,15 @@ const Env = z.object({
   WEB_PUSH_PRIVATE_KEY: z.string().optional(),
   WEB_PUSH_SUBJECT: z.string().default("mailto:admin@example.com"),
   GIPHY_API_KEY: z.string().optional(),
+  STUN_URLS: z
+    .string()
+    .default("stun:stun.l.google.com:19302")
+    .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
+  TURN_URLS: z
+    .string()
+    .default("")
+    .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
+  TURN_SECRET: z.string().optional(),
   ADMIN_EMAILS: z
     .string()
     .default("")

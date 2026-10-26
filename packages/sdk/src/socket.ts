@@ -1,6 +1,7 @@
 import { io, type Socket } from "socket.io-client";
 import type {
   AckResult,
+  CallSignalInput,
   ChangeEventDTO,
   ChatReadDTO,
   ClientToServerEvents,
@@ -201,6 +202,11 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
         return acked(socket.timeout(10_000).emitWithAck("message:send", { chatId, ...input }));
       }
       return unwrap(await api.POST("/v1/chats/{id}/messages", { params: { path: { id: chatId } }, body: input }));
+    },
+    /** Relays sealed call signalling; calls need a live socket, so this fails while offline. */
+    async sendCallSignal(input: CallSignalInput): Promise<{ delivered: number }> {
+      if (!socket.connected) throw new SixApiError(0, "OFFLINE", "Not connected");
+      return acked(socket.timeout(10_000).emitWithAck("call:signal", input));
     },
     async markRead(chatId: string, messageId?: string): Promise<ChatReadDTO | null> {
       if (socket.connected) return acked(socket.timeout(10_000).emitWithAck("chat:read", { chatId, messageId }));

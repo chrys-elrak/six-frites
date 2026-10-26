@@ -1931,7 +1931,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -1943,6 +1943,12 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "e2ee";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "call";
+                                        video: boolean;
+                                        /** @description How long it lasted; null if it was missed or declined */
+                                        secs: number | null;
                                     }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -2164,7 +2170,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -2176,6 +2182,12 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2427,7 +2439,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -2439,6 +2451,12 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2681,7 +2699,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -2693,6 +2711,12 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2875,7 +2899,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -2887,6 +2911,12 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -3069,7 +3099,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -3081,6 +3111,12 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -3261,7 +3297,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -3273,6 +3309,12 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -3459,7 +3501,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -3471,6 +3513,12 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -3693,7 +3741,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -3705,6 +3753,12 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
                                 }) | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -3932,7 +3986,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -3944,6 +3998,12 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -4631,7 +4691,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -4643,6 +4703,12 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
                             }) | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -5243,7 +5309,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -5255,6 +5321,12 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "e2ee";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "call";
+                                        video: boolean;
+                                        /** @description How long it lasted; null if it was missed or declined */
+                                        secs: number | null;
                                     }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -5400,7 +5472,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -5412,6 +5484,12 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "e2ee";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "call";
+                                        video: boolean;
+                                        /** @description How long it lasted; null if it was missed or declined */
+                                        secs: number | null;
                                     }) | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -5602,7 +5680,7 @@ export interface paths {
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts */
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
                                         action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
@@ -5614,6 +5692,12 @@ export interface paths {
                                         } | {
                                             /** @enum {string} */
                                             type: "e2ee";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "call";
+                                            video: boolean;
+                                            /** @description How long it lasted; null if it was missed or declined */
+                                            secs: number | null;
                                         }) | null;
                                         /** Format: date-time */
                                         createdAt: string;
@@ -6242,6 +6326,260 @@ export interface paths {
                     };
                     content: {
                         "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/calls/ice-servers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * STUN and TURN servers for a call
+         * @description Signalling goes over the socket as `call:signal`, sealed per device like messages; the server only relays it.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            iceServers: {
+                                urls: string[];
+                                username?: string;
+                                credential?: string;
+                            }[];
+                            /** @description Fetch new credentials after this long */
+                            ttlSeconds: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chats/{id}/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log a call in the chat
+         * @description The caller posts this when a call ends, answered or not. Idempotent per callId.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        callId: string;
+                        video: boolean;
+                        /** @description How long it lasted once answered; null when nobody picked up */
+                        durationSecs: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            action: ({
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
+                            }) | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
+                        };
                     };
                 };
             };
