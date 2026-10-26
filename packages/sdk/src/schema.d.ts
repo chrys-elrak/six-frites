@@ -1579,6 +1579,8 @@ export interface paths {
                         displayName?: string;
                         /** Format: uri */
                         avatarUrl?: string | null;
+                        /** @description A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes your photo */
+                        photo?: string | null;
                         username?: string | null;
                         findByEmail?: boolean;
                     };

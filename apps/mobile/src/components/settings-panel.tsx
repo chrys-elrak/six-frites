@@ -1,7 +1,7 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import { type InviteDTO, type SessionDTO, type UpdateMeInput, USERNAME_PATTERN } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Monitor, Smartphone } from "lucide-react-native";
+import { Camera, LogOut, Monitor, Smartphone } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { formatCode, contactUrl, shareContact, shareInvite, timeAgo } from "@/lib/format";
@@ -15,6 +15,7 @@ import {
 } from "@six/shared";
 import { useChatThemeStore } from "@/lib/chat-themes";
 import { playChime, useNotifyPrefs } from "@/lib/notify";
+import { pickAvatar } from "@/lib/media";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
@@ -26,43 +27,76 @@ import { Wallpaper } from "./chat-background";
 import { CustomThemePicker } from "./custom-theme";
 import { QrCode } from "./qr-code";
 import { Sheet } from "./sheet";
-import { Card, Divider, PrimaryButton, ScreenHeader, SectionTitle, TextButton } from "./ui";
+import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton } from "./ui";
 
 function ProfileCard() {
   const t = useTheme();
   const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
   const [name, setName] = useState(user.displayName);
+  const [error, setError] = useState<string | null>(null);
 
   const save = useMutation({
-    mutationFn: async () => unwrap(await six.api.PATCH("/v1/me", { body: { displayName: name.trim() } })),
+    mutationFn: async (body: UpdateMeInput) => unwrap(await six.api.PATCH("/v1/me", { body })),
     onSuccess: setUser,
+    onError: (err) => setError(err instanceof SixApiError ? err.message : "Couldn't save. Try again."),
   });
+
+  async function choosePhoto() {
+    setError(null);
+    try {
+      const photo = await pickAvatar();
+      if (photo) save.mutate({ photo });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't read that image.");
+    }
+  }
 
   const dirty = name.trim() !== user.displayName && name.trim().length > 0;
 
   return (
-    <Card style={styles.profile}>
-      <Avatar user={user} size="md" />
-      <View style={{ flex: 1, gap: 2 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            maxLength={64}
-            accessibilityLabel="Display name"
-            returnKeyType="done"
-            onSubmitEditing={() => dirty && save.mutate()}
-            style={[styles.nameInput, { color: t.text }]}
-          />
-          {dirty && (
-            <TextButton title="Save" onPress={() => save.mutate()} disabled={save.isPending} color={t.text} />
-          )}
+    <Card style={{ padding: 16, gap: 10 }}>
+      <View style={styles.profile}>
+        <Pressable onPress={choosePhoto} disabled={save.isPending} accessibilityLabel="Change your photo">
+          <Avatar user={user} size="md" />
+          <View style={styles.cameraBadge}>
+            <Camera size={18} color="#fff" />
+          </View>
+        </Pressable>
+        <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              maxLength={64}
+              accessibilityLabel="Display name"
+              returnKeyType="done"
+              onSubmitEditing={() => dirty && save.mutate({ displayName: name.trim() })}
+              style={[styles.nameInput, { color: t.text }]}
+            />
+            {dirty && (
+              <TextButton
+                title="Save"
+                onPress={() => save.mutate({ displayName: name.trim() })}
+                disabled={save.isPending}
+                color={t.text}
+              />
+            )}
+          </View>
+          <Text numberOfLines={1} style={{ color: t.muted, fontSize: 14 }}>
+            {user.email}
+          </Text>
         </View>
-        <Text numberOfLines={1} style={{ color: t.muted, fontSize: 14 }}>
-          {user.email}
-        </Text>
       </View>
+      {user.avatarUrl && (
+        <TextButton
+          title="Remove photo"
+          onPress={() => save.mutate({ photo: null })}
+          disabled={save.isPending}
+          color={t.danger}
+        />
+      )}
+      {error && <Notice tone="error">{error}</Notice>}
     </Card>
   );
 }
@@ -543,7 +577,18 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 22, fontWeight: "700", letterSpacing: -0.3, paddingHorizontal: 4 },
   signOut: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6 },
   content: { padding: 16, gap: 24 },
-  profile: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16 },
+  profile: { flexDirection: "row", alignItems: "center", gap: 16 },
+  cameraBadge: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
   nameInput: { flex: 1, fontSize: 18, fontWeight: "500", paddingVertical: 2 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   swatch: { width: 78, height: 112, borderRadius: 14, borderWidth: 2, overflow: "hidden" },

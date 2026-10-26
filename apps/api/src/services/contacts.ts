@@ -11,7 +11,7 @@ import { type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
-import { checkContactPin } from "./users.js";
+import { avatarOf, checkContactPin } from "./users.js";
 
 interface Override {
   displayName: string | null;
@@ -50,6 +50,7 @@ interface ContactRow {
   id: string;
   originalName: string;
   avatarUrl: string | null;
+  avatarKey: string | null;
   customName: string | null;
   photoKey: string | null;
   name: string;
@@ -58,7 +59,7 @@ interface ContactRow {
 function toContactDTO(r: ContactRow): ContactDTO {
   const o = { displayName: r.customName, photoKey: r.photoKey };
   return {
-    user: applyOverride({ id: r.id, displayName: r.originalName, avatarUrl: r.avatarUrl }, o),
+    user: applyOverride({ id: r.id, displayName: r.originalName, avatarUrl: avatarOf(r) }, o),
     chatId: r.chatId,
     originalName: r.customName === null ? r.originalName : null,
     customName: r.customName,
@@ -71,7 +72,7 @@ const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
   return prisma.$queryRaw<ContactRow[]>`
     SELECT * FROM (
-      SELECT cm."chatId", u.id, u."displayName" AS "originalName", u."avatarUrl",
+      SELECT cm."chatId", u.id, u."displayName" AS "originalName", u."avatarUrl", u."avatarKey",
              o."displayName" AS "customName", o."photoKey",
              COALESCE(o."displayName", u."displayName") AS name
       FROM "ChatMember" cm
@@ -119,7 +120,7 @@ async function getContact(userId: string, contactId: string) {
   return row;
 }
 
-function parsePhoto(dataUrl: string) {
+export function parsePhoto(dataUrl: string) {
   const [meta, data] = dataUrl.split(",", 2) as [string, string];
   const mime = meta.slice(5, meta.indexOf(";"));
   return { mime, bytes: Buffer.from(data, "base64"), ext: mime.split("/")[1] === "jpeg" ? "jpg" : mime.split("/")[1]! };

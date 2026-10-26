@@ -13,6 +13,7 @@ model User {
   email       String    @unique
   displayName String
   avatarUrl   String?
+  avatarKey   String?
   username    String?   @unique
   contactCode String    @unique @default(dbgenerated("random_code()"))
   findByEmail Boolean   @default(true)

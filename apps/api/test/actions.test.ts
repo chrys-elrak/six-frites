@@ -141,6 +141,29 @@ describe("contacts", () => {
 const PNG_1PX =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
+describe("your own name and photo", () => {
+  it("reach the people you chat with, and the old photo is deleted", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const head = (await get(guest, "/v1/sync")).cursor;
+
+    const me = (await call(host, "PATCH", "/v1/me", { displayName: "Chef", photo: PNG_1PX })).json();
+    expect(me).toMatchObject({ displayName: "Chef" });
+    expect(me.avatarUrl).toMatch(/^http:\/\/localhost:8333\/six-test\/a\//);
+    const photo = await fetch(me.avatarUrl);
+    expect(Buffer.from(await photo.arrayBuffer()).toString("base64")).toBe(PNG_1PX.split(",")[1]);
+
+    const { events } = await get(guest, `/v1/sync?since=${head}`);
+    const chat = events.find((e: { type: string; data: { id: string } }) => e.type === "chat.updated" && e.data.id === chatId);
+    expect(chat.data.members.find((m: { user: { id: string } }) => m.user.id === host.user.id).user).toMatchObject({
+      displayName: "Chef",
+      avatarUrl: me.avatarUrl,
+    });
+
+    expect((await call(host, "PATCH", "/v1/me", { photo: null })).json().avatarUrl).toBeNull();
+    expect((await fetch(me.avatarUrl)).status).toBe(404);
+  });
+});
+
 describe("custom contact names and photos", () => {
   it("are applied only for the person who set them", async () => {
     const { host, guest, chatId } = await makeFriends();

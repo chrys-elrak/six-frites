@@ -572,7 +572,7 @@ function Bubble({
                   ) : row.locked ? (
                     <span
                       className="inline-flex items-center gap-1.5 italic opacity-80"
-                      title="This device can't read it yet. Ask the sender to open the app, or add your recovery key in Settings."
+                      title="It was encrypted for the devices you had when it was sent. Read it there, or enter your recovery key in Settings to restore it if one of them backed it up."
                     >
                       <Lock className="size-4" /> Waiting for this message
                     </span>

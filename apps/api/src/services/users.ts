@@ -1,4 +1,4 @@
-import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import type { User } from "../generated/prisma/client.js";
 import {
@@ -9,11 +9,16 @@ import {
   type UserDTO,
 } from "@six/shared";
 import { generateCode, isUniqueViolation } from "../lib/codes.js";
-import { withEvents } from "../lib/events.js";
+import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
-import { deleteObjects } from "../lib/storage.js";
+import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
+import { parsePhoto } from "./contacts.js";
 import { revokeSession } from "./sessions.js";
+
+/** The photo the user uploaded, else the one their Google account came with. */
+export const avatarOf = (u: Pick<User, "avatarUrl" | "avatarKey">) =>
+  u.avatarKey ? presignGet(u.avatarKey) : u.avatarUrl;
 
 const RESERVED_USERNAMES = new Set(["admin", "support", "help", "system", "root", "six", "sixfrites", "official"]);
 
@@ -22,7 +27,7 @@ export function toUserDTO(u: User): UserDTO {
     id: u.id,
     email: u.email,
     displayName: u.displayName,
-    avatarUrl: u.avatarUrl,
+    avatarUrl: avatarOf(u),
     username: u.username,
     contactCode: u.contactCode,
     findByEmail: u.findByEmail,
@@ -32,8 +37,17 @@ export function toUserDTO(u: User): UserDTO {
   };
 }
 
-export function toPublicUser(u: Pick<User, "id" | "displayName" | "avatarUrl">) {
-  return { id: u.id, displayName: u.displayName, avatarUrl: u.avatarUrl };
+export function toPublicUser(u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey">) {
+  return { id: u.id, displayName: u.displayName, avatarUrl: avatarOf(u) };
+}
+
+/** Sends everyone who shares a chat with `userId` that chat again, after their name or photo changed. */
+async function announceProfile(tx: Tx, emit: Emit, userId: string) {
+  const chats = await tx.chatMember.findMany({ where: { userId }, select: { chatId: true } });
+  for (const { chatId } of chats) {
+    const others = await tx.chatMember.findMany({ where: { chatId, userId: { not: userId } }, select: { userId: true } });
+    for (const o of others) emit(o.userId, "chat.updated", await getChat(o.userId, chatId, tx));
+  }
 }
 
 export async function getMe(userId: string) {
@@ -44,8 +58,25 @@ export async function getMe(userId: string) {
 
 export async function updateMe(userId: string, input: UpdateMeInput) {
   if (input.username && RESERVED_USERNAMES.has(input.username)) throw new AppError("USERNAME_TAKEN");
+  const { photo, ...data } = input;
+  let avatarKey: string | null | undefined = photo === null || data.avatarUrl !== undefined ? null : undefined;
+  if (photo) {
+    const p = parsePhoto(photo);
+    avatarKey = `a/${userId}/${randomUUID()}.${p.ext}`;
+    await putObject(avatarKey, p.bytes, p.mime);
+  }
+
   try {
-    const user = await prisma.user.update({ where: { id: userId }, data: input });
+    const { user, previousKey } = await withEvents(async (tx, emit) => {
+      const before = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarKey: true } });
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: { ...data, ...(photo !== undefined && { avatarUrl: null }), ...(avatarKey !== undefined && { avatarKey }) },
+      });
+      if (data.displayName !== undefined || avatarKey !== undefined) await announceProfile(tx, emit, userId);
+      return { user, previousKey: before.avatarKey };
+    });
+    if (previousKey && previousKey !== user.avatarKey) await deleteObjects([previousKey]).catch(() => null);
     return toUserDTO(user);
   } catch (err) {
     if (isUniqueViolation(err)) throw new AppError("USERNAME_TAKEN");
@@ -94,6 +125,7 @@ export async function deleteAccount(userId: string) {
         email: `deleted-${userId}@deleted.invalid`,
         displayName: "Deleted account",
         avatarUrl: null,
+        avatarKey: null,
         username: null,
         contactCode: generateCode(),
         findByEmail: false,
@@ -103,15 +135,11 @@ export async function deleteAccount(userId: string) {
       },
     });
 
-    const chats = await tx.chatMember.findMany({ where: { userId }, select: { chatId: true } });
-    for (const { chatId } of chats) {
-      const others = await tx.chatMember.findMany({ where: { chatId, userId: { not: userId } }, select: { userId: true } });
-      for (const o of others) emit(o.userId, "chat.updated", await getChat(o.userId, chatId, tx));
-    }
+    await announceProfile(tx, emit, userId);
     const sessions = await tx.session.findMany({ where: { userId, revokedAt: null }, select: { id: true } });
     return {
       sessionIds: sessions.map((s) => s.id),
-      photoKeys: overrides.map((o) => o.photoKey).filter((k): k is string => !!k),
+      photoKeys: [user.avatarKey, ...overrides.map((o) => o.photoKey)].filter((k): k is string => !!k),
     };
   });
 

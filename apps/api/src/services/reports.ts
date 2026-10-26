@@ -17,6 +17,7 @@ import { banUser } from "./admin.js";
 import { EPHEMERAL_LINK_SECONDS, deleteMessages, visibleTo } from "./messages.js";
 import { toStickerDTO } from "./stickers.js";
 import { toAttachmentDTO } from "./uploads.js";
+import { avatarOf } from "./users.js";
 
 /** How many messages before and after a reported one are copied for context. */
 const CONTEXT = 3;
@@ -49,7 +50,7 @@ export const toUserRef = (u: User): AdminUserRef => ({
   id: u.id,
   displayName: u.displayName,
   email: u.email,
-  avatarUrl: u.avatarUrl,
+  avatarUrl: avatarOf(u),
   bannedAt: u.bannedAt?.toISOString() ?? null,
 });
 

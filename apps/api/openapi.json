@@ -3151,6 +3151,12 @@
                     "type": "string",
                     "format": "uri"
                   },
+                  "photo": {
+                    "description": "A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes your photo",
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$"
+                  },
                   "username": {
                     "nullable": true,
                     "type": "string"

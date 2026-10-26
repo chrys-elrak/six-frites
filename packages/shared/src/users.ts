@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Id, IsoDate } from "./common.js";
+import { ContactPhoto } from "./contacts.js";
 
 export const UserDTO = z.object({
   id: Id,
@@ -34,6 +35,9 @@ export const Username = z
 export const UpdateMeInput = z.object({
   displayName: z.string().trim().min(1).max(64).optional(),
   avatarUrl: z.string().url().nullable().optional(),
+  photo: ContactPhoto.nullable()
+    .optional()
+    .describe("A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes your photo"),
   username: Username.nullable().optional(),
   findByEmail: z.boolean().optional(),
 });
