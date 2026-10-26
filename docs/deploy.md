@@ -23,6 +23,8 @@ cp .env.production.example .env
 
 Fill in the secrets in `.env`. Each of `POSTGRES_PASSWORD`, `JWT_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` and
 `TURN_SECRET` can be `openssl rand -hex 32`. Web push keys come from `npx web-push generate-vapid-keys`.
+`FCM_SERVICE_ACCOUNT` is the Firebase service account key for Android push (Firebase console, Project settings >
+Service accounts > Generate new private key), the whole JSON on one line in single quotes.
 
 In Google Cloud, add `https://six-frites.koera.mg` to the web client's Authorized JavaScript origins.
 
@@ -56,3 +58,7 @@ Build the release app against production by setting these in `apps/mobile/.env` 
 EXPO_PUBLIC_API_URL=https://six-frites.koera.mg
 EXPO_PUBLIC_WEB_URL=https://six-frites.koera.mg
 ```
+
+For push notifications on Android, register the `com.sixfrites.app` Android app in the same Firebase project as
+`FCM_SERVICE_ACCOUNT` and put its `google-services.json` in `apps/mobile/`. Builds without that file still work,
+just without push.

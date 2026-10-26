@@ -19,6 +19,7 @@ const Env = z.object({
   WEB_PUSH_PUBLIC_KEY: z.string().optional(),
   WEB_PUSH_PRIVATE_KEY: z.string().optional(),
   WEB_PUSH_SUBJECT: z.string().default("mailto:admin@example.com"),
+  FCM_SERVICE_ACCOUNT: z.string().optional(),
   GIPHY_API_KEY: z.string().optional(),
   STUN_URLS: z
     .string()

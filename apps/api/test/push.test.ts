@@ -1,5 +1,5 @@
 import type { PushPayload } from "@six/shared";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { setActive } from "../src/lib/presence.js";
 import { pushQueue } from "../src/lib/queue.js";
 import { setPushProviders } from "../src/push/providers.js";
@@ -175,6 +175,36 @@ describe("Web Push delivery", () => {
       expect(await provider.send(subscription, payload)).toBe("gone");
     } finally {
       server.close();
+    }
+  });
+});
+
+describe("FCM delivery", () => {
+  it("sends a data message the app can present and open, and recognises dead tokens", async () => {
+    const { GoogleAuth } = await import("google-auth-library");
+    const { FcmProvider } = await import("../src/push/providers.js");
+
+    vi.spyOn(GoogleAuth.prototype, "getAccessToken").mockResolvedValue("oauth-token");
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response("{}", { status: 200 }))
+      .mockResolvedValueOnce(new Response("{}", { status: 404 }));
+    const provider = new FcmProvider({ project_id: "six", client_email: "x@six.iam.gserviceaccount.com", private_key: "k" });
+    const payload = { title: "Ana", body: "hi there", icon: null, chatId: "c", messageId: "m", url: "/chats/c" };
+
+    try {
+      expect(await provider.send("device", payload)).toBe("sent");
+      const [url, init] = fetch.mock.calls[0]!;
+      expect(url).toBe("https://fcm.googleapis.com/v1/projects/six/messages:send");
+      expect((init!.headers as Record<string, string>).authorization).toBe("Bearer oauth-token");
+      const { message } = JSON.parse(String(init!.body));
+      expect(message).toMatchObject({ token: "device", android: { priority: "HIGH" } });
+      expect(message.data).toMatchObject({ title: "Ana", message: "hi there", channelId: "messages", tag: "c" });
+      expect(JSON.parse(message.data.body)).toEqual({ chatId: "c", messageId: "m", url: "/chats/c" });
+
+      expect(await provider.send("device", payload)).toBe("gone");
+    } finally {
+      vi.restoreAllMocks();
     }
   });
 });
