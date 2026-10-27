@@ -180,7 +180,7 @@ const en = {
   },
   keyboardMedia: {
     title: "GIFs and stickers from the keyboard",
-    hint: "Chrome on Android only lets Gboard send GIFs and stickers to websites once a setting is on. Copy this address, paste it in Chrome's address bar, set it to Enabled and restart Chrome.",
+    hint: "Chrome on Android only lets Gboard send GIFs and stickers to websites once a setting is on. Copy this address, paste it in Chrome's address bar, set \"Enable IME media insertion\" to Enabled and tap Relaunch.",
     copy: "Copy",
     copied: "Copied",
   },
@@ -367,7 +367,7 @@ const fr: typeof en = {
   },
   keyboardMedia: {
     title: "GIF et stickers depuis le clavier",
-    hint: "Chrome sur Android ne laisse Gboard envoyer des GIF et des stickers aux sites web qu'une fois un réglage activé. Copiez cette adresse, collez-la dans la barre d'adresse de Chrome, choisissez Enabled et redémarrez Chrome.",
+    hint: "Chrome sur Android ne laisse Gboard envoyer des GIF et des stickers aux sites web qu'une fois un réglage activé. Copiez cette adresse, collez-la dans la barre d'adresse de Chrome, passez « Enable IME media insertion » sur Enabled et touchez Relaunch.",
     copy: "Copier",
     copied: "Copié",
   },
@@ -552,7 +552,7 @@ const mg: typeof en = {
   },
   keyboardMedia: {
     title: "GIF sy sticker avy amin'ny klavie",
-    hint: "Ao amin'ny Chrome Android, tsy afaka mandefa GIF sy sticker any amin'ny tranonkala ny Gboard raha tsy alefa ny safidy iray. Adikao ity adiresy ity, apetaho ao amin'ny toerana anoratana adiresy ao amin'ny Chrome, safidio Enabled ary avereno alefa ny Chrome.",
+    hint: "Ao amin'ny Chrome Android, tsy afaka mandefa GIF sy sticker any amin'ny tranonkala ny Gboard raha tsy alefa ny safidy iray. Adikao ity adiresy ity, apetaho ao amin'ny toerana anoratana adiresy ao amin'ny Chrome, ataovy Enabled ny « Enable IME media insertion » ary tsindrio Relaunch.",
     copy: "Adikao",
     copied: "Voadika",
   },
