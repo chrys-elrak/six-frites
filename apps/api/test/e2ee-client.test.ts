@@ -24,6 +24,14 @@ class MemoryStore implements SecretStore {
   }
 }
 
+/** Saves like IndexedDB or a phone's files do: a moment after it is asked to. */
+class SlowStore extends MemoryStore {
+  override async set(key: string, value: string) {
+    await new Promise((r) => setTimeout(r, 5));
+    await super.set(key, value);
+  }
+}
+
 /** An SDK REST client that talks to the in-process app instead of the network. */
 function restFor(auth: Auth) {
   return createClient<paths>({
@@ -105,6 +113,16 @@ describe("E2EE client", () => {
     }
     const again = await latest(guest, chatId);
     expect(await textOf(guest, again)).toBe("laptop 2");
+  });
+
+  it("reads a message opened twice at once", async () => {
+    const { phone, guest, chatId, members } = await setup();
+    const reader = appFor(guest.auth, new SlowStore());
+    await reader.e2ee.ready();
+    await say(phone, chatId, members, "notified and listed");
+    const m = await latest(reader, chatId);
+    const [a, b] = await Promise.all([textOf(reader, m), textOf(reader, m)]);
+    expect([a, b]).toEqual(["notified and listed", "notified and listed"]);
   });
 
   it("copes with both sides starting a session at the same time", async () => {

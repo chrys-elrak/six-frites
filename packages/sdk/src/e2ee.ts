@@ -405,26 +405,26 @@ export class E2EE {
     }
     await this.ready();
 
-    const fromEnvelope = await this.serial(async () => {
+    return this.serial(async (): Promise<Opened> => {
       const opened = await this.getJSON<Cached>(`plain:${m.id}`);
-      return opened && opened.editedAt === m.editedAt ? opened.content : this.openEnvelope(m);
+      if (opened && opened.editedAt === m.editedAt) return { status: "ok", content: opened.content };
+      const content =
+        (await this.openEnvelope(m)) ??
+        (m.senderId === this.userId && m.encryption!.senderDeviceId === this.deviceId
+          ? await this.getJSON<MessageContent>(`sent:${m.chatId}:${m.clientId}`)
+          : null) ??
+        (await this.openBackup(m));
+      if (!content) {
+        const hasEnvelope = m.encryption!.envelopes.some((e) => e.deviceId === this.deviceId);
+        return { status: "unavailable", reason: hasEnvelope ? "failed" : "no-envelope" };
+      }
+      if (content.chatId !== m.chatId || content.clientId !== m.clientId) {
+        return { status: "unavailable", reason: "failed" };
+      }
+      await this.setJSON(`plain:${m.id}`, { content, editedAt: m.editedAt } satisfies Cached);
+      if (!m.encryption!.backup) void this.queueBackup(m, content);
+      return { status: "ok", content };
     });
-    const content =
-      fromEnvelope ??
-      (m.senderId === this.userId && m.encryption.senderDeviceId === this.deviceId
-        ? await this.getJSON<MessageContent>(`sent:${m.chatId}:${m.clientId}`)
-        : null) ??
-      (await this.openBackup(m));
-    if (!content) {
-      const hasEnvelope = m.encryption.envelopes.some((e) => e.deviceId === this.deviceId);
-      return { status: "unavailable", reason: hasEnvelope ? "failed" : "no-envelope" };
-    }
-    if (content.chatId !== m.chatId || content.clientId !== m.clientId) {
-      return { status: "unavailable", reason: "failed" };
-    }
-    await this.setJSON(`plain:${m.id}`, { content, editedAt: m.editedAt } satisfies Cached);
-    if (!m.encryption.backup) void this.queueBackup(m, content);
-    return { status: "ok", content };
   }
 
   private async openEnvelope(m: MessageDTO): Promise<MessageContent | null> {
