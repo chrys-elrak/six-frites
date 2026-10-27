@@ -4739,6 +4739,10 @@
                                     "type": "boolean",
                                     "description": "Content permanently deleted; it can no longer be resent"
                                   },
+                                  "resent": {
+                                    "type": "boolean",
+                                    "description": "The sender re-armed it after it was opened"
+                                  },
                                   "resendsLeft": {
                                     "type": "integer",
                                     "minimum": -9007199254740991,
@@ -4761,6 +4765,7 @@
                                   "locked",
                                   "expired",
                                   "purged",
+                                  "resent",
                                   "resendsLeft",
                                   "resendUntil"
                                 ],
@@ -5588,6 +5593,10 @@
                               "type": "boolean",
                               "description": "Content permanently deleted; it can no longer be resent"
                             },
+                            "resent": {
+                              "type": "boolean",
+                              "description": "The sender re-armed it after it was opened"
+                            },
                             "resendsLeft": {
                               "type": "integer",
                               "minimum": -9007199254740991,
@@ -5610,6 +5619,7 @@
                             "locked",
                             "expired",
                             "purged",
+                            "resent",
                             "resendsLeft",
                             "resendUntil"
                           ],
@@ -6464,6 +6474,10 @@
                               "type": "boolean",
                               "description": "Content permanently deleted; it can no longer be resent"
                             },
+                            "resent": {
+                              "type": "boolean",
+                              "description": "The sender re-armed it after it was opened"
+                            },
                             "resendsLeft": {
                               "type": "integer",
                               "minimum": -9007199254740991,
@@ -6486,6 +6500,7 @@
                             "locked",
                             "expired",
                             "purged",
+                            "resent",
                             "resendsLeft",
                             "resendUntil"
                           ],
@@ -7438,6 +7453,10 @@
                           "type": "boolean",
                           "description": "Content permanently deleted; it can no longer be resent"
                         },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
                         "resendsLeft": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -7460,6 +7479,7 @@
                         "locked",
                         "expired",
                         "purged",
+                        "resent",
                         "resendsLeft",
                         "resendUntil"
                       ],
@@ -8129,6 +8149,10 @@
                           "type": "boolean",
                           "description": "Content permanently deleted; it can no longer be resent"
                         },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
                         "resendsLeft": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -8151,6 +8175,7 @@
                         "locked",
                         "expired",
                         "purged",
+                        "resent",
                         "resendsLeft",
                         "resendUntil"
                       ],
@@ -8810,6 +8835,10 @@
                           "type": "boolean",
                           "description": "Content permanently deleted; it can no longer be resent"
                         },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
                         "resendsLeft": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -8832,6 +8861,7 @@
                         "locked",
                         "expired",
                         "purged",
+                        "resent",
                         "resendsLeft",
                         "resendUntil"
                       ],
@@ -9484,6 +9514,10 @@
                               "type": "boolean",
                               "description": "Content permanently deleted; it can no longer be resent"
                             },
+                            "resent": {
+                              "type": "boolean",
+                              "description": "The sender re-armed it after it was opened"
+                            },
                             "resendsLeft": {
                               "type": "integer",
                               "minimum": -9007199254740991,
@@ -9506,6 +9540,7 @@
                             "locked",
                             "expired",
                             "purged",
+                            "resent",
                             "resendsLeft",
                             "resendUntil"
                           ],
@@ -10169,6 +10204,10 @@
                           "type": "boolean",
                           "description": "Content permanently deleted; it can no longer be resent"
                         },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
                         "resendsLeft": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -10191,6 +10230,7 @@
                         "locked",
                         "expired",
                         "purged",
+                        "resent",
                         "resendsLeft",
                         "resendUntil"
                       ],
@@ -10918,6 +10958,10 @@
                                 "type": "boolean",
                                 "description": "Content permanently deleted; it can no longer be resent"
                               },
+                              "resent": {
+                                "type": "boolean",
+                                "description": "The sender re-armed it after it was opened"
+                              },
                               "resendsLeft": {
                                 "type": "integer",
                                 "minimum": -9007199254740991,
@@ -10940,6 +10984,7 @@
                               "locked",
                               "expired",
                               "purged",
+                              "resent",
                               "resendsLeft",
                               "resendUntil"
                             ],
@@ -11811,6 +11856,10 @@
                           "type": "boolean",
                           "description": "Content permanently deleted; it can no longer be resent"
                         },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
                         "resendsLeft": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -11833,6 +11882,7 @@
                         "locked",
                         "expired",
                         "purged",
+                        "resent",
                         "resendsLeft",
                         "resendUntil"
                       ],
@@ -14228,6 +14278,10 @@
                           "type": "boolean",
                           "description": "Content permanently deleted; it can no longer be resent"
                         },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
                         "resendsLeft": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -14250,6 +14304,7 @@
                         "locked",
                         "expired",
                         "purged",
+                        "resent",
                         "resendsLeft",
                         "resendUntil"
                       ],
@@ -15770,6 +15825,10 @@
                                         "type": "boolean",
                                         "description": "Content permanently deleted; it can no longer be resent"
                                       },
+                                      "resent": {
+                                        "type": "boolean",
+                                        "description": "The sender re-armed it after it was opened"
+                                      },
                                       "resendsLeft": {
                                         "type": "integer",
                                         "minimum": -9007199254740991,
@@ -15792,6 +15851,7 @@
                                       "locked",
                                       "expired",
                                       "purged",
+                                      "resent",
                                       "resendsLeft",
                                       "resendUntil"
                                     ],
@@ -16431,6 +16491,10 @@
                                         "type": "boolean",
                                         "description": "Content permanently deleted; it can no longer be resent"
                                       },
+                                      "resent": {
+                                        "type": "boolean",
+                                        "description": "The sender re-armed it after it was opened"
+                                      },
                                       "resendsLeft": {
                                         "type": "integer",
                                         "minimum": -9007199254740991,
@@ -16453,6 +16517,7 @@
                                       "locked",
                                       "expired",
                                       "purged",
+                                      "resent",
                                       "resendsLeft",
                                       "resendUntil"
                                     ],
@@ -17276,6 +17341,10 @@
                                             "type": "boolean",
                                             "description": "Content permanently deleted; it can no longer be resent"
                                           },
+                                          "resent": {
+                                            "type": "boolean",
+                                            "description": "The sender re-armed it after it was opened"
+                                          },
                                           "resendsLeft": {
                                             "type": "integer",
                                             "minimum": -9007199254740991,
@@ -17298,6 +17367,7 @@
                                           "locked",
                                           "expired",
                                           "purged",
+                                          "resent",
                                           "resendsLeft",
                                           "resendUntil"
                                         ],
@@ -19319,6 +19389,10 @@
                           "type": "boolean",
                           "description": "Content permanently deleted; it can no longer be resent"
                         },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
                         "resendsLeft": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -19341,6 +19415,7 @@
                         "locked",
                         "expired",
                         "purged",
+                        "resent",
                         "resendsLeft",
                         "resendUntil"
                       ],

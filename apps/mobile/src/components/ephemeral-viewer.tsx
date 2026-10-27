@@ -18,10 +18,12 @@ const ON_DARK: BubbleColors = { bg: brand, ink: brandInk, theirBg: null, theirIn
 export function EphemeralViewer({
   message,
   expiresAt,
+  mine,
   onClose,
 }: {
   message: MessageDTO;
   expiresAt: string | null;
+  mine: boolean;
   onClose: () => void;
 }) {
   const tr = useT();
@@ -95,13 +97,15 @@ export function EphemeralViewer({
         </ScrollView>
 
         <Text style={styles.footer}>
-          {viewsLeft === 0
-            ? tr.messages.goneOnClose
-            : left !== null
-              ? tr.messages.goneOnTimer
-              : viewsLeft
-                ? tr.messages.opensLeft(viewsLeft)
-                : ""}
+          {mine
+            ? ""
+            : viewsLeft === 0
+              ? tr.messages.goneOnClose
+              : left !== null
+                ? tr.messages.goneOnTimer
+                : viewsLeft
+                  ? tr.messages.opensLeft(viewsLeft)
+                  : ""}
         </Text>
       </View>
     </Modal>

@@ -172,6 +172,7 @@ function buildRows(
                 locked: false,
                 expired: false,
                 purged: false,
+                resent: false,
                 resendsLeft: EPHEMERAL_RESEND.max,
                 resendUntil: null,
               }
@@ -355,7 +356,11 @@ function Sealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
     >
       <span
         className={`grid size-10 shrink-0 place-items-center rounded-full ${
-          e.expired ? "bg-stone-500/15 text-stone-500" : "bg-orange-500/15 text-orange-600 dark:text-orange-400"
+          e.expired
+            ? "bg-stone-500/15 text-stone-500"
+            : row.mine
+              ? "bg-black/10"
+              : "bg-orange-500/15 text-orange-600 dark:text-orange-400"
         }`}
       >
         <Flame className={`size-5 ${e.expired ? "" : "fill-current"}`} />
@@ -364,6 +369,7 @@ function Sealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
         <span className="block font-semibold">{e.expired ? tr.messages.opened : tr.messages.tapToView}</span>
         <span className="block text-xs opacity-70">
           {kind} · {shortRule(e, tr)}
+          {e.resent && ` · ${tr.messages.resent}`}
         </span>
       </span>
     </button>
@@ -456,7 +462,7 @@ function Bubble({
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
   const e = row.ephemeral;
-  const sealed = !!e && (e.locked || (e.expired && (!row.mine || e.purged)));
+  const sealed = !!e && (mine || e.locked || e.expired);
   const jumbo =
     !row.deleted &&
     !row.ephemeral &&
@@ -527,7 +533,7 @@ function Bubble({
                   onClick={() => onQuote(row.replyTo!.id)}
                 />
               )}
-              {row.ephemeral && !sealed && !row.deleted && <SenderBadge e={row.ephemeral} onResend={onResend} />}
+              {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} onResend={onResend} />}
               {row.attachment && !row.deleted && !sealed && (
                 <AttachmentView
                   attachment={row.attachment}
@@ -671,13 +677,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       if (!shown) return;
       viewingRef.current = null;
       setViewing(null);
+      if (shown.message.senderId === meId) return;
       const id = shown.message.id;
       const e = shown.message.ephemeral;
       const endsAt = shown.expiresAt ? Date.parse(shown.expiresAt) : null;
       const viewsUsed = !!e?.maxViews && e.views >= e.maxViews;
       if (viewsUsed || (endsAt !== null && Date.now() >= endsAt - 250)) markOpenedLocally(qc, chat.id, id);
       else if (endsAt !== null) setTimeout(() => markOpenedLocally(qc, chat.id, id), endsAt - Date.now());
-    }, [qc, chat.id]);
+    }, [qc, chat.id, meId]);
 
     async function resendEphemeral(m: MessageDTO) {
       try {
@@ -693,6 +700,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     async function openEphemeral(row: MsgRow) {
       const id = row.id;
       if (!id) return;
+      if (row.mine && row.message) return setViewing({ message: row.message, expiresAt: null });
       try {
         const result = unwrap(await six.api.POST("/v1/messages/{id}/view", { params: { path: { id } } }));
         setViewing({ ...result, message: await hydrate(result.message) });
@@ -923,7 +931,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           />
         )}
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
-        {viewing && <EphemeralViewer message={viewing.message} expiresAt={viewing.expiresAt} onClose={closeViewer} />}
+        {viewing && (
+          <EphemeralViewer
+            message={viewing.message}
+            expiresAt={viewing.expiresAt}
+            mine={viewing.message.senderId === meId}
+            onClose={closeViewer}
+          />
+        )}
         {reporting && (
           <ReportDialog
             target={{ messageId: reporting.id }}

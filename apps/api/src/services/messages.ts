@@ -126,6 +126,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
           locked,
           expired,
           purged,
+          resent: m.resendCount > 0,
           resendsLeft: isSender && !purged ? Math.max(0, EPHEMERAL_RESEND.max - m.resendCount) : 0,
           resendUntil:
             isSender && m.expiredAt && !purged

@@ -166,6 +166,7 @@ function buildRows(
                 locked: false,
                 expired: false,
                 purged: false,
+                resent: false,
                 resendsLeft: EPHEMERAL_RESEND.max,
                 resendUntil: null,
               }
@@ -333,16 +334,23 @@ function Sealed({ row, color, onOpen }: { row: MsgRow; color: string; onOpen: ()
   const t = useTheme();
   const tr = useT();
   const e = row.ephemeral!;
+  const tint = row.mine ? color : flame;
   const kind = row.type === "text" ? tr.common.message : mediaLabel(row.type, tr);
   return (
     <Pressable onPress={onOpen} disabled={e.expired} style={styles.sealed}>
-      <View style={[styles.sealedIcon, { backgroundColor: e.expired ? "rgba(120,113,108,0.15)" : "rgba(249,115,22,0.15)" }]}>
-        <Flame size={20} color={e.expired ? t.muted : flame} fill={e.expired ? "none" : flame} />
+      <View
+        style={[
+          styles.sealedIcon,
+          { backgroundColor: e.expired ? "rgba(120,113,108,0.15)" : row.mine ? "rgba(0,0,0,0.1)" : "rgba(249,115,22,0.15)" },
+        ]}
+      >
+        <Flame size={20} color={e.expired ? t.muted : tint} fill={e.expired ? "none" : tint} />
       </View>
       <View style={{ flexShrink: 1 }}>
         <Text style={{ color, fontWeight: "700", fontSize: 15 }}>{e.expired ? tr.messages.opened : tr.messages.tapToView}</Text>
         <Text style={{ color, opacity: 0.7, fontSize: 12 }}>
           {kind} · {shortRule(e, tr)}
+          {e.resent && ` · ${tr.messages.resent}`}
         </Text>
       </View>
     </Pressable>
@@ -426,7 +434,7 @@ function Bubble({
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
   const e = row.ephemeral;
-  const sealed = !!e && (e.locked || (e.expired && (!mine || e.purged)));
+  const sealed = !!e && (mine || e.locked || e.expired);
   const jumbo =
     !row.deleted && !row.ephemeral && !row.attachment && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text
       ? emojiOnly(row.text)
@@ -531,7 +539,7 @@ function Bubble({
           {row.replyTo && !row.deleted && (
             <Quote reply={row.replyTo} mine={mine && !bare} name={nameOf(row.replyTo.senderId)} onPress={() => onQuote(row.replyTo!.id)} />
           )}
-          {row.ephemeral && !sealed && !row.deleted && <SenderBadge e={row.ephemeral} color={fg} onResend={onResend} />}
+          {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} color={fg} onResend={onResend} />}
           {row.attachment && !row.deleted && !sealed && (
             <AttachmentView
               attachment={row.attachment}
@@ -646,13 +654,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       if (!shown) return;
       viewingRef.current = null;
       setViewing(null);
+      if (shown.message.senderId === meId) return;
       const id = shown.message.id;
       const e = shown.message.ephemeral;
       const endsAt = shown.expiresAt ? Date.parse(shown.expiresAt) : null;
       const viewsUsed = !!e?.maxViews && e.views >= e.maxViews;
       if (viewsUsed || (endsAt !== null && Date.now() >= endsAt - 250)) markOpenedLocally(qc, chat.id, id);
       else if (endsAt !== null) setTimeout(() => markOpenedLocally(qc, chat.id, id), endsAt - Date.now());
-    }, [qc, chat.id]);
+    }, [qc, chat.id, meId]);
 
     async function resendEphemeral(m: MessageDTO) {
       try {
@@ -666,6 +675,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       const id = row.id;
       if (!id || selecting) return;
       try {
+        if (row.mine && row.message) return setViewing({ message: await revealNow(meId, row.message), expiresAt: null });
         const res = await six.api.POST("/v1/messages/{id}/view", { params: { path: { id } } });
         const result = unwrap(res);
         const message = await revealNow(meId, result.message);
@@ -901,7 +911,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           }}
         />
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
-        {viewing && <EphemeralViewer message={viewing.message} expiresAt={viewing.expiresAt} onClose={closeViewer} />}
+        {viewing && (
+          <EphemeralViewer
+            message={viewing.message}
+            expiresAt={viewing.expiresAt}
+            mine={viewing.message.senderId === meId}
+            onClose={closeViewer}
+          />
+        )}
         {confirmDelete && (
           <Sheet
             title={tr.messages.deleteTitle}

@@ -73,10 +73,12 @@ function Media({ attachment }: { attachment: ShownAttachment }) {
 export function EphemeralViewer({
   message,
   expiresAt,
+  mine,
   onClose,
 }: {
   message: Hydrated;
   expiresAt: string | null;
+  mine: boolean;
   onClose: () => void;
 }) {
   const tr = useT();
@@ -146,13 +148,15 @@ export function EphemeralViewer({
         </div>
 
         <p className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-white/60">
-          {viewsLeft === 0
-            ? tr.messages.goneOnClose
-            : msLeft !== null
-              ? tr.messages.goneOnTimer
-              : viewsLeft
-                ? tr.messages.opensLeft(viewsLeft)
-                : null}
+          {mine
+            ? null
+            : viewsLeft === 0
+              ? tr.messages.goneOnClose
+              : msLeft !== null
+                ? tr.messages.goneOnTimer
+                : viewsLeft
+                  ? tr.messages.opensLeft(viewsLeft)
+                  : null}
         </p>
       </div>
     </Portal>

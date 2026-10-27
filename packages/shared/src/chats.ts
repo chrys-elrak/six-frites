@@ -101,6 +101,7 @@ export const EphemeralDTO = z.object({
   locked: z.boolean().describe("Content is withheld for you; open it with POST /v1/messages/{id}/view"),
   expired: z.boolean().describe("Its views or timer ran out; the recipient can no longer open it"),
   purged: z.boolean().describe("Content permanently deleted; it can no longer be resent"),
+  resent: z.boolean().describe("The sender re-armed it after it was opened"),
   resendsLeft: z.number().int().describe("How many more times the sender can re-arm it"),
   resendUntil: IsoDate.nullable().describe("Until when the sender can resend it, once it has been opened"),
 });

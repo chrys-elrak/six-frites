@@ -2372,6 +2372,8 @@ export interface paths {
                                         expired: boolean;
                                         /** @description Content permanently deleted; it can no longer be resent */
                                         purged: boolean;
+                                        /** @description The sender re-armed it after it was opened */
+                                        resent: boolean;
                                         /** @description How many more times the sender can re-arm it */
                                         resendsLeft: number;
                                         /**
@@ -2616,6 +2618,8 @@ export interface paths {
                                     expired: boolean;
                                     /** @description Content permanently deleted; it can no longer be resent */
                                     purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
                                     /** @description How many more times the sender can re-arm it */
                                     resendsLeft: number;
                                     /**
@@ -2895,6 +2899,8 @@ export interface paths {
                                     expired: boolean;
                                     /** @description Content permanently deleted; it can no longer be resent */
                                     purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
                                     /** @description How many more times the sender can re-arm it */
                                     resendsLeft: number;
                                     /**
@@ -3160,6 +3166,8 @@ export interface paths {
                                 expired: boolean;
                                 /** @description Content permanently deleted; it can no longer be resent */
                                 purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
                                 /** @description How many more times the sender can re-arm it */
                                 resendsLeft: number;
                                 /**
@@ -3360,6 +3368,8 @@ export interface paths {
                                 expired: boolean;
                                 /** @description Content permanently deleted; it can no longer be resent */
                                 purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
                                 /** @description How many more times the sender can re-arm it */
                                 resendsLeft: number;
                                 /**
@@ -3560,6 +3570,8 @@ export interface paths {
                                 expired: boolean;
                                 /** @description Content permanently deleted; it can no longer be resent */
                                 purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
                                 /** @description How many more times the sender can re-arm it */
                                 resendsLeft: number;
                                 /**
@@ -3758,6 +3770,8 @@ export interface paths {
                                     expired: boolean;
                                     /** @description Content permanently deleted; it can no longer be resent */
                                     purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
                                     /** @description How many more times the sender can re-arm it */
                                     resendsLeft: number;
                                     /**
@@ -3962,6 +3976,8 @@ export interface paths {
                                 expired: boolean;
                                 /** @description Content permanently deleted; it can no longer be resent */
                                 purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
                                 /** @description How many more times the sender can re-arm it */
                                 resendsLeft: number;
                                 /**
@@ -4202,6 +4218,8 @@ export interface paths {
                                     expired: boolean;
                                     /** @description Content permanently deleted; it can no longer be resent */
                                     purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
                                     /** @description How many more times the sender can re-arm it */
                                     resendsLeft: number;
                                     /**
@@ -4447,6 +4465,8 @@ export interface paths {
                                 expired: boolean;
                                 /** @description Content permanently deleted; it can no longer be resent */
                                 purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
                                 /** @description How many more times the sender can re-arm it */
                                 resendsLeft: number;
                                 /**
@@ -5152,6 +5172,8 @@ export interface paths {
                                 expired: boolean;
                                 /** @description Content permanently deleted; it can no longer be resent */
                                 purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
                                 /** @description How many more times the sender can re-arm it */
                                 resendsLeft: number;
                                 /**
@@ -5850,6 +5872,8 @@ export interface paths {
                                         expired: boolean;
                                         /** @description Content permanently deleted; it can no longer be resent */
                                         purged: boolean;
+                                        /** @description The sender re-armed it after it was opened */
+                                        resent: boolean;
                                         /** @description How many more times the sender can re-arm it */
                                         resendsLeft: number;
                                         /**
@@ -6013,6 +6037,8 @@ export interface paths {
                                         expired: boolean;
                                         /** @description Content permanently deleted; it can no longer be resent */
                                         purged: boolean;
+                                        /** @description The sender re-armed it after it was opened */
+                                        resent: boolean;
                                         /** @description How many more times the sender can re-arm it */
                                         resendsLeft: number;
                                         /**
@@ -6221,6 +6247,8 @@ export interface paths {
                                             expired: boolean;
                                             /** @description Content permanently deleted; it can no longer be resent */
                                             purged: boolean;
+                                            /** @description The sender re-armed it after it was opened */
+                                            resent: boolean;
                                             /** @description How many more times the sender can re-arm it */
                                             resendsLeft: number;
                                             /**
@@ -7063,6 +7091,8 @@ export interface paths {
                                 expired: boolean;
                                 /** @description Content permanently deleted; it can no longer be resent */
                                 purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
                                 /** @description How many more times the sender can re-arm it */
                                 resendsLeft: number;
                                 /**

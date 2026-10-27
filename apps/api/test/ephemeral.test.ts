@@ -21,13 +21,14 @@ describe("resending self-destructing messages", () => {
   it("re-arms an opened message for the recipient, at most three times", async () => {
     const { host, guest, chatId } = await makeFriends();
     const sent = (await send(host, chatId, "look again", { ephemeral: { maxViews: 1 } })).json();
+    expect(sent.ephemeral.resent).toBe(false);
     expect((await resend(host, sent.id)).json().error.code).toBe("RESEND_NOT_ALLOWED");
 
     for (let round = 1; round <= 3; round++) {
       expect((await view(guest, sent.id)).json().message.text).toBe("look again");
       const again = (await resend(host, sent.id)).json();
       expect(again.ephemeral).toMatchObject({ expired: false, views: 0, resendsLeft: 3 - round });
-      expect(await latest(guest, chatId)).toMatchObject({ text: null, ephemeral: { locked: true, views: 0 } });
+      expect(await latest(guest, chatId)).toMatchObject({ text: null, ephemeral: { locked: true, views: 0, resent: true } });
     }
 
     expect((await view(guest, sent.id)).json().message.text).toBe("look again");
