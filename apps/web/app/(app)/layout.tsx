@@ -17,6 +17,7 @@ import { primeAudio, useNotifyPrefs } from "@/lib/notify";
 import { relinkPush } from "@/lib/push";
 import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
+import { UpdatePrompt } from "@/components/update-prompt";
 import { CallScreen } from "@/components/call-screen";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
@@ -100,6 +101,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       {!locked && <Toasts />}
+      {!locked && <UpdatePrompt />}
       <CallScreen />
       <UnreadTitle />
       {locked && <LockScreen />}
