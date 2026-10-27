@@ -28,6 +28,7 @@ import {
   Lock,
   Mic,
   MoreHorizontal,
+  Reply,
   SmilePlus,
   Paperclip,
   RotateCcw,
@@ -62,13 +63,14 @@ import { useRealtime } from "@/lib/realtime";
 import { deliver } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
+import { useSwipeRight } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { EphemeralViewer } from "./ephemeral-viewer";
 import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
-import { ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
+import { ReactionBar, ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
 import { Sheet, type SheetAction } from "./sheet";
 import { ServiceIcon } from "./service-icon";
 import { StickerView } from "./sticker";
@@ -413,6 +415,7 @@ function Bubble({
   selected,
   nameOf,
   onMenu,
+  onReply,
   onQuote,
   onToggle,
   onOpen,
@@ -421,7 +424,6 @@ function Bubble({
   onOpenPack,
   meId,
   onReact,
-  onLongPress,
   onReactButton,
   frozen,
 }: {
@@ -431,6 +433,7 @@ function Bubble({
   selected: boolean;
   nameOf: (userId: string) => string;
   onMenu: () => void;
+  onReply: () => void;
   onQuote: (id: string) => void;
   onToggle: () => void;
   onOpen: (item: LightboxItem) => void;
@@ -439,7 +442,6 @@ function Bubble({
   onOpenPack: (packId: string) => void;
   meId: string;
   onReact: (emoji: string) => void;
-  onLongPress: (anchor: DOMRect) => void;
   onReactButton: (anchor: DOMRect) => void;
   frozen: boolean;
 }) {
@@ -448,8 +450,9 @@ function Bubble({
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
   const anchor = () => bubble.current!.getBoundingClientRect();
-  const press = useLongPress(selectable ? onToggle : () => onLongPress(anchor()));
+  const press = useLongPress(selectable ? onToggle : onMenu);
   const reactable = !selecting && !frozen && canReact(row);
+  const swipe = useSwipeRight(!selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null);
 
   function onTap(e: React.MouseEvent) {
     if (!reactable || (e.target as Element).closest("a, button, video, audio, input")) return;
@@ -491,6 +494,7 @@ function Bubble({
 
   return (
     <div
+      {...swipe.handlers}
       onClickCapture={
         selectable
           ? (e) => {
@@ -500,7 +504,7 @@ function Bubble({
             }
           : undefined
       }
-      className={`group flex items-center gap-2 px-3 ${selectable ? "cursor-pointer" : ""} ${
+      className={`group relative flex touch-pan-y touch-pinch-zoom items-center gap-2 overflow-x-clip px-3 ${selectable ? "cursor-pointer" : ""} ${
         selected ? "bg-brand/10" : ""
       } ${groupEnd ? "pb-3" : "pb-1"}`}
     >
@@ -513,7 +517,12 @@ function Bubble({
           )}
         </span>
       )}
-      <div className={`flex min-w-0 flex-1 ${mine ? "justify-end" : "justify-start"}`}>
+      <div ref={swipe.hint} className="pointer-events-none absolute inset-y-0 left-3 flex items-center opacity-0">
+        <span className="grid size-8 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm">
+          <Reply className="size-4" />
+        </span>
+      </div>
+      <div ref={swipe.moving} className={`flex min-w-0 flex-1 ${mine ? "justify-end" : "justify-start"}`}>
         <div className={`flex max-w-[80%] items-center gap-1 md:max-w-[65%] ${mine ? "flex-row-reverse" : ""}`}>
           <div className="flex min-w-0 flex-col items-end gap-1">
             <div
@@ -521,7 +530,7 @@ function Bubble({
               {...press}
               onClick={onTap}
               onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
-              className={`${radius} ${tone} ${jumbo || note || sticker ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow touch-manipulation [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${radius} ${tone} ${jumbo || note || sticker ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -810,14 +819,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
           : []),
-        ...(m.ephemeral
-          ? []
-          : [
-              ...(m.text ? [{ label: tr.common.copy, onSelect: () => void navigator.clipboard.writeText(m.text ?? "") }] : []),
-              ...(row.mine && m.type !== "sticker" && !frozen && !m.undecryptable
-                ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
-                : []),
-            ]),
+        ...(!m.ephemeral && row.mine && m.type !== "sticker" && !frozen && !m.undecryptable
+          ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
+          : []),
         ...(row.mine ? [] : [{ label: tr.common.report, onSelect: () => setReporting(m) }]),
         { label: tr.common.delete, destructive: true, onSelect: () => setConfirmDelete(m) },
       ];
@@ -877,6 +881,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 selected={row.id !== null && selecting && selectedIds.includes(row.id)}
                 nameOf={nameOf}
                 onMenu={() => setMenuFor(row)}
+                onReply={() => row.message && setMode(chat.id, { kind: "reply", message: row.message })}
                 onQuote={jumpTo}
                 onToggle={() => row.id && toggleSelected(row.id)}
                 onOpen={setLightbox}
@@ -886,10 +891,6 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 meId={meId}
                 onReact={(emoji) => !frozen && row.message && void react(qc, row.message, meId, emoji)}
                 frozen={frozen}
-                onLongPress={(anchor) => {
-                  setMenuFor(row);
-                  if (!frozen && canReact(row)) setReactAt({ row, anchor });
-                }}
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
               />
             )
@@ -897,13 +898,24 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         </VList>
 
         {menuFor && (
-          <Sheet
-            actions={actionsFor(menuFor)}
-            onClose={() => {
-              setMenuFor(null);
-              setReactAt(null);
-            }}
-          />
+          <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)}>
+            {!frozen && canReact(menuFor) && (
+              <div className="rounded-full bg-white px-1.5 py-1 shadow-xl dark:bg-stone-900">
+                <ReactionBar
+                  message={menuFor.message!}
+                  meId={meId}
+                  onReact={(emoji) => {
+                    setMenuFor(null);
+                    void react(qc, menuFor.message!, meId, emoji);
+                  }}
+                  onMore={() => {
+                    setMenuFor(null);
+                    setReactFor(menuFor.message);
+                  }}
+                />
+              </div>
+            )}
+          </Sheet>
         )}
         {reactAt && (
           <ReactionPopover
@@ -913,12 +925,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             meId={meId}
             onReact={(emoji) => {
               setReactAt(null);
-              setMenuFor(null);
               void react(qc, reactAt.row.message!, meId, emoji);
             }}
             onMore={() => {
               setReactAt(null);
-              setMenuFor(null);
               setReactFor(reactAt.row.message);
             }}
             onClose={closeReactBar}

@@ -15,10 +15,12 @@ export function Sheet({
   title,
   actions,
   onClose,
+  children,
 }: {
   title?: React.ReactNode;
   actions: SheetAction[];
   onClose: () => void;
+  children?: React.ReactNode;
 }) {
   const tr = useT();
   useEffect(() => {
@@ -37,6 +39,7 @@ export function Sheet({
           className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
         />
         <div className="relative w-full max-w-sm space-y-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3">
+          {children}
           <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-xl dark:bg-stone-900">
             {title && (
               <div className="border-b border-stone-200 px-4 py-3 text-center text-sm text-stone-500 dark:border-stone-800">

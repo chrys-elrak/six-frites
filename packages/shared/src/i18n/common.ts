@@ -17,7 +17,6 @@ const en = {
   retry: "Try again",
   loading: "Loading…",
   connecting: "Connecting…",
-  copy: "Copy",
   copied: "Copied",
   share: "Share",
   shareLink: "Share link",
@@ -52,6 +51,7 @@ const en = {
   newVersion: (v: string) => `Six Frites ${v} is available`,
   tapToUpdate: "Tap to download and install it.",
   update: "Update",
+  newWebVersion: "A new version of Six Frites is available",
   checkConnection: "Check your connection and try again.",
 };
 
@@ -74,7 +74,6 @@ const fr: typeof en = {
   retry: "Réessayer",
   loading: "Chargement…",
   connecting: "Connexion…",
-  copy: "Copier",
   copied: "Copié",
   share: "Partager",
   shareLink: "Partager le lien",
@@ -109,6 +108,7 @@ const fr: typeof en = {
   newVersion: (v) => `Six Frites ${v} est disponible`,
   tapToUpdate: "Touchez pour la télécharger et l'installer.",
   update: "Mettre à jour",
+  newWebVersion: "Une nouvelle version de Six Frites est disponible",
   checkConnection: "Vérifiez votre connexion et réessayez.",
 };
 
@@ -131,7 +131,6 @@ const mg: typeof en = {
   retry: "Andramo indray",
   loading: "Andraso kely…",
   connecting: "Mifandray…",
-  copy: "Adikao",
   copied: "Voadika",
   share: "Zarao",
   shareLink: "Zarao ny rohy",
@@ -166,6 +165,7 @@ const mg: typeof en = {
   newVersion: (v) => `Efa misy ny Six Frites ${v}`,
   tapToUpdate: "Tsindrio mba haka sy hametraka azy.",
   update: "Havaozy",
+  newWebVersion: "Efa misy ny Six Frites vaovao",
   checkConnection: "Hamarino ny fifandraisanao dia andramo indray.",
 };
 

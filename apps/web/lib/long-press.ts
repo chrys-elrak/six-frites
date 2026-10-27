@@ -2,6 +2,26 @@
 
 import { useRef } from "react";
 
+/**
+ * The finger is still down when the menu opens, so lifting it would click whatever the menu put under it.
+ * Eat that click, but let the next real press through.
+ */
+function swallowNextClick() {
+  const stop = (e: Event) => {
+    e.preventDefault();
+    e.stopPropagation();
+    done();
+  };
+  const done = () => {
+    window.removeEventListener("click", stop, true);
+    window.removeEventListener("pointerdown", done, true);
+    window.removeEventListener("keydown", done, true);
+  };
+  window.addEventListener("click", stop, true);
+  window.addEventListener("pointerdown", done, true);
+  window.addEventListener("keydown", done, true);
+}
+
 export function useLongPress(onLongPress: () => void, ms = 450) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const origin = useRef<{ x: number; y: number } | null>(null);
@@ -21,6 +41,7 @@ export function useLongPress(onLongPress: () => void, ms = 450) {
       timer.current = setTimeout(() => {
         clear();
         fired.current = true;
+        swallowNextClick();
         navigator.vibrate?.(10);
         onLongPress();
       }, ms);
@@ -36,13 +57,8 @@ export function useLongPress(onLongPress: () => void, ms = 450) {
       clear();
       if (fired.current) return;
       fired.current = true;
+      swallowNextClick();
       onLongPress();
-    },
-    onClickCapture: (e: React.MouseEvent) => {
-      if (!fired.current) return;
-      e.preventDefault();
-      e.stopPropagation();
-      fired.current = false;
     },
   };
 }
