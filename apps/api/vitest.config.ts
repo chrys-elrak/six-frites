@@ -20,6 +20,8 @@ export default defineConfig({
       QUEUE_PREFIX: "six-test",
       GIPHY_API_KEY: "test-giphy-key",
       ADMIN_EMAILS: "the-admin@example.com",
+      STORE_URL: "https://store.test",
+      STORE_WEBHOOK_SECRET: "test-store-secret",
     },
   },
 });

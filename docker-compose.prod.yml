@@ -21,6 +21,8 @@ x-app-env: &app-env
   TURN_URLS: turn:${DOMAIN}:3478?transport=udp,turn:${DOMAIN}:3478?transport=tcp
   TURN_SECRET: ${TURN_SECRET}
   ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+  STORE_URL: ${STORE_URL:-https://store.koera.mg}
+  STORE_WEBHOOK_SECRET: ${STORE_WEBHOOK_SECRET:-}
 
 x-app: &app
   image: six-frites:latest

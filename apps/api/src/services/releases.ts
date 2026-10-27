@@ -1,95 +1,49 @@
-import { createId } from "@paralleldrive/cuid2";
-import type { AppRelease } from "../generated/prisma/client.js";
-import { APK_MIME, type AppReleaseDTO, AppError, type CreateReleaseInput, type LatestAppDTO } from "@six/shared";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { AppError, type LatestAppDTO } from "@six/shared";
+import { z } from "zod";
 import { env } from "../env.js";
-import { prisma } from "../lib/prisma.js";
-import { deleteObjects, headObject, presignGet, presignPut } from "../lib/storage.js";
 import { deliverReleasePush } from "./push.js";
 
-const DOWNLOAD_LINK_SECONDS = 60 * 60;
+const STORE_APP = "six-frites";
 
 const downloadLink = `${env.PUBLIC_URL}/v1/app/android/download`;
 
-const toDTO = (r: AppRelease): AppReleaseDTO => ({
-  id: r.id,
-  version: r.version,
-  notes: r.notes,
-  size: r.size,
-  published: !!r.publishedAt,
-  createdAt: r.createdAt.toISOString(),
+export const storeDownloadUrl = `${env.STORE_URL}/${STORE_APP}/download`;
+
+const StoreRelease = z.object({
+  app: z.string(),
+  version: z.string(),
+  notes: z.string(),
+  size: z.number().int(),
+  publishedAt: z.string(),
 });
 
-const fileName = (r: Pick<AppRelease, "version">) => `six-frites-${r.version.replace(/[^\w.-]+/g, "-")}.apk`;
-
-export async function createRelease(adminId: string, input: CreateReleaseInput) {
-  const id = createId();
-  const release = await prisma.appRelease.create({
-    data: {
-      id,
-      version: input.version,
-      notes: input.notes || null,
-      size: input.size,
-      key: `releases/android/${id}/${fileName(input)}`,
-      createdById: adminId,
-    },
-  });
-  return {
-    release: toDTO(release),
-    url: await presignPut(release.key, APK_MIME, release.size),
-    headers: { "Content-Type": APK_MIME },
-  };
-}
-
-async function findRelease(id: string) {
-  const release = await prisma.appRelease.findUnique({ where: { id } });
-  if (!release) throw new AppError("RELEASE_NOT_FOUND");
-  return release;
-}
-
-/**
- * Offers an uploaded APK for download, once storage confirms the whole file arrived, and the first
- * time round tells Android phones about it in the background.
- */
-export async function publishRelease(id: string) {
-  const release = await findRelease(id);
-  const head = await headObject(release.key);
-  if (!head || head.size !== release.size) throw new AppError("UPLOAD_MISSING", "The APK hasn't finished uploading");
-  const published = await prisma.appRelease.update({ where: { id }, data: { publishedAt: release.publishedAt ?? new Date() } });
-  if (!release.publishedAt) void deliverReleasePush(release.version, downloadLink).catch(() => null);
-  return toDTO(published);
-}
-
-export async function listReleases() {
-  const releases = await prisma.appRelease.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
-  return releases.map(toDTO);
-}
-
-export async function deleteRelease(id: string) {
-  const release = await findRelease(id);
-  await deleteObjects([release.key]);
-  await prisma.appRelease.delete({ where: { id } });
-}
-
-const latest = () =>
-  prisma.appRelease.findFirst({
-    where: { platform: "android", publishedAt: { not: null } },
-    orderBy: { publishedAt: "desc" },
-  });
-
+/** The newest Android app published on Koera Store, or null while there is none. */
 export async function latestRelease(): Promise<LatestAppDTO | null> {
-  const release = await latest();
-  if (!release) return null;
+  const res = await fetch(`${env.STORE_URL}/api/apps/${STORE_APP}/latest`, { signal: AbortSignal.timeout(5000) });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Koera Store answered ${res.status}`);
+  const release = StoreRelease.parse(await res.json());
   return {
     version: release.version,
-    notes: release.notes,
+    notes: release.notes || null,
     size: release.size,
-    publishedAt: release.publishedAt!.toISOString(),
+    publishedAt: release.publishedAt,
     downloadUrl: downloadLink,
   };
 }
 
-export async function latestDownloadUrl() {
-  const release = await latest();
-  if (!release) throw new AppError("RELEASE_NOT_FOUND", "No Android app has been published yet");
-  return presignGet(release.key, fileName(release), DOWNLOAD_LINK_SECONDS);
+/**
+ * Koera Store calls this the first time a version goes live, signing the raw body with the app's webhook secret.
+ * Once the signature checks out, every Android phone hears about the new version in the background.
+ */
+export function announceRelease(body: string, signature: string | undefined) {
+  if (!env.STORE_WEBHOOK_SECRET) throw new AppError("FORBIDDEN", "STORE_WEBHOOK_SECRET is not set");
+  const expected = Buffer.from(`sha256=${createHmac("sha256", env.STORE_WEBHOOK_SECRET).update(body).digest("hex")}`);
+  const given = Buffer.from(signature ?? "");
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
+    throw new AppError("FORBIDDEN", "The signature doesn't match");
+  }
+  const release = StoreRelease.parse(JSON.parse(body));
+  if (release.app === STORE_APP) void deliverReleasePush(release.version, downloadLink).catch(() => null);
 }

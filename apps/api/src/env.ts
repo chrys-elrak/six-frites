@@ -30,6 +30,8 @@ const Env = z.object({
     .default("")
     .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
   TURN_SECRET: z.string().optional(),
+  STORE_URL: z.string().url().default("https://store.koera.mg"),
+  STORE_WEBHOOK_SECRET: z.string().optional(),
   ADMIN_EMAILS: z
     .string()
     .default("")

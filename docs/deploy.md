@@ -62,3 +62,8 @@ EXPO_PUBLIC_WEB_URL=https://six-frites.koera.mg
 For push notifications on Android, register the `com.sixfrites.app` Android app in the same Firebase project as
 `FCM_SERVICE_ACCOUNT` and put its `google-services.json` in `apps/mobile/`. Builds without that file still work,
 just without push.
+
+New versions of the Android app are published on Koera Store (`https://store.koera.mg/admin`, app slug
+`six-frites`). The API reads the newest one from there for the in-app update banner and the download link. To push
+"new version" notifications, set the app's webhook in the store to `https://six-frites.koera.mg/v1/app/android/published`
+and copy its webhook secret into `STORE_WEBHOOK_SECRET` in `.env`.

@@ -48,7 +48,6 @@ model User {
   reportsAgainst Report[]           @relation("target")
   devices        Device[]
   messageBackups MessageBackup[]
-  appReleases AppRelease[]
 }
 
 model Report {
@@ -436,18 +435,3 @@ model Block {
   @@index([blockedId])
 }
 
-model AppRelease {
-  id          String    @id @default(cuid())
-  platform    String    @default("android")
-  version     String
-  notes       String?
-  size        Int
-  key         String
-  createdById String?
-  createdAt   DateTime  @default(now())
-  publishedAt DateTime?
-
-  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
-
-  @@index([platform, publishedAt])
-}
