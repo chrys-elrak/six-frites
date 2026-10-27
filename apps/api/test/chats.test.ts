@@ -12,12 +12,12 @@ const send = (who: Auth, chatId: string, text: string, clientId = `c-${Math.rand
   chatHelpers(ctx).send(who, chatId, text, { clientId });
 
 describe("chats over REST", () => {
-  it("connects both people when an invite is used, but lists the chat only once someone writes", async () => {
+  it("connects both people when an invite is used and lists their chat right away", async () => {
     const { host, guest, chatId } = await makeFriends();
     const guestContacts = await get(guest, "/v1/contacts");
     expect(guestContacts.items).toHaveLength(1);
     expect(guestContacts.items[0]).toMatchObject({ user: { id: host.user.id }, chatId, customName: null });
-    expect((await get(guest, "/v1/chats")).items).toEqual([]);
+    expect((await get(guest, "/v1/chats")).items.map((c: { id: string }) => c.id)).toEqual([chatId]);
     expect((await get(guest, `/v1/chats/${chatId}`)).members).toHaveLength(2);
 
     await send(guest, chatId, "hi");

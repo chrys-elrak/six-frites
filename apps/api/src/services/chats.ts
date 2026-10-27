@@ -130,7 +130,6 @@ export async function listChats(userId: string, q: ChatListQuery) {
   const rows = await prisma.chat.findMany({
     where: {
       members: { some: { userId, archived: q.archived, hidden: false } },
-      messages: { some: {} },
       ...(after && {
         OR: [{ lastMessageAt: { lt: after.at } }, { lastMessageAt: after.at, id: { lt: after.id } }],
       }),

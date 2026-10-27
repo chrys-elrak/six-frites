@@ -362,7 +362,7 @@ describe("deleting chats", () => {
     await call(guest, "DELETE", `/v1/chats/${chatId}?scope=all`);
 
     expect(texts(await get(host, `/v1/chats/${chatId}/messages`))).toEqual([]);
-    expect((await get(host, "/v1/chats")).items).toEqual([]);
+    expect((await get(host, "/v1/chats")).items.map((c: { id: string }) => c.id)).toEqual([chatId]);
     expect((await get(host, "/v1/contacts")).items[0].chatId).toBe(chatId);
     expect((await get(host, `/v1/chats/${chatId}`)).lastMessage).toBeNull();
     expect(JSON.stringify(await get(host, "/v1/sync?since=0"))).not.toContain("gone soon");
