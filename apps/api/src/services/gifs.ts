@@ -16,6 +16,8 @@ const PAGE = 24;
 const MAX_OFFSET = 4999;
 /** How long provider answers stay in Redis: trending moves hourly, search results and GIF details barely. */
 const CACHE_SECONDS = { trending: 60 * 60, search: 24 * 60 * 60, gif: 24 * 60 * 60 };
+/** How long a provider is left alone after it fails or rate-limits us. Cached answers are still served meanwhile. */
+const PAUSE_SECONDS = 60;
 
 interface GiphyImage {
   url?: string;
@@ -50,15 +52,30 @@ type Page = { items: GifDTO[]; more: boolean };
 let client: Redis | null = null;
 const redis = () => (client ??= redisConnection());
 
-/** GETs JSON, caching answers so search-as-you-type stays within the providers' rate limits. */
-async function cachedJSON<T>(cacheKey: string, url: string, ttlSeconds: number, failure: (status: number) => AppError) {
-  const cached = await redis().get(`${env.QUEUE_PREFIX}:${cacheKey}`);
+/**
+ * GETs JSON from a provider, caching answers so search-as-you-type stays within its rate limit. A
+ * provider that is down or rate-limiting us is paused for a minute instead of being asked on every keystroke.
+ */
+async function cachedJSON<T>(
+  provider: "giphy" | "klipy",
+  path: string,
+  url: string,
+  ttlSeconds: number,
+  failure: (status: number) => AppError,
+) {
+  const cacheKey = `${env.QUEUE_PREFIX}:${provider}:${path}`;
+  const pauseKey = `${env.QUEUE_PREFIX}:${provider}:paused`;
+  const cached = await redis().get(cacheKey);
   if (cached) return JSON.parse(cached) as T;
+  if (await redis().exists(pauseKey)) throw failure(503);
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) throw failure(res.status);
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) }).catch(() => null);
+  if (!res?.ok) {
+    if (!res || res.status === 429 || res.status >= 500) await redis().set(pauseKey, "1", "EX", PAUSE_SECONDS);
+    throw failure(res?.status ?? 503);
+  }
   const body = await res.text();
-  await redis().set(`${env.QUEUE_PREFIX}:${cacheKey}`, body, "EX", ttlSeconds);
+  await redis().set(cacheKey, body, "EX", ttlSeconds);
   return JSON.parse(body) as T;
 }
 
@@ -66,7 +83,8 @@ function giphy<T>(path: string, params: Record<string, string>, ttlSeconds: numb
   const key = env.GIPHY_API_KEY!;
   const listing = path.endsWith("/search") || path.endsWith("/trending");
   return cachedJSON<T>(
-    `giphy:${path}?${new URLSearchParams(params)}`,
+    "giphy",
+    `${path}?${new URLSearchParams(params)}`,
     `${GIPHY}${path}?${new URLSearchParams({ ...params, api_key: key })}`,
     ttlSeconds,
     (status) =>
@@ -79,7 +97,8 @@ function giphy<T>(path: string, params: Record<string, string>, ttlSeconds: numb
 function klipy<T>(path: string, params: Record<string, string>, ttlSeconds: number) {
   const query = new URLSearchParams(params);
   return cachedJSON<T>(
-    `klipy:${path}?${query}`,
+    "klipy",
+    `${path}?${query}`,
     `${KLIPY}/${env.KLIPY_API_KEY}${path}?${query}`,
     ttlSeconds,
     (status) => new AppError("GIFS_UNAVAILABLE", `KLIPY answered ${status}`),
@@ -105,7 +124,7 @@ async function giphyPage(q: GifQuery, page: number, size: number): Promise<Page>
   const params = { limit: String(size), offset: String(offset), rating: "pg-13" };
   const body = await giphy<{ data: GiphyGif[]; pagination: { total_count: number } }>(
     `/${q.kind}s/${q.q ? "search" : "trending"}`,
-    q.q ? { ...params, q: q.q.toLowerCase() } : params,
+    q.q ? { ...params, q: q.q } : params,
     q.q ? CACHE_SECONDS.search : CACHE_SECONDS.trending,
   );
   const next = offset + body.data.length;
@@ -119,7 +138,7 @@ async function klipyPage(q: GifQuery, page: number, size: number): Promise<Page>
   const params = { page: String(page + 1), per_page: String(size), content_filter: "medium" };
   const body = await klipy<{ data: { data: KlipyItem[]; has_next: boolean } }>(
     `/${q.kind}s/${q.q ? "search" : "trending"}`,
-    q.q ? { ...params, q: q.q.toLowerCase() } : params,
+    q.q ? { ...params, q: q.q } : params,
     q.q ? CACHE_SECONDS.search : CACHE_SECONDS.trending,
   );
   return {
@@ -131,8 +150,12 @@ async function klipyPage(q: GifQuery, page: number, size: number): Promise<Page>
 /**
  * GIFs or stickers from GIPHY and KLIPY, whichever have a key, taking turns in one list. When one
  * provider fails the other's results still come back; only when both fail does the search fail.
+ * Searches are lowercased with spaces collapsed so near-identical ones share a cache entry, and a
+ * single letter lists trending ones rather than costing a search.
  */
-export async function listGifs(q: GifQuery) {
+export async function listGifs(query: GifQuery) {
+  const terms = query.q?.toLowerCase().replace(/\s+/g, " ").trim();
+  const q = { ...query, q: terms && terms.length > 1 ? terms : undefined };
   const page = Number(q.cursor ?? 0);
   const providers = [env.GIPHY_API_KEY && giphyPage, env.KLIPY_API_KEY && klipyPage].filter(
     (p): p is typeof giphyPage => !!p,

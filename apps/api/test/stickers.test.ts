@@ -1,5 +1,6 @@
 import { gzipSync } from "node:zlib";
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { redisConnection } from "../src/lib/queue.js";
 import { processUpload } from "../src/media/process.js";
 import { ensureBuiltinStickers } from "../src/services/stickers.js";
 import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
@@ -120,20 +121,27 @@ describe("GIFs", () => {
     },
   });
   const clip = Buffer.from("fake mp4 bytes");
+  const redis = redisConnection();
+  const unpause = () => redis.del("six-test:giphy:paused", "six-test:klipy:paused");
+  beforeEach(unpause);
+  afterAll(async () => {
+    await unpause();
+    redis.disconnect();
+  });
 
   function mockGiphy() {
     const realFetch = globalThis.fetch;
     return vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
       const url = input instanceof Request ? input.url : String(input);
       const { hostname, pathname, searchParams } = new URL(url);
-      if (hostname === "api.giphy.com" && pathname.endsWith("/search")) {
+      if (hostname === "api.giphy.com" && (pathname.endsWith("/search") || pathname.endsWith("/trending"))) {
         const kind = pathname.includes("/stickers/") ? "sticker1" : "cat1";
         return Response.json({
           data: [gif(kind, `https://media.giphy.com/${kind}/giphy.mp4`)],
           pagination: { total_count: 1 },
         });
       }
-      if (hostname === "api.klipy.com" && pathname.endsWith("/search")) {
+      if (hostname === "api.klipy.com" && (pathname.endsWith("/search") || pathname.endsWith("/trending"))) {
         if (searchParams.get("q")?.startsWith("broken")) return new Response("down", { status: 500 });
         const slug = pathname.includes("/stickers/") ? "sticker-wave" : "cat-dance";
         return Response.json({ result: true, data: { data: [klipyItem(slug)], has_next: false } });
@@ -223,12 +231,36 @@ describe("GIFs", () => {
     }
   });
 
-  it("still answers with GIPHY when KLIPY is down", async () => {
+  it("still answers with GIPHY when KLIPY is down, and leaves KLIPY alone for a while", async () => {
     const spy = mockGiphy();
+    const klipyCalls = () => spy.mock.calls.filter(([u]) => String(u).includes("api.klipy.com")).length;
     try {
       const { host } = await makeFriends();
       const found = await get(host, `/v1/gifs?q=broken${Date.now()}`);
       expect(found.items.map((g: { id: string }) => g.id)).toEqual(["cat1"]);
+
+      const before = klipyCalls();
+      const next = await get(host, `/v1/gifs?q=dogs${Date.now()}`);
+      expect(next.items.map((g: { id: string }) => g.id)).toEqual(["cat1"]);
+      expect(klipyCalls()).toBe(before);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("shares a cached search between spellings and doesn't search a single letter", async () => {
+    const spy = mockGiphy();
+    const calls = (part: string) => spy.mock.calls.filter(([u]) => String(u).includes(part)).length;
+    try {
+      const { host } = await makeFriends();
+      const tag = Date.now();
+      await get(host, `/v1/gifs?q=Happy%20%20Cat${tag}%20`);
+      const searches = calls("/gifs/search");
+      await get(host, `/v1/gifs?q=happy%20cat${tag}`);
+      expect(calls("/gifs/search")).toBe(searches);
+
+      await get(host, "/v1/gifs?q=h");
+      expect(calls("/gifs/search")).toBe(searches);
     } finally {
       spy.mockRestore();
     }
