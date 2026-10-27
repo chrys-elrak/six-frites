@@ -178,12 +178,6 @@ const en = {
       VALIDATION_FAILED: "Use 4 to 8 digits.",
     } as ByCode<"WRONG_APP_LOCK_CODE">,
   },
-  keyboardMedia: {
-    title: "GIFs and stickers from the keyboard",
-    hint: "Chrome on Android only lets Gboard send GIFs and stickers to websites once a setting is on. Copy this address, paste it in Chrome's address bar, set \"Enable IME media insertion\" to Enabled and tap Relaunch.",
-    copy: "Copy",
-    copied: "Copied",
-  },
 };
 
 const fr: typeof en = {
@@ -365,12 +359,6 @@ const fr: typeof en = {
       VALIDATION_FAILED: "Utilisez 4 à 8 chiffres.",
     },
   },
-  keyboardMedia: {
-    title: "GIF et stickers depuis le clavier",
-    hint: "Chrome sur Android ne laisse Gboard envoyer des GIF et des stickers aux sites web qu'une fois un réglage activé. Copiez cette adresse, collez-la dans la barre d'adresse de Chrome, passez « Enable IME media insertion » sur Enabled et touchez Relaunch.",
-    copy: "Copier",
-    copied: "Copié",
-  },
 };
 
 const mg: typeof en = {
@@ -549,12 +537,6 @@ const mg: typeof en = {
       RATE_LIMITED: "Be loatra ny andrana. Andraso iray minitra.",
       VALIDATION_FAILED: "Mampiasà isa 4 ka hatramin'ny 8.",
     },
-  },
-  keyboardMedia: {
-    title: "GIF sy sticker avy amin'ny klavie",
-    hint: "Ao amin'ny Chrome Android, tsy afaka mandefa GIF sy sticker any amin'ny tranonkala ny Gboard raha tsy alefa ny safidy iray. Adikao ity adiresy ity, apetaho ao amin'ny toerana anoratana adiresy ao amin'ny Chrome, ataovy Enabled ny « Enable IME media insertion » ary tsindrio Relaunch.",
-    copy: "Adikao",
-    copied: "Voadika",
   },
 };
 

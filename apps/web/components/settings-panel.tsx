@@ -1,8 +1,8 @@
 "use client";
 
 import { LOCALES, LOCALE_NAMES, isLocale } from "@six/shared";
-import { Check, Copy, Keyboard, LogOut } from "lucide-react";
-import { useEffect, useState } from "react";
+import { LogOut } from "lucide-react";
+import { useState } from "react";
 import { signOut } from "@/lib/e2ee";
 import { useLocale, useT } from "@/lib/i18n";
 import { relinkPush } from "@/lib/push";
@@ -50,50 +50,6 @@ function LanguagePicker() {
   );
 }
 
-const MEDIA_FLAG = "chrome://flags/#enable-android-media-insertion";
-
-/** Chrome on Android only hands keyboard GIFs and stickers to web pages behind a flag, and pages can't link to chrome:// addresses. */
-function KeyboardMedia() {
-  const tr = useT();
-  const [shown, setShown] = useState(false);
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    const ua = (navigator as { userAgentData?: { platform: string; brands: { brand: string }[] } }).userAgentData;
-    setShown(ua?.platform === "Android" && ua.brands.some((b) => b.brand === "Google Chrome"));
-  }, []);
-  if (!shown) return null;
-
-  async function copy() {
-    if (!(await navigator.clipboard.writeText(MEDIA_FLAG).then(() => true, () => false))) return;
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
-  return (
-    <section className="space-y-3">
-      <SectionTitle>{tr.settings.keyboardMedia.title}</SectionTitle>
-      <Card className="flex items-start gap-3 p-4">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand/15 text-brand">
-          <Keyboard className="size-5" />
-        </span>
-        <div className="min-w-0 flex-1 space-y-2">
-          <p className="text-sm text-stone-500 dark:text-stone-400">{tr.settings.keyboardMedia.hint}</p>
-          <code className="block rounded-lg bg-stone-100 px-3 py-2 text-xs break-all select-all dark:bg-stone-800">
-            {MEDIA_FLAG}
-          </code>
-          <button
-            onClick={() => void copy()}
-            className="flex items-center gap-1.5 rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
-          >
-            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-            {copied ? tr.settings.keyboardMedia.copied : tr.settings.keyboardMedia.copy}
-          </button>
-        </div>
-      </Card>
-    </section>
-  );
-}
-
 export function SettingsPanel() {
   const tr = useT();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -118,7 +74,6 @@ export function SettingsPanel() {
           <LanguagePicker />
           <FindMe />
           <ChatBackgroundPicker />
-          <KeyboardMedia />
           <NotificationSettings />
           <Invites />
           <Referrals />
