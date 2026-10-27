@@ -28,8 +28,7 @@ model User {
   backupPinHash  String?
   backupWrapped  String?
   backupPinTries Int       @default(0)
-  contactPinHash String?
-  appLock        Boolean   @default(false)
+  appLockHash    String?
 
   sessions       Session[]
   invites        Invite[]

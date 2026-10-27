@@ -12,9 +12,8 @@ import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
 import { useHasRecoveryKey } from "./encryption-settings";
 import { Logo } from "./logo";
-import { CodeInput, codeError } from "./privacy-code";
 import { Sheet } from "./sheet";
-import { Card, PrimaryButton, SectionTitle } from "./ui";
+import { Card, CodeInput, PrimaryButton, SectionTitle, codeError } from "./ui";
 
 export function AppLockSettings() {
   const tr = useT();
@@ -56,7 +55,6 @@ export function AppLockSettings() {
 
 function TurnOnDialog({ onClose }: { onClose: () => void }) {
   const tr = useT();
-  const hasCode = useSession((s) => s.user!.hasContactPin);
   const setUser = useSession((s) => s.setUser);
   const [code, setCode] = useState("");
   const [again, setAgain] = useState("");
@@ -68,8 +66,8 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
       onClose();
     },
   });
-  const mismatch = !hasCode && again.length >= code.length && again.length > 0 && again !== code;
-  const ready = code.length >= 4 && (hasCode || again === code);
+  const mismatch = again.length >= code.length && again.length > 0 && again !== code;
+  const ready = code.length >= 4 && again === code;
 
   return (
     <Dialog onClose={onClose}>
@@ -81,19 +79,12 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
         }}
       >
         <h2 className="text-lg font-semibold">{tr.settings.appLock.turnOnTitle}</h2>
-        <p className="text-sm text-stone-600 dark:text-stone-300">
-          {hasCode ? tr.settings.appLock.useCode : tr.settings.appLock.newCode}
-        </p>
-        <CodeInput
-          label={hasCode ? tr.contacts.privacy.title : tr.contacts.privacy.new}
-          value={code}
-          onChange={setCode}
-          autoFocus
-        />
-        {!hasCode && <CodeInput label={tr.contacts.privacy.again} value={again} onChange={setAgain} />}
+        <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.appLock.newCode}</p>
+        <CodeInput label={tr.settings.appLock.code} value={code} onChange={setCode} autoFocus />
+        <CodeInput label={tr.settings.appLock.again} value={again} onChange={setAgain} />
         {(save.isError || mismatch) && (
           <p className="text-sm text-red-600 dark:text-red-400">
-            {save.isError ? codeError(save.error, tr, tr.settings.appLock.errors) : tr.contacts.privacy.mismatch}
+            {save.isError ? codeError(save.error, tr, tr.settings.appLock.errors) : tr.settings.appLock.mismatch}
           </p>
         )}
         <div className="flex gap-2">

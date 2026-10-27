@@ -1,3 +1,6 @@
+import { SixApiError } from "@six/sdk";
+import type { Dict } from "@six/shared";
+
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
@@ -56,6 +59,50 @@ export function Toggle({
       <span
         aria-hidden
         className="relative h-6 w-10 shrink-0 rounded-full bg-stone-300 transition peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-2 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4 dark:bg-stone-700"
+      />
+    </label>
+  );
+}
+
+export function codeError(err: unknown, tr: Dict, errors: Record<string, string | undefined>) {
+  const code = err instanceof SixApiError ? err.code : undefined;
+  return (code && errors[code]) ?? tr.common.somethingWrongRetry;
+}
+
+export function CodeInput({
+  value,
+  onChange,
+  label,
+  autoFocus,
+  onEnter,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  autoFocus?: boolean;
+  onEnter?: () => void;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-sm font-medium text-stone-600 dark:text-stone-300">
+        {label}
+      </span>
+      <input
+        value={value}
+        onChange={(e) =>
+          onChange(e.target.value.replace(/\D/g, "").slice(0, 8))
+        }
+        type="password"
+        inputMode="numeric"
+        autoComplete="off"
+        autoFocus={autoFocus}
+        onKeyDown={(e) => {
+          if (onEnter && e.key === "Enter") {
+            e.preventDefault();
+            onEnter();
+          }
+        }}
+        className="w-full rounded-xl bg-stone-100 px-3 py-2.5 font-mono text-[16px] tracking-widest outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
       />
     </label>
   );

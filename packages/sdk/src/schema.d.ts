@@ -65,11 +65,9 @@ export interface paths {
                                 backupKeyId: string | null;
                                 /** @description What people see instead of your name and photo, until you share them */
                                 alias: string;
-                                /** @description Whether seeing the real name of a renamed contact needs your code */
-                                hasContactPin: boolean;
                                 /** @description Whether a new device can restore your backup with your 6-digit PIN */
                                 hasBackupPin: boolean;
-                                /** @description Whether the apps ask for your privacy code when they open */
+                                /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -140,11 +138,9 @@ export interface paths {
                                 backupKeyId: string | null;
                                 /** @description What people see instead of your name and photo, until you share them */
                                 alias: string;
-                                /** @description Whether seeing the real name of a renamed contact needs your code */
-                                hasContactPin: boolean;
                                 /** @description Whether a new device can restore your backup with your 6-digit PIN */
                                 hasBackupPin: boolean;
-                                /** @description Whether the apps ask for your privacy code when they open */
+                                /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1349,11 +1345,9 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
                             alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
+                            /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1447,11 +1441,9 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
                             alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
+                            /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1506,11 +1498,9 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
                             alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
+                            /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1520,127 +1510,6 @@ export interface paths {
             };
         };
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/me/contact-pin": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Set the code that shows renamed contacts' real names
-         * @description 4 to 8 digits. To change it, send the old one as `currentPin` (CONTACT_PIN_REQUIRED or WRONG_CONTACT_PIN otherwise).
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        pin: string;
-                        /** @description Needed to change a code you already set */
-                        currentPin?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            /** Format: email */
-                            email: string;
-                            displayName: string;
-                            /** Format: uri */
-                            avatarUrl: string | null;
-                            username: string | null;
-                            /** @description Share it (or its QR code) so people can find you */
-                            contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
-                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
-                            backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
-                            hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
-                            hasAppLock: boolean;
-                            /** Format: date-time */
-                            createdAt: string;
-                        };
-                    };
-                };
-            };
-        };
-        post?: never;
-        /** Remove the contact code */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        currentPin: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            /** Format: email */
-                            email: string;
-                            displayName: string;
-                            /** Format: uri */
-                            avatarUrl: string | null;
-                            username: string | null;
-                            /** @description Share it (or its QR code) so people can find you */
-                            contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
-                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
-                            backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
-                            hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
-                            hasAppLock: boolean;
-                            /** Format: date-time */
-                            createdAt: string;
-                        };
-                    };
-                };
-            };
-        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1656,7 +1525,7 @@ export interface paths {
         get?: never;
         /**
          * Turn on the app lock
-         * @description The apps then ask for the privacy code when they open. Send it as `code` (WRONG_APP_LOCK_CODE if it doesn't match); with no privacy code yet, `code` becomes it.
+         * @description The apps then ask for `code` when they open. Sending a new one while the lock is on changes it.
          */
         put: {
             parameters: {
@@ -1695,11 +1564,9 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
                             alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
+                            /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1741,11 +1608,9 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
                             alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
+                            /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1769,7 +1634,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Check the privacy code to unlock the app
+         * Check the app lock code
          * @description WRONG_APP_LOCK_CODE if it doesn't match. Always passes when the app lock is off.
          */
         post: {
@@ -5445,8 +5310,8 @@ export interface paths {
                                     avatarUrl: string | null;
                                 };
                                 chatId: string;
-                                /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
-                                originalName: string | null;
+                                /** @description Their own name, or their alias if they don't share it with you */
+                                originalName: string;
                                 customName: string | null;
                                 hasCustomPhoto: boolean;
                                 /** @description You show them your real name and photo */
@@ -5494,8 +5359,8 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
-                            originalName: string | null;
+                            /** @description Their own name, or their alias if they don't share it with you */
+                            originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
                             /** @description You show them your real name and photo */
@@ -5662,8 +5527,8 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
-                            originalName: string | null;
+                            /** @description Their own name, or their alias if they don't share it with you */
+                            originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
                             /** @description You show them your real name and photo */
@@ -5721,8 +5586,6 @@ export interface paths {
                     "application/json": {
                         displayName?: string | null;
                         photo?: string | null;
-                        /** @description Your contact code; needed to go back to their own name once you set one */
-                        pin?: string;
                     };
                 };
             };
@@ -5742,8 +5605,8 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
-                            originalName: string | null;
+                            /** @description Their own name, or their alias if they don't share it with you */
+                            originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
                             /** @description You show them your real name and photo */
@@ -5799,8 +5662,8 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
-                            originalName: string | null;
+                            /** @description Their own name, or their alias if they don't share it with you */
+                            originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
                             /** @description You show them your real name and photo */
@@ -5811,55 +5674,6 @@ export interface paths {
             };
         };
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/contacts/{userId}/reveal": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * See the real name of a contact you renamed
-         * @description Needs your contact code: CONTACT_PIN_NOT_SET if you have none, WRONG_CONTACT_PIN if it doesn't match.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        pin: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            originalName: string;
-                        };
-                    };
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -6971,11 +6785,9 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
                             alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
+                            /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -7087,11 +6899,9 @@ export interface paths {
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
                             alias: string;
-                            /** @description Whether seeing the real name of a renamed contact needs your code */
-                            hasContactPin: boolean;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
-                            /** @description Whether the apps ask for your privacy code when they open */
+                            /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;

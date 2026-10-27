@@ -159,21 +159,21 @@ const en = {
   useColours: "Use these colours",
   appLock: {
     title: "App lock",
-    onHint: "Six Frites asks for your privacy code when it opens and after 5 minutes away, on all your devices.",
-    offHint: "Ask for your privacy code when Six Frites opens and after 5 minutes away, on all your devices.",
+    onHint: "Six Frites asks for your app lock code when it opens and after 5 minutes away, on all your devices.",
+    offHint: "Ask for a code when Six Frites opens and after 5 minutes away, on all your devices.",
     turnOn: "Turn on",
     turnOff: "Turn off",
     turnOnTitle: "Lock the app",
-    useCode:
-      "Enter your privacy code: it will unlock Six Frites. If you forget it, sign out, sign in again and turn the lock off here.",
-    newCode:
-      "Choose a privacy code of 4 to 8 digits. It unlocks Six Frites and shows the real names of contacts you renamed.",
+    newCode: "Choose a code of 4 to 8 digits to unlock Six Frites. If you forget it, sign out, sign in again and turn the lock off here.",
+    code: "New code",
+    again: "New code again",
+    mismatch: "The codes don't match.",
     locked: "Six Frites is locked",
-    enterCode: "Enter your privacy code.",
+    enterCode: "Enter your app lock code.",
     unlock: "Unlock",
     forgot: "Forgot your code? Sign out",
     errors: {
-      WRONG_APP_LOCK_CODE: "That's not your privacy code.",
+      WRONG_APP_LOCK_CODE: "That's not your app lock code.",
       RATE_LIMITED: "Too many tries. Wait a minute.",
       VALIDATION_FAILED: "Use 4 to 8 digits.",
     } as ByCode<"WRONG_APP_LOCK_CODE">,
@@ -340,23 +340,21 @@ const fr: typeof en = {
   useColours: "Utiliser ces couleurs",
   appLock: {
     title: "Verrouillage de l'app",
-    onHint:
-      "Six Frites demande votre code de confidentialité à l'ouverture et après 5 minutes d'absence, sur tous vos appareils.",
-    offHint:
-      "Demandez votre code de confidentialité à l'ouverture de Six Frites et après 5 minutes d'absence, sur tous vos appareils.",
+    onHint: "Six Frites demande votre code de verrouillage à l'ouverture et après 5 minutes d'absence, sur tous vos appareils.",
+    offHint: "Demandez un code à l'ouverture de Six Frites et après 5 minutes d'absence, sur tous vos appareils.",
     turnOn: "Activer",
     turnOff: "Désactiver",
     turnOnTitle: "Verrouiller l'app",
-    useCode:
-      "Saisissez votre code de confidentialité : il déverrouillera Six Frites. Si vous l'oubliez, déconnectez-vous, reconnectez-vous et désactivez le verrouillage ici.",
-    newCode:
-      "Choisissez un code de confidentialité de 4 à 8 chiffres. Il déverrouille Six Frites et affiche le vrai nom des contacts que vous avez renommés.",
+    newCode: "Choisissez un code de 4 à 8 chiffres pour déverrouiller Six Frites. Si vous l'oubliez, déconnectez-vous, reconnectez-vous et désactivez le verrouillage ici.",
+    code: "Nouveau code",
+    again: "Confirmez le nouveau code",
+    mismatch: "Les codes ne correspondent pas.",
     locked: "Six Frites est verrouillé",
-    enterCode: "Saisissez votre code de confidentialité.",
+    enterCode: "Saisissez votre code de verrouillage.",
     unlock: "Déverrouiller",
     forgot: "Code oublié ? Se déconnecter",
     errors: {
-      WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de confidentialité.",
+      WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de verrouillage.",
       RATE_LIMITED: "Trop de tentatives. Patientez une minute.",
       VALIDATION_FAILED: "Utilisez 4 à 8 chiffres.",
     },
@@ -521,23 +519,21 @@ const mg: typeof en = {
   useColours: "Ampiasao ireo loko ireo",
   appLock: {
     title: "Hidin'ny fampiharana",
-    onHint:
-      "Angatahin'ny Six Frites ny kaody fiarovanao rehefa sokafana sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
-    offHint:
-      "Mangataha ny kaody fiarovanao rehefa sokafana ny Six Frites sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
+    onHint: "Angatahin'ny Six Frites ny kaodin'ny hidinao rehefa sokafana sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
+    offHint: "Mangataha kaody rehefa sokafana ny Six Frites sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
     turnOn: "Alefaso",
     turnOff: "Vonoy",
     turnOnTitle: "Hidio ny fampiharana",
-    useCode:
-      "Ampidiro ny kaody fiarovanao: izy no hanokatra ny Six Frites. Raha hadinonao izy, mivoaha, midira indray ary vonoy eto ny hidy.",
-    newCode:
-      "Mifidiana kaody fiarovana misy isa 4 ka hatramin'ny 8. Izy no manokatra ny Six Frites sy mampiseho ny tena anaran'ny mpifandray novanao anarana.",
+    newCode: "Mifidiana kaody misy isa 4 ka hatramin'ny 8 hanokafana ny Six Frites. Raha hadinonao izy, mivoaha, midira indray ary vonoy eto ny hidy.",
+    code: "Kaody vaovao",
+    again: "Avereno ny kaody vaovao",
+    mismatch: "Tsy mitovy ireo kaody.",
     locked: "Mihidy ny Six Frites",
-    enterCode: "Ampidiro ny kaody fiarovanao.",
+    enterCode: "Ampidiro ny kaodin'ny hidinao.",
     unlock: "Sokafy",
     forgot: "Hadinonao ny kaody? Hivoaka",
     errors: {
-      WRONG_APP_LOCK_CODE: "Tsy io no kaody fiarovanao.",
+      WRONG_APP_LOCK_CODE: "Tsy io no kaodin'ny hidinao.",
       RATE_LIMITED: "Be loatra ny andrana. Andraso iray minitra.",
       VALIDATION_FAILED: "Mampiasà isa 4 ka hatramin'ny 8.",
     },

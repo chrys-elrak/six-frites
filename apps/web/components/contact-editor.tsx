@@ -8,10 +8,8 @@ import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { useT } from "@/lib/i18n";
 import { toAvatarDataUrl, urlToAvatarDataUrl } from "@/lib/image";
-import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
-import { CodeInput, codeError } from "./privacy-code";
 import { PrimaryButton, Toggle } from "./ui";
 import { Portal } from "./portal";
 import { ReportDialog } from "./report-dialog";
@@ -32,29 +30,11 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
-  const hasCode = useSession((s) => s.user!.hasContactPin);
-  const [unlocking, setUnlocking] = useState(false);
-  const [pin, setPin] = useState("");
-  const [revealed, setRevealed] = useState<string | null>(null);
-  const [revealError, setRevealError] = useState<string | null>(null);
   const share = useMutation({
     mutationFn: async (shared: boolean) =>
       unwrap(await six.api.PUT("/v1/contacts/{userId}/profile", { params: { path: { userId } }, body: { shared } })),
     onSuccess: (dto) => qc.setQueryData(["contact", userId], dto),
   });
-
-  async function reveal() {
-    setRevealError(null);
-    try {
-      const { originalName } = unwrap(
-        await six.api.POST("/v1/contacts/{userId}/reveal", { params: { path: { userId } }, body: { pin } }),
-      );
-      setRevealed(originalName);
-      setUnlocking(false);
-    } catch (err) {
-      setRevealError(codeError(err, tr));
-    }
-  }
 
   const shuffle = () =>
     void suggestAvatars()
@@ -104,15 +84,9 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     try {
       const trimmed = (name ?? "").trim();
       const showingRealName = !(trimmed && trimmed !== c.originalName);
-      if (showingRealName && c.customName && hasCode && !revealed) {
-        setUnlocking(true);
-        setRevealError(tr.contacts.enterCodeToShow);
-        return;
-      }
       await updateContact(qc, userId, {
         displayName: showingRealName ? null : trimmed,
         ...(photo !== undefined && { photo }),
-        ...(revealed && { pin }),
       });
       onClose();
     } catch (err) {
@@ -239,41 +213,10 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               </label>
 
               {c.customName && (
-                <div className="space-y-2 rounded-xl bg-stone-50 p-3 text-sm dark:bg-stone-800/50">
-                  {revealed ? (
-                    <p>
-                      <span className="text-stone-500">{tr.contacts.realName}</span>
-                      <span className="font-medium">{revealed}</span>
-                    </p>
-                  ) : !hasCode ? (
-                    <p className="text-stone-500">{tr.contacts.realNameHidden}</p>
-                  ) : unlocking ? (
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <CodeInput
-                          label={tr.contacts.privacy.title}
-                          value={pin}
-                          onChange={setPin}
-                          autoFocus
-                          onEnter={() => pin.length >= 4 && void reveal()}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => void reveal()}
-                        disabled={pin.length < 4}
-                        className="rounded-xl bg-stone-200 px-4 py-2.5 text-sm font-semibold disabled:opacity-50 dark:bg-stone-700"
-                      >
-                        {tr.contacts.show}
-                      </button>
-                    </div>
-                  ) : (
-                    <button type="button" onClick={() => setUnlocking(true)} className="font-medium text-brand">
-                      {tr.contacts.showRealName}
-                    </button>
-                  )}
-                  {revealError && <p className="text-red-600 dark:text-red-400">{revealError}</p>}
-                </div>
+                <p className="rounded-xl bg-stone-50 p-3 text-sm dark:bg-stone-800/50">
+                  <span className="text-stone-500">{tr.contacts.realName}</span>
+                  <span className="font-medium">{c.originalName}</span>
+                </p>
               )}
 
               <div className="overflow-hidden rounded-xl bg-stone-50 dark:bg-stone-800/50">

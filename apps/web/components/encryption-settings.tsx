@@ -10,8 +10,7 @@ import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
-import { CodeInput } from "./privacy-code";
-import { Card, PrimaryButton, SectionTitle } from "./ui";
+import { Card, CodeInput, PrimaryButton, SectionTitle } from "./ui";
 
 export const recoveryKeyQuery = ["recovery-key"] as const;
 

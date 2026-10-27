@@ -243,29 +243,15 @@ describe("custom contact names and photos", () => {
     expect((await get(host, "/v1/contacts?q=noah")).items).toHaveLength(0);
   });
 
-  it("hide a renamed contact's real name behind your code", async () => {
+  it("keep showing a renamed contact's own name, and go back to it", async () => {
     const { host, guest } = await makeFriends();
     await call(guest, "PUT", `/v1/contacts/${host.user.id}/profile`, { shared: true });
     const url = `/v1/contacts/${guest.user.id}`;
     const renamed = (await call(host, "PATCH", url, { displayName: "Bestie" })).json();
-    expect(renamed).toMatchObject({ customName: "Bestie", originalName: null });
+    expect(renamed).toMatchObject({ customName: "Bestie", originalName: expect.stringMatching(/^guest/) });
 
-    expect((await call(host, "POST", `${url}/reveal`, { pin: "1234" })).json().error.code).toBe("CONTACT_PIN_NOT_SET");
-    const me = (await call(host, "PUT", "/v1/me/contact-pin", { pin: "1234" })).json();
-    expect(me.hasContactPin).toBe(true);
-    expect((await call(host, "PUT", "/v1/me/contact-pin", { pin: "9999" })).json().error.code).toBe(
-      "CONTACT_PIN_REQUIRED",
-    );
-
-    expect((await call(host, "POST", `${url}/reveal`, { pin: "0000" })).json().error.code).toBe("WRONG_CONTACT_PIN");
-    const revealed = await call(host, "POST", `${url}/reveal`, { pin: "1234" });
-    expect(revealed.json().originalName).toMatch(/^guest/);
-
-    expect((await call(host, "PATCH", url, { displayName: null })).json().error.code).toBe("CONTACT_PIN_REQUIRED");
-    const back = await call(host, "PATCH", url, { displayName: null, pin: "1234" });
-    expect(back.json()).toMatchObject({ customName: null, originalName: revealed.json().originalName });
-
-    expect((await call(host, "DELETE", "/v1/me/contact-pin", { currentPin: "1234" })).json().hasContactPin).toBe(false);
+    const back = (await call(host, "PATCH", url, { displayName: null })).json();
+    expect(back).toMatchObject({ customName: null, originalName: renamed.originalName });
   });
 
   it("rejects strangers and bad photos", async () => {
@@ -393,31 +379,22 @@ describe("deleting chats", () => {
 });
 
 describe("app lock", () => {
-  it("unlocks with the privacy code", async () => {
+  it("unlocks with its own code, which goes away when the lock is turned off", async () => {
     const me = await signUp("locked");
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(204);
 
     expect((await call(me, "PUT", "/v1/me/app-lock", { code: "12ab" })).json().error.code).toBe("VALIDATION_FAILED");
-    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "1234" })).json()).toMatchObject({
-      hasAppLock: true,
-      hasContactPin: true,
-    });
+    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "1234" })).json().hasAppLock).toBe(true);
     expect((await get(me, "/v1/me")).hasAppLock).toBe(true);
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "0000" })).json().error.code).toBe(
       "WRONG_APP_LOCK_CODE",
     );
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(204);
 
-    await call(me, "PUT", "/v1/me/contact-pin", { pin: "56789", currentPin: "1234" });
-    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "56789" })).statusCode).toBe(204);
-
-    expect((await call(me, "DELETE", "/v1/me/app-lock")).json()).toMatchObject({ hasAppLock: false, hasContactPin: true });
-    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "1234" })).json().error.code).toBe("WRONG_APP_LOCK_CODE");
+    expect((await call(me, "DELETE", "/v1/me/app-lock")).json().hasAppLock).toBe(false);
     expect((await call(me, "PUT", "/v1/me/app-lock", { code: "56789" })).json().hasAppLock).toBe(true);
-
-    expect((await call(me, "DELETE", "/v1/me/contact-pin", { currentPin: "56789" })).json()).toMatchObject({
-      hasAppLock: false,
-      hasContactPin: false,
-    });
+    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).json().error.code).toBe(
+      "WRONG_APP_LOCK_CODE",
+    );
   });
 });

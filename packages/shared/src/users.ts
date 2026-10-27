@@ -15,9 +15,8 @@ export const UserDTO = z.object({
     .nullable()
     .describe("Identifies the key from your recovery key; null until you set up a recovery key"),
   alias: z.string().describe("What people see instead of your name and photo, until you share them"),
-  hasContactPin: z.boolean().describe("Whether seeing the real name of a renamed contact needs your code"),
   hasBackupPin: z.boolean().describe("Whether a new device can restore your backup with your 6-digit PIN"),
-  hasAppLock: z.boolean().describe("Whether the apps ask for your privacy code when they open"),
+  hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;
@@ -46,18 +45,7 @@ export const UpdateMeInput = z.object({
 });
 export type UpdateMeInput = z.infer<typeof UpdateMeInput>;
 
-export const ContactPin = z.string().regex(/^\d{4,8}$/, "Use 4 to 8 digits");
-
-export const SetContactPinInput = z.object({
-  pin: ContactPin,
-  currentPin: z.string().optional().describe("Needed to change a code you already set"),
-});
-export type SetContactPinInput = z.infer<typeof SetContactPinInput>;
-
-export const RemoveContactPinInput = z.object({ currentPin: z.string() });
-export type RemoveContactPinInput = z.infer<typeof RemoveContactPinInput>;
-
-export const AppLockInput = z.object({ code: ContactPin });
+export const AppLockInput = z.object({ code: z.string().regex(/^\d{4,8}$/, "Use 4 to 8 digits") });
 export type AppLockInput = z.infer<typeof AppLockInput>;
 
 const ALIAS_GRADIENTS = [

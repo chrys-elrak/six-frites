@@ -13,7 +13,7 @@ import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
 import { scrubMessageEvents } from "./messages.js";
 import { purgeUploads } from "./uploads.js";
-import { avatarOf, checkContactPin, toPublicUser } from "./users.js";
+import { avatarOf, toPublicUser } from "./users.js";
 
 interface Override {
   displayName: string | null;
@@ -77,7 +77,7 @@ function toContactDTO(r: ContactRow): ContactDTO {
   return {
     user: applyOverride({ id: r.id, displayName: r.originalName, avatarUrl: avatarOf(r) }, o),
     chatId: r.chatId,
-    originalName: r.customName === null ? r.originalName : null,
+    originalName: r.originalName,
     customName: r.customName,
     hasCustomPhoto: r.photoKey !== null,
     sharingProfile: r.sharingProfile,
@@ -146,17 +146,9 @@ export function parsePhoto(dataUrl: string) {
   return { mime, bytes: Buffer.from(data, "base64"), ext: mime.split("/")[1] === "jpeg" ? "jpg" : mime.split("/")[1]! };
 }
 
-/** The real name of a contact shown under a custom name, once the owner's code checks out. */
-export async function revealContact(ownerId: string, contactId: string, pin: string) {
-  const contact = await getContact(ownerId, contactId);
-  await checkContactPin(ownerId, pin, true);
-  return { originalName: contact.originalName };
-}
-
 /** Sets or clears the name and photo only `ownerId` sees for this contact. */
 export async function updateContact(ownerId: string, contactId: string, input: UpdateContactInput) {
   const contact = await getContact(ownerId, contactId);
-  if (input.displayName === null && contact.customName !== null) await checkContactPin(ownerId, input.pin);
   const previousKey = contact.photoKey;
 
   let photoKey: string | null | undefined;

@@ -4,8 +4,6 @@ import type { User } from "../generated/prisma/client.js";
 import {
   AppError,
   type AppLockInput,
-  type RemoveContactPinInput,
-  type SetContactPinInput,
   type UpdateMeInput,
   type UserDTO,
 } from "@six/shared";
@@ -34,9 +32,8 @@ export function toUserDTO(u: User): UserDTO {
     findByEmail: u.findByEmail,
     backupKeyId: u.backupKeyId,
     alias: u.alias,
-    hasContactPin: u.contactPinHash !== null,
     hasBackupPin: u.backupPinHash !== null,
-    hasAppLock: u.appLock && u.contactPinHash !== null,
+    hasAppLock: u.appLockHash !== null,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -171,52 +168,16 @@ export async function pinMatches(stored: string, pin: string) {
   return timingSafeEqual(actual, expected);
 }
 
-/**
- * Checks the code that guards the real names of renamed contacts. Passes when no code is set,
- * unless `required`, since there is then nothing to protect.
- */
-export async function checkContactPin(userId: string, pin: string | undefined, required = false) {
-  const { contactPinHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { contactPinHash: true } });
-  if (!contactPinHash) {
-    if (required) throw new AppError("CONTACT_PIN_NOT_SET");
-    return;
-  }
-  if (pin === undefined) throw new AppError("CONTACT_PIN_REQUIRED");
-  if (!(await pinMatches(contactPinHash, pin))) throw new AppError("WRONG_CONTACT_PIN");
-}
-
-export async function setContactPin(userId: string, input: SetContactPinInput) {
-  await checkContactPin(userId, input.currentPin);
-  const user = await prisma.user.update({ where: { id: userId }, data: { contactPinHash: await hashPin(input.pin) } });
-  return toUserDTO(user);
-}
-
-export async function removeContactPin(userId: string, input: RemoveContactPinInput) {
-  await checkContactPin(userId, input.currentPin, true);
-  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { contactPinHash: null, appLock: false } }));
-}
-
-/**
- * Turns the app lock on. It unlocks with the privacy code, so `code` must match it, or becomes it when none is
- * set yet. Turning the lock off needs no code: only an unlocked app gets there.
- */
+/** Turns the app lock on with `code`, replacing any earlier one. Turning it off needs no code: only an unlocked app gets there. */
 export async function setAppLock(userId: string, input: AppLockInput) {
-  const { contactPinHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { contactPinHash: true } });
-  if (contactPinHash && !(await pinMatches(contactPinHash, input.code))) throw new AppError("WRONG_APP_LOCK_CODE");
-  const user = await prisma.user.update({
-    where: { id: userId },
-    data: { appLock: true, ...(!contactPinHash && { contactPinHash: await hashPin(input.code) }) },
-  });
-  return toUserDTO(user);
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: await hashPin(input.code) } }));
 }
 
 export async function removeAppLock(userId: string) {
-  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLock: false } }));
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: null } }));
 }
 
 export async function unlockApp(userId: string, input: AppLockInput) {
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLock: true, contactPinHash: true } });
-  if (u.appLock && u.contactPinHash && !(await pinMatches(u.contactPinHash, input.code))) {
-    throw new AppError("WRONG_APP_LOCK_CODE");
-  }
+  const { appLockHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true } });
+  if (appLockHash && !(await pinMatches(appLockHash, input.code))) throw new AppError("WRONG_APP_LOCK_CODE");
 }

@@ -5,10 +5,7 @@ import { PublicUser } from "./invites.js";
 export const ContactDTO = z.object({
   user: PublicUser.describe("With your custom name and photo applied"),
   chatId: Id,
-  originalName: z
-    .string()
-    .nullable()
-    .describe("Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them"),
+  originalName: z.string().describe("Their own name, or their alias if they don't share it with you"),
   customName: z.string().nullable(),
   hasCustomPhoto: z.boolean(),
   sharingProfile: z.boolean().describe("You show them your real name and photo"),
@@ -36,16 +33,9 @@ export const UpdateContactInput = z
   .object({
     displayName: z.string().trim().min(1).max(64).nullable().optional(),
     photo: ContactPhoto.nullable().optional(),
-    pin: z.string().optional().describe("Your contact code; needed to go back to their own name once you set one"),
   })
   .refine((v) => v.displayName !== undefined || v.photo !== undefined, "Provide displayName and/or photo");
 export type UpdateContactInput = z.infer<typeof UpdateContactInput>;
-
-export const RevealContactInput = z.object({ pin: z.string() });
-export type RevealContactInput = z.infer<typeof RevealContactInput>;
-
-export const RevealedContactDTO = z.object({ originalName: z.string() });
-export type RevealedContactDTO = z.infer<typeof RevealedContactDTO>;
 
 export const FindUserQuery = z.object({
   q: z.string().trim().min(1).max(320).describe("A contact code, a contact link, @username or an exact email"),

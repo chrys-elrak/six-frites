@@ -3,8 +3,6 @@ import {
   BlockedUserDTO,
   DeleteAccountInput,
   AppLockInput,
-  RemoveContactPinInput,
-  SetContactPinInput,
   UpdateMeInput,
   UserDTO,
 } from "@six/shared";
@@ -14,10 +12,8 @@ import {
   deleteAccount,
   getMe,
   removeAppLock,
-  removeContactPin,
   resetContactCode,
   setAppLock,
-  setContactPin,
   unlockApp,
   updateMe,
 } from "../services/users.js";
@@ -62,38 +58,6 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.put(
-    "/me/contact-pin",
-    {
-      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
-      schema: {
-        tags: ["me"],
-        summary: "Set the code that shows renamed contacts' real names",
-        description:
-          "4 to 8 digits. To change it, send the old one as `currentPin` (CONTACT_PIN_REQUIRED or WRONG_CONTACT_PIN otherwise).",
-        security: [{ bearer: [] }],
-        body: SetContactPinInput,
-        response: { 200: UserDTO },
-      },
-    },
-    (req) => setContactPin(req.auth.userId, req.body),
-  );
-
-  app.delete(
-    "/me/contact-pin",
-    {
-      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
-      schema: {
-        tags: ["me"],
-        summary: "Remove the contact code",
-        security: [{ bearer: [] }],
-        body: RemoveContactPinInput,
-        response: { 200: UserDTO },
-      },
-    },
-    (req) => removeContactPin(req.auth.userId, req.body),
-  );
-
-  app.put(
     "/me/app-lock",
     {
       config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
@@ -101,7 +65,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["me"],
         summary: "Turn on the app lock",
         description:
-          "The apps then ask for the privacy code when they open. Send it as `code` (WRONG_APP_LOCK_CODE if it doesn't match); with no privacy code yet, `code` becomes it.",
+          "The apps then ask for `code` when they open. Sending a new one while the lock is on changes it.",
         security: [{ bearer: [] }],
         body: AppLockInput,
         response: { 200: UserDTO },
@@ -129,7 +93,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
       schema: {
         tags: ["me"],
-        summary: "Check the privacy code to unlock the app",
+        summary: "Check the app lock code",
         description: "WRONG_APP_LOCK_CODE if it doesn't match. Always passes when the app lock is off.",
         security: [{ bearer: [] }],
         body: AppLockInput,

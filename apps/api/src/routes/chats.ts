@@ -7,9 +7,7 @@ import {
   ChatReadDTO,
   AddContactInput,
   ContactDTO,
-  RevealContactInput,
   ShareProfileInput,
-  RevealedContactDTO,
   ContactListQuery,
   FindUserQuery,
   FoundUserDTO,
@@ -35,7 +33,7 @@ import {
   page,
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
-import { findContact, listContacts, removeContact, revealContact, shareProfile, updateContact } from "../services/contacts.js";
+import { findContact, listContacts, removeContact, shareProfile, updateContact } from "../services/contacts.js";
 import { blockUser, unblockUser } from "../services/blocks.js";
 import { addContact, findUser } from "../services/discovery.js";
 import {
@@ -521,23 +519,6 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       await removeContact(req.auth.userId, req.params.userId);
       return reply.status(204).send(null);
     },
-  );
-
-  app.post(
-    "/contacts/:userId/reveal",
-    {
-      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
-      schema: {
-        tags: ["contacts"],
-        summary: "See the real name of a contact you renamed",
-        description: "Needs your contact code: CONTACT_PIN_NOT_SET if you have none, WRONG_CONTACT_PIN if it doesn't match.",
-        security,
-        params: z.object({ userId: Id }),
-        body: RevealContactInput,
-        response: { 200: RevealedContactDTO },
-      },
-    },
-    (req) => revealContact(req.auth.userId, req.params.userId, req.body.pin),
   );
 
   app.get(

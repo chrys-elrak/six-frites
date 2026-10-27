@@ -16,7 +16,6 @@ import { EncryptionSettings, useHasRecoveryKey } from "./encryption-settings";
 import { FindMe } from "./find-me";
 import { Invites, Referrals } from "./invites";
 import { NotificationSettings } from "./notification-settings";
-import { PrivacyCodeSettings } from "./privacy-code";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
 import { Card, SectionTitle } from "./ui";
@@ -79,7 +78,6 @@ export function SettingsPanel() {
           <Invites />
           <Referrals />
           <AppLockSettings />
-          <PrivacyCodeSettings />
           <EncryptionSettings />
           <Devices />
           <BlockedPeople />

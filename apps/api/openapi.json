@@ -126,17 +126,13 @@
                           "type": "string",
                           "description": "What people see instead of your name and photo, until you share them"
                         },
-                        "hasContactPin": {
-                          "type": "boolean",
-                          "description": "Whether seeing the real name of a renamed contact needs your code"
-                        },
                         "hasBackupPin": {
                           "type": "boolean",
                           "description": "Whether a new device can restore your backup with your 6-digit PIN"
                         },
                         "hasAppLock": {
                           "type": "boolean",
-                          "description": "Whether the apps ask for your privacy code when they open"
+                          "description": "Whether the apps ask for your app lock code when they open"
                         },
                         "createdAt": {
                           "type": "string",
@@ -154,7 +150,6 @@
                         "findByEmail",
                         "backupKeyId",
                         "alias",
-                        "hasContactPin",
                         "hasBackupPin",
                         "hasAppLock",
                         "createdAt"
@@ -259,17 +254,13 @@
                           "type": "string",
                           "description": "What people see instead of your name and photo, until you share them"
                         },
-                        "hasContactPin": {
-                          "type": "boolean",
-                          "description": "Whether seeing the real name of a renamed contact needs your code"
-                        },
                         "hasBackupPin": {
                           "type": "boolean",
                           "description": "Whether a new device can restore your backup with your 6-digit PIN"
                         },
                         "hasAppLock": {
                           "type": "boolean",
-                          "description": "Whether the apps ask for your privacy code when they open"
+                          "description": "Whether the apps ask for your app lock code when they open"
                         },
                         "createdAt": {
                           "type": "string",
@@ -287,7 +278,6 @@
                         "findByEmail",
                         "backupKeyId",
                         "alias",
-                        "hasContactPin",
                         "hasBackupPin",
                         "hasAppLock",
                         "createdAt"
@@ -2845,17 +2835,13 @@
                       "type": "string",
                       "description": "What people see instead of your name and photo, until you share them"
                     },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
+                      "description": "Whether the apps ask for your app lock code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -2873,7 +2859,6 @@
                     "findByEmail",
                     "backupKeyId",
                     "alias",
-                    "hasContactPin",
                     "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
@@ -2977,17 +2962,13 @@
                       "type": "string",
                       "description": "What people see instead of your name and photo, until you share them"
                     },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
+                      "description": "Whether the apps ask for your app lock code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3005,7 +2986,6 @@
                     "findByEmail",
                     "backupKeyId",
                     "alias",
-                    "hasContactPin",
                     "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
@@ -3126,17 +3106,13 @@
                       "type": "string",
                       "description": "What people see instead of your name and photo, until you share them"
                     },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
+                      "description": "Whether the apps ask for your app lock code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3154,243 +3130,6 @@
                     "findByEmail",
                     "backupKeyId",
                     "alias",
-                    "hasContactPin",
-                    "hasBackupPin",
-                    "hasAppLock",
-                    "createdAt"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/me/contact-pin": {
-      "put": {
-        "summary": "Set the code that shows renamed contacts' real names",
-        "tags": [
-          "me"
-        ],
-        "description": "4 to 8 digits. To change it, send the old one as `currentPin` (CONTACT_PIN_REQUIRED or WRONG_CONTACT_PIN otherwise).",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "pin": {
-                    "type": "string",
-                    "pattern": "^\\d{4,8}$"
-                  },
-                  "currentPin": {
-                    "description": "Needed to change a code you already set",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "pin"
-                ]
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "email": {
-                      "type": "string",
-                      "format": "email",
-                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
-                    },
-                    "displayName": {
-                      "type": "string"
-                    },
-                    "avatarUrl": {
-                      "nullable": true,
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
-                    "contactCode": {
-                      "type": "string",
-                      "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
-                    },
-                    "backupKeyId": {
-                      "nullable": true,
-                      "description": "Identifies the key from your recovery key; null until you set up a recovery key",
-                      "type": "string"
-                    },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
-                    "hasBackupPin": {
-                      "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
-                    },
-                    "hasAppLock": {
-                      "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "email",
-                    "displayName",
-                    "avatarUrl",
-                    "username",
-                    "contactCode",
-                    "findByEmail",
-                    "backupKeyId",
-                    "alias",
-                    "hasContactPin",
-                    "hasBackupPin",
-                    "hasAppLock",
-                    "createdAt"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Remove the contact code",
-        "tags": [
-          "me"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "currentPin": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "currentPin"
-                ]
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "email": {
-                      "type": "string",
-                      "format": "email",
-                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
-                    },
-                    "displayName": {
-                      "type": "string"
-                    },
-                    "avatarUrl": {
-                      "nullable": true,
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
-                    "contactCode": {
-                      "type": "string",
-                      "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
-                    },
-                    "backupKeyId": {
-                      "nullable": true,
-                      "description": "Identifies the key from your recovery key; null until you set up a recovery key",
-                      "type": "string"
-                    },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
-                    "hasBackupPin": {
-                      "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
-                    },
-                    "hasAppLock": {
-                      "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "email",
-                    "displayName",
-                    "avatarUrl",
-                    "username",
-                    "contactCode",
-                    "findByEmail",
-                    "backupKeyId",
-                    "alias",
-                    "hasContactPin",
                     "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
@@ -3409,7 +3148,7 @@
         "tags": [
           "me"
         ],
-        "description": "The apps then ask for the privacy code when they open. Send it as `code` (WRONG_APP_LOCK_CODE if it doesn't match); with no privacy code yet, `code` becomes it.",
+        "description": "The apps then ask for `code` when they open. Sending a new one while the lock is on changes it.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3480,17 +3219,13 @@
                       "type": "string",
                       "description": "What people see instead of your name and photo, until you share them"
                     },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
+                      "description": "Whether the apps ask for your app lock code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3508,7 +3243,6 @@
                     "findByEmail",
                     "backupKeyId",
                     "alias",
-                    "hasContactPin",
                     "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
@@ -3576,17 +3310,13 @@
                       "type": "string",
                       "description": "What people see instead of your name and photo, until you share them"
                     },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
+                      "description": "Whether the apps ask for your app lock code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3604,7 +3334,6 @@
                     "findByEmail",
                     "backupKeyId",
                     "alias",
-                    "hasContactPin",
                     "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
@@ -3619,7 +3348,7 @@
     },
     "/v1/me/app-lock/unlock": {
       "post": {
-        "summary": "Check the privacy code to unlock the app",
+        "summary": "Check the app lock code",
         "tags": [
           "me"
         ],
@@ -15061,9 +14790,8 @@
                             "minLength": 1
                           },
                           "originalName": {
-                            "nullable": true,
-                            "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
-                            "type": "string"
+                            "type": "string",
+                            "description": "Their own name, or their alias if they don't share it with you"
                           },
                           "customName": {
                             "nullable": true,
@@ -15173,9 +14901,8 @@
                       "minLength": 1
                     },
                     "originalName": {
-                      "nullable": true,
-                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
-                      "type": "string"
+                      "type": "string",
+                      "description": "Their own name, or their alias if they don't share it with you"
                     },
                     "customName": {
                       "nullable": true,
@@ -15425,9 +15152,8 @@
                       "minLength": 1
                     },
                     "originalName": {
-                      "nullable": true,
-                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
-                      "type": "string"
+                      "type": "string",
+                      "description": "Their own name, or their alias if they don't share it with you"
                     },
                     "customName": {
                       "nullable": true,
@@ -15479,10 +15205,6 @@
                     "nullable": true,
                     "type": "string",
                     "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$"
-                  },
-                  "pin": {
-                    "description": "Your contact code; needed to go back to their own name once you set one",
-                    "type": "string"
                   }
                 }
               }
@@ -15542,9 +15264,8 @@
                       "minLength": 1
                     },
                     "originalName": {
-                      "nullable": true,
-                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
-                      "type": "string"
+                      "type": "string",
+                      "description": "Their own name, or their alias if they don't share it with you"
                     },
                     "customName": {
                       "nullable": true,
@@ -15691,9 +15412,8 @@
                       "minLength": 1
                     },
                     "originalName": {
-                      "nullable": true,
-                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
-                      "type": "string"
+                      "type": "string",
+                      "description": "Their own name, or their alias if they don't share it with you"
                     },
                     "customName": {
                       "nullable": true,
@@ -15714,70 +15434,6 @@
                     "customName",
                     "hasCustomPhoto",
                     "sharingProfile"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/contacts/{userId}/reveal": {
-      "post": {
-        "summary": "See the real name of a contact you renamed",
-        "tags": [
-          "contacts"
-        ],
-        "description": "Needs your contact code: CONTACT_PIN_NOT_SET if you have none, WRONG_CONTACT_PIN if it doesn't match.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "pin": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "pin"
-                ]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            },
-            "in": "path",
-            "name": "userId",
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "originalName": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "originalName"
                   ],
                   "additionalProperties": false
                 }
@@ -19192,17 +18848,13 @@
                       "type": "string",
                       "description": "What people see instead of your name and photo, until you share them"
                     },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
+                      "description": "Whether the apps ask for your app lock code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -19220,7 +18872,6 @@
                     "findByEmail",
                     "backupKeyId",
                     "alias",
-                    "hasContactPin",
                     "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
@@ -19361,17 +19012,13 @@
                       "type": "string",
                       "description": "What people see instead of your name and photo, until you share them"
                     },
-                    "hasContactPin": {
-                      "type": "boolean",
-                      "description": "Whether seeing the real name of a renamed contact needs your code"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your privacy code when they open"
+                      "description": "Whether the apps ask for your app lock code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -19389,7 +19036,6 @@
                     "findByEmail",
                     "backupKeyId",
                     "alias",
-                    "hasContactPin",
                     "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
