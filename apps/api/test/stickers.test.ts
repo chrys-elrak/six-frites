@@ -106,19 +106,43 @@ describe("GIFs", () => {
       original_mp4: { mp4, width: "480", height: "360" },
     },
   });
+  const klipyItem = (slug: string) => ({
+    id: 1,
+    slug,
+    title: "Cat dance",
+    file: {
+      hd: {
+        mp4: { url: `https://static.klipy.com/${slug}/hd.mp4`, width: 498, height: 280 },
+        webp: { url: `https://static.klipy.com/${slug}/hd.webp`, width: 498, height: 280 },
+      },
+      md: { webp: { url: `https://static.klipy.com/${slug}/md.webp`, width: 300, height: 300 } },
+      sm: { webp: { url: `https://static.klipy.com/${slug}/sm.webp`, width: 220, height: 124 } },
+    },
+  });
   const clip = Buffer.from("fake mp4 bytes");
 
   function mockGiphy() {
     const realFetch = globalThis.fetch;
     return vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
       const url = input instanceof Request ? input.url : String(input);
-      const { hostname, pathname } = new URL(url);
+      const { hostname, pathname, searchParams } = new URL(url);
       if (hostname === "api.giphy.com" && pathname.endsWith("/search")) {
+        const kind = pathname.includes("/stickers/") ? "sticker1" : "cat1";
         return Response.json({
-          data: [gif("cat1", "https://media.giphy.com/cat1/giphy.mp4")],
+          data: [gif(kind, `https://media.giphy.com/${kind}/giphy.mp4`)],
           pagination: { total_count: 1 },
         });
       }
+      if (hostname === "api.klipy.com" && pathname.endsWith("/search")) {
+        if (searchParams.get("q")?.startsWith("broken")) return new Response("down", { status: 500 });
+        const slug = pathname.includes("/stickers/") ? "sticker-wave" : "cat-dance";
+        return Response.json({ result: true, data: { data: [klipyItem(slug)], has_next: false } });
+      }
+      if (hostname === "api.klipy.com" && pathname.endsWith("/gifs/items")) {
+        return Response.json({ result: true, data: { data: [klipyItem(searchParams.get("slugs")!)] } });
+      }
+      if (hostname === "static.klipy.com")
+        return new Response(clip, { headers: { "content-length": String(clip.length) } });
       if (hostname === "api.giphy.com" && pathname.endsWith("/cat1")) {
         return Response.json({ data: gif("cat1", "https://media.giphy.com/cat1/giphy.mp4") });
       }
@@ -144,7 +168,15 @@ describe("GIFs", () => {
           width: 200,
           height: 150,
         },
+        {
+          id: "klipy-cat-dance",
+          title: "Cat dance",
+          previewUrl: "https://static.klipy.com/cat-dance/sm.webp",
+          width: 220,
+          height: 124,
+        },
       ]);
+      expect(found.nextCursor).toBeNull();
       expect(JSON.stringify(found)).not.toContain("api_key");
 
       const sent = (await send(host, chatId, "", { text: undefined, gifId: "cat1" })).json();
@@ -170,6 +202,33 @@ describe("GIFs", () => {
       expect((await send(host, chatId, "", { text: undefined, gifId: "evil1" })).json().error.code).toBe(
         "GIF_NOT_FOUND",
       );
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("sends a KLIPY GIF and searches stickers from both providers", async () => {
+    const spy = mockGiphy();
+    try {
+      const { host, chatId } = await makeFriends();
+      const sent = (await send(host, chatId, "", { text: undefined, gifId: "klipy-cat-dance" })).json();
+      expect(sent).toMatchObject({ type: "gif", attachment: { kind: "gif", width: 498, height: 280 } });
+      expect(sent.attachment.url).not.toContain("static.klipy.com");
+
+      const stickers = await get(host, `/v1/gifs?q=wave${Date.now()}&kind=sticker`);
+      expect(stickers.items.map((g: { id: string }) => g.id)).toEqual(["sticker1", "klipy-sticker-wave"]);
+      expect(stickers.items[1].previewUrl).toBe("https://static.klipy.com/sticker-wave/hd.webp");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("still answers with GIPHY when KLIPY is down", async () => {
+    const spy = mockGiphy();
+    try {
+      const { host } = await makeFriends();
+      const found = await get(host, `/v1/gifs?q=broken${Date.now()}`);
+      expect(found.items.map((g: { id: string }) => g.id)).toEqual(["cat1"]);
     } finally {
       spy.mockRestore();
     }

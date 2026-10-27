@@ -8013,14 +8013,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Search GIFs, or list trending ones
-         * @description Proxied from GIPHY. Returns GIFS_UNAVAILABLE when the server has no GIPHY key. Send one with `gifId`.
+         * Search GIFs or stickers, or list trending ones
+         * @description Proxied from GIPHY and KLIPY, mixed together. Returns GIFS_UNAVAILABLE when the server has a key for neither. Send a GIF with `gifId`.
          */
         get: {
             parameters: {
                 query?: {
                     /** @description Search terms; trending GIFs when empty */
                     q?: string;
+                    /** @description `sticker`: transparent animated stickers instead, sent as an image file of the `previewUrl` */
+                    kind?: "gif" | "sticker";
                     cursor?: string;
                 };
                 header?: never;

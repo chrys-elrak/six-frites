@@ -11302,7 +11302,7 @@
                   "gifId": {
                     "description": "A GIF from GET /v1/gifs; the server saves a copy and attaches it",
                     "type": "string",
-                    "pattern": "^\\w{1,64}$"
+                    "pattern": "^[\\w-]{1,128}$"
                   },
                   "stickerId": {
                     "description": "Send this sticker, on its own",
@@ -12641,7 +12641,7 @@
                   "gifId": {
                     "description": "A GIF from GET /v1/gifs; the server saves a copy and attaches it",
                     "type": "string",
-                    "pattern": "^\\w{1,64}$"
+                    "pattern": "^[\\w-]{1,128}$"
                   },
                   "stickerId": {
                     "description": "Send this sticker, on its own",
@@ -21243,11 +21243,11 @@
     },
     "/v1/gifs": {
       "get": {
-        "summary": "Search GIFs, or list trending ones",
+        "summary": "Search GIFs or stickers, or list trending ones",
         "tags": [
           "gifs"
         ],
-        "description": "Proxied from GIPHY. Returns GIFS_UNAVAILABLE when the server has no GIPHY key. Send one with `gifId`.",
+        "description": "Proxied from GIPHY and KLIPY, mixed together. Returns GIFS_UNAVAILABLE when the server has a key for neither. Send a GIF with `gifId`.",
         "parameters": [
           {
             "schema": {
@@ -21258,6 +21258,20 @@
             "name": "q",
             "required": false,
             "description": "Search terms; trending GIFs when empty"
+          },
+          {
+            "schema": {
+              "default": "gif",
+              "type": "string",
+              "enum": [
+                "gif",
+                "sticker"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "description": "`sticker`: transparent animated stickers instead, sent as an image file of the `previewUrl`"
           },
           {
             "schema": {

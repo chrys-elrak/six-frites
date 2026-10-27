@@ -136,9 +136,9 @@ const stickerRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
       schema: {
         tags: ["gifs"],
-        summary: "Search GIFs, or list trending ones",
+        summary: "Search GIFs or stickers, or list trending ones",
         description:
-          "Proxied from GIPHY. Returns GIFS_UNAVAILABLE when the server has no GIPHY key. Send one with `gifId`.",
+          "Proxied from GIPHY and KLIPY, mixed together. Returns GIFS_UNAVAILABLE when the server has a key for neither. Send a GIF with `gifId`.",
         security,
         querystring: GifQuery,
         response: { 200: page(GifDTO) },

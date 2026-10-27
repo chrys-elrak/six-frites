@@ -20,6 +20,7 @@ export default defineConfig({
       REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
       QUEUE_PREFIX: "six-test",
       GIPHY_API_KEY: "test-giphy-key",
+      KLIPY_API_KEY: "test-klipy-key",
       ADMIN_EMAILS: "the-admin@example.com",
       STORE_URL: "https://store.test",
       STORE_WEBHOOK_SECRET: "test-store-secret",

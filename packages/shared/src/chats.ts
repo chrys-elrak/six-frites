@@ -242,7 +242,7 @@ export const SendMessageInput = z
     attachmentId: Id.optional().describe("A completed upload from POST /v1/uploads/{id}/complete"),
     gifId: z
       .string()
-      .regex(/^\w{1,64}$/)
+      .regex(/^[\w-]{1,128}$/)
       .optional()
       .describe("A GIF from GET /v1/gifs; the server saves a copy and attaches it"),
     stickerId: Id.optional().describe("Send this sticker, on its own"),

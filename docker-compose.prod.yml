@@ -19,6 +19,7 @@ x-app-env: &app-env
   WEB_PUSH_SUBJECT: ${WEB_PUSH_SUBJECT:-mailto:admin@example.com}
   FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}
   GIPHY_API_KEY: ${GIPHY_API_KEY:-}
+  KLIPY_API_KEY: ${KLIPY_API_KEY:-}
   TURN_URLS: turn:${DOMAIN}:3478?transport=udp,turn:${DOMAIN}:3478?transport=tcp
   TURN_SECRET: ${TURN_SECRET}
   ADMIN_EMAILS: ${ADMIN_EMAILS:-}

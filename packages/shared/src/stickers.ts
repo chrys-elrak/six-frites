@@ -48,6 +48,10 @@ export type GifDTO = z.infer<typeof GifDTO>;
 
 export const GifQuery = z.object({
   q: z.string().trim().max(100).optional().describe("Search terms; trending GIFs when empty"),
+  kind: z
+    .enum(["gif", "sticker"])
+    .default("gif")
+    .describe("`sticker`: transparent animated stickers instead, sent as an image file of the `previewUrl`"),
   cursor: z.string().regex(/^\d+$/).optional(),
 });
 export type GifQuery = z.infer<typeof GifQuery>;
