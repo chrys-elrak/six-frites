@@ -54,7 +54,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
         ...c,
         lastMessage: m,
         lastActivityAt: m.createdAt,
-        unreadCount: m.senderId === meId || viewing ? c.unreadCount : c.unreadCount + 1,
+        unreadCount: m.senderId === meId ? c.unreadCount : c.unreadCount + 1,
       }));
       if (!found) void qc.invalidateQueries({ queryKey: chatKeys.lists });
       break;
@@ -83,12 +83,10 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       break;
     case "chat.updated":
       upsertChat(qc, e.data);
-      void qc.invalidateQueries({ queryKey: ["contacts"] });
       void qc.invalidateQueries({ queryKey: scheduledKey(e.data.id) });
       break;
     case "chat.deleted":
       applyChatDeleted(qc, e.data.chatId, e.data.scope);
-      void qc.invalidateQueries({ queryKey: ["contacts"] });
       break;
     case "devices.changed":
       void qc.invalidateQueries({ queryKey: ["safety-number"] });

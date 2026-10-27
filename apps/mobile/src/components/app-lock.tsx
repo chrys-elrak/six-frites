@@ -11,18 +11,17 @@ import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Dialog } from "./encryption-settings";
 import { Logo } from "./logo";
-import { CodeInput, codeError } from "./privacy-code";
-import { Card, Notice, PrimaryButton, SectionTitle, TextButton } from "./ui";
+import { Card, CodeInput, Notice, PrimaryButton, SectionTitle, TextButton, codeError } from "./ui";
 
 export function AppLockSettings() {
   const t = useTheme();
   const tr = useT();
   const hasLock = useSession((s) => s.user!.hasAppLock);
   const setUser = useSession((s) => s.setUser);
-  const [setting, setSetting] = useState(false);
+  const [turningOn, setTurningOn] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  async function remove() {
+  async function turnOff() {
     setFailed(false);
     try {
       setUser(unwrap(await six.api.DELETE("/v1/me/app-lock")));
@@ -43,17 +42,16 @@ export function AppLockSettings() {
         </View>
         {failed && <Notice tone="error">{tr.common.somethingWrongRetry}</Notice>}
         <PrimaryButton
-          title={hasLock ? tr.settings.appLock.change : tr.settings.appLock.set}
-          onPress={() => setSetting(true)}
+          title={hasLock ? tr.settings.appLock.turnOff : tr.settings.appLock.turnOn}
+          onPress={() => (hasLock ? void turnOff() : setTurningOn(true))}
         />
-        {hasLock && <TextButton title={tr.common.remove} onPress={() => void remove()} />}
       </Card>
-      {setting && <SetCodeDialog hasLock={hasLock} onClose={() => setSetting(false)} />}
+      {turningOn && <TurnOnDialog onClose={() => setTurningOn(false)} />}
     </View>
   );
 }
 
-function SetCodeDialog({ hasLock, onClose }: { hasLock: boolean; onClose: () => void }) {
+function TurnOnDialog({ onClose }: { onClose: () => void }) {
   const t = useTheme();
   const tr = useT();
   const setUser = useSession((s) => s.setUser);
@@ -82,17 +80,17 @@ function SetCodeDialog({ hasLock, onClose }: { hasLock: boolean; onClose: () => 
   }
 
   return (
-    <Dialog title={hasLock ? tr.settings.appLock.changeTitle : tr.settings.appLock.setTitle} onClose={onClose}>
-      <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{tr.settings.appLock.hint}</Text>
-      <CodeInput label={tr.contacts.privacy.new} value={code} onChange={setCode} autoFocus />
-      <CodeInput label={tr.contacts.privacy.again} value={again} onChange={setAgain} onSubmit={() => void save()} />
-      {(error || mismatch) && <Notice tone="error">{error ?? tr.contacts.privacy.mismatch}</Notice>}
+    <Dialog title={tr.settings.appLock.turnOnTitle} onClose={onClose}>
+      <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{tr.settings.appLock.newCode}</Text>
+      <CodeInput label={tr.settings.appLock.code} value={code} onChange={setCode} autoFocus />
+      <CodeInput label={tr.settings.appLock.again} value={again} onChange={setAgain} onSubmit={() => void save()} />
+      {(error || mismatch) && <Notice tone="error">{error ?? tr.settings.appLock.mismatch}</Notice>}
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
         <View style={{ flex: 1 }}>
           <TextButton title={tr.common.cancel} onPress={onClose} />
         </View>
         <PrimaryButton
-          title={tr.common.save}
+          title={tr.settings.appLock.turnOn}
           busy={busy}
           disabled={!ready || busy}
           onPress={() => void save()}

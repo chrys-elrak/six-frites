@@ -22,7 +22,6 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
   const add = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/contacts", { body: { q: query } })),
     onSuccess: (contact) => {
-      void qc.invalidateQueries({ queryKey: ["contacts"] });
       onAdded?.();
       router.push(`/chats/${contact.chatId}`);
     },

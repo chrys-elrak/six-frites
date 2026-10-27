@@ -32,7 +32,6 @@ import { brand, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
 import { AppLockSettings } from "./app-lock";
-import { PrivacyCodeSettings } from "./privacy-code";
 import { Avatar } from "./avatar";
 import { Wallpaper } from "./chat-background";
 import { CustomThemePicker } from "./custom-theme";
@@ -40,6 +39,7 @@ import { QrCode } from "./qr-code";
 import { NewInvite } from "./invites";
 import { Sheet } from "./sheet";
 import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton } from "./ui";
+import { UpdateCard } from "./update-banner";
 
 function ProfileCard() {
   const t = useTheme();
@@ -101,6 +101,7 @@ function ProfileCard() {
           </Text>
         </View>
       </View>
+      <Text style={{ color: t.muted, fontSize: 13, lineHeight: 18 }}>{tr.settings.seenAs(user.alias)}</Text>
       {user.avatarUrl && (
         <TextButton
           title={tr.settings.removePhoto}
@@ -114,7 +115,7 @@ function ProfileCard() {
   );
 }
 
-function Toggle({
+export function Toggle({
   label,
   hint,
   value,
@@ -596,6 +597,7 @@ export function SettingsPanel() {
         </Pressable>
       </ScreenHeader>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <UpdateCard />
         <ProfileCard />
         <LanguagePicker />
         <FindMe />
@@ -606,7 +608,6 @@ export function SettingsPanel() {
         <Devices />
         <EncryptionSettings />
         <AppLockSettings />
-        <PrivacyCodeSettings />
         <BlockedPeople />
         <AccountCard />
         <Text style={[styles.credits, { color: t.faint }]}>

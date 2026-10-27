@@ -3,6 +3,7 @@ import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES } from "@six/shared";
 import * as DocumentPicker from "expo-document-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import type { ReceivedImage } from "../../modules/rich-input";
 import { getT } from "./i18n";
 import type { LocalFile } from "./send";
 
@@ -104,6 +105,20 @@ export async function pickFiles(): Promise<LocalFile[]> {
       return { uri: a.uri, name: a.name, mime, kind: kindFor(mime), size: a.size ?? 0 };
     }),
   );
+}
+
+/** A picture the keyboard inserted or the user pasted, ready to send as a photo. */
+export async function receivedImage(image: ReceivedImage): Promise<LocalFile> {
+  const file = await asSendableImage({
+    uri: image.uri,
+    name: nameFromUri(image.uri),
+    mime: image.mime,
+    kind: "image",
+    size: image.size,
+    width: image.width || null,
+    height: image.height || null,
+  });
+  return checkSizes([file])[0]!;
 }
 
 const MAX_AVATAR_BYTES = 64 * 1024;

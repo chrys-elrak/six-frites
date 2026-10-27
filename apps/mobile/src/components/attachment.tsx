@@ -55,7 +55,7 @@ function view(a: ShownAttachment) {
     mime: d.mime,
     size: d.size,
     url: d.url,
-    thumbUrl: d.thumbUrl,
+    thumbUrl: d.mime === "image/gif" && d.url ? d.url : d.thumbUrl,
     width: d.width,
     height: d.height,
     durationMs: d.durationMs,

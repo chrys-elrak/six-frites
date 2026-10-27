@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router/js-tabs";
 import { View } from "react-native";
 import { BrandBar } from "@/components/brand-bar";
-import { MessageCircle, Settings, Users } from "lucide-react-native";
+import { MessageCircle, Settings } from "lucide-react-native";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
@@ -32,13 +32,6 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, focused }) => (
               <MessageCircle color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />
             ),
-          }}
-        />
-        <Tabs.Screen
-          name="contacts"
-          options={{
-            title: tr.common.contacts,
-            tabBarIcon: ({ color, focused }) => <Users color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />,
           }}
         />
         <Tabs.Screen

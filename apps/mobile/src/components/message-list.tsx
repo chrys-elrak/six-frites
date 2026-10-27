@@ -8,9 +8,12 @@ import {
   type MessageEntity,
   type ReplyPreview,
   type ViewMessageResult,
+  previewLink,
+  splitLinks,
 } from "@six/shared";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { GestureDetector, useLongPressGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
 import {
   Ban,
@@ -25,6 +28,7 @@ import {
   Palette,
   Phone,
   PhoneMissed,
+  Reply,
   Video,
   RotateCcw,
   Timer,
@@ -33,6 +37,7 @@ import {
 import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
   FlatList,
+  Linking,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Pressable,
@@ -41,6 +46,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { applyEdited, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
 import { isFrozen, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
@@ -57,6 +63,7 @@ import { useRealtime } from "@/lib/realtime";
 import { deliver } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
+import { useSwipe } from "@/lib/swipe";
 import { brand, brandInk, flame, stone, type Theme, useTheme } from "@/lib/theme";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
@@ -300,7 +307,7 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
     row.spoiler && !row.attachment
       ? [...row.entities, { type: "spoiler" as const, offset: 0, length: text.length }]
       : row.entities;
-  if (entities.length === 0) return <>{text}</>;
+  if (entities.length === 0) return <Linked text={text} selecting={selecting} />;
   const codeBg = row.mine ? "rgba(0,0,0,0.1)" : "rgba(120,113,108,0.18)";
   const spoilerInk = row.mine ? "#b86c00" : t.dark ? stone[600] : stone[300];
 
@@ -311,7 +318,7 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
         if (!seg.styles.has("spoiler") || revealed) {
           return (
             <Text key={i} style={style}>
-              {seg.text}
+              {seg.styles.has("code") ? seg.text : <Linked text={seg.text} selecting={selecting} />}
             </Text>
           );
         }
@@ -327,6 +334,70 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
         );
       })}
     </>
+  );
+}
+
+function Linked({ text, selecting }: { text: string; selecting: boolean }) {
+  return (
+    <>
+      {splitLinks(text).map((part, i) =>
+        part.href ? (
+          <Text
+            key={i}
+            onPress={selecting ? undefined : () => void Linking.openURL(part.href!)}
+            style={{ textDecorationLine: "underline" }}
+          >
+            {part.text}
+          </Text>
+        ) : (
+          part.text
+        ),
+      )}
+    </>
+  );
+}
+
+function LinkCard({ url, mine, width }: { url: string; mine: boolean; width: number }) {
+  const t = useTheme();
+  const bubble = useBubbleColors();
+  const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
+  const { data } = useQuery({
+    queryKey: ["link-preview", url],
+    queryFn: async () => unwrap(await six.api.GET("/v1/link-preview", { params: { query: { url } } })),
+    staleTime: Infinity,
+    retry: false,
+  });
+  if (!data) return null;
+  return (
+    <Pressable
+      onPress={() => void Linking.openURL(url)}
+      style={[
+        styles.quote,
+        styles.linkCard,
+        { width },
+        mine
+          ? { borderLeftColor: alpha(bubble.ink, 0.4), backgroundColor: "rgba(0,0,0,0.1)" }
+          : {
+              borderLeftColor: brand,
+              backgroundColor: bubble.theirInk ? alpha(bubble.theirInk, 0.08) : t.dark ? "rgba(68,64,60,0.6)" : stone[100],
+            },
+      ]}
+    >
+      {data.image && <Image source={{ uri: data.image }} style={styles.linkImage} contentFit="cover" />}
+      <View style={styles.linkBody}>
+        <Text numberOfLines={1} style={{ color: fg, fontSize: 13, opacity: 0.7 }}>
+          {data.siteName}
+        </Text>
+        <Text numberOfLines={2} style={{ color: fg, fontSize: 13, fontWeight: "700" }}>
+          {data.title}
+        </Text>
+        {data.description && (
+          <Text numberOfLines={3} style={{ color: fg, fontSize: 13, opacity: 0.8 }}>
+            {data.description}
+          </Text>
+        )}
+      </View>
+    </Pressable>
   );
 }
 
@@ -401,6 +472,7 @@ function Bubble({
   nameOf,
   maxWidth,
   onMenu,
+  onReply,
   onQuote,
   onToggle,
   onOpen,
@@ -417,6 +489,7 @@ function Bubble({
   nameOf: (userId: string) => string;
   maxWidth: number;
   onMenu: (anchor?: Anchor) => void;
+  onReply: () => void;
   onQuote: (id: string) => void;
   onToggle: () => void;
   onOpen: (item: LightboxItem) => void;
@@ -442,6 +515,10 @@ function Bubble({
   const visual = !sealed && row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const hasText = !!row.text || row.deleted || !!row.locked;
+  const link =
+    !sealed && !row.deleted && !row.locked && !row.attachment && !row.spoiler && row.text
+      ? previewLink(row.text, row.entities)
+      : null;
   const big = 18;
   const small = 6;
   const radius = mine
@@ -457,7 +534,8 @@ function Bubble({
         borderTopLeftRadius: groupStart ? big : small,
         borderBottomLeftRadius: groupEnd ? big : small,
       };
-  const bare = jumbo || note;
+  const loose = !sealed && !row.deleted && !!(row.message as { file?: { sticker?: boolean } } | null)?.file?.sticker;
+  const bare = jumbo || note || loose;
   const tone = bare
     ? null
     : row.deleted
@@ -500,7 +578,11 @@ function Bubble({
       l.onReact("❤️");
     },
   });
-  const gestures = useSimultaneousGestures(hold, doubleTap);
+  const swipe = useSwipe(
+    !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
+    row.mine ? -1 : 1,
+  );
+  const gestures = useSimultaneousGestures(hold, doubleTap, swipe.gesture);
 
   return (
     <GestureDetector gesture={gestures}>
@@ -522,7 +604,12 @@ function Bubble({
         ) : (
           <View style={{ width: 20 }} />
         ))}
-      <View style={[styles.side, { alignItems: mine ? "flex-end" : "flex-start" }]}>
+      <Animated.View pointerEvents="none" style={[styles.swipeHint, mine ? { right: 12 } : { left: 12 }, swipe.hint]}>
+        <View style={styles.swipeIcon}>
+          <Reply size={16} color="#fff" />
+        </View>
+      </Animated.View>
+      <Animated.View style={[styles.side, { alignItems: mine ? "flex-end" : "flex-start" }, swipe.moving]}>
         <View
           ref={bubbleRef}
           collapsable={false}
@@ -550,6 +637,7 @@ function Bubble({
               maxWidth={maxWidth - 8}
             />
           )}
+          {link && <LinkCard url={link} mine={mine} width={Math.min(280, maxWidth - 24)} />}
           {sealed ? (
             <View style={styles.sealedRow}>
               <Sealed row={row} color={fg} onOpen={onOpenEphemeral} />
@@ -613,7 +701,7 @@ function Bubble({
             <Text style={{ color: t.danger, fontSize: 12, fontWeight: "600", marginTop: 2 }}>{tr.messages.notSent}</Text>
           </Pressable>
         )}
-      </View>
+      </Animated.View>
     </Pressable>
     </GestureDetector>
   );
@@ -647,6 +735,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
     const [reactingTo, setReactingTo] = useState<MessageDTO | null>(null);
     const [viewing, setViewing] = useState<ViewMessageResult | null>(null);
+    const [opening, setOpening] = useState(false);
     const viewingRef = useRef(viewing);
     viewingRef.current = viewing;
     const closeViewer = useCallback(() => {
@@ -674,6 +763,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     async function openEphemeral(row: MsgRow) {
       const id = row.id;
       if (!id || selecting) return;
+      setOpening(true);
       try {
         if (row.mine && row.message) return setViewing({ message: await revealNow(meId, row.message), expiresAt: null });
         const res = await six.api.POST("/v1/messages/{id}/view", { params: { path: { id } } });
@@ -682,6 +772,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         setViewing({ message, expiresAt: toLocalDeadline(result, res.response) });
       } catch {
         void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
+      } finally {
+        setOpening(false);
       }
     }
 
@@ -881,6 +973,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                     setAnchor(at ?? null);
                     setMenuFor(row);
                   }}
+                  onReply={() => row.message && setMode(chat.id, { kind: "reply", message: row.message })}
                   onQuote={jumpTo}
                   onToggle={() => row.id && toggleSelected(row.id)}
                   onOpen={setLightbox}
@@ -911,11 +1004,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           }}
         />
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
-        {viewing && (
+        {(viewing || opening) && (
           <EphemeralViewer
-            message={viewing.message}
-            expiresAt={viewing.expiresAt}
-            mine={viewing.message.senderId === meId}
+            message={viewing?.message ?? null}
+            expiresAt={viewing?.expiresAt ?? null}
+            mine={viewing?.message.senderId === meId}
             onClose={closeViewer}
           />
         )}
@@ -953,6 +1046,15 @@ const styles = StyleSheet.create({
   dayText: { fontSize: 12, fontWeight: "600", paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, overflow: "hidden" },
   line: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 },
   side: { flex: 1 },
+  swipeHint: { position: "absolute", top: 0, bottom: 0, justifyContent: "center", opacity: 0 },
+  swipeIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   padText: { paddingHorizontal: 12, paddingVertical: 6 },
   padVisual: { padding: 4 },
   caption: { paddingHorizontal: 8, paddingTop: 4, paddingBottom: 2 },
@@ -1000,4 +1102,7 @@ const styles = StyleSheet.create({
   badge: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 2 },
   quote: { borderLeftWidth: 4, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, marginBottom: 4 },
   quoteBody: { flexDirection: "row", alignItems: "center", gap: 4 },
+  linkCard: { paddingHorizontal: 0, paddingVertical: 0, overflow: "hidden" },
+  linkImage: { width: "100%", aspectRatio: 1.91 },
+  linkBody: { paddingHorizontal: 8, paddingVertical: 4 },
 });

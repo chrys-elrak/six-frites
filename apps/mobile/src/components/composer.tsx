@@ -33,7 +33,7 @@ import {
   X,
 } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, findNodeHandle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { editMessage, scheduleMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
@@ -41,7 +41,7 @@ import { shortRule } from "@/lib/ephemeral";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
-import { pickFiles, pickMedia, takePhoto } from "@/lib/media";
+import { pickFiles, pickMedia, receivedImage, takePhoto } from "@/lib/media";
 import { useRealtime } from "@/lib/realtime";
 import { type LocalFile, queueMessage } from "@/lib/send";
 import { useSession } from "@/lib/session";
@@ -52,6 +52,7 @@ import { EphemeralPicker } from "./ephemeral-picker";
 import { ScheduleDialog, ScheduledPanel } from "./scheduled";
 import { Sheet } from "./sheet";
 import { VideoNoteRecorder } from "./video-note-recorder";
+import RichInput, { type ReceivedImage } from "../../modules/rich-input";
 
 const drafts = new Map<string, string>();
 
@@ -161,6 +162,27 @@ export function Composer({
       realtime.setTyping(chatId, false);
     };
   }, [realtime, chatId, busyWith]);
+
+  const onImage = useRef<(image: ReceivedImage) => void>(() => {});
+  onImage.current = (image) => {
+    if (editing) return;
+    void pick(async () => {
+      const file = await receivedImage(image);
+      if (!image.fromKeyboard) return [file];
+      send(file);
+      return [];
+    });
+  };
+
+  useEffect(() => {
+    const sub = RichInput?.addListener("onImage", (image) => onImage.current(image));
+    return () => sub?.remove();
+  }, []);
+
+  useEffect(() => {
+    const tag = findNodeHandle(input.current);
+    if (tag) void RichInput?.watch(tag);
+  }, [recording]);
 
   function change(value: string) {
     setText(value);

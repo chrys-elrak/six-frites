@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { View } from "react-native";
 import { LockScreen } from "@/components/app-lock";
 import { CallScreen } from "@/components/call-screen";
+import { BackupPinPrompt } from "@/components/encryption-settings";
 import { Toasts } from "@/components/toasts";
 import { useAppLock, useAutoLock } from "@/lib/app-lock";
 import { usePush } from "@/lib/push";
@@ -20,6 +21,7 @@ export default function AppLayout() {
       <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }} />
         {!locked && <Toasts />}
+        {!locked && <BackupPinPrompt />}
         <CallScreen />
         {locked && <LockScreen />}
       </View>

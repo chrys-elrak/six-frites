@@ -1,3 +1,5 @@
+import { SixApiError } from "@six/sdk";
+import type { Dict } from "@six/shared";
 import type { LucideIcon } from "lucide-react-native";
 import {
   ActivityIndicator,
@@ -6,6 +8,7 @@ import {
   type StyleProp,
   StyleSheet,
   Text,
+  TextInput,
   View,
   type ViewStyle,
 } from "react-native";
@@ -199,7 +202,45 @@ export const text = (t: Theme) =>
     brand: { color: brand },
   });
 
+export function codeError(err: unknown, tr: Dict, errors: Record<string, string | undefined>) {
+  const code = err instanceof SixApiError ? err.code : undefined;
+  return (code && errors[code]) ?? tr.common.somethingWrongRetry;
+}
+
+export function CodeInput({
+  value,
+  onChange,
+  label,
+  autoFocus,
+  onSubmit,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  autoFocus?: boolean;
+  onSubmit?: () => void;
+}) {
+  const t = useTheme();
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={(v) => onChange(v.replace(/\D/g, "").slice(0, 8))}
+        secureTextEntry
+        keyboardType="number-pad"
+        autoComplete="off"
+        autoFocus={autoFocus}
+        onSubmitEditing={onSubmit}
+        maxLength={8}
+        style={[styles.codeInput, { backgroundColor: t.field, color: t.text }]}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  codeInput: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 18, letterSpacing: 6 },
   card: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },
   sectionTitle: {
     flexDirection: "row",

@@ -1,4 +1,4 @@
-import type { PublicUser } from "@six/shared";
+import { aliasAvatar, type PublicUser } from "@six/shared";
 import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
 import { useT } from "@/lib/i18n";
@@ -20,10 +20,18 @@ export function Avatar({
   const side = sizes[size];
   const box = { width: side, height: side, borderRadius: side / 2 };
   const dot = Math.round(side * 0.28);
+  const alias = aliasAvatar(user.displayName);
   return (
     <View style={{ width: side, height: side }}>
       {user.avatarUrl ? (
         <Image source={{ uri: user.avatarUrl }} style={box} contentFit="cover" transition={150} />
+      ) : alias ? (
+        <View style={[styles.initial, box, { backgroundImage: alias.gradient }]}>
+          <Text style={[styles.alias, { fontSize: side * 0.36, lineHeight: side * 0.38 }]}>F</Text>
+          <Text style={[styles.alias, styles.number, { fontSize: side * 0.22, lineHeight: side * 0.24 }]}>
+            {alias.number}
+          </Text>
+        </View>
       ) : (
         <View style={[styles.initial, box]}>
           <Text style={[styles.letter, { fontSize: side * 0.38 }]}>{user.displayName.slice(0, 1).toUpperCase()}</Text>
@@ -45,5 +53,7 @@ export function Avatar({
 const styles = StyleSheet.create({
   initial: { backgroundColor: brand, alignItems: "center", justifyContent: "center" },
   letter: { color: brandInk, fontWeight: "600" },
+  alias: { color: "#fff", fontWeight: "700" },
+  number: { fontWeight: "600", opacity: 0.9, fontVariant: ["tabular-nums"] },
   dot: { position: "absolute", right: 0, bottom: 0, backgroundColor: "#22c55e" },
 });

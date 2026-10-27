@@ -1,7 +1,7 @@
 import { type MessageDTO, chatTheme, durationLabel } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ChevronLeft, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
+import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -109,6 +109,20 @@ export function Conversation({ chatId }: { chatId: string }) {
   const count = selecting ? selectedIds.length : 0;
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/"));
 
+  const selectable = () =>
+    (messages.data?.pages.flatMap((p) => p.items) ?? []).filter((m) => m.type !== "service").map((m) => m.id);
+
+  function chooseMessages() {
+    const newest = selectable()[0];
+    if (newest) useSelection.getState().start(chatId, newest);
+  }
+
+  function selectBetween() {
+    const ids = selectable();
+    const at = selectedIds.map((id) => ids.indexOf(id)).filter((i) => i >= 0);
+    if (at.length) useSelection.setState({ ids: ids.slice(Math.min(...at), Math.max(...at) + 1) });
+  }
+
   function removeSelected(scope: "me" | "all") {
     const byId = new Map<string, MessageDTO>((messages.data?.pages.flatMap((p) => p.items) ?? []).map((m) => [m.id, m]));
     const chosen = selectedIds.map((id) => byId.get(id)).filter((m): m is MessageDTO => !!m);
@@ -122,6 +136,7 @@ export function Conversation({ chatId }: { chatId: string }) {
         <ScreenHeader>
           <IconButton Icon={X} label={tr.chat.cancelSelection} onPress={clearSelection} />
           <Text style={[styles.title, { color: t.text }]}>{tr.chat.selected(count)}</Text>
+          {count >= 2 && <IconButton Icon={ChevronsUpDown} label={tr.chat.selectBetween} onPress={selectBetween} />}
           <IconButton
             Icon={Trash2}
             label={tr.chat.deleteSelected}
@@ -213,6 +228,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           peerId={peer.id}
           onClose={() => setMenu(false)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
+          onChooseMessages={chooseMessages}
         />
       )}
       {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}

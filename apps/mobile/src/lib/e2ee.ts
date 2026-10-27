@@ -62,7 +62,15 @@ interface Patch {
 
 const keyOf = (m: MessageDTO) => `${m.id}:${m.editedAt ?? ""}`;
 
-export const useDecrypted = create<{ byKey: Record<string, Patch> }>(() => ({ byKey: {} }));
+export const useDecrypted = create<{ byKey: Record<string, Patch>; retries: number }>(() => ({ byKey: {}, retries: 0 }));
+
+/** Tries the messages this phone couldn't read again, once it has the backup key. */
+export function retryUndecryptable() {
+  useDecrypted.setState((s) => ({
+    byKey: Object.fromEntries(Object.entries(s.byKey).filter(([, p]) => !p.undecryptable)),
+    retries: s.retries + 1,
+  }));
+}
 
 const queued = new Set<string>();
 let chain: Promise<unknown> = Promise.resolve();
@@ -159,17 +167,19 @@ export function withContent<T extends MessageDTO>(m: T, patch: Patch | undefined
 /** Decrypts a list of messages, oldest first, and keeps them in sync as content arrives. */
 export function useHydratedMessages(meId: string, messages: MessageDTO[]) {
   const byKey = useDecrypted((s) => s.byKey);
+  const retries = useDecrypted((s) => s.retries);
   useEffect(() => {
     for (const m of [...messages].reverse()) if (m.encryption) decrypt(meId, m);
-  }, [meId, messages]);
+  }, [meId, messages, retries]);
   return useMemo(() => messages.map((m) => withContent(m, byKey[keyOf(m)])), [messages, byKey]);
 }
 
 export function useHydratedMessage<T extends MessageDTO>(meId: string | undefined, m: T | null | undefined) {
   const patch = useDecrypted((s) => (m ? s.byKey[keyOf(m)] : undefined));
+  const retries = useDecrypted((s) => s.retries);
   useEffect(() => {
     if (meId && m?.encryption) decrypt(meId, m);
-  }, [meId, m]);
+  }, [meId, m, retries]);
   return m ? withContent(m, patch) : m;
 }
 

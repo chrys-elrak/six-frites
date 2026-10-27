@@ -2,7 +2,7 @@ import type { MessageDTO } from "@six/shared";
 import { Image } from "expo-image";
 import { Flame, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type BubbleColors, BubbleColorsContext } from "@/lib/bubble-colors";
 import { shortRule } from "@/lib/ephemeral";
@@ -14,14 +14,17 @@ import { styleFor } from "./rich-text";
 
 const ON_DARK: BubbleColors = { bg: brand, ink: brandInk, theirBg: null, theirInk: "#ffffff" };
 
-/** Full-screen view of an opened self-destructing message; closing it, or its timer running out, ends it. */
+/**
+ * Full-screen view of an opened self-destructing message; closing it, or its timer running out, ends it.
+ * With no message yet it shows a spinner while the message is being opened.
+ */
 export function EphemeralViewer({
   message,
   expiresAt,
   mine,
   onClose,
 }: {
-  message: MessageDTO;
+  message: MessageDTO | null;
   expiresAt: string | null;
   mine: boolean;
   onClose: () => void;
@@ -32,8 +35,8 @@ export function EphemeralViewer({
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
   const [now, setNow] = useState(Date.now());
   const left = deadline ? Math.max(0, deadline - now) : null;
-  const e = message.ephemeral;
-  const a = message.attachment;
+  const e = message?.ephemeral;
+  const a = message?.attachment;
   const viewsLeft = e?.maxViews ? e.maxViews - e.views : null;
 
   useEffect(() => {
@@ -47,7 +50,7 @@ export function EphemeralViewer({
   }, [left, onClose]);
 
   const mediaHeight = Math.round(height * 0.6);
-  const text = message.text ?? "";
+  const text = message?.text ?? "";
 
   return (
     <Modal animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
@@ -56,12 +59,15 @@ export function EphemeralViewer({
           <Flame size={18} color={flame} fill={flame} />
           <Text style={styles.rule}>{e ? shortRule(e, tr) : ""}</Text>
           {left !== null && <Text style={styles.countdown}>{tr.messages.seconds(Math.ceil(left / 1000))}</Text>}
-          <Pressable accessibilityLabel={tr.common.close} onPress={onClose} hitSlop={8} style={styles.close}>
-            <X size={26} color="#fff" />
-          </Pressable>
+          {message && (
+            <Pressable accessibilityLabel={tr.common.close} onPress={onClose} hitSlop={8} style={styles.close}>
+              <X size={26} color="#fff" />
+            </Pressable>
+          )}
         </View>
 
         <ScrollView contentContainerStyle={styles.body}>
+          {!message && <ActivityIndicator size="large" color="#fff" />}
           {a?.url && a.kind === "image" && (
             <Image source={{ uri: a.url }} style={{ width: width - 32, height: mediaHeight }} contentFit="contain" />
           )}
@@ -83,7 +89,7 @@ export function EphemeralViewer({
               </BubbleColorsContext.Provider>
             </View>
           )}
-          {!!text && (
+          {!!message && !!text && (
             <Text style={styles.text}>
               {message.entities.length
                 ? segments(text, message.entities).map((seg, i) => (
@@ -97,7 +103,7 @@ export function EphemeralViewer({
         </ScrollView>
 
         <Text style={styles.footer}>
-          {mine
+          {mine || !message
             ? ""
             : viewsLeft === 0
               ? tr.messages.goneOnClose

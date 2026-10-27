@@ -1,5 +1,5 @@
 import { unwrap } from "@six/sdk";
-import { type Dict, SCHEDULE_LIMITS, type ScheduledMessageDTO, maskSpoilers } from "@six/shared";
+import { type Dict, SCHEDULE_LIMITS, type ScheduledMessageDTO, dayRange, maskSpoilers } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, EyeOff, Flame, Minus, Plus, X } from "lucide-react-native";
 import { useState } from "react";
@@ -48,12 +48,14 @@ function presets(now: Date, tr: Dict) {
 
 function Stepper({
   kind,
+  label,
   value,
   onMinus,
   onPlus,
   t,
 }: {
   kind: "day" | "hour" | "minute";
+  label?: string;
   value: string;
   onMinus: () => void;
   onPlus: () => void;
@@ -64,7 +66,7 @@ function Stepper({
     <View style={[styles.stepper, { backgroundColor: t.field }]}>
       <IconButton Icon={kind === "day" ? ChevronLeft : Minus} label={step.earlier} onPress={onMinus} />
       <View style={{ flex: 1, alignItems: "center" }}>
-        <Text style={{ color: t.muted, fontSize: 11 }}>{step.label}</Text>
+        <Text style={{ color: t.muted, fontSize: 11 }}>{label ?? step.label}</Text>
         <Text style={{ color: t.text, fontSize: 16, fontWeight: "600" }}>{value}</Text>
       </View>
       <IconButton Icon={kind === "day" ? ChevronRight : Plus} label={step.later} onPress={onPlus} />
@@ -159,6 +161,54 @@ export function ScheduleDialog({
             <TextButton title={tr.common.cancel} onPress={onClose} />
           </View>
           <PrimaryButton title={tr.chat.schedule} onPress={submit} style={{ flex: 1 }} />
+        </View>
+      </View>
+    </Overlay>
+  );
+}
+
+const dayLabel = (d: Date) => d.toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" });
+
+/** Picks two days, up to today, for deleting the messages sent from the first through the last. */
+export function DateRangeDialog({
+  onPick,
+  onClose,
+}: {
+  onPick: (range: { from: string; to: string }) => void;
+  onClose: () => void;
+}) {
+  const t = useTheme();
+  const tr = useT();
+  const [from, setFrom] = useState(() => new Date(Date.now() - 7 * 864e5));
+  const [to, setTo] = useState(() => new Date());
+  const shift = (set: (d: Date) => void, d: Date, days: number) =>
+    set(new Date(Math.min(d.getTime() + days * 864e5, Date.now())));
+
+  return (
+    <Overlay onClose={onClose}>
+      <View style={{ padding: 16, gap: 14 }}>
+        <Text style={[styles.title, { color: t.text }]}>{tr.chat.deleteWhich}</Text>
+        <Stepper
+          t={t}
+          kind="day"
+          label={tr.chat.rangeFrom}
+          value={dayLabel(from)}
+          onMinus={() => shift(setFrom, from, -1)}
+          onPlus={() => shift(setFrom, from, 1)}
+        />
+        <Stepper
+          t={t}
+          kind="day"
+          label={tr.chat.rangeTo}
+          value={dayLabel(to)}
+          onMinus={() => shift(setTo, to, -1)}
+          onPlus={() => shift(setTo, to, 1)}
+        />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <TextButton title={tr.common.cancel} onPress={onClose} />
+          </View>
+          <PrimaryButton title={tr.common.next} onPress={() => onPick(dayRange(from, to))} style={{ flex: 1 }} />
         </View>
       </View>
     </Overlay>

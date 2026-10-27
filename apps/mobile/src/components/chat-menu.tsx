@@ -1,6 +1,7 @@
 import {
   AUTO_DELETE_PRESETS,
   CHAT_THEMES,
+  DELETE_RANGE_PRESETS,
   type ChatDTO,
   type DeleteScope,
   customThemeColor,
@@ -15,7 +16,10 @@ import { isFrozen } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemePicker } from "./custom-theme";
+import { DateRangeDialog } from "./scheduled";
 import { Sheet } from "./sheet";
+
+type Range = { from?: string; to?: string };
 
 export function ChatMenu({
   chat,
@@ -23,25 +27,37 @@ export function ChatMenu({
   peerId,
   onClose,
   onDeleted,
+  onChooseMessages,
 }: {
   chat: ChatDTO;
   peerName: string;
   peerId: string;
   onClose: () => void;
   onDeleted?: (scope: DeleteScope) => void;
+  onChooseMessages?: () => void;
 }) {
   const tr = useT();
   const qc = useQueryClient();
   const [view, setView] = useState<
-    "menu" | "delete" | "block" | "autoDelete" | "custom" | "theme" | "customTheme" | "removeContact"
+    | "menu"
+    | "delete"
+    | "deleteScope"
+    | "dates"
+    | "block"
+    | "autoDelete"
+    | "custom"
+    | "theme"
+    | "customTheme"
+    | "removeContact"
   >("menu");
+  const [range, setRange] = useState<Range | undefined>(undefined);
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
 
   async function remove(scope: DeleteScope) {
     try {
-      await deleteChat(qc, chat.id, scope);
-      onDeleted?.(scope);
+      await deleteChat(qc, chat.id, scope, range);
+      if (!range) onDeleted?.(scope);
     } catch {
       void qc.invalidateQueries({ queryKey: ["chats"] });
     }
@@ -153,15 +169,41 @@ export function ChatMenu({
     );
   }
 
+  const pick = (chosen: Range | undefined) => {
+    setRange(chosen);
+    setView("deleteScope");
+  };
+
   if (view === "delete") {
     return (
       <Sheet
-        title={tr.chat.deleteChatTitle}
+        title={tr.chat.deleteWhich}
+        onClose={onClose}
+        actions={[
+          { label: tr.chat.deleteEverything, keepOpen: true, onSelect: () => pick(undefined) },
+          ...DELETE_RANGE_PRESETS.map((p) => ({
+            label: tr.chat[p.label],
+            keepOpen: true,
+            onSelect: () => pick({ from: new Date(Date.now() - p.secs * 1000).toISOString() }),
+          })),
+          { label: tr.chat.chooseDates, keepOpen: true, onSelect: () => setView("dates") },
+          ...(onChooseMessages ? [{ label: tr.chat.chooseMessages, onSelect: onChooseMessages }] : []),
+        ]}
+      />
+    );
+  }
+
+  if (view === "dates") return <DateRangeDialog onPick={pick} onClose={onClose} />;
+
+  if (view === "deleteScope") {
+    return (
+      <Sheet
+        title={range ? tr.chat.deleteRangeTitle : tr.chat.deleteChatTitle}
         onClose={onClose}
         actions={[
           { label: tr.chat.deleteForMe, destructive: true, onSelect: () => void remove("me") },
           {
-            label: tr.chat.deleteAllFor(peerName),
+            label: range ? tr.chat.deleteThisFor(peerName) : tr.chat.deleteAllFor(peerName),
             destructive: true,
             onSelect: () => void remove("all"),
           },

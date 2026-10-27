@@ -1,39 +1,55 @@
 import { SixApiError, unwrap } from "@six/sdk";
-import { useQuery } from "@tanstack/react-query";
+import type { Dict } from "@six/shared";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, ShieldCheck } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { e2eeFor } from "@/lib/e2ee";
+import { e2eeFor, retryUndecryptable } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
-import { Card, Notice, PrimaryButton, SectionTitle, TextButton } from "./ui";
+import { Card, CodeInput, Notice, PrimaryButton, SectionTitle, TextButton } from "./ui";
 
 async function refreshMe() {
   useSession.getState().setUser(unwrap(await six.api.GET("/v1/me")));
 }
 
-/** Settings card for the recovery key that lets a new phone read past encrypted messages. */
+function useHasRecoveryKey() {
+  const user = useSession((s) => s.user);
+  return useQuery({
+    queryKey: ["recovery-key", user?.id, user?.backupKeyId],
+    queryFn: () => e2eeFor(user!.id)!.hasRecoveryKey(user!.backupKeyId),
+    enabled: !!user,
+  });
+}
+
+/** Settings card for the PIN that lets a new phone read past encrypted messages. */
 export function EncryptionSettings() {
   const t = useTheme();
   const tr = useT();
+  const bp = tr.settings.backupPin;
   const user = useSession((s) => s.user)!;
-  const local = useQuery({
-    queryKey: ["recovery-key", user.id],
-    queryFn: () => e2eeFor(user.id)!.hasRecoveryKey(),
-  });
-  const [dialog, setDialog] = useState<"create" | "restore" | null>(null);
+  const local = useHasRecoveryKey();
+  const [dialog, setDialog] = useState<"pin" | "restore" | "words" | null>(null);
 
-  const onAccount = user.backupKeyId !== null;
   const onPhone = local.data === true;
+  const legacy = user.backupKeyId !== null && !user.hasBackupPin;
   const status = onPhone
-    ? tr.settings.keyOnPhone
-    : onAccount
-      ? tr.settings.keyOnAccountPhone
-      : tr.settings.noKeyPhone;
+    ? user.hasBackupPin
+      ? bp.on
+      : bp.noPin
+    : user.hasBackupPin
+      ? bp.locked
+      : legacy
+        ? tr.settings.keyOnAccountPhone
+        : bp.noPin;
+  const close = () => {
+    setDialog(null);
+    void local.refetch();
+  };
 
   return (
     <View>
@@ -43,36 +59,130 @@ export function EncryptionSettings() {
           {onPhone ? <ShieldCheck size={22} color={brand} /> : <KeyRound size={22} color={t.muted} />}
           <Text style={{ flex: 1, color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{status}</Text>
         </View>
-        {onAccount && !onPhone ? (
-          <PrimaryButton title={tr.settings.enterRecoveryKey} onPress={() => setDialog("restore")} />
+        {onPhone ? (
+          <PrimaryButton title={user.hasBackupPin ? bp.change : bp.create} onPress={() => setDialog("pin")} />
+        ) : user.hasBackupPin ? (
+          <>
+            <PrimaryButton title={bp.enter} onPress={() => setDialog("restore")} />
+            <TextButton title={bp.forgot} onPress={() => setDialog("pin")} />
+          </>
+        ) : legacy ? (
+          <>
+            <PrimaryButton title={tr.settings.enterRecoveryKey} onPress={() => setDialog("words")} />
+            <TextButton title={tr.settings.lostKey} onPress={() => setDialog("pin")} />
+          </>
         ) : (
-          <PrimaryButton
-            title={onPhone ? tr.settings.createNewRecoveryKey : tr.settings.createRecoveryKey}
-            onPress={() => setDialog("create")}
-          />
-        )}
-        {onAccount && !onPhone && (
-          <TextButton title={tr.settings.lostKey} onPress={() => setDialog("create")} />
+          <PrimaryButton title={bp.create} onPress={() => setDialog("pin")} />
         )}
       </Card>
-      {dialog === "create" && (
-        <CreateKey
-          replacing={onAccount}
-          onClose={() => {
-            setDialog(null);
-            void local.refetch();
-          }}
-        />
-      )}
-      {dialog === "restore" && (
-        <RestoreKey
-          onClose={() => {
-            setDialog(null);
-            void local.refetch();
-          }}
-        />
-      )}
+      {(dialog === "pin" || dialog === "restore") && <PinDialog restoring={dialog === "restore"} onClose={close} />}
+      {dialog === "words" && <RestoreKey onClose={close} />}
     </View>
+  );
+}
+
+/**
+ * Shows the PIN dialog once per launch when this phone can't read past messages but a PIN would
+ * fix it, or when there is no backup yet. Never offers a new PIN on a phone without the key while
+ * the account has one, since that would start over and lose the old backup.
+ */
+export function BackupPinPrompt() {
+  const user = useSession((s) => s.user);
+  const local = useHasRecoveryKey();
+  const [dismissed, setDismissed] = useState(false);
+  if (!user || dismissed || local.data === undefined) return null;
+  const restoring = !local.data && user.hasBackupPin;
+  const creating = !user.hasBackupPin && (local.data || !user.backupKeyId);
+  if (!restoring && !creating) return null;
+  return <PinDialog restoring={restoring} prompted onClose={() => setDismissed(true)} />;
+}
+
+function pinError(err: unknown, tr: Dict) {
+  if (!(err instanceof SixApiError)) return tr.common.somethingWrongRetry;
+  if (err.code === "WRONG_BACKUP_PIN") return tr.settings.backupPin.wrong((err.details as { triesLeft: number }).triesLeft);
+  if (err.code === "BACKUP_PIN_NOT_SET") return tr.settings.backupPin.notSet;
+  return tr.settings.appLock.errors[err.code] ?? tr.common.somethingWrongRetry;
+}
+
+/** Asks for the backup PIN to restore past messages, or for a new PIN to protect them. */
+function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boolean; prompted?: boolean; onClose: () => void }) {
+  const t = useTheme();
+  const tr = useT();
+  const bp = tr.settings.backupPin;
+  const qc = useQueryClient();
+  const user = useSession((s) => s.user)!;
+  const setUser = useSession((s) => s.setUser);
+  const onPhone = useHasRecoveryKey().data === true;
+  const [restoring, setRestoring] = useState(initial);
+  const [pin, setPin] = useState("");
+  const [again, setAgain] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const ready = pin.length === 6 && (restoring || again === pin);
+  const mismatch = !restoring && again.length === 6 && again !== pin;
+  const title = restoring ? bp.restoreTitle : onPhone && user.hasBackupPin ? bp.changeTitle : bp.createTitle;
+
+  async function save() {
+    if (!ready || busy) return;
+    setBusy(true);
+    setError(null);
+    const e = e2eeFor(user.id)!;
+    try {
+      if (restoring) await e.unlockWithPin(pin);
+      else setUser(await e.setBackupPin(pin));
+      void qc.invalidateQueries({ queryKey: ["recovery-key"] });
+      retryUndecryptable();
+      onClose();
+    } catch (err) {
+      setPin("");
+      setError(pinError(err, tr));
+      const gone =
+        err instanceof SixApiError &&
+        (err.code === "BACKUP_PIN_NOT_SET" || (err.details as { triesLeft?: number } | undefined)?.triesLeft === 0);
+      if (gone) {
+        setRestoring(false);
+        await refreshMe().catch(() => null);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog title={title} onClose={onClose}>
+      <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{restoring ? bp.restoreHint : bp.createHint}</Text>
+      {!restoring && !onPhone && user.backupKeyId && <Notice tone="error">{bp.newBackupWarning}</Notice>}
+      <CodeInput
+        key={String(restoring)}
+        label={bp.pin}
+        value={pin}
+        onChange={(v) => setPin(v.slice(0, 6))}
+        autoFocus
+        onSubmit={restoring ? () => void save() : undefined}
+      />
+      {!restoring && (
+        <CodeInput label={bp.again} value={again} onChange={(v) => setAgain(v.slice(0, 6))} onSubmit={() => void save()} />
+      )}
+      {(error || mismatch) && <Notice tone="error">{error ?? bp.mismatch}</Notice>}
+      <PrimaryButton
+        title={restoring ? bp.restore : tr.common.save}
+        busy={busy}
+        disabled={!ready || busy}
+        onPress={() => void save()}
+      />
+      {restoring && (
+        <TextButton
+          title={bp.forgot}
+          onPress={() => {
+            setRestoring(false);
+            setPin("");
+            setError(null);
+          }}
+        />
+      )}
+      <TextButton title={prompted ? bp.later : tr.common.cancel} onPress={onClose} />
+    </Dialog>
   );
 }
 
@@ -92,59 +202,6 @@ export function Dialog({ title, children, onClose }: { title: string; children: 
   );
 }
 
-function CreateKey({ replacing, onClose }: { replacing: boolean; onClose: () => void }) {
-  const t = useTheme();
-  const tr = useT();
-  const user = useSession((s) => s.user)!;
-  const [words, setWords] = useState<string[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function create() {
-    setBusy(true);
-    setError(null);
-    try {
-      setWords((await e2eeFor(user.id)!.createRecoveryKey()).split(" "));
-      await refreshMe();
-    } catch {
-      setError(tr.settings.couldNotCreateKey);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!words) {
-    return (
-      <Dialog title={tr.settings.createRecoveryKey} onClose={onClose}>
-        <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>
-          {tr.settings.createIntroPhone}
-          {replacing ? `\n\n${tr.settings.replaceWarningPhone}` : ""}
-        </Text>
-        {error && <Notice tone="error">{error}</Notice>}
-        <PrimaryButton title={busy ? tr.settings.creating : tr.settings.showWords} disabled={busy} onPress={() => void create()} />
-        <TextButton title={tr.settings.notNow} onPress={onClose} />
-      </Dialog>
-    );
-  }
-
-  return (
-    <Dialog title={tr.settings.yourRecoveryKey} onClose={() => undefined}>
-      <ScrollView style={{ maxHeight: 360 }} contentContainerStyle={styles.words}>
-        {words.map((w, i) => (
-          <View key={i} style={[styles.word, { backgroundColor: t.field }]}>
-            <Text style={{ color: t.muted, fontSize: 12, width: 20 }}>{i + 1}</Text>
-            <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{w}</Text>
-          </View>
-        ))}
-      </ScrollView>
-      <Text style={{ color: t.muted, fontSize: 13, textAlign: "center" }}>
-        {tr.settings.screenshotsBlocked}
-      </Text>
-      <PrimaryButton title={tr.settings.savedThem} onPress={onClose} />
-    </Dialog>
-  );
-}
-
 function RestoreKey({ onClose }: { onClose: () => void }) {
   const t = useTheme();
   const tr = useT();
@@ -158,6 +215,7 @@ function RestoreKey({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       await e2eeFor(user.id)!.restoreRecoveryKey(words, user.backupKeyId);
+      retryUndecryptable();
       onClose();
     } catch (err) {
       setError(
@@ -224,8 +282,6 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 12 },
   panel: { borderRadius: 20, padding: 16, gap: 14 },
   title: { fontSize: 17, fontWeight: "700", textAlign: "center" },
-  words: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" },
-  word: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, width: "30%" },
   input: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, minHeight: 110, textAlignVertical: "top" },
   groups: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" },
   group: { fontFamily: "monospace", fontSize: 17, letterSpacing: 1, width: "28%", textAlign: "center" },

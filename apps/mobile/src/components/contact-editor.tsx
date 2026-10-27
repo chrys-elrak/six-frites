@@ -1,5 +1,5 @@
 import { SixApiError, unwrap } from "@six/sdk";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Shuffle, Trash2, X } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -11,13 +11,12 @@ import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { useT } from "@/lib/i18n";
 import { pickAvatar } from "@/lib/media";
-import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
 import { SafetyNumber } from "./encryption-settings";
-import { CodeInput, codeError } from "./privacy-code";
-import { IconButton, Notice, PrimaryButton, TextButton } from "./ui";
+import { Toggle } from "./settings-panel";
+import { IconButton, Notice, PrimaryButton } from "./ui";
 
 const MAX_BYTES = 64 * 1024;
 
@@ -30,6 +29,11 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     queryKey: ["contact", userId],
     queryFn: async () => unwrap(await six.api.GET("/v1/contacts/{userId}", { params: { path: { userId } } })),
   });
+  const share = useMutation({
+    mutationFn: async (shared: boolean) =>
+      unwrap(await six.api.PUT("/v1/contacts/{userId}/profile", { params: { path: { userId } }, body: { shared } })),
+    onSuccess: (dto) => qc.setQueryData(["contact", userId], dto),
+  });
   const [name, setName] = useState<string | null>(null);
   const [photo, setPhoto] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
@@ -38,11 +42,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [picked, setPicked] = useState<number | null>(null);
   const [rendering, setRendering] = useState<string | null>(null);
   const shot = useRef<ComponentRef<typeof View>>(null);
-  const hasCode = useSession((s) => s.user!.hasContactPin);
-  const [unlocking, setUnlocking] = useState(false);
-  const [pin, setPin] = useState("");
-  const [revealed, setRevealed] = useState<string | null>(null);
-  const [revealError, setRevealError] = useState<string | null>(null);
 
   const c = contact.data;
   if (c && name === null) setName(c.customName ?? "");
@@ -81,19 +80,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     }
   }
 
-  async function reveal() {
-    setRevealError(null);
-    try {
-      const { originalName } = unwrap(
-        await six.api.POST("/v1/contacts/{userId}/reveal", { params: { path: { userId } }, body: { pin } }),
-      );
-      setRevealed(originalName);
-      setUnlocking(false);
-    } catch (err) {
-      setRevealError(codeError(err, tr));
-    }
-  }
-
   async function save() {
     if (!c) return;
     setSaving(true);
@@ -101,15 +87,9 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     try {
       const trimmed = (name ?? "").trim();
       const showingRealName = !(trimmed && trimmed !== c.originalName);
-      if (showingRealName && c.customName && hasCode && !revealed) {
-        setUnlocking(true);
-        setRevealError(tr.contacts.enterCodeToShow);
-        return;
-      }
       await updateContact(qc, userId, {
         displayName: showingRealName ? null : trimmed,
         ...(photo !== undefined && { photo }),
-        ...(revealed && { pin }),
       });
       onClose();
     } catch (err) {
@@ -202,30 +182,22 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
 
               {c.customName && (
                 <View style={[styles.reveal, { backgroundColor: t.field }]}>
-                  {revealed ? (
-                    <Text style={{ color: t.text, fontSize: 14 }}>
-                      <Text style={{ color: t.muted }}>{tr.contacts.realName}</Text>
-                      <Text style={{ fontWeight: "600" }}>{revealed}</Text>
-                    </Text>
-                  ) : !hasCode ? (
-                    <Text style={{ color: t.muted, fontSize: 14, lineHeight: 20 }}>{tr.contacts.realNameHidden}</Text>
-                  ) : unlocking ? (
-                    <View style={{ gap: 8 }}>
-                      <CodeInput
-                        label={tr.contacts.privacy.title}
-                        value={pin}
-                        onChange={setPin}
-                        autoFocus
-                        onSubmit={() => pin.length >= 4 && void reveal()}
-                      />
-                      <PrimaryButton title={tr.contacts.show} disabled={pin.length < 4} onPress={() => void reveal()} />
-                    </View>
-                  ) : (
-                    <TextButton title={tr.contacts.showRealName} color={brand} onPress={() => setUnlocking(true)} />
-                  )}
-                  {revealError && <Notice tone="error">{revealError}</Notice>}
+                  <Text style={{ color: t.text, fontSize: 14 }}>
+                    <Text style={{ color: t.muted }}>{tr.contacts.realName}</Text>
+                    <Text style={{ fontWeight: "600" }}>{c.originalName}</Text>
+                  </Text>
                 </View>
               )}
+
+              <View style={{ borderRadius: 12, overflow: "hidden", backgroundColor: t.field }}>
+                <Toggle
+                  label={tr.contacts.shareProfile}
+                  hint={tr.contacts.shareProfileHint}
+                  value={share.isPending ? !!share.variables : c.sharingProfile}
+                  disabled={share.isPending}
+                  onChange={(on) => share.mutate(on)}
+                />
+              </View>
 
               {error && <Notice tone="error">{error}</Notice>}
               <PrimaryButton title={saving ? tr.common.saving : tr.common.save} disabled={saving} onPress={() => void save()} />

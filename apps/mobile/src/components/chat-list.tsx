@@ -1,4 +1,4 @@
-import { type ChatDTO, maskSpoilers, serviceText } from "@six/shared";
+import { type ChatDTO, maskSpoilers, serviceText, shownType } from "@six/shared";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import {
@@ -14,11 +14,14 @@ import {
   Phone,
   PhoneMissed,
   Pin,
+  Search,
+  Share2,
   Timer,
+  UserPlus,
   Video,
 } from "lucide-react-native";
 import { useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 import { isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
 import { formatDuration, listTime } from "@/lib/format";
@@ -28,9 +31,11 @@ import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { usePresence, useWatchPresence } from "@/lib/presence";
 import { useTyping } from "@/lib/typing";
+import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
-import { MediaIcon, mediaLabel } from "./media-label";
+import { NewInvite } from "./invites";
+import { MediaIcon, type MediaType, mediaLabel } from "./media-label";
 import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
 import { UpdateBanner } from "./update-banner";
 
@@ -83,6 +88,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
     );
   }
   if (m.type !== "text") {
+    const type = shownType(m as typeof m & { file?: { sticker?: boolean } }) as MediaType;
     const voiceLength =
       m.type === "voice" && m.attachment?.durationMs ? ` (${formatDuration(m.attachment.durationMs)})` : "";
     const extra =
@@ -94,9 +100,9 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
     return line(
       <>
         {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
-        <MediaIcon type={m.type} color={color} />
+        <MediaIcon type={type} color={color} />
       </>,
-      `${mediaLabel(m.type, tr)}${voiceLength}${extra}`,
+      `${mediaLabel(type, tr)}${voiceLength}${extra}`,
     );
   }
   if (m.spoiler) {
@@ -189,14 +195,17 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
     live: null,
   }[status];
 
-  const visible = chats.data?.filter((c) => c.lastMessage !== null) ?? [];
+  const [query, setQuery] = useState("");
+  const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
+  const needle = query.trim().toLowerCase();
+  const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
-  const archivedCount = archivedChats.data?.filter((c) => c.lastMessage !== null).length ?? 0;
+  const archivedCount = archivedChats.data?.length ?? 0;
 
   const header = archived ? undefined : (
     <>
       <UpdateBanner />
-      {archivedCount > 0 && (
+      {!needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}
           style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
@@ -217,15 +226,37 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         {archived && (
           <IconButton Icon={ChevronLeft} label={tr.common.backToChats} onPress={() => router.back()} size={26} />
         )}
-        <View style={{ flex: 1, paddingHorizontal: archived ? 0 : 4 }}>
-          <Text style={[styles.title, { color: t.text }]}>{archived ? tr.common.archived : tr.common.chats}</Text>
-          {statusText && <Text style={{ color: t.muted, fontSize: 12 }}>{statusText}</Text>}
+        <View style={{ flex: 1, gap: 10, paddingHorizontal: archived ? 0 : 4 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.title, { color: t.text }]}>{archived ? tr.common.archived : tr.common.chats}</Text>
+              {statusText && <Text style={{ color: t.muted, fontSize: 12 }}>{statusText}</Text>}
+            </View>
+            {!archived && (
+              <>
+                <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
+                <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
+              </>
+            )}
+          </View>
+          <View style={[styles.search, { backgroundColor: t.chip }]}>
+            <Search size={16} color={t.muted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={tr.contacts.search}
+              placeholderTextColor={t.muted}
+              accessibilityLabel={tr.contacts.search}
+              style={[styles.searchInput, { color: t.text }]}
+            />
+          </View>
         </View>
       </ScreenHeader>
 
       <FlatList
         data={visible}
         keyExtractor={(c) => c.id}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => <ChatRow chat={item} meId={meId} />}
         ListHeaderComponent={header}
         refreshControl={
@@ -241,6 +272,8 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             <Text style={[styles.note, { color: t.muted }]}>{tr.common.loading}</Text>
           ) : chats.isError ? (
             <Text style={[styles.note, { color: t.danger }]}>{tr.chats.couldNotLoad}</Text>
+          ) : needle ? (
+            <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.contacts.noMatch(query.trim())}</Text>
           ) : archived || archivedCount === 0 ? (
             <EmptyState
               Icon={archived ? Archive : MessageCircle}
@@ -251,13 +284,15 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
                   <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
                     {tr.chats.noChatsHint}
                   </Text>
-                  <PrimaryButton title={tr.chats.openContacts} onPress={() => router.navigate("/contacts")} />
+                  <PrimaryButton title={tr.contacts.addContact} onPress={() => setDialog("add")} />
                 </View>
               )}
             </EmptyState>
           ) : undefined
         }
       />
+      {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
+      {dialog === "invite" && <NewInvite onClose={() => setDialog(null)} />}
     </View>
   );
 }
@@ -276,4 +311,6 @@ const styles = StyleSheet.create({
   archiveIcon: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
   archiveText: { flex: 1, fontSize: 15, fontWeight: "500" },
   note: { padding: 16, fontSize: 14 },
+  search: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 12, paddingHorizontal: 12 },
+  searchInput: { flex: 1, fontSize: 16, paddingVertical: 8 },
 });
