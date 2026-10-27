@@ -2,6 +2,7 @@ import { E2EE, type Hydrated, decryptFile } from "@six/sdk";
 import type { ChatDTO, EncryptedFile, MessageDTO } from "@six/shared";
 import { Directory, File, Paths } from "expo-file-system";
 import { useEffect, useMemo } from "react";
+import { AppState } from "react-native";
 import { create } from "zustand";
 import { DeviceSecretStore } from "./secret-store";
 import { six } from "./six";
@@ -57,6 +58,7 @@ interface Patch {
   replyText?: string | null;
   file?: EncryptedFile;
   fileUri?: string;
+  fileFailed?: boolean;
   undecryptable?: boolean;
 }
 
@@ -64,13 +66,15 @@ const keyOf = (m: MessageDTO) => `${m.id}:${m.editedAt ?? ""}`;
 
 export const useDecrypted = create<{ byKey: Record<string, Patch>; retries: number }>(() => ({ byKey: {}, retries: 0 }));
 
-/** Tries the messages this phone couldn't read again, once it has the backup key. */
+/** Tries again the messages this phone couldn't read or download: once it has the backup key, or when the app comes back. */
 export function retryUndecryptable() {
   useDecrypted.setState((s) => ({
-    byKey: Object.fromEntries(Object.entries(s.byKey).filter(([, p]) => !p.undecryptable)),
+    byKey: Object.fromEntries(Object.entries(s.byKey).filter(([, p]) => !p.undecryptable && !p.fileFailed)),
     retries: s.retries + 1,
   }));
 }
+
+AppState.addEventListener("change", (state) => state === "active" && retryUndecryptable());
 
 const queued = new Set<string>();
 let chain: Promise<unknown> = Promise.resolve();
@@ -126,8 +130,12 @@ function decrypt(meId: string, m: MessageDTO) {
     const patch = patchOf(await e.hydrate(m));
     useDecrypted.setState((s) => ({ byKey: { ...s.byKey, [key]: patch } }));
     if (patch.file && m.attachment?.url && m.attachment.status === "ready") {
-      const fileUri = await decryptToCache(m, patch.file);
-      useDecrypted.setState((s) => ({ byKey: { ...s.byKey, [key]: { ...patch, fileUri } } }));
+      const fileUri = await decryptToCache(m, patch.file).catch((err) => {
+        console.warn("could not download attachment:", err?.message ?? err);
+        return null;
+      });
+      const done = fileUri ? { fileUri } : { fileFailed: true };
+      useDecrypted.setState((s) => ({ byKey: { ...s.byKey, [key]: { ...patch, ...done } } }));
     }
   };
   chain = chain.then(run, run).catch((err) => console.warn("could not decrypt message:", err?.message ?? err)).finally(() => queued.delete(key));
@@ -155,7 +163,7 @@ export function withContent<T extends MessageDTO>(m: T, patch: Patch | undefined
             height: patch.file.height ?? null,
             durationMs: patch.file.durationMs ?? null,
             waveform: patch.file.waveform ?? null,
-            status: patch.fileUri ? "ready" : m.attachment.status === "failed" ? "failed" : "processing",
+            status: patch.fileUri ? "ready" : patch.fileFailed || m.attachment.status === "failed" ? "failed" : "processing",
             url: patch.fileUri ?? null,
             thumbUrl: patch.file.thumb ?? null,
           }
