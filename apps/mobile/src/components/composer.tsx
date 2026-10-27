@@ -118,6 +118,7 @@ export function Composer({
   const [noteRecorder, setNoteRecorder] = useState(false);
   const [picked, setPicked] = useState<LocalFile[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
+  const closeEmoji = useCallback(() => setEmoji(false), []);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
@@ -346,7 +347,7 @@ export function Composer({
       <View
         style={[
           styles.bar,
-          { backgroundColor: t.bg, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 8) },
+          { backgroundColor: t.bg, borderColor: t.border, paddingBottom: emoji ? 8 : Math.max(insets.bottom, 8) },
         ]}
       >
         {mode?.kind === "reply" && (
@@ -430,7 +431,11 @@ export function Composer({
             )}
             <View style={[styles.field, { backgroundColor: t.surface, borderColor: t.border }]}>
               <Pressable
-                onPress={() => setEmoji(true)}
+                onPress={() => {
+                  if (emoji) input.current?.focus();
+                  else input.current?.blur();
+                  setEmoji(!emoji);
+                }}
                 accessibilityLabel={tr.composer.pickerTabs.emoji}
                 style={[styles.round40, emoji && { backgroundColor: "rgba(235,138,0,0.2)" }]}
               >
@@ -440,6 +445,7 @@ export function Composer({
                 ref={input}
                 value={text}
                 onChangeText={typeText}
+                onFocus={() => setEmoji(false)}
                 selection={forced}
                 onSelectionChange={(e) => {
                   selection.current = e.nativeEvent.selection;
@@ -504,7 +510,7 @@ export function Composer({
           ]}
         />
       )}
-      <EmojiPicker open={emoji} onClose={() => setEmoji(false)} onPick={insert} />
+      <EmojiPicker inline open={emoji} onClose={closeEmoji} onPick={insert} />
       {noteRecorder && (
         <VideoNoteRecorder
           initialEphemeral={ephemeral}
