@@ -12,6 +12,7 @@ import type { Prisma } from "../generated/prisma/client.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { isAdminEmail } from "../plugins/auth.js";
+import { admitQueued, invitesOf } from "./referrals.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
 import { SEEDED_PREFIX, attachSticker, isSeededPack, toStickerDTO } from "./stickers.js";
@@ -27,7 +28,7 @@ const userInclude = () =>
   }) satisfies Prisma.UserInclude;
 type UserRow = Prisma.UserGetPayload<{ include: ReturnType<typeof userInclude> }>;
 
-function toAdminUser(u: UserRow, storageBytes: number): AdminUserDTO {
+function toAdminUser(u: UserRow, storageBytes: number, invites: { invited: number; waiting: number }): AdminUserDTO {
   const lastActive = u.sessions.map((s) => s.lastUsedAt).sort((a, b) => +b - +a)[0];
   return {
     ...toUserRef(u),
@@ -40,6 +41,9 @@ function toAdminUser(u: UserRow, storageBytes: number): AdminUserDTO {
     activeSessions: u.sessions.length,
     openReports: u._count.reportsAgainst,
     storageBytes,
+    queued: u.queuedAt !== null,
+    inviteLimit: u.inviteLimit,
+    ...invites,
   };
 }
 
@@ -52,9 +56,10 @@ async function storageOf(userIds: string[]) {
   return new Map(rows.map((r) => [r.ownerId, Number(r.bytes)]));
 }
 
-async function withStorage(rows: UserRow[]) {
-  const storage = await storageOf(rows.map((u) => u.id));
-  return rows.map((u) => toAdminUser(u, storage.get(u.id) ?? 0));
+async function withTotals(rows: UserRow[]) {
+  const ids = rows.map((u) => u.id);
+  const [storage, invites] = await Promise.all([storageOf(ids), invitesOf(prisma, ids)]);
+  return rows.map((u) => toAdminUser(u, storage.get(u.id) ?? 0, invites(u.id)));
 }
 
 export async function listUsers(q: AdminUserQuery) {
@@ -72,13 +77,13 @@ export async function listUsers(q: AdminUserQuery) {
     ...pageArgs(q),
   });
   const page = toPage(rows, q, (u) => u);
-  return { items: await withStorage(page.items), nextCursor: page.nextCursor };
+  return { items: await withTotals(page.items), nextCursor: page.nextCursor };
 }
 
 export async function getUser(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId }, include: userInclude() });
   if (!user) throw new AppError("USER_NOT_FOUND");
-  return (await withStorage([user]))[0]!;
+  return (await withTotals([user]))[0]!;
 }
 
 export async function signOutEverywhere(userId: string) {
@@ -100,6 +105,15 @@ export async function unbanUser(userId: string) {
   await prisma.user.update({ where: { id: userId }, data: { bannedAt: null, banReason: null } }).catch(() => {
     throw new AppError("USER_NOT_FOUND");
   });
+  return getUser(userId);
+}
+
+/** Raising someone's limit lets in the people waiting on their links, oldest first. */
+export async function setInviteLimit(userId: string, limit: number) {
+  await prisma.user.update({ where: { id: userId }, data: { inviteLimit: limit } }).catch(() => {
+    throw new AppError("USER_NOT_FOUND");
+  });
+  await admitQueued(userId);
   return getUser(userId);
 }
 

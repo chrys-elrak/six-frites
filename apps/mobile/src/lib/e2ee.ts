@@ -1,9 +1,10 @@
 import { E2EE, type Hydrated, decryptFile } from "@six/sdk";
 import type { ChatDTO, EncryptedFile, MessageDTO } from "@six/shared";
 import { Directory, File, Paths } from "expo-file-system";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { AppState } from "react-native";
 import { create } from "zustand";
+import { closeDrafts, openDrafts } from "./drafts";
 import { DeviceSecretStore } from "./secret-store";
 import { six } from "./six";
 
@@ -20,7 +21,9 @@ export const useKeyChanges = create<{ userIds: string[]; dismiss: (id: string) =
 export function e2eeFor(userId: string | undefined) {
   if (!userId) return null;
   if (current?.userId !== userId) {
-    current = new E2EE(six.api, new DeviceSecretStore(userId), userId);
+    const store = new DeviceSecretStore(userId);
+    current = new E2EE(six.api, store, userId);
+    void openDrafts(store);
     current.onIdentityChange((id) =>
       useKeyChanges.setState((s) => (s.userIds.includes(id) ? s : { userIds: [...s.userIds, id] })),
     );
@@ -44,6 +47,7 @@ export async function forgetE2EE() {
   const e = current;
   current = null;
   readyFor = null;
+  closeDrafts();
   useDecrypted.setState({ byKey: {} });
   await e?.forget().catch(() => null);
   const media = new Directory(Paths.cache, "e2ee-media");
@@ -55,6 +59,8 @@ interface Patch {
   text: string | null;
   entities: MessageDTO["entities"];
   spoiler: boolean;
+  location: MessageDTO["location"];
+  checklist: MessageDTO["checklist"];
   replyText?: string | null;
   file?: EncryptedFile;
   fileUri?: string;
@@ -84,6 +90,8 @@ function patchOf(h: Hydrated): Patch {
     text: h.text,
     entities: h.entities,
     spoiler: h.spoiler,
+    location: h.location,
+    checklist: h.checklist,
     replyText: h.replyTo?.encrypted ? h.replyTo.text : undefined,
     file: h.file,
     undecryptable: h.undecryptable,
@@ -120,11 +128,12 @@ async function decryptToCache(m: MessageDTO, file: EncryptedFile) {
   return out.uri;
 }
 
-function decrypt(meId: string, m: MessageDTO) {
+function decrypt(meId: string, m: MessageDTO, stillWanted = () => true) {
   const key = keyOf(m);
   if (queued.has(key) || useDecrypted.getState().byKey[key]) return;
   queued.add(key);
   const run = async () => {
+    if (!stillWanted()) return;
     const e = e2eeFor(meId);
     if (!e) return;
     const patch = patchOf(await e.hydrate(m));
@@ -151,6 +160,8 @@ export function withContent<T extends MessageDTO>(m: T, patch: Patch | undefined
     text: patch.text,
     entities: patch.entities,
     spoiler: patch.spoiler,
+    location: patch.location,
+    checklist: patch.checklist,
     replyTo: m.replyTo && patch.replyText !== undefined ? { ...m.replyTo, text: patch.replyText } : m.replyTo,
     attachment:
       m.attachment && patch.file
@@ -165,21 +176,40 @@ export function withContent<T extends MessageDTO>(m: T, patch: Patch | undefined
             waveform: patch.file.waveform ?? null,
             status: patch.fileUri ? "ready" : patch.fileFailed || m.attachment.status === "failed" ? "failed" : "processing",
             url: patch.fileUri ?? null,
-            thumbUrl: patch.file.thumb ?? null,
+            thumbUrl: (m.attachment.kind === "image" && patch.fileUri) || patch.file.thumb || null,
           }
         : m.attachment,
     file: patch.file,
   };
 }
 
-/** Decrypts a list of messages, oldest first, and keeps them in sync as content arrives. */
+let onScreen = new Set<string>();
+
+/**
+ * Decrypts a list's messages lazily: only the ones on screen, which the list reports through `see` with
+ * their ids. Messages that scroll away before their turn in the queue are skipped until they come back.
+ */
 export function useHydratedMessages(meId: string, messages: MessageDTO[]) {
   const byKey = useDecrypted((s) => s.byKey);
   const retries = useDecrypted((s) => s.retries);
-  useEffect(() => {
-    for (const m of [...messages].reverse()) if (m.encryption) decrypt(meId, m);
-  }, [meId, messages, retries]);
-  return useMemo(() => messages.map((m) => withContent(m, byKey[keyOf(m)])), [messages, byKey]);
+  const latest = useRef(messages);
+  latest.current = messages;
+  const decryptSeen = useCallback(() => {
+    for (const m of [...latest.current].reverse()) {
+      if (m.encryption && onScreen.has(m.id)) decrypt(meId, m, () => onScreen.has(m.id));
+    }
+  }, [meId]);
+  useEffect(decryptSeen, [decryptSeen, messages, retries]);
+  useEffect(() => () => void (onScreen = new Set()), []);
+  const see = useCallback(
+    (ids: string[]) => {
+      onScreen = new Set(ids);
+      decryptSeen();
+    },
+    [decryptSeen],
+  );
+  const shown = useMemo(() => messages.map((m) => withContent(m, byKey[keyOf(m)])), [messages, byKey]);
+  return { shown, see };
 }
 
 export function useHydratedMessage<T extends MessageDTO>(meId: string | undefined, m: T | null | undefined) {
@@ -203,7 +233,7 @@ export async function revealNow<T extends MessageDTO>(meId: string, m: T) {
   const h = await hydrateNow(meId, m);
   if (!h.file || !h.attachment?.url) return h;
   const url = await decryptToCache(m, h.file);
-  return { ...h, attachment: { ...h.attachment, url, thumbUrl: h.file.thumb ?? null } };
+  return { ...h, attachment: { ...h.attachment, url, thumbUrl: (h.attachment.kind === "image" && url) || h.file.thumb || null } };
 }
 
 /** Whether to encrypt in this chat; any failure to tell falls back to what the chat requires. */

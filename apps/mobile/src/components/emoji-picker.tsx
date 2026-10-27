@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import categories from "@six/shared/emojis.json";
 import { Search, X } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
-import { BackHandler, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import categories from "@/lib/emojis.json";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 import { IconButton } from "./ui";
@@ -19,17 +19,15 @@ const COLUMNS = 8;
 
 const all = (categories as { title: string; data: Emoji[] }[]).flatMap((c) => c.data);
 
-/** Inline, it sits under the composer in place of the keyboard; otherwise it slides up over the screen. */
+/** Slides up over the screen to pick a reaction. */
 export function EmojiPicker({
   open,
   onClose,
   onPick,
-  inline = false,
 }: {
   open: boolean;
   onClose: () => void;
   onPick: (emoji: string) => void;
-  inline?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -50,15 +48,6 @@ export function EmojiPicker({
       })
       .catch(() => setTab("smileys_emotion"));
   }, []);
-
-  useEffect(() => {
-    if (!inline || !open) return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      onClose();
-      return true;
-    });
-    return () => sub.remove();
-  }, [inline, open, onClose]);
 
   const data = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -141,8 +130,6 @@ export function EmojiPicker({
       />
     </View>
   );
-
-  if (inline) return open ? panel : null;
 
   return (
     <Modal

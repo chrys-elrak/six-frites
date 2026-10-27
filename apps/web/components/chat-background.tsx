@@ -2,7 +2,6 @@
 
 import {
   type ChatTheme,
-  CHAT_THEMES,
   DOODLES,
   type DoodleNode,
   WALLPAPER_LAYOUT,
@@ -10,18 +9,14 @@ import {
   CUSTOM_THEME_COLORS,
   chatTheme,
   customTheme,
-  customThemeColor,
   customThemeColors,
-  customThemeId,
-  themeName,
   type Wallpaper as WallpaperColors,
 } from "@six/shared";
 import { Check } from "lucide-react";
 import { memo, useEffect, useState } from "react";
-import { useChatTheme, useChatThemeStore } from "@/lib/chat-themes";
 import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
-import { Card, PrimaryButton, SectionTitle } from "./ui";
+import { PrimaryButton } from "./ui";
 
 function Doodle({ nodes }: { nodes: DoodleNode[] }) {
   return (
@@ -85,11 +80,9 @@ export const Wallpaper = memo(function Wallpaper({ theme, id }: { theme: ChatThe
   );
 });
 
-/** The wallpaper behind a chat: its shared background if one is set, otherwise your default. */
-/** The wallpaper behind a chat: its shared background if one is set, otherwise your default. */
+/** The wallpaper behind a chat: its shared background if one is set, otherwise Frites. */
 export function ChatBackground({ themeId }: { themeId: string | null }) {
-  const fallback = useChatTheme();
-  const theme = themeId ? chatTheme(themeId) : fallback;
+  const theme = chatTheme(themeId);
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <Wallpaper theme={theme} id="chat" />
@@ -102,54 +95,11 @@ export function ChatBackground({ themeId }: { themeId: string | null }) {
  * bg-brand / text-brand-ink read, theirs through --bubble-their(-ink), for light and dark.
  */
 export function BubbleColors({ themeId, scope }: { themeId: string | null; scope: string }) {
-  const fallback = useChatTheme();
-  const theme = themeId ? chatTheme(themeId) : fallback;
+  const theme = chatTheme(themeId);
   const vars = (w: WallpaperColors) =>
     `--color-brand:${w.bubble};--color-brand-ink:${w.bubbleInk};--bubble-their:${w.theirBubble};--bubble-their-ink:${w.theirBubbleInk};`;
   return (
     <style>{`.${scope}{${vars(theme.light)}}@media (prefers-color-scheme: dark){.${scope}{${vars(theme.dark)}}}`}</style>
-  );
-}
-
-function ThemeSwatch({ theme, on, label, onClick }: { theme: ChatTheme; on: boolean; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={on}
-      onClick={onClick}
-      className="flex shrink-0 flex-col items-center gap-1.5"
-    >
-      <span
-        className={`relative block h-28 w-20 overflow-hidden rounded-xl ring-2 transition ${
-          on ? "ring-brand" : "ring-stone-200 hover:ring-stone-300 dark:ring-stone-700"
-        }`}
-      >
-        <Wallpaper theme={theme} id={`swatch-${theme.id.replace(/[^a-z0-9]/gi, "")}`} />
-        <span
-          className="absolute top-5 right-2 h-3.5 w-9 rounded-full dark:hidden"
-          style={{ background: theme.light.bubble }}
-        />
-        <span
-          className="absolute top-5 right-2 hidden h-3.5 w-9 rounded-full dark:block"
-          style={{ background: theme.dark.bubble }}
-        />
-        <span
-          className="absolute top-11 left-2 h-3.5 w-11 rounded-full dark:hidden"
-          style={{ background: theme.light.theirBubble }}
-        />
-        <span
-          className="absolute top-11 left-2 hidden h-3.5 w-11 rounded-full dark:block"
-          style={{ background: theme.dark.theirBubble }}
-        />
-        {on && (
-          <span className="absolute right-1.5 bottom-1.5 grid size-5 place-items-center rounded-full bg-brand text-brand-ink">
-            <Check className="size-3.5" strokeWidth={3} />
-          </span>
-        )}
-      </span>
-      <span className={`text-xs ${on ? "font-semibold text-brand" : "text-stone-600 dark:text-stone-300"}`}>{label}</span>
-    </button>
   );
 }
 
@@ -323,45 +273,5 @@ export function CustomThemeDialog({
         </div>
       </div>
     </Portal>
-  );
-}
-
-export function ChatBackgroundPicker() {
-  const tr = useT();
-  const current = useChatThemeStore((s) => s.id);
-  const choose = useChatThemeStore((s) => s.set);
-  const [custom, setCustom] = useState(false);
-  const customHex = customThemeColor(current);
-  return (
-    <section className="space-y-3">
-      <SectionTitle>{tr.settings.defaultBackground}</SectionTitle>
-      <Card className="p-2">
-        <div role="radiogroup" aria-label={tr.settings.defaultBackground} className="flex gap-3 overflow-x-auto p-1 pb-2">
-          {CHAT_THEMES.map((theme) => (
-            <ThemeSwatch
-              key={theme.id}
-              theme={theme}
-              on={theme.id === current}
-              label={themeName(theme.id, tr)}
-              onClick={() => choose(theme.id)}
-            />
-          ))}
-          <ThemeSwatch
-            theme={customTheme(customHex ?? CUSTOM_THEME_COLORS[3]!)}
-            on={!!customHex}
-            label={tr.common.custom}
-            onClick={() => setCustom(true)}
-          />
-        </div>
-      </Card>
-      {custom && (
-        <CustomThemeDialog
-          title={tr.settings.defaultCustomBackground}
-          current={current}
-          onPick={(mine, theirs) => choose(customThemeId(mine, theirs))}
-          onClose={() => setCustom(false)}
-        />
-      )}
-    </section>
   );
 }

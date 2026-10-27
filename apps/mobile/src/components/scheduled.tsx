@@ -77,11 +77,13 @@ function Stepper({
 /** Picks a send time with presets and day/hour/minute steppers, since React Native has no date-time input. */
 export function ScheduleDialog({
   title,
+  confirm,
   initial,
   onPick,
   onClose,
 }: {
   title: string;
+  confirm?: string;
   initial?: Date;
   onPick: (at: Date) => void;
   onClose: () => void;
@@ -160,7 +162,7 @@ export function ScheduleDialog({
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <TextButton title={tr.common.cancel} onPress={onClose} />
           </View>
-          <PrimaryButton title={tr.chat.schedule} onPress={submit} style={{ flex: 1 }} />
+          <PrimaryButton title={confirm ?? tr.chat.schedule} onPress={submit} style={{ flex: 1 }} />
         </View>
       </View>
     </Overlay>

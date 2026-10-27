@@ -62,6 +62,21 @@ export async function react(qc: QueryClient, m: MessageDTO, meId: string, emoji:
   }
 }
 
+/** Ticks or unticks a checklist item, showing the change before the server answers. */
+export async function check(qc: QueryClient, m: MessageDTO, meId: string, item: number) {
+  const done = !m.checks.some((c) => c.item === item);
+  const checks = done
+    ? [...m.checks, { item, userId: meId, at: new Date().toISOString() }]
+    : m.checks.filter((c) => c.item !== item);
+  applyEdited(qc, { ...m, checks });
+  try {
+    const params = { path: { id: m.id, item } };
+    applyEdited(qc, unwrap(await six.api.PUT("/v1/messages/{id}/checklist/{item}", { params, body: { done } })));
+  } catch {
+    void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
+  }
+}
+
 /** Shows a self-destructing message as opened straight away instead of waiting for the server's update. */
 export function markOpenedLocally(qc: QueryClient, chatId: string, messageId: string) {
   const expire = (m: MessageDTO): MessageDTO =>

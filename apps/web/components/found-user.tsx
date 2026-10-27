@@ -32,7 +32,6 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
       <Avatar user={found.user} size="lg" />
       <div>
         <p className="text-lg font-semibold">{found.user.displayName}</p>
-        {found.username && <p className="text-sm text-stone-500">@{found.username}</p>}
       </div>
       <PrimaryButton className="w-full" onClick={() => add.mutate()} disabled={add.isPending}>
         {found.chatId ? tr.contacts.openChat : tr.common.message}

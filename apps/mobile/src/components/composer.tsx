@@ -1,11 +1,17 @@
 import {
+  type EmojiEntry,
   type EntityType,
   type EphemeralInput,
+  type GifDTO,
   type TypingKind,
+  emojiQuery,
   emojifyEnd,
   emojifyTyped,
   maskSpoilers,
+  parseCommand,
+  suggestEmoji,
 } from "@six/shared";
+import emojis from "@six/shared/emojis.json";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   RecordingPresets,
@@ -14,7 +20,6 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
-import * as Haptics from "expo-haptics";
 import {
   Bold,
   CalendarClock,
@@ -24,37 +29,42 @@ import {
   Flame,
   Italic,
   type LucideIcon,
-  Mic,
   Paperclip,
   SendHorizontal,
-  Smile,
+  Square,
   Strikethrough,
   Trash2,
   X,
 } from "lucide-react-native";
-import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View, findNodeHandle } from "react-native";
+import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { File, Paths } from "expo-file-system";
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, findNodeHandle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { editMessage, scheduleMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
+import { useDrafts } from "@/lib/drafts";
 import { shortRule } from "@/lib/ephemeral";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 import { pickFiles, pickMedia, receivedImage, takePhoto } from "@/lib/media";
 import { useRealtime } from "@/lib/realtime";
-import { type LocalFile, queueMessage } from "@/lib/send";
+import { type Draft, type LocalFile, queueMessage } from "@/lib/send";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
-import { EmojiPicker } from "./emoji-picker";
+import { NewChecklist } from "./checklist";
+import { currentPosition } from "./location-card";
+import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { ScheduleDialog, ScheduledPanel } from "./scheduled";
 import { Sheet } from "./sheet";
-import { VideoNoteRecorder } from "./video-note-recorder";
+import { RecordButton, type RecordMode } from "./record-button";
+import { VoicePlayer } from "./attachment";
+import { VideoNoteCapture, type VideoNoteHandle, VideoNotePreview } from "./video-note-capture";
 import RichInput, { type ReceivedImage } from "../../modules/rich-input";
 
-const drafts = new Map<string, string>();
+const allEmoji = (emojis as { data: EmojiEntry[] }[]).flatMap((c) => c.data);
 
 const formats: { type: EntityType; Icon: LucideIcon }[] = [
   { type: "bold", Icon: Bold },
@@ -106,20 +116,32 @@ export function Composer({
   const { realtime } = useRealtime();
   const mode = useComposerMode((s) => s.byChat[chatId]);
   const setMode = useComposerMode((s) => s.set);
-  const [text, setText] = useState(() => drafts.get(chatId) ?? "");
+  const [text, setText] = useState(() => useDrafts.getState().byChat[chatId] ?? "");
+  const draftsReady = useDrafts((s) => s.ready);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [spoiler, setSpoiler] = useState(false);
   const selection = useRef<Range>({ start: 0, end: 0 });
   const [forced, setForced] = useState<Range | undefined>(undefined);
   const [hasSelection, setHasSelection] = useState(false);
+  const [caret, setCaret] = useState(0);
   const input = useRef<ComponentRef<typeof TextInput>>(null);
+  const commands = useRef<CommandBarHandle>(null);
   const [attachMenu, setAttachMenu] = useState(false);
-  const [emoji, setEmoji] = useState(false);
-  const [noteRecorder, setNoteRecorder] = useState(false);
+  const [askLocation, setAskLocation] = useState(false);
+  const [writingChecklist, setWritingChecklist] = useState(false);
+  const [recMode, setRecMode] = useState<RecordMode>("voice");
+  const [capture, setCapture] = useState<{ kind: RecordMode; locked: boolean } | null>(null);
+  const captureNow = useRef(capture);
+  captureNow.current = capture;
+  const [slide, setSlide] = useState(0);
+  const [noteMs, setNoteMs] = useState(0);
+  const [barHeight, setBarHeight] = useState(0);
+  const note = useRef<VideoNoteHandle>(null);
+  const voiceOn = useRef(false);
+  const [preview, setPreview] = useState<{ kind: RecordMode; file: LocalFile } | null>(null);
   const [picked, setPicked] = useState<LocalFile[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
-  const closeEmoji = useCallback(() => setEmoji(false), []);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
@@ -130,8 +152,8 @@ export function Composer({
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
-    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (drafts.get(chatId) ?? ""));
-  }, [editing, chatId]);
+    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (useDrafts.getState().byChat[chatId] ?? ""));
+  }, [editing, chatId, draftsReady]);
 
   useEffect(() => {
     if (mode) input.current?.focus();
@@ -146,7 +168,7 @@ export function Composer({
 
   const busyWith: TypingKind | null = recording
     ? "voice"
-    : noteRecorder || picked?.some((f) => f.kind === "video")
+    : capture?.kind === "video" || picked?.some((f) => f.kind === "video")
       ? "video"
       : picked?.some((f) => f.kind === "image")
         ? "photo"
@@ -186,7 +208,7 @@ export function Composer({
 
   function change(value: string) {
     setText(value);
-    if (!editing) drafts.set(chatId, value);
+    if (!editing) useDrafts.getState().set(chatId, value);
   }
 
   function typeText(value: string) {
@@ -205,10 +227,15 @@ export function Composer({
     return true;
   }
 
-  function insert(value: string) {
-    const { start, end } = selection.current;
-    change(text.slice(0, start) + value + text.slice(end));
-    setForced({ start: start + value.length, end: start + value.length });
+  const query = parseCommand(text) ? null : emojiQuery(text, caret);
+  const suggestions = useMemo(() => (query ? suggestEmoji(allEmoji, query.query) : []), [query?.query]);
+
+  function pickSuggestion(emoji: string) {
+    if (!query) return;
+    const at = query.start + emoji.length;
+    change(text.slice(0, query.start) + emoji + text.slice(caret));
+    setForced({ start: at, end: at });
+    setCaret(at);
   }
 
   function spoilerButton() {
@@ -223,8 +250,46 @@ export function Composer({
     setMode(chatId, undefined);
   }
 
+  function completeCommand(value: string) {
+    change(value);
+    setForced({ start: value.length, end: value.length });
+    setCaret(value.length);
+  }
+
+  /** Sends a GIPHY or KLIPY sticker as a sticker image, like one from the keyboard; the command stays if it can't be fetched. */
+  async function sendFoundSticker(found: GifDTO) {
+    const saved = await File.downloadFileAsync(
+      found.previewUrl,
+      new File(Paths.cache, `sticker-${Date.now()}.webp`),
+    ).catch(() => null);
+    if (!saved) return;
+    send({
+      uri: saved.uri,
+      kind: "image",
+      name: `${(found.title || "sticker").slice(0, 100)}.webp`,
+      mime: "image/webp",
+      size: saved.size,
+      width: found.width,
+      height: found.height,
+      sticker: true,
+    });
+    reset();
+  }
+
+  function sendGif(gif: GifDTO) {
+    if (!realtime) return;
+    realtime.setTyping(chatId, false);
+    queueMessage(qc, realtime, chatId, {
+      text: "",
+      replyTo: mode?.kind === "reply" ? mode.message : undefined,
+      ephemeral,
+      gif,
+    });
+    reset();
+  }
+
   function reset() {
-    drafts.delete(chatId);
+    useDrafts.getState().set(chatId, "");
     setText("");
     setSpoiler(false);
     setEphemeral(null);
@@ -255,13 +320,13 @@ export function Composer({
     realtime?.setTyping(chatId, false);
     setSpoiler(false);
     setEphemeral(null);
-    drafts.delete(chatId);
+    useDrafts.getState().set(chatId, "");
     setText("");
     if (mode) cancel();
   }
 
   async function submit() {
-    if (!canSubmit) return;
+    if (!canSubmit || commands.current?.submit()) return;
     if (editing) {
       const changed =
         parsed.text !== editing.text || JSON.stringify(parsed.entities) !== JSON.stringify(editing.entities);
@@ -320,6 +385,26 @@ export function Composer({
     reset();
   }
 
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist">) {
+    if (!realtime) return;
+    queueMessage(qc, realtime, chatId, {
+      text: "",
+      replyTo: mode?.kind === "reply" ? mode.message : undefined,
+      ...extra,
+    });
+    if (mode) cancel();
+    onSent();
+  }
+
+  async function sendLocation() {
+    setError(null);
+    try {
+      sendSpecial({ location: await currentPosition() });
+    } catch (err) {
+      setError((err as Error).message === "denied" ? tr.composer.locationDenied : tr.composer.locationFailed);
+    }
+  }
+
   async function pick(source: () => Promise<LocalFile[]>) {
     setError(null);
     try {
@@ -330,46 +415,104 @@ export function Composer({
     }
   }
 
+  /** Resolves true once the voice message is recording, false when the microphone was refused. */
   async function startRecording() {
     setError(null);
     const perm = await requestRecordingPermissionsAsync();
     if (!perm.granted) {
       setError(tr.composer.micDenied);
-      return;
+      return false;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
     await recorder.prepareToRecordAsync();
     recorder.record();
+    voiceOn.current = true;
     setRecording(true);
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    return true;
   }
 
-  async function stopRecording(keep: boolean) {
+  /** Stops the voice message and returns it, or null when it was too short to keep. */
+  async function stopRecording(): Promise<LocalFile | null> {
+    voiceOn.current = false;
     const durationMs = recState.durationMillis;
     await recorder.stop();
     setRecording(false);
     await setAudioModeAsync({ allowsRecording: false }).catch(() => null);
     const uri = recorder.uri;
-    if (!keep || !uri || durationMs < 500) return;
+    if (!uri || durationMs < 500) return null;
     const size = (await (await fetch(uri)).blob()).size;
-    send({
+    return {
       uri,
       kind: "voice",
       name: `voice-${new Date().toISOString().slice(0, 19)}.m4a`,
       mime: "audio/mp4",
       size,
       durationMs,
-    });
+    };
   }
 
-  const showMic = !editing && parsed.text.length === 0;
+  function startCapture(locked: boolean) {
+    setError(null);
+    setSlide(0);
+    setNoteMs(0);
+    if (recMode === "video") Keyboard.dismiss();
+    else {
+      void startRecording().then((ok) => {
+        if (!ok) setCapture(null);
+        else if (!captureNow.current) void stopRecording();
+      });
+    }
+    setCapture({ kind: recMode, locked });
+  }
+
+  async function finishCapture() {
+    const c = captureNow.current;
+    if (!c) return;
+    const clip = c.kind === "video" ? note.current?.stop() : null;
+    setCapture(null);
+    const file = c.kind === "voice" ? voiceOn.current && (await stopRecording()) : await clip;
+    if (file) send(file);
+  }
+
+  async function previewCapture() {
+    const c = captureNow.current;
+    if (!c) return;
+    const file = c.kind === "voice" ? voiceOn.current && (await stopRecording()) : await note.current?.stop();
+    setCapture(null);
+    if (file) setPreview({ kind: c.kind, file });
+  }
+
+  function cancelCapture() {
+    const c = captureNow.current;
+    setCapture(null);
+    if (c?.kind === "video") note.current?.cancel();
+    else if (voiceOn.current) void stopRecording();
+  }
+
+  function closePreview(keep: boolean) {
+    if (preview && keep) send(preview.file);
+    setPreview(null);
+  }
+
+  const showMic = (!editing && parsed.text.length === 0) || !!capture || !!preview;
 
   return (
     <>
+      {capture?.kind === "video" && (
+        <VideoNoteCapture
+          ref={note}
+          bottom={barHeight}
+          onTick={setNoteMs}
+          onLimit={() => void finishCapture()}
+          onStop={() => void previewCapture()}
+        />
+      )}
+      {preview?.kind === "video" && <VideoNotePreview uri={preview.file.uri} bottom={barHeight} />}
       <View
+        onLayout={(e) => setBarHeight(e.nativeEvent.layout.height)}
         style={[
           styles.bar,
-          { backgroundColor: t.bg, borderColor: t.border, paddingBottom: emoji ? 8 : Math.max(insets.bottom, 8) },
+          { backgroundColor: t.bg, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 8) },
         ]}
       >
         {mode?.kind === "reply" && (
@@ -397,6 +540,35 @@ export function Composer({
         )}
         {error && <Text style={{ color: t.danger, fontSize: 14, paddingHorizontal: 4 }}>{error}</Text>}
 
+        {!editing && <CommandBar
+            ref={commands}
+            text={text}
+            onComplete={completeCommand}
+            onGif={sendGif}
+            onSticker={(found) => void sendFoundSticker(found)}
+          />}
+
+        {suggestions.length > 0 && (
+          <ScrollView
+            horizontal
+            keyboardShouldPersistTaps="always"
+            showsHorizontalScrollIndicator={false}
+            accessibilityLabel={tr.composer.emojiSuggestions}
+            contentContainerStyle={styles.toolbar}
+          >
+            {suggestions.map((x) => (
+              <Pressable
+                key={x.e}
+                onPress={() => pickSuggestion(x.e)}
+                accessibilityLabel={x.n}
+                style={[styles.format, { backgroundColor: t.surface, borderColor: t.border }]}
+              >
+                <Text style={styles.suggestion}>{x.e}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
+
         {hasSelection && (
           <View style={styles.toolbar} accessibilityRole="toolbar">
             {formats.map(({ type, Icon }) => (
@@ -412,112 +584,148 @@ export function Composer({
           </View>
         )}
 
-        {recording ? (
-          <View style={styles.row}>
+        <View style={styles.row}>
+          {capture || preview ? (
+            (capture?.locked || preview) && (
+              <Pressable
+                onPress={preview ? () => closePreview(false) : cancelCapture}
+                accessibilityLabel={tr.composer.discardRecording}
+                style={styles.round40}
+              >
+                <Trash2 size={20} color={t.danger} />
+              </Pressable>
+            )
+          ) : !editing && (
+            <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel={tr.composer.attach} style={styles.round40}>
+              <Paperclip size={22} color={t.muted} />
+            </Pressable>
+          )}
+          {!capture && !preview && !editing && scheduledCount > 0 && (
             <Pressable
-              onPress={() => void stopRecording(false)}
-              accessibilityLabel={tr.composer.discardRecording}
+              onPress={() => setShowScheduled(true)}
+              accessibilityLabel={tr.composer.scheduledCount(scheduledCount)}
               style={styles.round40}
             >
-              <Trash2 size={20} color={t.danger} />
+              <CalendarClock size={22} color={brand} />
             </Pressable>
+          )}
+          <View style={[styles.field, { backgroundColor: t.surface, borderColor: t.border }, (capture || preview) && styles.gone]}>
+            <TextInput
+              ref={input}
+              value={text}
+              onChangeText={typeText}
+              selection={forced}
+              onSelectionChange={(e) => {
+                selection.current = e.nativeEvent.selection;
+                setCaret(e.nativeEvent.selection.end);
+                setHasSelection(e.nativeEvent.selection.end > e.nativeEvent.selection.start);
+                if (forced) setForced(undefined);
+              }}
+              multiline
+              maxLength={4000}
+              placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
+              placeholderTextColor={t.muted}
+              accessibilityLabel={tr.common.message}
+              style={[styles.input, { color: t.text }]}
+            />
+            <Pressable
+              onPress={spoilerButton}
+              accessibilityLabel={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
+              accessibilityState={{ selected: !editing && spoiler }}
+              style={styles.round40}
+            >
+              <EyeOff size={20} color={spoiler && !editing ? brand : t.faint} />
+            </Pressable>
+            {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
+          </View>
+          {capture && (
             <View style={[styles.field, styles.recordingField, { backgroundColor: t.surface, borderColor: t.border }]}>
               <View style={styles.redDot} />
-              <Text style={{ color: t.text, fontFamily: "monospace" }}>{formatDuration(recState.durationMillis)}</Text>
-              <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>{tr.composer.recording}</Text>
+              <Text style={{ color: t.text, fontFamily: "monospace" }}>
+                {formatDuration(capture.kind === "voice" ? recState.durationMillis : noteMs)}
+              </Text>
+              {capture.locked ? (
+                <>
+                  <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>{tr.composer.recording}</Text>
+                  {capture.kind === "voice" && (
+                    <Pressable
+                      onPress={() => void previewCapture()}
+                      accessibilityLabel={tr.composer.stopRecording}
+                      hitSlop={6}
+                      style={styles.round32}
+                    >
+                      <Square size={16} color={t.danger} fill={t.danger} />
+                    </Pressable>
+                  )}
+                  <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
+                </>
+              ) : (
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    flex: 1,
+                    color: t.muted,
+                    fontSize: 14,
+                    textAlign: "right",
+                    opacity: Math.max(0.2, 1 + slide / 110),
+                    transform: [{ translateX: slide / 2 }],
+                  }}
+                >
+                  ‹ {tr.composer.slideToCancel}
+                </Text>
+              )}
+            </View>
+          )}
+          {preview && (
+            <View style={[styles.field, styles.recordingField, { backgroundColor: t.surface, borderColor: t.border }]}>
+              <View style={{ flex: 1 }}>
+                {preview.kind === "voice" ? (
+                  <VoicePlayer
+                    url={preview.file.uri}
+                    durationMs={preview.file.durationMs ?? null}
+                    waveform={null}
+                    mine={false}
+                    label={tr.composer.playPreview}
+                  />
+                ) : (
+                  <Text numberOfLines={1} style={{ color: t.text, fontSize: 14 }}>
+                    {tr.summary.kinds.video_note} · {formatDuration(preview.file.durationMs ?? 0)}
+                  </Text>
+                )}
+              </View>
               <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
             </View>
+          )}
+          {showMic ? (
+            <RecordButton
+              mode={preview?.kind ?? recMode}
+              state={preview ? "locked" : capture ? (capture.locked ? "locked" : "holding") : "idle"}
+              disabled={!realtime}
+              onToggle={() => setRecMode((m) => (m === "voice" ? "video" : "voice"))}
+              onStart={startCapture}
+              onLock={() => setCapture((c) => c && { ...c, locked: true })}
+              onRelease={() => void finishCapture()}
+              onCancel={cancelCapture}
+              onSend={() => (preview ? closePreview(true) : void finishCapture())}
+              onSlide={setSlide}
+            />
+          ) : (
             <Pressable
-              onPress={() => void stopRecording(true)}
-              accessibilityLabel={tr.composer.sendVoice}
-              style={[styles.round40, { backgroundColor: brand }]}
+              onPress={() => void submit()}
+              onLongPress={editing ? undefined : () => canSubmit && setScheduling(true)}
+              accessibilityHint={editing ? undefined : tr.composer.holdToSchedule}
+              disabled={!canSubmit}
+              accessibilityLabel={editing ? tr.common.save : tr.common.send}
+              style={[styles.round40, { backgroundColor: brand, opacity: canSubmit ? 1 : 0.4 }]}
             >
-              <SendHorizontal size={20} color={brandInk} />
+              {editing ? (
+                <Check size={20} strokeWidth={2.6} color={brandInk} />
+              ) : (
+                <SendHorizontal size={20} color={brandInk} />
+              )}
             </Pressable>
-          </View>
-        ) : (
-          <View style={styles.row}>
-            {!editing && (
-              <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel={tr.composer.attach} style={styles.round40}>
-                <Paperclip size={22} color={t.muted} />
-              </Pressable>
-            )}
-            {!editing && scheduledCount > 0 && (
-              <Pressable
-                onPress={() => setShowScheduled(true)}
-                accessibilityLabel={tr.composer.scheduledCount(scheduledCount)}
-                style={styles.round40}
-              >
-                <CalendarClock size={22} color={brand} />
-              </Pressable>
-            )}
-            <View style={[styles.field, { backgroundColor: t.surface, borderColor: t.border }]}>
-              <Pressable
-                onPress={() => {
-                  if (emoji) input.current?.focus();
-                  else input.current?.blur();
-                  setEmoji(!emoji);
-                }}
-                accessibilityLabel={tr.composer.pickerTabs.emoji}
-                style={[styles.round40, emoji && { backgroundColor: "rgba(235,138,0,0.2)" }]}
-              >
-                <Smile size={22} color={emoji ? brand : t.muted} />
-              </Pressable>
-              <TextInput
-                ref={input}
-                value={text}
-                onChangeText={typeText}
-                onFocus={() => setEmoji(false)}
-                selection={forced}
-                onSelectionChange={(e) => {
-                  selection.current = e.nativeEvent.selection;
-                  setHasSelection(e.nativeEvent.selection.end > e.nativeEvent.selection.start);
-                  if (forced) setForced(undefined);
-                }}
-                multiline
-                maxLength={4000}
-                placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
-                placeholderTextColor={t.muted}
-                accessibilityLabel={tr.common.message}
-                style={[styles.input, { color: t.text }]}
-              />
-              <Pressable
-                onPress={spoilerButton}
-                accessibilityLabel={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
-                accessibilityState={{ selected: !editing && spoiler }}
-                style={styles.round40}
-              >
-                <EyeOff size={20} color={spoiler && !editing ? brand : t.faint} />
-              </Pressable>
-              {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
-            </View>
-            {showMic ? (
-              <Pressable
-                onPress={() => void startRecording()}
-                disabled={!realtime}
-                accessibilityLabel={tr.composer.recordVoice}
-                style={[styles.round40, { backgroundColor: brand, opacity: realtime ? 1 : 0.4 }]}
-              >
-                <Mic size={20} color={brandInk} />
-              </Pressable>
-            ) : (
-              <Pressable
-                onPress={() => void submit()}
-                onLongPress={editing ? undefined : () => canSubmit && setScheduling(true)}
-                accessibilityHint={editing ? undefined : tr.composer.holdToSchedule}
-                disabled={!canSubmit}
-                accessibilityLabel={editing ? tr.common.save : tr.common.send}
-                style={[styles.round40, { backgroundColor: brand, opacity: canSubmit ? 1 : 0.4 }]}
-              >
-                {editing ? (
-                  <Check size={20} strokeWidth={2.6} color={brandInk} />
-                ) : (
-                  <SendHorizontal size={20} color={brandInk} />
-                )}
-              </Pressable>
-            )}
-          </View>
-        )}
+          )}
+        </View>
       </View>
 
       {attachMenu && (
@@ -527,21 +735,22 @@ export function Composer({
           actions={[
             { label: tr.composer.photoOrVideo, onSelect: () => void pick(pickMedia) },
             { label: tr.composer.camera, onSelect: () => void pick(takePhoto) },
-            { label: tr.summary.kinds.video_note, onSelect: () => setNoteRecorder(true) },
             { label: tr.summary.kinds.file, onSelect: () => void pick(pickFiles) },
+            { label: tr.composer.audio, onSelect: () => void pick(() => pickFiles("audio/*")) },
+            { label: tr.composer.location, onSelect: () => setAskLocation(true) },
+            { label: tr.composer.checklist, onSelect: () => setWritingChecklist(true) },
           ]}
         />
       )}
-      <EmojiPicker inline open={emoji} onClose={closeEmoji} onPick={insert} />
-      {noteRecorder && (
-        <VideoNoteRecorder
-          initialEphemeral={ephemeral}
-          onClose={() => setNoteRecorder(false)}
-          onSend={(file, chosen) => {
-            setNoteRecorder(false);
-            send(file, chosen);
-          }}
+      {askLocation && (
+        <Sheet
+          title={tr.composer.sendLocationTitle}
+          onClose={() => setAskLocation(false)}
+          actions={[{ label: tr.composer.sendLocation, onSelect: () => void sendLocation() }]}
         />
+      )}
+      {writingChecklist && (
+        <NewChecklist onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
       {scheduling && (
         <ScheduleDialog title={tr.composer.scheduleMessage} onClose={() => setScheduling(false)} onPick={(when) => void schedule(when)} />
@@ -565,6 +774,7 @@ const styles = StyleSheet.create({
   modeBar: { flexDirection: "row", alignItems: "center", gap: 12, borderLeftWidth: 4, borderLeftColor: brand, paddingLeft: 12 },
   ephemeralBar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 },
   toolbar: { flexDirection: "row", gap: 6 },
+  suggestion: { fontSize: 22 },
   format: {
     width: 36,
     height: 36,
@@ -583,8 +793,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   recordingField: { alignItems: "center", gap: 8, paddingHorizontal: 16 },
+  gone: { display: "none" },
   redDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#ef4444" },
-  input: { flex: 1, fontSize: 16, lineHeight: 22, maxHeight: 160, paddingTop: 9, paddingBottom: 9 },
+  input: { flex: 1, fontSize: 16, lineHeight: 22, maxHeight: 160, paddingTop: 9, paddingBottom: 9, paddingLeft: 16 },
   round40: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   round32: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
 });

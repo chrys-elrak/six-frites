@@ -1,12 +1,13 @@
 "use client";
 
 import { kindFor } from "@six/sdk";
-import type { EphemeralInput, UploadKind } from "@six/shared";
-import { EyeOff, FileText, SendHorizontal, X } from "lucide-react";
+import { type EphemeralInput, type UploadKind, stripAudio } from "@six/shared";
+import { EyeOff, FileText, Pencil, SendHorizontal, Volume2, VolumeX, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { formatBytes } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { EphemeralPicker } from "./ephemeral-picker";
+import { PhotoEditor } from "./photo-editor";
 import { Portal } from "./portal";
 
 export interface PickedFile {
@@ -17,21 +18,32 @@ export interface PickedFile {
 
 interface Item extends PickedFile {
   id: string;
+  /** The video with its sound, kept while it is muted so unmuting is instant. */
+  unmuted?: File;
 }
 
 const visual = (kind: UploadKind) => kind === "image" || kind === "video";
+const editable = (item: Item) => item.kind === "image" && item.file.type !== "image/gif";
+const pill = (on: boolean) =>
+  `flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium backdrop-blur ${
+    on ? "bg-brand text-brand-ink" : "bg-black/45 text-white hover:bg-black/60"
+  }`;
 
 function Preview({
   item,
   url,
   large,
   onToggleSpoiler,
+  onEdit,
+  onToggleMute,
   onRemove,
 }: {
   item: Item;
   url: string | undefined;
   large: boolean;
   onToggleSpoiler: () => void;
+  onEdit: () => void;
+  onToggleMute: () => void;
   onRemove: () => void;
 }) {
   const tr = useT();
@@ -59,18 +71,36 @@ function Preview({
         <span className="spoiler pointer-events-none absolute inset-0 rounded-none text-white/85" aria-hidden />
       )}
       <div className="absolute inset-x-0 top-0 flex justify-between p-1.5">
-        <button
-          type="button"
-          onClick={onToggleSpoiler}
-          aria-pressed={item.spoiler}
-          title={item.spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
-          className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium backdrop-blur ${
-            item.spoiler ? "bg-brand text-brand-ink" : "bg-black/45 text-white hover:bg-black/60"
-          }`}
-        >
-          <EyeOff className="size-3.5" />
-          {large && (item.spoiler ? tr.composer.spoilerOn : tr.summary.spoiler)}
-        </button>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={onToggleSpoiler}
+            aria-pressed={item.spoiler}
+            title={item.spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
+            className={pill(item.spoiler)}
+          >
+            <EyeOff className="size-3.5" />
+            {large && (item.spoiler ? tr.composer.spoilerOn : tr.summary.spoiler)}
+          </button>
+          {editable(item) && (
+            <button type="button" onClick={onEdit} title={tr.composer.editPhoto} className={pill(false)}>
+              <Pencil className="size-3.5" />
+              {large && tr.composer.edit}
+            </button>
+          )}
+          {item.kind === "video" && (
+            <button
+              type="button"
+              onClick={onToggleMute}
+              aria-pressed={!!item.unmuted}
+              title={item.unmuted ? tr.composer.unmute : tr.composer.mute}
+              className={pill(!!item.unmuted)}
+            >
+              {item.unmuted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+              {large && (item.unmuted ? tr.composer.muted : tr.composer.mute)}
+            </button>
+          )}
+        </div>
         <button
           type="button"
           onClick={onRemove}
@@ -110,6 +140,9 @@ export function AttachDialog({
   const fileIds = items.map((i) => i.id).join();
   const [caption, setCaption] = useState(initialCaption);
   const [ephemeral, setEphemeral] = useState(initialEphemeral);
+  const [editing, setEditing] = useState<Item | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [muting, setMuting] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const made = Object.fromEntries(items.map((i) => [i.id, URL.createObjectURL(i.file)]));
@@ -134,8 +167,28 @@ export function AttachDialog({
   const update = (id: string, patch: Partial<Item>) =>
     setItems((list) => list.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   const remove = (id: string) => setItems((list) => list.filter((i) => i.id !== id));
+  const swap = (id: string, file: File, unmuted?: File) => update(id, { id: crypto.randomUUID(), file, unmuted });
+  async function toggleMute(item: Item) {
+    setError(null);
+    if (item.unmuted) return swap(item.id, item.unmuted);
+    setMuting(true);
+    try {
+      const bytes = new Uint8Array(await item.file.arrayBuffer());
+      if (stripAudio(bytes)) swap(item.id, new File([bytes], item.file.name, { type: item.file.type }), item.file);
+      else setError(tr.composer.couldNotMute);
+    } finally {
+      setMuting(false);
+    }
+  }
+  const handlers = (item: Item) => ({
+    onToggleSpoiler: () => update(item.id, { spoiler: !item.spoiler }),
+    onEdit: () => setEditing(item),
+    onToggleMute: () => void toggleMute(item),
+    onRemove: () => remove(item.id),
+  });
   const send = () =>
     items.length &&
+    !muting &&
     onSend(
       items.map(({ file, kind, spoiler }) => ({ file, kind, spoiler })),
       caption,
@@ -174,25 +227,12 @@ export function AttachDialog({
 
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4">
             {single ? (
-              <Preview
-                item={media[0]!}
-                url={urls[media[0]!.id]}
-                large
-                onToggleSpoiler={() => update(media[0]!.id, { spoiler: !media[0]!.spoiler })}
-                onRemove={() => remove(media[0]!.id)}
-              />
+              <Preview item={media[0]!} url={urls[media[0]!.id]} large {...handlers(media[0]!)} />
             ) : (
               media.length > 0 && (
                 <div className="grid grid-cols-3 gap-1.5">
                   {media.map((item) => (
-                    <Preview
-                      key={item.id}
-                      item={item}
-                      url={urls[item.id]}
-                      large={false}
-                      onToggleSpoiler={() => update(item.id, { spoiler: !item.spoiler })}
-                      onRemove={() => remove(item.id)}
-                    />
+                    <Preview key={item.id} item={item} url={urls[item.id]} large={false} {...handlers(item)} />
                   ))}
                 </div>
               )
@@ -218,6 +258,11 @@ export function AttachDialog({
             ))}
             {media.length > 0 && (
               <p className="px-1 text-xs text-stone-500">{tr.composer.spoilerTip}</p>
+            )}
+            {error && (
+              <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
+                {error}
+              </p>
             )}
             <div className="flex items-center justify-between gap-2 pt-1">
               <span className="text-sm text-stone-500">{tr.composer.selfDestructAfterViewing}</span>
@@ -255,14 +300,25 @@ export function AttachDialog({
             />
             <button
               type="submit"
+              disabled={muting}
               aria-label={tr.common.send}
-              className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-50"
             >
               <SendHorizontal className="size-5" strokeWidth={2.2} />
             </button>
           </form>
         </div>
       </div>
+      {editing && (
+        <PhotoEditor
+          file={editing.file}
+          onCancel={() => setEditing(null)}
+          onDone={(file) => {
+            setEditing(null);
+            swap(editing.id, file);
+          }}
+        />
+      )}
     </Portal>
   );
 }

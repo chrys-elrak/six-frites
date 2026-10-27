@@ -93,6 +93,9 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (cha
     case "devices.changed":
       void qc.invalidateQueries({ queryKey: ["safety-number", e.data.userId] });
       break;
+    case "me.updated":
+      useSession.getState().setUser(e.data);
+      break;
     case "chat.delivered": {
       const d = e.data;
       patchChat(qc, d.chatId, (c) => ({

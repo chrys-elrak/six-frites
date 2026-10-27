@@ -187,20 +187,23 @@ export function VoicePlayer({
   durationMs,
   waveform,
   mine,
+  label,
 }: {
   autoPlay?: boolean;
   url: string | null;
   durationMs: number | null;
   waveform: number[] | null;
   mine: boolean;
+  label?: string;
 }) {
   const tr = useT();
   const audio = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
+  const [loadedMs, setLoadedMs] = useState(0);
   const rate = usePlaybackRate((s) => s.rate);
   const bars = waveform ?? Array.from({ length: 48 }, () => 18);
-  const total = durationMs ?? 0;
+  const total = durationMs ?? loadedMs;
 
   useEffect(() => () => audio.current?.pause(), []);
   useEffect(() => {
@@ -220,6 +223,7 @@ export function VoicePlayer({
       const el = new Audio(url);
       el.playbackRate = rate;
       el.ontimeupdate = () => setPosition(el.currentTime * 1000);
+      el.ondurationchange = () => Number.isFinite(el.duration) && setLoadedMs(el.duration * 1000);
       el.onplay = () => setPlaying(true);
       el.onpause = () => setPlaying(false);
       el.onended = () => {
@@ -251,7 +255,7 @@ export function VoicePlayer({
         type="button"
         onClick={toggle}
         disabled={!url}
-        aria-label={isPlaying ? tr.messages.pause : tr.messages.playVoice}
+        aria-label={isPlaying ? tr.messages.pause : (label ?? tr.messages.playVoice)}
         className={`grid size-10 shrink-0 place-items-center rounded-full disabled:opacity-50 ${
           mine ? "bg-brand-ink text-brand" : "bg-brand text-brand-ink"
         }`}
@@ -408,8 +412,12 @@ export function AttachmentView({
 }) {
   const tr = useT();
   const kind = attachment.data.kind;
+  const audio = kind === "file" && attachment.data.mime.startsWith("audio/");
   const [wanted, setWanted] = useState(false);
-  const decrypted = useDecrypted(attachment, wanted || kind === "image" || kind === "voice" || kind === "video_note");
+  const decrypted = useDecrypted(
+    attachment,
+    wanted || audio || kind === "image" || kind === "voice" || kind === "video_note",
+  );
   const a = view(attachment, decrypted);
   const fetching = wanted && !!decrypted && !decrypted.url && !decrypted.failed;
 
@@ -549,6 +557,15 @@ export function AttachmentView({
                 : tr.messages.processing}
           </p>
         )}
+      </div>
+    );
+  }
+
+  if (audio && a.state === "ready") {
+    return (
+      <div className="w-64 max-w-full pt-1">
+        <p className="truncate text-sm font-medium">{a.name}</p>
+        <VoicePlayer url={a.url} durationMs={a.durationMs} waveform={null} mine={mine} label={tr.messages.playAudio} />
       </div>
     );
   }

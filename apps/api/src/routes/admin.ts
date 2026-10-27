@@ -12,6 +12,7 @@ import {
   CreateReportInput,
   CreateStickerPackInput,
   Id,
+  InviteLimitInput,
   ReportDTO,
   ResolveReportInput,
   StickerDTO,
@@ -27,6 +28,7 @@ import {
   getUser,
   listStickerPacks,
   listUsers,
+  setInviteLimit,
   signOutEverywhere,
   unbanUser,
 } from "../services/admin.js";
@@ -123,6 +125,22 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     "/admin/users/:id/unban",
     { schema: { tags, summary: "Lift a ban", security, params: Params, response: { 200: AdminUserDTO } } },
     (req) => unbanUser(req.params.id),
+  );
+
+  app.post(
+    "/admin/users/:id/invite-limit",
+    {
+      schema: {
+        tags,
+        summary: "Change how many people a user can invite",
+        description: "People waiting on their links get in, oldest first, as far as the new limit allows.",
+        security,
+        params: Params,
+        body: InviteLimitInput,
+        response: { 200: AdminUserDTO },
+      },
+    },
+    (req) => setInviteLimit(req.params.id, req.body.limit),
   );
 
   app.post(

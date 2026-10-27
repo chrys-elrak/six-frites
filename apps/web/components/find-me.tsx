@@ -1,141 +1,123 @@
 "use client";
 
-import { SixApiError, unwrap } from "@six/sdk";
-import { USERNAME_PATTERN, type UpdateMeInput } from "@six/shared";
-import { useMutation } from "@tanstack/react-query";
+import { unwrap } from "@six/sdk";
+import { MAX_CONTACT_LINKS } from "@six/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { contactUrl, formatCode, shareContact } from "@/lib/format";
+import { contactUrl, formatCode, sendAtLabel, shareContact } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { QrCode } from "./qr-code";
+import { ScheduleDialog } from "./scheduled";
 import { Sheet } from "./sheet";
-import { Card, SectionTitle, Toggle } from "./ui";
+import { Card, SectionTitle } from "./ui";
+
+const SOFT = "rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700";
+const QUIET = "rounded-lg px-3 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800";
+
+function CodeRow({ code, label, children }: { code: string; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-4 p-4">
+      <QrCode value={contactUrl(code)} className="size-28 shrink-0 rounded-lg" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <div>
+          <p className="text-sm text-stone-500 dark:text-stone-400">{label}</p>
+          <p className="font-mono text-xl font-semibold tracking-widest">{formatCode(code)}</p>
+        </div>
+        <div className="flex flex-wrap gap-1">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export function FindMe() {
   const tr = useT();
+  const qc = useQueryClient();
   const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
-  const [username, setUsername] = useState(user.username ?? "");
-  const [flash, setFlash] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [choosing, setChoosing] = useState(false);
+  const [pickingDate, setPickingDate] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     void six.api.GET("/v1/me").then(({ data }) => data && setUser(data));
   }, [setUser]);
-
-  useEffect(() => setUsername(user.username ?? ""), [user.username]);
-
-  const update = useMutation({
-    mutationFn: async (body: UpdateMeInput) => unwrap(await six.api.PATCH("/v1/me", { body })),
-    onSuccess: (u) => {
-      setUser(u);
-      setUsername(u.username ?? "");
-    },
-  });
 
   const reset = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/me/contact-code")),
     onSuccess: setUser,
   });
 
-  async function share() {
-    if ((await shareContact(user.contactCode)) === "copied") {
-      setFlash(tr.settings.linkCopied);
-      setTimeout(() => setFlash(null), 1500);
+  const links = useQuery({
+    queryKey: ["contact-links"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/me/contact-links")).items,
+  });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["contact-links"] });
+  const create = useMutation({
+    mutationFn: async (expiresAt: Date | null) =>
+      unwrap(await six.api.POST("/v1/me/contact-links", { body: { expiresAt: expiresAt?.toISOString() ?? null } })),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: async (code: string) =>
+      unwrap(await six.api.DELETE("/v1/me/contact-links/{code}", { params: { path: { code } } })),
+    onSuccess: refresh,
+  });
+
+  async function share(code: string) {
+    if ((await shareContact(code)) === "copied") {
+      setCopied(code);
+      setTimeout(() => setCopied(null), 1500);
     }
   }
 
-  const typed = username.trim().replace(/^@/, "").toLowerCase();
-  const dirty = typed !== (user.username ?? "");
-  const valid = typed === "" || USERNAME_PATTERN.test(typed);
-
   if (!user.contactCode) return null;
+  const items = links.data ?? [];
 
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.findMe}</SectionTitle>
+      <Card className="overflow-hidden">
+        <CodeRow code={user.contactCode} label={tr.settings.contactCode}>
+          <button onClick={() => void share(user.contactCode)} className={SOFT}>
+            {copied === user.contactCode ? tr.settings.linkCopied : tr.common.shareLink}
+          </button>
+          <button onClick={() => setConfirmReset(true)} disabled={reset.isPending} className={QUIET}>
+            {tr.settings.newCode}
+          </button>
+        </CodeRow>
+        <p className="px-4 pb-4 text-sm text-stone-500 dark:text-stone-400">{tr.settings.oneUseHint}</p>
+      </Card>
+
+      <SectionTitle>{tr.settings.reusableCodes}</SectionTitle>
       <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
-        <div className="flex items-center gap-4 p-4">
-          <QrCode value={contactUrl(user.contactCode)} className="size-28 shrink-0 rounded-lg" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <div>
-              <p className="text-sm text-stone-500 dark:text-stone-400">{tr.settings.contactCode}</p>
-              <p className="font-mono text-xl font-semibold tracking-widest">{formatCode(user.contactCode)}</p>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              <button
-                onClick={share}
-                className="rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
-              >
-                {flash ?? tr.common.shareLink}
-              </button>
-              <button
-                onClick={() => setConfirmReset(true)}
-                disabled={reset.isPending}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-              >
-                {tr.settings.newCode}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <form
-          className="space-y-1.5 p-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (dirty && valid) update.mutate({ username: typed || null });
-          }}
-        >
-          <label htmlFor="username" className="text-sm font-medium text-stone-600 dark:text-stone-300">
-            {tr.settings.username}
-          </label>
-          <div className="flex gap-2">
-            <div className="flex min-w-0 flex-1 items-center rounded-xl bg-stone-100 px-3 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-800">
-              <span className="text-stone-400">@</span>
-              <input
-                id="username"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  update.reset();
-                }}
-                placeholder={tr.settings.usernamePlaceholder}
-                maxLength={21}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                className="min-w-0 flex-1 bg-transparent py-2.5 pl-0.5 text-[16px] outline-none md:text-sm"
-              />
-            </div>
-            {dirty && (
-              <button
-                disabled={!valid || update.isPending}
-                className="rounded-xl bg-stone-900 px-4 text-sm font-semibold text-white disabled:opacity-50 dark:bg-stone-100 dark:text-stone-900"
-              >
-                {tr.common.save}
-              </button>
-            )}
-          </div>
-          <p className={`text-xs ${update.isError || !valid ? "text-red-600 dark:text-red-400" : "text-stone-500"}`}>
-            {update.isError
-              ? update.error instanceof SixApiError
-                ? (tr.settings.usernameErrors[update.error.code] ?? update.error.message)
-                : tr.common.couldNotSave
-              : !valid
-                ? tr.settings.usernameErrors.VALIDATION_FAILED
-                : tr.settings.usernameHint}
-          </p>
-        </form>
-
-        <Toggle
-          label={tr.settings.findByEmail}
-          hint={tr.settings.findByEmailHint(user.email)}
-          checked={user.findByEmail}
-          disabled={update.isPending}
-          onChange={(findByEmail) => update.mutate({ findByEmail })}
-        />
+        <p className="p-4 text-sm text-stone-500 dark:text-stone-400">{tr.settings.reusableHint}</p>
+        {items.map((l) => (
+          <CodeRow
+            key={l.code}
+            code={l.code}
+            label={l.expiresAt ? tr.settings.worksUntil(sendAtLabel(l.expiresAt)) : tr.settings.worksUntilDeleted}
+          >
+            <button onClick={() => void share(l.code)} className={SOFT}>
+              {copied === l.code ? tr.settings.linkCopied : tr.common.shareLink}
+            </button>
+            <button onClick={() => setDeleting(l.code)} className={QUIET}>
+              {tr.common.delete}
+            </button>
+          </CodeRow>
+        ))}
+        {items.length < MAX_CONTACT_LINKS && (
+          <button
+            onClick={() => setChoosing(true)}
+            disabled={create.isPending}
+            className="w-full p-4 text-left text-sm font-semibold text-orange-600 hover:bg-stone-50 dark:text-orange-400 dark:hover:bg-stone-800/50"
+          >
+            {tr.settings.newReusableCode}
+          </button>
+        )}
       </Card>
 
       {confirmReset && (
@@ -143,6 +125,35 @@ export function FindMe() {
           title={tr.settings.resetCodeWarning}
           actions={[{ label: tr.settings.getNewCode, destructive: true, onSelect: () => reset.mutate() }]}
           onClose={() => setConfirmReset(false)}
+        />
+      )}
+      {choosing && (
+        <Sheet
+          title={tr.settings.newReusableCode}
+          actions={[
+            { label: tr.settings.untilDeleted, onSelect: () => create.mutate(null) },
+            { label: tr.settings.untilDate, onSelect: () => setPickingDate(true) },
+          ]}
+          onClose={() => setChoosing(false)}
+        />
+      )}
+      {pickingDate && (
+        <ScheduleDialog
+          title={tr.settings.stopsWorking}
+          confirm={tr.settings.create}
+          initial={new Date(Date.now() + 7 * 864e5)}
+          onPick={(at) => {
+            setPickingDate(false);
+            create.mutate(at);
+          }}
+          onClose={() => setPickingDate(false)}
+        />
+      )}
+      {deleting && (
+        <Sheet
+          title={tr.settings.deleteCodeWarning}
+          actions={[{ label: tr.common.delete, destructive: true, onSelect: () => remove.mutate(deleting) }]}
+          onClose={() => setDeleting(null)}
         />
       )}
     </section>

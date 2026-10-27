@@ -1,9 +1,10 @@
-import type { Invite } from "../generated/prisma/client.js";
+import type { Invite, User } from "../generated/prisma/client.js";
 import {
   AppError,
   type CreateInviteInput,
   type InviteDTO,
   type InvitePreview,
+  type InviteQuota,
   type InviteStatus,
   type PageQuery,
 } from "@six/shared";
@@ -11,6 +12,7 @@ import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
+import { isAdminEmail } from "../plugins/auth.js";
 import { ensureDirectChat } from "./chats.js";
 import { profilesFor } from "./contacts.js";
 import { toPublicUser } from "./users.js";
@@ -87,9 +89,40 @@ async function usableInvite(tx: Tx, code: string, userId: string) {
   return invite;
 }
 
-/** Labels a new account with the link it signed up with, takes one of the link's places and connects both people. */
-export async function applyInvite(tx: Tx, emit: Emit, refereeId: string, code: string) {
-  const invite = await usableInvite(tx, code, refereeId);
+/** How many people each user brought in with their links, and how many are waiting on their limit. */
+export async function invitesOf(db: Tx, userIds: string[]) {
+  const rows = userIds.length
+    ? await db.$queryRaw<{ referrerId: string; invited: bigint; waiting: bigint }[]>`
+        SELECT r."referrerId",
+          count(*) FILTER (WHERE u."queuedAt" IS NULL) AS invited,
+          count(*) FILTER (WHERE u."queuedAt" IS NOT NULL) AS waiting
+        FROM "Referral" r JOIN "User" u ON u.id = r."refereeId"
+        WHERE r."referrerId" = ANY(${userIds}::text[]) GROUP BY 1`
+    : [];
+  const byId = new Map(rows.map((r) => [r.referrerId, { invited: Number(r.invited), waiting: Number(r.waiting) }]));
+  return (id: string) => byId.get(id) ?? { invited: 0, waiting: 0 };
+}
+
+/** Places left under someone's invite limit. Locks their row so two sign-ups can't both take the last one. */
+async function roomLeft(tx: Tx, referrer: User) {
+  if (isAdminEmail(referrer.email)) return Infinity;
+  await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${referrer.id} FOR UPDATE`;
+  const { inviteLimit } = await tx.user.findUniqueOrThrow({ where: { id: referrer.id }, select: { inviteLimit: true } });
+  return inviteLimit - (await invitesOf(tx, [referrer.id]))(referrer.id).invited;
+}
+
+export async function inviteQuota(userId: string): Promise<InviteQuota> {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  return { limit: isAdminEmail(user.email) ? null : user.inviteLimit, ...(await invitesOf(prisma, [userId]))(userId) };
+}
+
+/**
+ * Labels a new account with the link it signed up with and takes one of the link's places. If the link's
+ * owner has already brought in as many people as their limit allows, the account waits in line until an
+ * admin raises it; otherwise both people are connected.
+ */
+export async function applyInvite(tx: Tx, emit: Emit, referee: User, code: string) {
+  const invite = await usableInvite(tx, code, referee.id);
 
   const claimed = await tx.invite.updateMany({
     where: { id: invite.id, ...(invite.maxUses !== null && { uses: { lt: invite.maxUses } }) },
@@ -97,12 +130,28 @@ export async function applyInvite(tx: Tx, emit: Emit, refereeId: string, code: s
   });
   if (claimed.count === 0) throw new AppError("INVITE_EXHAUSTED");
 
-  const referral = await tx.referral.create({
-    data: { inviteId: invite.id, referrerId: invite.creatorId, refereeId },
-    include: { referrer: true },
+  const room = await roomLeft(tx, invite.creator);
+  await tx.referral.create({ data: { inviteId: invite.id, referrerId: invite.creatorId, refereeId: referee.id } });
+  if (room <= 0) return tx.user.update({ where: { id: referee.id }, data: { queuedAt: new Date() } });
+  await ensureDirectChat(tx, emit, invite.creatorId, referee.id);
+  return referee;
+}
+
+/** Lets in the people waiting on someone's links, first come first served, while they have room. */
+export async function admitQueued(referrerId: string) {
+  await withEvents(async (tx, emit) => {
+    const room = await roomLeft(tx, await tx.user.findUniqueOrThrow({ where: { id: referrerId } }));
+    if (room <= 0) return;
+    const waiting = await tx.referral.findMany({
+      where: { referrerId, referee: { queuedAt: { not: null } } },
+      orderBy: { createdAt: "asc" },
+      ...(Number.isFinite(room) && { take: room }),
+    });
+    for (const r of waiting) {
+      await tx.user.update({ where: { id: r.refereeId }, data: { queuedAt: null } });
+      await ensureDirectChat(tx, emit, referrerId, r.refereeId);
+    }
   });
-  await ensureDirectChat(tx, emit, invite.creatorId, refereeId);
-  return referral;
 }
 
 /** Connects someone who already has an account with the link's owner. It doesn't take one of the link's places. */
@@ -124,7 +173,7 @@ export async function acceptInvite(userId: string, code: string) {
 
 export async function listReferrals(userId: string, q: PageQuery) {
   const rows = await prisma.referral.findMany({
-    where: { referrerId: userId },
+    where: { referrerId: userId, referee: { queuedAt: null } },
     include: { referee: true, invite: { select: { code: true } } },
     ...pageArgs(q),
   });

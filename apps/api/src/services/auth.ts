@@ -1,8 +1,10 @@
 import { createId } from "@paralleldrive/cuid2";
 import { AppError, type AuthResult, type DeviceInfo, type GoogleLoginInput } from "@six/shared";
+import { env } from "../env.js";
 import { type Tx, withEvents } from "../lib/events.js";
 import { type GoogleVerifier, verifyGoogleIdToken } from "../lib/google.js";
 import { prisma } from "../lib/prisma.js";
+import { isAdminEmail } from "../plugins/auth.js";
 import {
   REFRESH_TTL_SECS,
   newRefreshToken,
@@ -31,10 +33,13 @@ export async function loginWithGoogle(
 ): Promise<IssuedAuth> {
   const identity = await verify(input.idToken);
 
-  const { user, session, refresh } = await withEvents(async (tx, emit) => {
+  const signedIn = await withEvents(async (tx, emit) => {
     const existing = await tx.user.findUnique({ where: { googleSub: identity.sub } });
     if (existing?.bannedAt) throw new AppError("ACCOUNT_BANNED", "This account has been banned");
-    const user =
+    if (!existing && !input.inviteCode && env.INVITE_ONLY && !isAdminEmail(identity.email)) {
+      throw new AppError("INVITE_REQUIRED", "Sign up with an invite link from someone already on Six Frites");
+    }
+    let user =
       existing ??
       (await tx.user.create({
         data: {
@@ -45,11 +50,14 @@ export async function loginWithGoogle(
         },
       }));
 
-    if (input.inviteCode && !existing) await applyInvite(tx, emit, user.id, input.inviteCode);
+    if (input.inviteCode && !existing) user = await applyInvite(tx, emit, user, input.inviteCode);
+    if (user.queuedAt) return null;
 
     const session = await createSession(tx, user.id, input.device);
     return { user, ...session };
   });
+  if (!signedIn) throw new AppError("ACCOUNT_QUEUED", "You're on the waiting list and will be let in soon");
+  const { user, session, refresh } = signedIn;
 
   return {
     ...(await issueAccess(user.id, session.id)),

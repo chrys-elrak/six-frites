@@ -15,8 +15,7 @@ import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
 import { SafetyNumber } from "./encryption-settings";
-import { Toggle } from "./settings-panel";
-import { IconButton, Notice, PrimaryButton } from "./ui";
+import { IconButton, Notice, PrimaryButton, Toggle } from "./ui";
 
 const MAX_BYTES = 64 * 1024;
 

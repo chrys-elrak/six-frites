@@ -10,7 +10,6 @@ import { BlockedPeople, DeleteAccount } from "./account-settings";
 import { AppLockSettings } from "./app-lock";
 import { AdminLink } from "./admin/admin-link";
 import { AndroidDownload } from "./android-download";
-import { ChatBackgroundPicker } from "./chat-background";
 import { Devices } from "./devices";
 import { EncryptionSettings, useHasRecoveryKey } from "./encryption-settings";
 import { FindMe } from "./find-me";
@@ -73,7 +72,6 @@ export function SettingsPanel() {
           <AndroidDownload />
           <LanguagePicker />
           <FindMe />
-          <ChatBackgroundPicker />
           <NotificationSettings />
           <Invites />
           <Referrals />

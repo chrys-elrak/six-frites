@@ -147,18 +147,20 @@ function SpeedButton({ tint, bg }: { tint: string; bg: string }) {
   );
 }
 
-function VoicePlayer({
+export function VoicePlayer({
   url,
   durationMs,
   waveform,
   mine,
   autoPlay = false,
+  label,
 }: {
   url: string | null;
   durationMs: number | null;
   waveform: number[] | null;
   mine: boolean;
   autoPlay?: boolean;
+  label?: string;
 }) {
   const tr = useT();
   const player = useAudioPlayer(null);
@@ -216,7 +218,7 @@ function VoicePlayer({
       <Pressable
         onPress={toggle}
         disabled={!url}
-        accessibilityLabel={status.playing ? tr.messages.pause : tr.messages.playVoice}
+        accessibilityLabel={status.playing ? tr.messages.pause : (label ?? tr.messages.playVoice)}
         style={[styles.voiceButton, { backgroundColor: mine ? bubble.ink : brand, opacity: url ? 1 : 0.5 }]}
       >
         {status.playing ? (
@@ -260,6 +262,16 @@ function VoicePlayer({
 }
 
 const NOTE = 224;
+
+function GifLoop({ url }: { url: string }) {
+  const player = useVideoPlayer(url, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.audioMixingMode = "mixWithOthers";
+    p.play();
+  });
+  return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} surfaceType="textureView" />;
+}
 
 function VideoNotePlayer({ url, onDone }: { url: string; onDone: () => void }) {
   const rate = usePlaybackRate((s) => s.rate);
@@ -410,6 +422,31 @@ export function AttachmentView({
   const a = view(attachment);
   const [busy, setBusy] = useState(false);
 
+  if (a.kind === "gif") {
+    const size = boxSize(a.width, a.height, Math.min(280, maxWidth));
+    return (
+      <Pressable
+        onPress={onReveal}
+        disabled={!hidden}
+        accessibilityLabel={hidden ? tr.messages.revealSpoiler : a.name}
+        style={[styles.visual, size, { backgroundColor: t.dark ? stone[700] : stone[200] }]}
+      >
+        {hidden ? (
+          <View style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: "rgba(0,0,0,0.25)" }]}>
+            <View style={styles.chip}>
+              <EyeOff size={14} color="#fff" />
+              <Text style={styles.chipText}>{tr.summary.spoiler}</Text>
+            </View>
+          </View>
+        ) : attachment.source === "local" ? (
+          a.url && <Image source={{ uri: a.url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        ) : (
+          a.url && <GifLoop url={a.url} />
+        )}
+      </Pressable>
+    );
+  }
+
   if (a.kind === "image" || a.kind === "video") {
     const size = boxSize(a.width, a.height, Math.min(280, maxWidth));
     const ready = a.state === "ready" && a.url;
@@ -500,8 +537,19 @@ export function AttachmentView({
     );
   }
 
-  const ready = a.state === "ready" && attachment.source === "server" && a.url;
   const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
+  if (a.kind === "file" && a.mime.startsWith("audio/") && a.state === "ready") {
+    return (
+      <View style={{ width: 256, maxWidth: "100%", paddingTop: 4 }}>
+        <Text numberOfLines={1} style={{ color: fg, fontSize: 14, fontWeight: "600" }}>
+          {a.name}
+        </Text>
+        <VoicePlayer url={a.url} durationMs={a.durationMs} waveform={null} mine={mine} label={tr.messages.playAudio} />
+      </View>
+    );
+  }
+
+  const ready = a.state === "ready" && attachment.source === "server" && a.url;
   return (
     <Pressable
       disabled={!ready || busy}

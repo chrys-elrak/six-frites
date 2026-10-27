@@ -31,6 +31,7 @@ import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { usePresence, useWatchPresence } from "@/lib/presence";
 import { useTyping } from "@/lib/typing";
+import { useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
@@ -94,7 +95,9 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
     const extra =
       m.type === "file" && m.attachment && !m.text
         ? ` · ${m.attachment.name}`
-        : m.text
+        : m.type === "checklist" && m.checklist
+          ? ` · ${m.checklist.title}`
+          : m.text
           ? ` · ${maskSpoilers(m.text, m.entities)}`
           : "";
     return line(
@@ -123,6 +126,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const tr = useT();
   const [menu, setMenu] = useState(false);
   const typing = useTyping(chat.id);
+  const draft = useDrafts((s) => s.byChat[chat.id]);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const online = usePresence(peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
@@ -152,6 +156,10 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
             <View style={{ flex: 1 }}>
               {typing ? (
                 <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing[typing]}</Text>
+              ) : draft ? (
+                <Text numberOfLines={1} style={[styles.preview, { color: t.muted }]}>
+                  <Text style={{ color: t.danger }}>{tr.chats.draft}</Text> {draft.replace(/\s+/g, " ")}
+                </Text>
               ) : (
                 <Preview chat={chat} meId={meId} color={unread ? t.text : t.muted} />
               )}

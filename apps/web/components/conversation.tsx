@@ -43,6 +43,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pickerSlot, setPickerSlot] = useState<HTMLDivElement | null>(null);
   const typing = useTyping(chatId);
   const selecting = useSelection((s) => s.chatId === chatId);
   const selectedIds = useSelection((s) => s.ids);
@@ -222,42 +223,48 @@ export function Conversation({ chatId }: { chatId: string }) {
         </header>
       )}
 
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        <ChatBackground themeId={c.theme} />
-        <BubbleColors themeId={c.theme} scope="chat-colors" />
-        <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
-          <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <ChatBackground themeId={c.theme} />
+            <BubbleColors themeId={c.theme} scope="chat-colors" />
+            <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
+              <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
+            </div>
+          </div>
+          {!selecting && keysChanged && (
+            <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+              <ShieldAlert className="size-4 shrink-0" />
+              <p className="min-w-0 flex-1">
+                {tr.chat.securityCodeChanged(peer.displayName)}
+              </p>
+              <button onClick={() => setEditing(true)} className="shrink-0 font-semibold underline-offset-2 hover:underline">
+                {tr.chat.verify}
+              </button>
+              <button
+                onClick={() => dismissKeys(peer.id)}
+                aria-label={tr.common.dismiss}
+                className="shrink-0 rounded-full p-1"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          )}
+          {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
+          {!selecting && !frozen && (
+            <div className="chat-colors contents">
+              <Composer
+                chatId={chatId}
+                nameOf={nameOf}
+                scheduledCount={c.scheduledCount}
+                onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
+                pickerSlot={pickerSlot}
+              />
+            </div>
+          )}
         </div>
+        <div ref={setPickerSlot} className="chat-colors contents" />
       </div>
-      {!selecting && keysChanged && (
-        <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          <ShieldAlert className="size-4 shrink-0" />
-          <p className="min-w-0 flex-1">
-            {tr.chat.securityCodeChanged(peer.displayName)}
-          </p>
-          <button onClick={() => setEditing(true)} className="shrink-0 font-semibold underline-offset-2 hover:underline">
-            {tr.chat.verify}
-          </button>
-          <button
-            onClick={() => dismissKeys(peer.id)}
-            aria-label={tr.common.dismiss}
-            className="shrink-0 rounded-full p-1"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-      )}
-      {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
-      {!selecting && !frozen && (
-        <div className="chat-colors contents">
-          <Composer
-            chatId={chatId}
-            nameOf={nameOf}
-            scheduledCount={c.scheduledCount}
-            onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
-          />
-        </div>
-      )}
 
       {menu && (
         <ChatMenu

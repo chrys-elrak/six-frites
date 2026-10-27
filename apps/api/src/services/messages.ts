@@ -1,11 +1,14 @@
 import { type Message, Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
+  CHECKLIST,
+  type Checklist,
   type DeleteChatQuery,
   type DeleteMessagesQuery,
   type EncryptedInput,
   type EncryptionDTO,
   type EditMessageInput,
+  type GeoPoint,
   type MessageDTO,
   type MessageEntity,
   type MessageType,
@@ -37,6 +40,7 @@ export const messageInclude = {
   reactions: { orderBy: { createdAt: "asc" } },
   envelopes: { include: { device: { select: { userId: true } } } },
   backups: true,
+  marks: { orderBy: { item: "asc" } },
 } satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
 
@@ -137,6 +141,9 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
       : null,
     replyTo: r ? toReplyPreview(r) : null,
     action: (m.action as ServiceAction | null) ?? null,
+    location: hideContent ? null : ((m.location as GeoPoint | null) ?? null),
+    checklist: hideContent ? null : ((m.checklist as Checklist | null) ?? null),
+    checks: hideContent ? [] : m.marks.map((k) => ({ item: k.item, userId: k.userId, at: k.createdAt.toISOString() })),
     createdAt: m.createdAt.toISOString(),
     editedAt: m.editedAt?.toISOString() ?? null,
     deletedAt: m.deletedAt?.toISOString() ?? null,
@@ -197,7 +204,10 @@ export function checkEncryption(
     return;
   }
   if (upload?.encrypted) throw new AppError("VALIDATION_FAILED", "This file is encrypted; send it in encrypted content");
-  if (chat.encryptedAt && (content.text !== undefined || (upload && upload.kind !== "gif"))) {
+  if (
+    chat.encryptedAt &&
+    (content.text !== undefined || content.location || content.checklist || (upload && upload.kind !== "gif"))
+  ) {
     throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
   }
 }
@@ -273,7 +283,7 @@ export async function createMessage(
       chatId,
       senderId: userId,
       clientId: input.clientId,
-      type: content ? (content.stickerId ? "sticker" : (upload?.kind ?? "text")) : "service",
+      type: content ? (content.stickerId ? "sticker" : (upload?.kind ?? kindOf(content))) : "service",
       text: content?.text ?? null,
       entities: storedEntities(content?.entities),
       attachmentId: upload?.id ?? null,
@@ -283,6 +293,8 @@ export async function createMessage(
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,
       ...("action" in input && { action: input.action }),
+      ...(content?.location && { location: content.location }),
+      ...(content?.checklist && { checklist: content.checklist }),
       encrypted: !!encrypted,
       senderDevice,
       ...(envelopes.length && {
@@ -314,6 +326,9 @@ export async function createMessage(
   }
   return { message, recipients: members.filter((id) => id !== userId) };
 }
+
+const kindOf = (c: SendMessageInput) =>
+  c.type ?? (c.location ? "location" : c.checklist ? "checklist" : "text");
 
 /** Swaps a `gifId` for a stored copy of that GIF, checking membership first so only members trigger downloads. */
 export async function resolveGif<T extends SendMessageInput>(userId: string, chatId: string, input: T): Promise<T> {
@@ -356,7 +371,11 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     });
     if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
     await assertCanMessage(tx, message.chatId, userId);
-    if (message.deletedAt || isEphemeral(message) || message.type === "service" || message.type === "sticker") {
+    if (
+      message.deletedAt ||
+      isEphemeral(message) ||
+      ["service", "sticker", "location", "checklist"].includes(message.type)
+    ) {
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
     const chat = await tx.chat.findUniqueOrThrow({ where: { id: message.chatId }, select: { encryptedAt: true } });
@@ -435,6 +454,26 @@ export async function setReaction(userId: string, messageId: string, emoji: stri
   });
   if (result.authorId) await queueReactionPush(messageId, result.authorId, userId, emoji).catch(() => null);
   return result.dto;
+}
+
+/**
+ * Ticks (`done`) or unticks one checklist item for both people. Encrypted checklists keep their
+ * items in the envelopes, so the server only bounds the index by the largest checklist.
+ */
+export async function checkItem(userId: string, messageId: string, item: number, done: boolean) {
+  return withEvents(async (tx, emit) => {
+    const message = await reactableMessage(tx, userId, messageId);
+    const items = (message.checklist as Checklist | null)?.items.length ?? CHECKLIST.items;
+    if (message.type !== "checklist" || item >= items) throw new AppError("NOT_FOUND", "No such checklist item");
+
+    const key = { messageId_item: { messageId, item } };
+    if (done) await tx.checklistMark.upsert({ where: key, create: { messageId, item, userId }, update: {} });
+    else await tx.checklistMark.deleteMany({ where: { messageId, item } });
+
+    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    return toMessageDTO(updated, userId);
+  });
 }
 
 /**

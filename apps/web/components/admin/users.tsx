@@ -11,7 +11,72 @@ import { six } from "@/lib/six";
 import { Avatar } from "../avatar";
 import { Dialog } from "../dialog";
 import { Sheet } from "../sheet";
+import { PrimaryButton } from "../ui";
 import { Segmented } from "./segmented";
+
+function LimitDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [limit, setLimit] = useState(String(user.inviteLimit));
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Dialog onClose={onClose}>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            unwrap(
+              await six.api.POST("/v1/admin/users/{id}/invite-limit", {
+                params: { path: { id: user.id } },
+                body: { limit: Number(limit) },
+              }),
+            );
+            refreshAdmin(qc);
+            onClose();
+          } catch (err) {
+            setError((err as Error).message);
+          }
+        }}
+        className="space-y-3 p-4"
+      >
+        <h2 className="font-semibold">Invite limit for {user.displayName}</h2>
+        <p className="text-sm text-stone-500">
+          {user.invited} joined with their links{user.waiting > 0 && `, ${user.waiting} waiting`}. Raising the limit
+          lets the people waiting in, oldest first.
+        </p>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={100000}
+          required
+          value={limit}
+          onChange={(e) => setLimit(e.target.value)}
+          autoFocus
+          aria-label="Invite limit"
+          className="block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800 md:text-sm"
+        />
+        {error && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
+          >
+            Cancel
+          </button>
+          <PrimaryButton type="submit" className="flex-1">
+            Save
+          </PrimaryButton>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
 
 function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void }) {
   const qc = useQueryClient();
@@ -82,6 +147,7 @@ function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void 
 function UserRow({ u }: { u: AdminUserDTO }) {
   const qc = useQueryClient();
   const [banning, setBanning] = useState(false);
+  const [limiting, setLimiting] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   async function act(path: "/v1/admin/users/{id}/unban" | "/v1/admin/users/{id}/sign-out") {
@@ -97,11 +163,14 @@ function UserRow({ u }: { u: AdminUserDTO }) {
           {u.displayName}
           {u.admin && <span className="ml-1.5 text-xs text-brand">Admin</span>}
           {u.bannedAt && <span className="ml-1.5 text-xs text-red-600 dark:text-red-400">Banned</span>}
+          {u.queued && <span className="ml-1.5 text-xs text-amber-600 dark:text-amber-400">Waiting</span>}
         </p>
         <p className="truncate text-xs text-stone-500">{u.email}</p>
         <p className="text-xs text-stone-500">
           Joined {timeAgo(u.createdAt)} · {u.lastActiveAt ? `active ${timeAgo(u.lastActiveAt)}` : "signed out"} ·{" "}
-          {u.chats} chats · {u.messages} messages · {formatBytes(u.storageBytes)} stored
+          {u.chats} chats · {u.messages} messages · {formatBytes(u.storageBytes)} stored · invited{" "}
+          {u.admin ? u.invited : `${u.invited}/${u.inviteLimit}`}
+          {u.waiting > 0 && <span className="text-amber-600 dark:text-amber-400"> · {u.waiting} waiting</span>}
           {u.openReports > 0 && (
             <span className="text-red-600 dark:text-red-400">
               {" "}
@@ -113,6 +182,13 @@ function UserRow({ u }: { u: AdminUserDTO }) {
       </div>
       {!u.admin && (
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setLimiting(true)}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
+          >
+            Invite limit
+          </button>
           {u.activeSessions > 0 && (
             <button
               type="button"
@@ -142,6 +218,7 @@ function UserRow({ u }: { u: AdminUserDTO }) {
         </div>
       )}
       {banning && <BanDialog user={u} onClose={() => setBanning(false)} />}
+      {limiting && <LimitDialog user={u} onClose={() => setLimiting(false)} />}
       {signingOut && (
         <Sheet
           title={`Sign ${u.displayName} out of ${u.activeSessions} device${u.activeSessions === 1 ? "" : "s"}?`}

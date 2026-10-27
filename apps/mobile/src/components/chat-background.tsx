@@ -2,7 +2,6 @@ import { type ChatTheme, chatTheme, DOODLES, type DoodleNode, WALLPAPER_LAYOUT, 
 import { memo } from "react";
 import { StyleSheet } from "react-native";
 import Svg, { Circle, Defs, G, LinearGradient, Path, Pattern, Rect, Stop } from "react-native-svg";
-import { useChatTheme } from "@/lib/chat-themes";
 import { useTheme } from "@/lib/theme";
 
 function Doodle({ nodes }: { nodes: DoodleNode[] }) {
@@ -52,10 +51,9 @@ export const Wallpaper = memo(function Wallpaper({ theme, dark, id }: { theme: C
   );
 });
 
-/** The wallpaper behind a chat: its shared background if one is set, otherwise your default. */
+/** The wallpaper behind a chat: its shared background if one is set, otherwise Frites. */
 export function ChatBackground({ themeId }: { themeId: string | null }) {
-  const fallback = useChatTheme();
-  const theme = themeId ? chatTheme(themeId) : fallback;
+  const theme = chatTheme(themeId);
   const t = useTheme();
   return <Wallpaper theme={theme} dark={t.dark} id="chat" />;
 }

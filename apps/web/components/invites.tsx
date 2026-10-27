@@ -7,6 +7,7 @@ import {
   MAX_INVITE_DAYS,
   MAX_INVITE_MESSAGE,
   MAX_INVITE_USES,
+  quotaSummary,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
@@ -181,6 +182,11 @@ export function Invites() {
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
 
+  const quota = useQuery({
+    queryKey: ["invite-quota"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/me/invite-quota")),
+  });
+
   const revoke = useMutation({
     mutationFn: async (code: string) =>
       unwrap(await six.api.POST("/v1/invites/{code}/revoke", { params: { path: { code } } })),
@@ -188,13 +194,19 @@ export function Invites() {
   });
 
   const items = invites.data?.pages.flatMap((p) => p.items) ?? [];
+  const used = quota.data && quotaSummary(quota.data, tr);
+  const full = quota.data?.limit != null && quota.data.invited >= quota.data.limit;
 
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.inviteFriends}</SectionTitle>
       <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
         <div className="flex items-center gap-3 p-4">
-          <p className="flex-1 text-sm text-stone-600 dark:text-stone-300">{tr.settings.inviteHint}</p>
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.inviteHint}</p>
+            {used && <p className="text-xs text-stone-500 dark:text-stone-400">{used}</p>}
+            {full && <p className="text-xs text-amber-700 dark:text-amber-400">{tr.settings.inviteLimitReached}</p>}
+          </div>
           <PrimaryButton onClick={() => setCreating(true)}>{tr.settings.newLink}</PrimaryButton>
         </div>
         {items.map((i) => (

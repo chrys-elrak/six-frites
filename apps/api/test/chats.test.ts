@@ -255,3 +255,42 @@ describe("socket", () => {
     expect(echoedToSelf).toEqual([]);
   });
 });
+
+describe("locations and checklists", () => {
+  const { call } = chatHelpers(ctx);
+  const post = (who: Auth, chatId: string, body: object) =>
+    call(who, "POST", `/v1/chats/${chatId}/messages`, { clientId: `c-${Math.random()}`, ...body });
+
+  it("shares a location on its own", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const where = { lat: -18.8792, lng: 47.5079, accuracy: 20 };
+    const sent = await post(host, chatId, { location: where });
+    expect(sent.statusCode, sent.body).toBe(201);
+    expect(sent.json()).toMatchObject({ type: "location", location: where, text: null });
+    expect((await get(guest, `/v1/chats/${chatId}/messages`)).items[0]).toMatchObject({ type: "location", location: where });
+
+    expect((await post(host, chatId, { location: where, text: "here" })).statusCode).toBe(400);
+    expect((await post(host, chatId, { location: { lat: 91, lng: 0 } })).statusCode).toBe(400);
+    expect((await post(host, chatId, { type: "location" })).statusCode).toBe(400);
+  });
+
+  it("lets either person tick checklist items, and keeps them from being edited", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const sent = await post(host, chatId, { checklist: { title: " Groceries ", items: ["Milk", "Bread"] } });
+    expect(sent.json()).toMatchObject({ type: "checklist", checklist: { title: "Groceries", items: ["Milk", "Bread"] }, checks: [] });
+    const id = sent.json().id;
+    const tick = (who: Auth, item: number, done: boolean) => call(who, "PUT", `/v1/messages/${id}/checklist/${item}`, { done });
+
+    const ticked = await tick(guest, 1, true);
+    expect(ticked.statusCode, ticked.body).toBe(200);
+    expect(ticked.json().checks).toMatchObject([{ item: 1, userId: guest.user.id }]);
+    expect((await tick(host, 1, true)).json().checks).toMatchObject([{ item: 1, userId: guest.user.id }]);
+    expect((await tick(host, 1, false)).json().checks).toEqual([]);
+    expect((await tick(host, 2, true)).json().error.code).toBe("NOT_FOUND");
+
+    const text = (await post(host, chatId, { text: "not a list" })).json();
+    expect((await call(host, "PUT", `/v1/messages/${text.id}/checklist/0`, { done: true })).json().error.code).toBe("NOT_FOUND");
+    expect((await call(host, "PATCH", `/v1/messages/${id}`, { text: "edited" })).json().error.code).toBe("MESSAGE_NOT_EDITABLE");
+    expect((await post(host, chatId, { checklist: { title: "Empty", items: [] } })).statusCode).toBe(400);
+  });
+});

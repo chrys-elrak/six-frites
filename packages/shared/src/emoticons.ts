@@ -59,3 +59,35 @@ export function emojifyEnd(text: string) {
   const trimmed = text.trimEnd();
   return swapEmoticon(trimmed, trimmed.length) ?? text;
 }
+
+/** One emoji of `@six/shared/emojis.json`: the emoji, its name and its search keywords. */
+export interface EmojiEntry {
+  e: string;
+  n: string;
+  k: string;
+}
+
+/** The `:name` typed right before the caret, as in Telegram, once it has 2 letters; null when there is none. */
+export function emojiQuery(text: string, caret: number) {
+  const before = text.slice(0, caret);
+  const m = /(?:^|\s):([\p{L}\p{N}_+-]{2,})$/u.exec(before);
+  if (!m || before.split("`").length % 2 === 0) return null;
+  return { start: caret - m[1]!.length - 1, query: m[1]!.toLowerCase() };
+}
+
+/** Emoji named exactly `query` (or with it as a whole word) first, then by a word that starts with it, shortest names first. */
+export function suggestEmoji(list: EmojiEntry[], query: string, limit = 8) {
+  const q = query.replace(/_/g, " ");
+  const rank = (x: EmojiEntry) => {
+    const words = x.n.split(" ");
+    if (x.n === q || words.includes(q)) return 0;
+    if (x.n.startsWith(q) || words.some((w) => w.startsWith(q))) return 1;
+    return x.k.split(" ").some((w) => w.startsWith(query)) ? 2 : 3;
+  };
+  return list
+    .map((x) => ({ x, r: rank(x) }))
+    .filter((s) => s.r < 3)
+    .sort((a, b) => a.r - b.r || a.x.n.length - b.x.n.length)
+    .slice(0, limit)
+    .map((s) => s.x);
+}

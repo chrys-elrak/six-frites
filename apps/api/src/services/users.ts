@@ -19,17 +19,13 @@ import { revokeSession } from "./sessions.js";
 export const avatarOf = (u: Pick<User, "avatarUrl" | "avatarKey">) =>
   u.avatarKey ? presignGet(u.avatarKey) : u.avatarUrl;
 
-const RESERVED_USERNAMES = new Set(["admin", "support", "help", "system", "root", "six", "sixfrites", "official"]);
-
 export function toUserDTO(u: User): UserDTO {
   return {
     id: u.id,
     email: u.email,
     displayName: u.displayName,
     avatarUrl: avatarOf(u),
-    username: u.username,
     contactCode: u.contactCode,
-    findByEmail: u.findByEmail,
     backupKeyId: u.backupKeyId,
     alias: u.alias,
     hasBackupPin: u.backupPinHash !== null,
@@ -61,7 +57,6 @@ export async function getMe(userId: string) {
 }
 
 export async function updateMe(userId: string, input: UpdateMeInput) {
-  if (input.username && RESERVED_USERNAMES.has(input.username)) throw new AppError("USERNAME_TAKEN");
   const { photo, ...data } = input;
   let avatarKey: string | null | undefined = photo === null || data.avatarUrl !== undefined ? null : undefined;
   if (photo) {
@@ -70,22 +65,17 @@ export async function updateMe(userId: string, input: UpdateMeInput) {
     await putObject(avatarKey, p.bytes, p.mime);
   }
 
-  try {
-    const { user, previousKey } = await withEvents(async (tx, emit) => {
-      const before = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarKey: true } });
-      const user = await tx.user.update({
-        where: { id: userId },
-        data: { ...data, ...(photo !== undefined && { avatarUrl: null }), ...(avatarKey !== undefined && { avatarKey }) },
-      });
-      if (data.displayName !== undefined || avatarKey !== undefined) await announceProfile(tx, emit, userId);
-      return { user, previousKey: before.avatarKey };
+  const { user, previousKey } = await withEvents(async (tx, emit) => {
+    const before = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarKey: true } });
+    const user = await tx.user.update({
+      where: { id: userId },
+      data: { ...data, ...(photo !== undefined && { avatarUrl: null }), ...(avatarKey !== undefined && { avatarKey }) },
     });
-    if (previousKey && previousKey !== user.avatarKey) await deleteObjects([previousKey]).catch(() => null);
-    return toUserDTO(user);
-  } catch (err) {
-    if (isUniqueViolation(err)) throw new AppError("USERNAME_TAKEN");
-    throw err;
-  }
+    if (data.displayName !== undefined || avatarKey !== undefined) await announceProfile(tx, emit, userId);
+    return { user, previousKey: before.avatarKey };
+  });
+  if (previousKey && previousKey !== user.avatarKey) await deleteObjects([previousKey]).catch(() => null);
+  return toUserDTO(user);
 }
 
 /** Replaces the user's contact code, so the old code, link and QR stop working. */
@@ -102,7 +92,7 @@ export async function resetContactCode(userId: string) {
 
 /**
  * Deletes the account: signs out every device and strips everything that identifies the person
- * (Google link, email, name, photo, username, contact code, invites, blocks, the names and photos
+ * (Google link, email, name, photo, contact code and links, invites, blocks, the names and photos
  * they gave others and others gave them, scheduled messages). What they already sent stays in the
  * other person's history under "Deleted account", and signing in with the same Google account
  * later starts a new, empty account.
@@ -119,6 +109,7 @@ export async function deleteAccount(userId: string) {
     await tx.contactOverride.deleteMany({ where: { OR: [{ ownerId: userId }, { contactId: userId }] } });
     await tx.block.deleteMany({ where: { OR: [{ blockerId: userId }, { blockedId: userId }] } });
     await tx.invite.deleteMany({ where: { creatorId: userId } });
+    await tx.contactLink.deleteMany({ where: { userId } });
     await tx.scheduledMessage.deleteMany({ where: { senderId: userId } });
     await tx.pushToken.deleteMany({ where: { session: { userId } } });
     await tx.messageBackup.deleteMany({ where: { userId } });
@@ -131,9 +122,7 @@ export async function deleteAccount(userId: string) {
         alias: "Deleted account",
         avatarUrl: null,
         avatarKey: null,
-        username: null,
         contactCode: generateCode(),
-        findByEmail: false,
         lastSeenAt: null,
         backupKeyId: null,
         backupPinHash: null,

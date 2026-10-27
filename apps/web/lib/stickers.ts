@@ -12,15 +12,6 @@ export const STICKER_ACCEPT = ".tgs,.json,.webp,.png,application/json,image/webp
 
 const processing = (packs: StickerPackDTO[] | undefined) => !!packs?.some((p) => p.stickers.some((s) => !s.url));
 
-export function useStickerPacks() {
-  return useQuery({
-    queryKey: stickerKeys.packs,
-    queryFn: async () => unwrap(await six.api.GET("/v1/sticker-packs")).items,
-    staleTime: 60_000,
-    refetchInterval: (q) => (processing(q.state.data) ? 2000 : false),
-  });
-}
-
 export function useStickerPack(id: string) {
   return useQuery({
     queryKey: stickerKeys.pack(id),
@@ -38,12 +29,6 @@ function refresh(qc: QueryClient, packId: string) {
 function stickerMime(file: File) {
   const ext = file.name.split(".").pop()?.toLowerCase();
   return ext === "tgs" ? "application/x-tgsticker" : ext === "json" ? "application/json" : file.type;
-}
-
-export async function createPack(qc: QueryClient, title: string) {
-  const pack = unwrap(await six.api.POST("/v1/sticker-packs", { body: { title } }));
-  refresh(qc, pack.id);
-  return pack;
 }
 
 /** Uploads sticker files into a pack: your own, or an official one when `official` (admins only). */

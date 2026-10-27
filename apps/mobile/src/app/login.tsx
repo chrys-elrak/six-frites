@@ -44,7 +44,7 @@ export default function Login() {
   const { invite, next } = useLocalSearchParams<{ invite?: string; next?: string }>();
   const preview = useQuery({ ...invitePreviewQuery(invite ?? ""), enabled: !!invite });
   const inviteCode = invite && (preview.isPending || preview.data?.status === "valid") ? invite : undefined;
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ text: string; queued: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function signIn() {
@@ -53,7 +53,7 @@ export default function Login() {
     try {
       const idToken = await googleIdToken();
       if (!idToken) {
-        setError(tr.auth.googleNotFinished);
+        setError({ text: tr.auth.googleNotFinished, queued: false });
         return;
       }
       unlock();
@@ -65,7 +65,10 @@ export default function Login() {
     } catch (err) {
       const code = err instanceof SixApiError || isErrorWithCode(err) ? err.code : null;
       const errors: Record<string, string | undefined> = tr.auth.errors;
-      setError((code && errors[code]) ?? (err instanceof Error ? err.message : tr.common.somethingWrong));
+      setError({
+        text: (code && errors[code]) ?? (err instanceof Error ? err.message : tr.common.somethingWrong),
+        queued: code === "ACCOUNT_QUEUED",
+      });
     } finally {
       setBusy(false);
     }
@@ -109,7 +112,7 @@ export default function Login() {
         ) : (
           <Notice tone="error">Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in apps/mobile/.env to enable sign-in.</Notice>
         )}
-        {error && <Notice tone="error">{error}</Notice>}
+        {error && <Notice tone={error.queued ? "success" : "error"}>{error.text}</Notice>}
       </View>
     </SafeAreaView>
   );

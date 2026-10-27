@@ -364,3 +364,26 @@ describe("existing chats", () => {
     ).not.toBeNull();
   });
 });
+
+describe("encrypted checklists", () => {
+  it("keep their items in the envelopes while ticks stay on the server", async () => {
+    const { phone, guest, chatId } = await friendsWithDevices();
+    const sent = await call(phone.auth, "POST", `/v1/chats/${chatId}/messages`, {
+      clientId: `e-${Math.random()}`,
+      type: "checklist",
+      encrypted: { envelopes: await phone.seal(chatId, "the list") },
+    });
+    expect(sent.statusCode, sent.body).toBe(201);
+    expect(sent.json()).toMatchObject({ type: "checklist", checklist: null, checks: [] });
+
+    const tick = (item: number) => call(guest.auth, "PUT", `/v1/messages/${sent.json().id}/checklist/${item}`, { done: true });
+    expect((await tick(4)).json().checks).toMatchObject([{ item: 4, userId: guest.auth.user.id }]);
+    expect((await tick(30)).statusCode).toBe(400);
+
+    const plain = await call(guest.auth, "POST", `/v1/chats/${chatId}/messages`, {
+      clientId: "plain-list",
+      checklist: { title: "Leak", items: ["a"] },
+    });
+    expect(plain.json().error.code).toBe("ENCRYPTION_REQUIRED");
+  });
+});

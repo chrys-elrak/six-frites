@@ -1,7 +1,10 @@
 import { unwrap } from "@six/sdk";
 import {
   type ChatDTO,
+  type Checklist,
+  type ChecklistMark,
   EPHEMERAL_RESEND,
+  type GeoPoint,
   serviceSentence,
   type EphemeralDTO,
   type MessageDTO,
@@ -45,9 +48,10 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type ListViewToken,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import { applyEdited, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
+import { applyEdited, check, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
 import { isFrozen, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
@@ -67,6 +71,8 @@ import { useSwipe } from "@/lib/swipe";
 import { brand, brandInk, flame, stone, type Theme, useTheme } from "@/lib/theme";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
+import { ChecklistView } from "./checklist";
+import { LocationCard } from "./location-card";
 import { EmojiPicker } from "./emoji-picker";
 import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
@@ -91,6 +97,9 @@ interface MsgRow {
   deleted: boolean;
   edited: boolean;
   attachment: ShownAttachment | null;
+  location: GeoPoint | null;
+  checklist: Checklist | null;
+  checks: ChecklistMark[];
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   locked: "decrypting" | "undecryptable" | null;
@@ -98,6 +107,8 @@ interface MsgRow {
   groupEnd: boolean;
   delivery: Delivery | null;
 }
+
+const VIEWABILITY = { itemVisiblePercentThreshold: 1 };
 
 type Row = { kind: "day"; key: string; at: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
 
@@ -136,6 +147,9 @@ function buildRows(
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
         attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
+        location: m.location ?? null,
+        checklist: m.checklist ?? null,
+        checks: m.checks ?? [],
         type: m.type,
         ephemeral: m.ephemeral,
         locked: lockOf(m),
@@ -162,7 +176,14 @@ function buildRows(
           attachment: p.attachment
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
             : null,
-          type: (p.attachment?.kind ?? "text") as MessageDTO["type"],
+          location: p.location ?? null,
+          checklist: p.checklist ?? null,
+          checks: [],
+          type: (p.location
+            ? "location"
+            : p.checklist
+              ? "checklist"
+              : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           locked: null,
           ephemeral: p.ephemeral
             ? {
@@ -480,6 +501,7 @@ function Bubble({
   onResend,
   meId,
   onReact,
+  onCheck,
   frozen,
 }: {
   row: MsgRow;
@@ -497,6 +519,7 @@ function Bubble({
   onResend: () => void;
   meId: string;
   onReact: (emoji: string) => void;
+  onCheck: (item: number) => void;
   frozen: boolean;
 }) {
   const t = useTheme();
@@ -638,6 +661,16 @@ function Bubble({
             />
           )}
           {link && <LinkCard url={link} mine={mine} width={Math.min(280, maxWidth - 24)} />}
+          {row.location && !row.deleted && <LocationCard point={row.location} mine={mine} />}
+          {row.checklist && !row.deleted && (
+            <ChecklistView
+              list={row.checklist}
+              checks={row.checks}
+              mine={mine}
+              nameOf={nameOf}
+              onCheck={row.message && !frozen && !selecting ? onCheck : undefined}
+            />
+          )}
           {sealed ? (
             <View style={styles.sealedRow}>
               <Sealed row={row} color={fg} onOpen={onOpenEphemeral} />
@@ -788,7 +821,16 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     }, [chat.members, meId]);
 
     const loaded = useMemo(() => messages.data?.pages.flatMap((p) => p.items) ?? [], [messages.data]);
-    const shown = useHydratedMessages(meId, loaded);
+    const { shown, see } = useHydratedMessages(meId, loaded);
+    const seeRef = useRef(see);
+    seeRef.current = see;
+    const onViewable = useRef(({ viewableItems }: { viewableItems: ListViewToken[] }) =>
+      seeRef.current(
+        viewableItems.flatMap(({ item }: { item: Row }) =>
+          item.kind === "msg" ? (item.id ? [item.id] : []) : item.kind === "service" ? [item.message.id] : [],
+        ),
+      ),
+    ).current;
     const ordered = useMemo(() => shown.slice().reverse(), [shown]);
     const rows = useMemo(
       () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt).reverse(),
@@ -909,6 +951,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             inverted
             keyExtractor={(r) => r.key}
             onScroll={onScroll}
+            onViewableItemsChanged={onViewable}
+            viewabilityConfig={VIEWABILITY}
             scrollEventThrottle={64}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
@@ -981,6 +1025,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   onResend={() => row.message && void resendEphemeral(row.message)}
                   meId={meId}
                   onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
+                  onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
                   frozen={frozen}
                 />
               )

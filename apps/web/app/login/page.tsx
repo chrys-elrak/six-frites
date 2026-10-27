@@ -23,7 +23,7 @@ function LoginForm() {
   const next = params.get("next");
   const home = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
   const status = useSession((s) => s.status);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ text: string; queued: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const signingIn = useRef(false);
 
@@ -45,11 +45,13 @@ function LoginForm() {
       router.replace(home);
     } catch (err) {
       signingIn.current = false;
-      setError(
-        err instanceof SixApiError
-          ? ((tr.auth.errors as Record<string, string | undefined>)[err.code] ?? err.message)
-          : tr.common.somethingWrong,
-      );
+      setError({
+        text:
+          err instanceof SixApiError
+            ? ((tr.auth.errors as Record<string, string | undefined>)[err.code] ?? err.message)
+            : tr.common.somethingWrong,
+        queued: err instanceof SixApiError && err.code === "ACCOUNT_QUEUED",
+      });
     } finally {
       setBusy(false);
     }
@@ -80,8 +82,15 @@ function LoginForm() {
         <GoogleButton onCredential={onCredential} />
         {busy && <p className="text-center text-sm text-stone-500">{tr.auth.signingIn}</p>}
         {error && (
-          <p role="alert" className="rounded-xl bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-            {error}
+          <p
+            role="alert"
+            className={`rounded-xl p-3 text-center text-sm ${
+              error.queued
+                ? "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-200"
+                : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+            }`}
+          >
+            {error.text}
           </p>
         )}
       </div>

@@ -9,6 +9,7 @@ import {
   MessagesDeletedDTO,
 } from "./chats.js";
 import { DevicesChangedDTO } from "./e2ee.js";
+import { UserDTO } from "./users.js";
 
 const event = <T extends string, D extends z.ZodTypeAny>(type: T, data: D) =>
   z.object({ eventId: z.string(), type: z.literal(type), data, createdAt: z.string() });
@@ -23,6 +24,7 @@ export const ChangeEventDTO = z.discriminatedUnion("type", [
   event("chat.read", ChatReadDTO),
   event("chat.deleted", ChatDeletedDTO),
   event("devices.changed", DevicesChangedDTO),
+  event("me.updated", UserDTO),
 ]);
 export type ChangeEventDTO = z.infer<typeof ChangeEventDTO>;
 export type ChangeEventType = ChangeEventDTO["type"];

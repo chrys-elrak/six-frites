@@ -7,9 +7,7 @@ export const UserDTO = z.object({
   email: z.string().email(),
   displayName: z.string(),
   avatarUrl: z.string().url().nullable(),
-  username: z.string().nullable(),
   contactCode: z.string().describe("Share it (or its QR code) so people can find you"),
-  findByEmail: z.boolean().describe("Whether people who type your exact email can find you"),
   backupKeyId: z
     .string()
     .nullable()
@@ -26,22 +24,12 @@ export const DeleteAccountInput = z.object({
 });
 export type DeleteAccountInput = z.infer<typeof DeleteAccountInput>;
 
-export const USERNAME_PATTERN = /^[a-z][a-z0-9_]{2,19}$/;
-
-export const Username = z
-  .string()
-  .trim()
-  .transform((s) => s.replace(/^@/, "").toLowerCase())
-  .pipe(z.string().regex(USERNAME_PATTERN, "3 to 20 letters, digits or _, starting with a letter"));
-
 export const UpdateMeInput = z.object({
   displayName: z.string().trim().min(1).max(64).optional(),
   avatarUrl: z.string().url().nullable().optional(),
   photo: ContactPhoto.nullable()
     .optional()
     .describe("A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes your photo"),
-  username: Username.nullable().optional(),
-  findByEmail: z.boolean().optional(),
 });
 export type UpdateMeInput = z.infer<typeof UpdateMeInput>;
 

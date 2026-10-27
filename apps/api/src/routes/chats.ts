@@ -5,6 +5,8 @@ import {
   ChatDeliveredDTO,
   ChatListQuery,
   ChatReadDTO,
+  CHECKLIST,
+  CheckItemInput,
   AddContactInput,
   ContactDTO,
   ShareProfileInput,
@@ -37,6 +39,7 @@ import { findContact, listContacts, removeContact, shareProfile, updateContact }
 import { blockUser, unblockUser } from "../services/blocks.js";
 import { addContact, findUser } from "../services/discovery.js";
 import {
+  checkItem,
   deleteMessages,
   deleteMessagesBetween,
   editMessage,
@@ -171,6 +174,24 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setReaction(req.auth.userId, req.params.id, req.params.emoji, false),
+  );
+
+  app.put(
+    "/messages/:id/checklist/:item",
+    {
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["messages"],
+        summary: "Tick or untick a checklist item",
+        description:
+          "`item` is the index in the checklist's items. Either person can tick any item; both get message.edited with the new `checks`.",
+        security,
+        params: z.object({ id: Id, item: z.coerce.number().int().min(0).max(CHECKLIST.items - 1) }),
+        body: CheckItemInput,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => checkItem(req.auth.userId, req.params.id, req.params.item, req.body.done),
   );
 
   app.post(
@@ -393,10 +414,10 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
       schema: {
         tags: ["contacts"],
-        summary: "Find someone by contact code, contact link, username or email",
+        summary: "Find someone by contact code or contact link",
         description:
-          "`q` is a contact code (dashes and spaces ignored), a contact link or scanned QR (…/add/CODE), " +
-          "@username, or an exact email of someone who allows it. USER_NOT_FOUND if no one matches, CONTACT_SELF for you.",
+          "`q` is a contact code (dashes and spaces ignored) or a contact link or scanned QR (…/add/CODE). " +
+          "USER_NOT_FOUND if no one matches, CONTACT_SELF for you.",
         security,
         querystring: FindUserQuery,
         response: { 200: FoundUserDTO },

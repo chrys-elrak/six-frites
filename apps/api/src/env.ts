@@ -38,6 +38,10 @@ const Env = z.object({
     .string()
     .default("")
     .transform((s) => s.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean)),
+  INVITE_ONLY: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
 });
 
 export const env = Env.parse(process.env);

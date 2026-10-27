@@ -81,26 +81,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div inert={locked} className="fixed inset-x-0 top-0 flex h-[var(--app-height,100dvh)] flex-col overflow-hidden">
         <Link
           href="/"
-          className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-2 border-b border-stone-200 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:flex dark:border-stone-800`}
+          className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-3 border-b border-stone-200 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:flex dark:border-stone-800`}
         >
-          <Logo className="size-7" />
-          <span className="text-[15px] font-bold tracking-tight">Six Frites</span>
+          <Logo className="size-9" />
+          <span className="text-lg font-bold tracking-tight">Six Frites</span>
         </Link>
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex ${wide ? "md:flex-1" : "md:w-80 md:shrink-0 md:border-r lg:w-96"} dark:border-stone-800`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex md:flex-row ${wide ? "md:flex-1" : "md:w-100 md:shrink-0 md:border-r lg:w-116"} dark:border-stone-800`}
           >
-            <div className="min-h-0 flex-1">
+            <div className="min-h-0 min-w-0 flex-1">
               {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
               {tab === "settings" && <SettingsPanel />}
             </div>
+            <TabBar active={tab} />
           </aside>
           <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col ${wide ? "" : "md:flex"}`}>
             {children}
           </section>
-        </div>
-        <div className={`${topLevel ? "" : "hidden"} md:block`}>
-          <TabBar active={tab} />
         </div>
       </div>
       {!locked && <Toasts />}

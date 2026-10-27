@@ -1,15 +1,18 @@
 "use client";
 
 import {
+  type EmojiEntry,
   type EntityType,
   type EphemeralInput,
   type GifDTO,
-  type StickerDTO,
   type TypingKind,
   type UploadKind,
+  emojiQuery,
   emojifyEnd,
   emojifyTyped,
   maskSpoilers,
+  parseCommand,
+  suggestEmoji,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,9 +24,9 @@ import {
   Flame,
   Italic,
   type LucideIcon,
-  Mic,
   Paperclip,
   SendHorizontal,
+  Square,
   Strikethrough,
   Trash2,
   X,
@@ -32,25 +35,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage, scheduleMessage } from "@/lib/actions";
 import { useLongPress } from "@/lib/long-press";
 import { useComposerMode } from "@/lib/composer";
+import { useDrafts } from "@/lib/drafts";
 import { isTouch } from "@/lib/camera";
 import { shortRule } from "@/lib/ephemeral";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
+import { ChecklistDialog } from "./checklist";
+import { currentPosition } from "./location-card";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { CameraDialog } from "./camera-dialog";
 import { ScheduleDialog, ScheduledPanel } from "./scheduled";
 import { Sheet } from "./sheet";
-import { VideoNoteRecorder } from "./video-note-recorder";
+import { VoicePlayer } from "./attachment";
+import { RecordButton, type RecordMode } from "./record-button";
+import { VideoNoteCapture, type VideoNoteHandle, VideoNotePreview } from "./video-note-capture";
+import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { EmojiButton } from "./emoji-picker";
+import { emojiList } from "@/lib/emoji";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { useRecorder } from "@/lib/recorder";
+import { mediaMeta } from "@/lib/media-meta";
+import { type Recording, useRecorder } from "@/lib/recorder";
 import { useSession } from "@/lib/session";
 import { type Draft, queueMessage, replyQuote } from "@/lib/send";
 import { looksLikeSticker } from "@/lib/image";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
-
-const drafts = new Map<string, string>();
 
 const formats: { type: EntityType; keys: string; Icon: LucideIcon }[] = [
   { type: "bold", keys: "B", Icon: Bold },
@@ -97,11 +106,13 @@ export function Composer({
   nameOf,
   scheduledCount,
   onSent,
+  pickerSlot,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
   scheduledCount: number;
   onSent: () => void;
+  pickerSlot?: HTMLElement | null;
 }) {
   const tr = useT();
   const meId = useSession((s) => s.user?.id);
@@ -109,31 +120,50 @@ export function Composer({
   const { realtime } = useRealtime();
   const mode = useComposerMode((s) => s.byChat[chatId]);
   const setMode = useComposerMode((s) => s.set);
-  const [text, setText] = useState(() => drafts.get(chatId) ?? "");
+  const [text, setText] = useState(() => useDrafts.getState().byChat[chatId] ?? "");
+  const draftsReady = useDrafts((s) => s.ready);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [spoiler, setSpoiler] = useState(false);
   const [hasSelection, setHasSelection] = useState(false);
+  const [caret, setCaret] = useState(0);
+  const [suggested, setSuggested] = useState<{ start: number; end: number; items: EmojiEntry[] } | null>(null);
+  const [active, setActive] = useState(0);
   const ref = useRef<HTMLTextAreaElement>(null);
+  const commands = useRef<CommandBarHandle>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const mediaInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
+  const audioInput = useRef<HTMLInputElement>(null);
   const [attachMenu, setAttachMenu] = useState(false);
+  const [askLocation, setAskLocation] = useState(false);
+  const [writingChecklist, setWritingChecklist] = useState(false);
   const [camera, setCamera] = useState(false);
-  const [noteRecorder, setNoteRecorder] = useState(false);
   const recorder = useRecorder();
+  const [recMode, setRecMode] = useState<RecordMode>("voice");
+  const [capture, setCapture] = useState<{ kind: RecordMode; locked: boolean } | null>(null);
+  const captureNow = useRef(capture);
+  captureNow.current = capture;
+  const [slide, setSlide] = useState(0);
+  const [noteMs, setNoteMs] = useState(0);
+  const [noteBottom, setNoteBottom] = useState(0);
+  const note = useRef<VideoNoteHandle>(null);
+  const form = useRef<HTMLFormElement>(null);
+  const [preview, setPreview] = useState<
+    | { kind: "voice"; rec: Recording; url: string; waveform: number[] | null }
+    | { kind: "video"; file: File; url: string; durationMs: number }
+    | null
+  >(null);
   const [picked, setPicked] = useState<File[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
   const closeCamera = useCallback(() => setCamera(false), []);
-  const closeNoteRecorder = useCallback(() => setNoteRecorder(false), []);
   const [scheduling, setScheduling] = useState(false);
   const [showScheduled, setShowScheduled] = useState(false);
   const closeScheduling = useCallback(() => setScheduling(false), []);
   const closeScheduled = useCallback(() => setShowScheduled(false), []);
 
   function sendVideoNote(file: File, chosen: EphemeralInput | null) {
-    setNoteRecorder(false);
     if (!realtime) return;
     void queueMessage(qc, realtime, chatId, {
       text: "",
@@ -146,17 +176,39 @@ export function Composer({
     onSent();
   }
 
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist">) {
+    if (!realtime) return;
+    void queueMessage(qc, realtime, chatId, {
+      text: "",
+      replyTo: mode?.kind === "reply" ? mode.message : undefined,
+      ...extra,
+    });
+    if (mode) cancel();
+    onSent();
+  }
+
+  async function sendLocation() {
+    setError(null);
+    try {
+      sendSpecial({ location: await currentPosition() });
+    } catch (err) {
+      setError((err as Error).message === "denied" ? tr.composer.locationDenied : tr.composer.locationFailed);
+    }
+  }
+
   const attachActions = [
     { label: tr.composer.photoOrVideo, onSelect: () => mediaInput.current?.click() },
     { label: tr.composer.camera, onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
-    { label: tr.summary.kinds.video_note, onSelect: () => setNoteRecorder(true) },
     { label: tr.summary.kinds.file, onSelect: () => fileInput.current?.click() },
+    { label: tr.composer.audio, onSelect: () => audioInput.current?.click() },
+    { label: tr.composer.location, onSelect: () => setAskLocation(true) },
+    { label: tr.composer.checklist, onSelect: () => setWritingChecklist(true) },
   ];
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
-    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (drafts.get(chatId) ?? ""));
-  }, [editing, chatId]);
+    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (useDrafts.getState().byChat[chatId] ?? ""));
+  }, [editing, chatId, draftsReady]);
 
   useEffect(() => {
     if (mode) ref.current?.focus();
@@ -164,7 +216,7 @@ export function Composer({
 
   function change(value: string) {
     setText(value);
-    if (!editing) drafts.set(chatId, value);
+    if (!editing) useDrafts.getState().set(chatId, value);
   }
 
   function typeText(value: string) {
@@ -196,6 +248,49 @@ export function Composer({
     requestAnimationFrame(() => el?.setSelectionRange(start + emoji.length, start + emoji.length));
   }
 
+  useEffect(() => {
+    const q = parseCommand(text) ? null : emojiQuery(text, caret);
+    if (!q) return setSuggested(null);
+    let live = true;
+    void emojiList().then((list) => {
+      if (!live) return;
+      setSuggested({ start: q.start, end: caret, items: suggestEmoji(list, q.query) });
+      setActive(0);
+    });
+    return () => {
+      live = false;
+    };
+  }, [text, caret]);
+
+  function pickSuggestion(emoji: string) {
+    if (!suggested) return;
+    const at = suggested.start + emoji.length;
+    change(text.slice(0, suggested.start) + emoji + text.slice(suggested.end));
+    setSuggested(null);
+    setCaret(at);
+    requestAnimationFrame(() => ref.current?.setSelectionRange(at, at));
+  }
+
+  function completeCommand(value: string) {
+    change(value);
+    setCaret(value.length);
+    requestAnimationFrame(() => ref.current?.setSelectionRange(value.length, value.length));
+  }
+
+  function suggestionKey(e: React.KeyboardEvent) {
+    const items = suggested?.items;
+    if (!items?.length || e.nativeEvent.isComposing) return false;
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      setActive((i) => (i + (e.key === "ArrowRight" ? 1 : items.length - 1)) % items.length);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      pickSuggestion(items[active]!.e);
+    } else if (e.key === "Escape") {
+      setSuggested(null);
+    } else return false;
+    e.preventDefault();
+    return true;
+  }
+
   function spoilerButton() {
     if (!wrap("spoiler") && !editing) setSpoiler((v) => !v);
   }
@@ -221,7 +316,7 @@ export function Composer({
 
   const busyWith: TypingKind | null = recorder.recording
     ? "voice"
-    : noteRecorder || picked?.some((f) => f.type.startsWith("video/"))
+    : capture?.kind === "video" || picked?.some((f) => f.type.startsWith("video/"))
       ? "video"
       : camera || picked?.some((f) => f.type.startsWith("image/"))
         ? "photo"
@@ -259,7 +354,7 @@ export function Composer({
   }
 
   async function submit() {
-    if (!canSubmit) return;
+    if (!canSubmit || commands.current?.submit()) return;
     if (editing) {
       const changed =
         parsed.text !== editing.text || JSON.stringify(parsed.entities) !== JSON.stringify(editing.entities);
@@ -294,7 +389,7 @@ export function Composer({
     });
     setSpoiler(false);
     setEphemeral(null);
-    drafts.delete(chatId);
+    useDrafts.getState().set(chatId, "");
     setText("");
     if (mode) cancel();
     onSent();
@@ -324,12 +419,12 @@ export function Composer({
     realtime?.setTyping(chatId, false);
     setSpoiler(false);
     setEphemeral(null);
-    drafts.delete(chatId);
+    useDrafts.getState().set(chatId, "");
     setText("");
     if (mode) cancel();
   }
 
-  function sendGifOrSticker(extra: { gif?: GifDTO; sticker?: StickerDTO; file?: Draft["file"] }) {
+  function sendGifOrSticker(extra: { gif?: GifDTO; file?: Draft["file"] }) {
     if (!realtime || editing) return;
     void queueMessage(qc, realtime, chatId, {
       text: "",
@@ -340,6 +435,15 @@ export function Composer({
     setEphemeral(null);
     if (mode) cancel();
     onSent();
+  }
+
+  /** Sends a GIPHY or KLIPY sticker as a sticker image, like one from the keyboard; the command stays if it can't be fetched. */
+  async function sendFoundSticker(found: GifDTO) {
+    const blob = await fetch(found.previewUrl).then((r) => (r.ok ? r.blob() : null), () => null);
+    if (!blob) return;
+    change("");
+    const name = `${(found.title || "sticker").slice(0, 100)}.webp`;
+    sendGifOrSticker({ file: { blob, kind: "image", name, mime: blob.type || "image/webp", sticker: true } });
   }
 
   function sendFiles(files: FileList | File[]) {
@@ -370,7 +474,7 @@ export function Composer({
         file: { blob: file, kind, name: file.name || "file", mime: file.type || "application/octet-stream" },
       });
     });
-    drafts.delete(chatId);
+    useDrafts.getState().set(chatId, "");
     setText("");
     setSpoiler(false);
     setEphemeral(null);
@@ -378,9 +482,7 @@ export function Composer({
     onSent();
   }
 
-  async function sendVoice() {
-    const rec = await recorder.stop();
-    if (!rec || rec.durationMs < 500) return;
+  function sendVoice(rec: Recording) {
     const ext = rec.mime.includes("mp4") ? "m4a" : rec.mime.includes("ogg") ? "ogg" : "webm";
     send({
       blob: rec.blob,
@@ -390,16 +492,86 @@ export function Composer({
     });
   }
 
-  const showMic = !editing && parsed.text.length === 0;
+  function startCapture(locked: boolean) {
+    setError(null);
+    setSlide(0);
+    setNoteMs(0);
+    if (recMode === "video") {
+      setNoteBottom(window.innerHeight - (form.current?.getBoundingClientRect().top ?? window.innerHeight));
+    } else {
+      void recorder.start().then((ok) => {
+        if (!ok) setCapture(null);
+        else if (!captureNow.current) recorder.cancel();
+      });
+    }
+    setCapture({ kind: recMode, locked });
+  }
+
+  async function finishCapture() {
+    const c = captureNow.current;
+    if (!c) return;
+    const clip = c.kind === "video" ? note.current?.stop() : null;
+    setCapture(null);
+    if (c.kind === "voice") {
+      const rec = await recorder.stop();
+      if (rec && rec.durationMs >= 500) sendVoice(rec);
+      return;
+    }
+    const file = await clip;
+    if (file) sendVideoNote(file, ephemeral);
+  }
+
+  async function previewCapture() {
+    const c = captureNow.current;
+    if (!c) return;
+    if (c.kind === "voice") {
+      const rec = await recorder.stop();
+      setCapture(null);
+      if (!rec || rec.durationMs < 500) return;
+      setPreview({ kind: "voice", rec, url: URL.createObjectURL(rec.blob), waveform: null });
+      void mediaMeta(rec.blob, "voice").then(
+        ({ waveform }) =>
+          waveform && setPreview((p) => (p?.kind === "voice" && p.rec === rec ? { ...p, waveform } : p)),
+      );
+      return;
+    }
+    const durationMs = noteMs;
+    const file = await note.current?.stop();
+    setCapture(null);
+    if (file) setPreview({ kind: "video", file, url: URL.createObjectURL(file), durationMs });
+  }
+
+  function closePreview(send: boolean) {
+    const p = preview;
+    if (!p) return;
+    setPreview(null);
+    URL.revokeObjectURL(p.url);
+    if (!send) return;
+    if (p.kind === "voice") sendVoice(p.rec);
+    else sendVideoNote(p.file, ephemeral);
+  }
+
+  function cancelCapture() {
+    const c = captureNow.current;
+    setCapture(null);
+    if (c?.kind === "voice") recorder.cancel();
+    else note.current?.cancel();
+  }
+
+  const showMic = (!editing && parsed.text.length === 0) || !!capture || !!preview;
+  const overVideo = capture?.kind === "video" || preview?.kind === "video";
 
   return (
     <>
       <form
+        ref={form}
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
         }}
-        className="space-y-2 border-t border-stone-200 bg-stone-50/90 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
+        className={`space-y-2 border-t border-stone-200 bg-stone-50/90 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-stone-800 dark:bg-stone-950/90 ${
+          overVideo ? "relative z-50" : ""
+        }`}
       >
         {mode?.kind === "reply" && (
           <ModeBar
@@ -462,163 +634,276 @@ export function Composer({
           </p>
         )}
 
-        {recorder.recording ? (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={recorder.cancel}
-              aria-label={tr.composer.discardRecording}
-              className="grid size-10 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-            >
-              <Trash2 className="size-5" />
-            </button>
-            <div className="flex min-h-10 flex-1 items-center gap-2 rounded-2xl bg-white px-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
-              <span className="size-2.5 animate-pulse rounded-full bg-red-500" aria-hidden />
-              <span className="font-mono text-sm tabular-nums">{formatDuration(recorder.elapsed)}</span>
-              <span className="text-sm text-stone-500">{tr.composer.recording}</span>
-            </div>
-            <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
-            <button
-              type="button"
-              onClick={() => void sendVoice()}
-              aria-label={tr.composer.sendVoice}
-              className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95"
-            >
-              <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-end gap-1.5">
-            {!editing && (
-              <>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => setAttachMenu(true)}
-                  aria-label={tr.composer.attach}
-                  aria-haspopup="menu"
-                  className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
-                >
-                  <Paperclip className="size-5" />
-                </button>
-                {(
-                  [
-                    [mediaInput, "image/*,video/*", undefined],
-                    [fileInput, undefined, undefined],
-                    [cameraInput, "image/*", "environment"],
-                  ] as const
-                ).map(([ref, accept, capture], i) => (
-                  <input
-                    key={i}
-                    ref={ref}
-                    type="file"
-                    accept={accept}
-                    capture={capture}
-                    multiple={!capture}
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.length) sendFiles(e.target.files);
-                      e.target.value = "";
-                    }}
-                  />
-                ))}
-              </>
-            )}
-            <div className="flex min-h-10 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800">
-              <EmojiButton
-                onPick={insert}
-                onGif={(gif) => sendGifOrSticker({ gif })}
-                onSticker={(sticker) => sendGifOrSticker({ sticker })}
-              />
-              <textarea
-                ref={ref}
-                value={text}
-                onChange={(e) => typeText(e.target.value)}
-                onSelect={(e) => setHasSelection(e.currentTarget.selectionEnd > e.currentTarget.selectionStart)}
-                onBlur={() => setHasSelection(false)}
-                onPaste={(e) => {
-                  const files = [...e.clipboardData.files];
-                  if (!files.length || editing) return;
-                  e.preventDefault();
-                  void sendPasted(files);
-                }}
-                onKeyDown={(e) => {
-                  if (shortcut(e)) return;
-                  if (e.key === "Escape" && mode) {
-                    e.preventDefault();
-                    cancel();
-                    return;
-                  }
-                  const desktop = window.matchMedia("(pointer: fine)").matches;
-                  if (e.key === "Enter" && !e.shiftKey && desktop && !e.nativeEvent.isComposing) {
-                    e.preventDefault();
-                    void submit();
-                  }
-                }}
-                rows={1}
-                maxLength={4000}
-                enterKeyHint={editing ? "done" : "send"}
-                placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
-                aria-label={tr.common.message}
-                className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
-              />
+        <div className="flex items-end gap-1.5">
+          {capture || preview ? (
+            (capture?.locked || preview) && (
               <button
                 type="button"
-                {...keepSelection(spoilerButton)}
-                aria-pressed={!editing && spoiler}
-                aria-label={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
-                title={tr.composer.spoilerHint}
-                className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
-                  spoiler && !editing ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
-                }`}
+                onClick={preview ? () => closePreview(false) : cancelCapture}
+                aria-label={tr.composer.discardRecording}
+                className="grid size-10 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
               >
-                <EyeOff className="size-5" />
+                <Trash2 className="size-5" />
               </button>
-              {!editing && scheduledCount > 0 && (
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => setShowScheduled(true)}
-                  aria-label={tr.composer.scheduledCount(scheduledCount)}
-                  title={tr.composer.scheduledMessages}
-                  className="grid size-10 shrink-0 place-items-center rounded-full text-brand"
-                >
-                  <CalendarClock className="size-5" />
-                </button>
-              )}
-              {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
-            </div>
-            {showMic ? (
+            )
+          ) : !editing && (
+            <>
               <button
                 type="button"
-                onClick={() => void recorder.start()}
-                disabled={!realtime}
-                aria-label={tr.composer.recordVoice}
-                className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
-              >
-                <Mic className="size-5" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={!canSubmit}
-                {...(editing ? {} : sendPress)}
                 onMouseDown={(e) => e.preventDefault()}
-                aria-label={editing ? tr.common.save : tr.common.send}
-                title={editing ? undefined : tr.composer.holdOrRightClickToSchedule}
-                className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
+                onClick={() => setAttachMenu(true)}
+                aria-label={tr.composer.attach}
+                aria-haspopup="menu"
+                className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
               >
-                {editing ? (
-                  <Check className="size-5" strokeWidth={2.6} aria-hidden />
-                ) : (
-                  <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
-                )}
+                <Paperclip className="size-5" />
+              </button>
+              {(
+                [
+                  [mediaInput, "image/*,video/*", undefined],
+                  [fileInput, undefined, undefined],
+                  [cameraInput, "image/*", "environment"],
+                  [audioInput, "audio/*", undefined],
+                ] as const
+              ).map(([ref, accept, capture], i) => (
+                <input
+                  key={i}
+                  ref={ref}
+                  type="file"
+                  accept={accept}
+                  capture={capture}
+                  multiple={!capture}
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.length) sendFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+              ))}
+            </>
+          )}
+          <div
+            className={`relative min-h-10 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800 ${
+              capture || preview ? "hidden" : "flex"
+            }`}
+          >
+            {!editing && (
+              <CommandBar
+                ref={commands}
+                text={text}
+                onComplete={completeCommand}
+                onGif={(gif) => {
+                  change("");
+                  sendGifOrSticker({ gif });
+                }}
+                onSticker={(found) => void sendFoundSticker(found)}
+              />
+            )}
+            {!!suggested?.items.length && (
+              <div
+                role="listbox"
+                aria-label={tr.composer.emojiSuggestions}
+                className="absolute bottom-full left-0 z-30 mb-2 flex max-w-full gap-0.5 overflow-x-auto rounded-xl bg-white p-1 shadow-lg ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"
+              >
+                {suggested.items.map((x, i) => (
+                  <button
+                    key={x.e}
+                    type="button"
+                    role="option"
+                    aria-selected={i === active}
+                    title={`:${x.n.replace(/ /g, "_")}:`}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onMouseEnter={() => setActive(i)}
+                    onClick={() => pickSuggestion(x.e)}
+                    className={`grid size-10 shrink-0 place-items-center rounded-lg text-2xl ${
+                      i === active ? "bg-stone-100 dark:bg-stone-800" : ""
+                    }`}
+                  >
+                    {x.e}
+                  </button>
+                ))}
+              </div>
+            )}
+            <EmojiButton
+              slot={pickerSlot}
+              onPick={insert}
+              onGif={(gif) => sendGifOrSticker({ gif })}
+            />
+            <textarea
+              ref={ref}
+              value={text}
+              onChange={(e) => {
+                setCaret(e.target.selectionEnd);
+                typeText(e.target.value);
+              }}
+              onSelect={(e) => {
+                setHasSelection(e.currentTarget.selectionEnd > e.currentTarget.selectionStart);
+                setCaret(e.currentTarget.selectionEnd);
+              }}
+              onBlur={() => {
+                setHasSelection(false);
+                setSuggested(null);
+              }}
+              onPaste={(e) => {
+                const files = [...e.clipboardData.files];
+                if (!files.length || editing) return;
+                e.preventDefault();
+                void sendPasted(files);
+              }}
+              onKeyDown={(e) => {
+                if (commands.current?.key(e) || suggestionKey(e) || shortcut(e)) return;
+                if (e.key === "Escape" && mode) {
+                  e.preventDefault();
+                  cancel();
+                  return;
+                }
+                const desktop = window.matchMedia("(pointer: fine)").matches;
+                if (e.key === "Enter" && !e.shiftKey && desktop && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  void submit();
+                }
+              }}
+              rows={1}
+              maxLength={4000}
+              enterKeyHint={editing ? "done" : "send"}
+              placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
+              aria-label={tr.common.message}
+              className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
+            />
+            <button
+              type="button"
+              {...keepSelection(spoilerButton)}
+              aria-pressed={!editing && spoiler}
+              aria-label={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
+              title={tr.composer.spoilerHint}
+              className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
+                spoiler && !editing ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+              }`}
+            >
+              <EyeOff className="size-5" />
+            </button>
+            {!editing && scheduledCount > 0 && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setShowScheduled(true)}
+                aria-label={tr.composer.scheduledCount(scheduledCount)}
+                title={tr.composer.scheduledMessages}
+                className="grid size-10 shrink-0 place-items-center rounded-full text-brand"
+              >
+                <CalendarClock className="size-5" />
               </button>
             )}
+            {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
           </div>
-        )}
+          {capture && (
+            <div className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-white px-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+              <span className="size-2.5 shrink-0 animate-pulse rounded-full bg-red-500" aria-hidden />
+              <span className="font-mono text-sm tabular-nums">
+                {formatDuration(capture.kind === "voice" ? recorder.elapsed : noteMs)}
+              </span>
+              {capture.locked ? (
+                <>
+                  <span className="truncate text-sm text-stone-500">{tr.composer.recording}</span>
+                  <span className="ml-auto flex shrink-0 items-center gap-1">
+                    {capture.kind === "voice" && (
+                      <button
+                        type="button"
+                        onClick={() => void previewCapture()}
+                        aria-label={tr.composer.stopRecording}
+                        title={tr.composer.stopRecording}
+                        className="grid size-8 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                      >
+                        <Square className="size-4 fill-current" />
+                      </button>
+                    )}
+                    <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
+                  </span>
+                </>
+              ) : (
+                <span
+                  className="ml-auto truncate text-sm text-stone-500"
+                  style={{ transform: `translateX(${slide / 2}px)`, opacity: Math.max(0.2, 1 + slide / 110) }}
+                >
+                  ‹ {tr.composer.slideToCancel}
+                </span>
+              )}
+            </div>
+          )}
+          {preview && (
+            <div className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-white px-3 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+              {preview.kind === "voice" ? (
+                <VoicePlayer
+                  key={preview.url}
+                  url={preview.url}
+                  durationMs={preview.rec.durationMs}
+                  waveform={preview.waveform}
+                  mine={false}
+                  label={tr.composer.playPreview}
+                />
+              ) : (
+                <span className="truncate px-1 text-sm">
+                  {tr.summary.kinds.video_note} · {formatDuration(preview.durationMs)}
+                </span>
+              )}
+              <span className="ml-auto shrink-0">
+                <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
+              </span>
+            </div>
+          )}
+          {showMic ? (
+            <RecordButton
+              mode={preview?.kind ?? recMode}
+              state={preview ? "locked" : capture ? (capture.locked ? "locked" : "holding") : "idle"}
+              disabled={!realtime}
+              onToggle={() => setRecMode((m) => (m === "voice" ? "video" : "voice"))}
+              onStart={startCapture}
+              onLock={() => setCapture((c) => c && { ...c, locked: true })}
+              onRelease={() => void finishCapture()}
+              onCancel={cancelCapture}
+              onSend={() => (preview ? closePreview(true) : void finishCapture())}
+              onSlide={setSlide}
+            />
+          ) : (
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              {...(editing ? {} : sendPress)}
+              onMouseDown={(e) => e.preventDefault()}
+              aria-label={editing ? tr.common.save : tr.common.send}
+              title={editing ? undefined : tr.composer.holdOrRightClickToSchedule}
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-40"
+            >
+              {editing ? (
+                <Check className="size-5" strokeWidth={2.6} aria-hidden />
+              ) : (
+                <SendHorizontal className="size-5" strokeWidth={2.2} aria-hidden />
+              )}
+            </button>
+          )}
+        </div>
       </form>
+      {capture?.kind === "video" && (
+        <VideoNoteCapture
+          ref={note}
+          bottom={noteBottom}
+          onTick={setNoteMs}
+          onLimit={() => void finishCapture()}
+          onStop={() => void previewCapture()}
+        />
+      )}
+      {preview?.kind === "video" && <VideoNotePreview url={preview.url} bottom={noteBottom} />}
       {attachMenu && <Sheet title={tr.common.send} actions={attachActions} onClose={() => setAttachMenu(false)} />}
+      {askLocation && (
+        <Sheet
+          title={tr.composer.sendLocationTitle}
+          actions={[{ label: tr.composer.sendLocation, onSelect: () => void sendLocation() }]}
+          onClose={() => setAskLocation(false)}
+        />
+      )}
+      {writingChecklist && (
+        <ChecklistDialog onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
+      )}
       {scheduling && (
         <ScheduleDialog title={tr.composer.scheduleMessage} onClose={closeScheduling} onPick={(at) => void schedule(at)} />
       )}
@@ -631,9 +916,6 @@ export function Composer({
             setPicked([file]);
           }}
         />
-      )}
-      {noteRecorder && (
-        <VideoNoteRecorder initialEphemeral={ephemeral} onClose={closeNoteRecorder} onSend={sendVideoNote} />
       )}
       {picked && (
         <AttachDialog

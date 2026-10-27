@@ -56,11 +56,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
-                                username: string | null;
                                 /** @description Share it (or its QR code) so people can find you */
                                 contactCode: string;
-                                /** @description Whether people who type your exact email can find you */
-                                findByEmail: boolean;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
                                 /** @description What people see instead of your name and photo, until you share them */
@@ -129,11 +126,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
-                                username: string | null;
                                 /** @description Share it (or its QR code) so people can find you */
                                 contactCode: string;
-                                /** @description Whether people who type your exact email can find you */
-                                findByEmail: boolean;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
                                 /** @description What people see instead of your name and photo, until you share them */
@@ -348,6 +342,13 @@ export interface paths {
                                 openReports: number;
                                 /** @description Space their uploads take, processed copies included; GIFs not counted */
                                 storageBytes: number;
+                                /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                                queued: boolean;
+                                inviteLimit: number;
+                                /** @description People who joined with their links */
+                                invited: number;
+                                /** @description People waiting for them to get a higher limit */
+                                waiting: number;
                             }[];
                             nextCursor: string | null;
                         };
@@ -409,6 +410,13 @@ export interface paths {
                             openReports: number;
                             /** @description Space their uploads take, processed copies included; GIFs not counted */
                             storageBytes: number;
+                            /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                            queued: boolean;
+                            inviteLimit: number;
+                            /** @description People who joined with their links */
+                            invited: number;
+                            /** @description People waiting for them to get a higher limit */
+                            waiting: number;
                         };
                     };
                 };
@@ -479,6 +487,13 @@ export interface paths {
                             openReports: number;
                             /** @description Space their uploads take, processed copies included; GIFs not counted */
                             storageBytes: number;
+                            /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                            queued: boolean;
+                            inviteLimit: number;
+                            /** @description People who joined with their links */
+                            invited: number;
+                            /** @description People waiting for them to get a higher limit */
+                            waiting: number;
                         };
                     };
                 };
@@ -538,6 +553,88 @@ export interface paths {
                             openReports: number;
                             /** @description Space their uploads take, processed copies included; GIFs not counted */
                             storageBytes: number;
+                            /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                            queued: boolean;
+                            inviteLimit: number;
+                            /** @description People who joined with their links */
+                            invited: number;
+                            /** @description People waiting for them to get a higher limit */
+                            waiting: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/invite-limit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change how many people a user can invite
+         * @description People waiting on their links get in, oldest first, as far as the new limit allows.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        limit: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            displayName: string;
+                            email: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            banReason: string | null;
+                            admin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            lastActiveAt: string | null;
+                            chats: number;
+                            messages: number;
+                            activeSessions: number;
+                            /** @description Open reports against this person */
+                            openReports: number;
+                            /** @description Space their uploads take, processed copies included; GIFs not counted */
+                            storageBytes: number;
+                            /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                            queued: boolean;
+                            inviteLimit: number;
+                            /** @description People who joined with their links */
+                            invited: number;
+                            /** @description People waiting for them to get a higher limit */
+                            waiting: number;
                         };
                     };
                 };
@@ -597,6 +694,13 @@ export interface paths {
                             openReports: number;
                             /** @description Space their uploads take, processed copies included; GIFs not counted */
                             storageBytes: number;
+                            /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                            queued: boolean;
+                            inviteLimit: number;
+                            /** @description People who joined with their links */
+                            invited: number;
+                            /** @description People waiting for them to get a higher limit */
+                            waiting: number;
                         };
                     };
                 };
@@ -666,7 +770,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -813,7 +917,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -1336,11 +1440,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
-                            username: string | null;
                             /** @description Share it (or its QR code) so people can find you */
                             contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
@@ -1360,7 +1461,7 @@ export interface paths {
         post?: never;
         /**
          * Delete your account
-         * @description Signs out every device and removes your name, photo, email, username, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people's chats under "Deleted account". Signing in with the same Google account afterwards creates a new account. Send `{ "confirm": "DELETE" }`.
+         * @description Signs out every device and removes your name, photo, email, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people's chats under "Deleted account". Signing in with the same Google account afterwards creates a new account. Send `{ "confirm": "DELETE" }`.
          */
         delete: {
             parameters: {
@@ -1394,10 +1495,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /**
-         * Update profile
-         * @description `username` is stored lowercase without the @; USERNAME_TAKEN if someone has it.
-         */
+        /** Update profile */
         patch: {
             parameters: {
                 query?: never;
@@ -1413,8 +1511,6 @@ export interface paths {
                         avatarUrl?: string | null;
                         /** @description A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes your photo */
                         photo?: string | null;
-                        username?: string | null;
-                        findByEmail?: boolean;
                     };
                 };
             };
@@ -1432,11 +1528,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
-                            username: string | null;
                             /** @description Share it (or its QR code) so people can find you */
                             contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
@@ -1465,7 +1558,7 @@ export interface paths {
         put?: never;
         /**
          * Get a new contact code
-         * @description The old code, contact link and QR code stop working.
+         * @description The old code, contact link and QR code stop working. People you're already connected with stay connected.
          */
         post: {
             parameters: {
@@ -1489,11 +1582,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
-                            username: string | null;
                             /** @description Share it (or its QR code) so people can find you */
                             contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
@@ -1510,6 +1600,132 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contact-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your contact links that still work */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @description Works like your contact code, for anyone, until it expires or you delete it */
+                                code: string;
+                                /** Format: date-time */
+                                expiresAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create a contact link
+         * @description Unlike your contact code, which changes once someone uses it, a contact link lets anyone add you until it expires or you delete it.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date-time
+                         * @description When it stops working; null keeps it until you delete it
+                         */
+                        expiresAt: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Works like your contact code, for anyone, until it expires or you delete it */
+                            code: string;
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contact-links/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a contact link
+         * @description It stops working at once. People who already added you with it stay connected.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1555,11 +1771,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
-                            username: string | null;
                             /** @description Share it (or its QR code) so people can find you */
                             contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
@@ -1599,11 +1812,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
-                            username: string | null;
                             /** @description Share it (or its QR code) so people can find you */
                             contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
@@ -2080,6 +2290,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/invite-quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How many people my links can still bring in
+         * @description Past the limit, people who sign up with my links wait until an admin raises it.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description How many people your links can bring in; null means no limit */
+                            limit: number | null;
+                            /** @description People who joined with your links */
+                            invited: number;
+                            /** @description People who signed up with your links after you hit the limit */
+                            waiting: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/referrals": {
         parameters: {
             query?: never;
@@ -2188,7 +2444,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -2267,7 +2523,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
@@ -2294,6 +2550,25 @@ export interface paths {
                                         /** @description How long it lasted; null if it was missed or declined */
                                         secs: number | null;
                                     }) | null;
+                                    location: {
+                                        lat: number;
+                                        lng: number;
+                                        /** @description How far off it may be, in meters */
+                                        accuracy?: number | null;
+                                    } | null;
+                                    checklist: {
+                                        title: string;
+                                        items: string[];
+                                    } | null;
+                                    /** @description The checklist items marked done; either person can tick them */
+                                    checks: {
+                                        /** @description Index in the checklist's items */
+                                        item: number;
+                                        /** @description Who marked it done */
+                                        userId: string;
+                                        /** Format: date-time */
+                                        at: string;
+                                    }[];
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -2437,7 +2712,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -2516,7 +2791,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -2543,6 +2818,25 @@ export interface paths {
                                     /** @description How long it lasted; null if it was missed or declined */
                                     secs: number | null;
                                 }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -2725,7 +3019,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -2804,7 +3098,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -2831,6 +3125,25 @@ export interface paths {
                                     /** @description How long it lasted; null if it was missed or declined */
                                     secs: number | null;
                                 }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -2994,7 +3307,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -3073,7 +3386,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -3100,6 +3413,25 @@ export interface paths {
                                 /** @description How long it lasted; null if it was missed or declined */
                                 secs: number | null;
                             }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -3196,7 +3528,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -3275,7 +3607,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -3302,6 +3634,25 @@ export interface paths {
                                 /** @description How long it lasted; null if it was missed or declined */
                                 secs: number | null;
                             }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -3398,7 +3749,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -3477,7 +3828,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -3504,6 +3855,25 @@ export interface paths {
                                 /** @description How long it lasted; null if it was missed or declined */
                                 secs: number | null;
                             }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -3561,6 +3931,232 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/messages/{id}/checklist/{item}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Tick or untick a checklist item
+         * @description `item` is the index in the checklist's items. Either person can tick any item; both get message.edited with the new `checks`.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    item: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        done: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            action: ({
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
+                            }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/messages/{id}/view": {
         parameters: {
             query?: never;
@@ -3598,7 +4194,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -3677,7 +4273,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -3704,6 +4300,25 @@ export interface paths {
                                     /** @description How long it lasted; null if it was missed or declined */
                                     secs: number | null;
                                 }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -3804,7 +4419,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -3883,7 +4498,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -3910,6 +4525,25 @@ export interface paths {
                                 /** @description How long it lasted; null if it was missed or declined */
                                 secs: number | null;
                             }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -4046,7 +4680,7 @@ export interface paths {
                                 senderId: string;
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -4125,7 +4759,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -4152,6 +4786,25 @@ export interface paths {
                                     /** @description How long it lasted; null if it was missed or declined */
                                     secs: number | null;
                                 }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -4239,6 +4892,23 @@ export interface paths {
                         gifId?: string;
                         /** @description Send this sticker, on its own */
                         stickerId?: string;
+                        /** @description Share a place, on its own */
+                        location?: {
+                            lat: number;
+                            lng: number;
+                            /** @description How far off it may be, in meters */
+                            accuracy?: number | null;
+                        };
+                        /** @description Send a checklist, on its own */
+                        checklist?: {
+                            title: string;
+                            items: string[];
+                        };
+                        /**
+                         * @description With `encrypted`: the content is a location or a checklist rather than text or a file
+                         * @enum {string}
+                         */
+                        type?: "location" | "checklist";
                         replyToId?: string;
                         spoiler?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
@@ -4293,7 +4963,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -4372,7 +5042,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -4399,6 +5069,25 @@ export interface paths {
                                 /** @description How long it lasted; null if it was missed or declined */
                                 secs: number | null;
                             }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -4492,7 +5181,7 @@ export interface paths {
                                 /** @description Becomes the clientId of the message once it is sent */
                                 clientId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 entities: {
                                     /** @enum {string} */
@@ -4535,7 +5224,7 @@ export interface paths {
                                     id: string;
                                     senderId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     spoiler: boolean;
                                     ephemeral: boolean;
@@ -4617,6 +5306,23 @@ export interface paths {
                         gifId?: string;
                         /** @description Send this sticker, on its own */
                         stickerId?: string;
+                        /** @description Share a place, on its own */
+                        location?: {
+                            lat: number;
+                            lng: number;
+                            /** @description How far off it may be, in meters */
+                            accuracy?: number | null;
+                        };
+                        /** @description Send a checklist, on its own */
+                        checklist?: {
+                            title: string;
+                            items: string[];
+                        };
+                        /**
+                         * @description With `encrypted`: the content is a location or a checklist rather than text or a file
+                         * @enum {string}
+                         */
+                        type?: "location" | "checklist";
                         replyToId?: string;
                         spoiler?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
@@ -4676,7 +5382,7 @@ export interface paths {
                             /** @description Becomes the clientId of the message once it is sent */
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -4719,7 +5425,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -4875,7 +5581,7 @@ export interface paths {
                             /** @description Becomes the clientId of the message once it is sent */
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -4918,7 +5624,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -5000,7 +5706,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -5079,7 +5785,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -5106,6 +5812,25 @@ export interface paths {
                                 /** @description How long it lasted; null if it was missed or declined */
                                 secs: number | null;
                             }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -5338,7 +6063,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @description A contact code, a contact link, @username or an exact email */
+                        /** @description A contact code or contact link */
                         q: string;
                     };
                 };
@@ -5384,13 +6109,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Find someone by contact code, contact link, username or email
-         * @description `q` is a contact code (dashes and spaces ignored), a contact link or scanned QR (…/add/CODE), @username, or an exact email of someone who allows it. USER_NOT_FOUND if no one matches, CONTACT_SELF for you.
+         * Find someone by contact code or contact link
+         * @description `q` is a contact code (dashes and spaces ignored) or a contact link or scanned QR (…/add/CODE). USER_NOT_FOUND if no one matches, CONTACT_SELF for you.
          */
         get: {
             parameters: {
                 query: {
-                    /** @description A contact code, a contact link, @username or an exact email */
+                    /** @description A contact code or contact link */
                     q: string;
                 };
                 header?: never;
@@ -5413,8 +6138,6 @@ export interface paths {
                                 /** Format: uri */
                                 avatarUrl: string | null;
                             };
-                            /** @description Only when you searched by it */
-                            username: string | null;
                             /** @description Your direct chat with them, if you already have one */
                             chatId: string | null;
                         };
@@ -5720,7 +6443,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -5799,7 +6522,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
@@ -5826,6 +6549,25 @@ export interface paths {
                                         /** @description How long it lasted; null if it was missed or declined */
                                         secs: number | null;
                                     }) | null;
+                                    location: {
+                                        lat: number;
+                                        lng: number;
+                                        /** @description How far off it may be, in meters */
+                                        accuracy?: number | null;
+                                    } | null;
+                                    checklist: {
+                                        title: string;
+                                        items: string[];
+                                    } | null;
+                                    /** @description The checklist items marked done; either person can tick them */
+                                    checks: {
+                                        /** @description Index in the checklist's items */
+                                        item: number;
+                                        /** @description Who marked it done */
+                                        userId: string;
+                                        /** Format: date-time */
+                                        at: string;
+                                    }[];
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -5885,7 +6627,7 @@ export interface paths {
                                     senderId: string;
                                     clientId: string;
                                     /** @enum {string} */
-                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                     text: string | null;
                                     entities: {
                                         /** @enum {string} */
@@ -5964,7 +6706,7 @@ export interface paths {
                                         id: string;
                                         senderId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                         text: string | null;
                                         spoiler: boolean;
                                         ephemeral: boolean;
@@ -5991,6 +6733,25 @@ export interface paths {
                                         /** @description How long it lasted; null if it was missed or declined */
                                         secs: number | null;
                                     }) | null;
+                                    location: {
+                                        lat: number;
+                                        lng: number;
+                                        /** @description How far off it may be, in meters */
+                                        accuracy?: number | null;
+                                    } | null;
+                                    checklist: {
+                                        title: string;
+                                        items: string[];
+                                    } | null;
+                                    /** @description The checklist items marked done; either person can tick them */
+                                    checks: {
+                                        /** @description Index in the checklist's items */
+                                        item: number;
+                                        /** @description Who marked it done */
+                                        userId: string;
+                                        /** Format: date-time */
+                                        at: string;
+                                    }[];
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -6096,7 +6857,7 @@ export interface paths {
                                         senderId: string;
                                         clientId: string;
                                         /** @enum {string} */
-                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                        type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                         text: string | null;
                                         entities: {
                                             /** @enum {string} */
@@ -6175,7 +6936,7 @@ export interface paths {
                                             id: string;
                                             senderId: string;
                                             /** @enum {string} */
-                                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                             text: string | null;
                                             spoiler: boolean;
                                             ephemeral: boolean;
@@ -6202,6 +6963,25 @@ export interface paths {
                                             /** @description How long it lasted; null if it was missed or declined */
                                             secs: number | null;
                                         }) | null;
+                                        location: {
+                                            lat: number;
+                                            lng: number;
+                                            /** @description How far off it may be, in meters */
+                                            accuracy?: number | null;
+                                        } | null;
+                                        checklist: {
+                                            title: string;
+                                            items: string[];
+                                        } | null;
+                                        /** @description The checklist items marked done; either person can tick them */
+                                        checks: {
+                                            /** @description Index in the checklist's items */
+                                            item: number;
+                                            /** @description Who marked it done */
+                                            userId: string;
+                                            /** Format: date-time */
+                                            at: string;
+                                        }[];
                                         /** Format: date-time */
                                         createdAt: string;
                                         /** Format: date-time */
@@ -6321,6 +7101,31 @@ export interface paths {
                                 type: "devices.changed";
                                 data: {
                                     userId: string;
+                                };
+                                createdAt: string;
+                            } | {
+                                eventId: string;
+                                /** @enum {string} */
+                                type: "me.updated";
+                                data: {
+                                    id: string;
+                                    /** Format: email */
+                                    email: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Share it (or its QR code) so people can find you */
+                                    contactCode: string;
+                                    /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                                    backupKeyId: string | null;
+                                    /** @description What people see instead of your name and photo, until you share them */
+                                    alias: string;
+                                    /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                    hasBackupPin: boolean;
+                                    /** @description Whether the apps ask for your app lock code when they open */
+                                    hasAppLock: boolean;
+                                    /** Format: date-time */
+                                    createdAt: string;
                                 };
                                 createdAt: string;
                             })[];
@@ -6776,11 +7581,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
-                            username: string | null;
                             /** @description Share it (or its QR code) so people can find you */
                             contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
@@ -6890,11 +7692,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
-                            username: string | null;
                             /** @description Share it (or its QR code) so people can find you */
                             contactCode: string;
-                            /** @description Whether people who type your exact email can find you */
-                            findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
                             /** @description What people see instead of your name and photo, until you share them */
@@ -7109,7 +7908,7 @@ export interface paths {
                             senderId: string;
                             clientId: string;
                             /** @enum {string} */
-                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                             text: string | null;
                             entities: {
                                 /** @enum {string} */
@@ -7188,7 +7987,7 @@ export interface paths {
                                 id: string;
                                 senderId: string;
                                 /** @enum {string} */
-                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service";
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
                                 text: string | null;
                                 spoiler: boolean;
                                 ephemeral: boolean;
@@ -7215,6 +8014,25 @@ export interface paths {
                                 /** @description How long it lasted; null if it was missed or declined */
                                 secs: number | null;
                             }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */

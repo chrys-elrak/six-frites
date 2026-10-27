@@ -1,17 +1,17 @@
 import { unwrap } from "@six/sdk";
-import { Lock } from "lucide-react-native";
-import { useState } from "react";
+import { Fingerprint, Lock } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { unlock } from "@/lib/app-lock";
+import { canUseBiometrics, checkBiometrics, setBiometricUnlock, unlock, useBiometricUnlock } from "@/lib/app-lock";
 import { useT } from "@/lib/i18n";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Dialog } from "./encryption-settings";
 import { Logo } from "./logo";
-import { Card, CodeInput, Notice, PrimaryButton, SectionTitle, TextButton, codeError } from "./ui";
+import { Card, CodeInput, IconButton, Notice, PrimaryButton, SectionTitle, TextButton, Toggle, codeError } from "./ui";
 
 export function AppLockSettings() {
   const t = useTheme();
@@ -20,14 +20,26 @@ export function AppLockSettings() {
   const setUser = useSession((s) => s.setUser);
   const [turningOn, setTurningOn] = useState(false);
   const [failed, setFailed] = useState(false);
+  const biometric = useBiometricUnlock((s) => s.on);
+  const [canBiometric, setCanBiometric] = useState(false);
+
+  useEffect(() => {
+    void canUseBiometrics().then(setCanBiometric);
+  }, []);
 
   async function turnOff() {
     setFailed(false);
     try {
       setUser(unwrap(await six.api.DELETE("/v1/me/app-lock")));
+      setBiometricUnlock(false);
     } catch {
       setFailed(true);
     }
+  }
+
+  async function toggleBiometric(on: boolean) {
+    if (on && !(await checkBiometrics(tr.settings.appLock.fingerprintPrompt, tr.common.cancel))) return;
+    setBiometricUnlock(on);
   }
 
   return (
@@ -46,6 +58,17 @@ export function AppLockSettings() {
           onPress={() => (hasLock ? void turnOff() : setTurningOn(true))}
         />
       </Card>
+      {hasLock && (
+        <Card style={{ marginTop: 8 }}>
+          <Toggle
+            label={tr.settings.appLock.biometric}
+            hint={canBiometric ? tr.settings.appLock.biometricHint : tr.settings.appLock.noBiometric}
+            value={biometric && canBiometric}
+            disabled={!canBiometric}
+            onChange={(on) => void toggleBiometric(on)}
+          />
+        </Card>
+      )}
       {turningOn && <TurnOnDialog onClose={() => setTurningOn(false)} />}
     </View>
   );
@@ -112,6 +135,15 @@ export function LockScreen() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const biometric = useBiometricUnlock((s) => s.on);
+
+  function askFingerprint() {
+    void checkBiometrics(tr.settings.appLock.fingerprintPrompt, tr.settings.appLock.useCode).then((ok) => ok && unlock());
+  }
+
+  useEffect(() => {
+    if (biometric) askFingerprint();
+  }, [biometric]);
 
   async function check() {
     if (code.length < 4 || busy) return;
@@ -143,7 +175,7 @@ export function LockScreen() {
             label={tr.settings.appLock.enterCode}
             value={code}
             onChange={setCode}
-            autoFocus
+            autoFocus={!biometric}
             onSubmit={() => void check()}
           />
           {error && <Notice tone="error">{error}</Notice>}
@@ -153,6 +185,16 @@ export function LockScreen() {
             disabled={code.length < 4 || busy}
             onPress={() => void check()}
           />
+          {biometric && (
+            <IconButton
+              Icon={Fingerprint}
+              label={tr.settings.appLock.useFingerprint}
+              onPress={askFingerprint}
+              size={40}
+              color={brand}
+              style={{ alignSelf: "center" }}
+            />
+          )}
           <TextButton title={tr.settings.appLock.forgot} onPress={() => void logout()} />
         </View>
       </KeyboardAvoidingView>

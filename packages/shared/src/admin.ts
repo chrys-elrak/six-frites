@@ -36,6 +36,10 @@ export const AdminUserDTO = AdminUserRef.extend({
   activeSessions: z.number().int(),
   openReports: z.number().int().describe("Open reports against this person"),
   storageBytes: z.number().int().describe("Space their uploads take, processed copies included; GIFs not counted"),
+  queued: z.boolean().describe("Signed up after their inviter hit the limit and can't sign in yet"),
+  inviteLimit: z.number().int(),
+  invited: z.number().int().describe("People who joined with their links"),
+  waiting: z.number().int().describe("People waiting for them to get a higher limit"),
 });
 export type AdminUserDTO = z.infer<typeof AdminUserDTO>;
 
@@ -89,6 +93,9 @@ export const AdminUserQuery = PageQuery.extend({
     .transform((v) => (v === undefined ? undefined : v === "true")),
 });
 export type AdminUserQuery = z.infer<typeof AdminUserQuery>;
+
+export const InviteLimitInput = z.object({ limit: z.number().int().min(0).max(100_000) });
+export type InviteLimitInput = z.infer<typeof InviteLimitInput>;
 
 export const BanUserInput = z.object({ reason: z.string().trim().min(1).max(500) });
 export type BanUserInput = z.infer<typeof BanUserInput>;

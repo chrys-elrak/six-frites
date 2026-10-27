@@ -5,6 +5,7 @@ import {
   CreateInviteInput,
   InviteDTO,
   InvitePreview,
+  InviteQuota,
   PageQuery,
   ReferralDTO,
   page,
@@ -12,6 +13,7 @@ import {
 import {
   acceptInvite,
   createInvite,
+  inviteQuota,
   listInvites,
   listReferrals,
   previewInvite,
@@ -98,6 +100,20 @@ const inviteRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
       (req) => acceptInvite(req.auth.userId, req.params.code),
+    );
+
+    authed.get(
+      "/me/invite-quota",
+      {
+        schema: {
+          tags: ["invites"],
+          summary: "How many people my links can still bring in",
+          description: "Past the limit, people who sign up with my links wait until an admin raises it.",
+          security: bearer,
+          response: { 200: InviteQuota },
+        },
+      },
+      (req) => inviteQuota(req.auth.userId),
     );
 
     authed.get(

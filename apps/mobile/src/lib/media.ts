@@ -1,7 +1,9 @@
 import { kindFor } from "@six/sdk";
-import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES } from "@six/shared";
+import { ACCEPTED_TYPES, type CropRect, MAX_UPLOAD_BYTES, cropPixels, stripAudio } from "@six/shared";
+import { randomUUID } from "expo-crypto";
 import * as DocumentPicker from "expo-document-picker";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { File, Paths } from "expo-file-system";
+import { ImageManipulator, type ImageRef, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import type { ReceivedImage } from "../../modules/rich-input";
 import { getT } from "./i18n";
@@ -31,22 +33,46 @@ function guessMime(name: string, given?: string | null) {
   return EXT_MIME[name.split(".").pop()?.toLowerCase() ?? ""] ?? "application/octet-stream";
 }
 
-/** Re-encodes photos the API can't take as images (such as HEIC) to JPEG so they still arrive as photos. */
-async function asSendableImage(file: LocalFile): Promise<LocalFile> {
-  if (!file.mime.startsWith("image/") || ACCEPTED_TYPES.image.includes(file.mime)) return file;
-  const rendered = await ImageManipulator.manipulate(file.uri).renderAsync();
-  const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.9 });
+async function saveImage(file: LocalFile, rendered: ImageRef, format = SaveFormat.JPEG): Promise<LocalFile> {
+  const saved = await rendered.saveAsync({ format, compress: 0.9 });
   const size = (await (await fetch(saved.uri)).blob()).size;
   return {
     ...file,
     uri: saved.uri,
     kind: "image",
-    mime: "image/jpeg",
-    name: file.name.replace(/\.\w+$/, "") + ".jpg",
+    mime: `image/${format}`,
+    name: file.name.replace(/\.\w+$/, "") + (format === SaveFormat.JPEG ? ".jpg" : `.${format}`),
     size,
     width: saved.width,
     height: saved.height,
   };
+}
+
+/** Re-encodes photos the API can't take as images (such as HEIC) to JPEG so they still arrive as photos. */
+async function asSendableImage(file: LocalFile): Promise<LocalFile> {
+  if (!file.mime.startsWith("image/") || ACCEPTED_TYPES.image.includes(file.mime)) return file;
+  return saveImage(file, await ImageManipulator.manipulate(file.uri).renderAsync());
+}
+
+/** Turns a photo `turns` quarters counter-clockwise, then crops it. */
+export async function editPhoto(file: LocalFile, source: ImageRef, turns: number, crop: CropRect) {
+  const odd = turns % 2 === 1;
+  const rendered = await ImageManipulator.manipulate(source)
+    .rotate(-90 * turns)
+    .crop(cropPixels(crop, odd ? source.height : source.width, odd ? source.width : source.height))
+    .renderAsync();
+  const format = file.mime === "image/png" ? SaveFormat.PNG : file.mime === "image/webp" ? SaveFormat.WEBP : SaveFormat.JPEG;
+  return saveImage(file, rendered, format);
+}
+
+/** A copy of the video with its sound taken out, or null when it isn't an MP4 or MOV that can be edited. */
+export async function muteVideo(file: LocalFile): Promise<LocalFile | null> {
+  const bytes = await new File(file.uri).bytes();
+  if (!stripAudio(bytes)) return null;
+  const out = new File(Paths.cache, `muted-${randomUUID()}.${file.name.split(".").pop()}`);
+  out.create();
+  await out.write(bytes);
+  return { ...file, uri: out.uri };
 }
 
 async function fromPickerAsset(a: ImagePicker.ImagePickerAsset): Promise<LocalFile> {
@@ -96,8 +122,8 @@ export async function takePhoto(): Promise<LocalFile[]> {
   return checkSizes(await Promise.all(res.assets.map(fromPickerAsset)));
 }
 
-export async function pickFiles(): Promise<LocalFile[]> {
-  const res = await DocumentPicker.getDocumentAsync({ multiple: true, copyToCacheDirectory: true });
+export async function pickFiles(type = "*/*"): Promise<LocalFile[]> {
+  const res = await DocumentPicker.getDocumentAsync({ type, multiple: true, copyToCacheDirectory: true });
   if (res.canceled) return [];
   return checkSizes(
     res.assets.map((a) => {

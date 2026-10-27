@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
-import { STICKER_ACCEPT, addStickers, createPack, removeSticker, setPackSaved, useStickerPack } from "@/lib/stickers";
+import { STICKER_ACCEPT, addStickers, removeSticker, setPackSaved, useStickerPack } from "@/lib/stickers";
 import { Dialog } from "./dialog";
 import { StickerView } from "./sticker";
 import { PrimaryButton } from "./ui";
@@ -101,25 +101,6 @@ function Header({ title, onClose }: { title: string; onClose: () => void }) {
         <X className="size-4" />
       </button>
     </div>
-  );
-}
-
-export function NewPackDialog({ onClose, onCreated }: { onClose: () => void; onCreated: (packId: string) => void }) {
-  const tr = useT();
-  const qc = useQueryClient();
-  return (
-    <Dialog onClose={onClose}>
-      <Header title={tr.composer.newPack} onClose={onClose} />
-      <UploadForm
-        withTitle
-        label={tr.composer.create}
-        onSubmit={async (title, files, emoji) => {
-          const pack = await createPack(qc, title);
-          await addStickers(qc, pack.id, files, emoji);
-          onCreated(pack.id);
-        }}
-      />
-    </Dialog>
   );
 }
 

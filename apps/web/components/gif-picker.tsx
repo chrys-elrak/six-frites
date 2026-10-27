@@ -8,6 +8,21 @@ import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 
+/** GIPHY and KLIPY results for `q`, or trending ones when it is empty, a page at a time. */
+export function useGifs(q: string, enabled = true, kind: "gif" | "sticker" = "gif") {
+  return useInfiniteQuery({
+    queryKey: ["gifs", kind, q],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) =>
+      unwrap(await six.api.GET("/v1/gifs", { params: { query: { q: q || undefined, kind, cursor: pageParam } } })),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    staleTime: 30 * 60_000,
+    gcTime: 30 * 60_000,
+    retry: false,
+    enabled,
+  });
+}
+
 export function GifPicker({ onPick }: { onPick: (gif: GifDTO) => void }) {
   const tr = useT();
   const [input, setInput] = useState("");
@@ -18,16 +33,7 @@ export function GifPicker({ onPick }: { onPick: (gif: GifDTO) => void }) {
     return () => clearTimeout(t);
   }, [input]);
 
-  const gifs = useInfiniteQuery({
-    queryKey: ["gifs", q],
-    initialPageParam: undefined as string | undefined,
-    queryFn: async ({ pageParam }) =>
-      unwrap(await six.api.GET("/v1/gifs", { params: { query: { q: q || undefined, cursor: pageParam } } })),
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
-    staleTime: 30 * 60_000,
-    gcTime: 30 * 60_000,
-    retry: false,
-  });
+  const gifs = useGifs(q);
   const items = gifs.data?.pages.flatMap((p) => p.items) ?? [];
   const unavailable = gifs.error instanceof SixApiError && gifs.error.code === "GIFS_UNAVAILABLE";
   const notice = unavailable

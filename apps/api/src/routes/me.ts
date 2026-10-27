@@ -1,6 +1,8 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import {
   BlockedUserDTO,
+  ContactLinkDTO,
+  CreateContactLinkInput,
   DeleteAccountInput,
   AppLockInput,
   UpdateMeInput,
@@ -8,6 +10,7 @@ import {
 } from "@six/shared";
 import { z } from "zod";
 import { listBlocked } from "../services/blocks.js";
+import { createContactLink, deleteContactLink, listContactLinks } from "../services/discovery.js";
 import {
   deleteAccount,
   getMe,
@@ -33,7 +36,6 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["me"],
         summary: "Update profile",
-        description: "`username` is stored lowercase without the @; USERNAME_TAKEN if someone has it.",
         security: [{ bearer: [] }],
         body: UpdateMeInput,
         response: { 200: UserDTO },
@@ -49,12 +51,60 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["me"],
         summary: "Get a new contact code",
-        description: "The old code, contact link and QR code stop working.",
+        description: "The old code, contact link and QR code stop working. People you're already connected with stay connected.",
         security: [{ bearer: [] }],
         response: { 200: UserDTO },
       },
     },
     (req) => resetContactCode(req.auth.userId),
+  );
+
+  app.get(
+    "/me/contact-links",
+    {
+      schema: {
+        tags: ["me"],
+        summary: "Your contact links that still work",
+        security: [{ bearer: [] }],
+        response: { 200: z.object({ items: z.array(ContactLinkDTO) }) },
+      },
+    },
+    (req) => listContactLinks(req.auth.userId),
+  );
+
+  app.post(
+    "/me/contact-links",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["me"],
+        summary: "Create a contact link",
+        description:
+          "Unlike your contact code, which changes once someone uses it, a contact link lets anyone add you until it expires or you delete it.",
+        security: [{ bearer: [] }],
+        body: CreateContactLinkInput,
+        response: { 201: ContactLinkDTO },
+      },
+    },
+    async (req, reply) => reply.status(201).send(await createContactLink(req.auth.userId, req.body.expiresAt)),
+  );
+
+  app.delete(
+    "/me/contact-links/:code",
+    {
+      schema: {
+        tags: ["me"],
+        summary: "Delete a contact link",
+        description: "It stops working at once. People who already added you with it stay connected.",
+        security: [{ bearer: [] }],
+        params: z.object({ code: z.string().min(1).max(32) }),
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await deleteContactLink(req.auth.userId, req.params.code);
+      return reply.status(204).send(null);
+    },
   );
 
   app.put(
@@ -127,7 +177,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["me"],
         summary: "Delete your account",
         description:
-          'Signs out every device and removes your name, photo, email, username, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people\'s chats under "Deleted account". Signing in with the same Google account afterwards creates a new account. Send `{ "confirm": "DELETE" }`.',
+          'Signs out every device and removes your name, photo, email, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people\'s chats under "Deleted account". Signing in with the same Google account afterwards creates a new account. Send `{ "confirm": "DELETE" }`.',
         security: [{ bearer: [] }],
         body: DeleteAccountInput,
         response: { 204: z.null() },

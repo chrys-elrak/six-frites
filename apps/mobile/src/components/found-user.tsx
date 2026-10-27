@@ -32,7 +32,6 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
       <Avatar user={found.user} size="lg" />
       <View style={{ alignItems: "center" }}>
         <Text style={{ color: t.text, fontSize: 18, fontWeight: "700" }}>{found.user.displayName}</Text>
-        {found.username && <Text style={{ color: t.muted, fontSize: 14 }}>@{found.username}</Text>}
       </View>
       <PrimaryButton
         title={found.chatId ? tr.contacts.openChat : tr.common.message}

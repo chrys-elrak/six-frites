@@ -28,6 +28,7 @@ import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
+import { useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
@@ -81,6 +82,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
         <MediaLabel type={shownType(m as Hydrated)} />
         {voiceLength}
         {m.type === "file" && m.attachment && !m.text && <span className="truncate">· {m.attachment.name}</span>}
+        {m.type === "checklist" && m.checklist && <span className="truncate">· {m.checklist.title}</span>}
         {m.text && <span className="truncate">· {maskSpoilers(m.text, m.entities)}</span>}
       </span>
     );
@@ -105,6 +107,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
   const [menu, setMenu] = useState(false);
   const press = useLongPress(() => setMenu(true));
   const typing = useTyping(chat.id);
+  const draft = useDrafts((s) => (active ? undefined : s.byChat[chat.id]));
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
   const online = usePresence(peer.id === meId || frozen ? undefined : peer.id)?.online;
@@ -138,7 +141,15 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
                     : "text-stone-500 dark:text-stone-400"
               }`}
             >
-              {typing ? tr.chats.typing[typing] : <Preview chat={chat} meId={meId} />}
+              {typing ? (
+                tr.chats.typing[typing]
+              ) : draft ? (
+                <>
+                  <span className="text-red-600 dark:text-red-400">{tr.chats.draft}</span> {draft}
+                </>
+              ) : (
+                <Preview chat={chat} meId={meId} />
+              )}
             </p>
             {chat.pinned && !unread && (
               <Pin aria-label={tr.chats.pinned} className="size-3.5 shrink-0 rotate-45 text-stone-400" />

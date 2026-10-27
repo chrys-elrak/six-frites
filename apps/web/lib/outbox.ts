@@ -1,6 +1,8 @@
 import type {
+  Checklist,
   EncryptedFile,
   EphemeralInput,
+  GeoPoint,
   GifDTO,
   MessageEntity,
   ReplyPreview,
@@ -33,6 +35,8 @@ export interface PendingMessage {
   attachment: PendingAttachment | null;
   gif: GifDTO | null;
   sticker: StickerDTO | null;
+  location?: GeoPoint;
+  checklist?: Checklist;
   createdAt: string;
   status: "sending" | "failed";
 }

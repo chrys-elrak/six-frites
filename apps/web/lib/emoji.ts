@@ -1,3 +1,5 @@
+import type { EmojiEntry } from "@six/shared";
+
 const segmenter =
   typeof Intl !== "undefined" && "Segmenter" in Intl
     ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
@@ -29,4 +31,14 @@ export async function animatedEmojiUrl(emoji: string): Promise<string | null> {
   const candidates = [key, bare, bare.replace(/^([0-9a-f]+)/, "$1_fe0f")];
   const hit = candidates.find((k) => set.has(k));
   return hit ? `https://fonts.gstatic.com/s/e/notoemoji/latest/${hit}/lottie.json` : null;
+}
+
+let list: Promise<EmojiEntry[]> | null = null;
+
+/** Every emoji with its name and keywords, loaded on first use. */
+export function emojiList() {
+  list ??= import("@six/shared/emojis.json").then((m) =>
+    (m.default as { data: EmojiEntry[] }[]).flatMap((c) => c.data),
+  );
+  return list;
 }

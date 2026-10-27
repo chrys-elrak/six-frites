@@ -38,19 +38,32 @@ export const UpdateContactInput = z
 export type UpdateContactInput = z.infer<typeof UpdateContactInput>;
 
 export const FindUserQuery = z.object({
-  q: z.string().trim().min(1).max(320).describe("A contact code, a contact link, @username or an exact email"),
+  q: z.string().trim().min(1).max(320).describe("A contact code or contact link"),
 });
 export type FindUserQuery = z.infer<typeof FindUserQuery>;
 
 export const FoundUserDTO = z.object({
   user: PublicUser.describe("With your custom name and photo applied if you already know them"),
-  username: z.string().nullable().describe("Only when you searched by it"),
   chatId: Id.nullable().describe("Your direct chat with them, if you already have one"),
 });
 export type FoundUserDTO = z.infer<typeof FoundUserDTO>;
 
 export const AddContactInput = FindUserQuery;
 export type AddContactInput = FindUserQuery;
+
+export const MAX_CONTACT_LINKS = 10;
+
+export const ContactLinkDTO = z.object({
+  code: z.string().describe("Works like your contact code, for anyone, until it expires or you delete it"),
+  expiresAt: IsoDate.nullable(),
+  createdAt: IsoDate,
+});
+export type ContactLinkDTO = z.infer<typeof ContactLinkDTO>;
+
+export const CreateContactLinkInput = z.object({
+  expiresAt: IsoDate.nullable().describe("When it stops working; null keeps it until you delete it"),
+});
+export type CreateContactLinkInput = z.infer<typeof CreateContactLinkInput>;
 
 export const BlockedUserDTO = z.object({
   user: PublicUser,

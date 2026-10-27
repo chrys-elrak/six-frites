@@ -105,17 +105,9 @@
                           "type": "string",
                           "format": "uri"
                         },
-                        "username": {
-                          "nullable": true,
-                          "type": "string"
-                        },
                         "contactCode": {
                           "type": "string",
                           "description": "Share it (or its QR code) so people can find you"
-                        },
-                        "findByEmail": {
-                          "type": "boolean",
-                          "description": "Whether people who type your exact email can find you"
                         },
                         "backupKeyId": {
                           "nullable": true,
@@ -145,9 +137,7 @@
                         "email",
                         "displayName",
                         "avatarUrl",
-                        "username",
                         "contactCode",
-                        "findByEmail",
                         "backupKeyId",
                         "alias",
                         "hasBackupPin",
@@ -233,17 +223,9 @@
                           "type": "string",
                           "format": "uri"
                         },
-                        "username": {
-                          "nullable": true,
-                          "type": "string"
-                        },
                         "contactCode": {
                           "type": "string",
                           "description": "Share it (or its QR code) so people can find you"
-                        },
-                        "findByEmail": {
-                          "type": "boolean",
-                          "description": "Whether people who type your exact email can find you"
                         },
                         "backupKeyId": {
                           "nullable": true,
@@ -273,9 +255,7 @@
                         "email",
                         "displayName",
                         "avatarUrl",
-                        "username",
                         "contactCode",
-                        "findByEmail",
                         "backupKeyId",
                         "alias",
                         "hasBackupPin",
@@ -659,6 +639,27 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991,
                             "description": "Space their uploads take, processed copies included; GIFs not counted"
+                          },
+                          "queued": {
+                            "type": "boolean",
+                            "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                          },
+                          "inviteLimit": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "invited": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "People who joined with their links"
+                          },
+                          "waiting": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "People waiting for them to get a higher limit"
                           }
                         },
                         "required": [
@@ -675,7 +676,11 @@
                           "messages",
                           "activeSessions",
                           "openReports",
-                          "storageBytes"
+                          "storageBytes",
+                          "queued",
+                          "inviteLimit",
+                          "invited",
+                          "waiting"
                         ],
                         "additionalProperties": false
                       }
@@ -792,6 +797,27 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Space their uploads take, processed copies included; GIFs not counted"
+                    },
+                    "queued": {
+                      "type": "boolean",
+                      "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "inviteLimit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "invited": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who joined with their links"
+                    },
+                    "waiting": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People waiting for them to get a higher limit"
                     }
                   },
                   "required": [
@@ -808,7 +834,11 @@
                     "messages",
                     "activeSessions",
                     "openReports",
-                    "storageBytes"
+                    "storageBytes",
+                    "queued",
+                    "inviteLimit",
+                    "invited",
+                    "waiting"
                   ],
                   "additionalProperties": false
                 }
@@ -934,6 +964,27 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Space their uploads take, processed copies included; GIFs not counted"
+                    },
+                    "queued": {
+                      "type": "boolean",
+                      "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "inviteLimit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "invited": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who joined with their links"
+                    },
+                    "waiting": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People waiting for them to get a higher limit"
                     }
                   },
                   "required": [
@@ -950,7 +1001,11 @@
                     "messages",
                     "activeSessions",
                     "openReports",
-                    "storageBytes"
+                    "storageBytes",
+                    "queued",
+                    "inviteLimit",
+                    "invited",
+                    "waiting"
                   ],
                   "additionalProperties": false
                 }
@@ -1055,6 +1110,27 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Space their uploads take, processed copies included; GIFs not counted"
+                    },
+                    "queued": {
+                      "type": "boolean",
+                      "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "inviteLimit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "invited": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who joined with their links"
+                    },
+                    "waiting": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People waiting for them to get a higher limit"
                     }
                   },
                   "required": [
@@ -1071,7 +1147,178 @@
                     "messages",
                     "activeSessions",
                     "openReports",
-                    "storageBytes"
+                    "storageBytes",
+                    "queued",
+                    "inviteLimit",
+                    "invited",
+                    "waiting"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/{id}/invite-limit": {
+      "post": {
+        "summary": "Change how many people a user can invite",
+        "tags": [
+          "admin"
+        ],
+        "description": "People waiting on their links get in, oldest first, as far as the new limit allows.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100000
+                  }
+                },
+                "required": [
+                  "limit"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "bannedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "banReason": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "admin": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "lastActiveAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "chats": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "messages": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "activeSessions": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "openReports": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Open reports against this person"
+                    },
+                    "storageBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space their uploads take, processed copies included; GIFs not counted"
+                    },
+                    "queued": {
+                      "type": "boolean",
+                      "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "inviteLimit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "invited": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who joined with their links"
+                    },
+                    "waiting": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People waiting for them to get a higher limit"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "displayName",
+                    "email",
+                    "avatarUrl",
+                    "bannedAt",
+                    "banReason",
+                    "admin",
+                    "createdAt",
+                    "lastActiveAt",
+                    "chats",
+                    "messages",
+                    "activeSessions",
+                    "openReports",
+                    "storageBytes",
+                    "queued",
+                    "inviteLimit",
+                    "invited",
+                    "waiting"
                   ],
                   "additionalProperties": false
                 }
@@ -1176,6 +1423,27 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "Space their uploads take, processed copies included; GIFs not counted"
+                    },
+                    "queued": {
+                      "type": "boolean",
+                      "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "inviteLimit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "invited": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who joined with their links"
+                    },
+                    "waiting": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People waiting for them to get a higher limit"
                     }
                   },
                   "required": [
@@ -1192,7 +1460,11 @@
                     "messages",
                     "activeSessions",
                     "openReports",
-                    "storageBytes"
+                    "storageBytes",
+                    "queued",
+                    "inviteLimit",
+                    "invited",
+                    "waiting"
                   ],
                   "additionalProperties": false
                 }
@@ -1379,7 +1651,9 @@
                                     "file",
                                     "gif",
                                     "sticker",
-                                    "service"
+                                    "service",
+                                    "location",
+                                    "checklist"
                                   ]
                                 },
                                 "text": {
@@ -1822,7 +2096,9 @@
                               "file",
                               "gif",
                               "sticker",
-                              "service"
+                              "service",
+                              "location",
+                              "checklist"
                             ]
                           },
                           "text": {
@@ -2814,17 +3090,9 @@
                       "type": "string",
                       "format": "uri"
                     },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
                     "contactCode": {
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
                     },
                     "backupKeyId": {
                       "nullable": true,
@@ -2854,9 +3122,7 @@
                     "email",
                     "displayName",
                     "avatarUrl",
-                    "username",
                     "contactCode",
-                    "findByEmail",
                     "backupKeyId",
                     "alias",
                     "hasBackupPin",
@@ -2875,7 +3141,6 @@
         "tags": [
           "me"
         ],
-        "description": "`username` is stored lowercase without the @; USERNAME_TAKEN if someone has it.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2898,13 +3163,6 @@
                     "nullable": true,
                     "type": "string",
                     "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$"
-                  },
-                  "username": {
-                    "nullable": true,
-                    "type": "string"
-                  },
-                  "findByEmail": {
-                    "type": "boolean"
                   }
                 }
               }
@@ -2941,17 +3199,9 @@
                       "type": "string",
                       "format": "uri"
                     },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
                     "contactCode": {
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
                     },
                     "backupKeyId": {
                       "nullable": true,
@@ -2981,9 +3231,7 @@
                     "email",
                     "displayName",
                     "avatarUrl",
-                    "username",
                     "contactCode",
-                    "findByEmail",
                     "backupKeyId",
                     "alias",
                     "hasBackupPin",
@@ -3002,7 +3250,7 @@
         "tags": [
           "me"
         ],
-        "description": "Signs out every device and removes your name, photo, email, username, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people's chats under \"Deleted account\". Signing in with the same Google account afterwards creates a new account. Send `{ \"confirm\": \"DELETE\" }`.",
+        "description": "Signs out every device and removes your name, photo, email, contact code, invites, blocks and scheduled messages. Messages you already sent stay in other people's chats under \"Deleted account\". Signing in with the same Google account afterwards creates a new account. Send `{ \"confirm\": \"DELETE\" }`.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3054,7 +3302,7 @@
         "tags": [
           "me"
         ],
-        "description": "The old code, contact link and QR code stop working.",
+        "description": "The old code, contact link and QR code stop working. People you're already connected with stay connected.",
         "security": [
           {
             "bearer": []
@@ -3085,17 +3333,9 @@
                       "type": "string",
                       "format": "uri"
                     },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
                     "contactCode": {
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
                     },
                     "backupKeyId": {
                       "nullable": true,
@@ -3125,9 +3365,7 @@
                     "email",
                     "displayName",
                     "avatarUrl",
-                    "username",
                     "contactCode",
-                    "findByEmail",
                     "backupKeyId",
                     "alias",
                     "hasBackupPin",
@@ -3135,6 +3373,177 @@
                     "createdAt"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/contact-links": {
+      "get": {
+        "summary": "Your contact links that still work",
+        "tags": [
+          "me"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Works like your contact code, for anyone, until it expires or you delete it"
+                          },
+                          "expiresAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "expiresAt",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a contact link",
+        "tags": [
+          "me"
+        ],
+        "description": "Unlike your contact code, which changes once someone uses it, a contact link lets anyone add you until it expires or you delete it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expiresAt": {
+                    "nullable": true,
+                    "description": "When it stops working; null keeps it until you delete it",
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  }
+                },
+                "required": [
+                  "expiresAt"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "Works like your contact code, for anyone, until it expires or you delete it"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "expiresAt",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/contact-links/{code}": {
+      "delete": {
+        "summary": "Delete a contact link",
+        "tags": [
+          "me"
+        ],
+        "description": "It stops working at once. People who already added you with it stay connected.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -3198,17 +3607,9 @@
                       "type": "string",
                       "format": "uri"
                     },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
                     "contactCode": {
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
                     },
                     "backupKeyId": {
                       "nullable": true,
@@ -3238,9 +3639,7 @@
                     "email",
                     "displayName",
                     "avatarUrl",
-                    "username",
                     "contactCode",
-                    "findByEmail",
                     "backupKeyId",
                     "alias",
                     "hasBackupPin",
@@ -3289,17 +3688,9 @@
                       "type": "string",
                       "format": "uri"
                     },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
                     "contactCode": {
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
                     },
                     "backupKeyId": {
                       "nullable": true,
@@ -3329,9 +3720,7 @@
                     "email",
                     "displayName",
                     "avatarUrl",
-                    "username",
                     "contactCode",
-                    "findByEmail",
                     "backupKeyId",
                     "alias",
                     "hasBackupPin",
@@ -4076,6 +4465,59 @@
         }
       }
     },
+    "/v1/me/invite-quota": {
+      "get": {
+        "summary": "How many people my links can still bring in",
+        "tags": [
+          "invites"
+        ],
+        "description": "Past the limit, people who sign up with my links wait until an admin raises it.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "limit": {
+                      "nullable": true,
+                      "description": "How many people your links can bring in; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "invited": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who joined with your links"
+                    },
+                    "waiting": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who signed up with your links after you hit the limit"
+                    }
+                  },
+                  "required": [
+                    "limit",
+                    "invited",
+                    "waiting"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/referrals": {
       "get": {
         "summary": "People who joined with my invites",
@@ -4347,7 +4789,9 @@
                                   "file",
                                   "gif",
                                   "sticker",
-                                  "service"
+                                  "service",
+                                  "location",
+                                  "checklist"
                                 ]
                               },
                               "text": {
@@ -4640,7 +5084,9 @@
                                       "file",
                                       "gif",
                                       "sticker",
-                                      "service"
+                                      "service",
+                                      "location",
+                                      "checklist"
                                     ]
                                   },
                                   "text": {
@@ -4762,6 +5208,91 @@
                                   }
                                 ],
                                 "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                              },
+                              "location": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "lat": {
+                                    "type": "number",
+                                    "minimum": -90,
+                                    "maximum": 90
+                                  },
+                                  "lng": {
+                                    "type": "number",
+                                    "minimum": -180,
+                                    "maximum": 180
+                                  },
+                                  "accuracy": {
+                                    "description": "How far off it may be, in meters",
+                                    "nullable": true,
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100000
+                                  }
+                                },
+                                "required": [
+                                  "lat",
+                                  "lng"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "checklist": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "title": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                  },
+                                  "items": {
+                                    "minItems": 1,
+                                    "maxItems": 30,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "title",
+                                  "items"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "checks": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "item": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991,
+                                      "description": "Index in the checklist's items"
+                                    },
+                                    "userId": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "description": "Who marked it done"
+                                    },
+                                    "at": {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    }
+                                  },
+                                  "required": [
+                                    "item",
+                                    "userId",
+                                    "at"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "description": "The checklist items marked done; either person can tick them"
                               },
                               "createdAt": {
                                 "type": "string",
@@ -4951,6 +5482,9 @@
                               "ephemeral",
                               "replyTo",
                               "action",
+                              "location",
+                              "checklist",
+                              "checks",
                               "createdAt",
                               "editedAt",
                               "deletedAt",
@@ -5207,7 +5741,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -5500,7 +6036,9 @@
                                 "file",
                                 "gif",
                                 "sticker",
-                                "service"
+                                "service",
+                                "location",
+                                "checklist"
                               ]
                             },
                             "text": {
@@ -5622,6 +6160,91 @@
                             }
                           ],
                           "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                        },
+                        "location": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "minimum": -90,
+                              "maximum": 90
+                            },
+                            "lng": {
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "accuracy": {
+                              "description": "How far off it may be, in meters",
+                              "nullable": true,
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100000
+                            }
+                          },
+                          "required": [
+                            "lat",
+                            "lng"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checklist": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "items": {
+                              "minItems": 1,
+                              "maxItems": 30,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            }
+                          },
+                          "required": [
+                            "title",
+                            "items"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "item": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Index in the checklist's items"
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Who marked it done"
+                              },
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "item",
+                              "userId",
+                              "at"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "The checklist items marked done; either person can tick them"
                         },
                         "createdAt": {
                           "type": "string",
@@ -5811,6 +6434,9 @@
                         "ephemeral",
                         "replyTo",
                         "action",
+                        "location",
+                        "checklist",
+                        "checks",
                         "createdAt",
                         "editedAt",
                         "deletedAt",
@@ -6094,7 +6720,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -6387,7 +7015,9 @@
                                 "file",
                                 "gif",
                                 "sticker",
-                                "service"
+                                "service",
+                                "location",
+                                "checklist"
                               ]
                             },
                             "text": {
@@ -6509,6 +7139,91 @@
                             }
                           ],
                           "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                        },
+                        "location": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "minimum": -90,
+                              "maximum": 90
+                            },
+                            "lng": {
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "accuracy": {
+                              "description": "How far off it may be, in meters",
+                              "nullable": true,
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100000
+                            }
+                          },
+                          "required": [
+                            "lat",
+                            "lng"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checklist": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "items": {
+                              "minItems": 1,
+                              "maxItems": 30,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            }
+                          },
+                          "required": [
+                            "title",
+                            "items"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "item": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Index in the checklist's items"
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Who marked it done"
+                              },
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "item",
+                              "userId",
+                              "at"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "The checklist items marked done; either person can tick them"
                         },
                         "createdAt": {
                           "type": "string",
@@ -6698,6 +7413,9 @@
                         "ephemeral",
                         "replyTo",
                         "action",
+                        "location",
+                        "checklist",
+                        "checks",
                         "createdAt",
                         "editedAt",
                         "deletedAt",
@@ -7100,7 +7818,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -7393,7 +8113,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -7515,6 +8237,91 @@
                         }
                       ],
                       "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
                     },
                     "createdAt": {
                       "type": "string",
@@ -7704,6 +8511,9 @@
                     "ephemeral",
                     "replyTo",
                     "action",
+                    "location",
+                    "checklist",
+                    "checks",
                     "createdAt",
                     "editedAt",
                     "deletedAt",
@@ -7796,7 +8606,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -8089,7 +8901,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -8211,6 +9025,91 @@
                         }
                       ],
                       "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
                     },
                     "createdAt": {
                       "type": "string",
@@ -8400,6 +9299,9 @@
                     "ephemeral",
                     "replyTo",
                     "action",
+                    "location",
+                    "checklist",
+                    "checks",
                     "createdAt",
                     "editedAt",
                     "deletedAt",
@@ -8482,7 +9384,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -8775,7 +9679,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -8897,6 +9803,91 @@
                         }
                       ],
                       "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
                     },
                     "createdAt": {
                       "type": "string",
@@ -9086,6 +10077,805 @@
                     "ephemeral",
                     "replyTo",
                     "action",
+                    "location",
+                    "checklist",
+                    "checks",
+                    "createdAt",
+                    "editedAt",
+                    "deletedAt",
+                    "expiresAt",
+                    "reactions",
+                    "encryption"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/checklist/{item}": {
+      "put": {
+        "summary": "Tick or untick a checklist item",
+        "tags": [
+          "messages"
+        ],
+        "description": "`item` is the index in the checklist's items. Either person can tick any item; both get message.edited with the new `checks`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "done": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "done"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 29
+            },
+            "in": "path",
+            "name": "item",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file",
+                        "gif",
+                        "sticker",
+                        "service",
+                        "location",
+                        "checklist"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        },
+                        "encrypted": {
+                          "type": "boolean",
+                          "description": "The file is encrypted; its key, name, type and preview are in the message content"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform",
+                        "encrypted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ephemeral": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ttlSeconds": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "views": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired",
+                        "purged",
+                        "resent",
+                        "resendsLeft",
+                        "resendUntil"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "replyTo": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker",
+                            "service",
+                            "location",
+                            "checklist"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        },
+                        "encrypted": {
+                          "type": "boolean",
+                          "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted",
+                        "encrypted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "action": {
+                      "nullable": true,
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "e2ee"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "call"
+                              ]
+                            },
+                            "video": {
+                              "type": "boolean"
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "description": "How long it lasted; null if it was missed or declined",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "video",
+                            "secs"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ],
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "editedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "deletedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
+                    },
+                    "encryption": {
+                      "nullable": true,
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "type": "object",
+                      "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "envelopes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "deviceId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "envelope": {
+                                "type": "object",
+                                "properties": {
+                                  "v": {
+                                    "type": "number",
+                                    "enum": [
+                                      1
+                                    ]
+                                  },
+                                  "x3dh": {
+                                    "type": "object",
+                                    "properties": {
+                                      "identity": {
+                                        "type": "object",
+                                        "properties": {
+                                          "signPub": {
+                                            "type": "string",
+                                            "pattern": "^[\\w-]{43}$",
+                                            "description": "Ed25519 identity key"
+                                          },
+                                          "dhPub": {
+                                            "type": "string",
+                                            "pattern": "^[\\w-]{43}$",
+                                            "description": "X25519 identity key, signed by signPub"
+                                          },
+                                          "dhSig": {
+                                            "type": "string",
+                                            "pattern": "^[\\w-]{86}$",
+                                            "description": "A 64-byte Ed25519 signature, base64url without padding"
+                                          }
+                                        },
+                                        "required": [
+                                          "signPub",
+                                          "dhPub",
+                                          "dhSig"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "ephemeral": {
+                                        "type": "string",
+                                        "pattern": "^[\\w-]{43}$",
+                                        "description": "A 32-byte public key, base64url without padding"
+                                      },
+                                      "signedPreKeyId": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 4294967295
+                                      },
+                                      "oneTimePreKeyId": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 4294967295
+                                      }
+                                    },
+                                    "required": [
+                                      "identity",
+                                      "ephemeral",
+                                      "signedPreKeyId",
+                                      "oneTimePreKeyId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "header": {
+                                    "type": "string",
+                                    "maxLength": 128,
+                                    "pattern": "^[\\w-]+$"
+                                  },
+                                  "body": {
+                                    "type": "string",
+                                    "maxLength": 65536,
+                                    "pattern": "^[\\w-]+$"
+                                  }
+                                },
+                                "required": [
+                                  "v",
+                                  "header",
+                                  "body"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "deviceId",
+                              "envelope"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "Only the envelopes for your own devices"
+                        },
+                        "backup": {
+                          "nullable": true,
+                          "description": "Your backup copy, if you stored one",
+                          "type": "string",
+                          "maxLength": 65536,
+                          "pattern": "^[\\w-]+$"
+                        }
+                      },
+                      "required": [
+                        "senderDeviceId",
+                        "envelopes",
+                        "backup"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "senderId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "sticker",
+                    "ephemeral",
+                    "replyTo",
+                    "action",
+                    "location",
+                    "checklist",
+                    "checks",
                     "createdAt",
                     "editedAt",
                     "deletedAt",
@@ -9161,7 +10951,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -9454,7 +11246,9 @@
                                 "file",
                                 "gif",
                                 "sticker",
-                                "service"
+                                "service",
+                                "location",
+                                "checklist"
                               ]
                             },
                             "text": {
@@ -9576,6 +11370,91 @@
                             }
                           ],
                           "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                        },
+                        "location": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "minimum": -90,
+                              "maximum": 90
+                            },
+                            "lng": {
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "accuracy": {
+                              "description": "How far off it may be, in meters",
+                              "nullable": true,
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100000
+                            }
+                          },
+                          "required": [
+                            "lat",
+                            "lng"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checklist": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "items": {
+                              "minItems": 1,
+                              "maxItems": 30,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            }
+                          },
+                          "required": [
+                            "title",
+                            "items"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "item": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Index in the checklist's items"
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Who marked it done"
+                              },
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "item",
+                              "userId",
+                              "at"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "The checklist items marked done; either person can tick them"
                         },
                         "createdAt": {
                           "type": "string",
@@ -9765,6 +11644,9 @@
                         "ephemeral",
                         "replyTo",
                         "action",
+                        "location",
+                        "checklist",
+                        "checks",
                         "createdAt",
                         "editedAt",
                         "deletedAt",
@@ -9851,7 +11733,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -10144,7 +12028,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -10266,6 +12152,91 @@
                         }
                       ],
                       "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
                     },
                     "createdAt": {
                       "type": "string",
@@ -10455,6 +12426,9 @@
                     "ephemeral",
                     "replyTo",
                     "action",
+                    "location",
+                    "checklist",
+                    "checks",
                     "createdAt",
                     "editedAt",
                     "deletedAt",
@@ -10605,7 +12579,9 @@
                               "file",
                               "gif",
                               "sticker",
-                              "service"
+                              "service",
+                              "location",
+                              "checklist"
                             ]
                           },
                           "text": {
@@ -10898,7 +12874,9 @@
                                   "file",
                                   "gif",
                                   "sticker",
-                                  "service"
+                                  "service",
+                                  "location",
+                                  "checklist"
                                 ]
                               },
                               "text": {
@@ -11020,6 +12998,91 @@
                               }
                             ],
                             "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                          },
+                          "location": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "lat": {
+                                "type": "number",
+                                "minimum": -90,
+                                "maximum": 90
+                              },
+                              "lng": {
+                                "type": "number",
+                                "minimum": -180,
+                                "maximum": 180
+                              },
+                              "accuracy": {
+                                "description": "How far off it may be, in meters",
+                                "nullable": true,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100000
+                              }
+                            },
+                            "required": [
+                              "lat",
+                              "lng"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "checklist": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "items": {
+                                "minItems": 1,
+                                "maxItems": 30,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                }
+                              }
+                            },
+                            "required": [
+                              "title",
+                              "items"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "checks": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "item": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991,
+                                  "description": "Index in the checklist's items"
+                                },
+                                "userId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "description": "Who marked it done"
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "item",
+                                "userId",
+                                "at"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "The checklist items marked done; either person can tick them"
                           },
                           "createdAt": {
                             "type": "string",
@@ -11209,6 +13272,9 @@
                           "ephemeral",
                           "replyTo",
                           "action",
+                          "location",
+                          "checklist",
+                          "checks",
                           "createdAt",
                           "editedAt",
                           "deletedAt",
@@ -11308,6 +13374,66 @@
                     "description": "Send this sticker, on its own",
                     "type": "string",
                     "minLength": 1
+                  },
+                  "location": {
+                    "description": "Share a place, on its own",
+                    "type": "object",
+                    "properties": {
+                      "lat": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "lng": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "description": "How far off it may be, in meters",
+                        "nullable": true,
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100000
+                      }
+                    },
+                    "required": [
+                      "lat",
+                      "lng"
+                    ]
+                  },
+                  "checklist": {
+                    "description": "Send a checklist, on its own",
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "items": {
+                        "minItems": 1,
+                        "maxItems": 30,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        }
+                      }
+                    },
+                    "required": [
+                      "title",
+                      "items"
+                    ]
+                  },
+                  "type": {
+                    "description": "With `encrypted`: the content is a location or a checklist rather than text or a file",
+                    "type": "string",
+                    "enum": [
+                      "location",
+                      "checklist"
+                    ]
                   },
                   "replyToId": {
                     "type": "string",
@@ -11503,7 +13629,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -11796,7 +13924,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -11918,6 +14048,91 @@
                         }
                       ],
                       "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
                     },
                     "createdAt": {
                       "type": "string",
@@ -12107,6 +14322,9 @@
                     "ephemeral",
                     "replyTo",
                     "action",
+                    "location",
+                    "checklist",
+                    "checks",
                     "createdAt",
                     "editedAt",
                     "deletedAt",
@@ -12181,7 +14399,9 @@
                               "file",
                               "gif",
                               "sticker",
-                              "service"
+                              "service",
+                              "location",
+                              "checklist"
                             ]
                           },
                           "text": {
@@ -12372,7 +14592,9 @@
                                   "file",
                                   "gif",
                                   "sticker",
-                                  "service"
+                                  "service",
+                                  "location",
+                                  "checklist"
                                 ]
                               },
                               "text": {
@@ -12648,6 +14870,66 @@
                     "type": "string",
                     "minLength": 1
                   },
+                  "location": {
+                    "description": "Share a place, on its own",
+                    "type": "object",
+                    "properties": {
+                      "lat": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "lng": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "description": "How far off it may be, in meters",
+                        "nullable": true,
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100000
+                      }
+                    },
+                    "required": [
+                      "lat",
+                      "lng"
+                    ]
+                  },
+                  "checklist": {
+                    "description": "Send a checklist, on its own",
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "items": {
+                        "minItems": 1,
+                        "maxItems": 30,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        }
+                      }
+                    },
+                    "required": [
+                      "title",
+                      "items"
+                    ]
+                  },
+                  "type": {
+                    "description": "With `encrypted`: the content is a location or a checklist rather than text or a file",
+                    "type": "string",
+                    "enum": [
+                      "location",
+                      "checklist"
+                    ]
+                  },
                   "replyToId": {
                     "type": "string",
                     "minLength": 1
@@ -12846,7 +15128,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -13037,7 +15321,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -13449,7 +15735,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -13640,7 +15928,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -13925,7 +16215,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -14218,7 +16510,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -14340,6 +16634,91 @@
                         }
                       ],
                       "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
                     },
                     "createdAt": {
                       "type": "string",
@@ -14529,6 +16908,9 @@
                     "ephemeral",
                     "replyTo",
                     "action",
+                    "location",
+                    "checklist",
+                    "checks",
                     "createdAt",
                     "editedAt",
                     "deletedAt",
@@ -14849,7 +17231,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 320,
-                    "description": "A contact code, a contact link, @username or an exact email"
+                    "description": "A contact code or contact link"
                   }
                 },
                 "required": [
@@ -14934,11 +17316,11 @@
     },
     "/v1/users/find": {
       "get": {
-        "summary": "Find someone by contact code, contact link, username or email",
+        "summary": "Find someone by contact code or contact link",
         "tags": [
           "contacts"
         ],
-        "description": "`q` is a contact code (dashes and spaces ignored), a contact link or scanned QR (…/add/CODE), @username, or an exact email of someone who allows it. USER_NOT_FOUND if no one matches, CONTACT_SELF for you.",
+        "description": "`q` is a contact code (dashes and spaces ignored) or a contact link or scanned QR (…/add/CODE). USER_NOT_FOUND if no one matches, CONTACT_SELF for you.",
         "parameters": [
           {
             "schema": {
@@ -14949,7 +17331,7 @@
             "in": "query",
             "name": "q",
             "required": true,
-            "description": "A contact code, a contact link, @username or an exact email"
+            "description": "A contact code or contact link"
           }
         ],
         "security": [
@@ -14989,11 +17371,6 @@
                       "additionalProperties": false,
                       "description": "With your custom name and photo applied if you already know them"
                     },
-                    "username": {
-                      "nullable": true,
-                      "description": "Only when you searched by it",
-                      "type": "string"
-                    },
                     "chatId": {
                       "nullable": true,
                       "description": "Your direct chat with them, if you already have one",
@@ -15003,7 +17380,6 @@
                   },
                   "required": [
                     "user",
-                    "username",
                     "chatId"
                   ],
                   "additionalProperties": false
@@ -15530,7 +17906,9 @@
                                       "file",
                                       "gif",
                                       "sticker",
-                                      "service"
+                                      "service",
+                                      "location",
+                                      "checklist"
                                     ]
                                   },
                                   "text": {
@@ -15823,7 +18201,9 @@
                                           "file",
                                           "gif",
                                           "sticker",
-                                          "service"
+                                          "service",
+                                          "location",
+                                          "checklist"
                                         ]
                                       },
                                       "text": {
@@ -15945,6 +18325,91 @@
                                       }
                                     ],
                                     "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                                  },
+                                  "location": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "lat": {
+                                        "type": "number",
+                                        "minimum": -90,
+                                        "maximum": 90
+                                      },
+                                      "lng": {
+                                        "type": "number",
+                                        "minimum": -180,
+                                        "maximum": 180
+                                      },
+                                      "accuracy": {
+                                        "description": "How far off it may be, in meters",
+                                        "nullable": true,
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "required": [
+                                      "lat",
+                                      "lng"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "checklist": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "title": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 128
+                                      },
+                                      "items": {
+                                        "minItems": 1,
+                                        "maxItems": 30,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "title",
+                                      "items"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "checks": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "item": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "description": "Index in the checklist's items"
+                                        },
+                                        "userId": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "description": "Who marked it done"
+                                        },
+                                        "at": {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                        }
+                                      },
+                                      "required": [
+                                        "item",
+                                        "userId",
+                                        "at"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "description": "The checklist items marked done; either person can tick them"
                                   },
                                   "createdAt": {
                                     "type": "string",
@@ -16134,6 +18599,9 @@
                                   "ephemeral",
                                   "replyTo",
                                   "action",
+                                  "location",
+                                  "checklist",
+                                  "checks",
                                   "createdAt",
                                   "editedAt",
                                   "deletedAt",
@@ -16196,7 +18664,9 @@
                                       "file",
                                       "gif",
                                       "sticker",
-                                      "service"
+                                      "service",
+                                      "location",
+                                      "checklist"
                                     ]
                                   },
                                   "text": {
@@ -16489,7 +18959,9 @@
                                           "file",
                                           "gif",
                                           "sticker",
-                                          "service"
+                                          "service",
+                                          "location",
+                                          "checklist"
                                         ]
                                       },
                                       "text": {
@@ -16611,6 +19083,91 @@
                                       }
                                     ],
                                     "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                                  },
+                                  "location": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "lat": {
+                                        "type": "number",
+                                        "minimum": -90,
+                                        "maximum": 90
+                                      },
+                                      "lng": {
+                                        "type": "number",
+                                        "minimum": -180,
+                                        "maximum": 180
+                                      },
+                                      "accuracy": {
+                                        "description": "How far off it may be, in meters",
+                                        "nullable": true,
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "required": [
+                                      "lat",
+                                      "lng"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "checklist": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "title": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 128
+                                      },
+                                      "items": {
+                                        "minItems": 1,
+                                        "maxItems": 30,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "title",
+                                      "items"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "checks": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "item": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "description": "Index in the checklist's items"
+                                        },
+                                        "userId": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "description": "Who marked it done"
+                                        },
+                                        "at": {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                        }
+                                      },
+                                      "required": [
+                                        "item",
+                                        "userId",
+                                        "at"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "description": "The checklist items marked done; either person can tick them"
                                   },
                                   "createdAt": {
                                     "type": "string",
@@ -16800,6 +19357,9 @@
                                   "ephemeral",
                                   "replyTo",
                                   "action",
+                                  "location",
+                                  "checklist",
+                                  "checks",
                                   "createdAt",
                                   "editedAt",
                                   "deletedAt",
@@ -17047,7 +19607,9 @@
                                           "file",
                                           "gif",
                                           "sticker",
-                                          "service"
+                                          "service",
+                                          "location",
+                                          "checklist"
                                         ]
                                       },
                                       "text": {
@@ -17340,7 +19902,9 @@
                                               "file",
                                               "gif",
                                               "sticker",
-                                              "service"
+                                              "service",
+                                              "location",
+                                              "checklist"
                                             ]
                                           },
                                           "text": {
@@ -17462,6 +20026,91 @@
                                           }
                                         ],
                                         "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                                      },
+                                      "location": {
+                                        "nullable": true,
+                                        "type": "object",
+                                        "properties": {
+                                          "lat": {
+                                            "type": "number",
+                                            "minimum": -90,
+                                            "maximum": 90
+                                          },
+                                          "lng": {
+                                            "type": "number",
+                                            "minimum": -180,
+                                            "maximum": 180
+                                          },
+                                          "accuracy": {
+                                            "description": "How far off it may be, in meters",
+                                            "nullable": true,
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100000
+                                          }
+                                        },
+                                        "required": [
+                                          "lat",
+                                          "lng"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "checklist": {
+                                        "nullable": true,
+                                        "type": "object",
+                                        "properties": {
+                                          "title": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 128
+                                          },
+                                          "items": {
+                                            "minItems": 1,
+                                            "maxItems": 30,
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 200
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "title",
+                                          "items"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "checks": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "item": {
+                                              "type": "integer",
+                                              "minimum": -9007199254740991,
+                                              "maximum": 9007199254740991,
+                                              "description": "Index in the checklist's items"
+                                            },
+                                            "userId": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "description": "Who marked it done"
+                                            },
+                                            "at": {
+                                              "type": "string",
+                                              "format": "date-time",
+                                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                            }
+                                          },
+                                          "required": [
+                                            "item",
+                                            "userId",
+                                            "at"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "description": "The checklist items marked done; either person can tick them"
                                       },
                                       "createdAt": {
                                         "type": "string",
@@ -17651,6 +20300,9 @@
                                       "ephemeral",
                                       "replyTo",
                                       "action",
+                                      "location",
+                                      "checklist",
+                                      "checks",
                                       "createdAt",
                                       "editedAt",
                                       "deletedAt",
@@ -17939,6 +20591,91 @@
                                 },
                                 "required": [
                                   "userId"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "eventId",
+                              "type",
+                              "data",
+                              "createdAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "eventId": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "me.updated"
+                                ]
+                              },
+                              "data": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "email": {
+                                    "type": "string",
+                                    "format": "email",
+                                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "avatarUrl": {
+                                    "nullable": true,
+                                    "type": "string",
+                                    "format": "uri"
+                                  },
+                                  "contactCode": {
+                                    "type": "string",
+                                    "description": "Share it (or its QR code) so people can find you"
+                                  },
+                                  "backupKeyId": {
+                                    "nullable": true,
+                                    "description": "Identifies the key from your recovery key; null until you set up a recovery key",
+                                    "type": "string"
+                                  },
+                                  "alias": {
+                                    "type": "string",
+                                    "description": "What people see instead of your name and photo, until you share them"
+                                  },
+                                  "hasBackupPin": {
+                                    "type": "boolean",
+                                    "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                                  },
+                                  "hasAppLock": {
+                                    "type": "boolean",
+                                    "description": "Whether the apps ask for your app lock code when they open"
+                                  },
+                                  "createdAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "email",
+                                  "displayName",
+                                  "avatarUrl",
+                                  "contactCode",
+                                  "backupKeyId",
+                                  "alias",
+                                  "hasBackupPin",
+                                  "hasAppLock",
+                                  "createdAt"
                                 ],
                                 "additionalProperties": false
                               },
@@ -18827,17 +21564,9 @@
                       "type": "string",
                       "format": "uri"
                     },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
                     "contactCode": {
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
                     },
                     "backupKeyId": {
                       "nullable": true,
@@ -18867,9 +21596,7 @@
                     "email",
                     "displayName",
                     "avatarUrl",
-                    "username",
                     "contactCode",
-                    "findByEmail",
                     "backupKeyId",
                     "alias",
                     "hasBackupPin",
@@ -18991,17 +21718,9 @@
                       "type": "string",
                       "format": "uri"
                     },
-                    "username": {
-                      "nullable": true,
-                      "type": "string"
-                    },
                     "contactCode": {
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
-                    },
-                    "findByEmail": {
-                      "type": "boolean",
-                      "description": "Whether people who type your exact email can find you"
                     },
                     "backupKeyId": {
                       "nullable": true,
@@ -19031,9 +21750,7 @@
                     "email",
                     "displayName",
                     "avatarUrl",
-                    "username",
                     "contactCode",
-                    "findByEmail",
                     "backupKeyId",
                     "alias",
                     "hasBackupPin",
@@ -19331,7 +22048,9 @@
                         "file",
                         "gif",
                         "sticker",
-                        "service"
+                        "service",
+                        "location",
+                        "checklist"
                       ]
                     },
                     "text": {
@@ -19624,7 +22343,9 @@
                             "file",
                             "gif",
                             "sticker",
-                            "service"
+                            "service",
+                            "location",
+                            "checklist"
                           ]
                         },
                         "text": {
@@ -19746,6 +22467,91 @@
                         }
                       ],
                       "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
                     },
                     "createdAt": {
                       "type": "string",
@@ -19935,6 +22741,9 @@
                     "ephemeral",
                     "replyTo",
                     "action",
+                    "location",
+                    "checklist",
+                    "checks",
                     "createdAt",
                     "editedAt",
                     "deletedAt",

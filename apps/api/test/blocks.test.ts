@@ -52,7 +52,6 @@ describe("account deletion", () => {
   it("signs out, anonymises the person, keeps their messages for the other side and frees the Google account", async () => {
     const { host, guest, chatId } = await makeFriends();
     const { id } = (await send(guest, chatId, "remember me")).json();
-    await call(guest, "PATCH", "/v1/me", { username: `gone_${Date.now().toString(36)}`.slice(0, 20) });
     const { contactCode } = await get(guest, "/v1/me");
     const { googleSub } = await prisma.user.findUniqueOrThrow({ where: { id: guest.user.id } });
 

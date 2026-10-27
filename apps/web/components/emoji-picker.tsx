@@ -1,15 +1,15 @@
 "use client";
 
-import type { GifDTO, StickerDTO } from "@six/shared";
+import type { GifDTO } from "@six/shared";
 import { EmojiPicker } from "frimousse";
 import { Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, useT } from "@/lib/i18n";
 import { GifPicker } from "./gif-picker";
-import { StickerPicker } from "./sticker-picker";
 
-type Tab = "emoji" | "gif" | "sticker";
-const TABS: Tab[] = ["emoji", "gif", "sticker"];
+type Tab = "emoji" | "gif";
+const TABS: Tab[] = ["emoji", "gif"];
 
 export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
   const tr = useT();
@@ -64,17 +64,18 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
   );
 }
 
+/** On wide screens with a `slot`, the picker docks there as a sidebar; otherwise it pops over the composer. */
 export function EmojiButton({
+  slot,
   onPick,
   onGif,
-  onSticker,
 }: {
+  slot?: HTMLElement | null;
   onPick: (emoji: string) => void;
   onGif: (gif: GifDTO) => void;
-  onSticker: (sticker: StickerDTO) => void;
 }) {
   const tr = useT();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<false | "popover" | "docked">(false);
   const [tab, setTab] = useState<Tab>("emoji");
   const root = useRef<HTMLDivElement>(null);
 
@@ -82,7 +83,7 @@ export function EmojiButton({
     if (!open) return;
     const onDown = (e: PointerEvent) => {
       const target = e.target as Element;
-      if (!root.current?.contains(target) && !target.closest?.("[role=dialog]")) setOpen(false);
+      if (open === "popover" && !root.current?.contains(target) && !target.closest?.("[role=dialog]")) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) =>
       e.key === "Escape" && !document.querySelector("[role=dialog]") && setOpen(false);
@@ -94,14 +95,53 @@ export function EmojiButton({
     };
   }, [open]);
 
+  const panel = (
+    <div
+      className={
+        open === "docked"
+          ? "flex w-85 shrink-0 flex-col border-l border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
+          : "absolute bottom-12 left-0 z-40 flex h-[380px] w-[calc(100vw-1.5rem)] max-w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"
+      }
+    >
+      {tab === "emoji" ? (
+        <Emojis onPick={onPick} />
+      ) : (
+        <GifPicker
+          onPick={(gif) => {
+            if (open === "popover") setOpen(false);
+            onGif(gif);
+          }}
+        />
+      )}
+      <div role="tablist" className="flex shrink-0 border-t border-stone-200 dark:border-stone-800">
+        {TABS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={`flex-1 py-2 text-sm font-medium ${
+              tab === id ? "text-brand" : "text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
+            }`}
+          >
+            {tr.composer.pickerTabs[id]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div ref={root} className="relative shrink-0">
       <button
         type="button"
         onMouseDown={(e) => e.preventDefault()}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() =>
+          setOpen((v) => (v ? false : slot && window.matchMedia("(min-width: 1280px)").matches ? "docked" : "popover"))
+        }
         aria-label={tr.composer.emojiGifsStickers}
-        aria-expanded={open}
+        aria-expanded={!!open}
         className={`grid size-10 place-items-center rounded-full transition ${
           open ? "bg-brand/20 text-brand" : "text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
         }`}
@@ -109,43 +149,8 @@ export function EmojiButton({
         <Smile className="size-5" />
       </button>
 
-      {open && (
-        <div className="absolute bottom-12 left-0 z-40 flex h-[380px] w-[calc(100vw-1.5rem)] max-w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
-          {tab === "emoji" ? (
-            <Emojis onPick={onPick} />
-          ) : tab === "gif" ? (
-            <GifPicker
-              onPick={(gif) => {
-                setOpen(false);
-                onGif(gif);
-              }}
-            />
-          ) : (
-            <StickerPicker
-              onPick={(sticker) => {
-                setOpen(false);
-                onSticker(sticker);
-              }}
-            />
-          )}
-          <div role="tablist" className="flex shrink-0 border-t border-stone-200 dark:border-stone-800">
-            {TABS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={tab === id}
-                onClick={() => setTab(id)}
-                className={`flex-1 py-2 text-sm font-medium ${
-                  tab === id ? "text-brand" : "text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
-                }`}
-              >
-                {tr.composer.pickerTabs[id]}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {open === "popover" && panel}
+      {open === "docked" && slot && createPortal(panel, slot)}
     </div>
   );
 }

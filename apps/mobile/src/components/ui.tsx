@@ -7,6 +7,7 @@ import {
   type PressableProps,
   type StyleProp,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -239,7 +240,44 @@ export function CodeInput({
   );
 }
 
+export function Toggle({
+  label,
+  hint,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: boolean;
+  disabled?: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      onPress={() => !disabled && onChange(!value)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled }}
+      style={[styles.toggle, disabled && { opacity: 0.6 }]}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{label}</Text>
+        <Text style={{ color: t.muted, fontSize: 13 }}>{hint}</Text>
+      </View>
+      <Switch
+        value={value}
+        disabled={disabled}
+        onValueChange={onChange}
+        trackColor={{ true: brand, false: t.ring }}
+        thumbColor="#fff"
+      />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  toggle: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   codeInput: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 18, letterSpacing: 6 },
   card: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },
   sectionTitle: {

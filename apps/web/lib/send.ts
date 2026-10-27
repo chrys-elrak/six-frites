@@ -1,8 +1,10 @@
 import { type Realtime, encryptFile } from "@six/sdk";
 import {
   type ChatDTO,
+  type Checklist,
   type EncryptedFile,
   type EphemeralInput,
+  type GeoPoint,
   type GifDTO,
   type MessageDTO,
   type MessageEntity,
@@ -26,6 +28,8 @@ export interface Draft {
   file?: { blob: Blob; kind: UploadKind; name: string; mime: string; sticker?: boolean };
   gif?: GifDTO;
   sticker?: StickerDTO;
+  location?: GeoPoint;
+  checklist?: Checklist;
 }
 
 /** What a reply shows of the message it quotes: no spoilers, nothing from self-destructing messages. */
@@ -93,6 +97,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       replyToId: pending.replyTo?.id,
       ephemeral: pending.ephemeral ?? undefined,
     };
+    const type = pending.location ? ("location" as const) : pending.checklist ? ("checklist" as const) : undefined;
     const sent = encrypt
       ? await client!.send(
           chatId,
@@ -104,8 +109,10 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             spoiler: pending.spoiler || undefined,
             replyText: pending.replyTo ? (pending.replyTo.text?.slice(0, 200) ?? null) : undefined,
             file,
+            location: pending.location,
+            checklist: pending.checklist,
           },
-          (encrypted) => realtime.sendMessage(chatId, { ...base, encrypted }),
+          (encrypted) => realtime.sendMessage(chatId, { ...base, encrypted, type }),
         )
       : await realtime.sendMessage(chatId, {
           ...base,
@@ -114,6 +121,8 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           gifId: pending.gif?.id,
           stickerId: pending.sticker?.id,
           spoiler: pending.spoiler || undefined,
+          location: pending.location,
+          checklist: pending.checklist,
         });
     const m = await hydrate(sent);
     insertMessage(qc, m);
@@ -179,6 +188,8 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
         : null,
     gif: gif ?? null,
     sticker: draft.sticker ?? null,
+    location: draft.location,
+    checklist: draft.checklist,
     createdAt: new Date().toISOString(),
     status: "sending",
   };

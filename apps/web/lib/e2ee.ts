@@ -8,6 +8,7 @@ import type {
   ScheduledMessageDTO,
 } from "@six/shared";
 import { create } from "zustand";
+import { closeDrafts, openDrafts } from "./drafts";
 import { six } from "./six";
 
 function request<T>(r: IDBRequest<T>) {
@@ -99,6 +100,7 @@ export function startE2EE(userId: string) {
     const store = indexedStore(`six-e2ee-${userId}`);
     current = { client: new E2EE(six.api, store, userId), store };
     current.client.onIdentityChange(useIdentityChanges.getState().add);
+    void openDrafts(store);
   }
   void current.client.ready().catch((err) => console.error("could not set up encryption:", err));
   return current.client;
@@ -108,6 +110,7 @@ export const e2ee = () => current?.client ?? null;
 
 /** Wipes this device's keys and decrypted messages, before signing out. */
 export async function forgetE2EE() {
+  closeDrafts();
   await current?.client.forget().catch(() => null);
   current = null;
 }

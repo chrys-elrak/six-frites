@@ -3,8 +3,11 @@
 import { unwrap } from "@six/sdk";
 import {
   type ChatDTO,
+  type Checklist,
+  type ChecklistMark,
   EPHEMERAL_RESEND,
   type EphemeralDTO,
+  type GeoPoint,
   type MessageDTO,
   type MessageEntity,
   type MessageType,
@@ -28,7 +31,9 @@ import {
   Film,
   Flame,
   Image as ImageIcon,
+  ListChecks,
   Lock,
+  MapPin,
   Mic,
   MoreHorizontal,
   Reply,
@@ -50,7 +55,7 @@ import {
   useState,
 } from "react";
 import { VList, type VListHandle } from "virtua";
-import { applyEdited, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
+import { applyEdited, check, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
 import { type Hydrated, hydrate } from "@/lib/e2ee";
 import { shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
@@ -69,6 +74,8 @@ import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
+import { ChecklistView } from "./checklist";
+import { LocationCard } from "./location-card";
 import { EphemeralViewer } from "./ephemeral-viewer";
 import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
@@ -96,6 +103,9 @@ interface MsgRow {
   edited: boolean;
   attachment: ShownAttachment | null;
   sticker: StickerDTO | null;
+  location: GeoPoint | null;
+  checklist: Checklist | null;
+  checks: ChecklistMark[];
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   locked: boolean;
@@ -139,6 +149,9 @@ function buildRows(
         edited: m.editedAt !== null,
         attachment: m.attachment ? { source: "server" as const, data: m.attachment, file: m.file } : null,
         sticker: m.sticker,
+        location: m.location,
+        checklist: m.checklist,
+        checks: m.checks ?? [],
         type: m.type,
         ephemeral: m.ephemeral,
         locked: !!m.undecryptable,
@@ -166,7 +179,16 @@ function buildRows(
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
             : null,
           sticker: p.sticker,
-          type: (p.sticker ? "sticker" : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
+          location: p.location ?? null,
+          checklist: p.checklist ?? null,
+          checks: [],
+          type: (p.sticker
+            ? "sticker"
+            : p.location
+              ? "location"
+              : p.checklist
+                ? "checklist"
+                : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           locked: false,
           ephemeral: p.ephemeral
             ? {
@@ -298,6 +320,8 @@ const mediaIcons = {
   file: Paperclip,
   gif: Film,
   sticker: StickerIcon,
+  location: MapPin,
+  checklist: ListChecks,
 } as const;
 
 export function MediaLabel({ type }: { type: MessageType }) {
@@ -475,6 +499,7 @@ function Bubble({
   meId,
   onReact,
   onReactButton,
+  onCheck,
   frozen,
 }: {
   row: MsgRow;
@@ -493,6 +518,7 @@ function Bubble({
   meId: string;
   onReact: (emoji: string) => void;
   onReactButton: (anchor: DOMRect) => void;
+  onCheck: (item: number) => void;
   frozen: boolean;
 }) {
   const tr = useT();
@@ -614,6 +640,15 @@ function Bubble({
                 />
               )}
               {link && <LinkCard url={link} mine={mine} />}
+              {row.location && !row.deleted && <LocationCard point={row.location} mine={mine} />}
+              {row.checklist && !row.deleted && (
+                <ChecklistView
+                  list={row.checklist}
+                  checks={row.checks}
+                  nameOf={nameOf}
+                  onCheck={row.message && !frozen && !selecting ? onCheck : undefined}
+                />
+              )}
               {sealed ? (
                 <div className="flex items-end gap-2">
                   <Sealed row={row} onOpen={onOpenEphemeral} />
@@ -885,7 +920,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
           : []),
-        ...(!m.ephemeral && row.mine && m.type !== "sticker" && !frozen && !m.undecryptable
+        ...(!m.ephemeral &&
+        row.mine &&
+        !["sticker", "location", "checklist"].includes(m.type) &&
+        !frozen &&
+        !m.undecryptable
           ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
           : []),
         ...(row.mine ? [] : [{ label: tr.common.report, onSelect: () => setReporting(m) }]),
@@ -956,6 +995,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onOpenPack={setPackFor}
                 meId={meId}
                 onReact={(emoji) => !frozen && row.message && void react(qc, row.message, meId, emoji)}
+                onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
                 frozen={frozen}
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
               />

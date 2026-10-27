@@ -16,8 +16,37 @@ export const MessageType = z.enum([
   "gif",
   "sticker",
   "service",
+  "location",
+  "checklist",
 ]);
 export type MessageType = z.infer<typeof MessageType>;
+
+export const GeoPoint = z.object({
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  accuracy: z.number().min(0).max(100_000).nullable().optional().describe("How far off it may be, in meters"),
+});
+export type GeoPoint = z.infer<typeof GeoPoint>;
+
+/** Opens the place in Google Maps: the app on Android, the website elsewhere. */
+export const mapsUrl = (p: GeoPoint) => `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+
+export const coordsLabel = (p: GeoPoint) => `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+
+export const CHECKLIST = { title: 128, item: 200, items: 30 } as const;
+
+export const Checklist = z.object({
+  title: z.string().trim().min(1).max(CHECKLIST.title),
+  items: z.array(z.string().trim().min(1).max(CHECKLIST.item)).min(1).max(CHECKLIST.items),
+});
+export type Checklist = z.infer<typeof Checklist>;
+
+export const ChecklistMark = z.object({
+  item: z.number().int().describe("Index in the checklist's items"),
+  userId: Id.describe("Who marked it done"),
+  at: IsoDate,
+});
+export type ChecklistMark = z.infer<typeof ChecklistMark>;
 
 export const EntityType = z.enum(["bold", "italic", "strike", "code", "spoiler"]);
 export type EntityType = z.infer<typeof EntityType>;
@@ -179,6 +208,9 @@ export const MessageDTO = z.object({
   ephemeral: EphemeralDTO.nullable(),
   replyTo: ReplyPreview.nullable(),
   action: ServiceAction.nullable(),
+  location: GeoPoint.nullable(),
+  checklist: Checklist.nullable(),
+  checks: z.array(ChecklistMark).describe("The checklist items marked done; either person can tick them"),
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
   deletedAt: IsoDate.nullable(),
@@ -246,20 +278,55 @@ export const SendMessageInput = z
       .optional()
       .describe("A GIF from GET /v1/gifs; the server saves a copy and attaches it"),
     stickerId: Id.optional().describe("Send this sticker, on its own"),
+    location: GeoPoint.optional().describe("Share a place, on its own"),
+    checklist: Checklist.optional().describe("Send a checklist, on its own"),
+    type: z
+      .enum(["location", "checklist"])
+      .optional()
+      .describe("With `encrypted`: the content is a location or a checklist rather than text or a file"),
     replyToId: Id.optional(),
     spoiler: z.boolean().optional(),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
     encrypted: EncryptedInput.optional(),
   })
   .refine(
-    (v) => v.text !== undefined || v.attachmentId !== undefined || v.gifId !== undefined || v.stickerId || v.encrypted,
-    { message: "Send text, an attachment, a GIF, a sticker or encrypted content", path: ["text"] },
+    (v) =>
+      v.text !== undefined ||
+      v.attachmentId !== undefined ||
+      v.gifId !== undefined ||
+      v.stickerId ||
+      v.location ||
+      v.checklist ||
+      v.encrypted,
+    { message: "Send text, an attachment, a GIF, a sticker, a location, a checklist or encrypted content", path: ["text"] },
   )
   .refine(
     (v) =>
       !v.encrypted ||
-      (v.text === undefined && v.entities === undefined && v.spoiler === undefined && !v.gifId && !v.stickerId),
-    { message: "Text, entities and spoilers go inside the encrypted content; GIFs and stickers are sent on their own", path: ["encrypted"] },
+      (v.text === undefined &&
+        v.entities === undefined &&
+        v.spoiler === undefined &&
+        !v.gifId &&
+        !v.stickerId &&
+        !v.location &&
+        !v.checklist),
+    {
+      message:
+        "Text, entities, spoilers, locations and checklists go inside the encrypted content; GIFs and stickers are sent on their own",
+      path: ["encrypted"],
+    },
+  )
+  .refine((v) => !v.type || v.encrypted, { message: "`type` is only for encrypted content", path: ["type"] })
+  .refine(
+    (v) =>
+      [v.location, v.checklist, v.type].filter(Boolean).length === 0 ||
+      ([v.location, v.checklist].filter(Boolean).length <= 1 &&
+        v.text === undefined &&
+        !v.attachmentId &&
+        !v.gifId &&
+        !v.stickerId &&
+        !v.ephemeral),
+    { message: "Locations and checklists are sent on their own", path: ["location"] },
   )
   .refine((v) => [v.attachmentId, v.gifId, v.stickerId].filter((x) => x !== undefined).length <= 1, {
     message: "Send one attachment, GIF or sticker at a time",
@@ -443,6 +510,9 @@ export const MAX_REACTIONS_PER_USER = 10;
 export const ReactInput = z.object({ emoji: ReactionEmoji });
 export type ReactInput = z.infer<typeof ReactInput>;
 
+export const CheckItemInput = z.object({ done: z.boolean() });
+export type CheckItemInput = z.infer<typeof CheckItemInput>;
+
 export const ViewMessageResult = z.object({
   message: MessageDTO,
   expiresAt: IsoDate.nullable().describe("When the content will be destroyed, if a timer is running"),
@@ -454,7 +524,12 @@ export const SCHEDULE_LIMITS = { perChat: 100, maxAheadSeconds: 365 * 24 * 60 * 
 
 export const ScheduleMessageInput = SendMessageInput.safeExtend({
   sendAt: IsoDate.describe("When to send it, in the future and at most a year ahead"),
-}).refine((v) => !v.stickerId, { message: "Stickers can't be scheduled", path: ["stickerId"] });
+})
+  .refine((v) => !v.stickerId, { message: "Stickers can't be scheduled", path: ["stickerId"] })
+  .refine((v) => !v.location && !v.checklist && !v.type, {
+    message: "Locations and checklists can't be scheduled",
+    path: ["location"],
+  });
 export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
 
 export const ScheduledMessageDTO = z.object({

@@ -22,6 +22,7 @@ export default defineConfig({
       GIPHY_API_KEY: "test-giphy-key",
       KLIPY_API_KEY: "test-klipy-key",
       ADMIN_EMAILS: "the-admin@example.com",
+      INVITE_ONLY: "false",
       STORE_URL: "https://store.test",
       STORE_WEBHOOK_SECRET: "test-store-secret",
     },

@@ -1,33 +1,56 @@
 import type { EphemeralInput, UploadKind } from "@six/shared";
 import { Image } from "expo-image";
-import { EyeOff, FileText, Play, SendHorizontal, X } from "lucide-react-native";
+import { EyeOff, FileText, Pencil, Play, SendHorizontal, Volume2, VolumeX, X } from "lucide-react-native";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
+import { muteVideo } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { EphemeralPicker } from "./ephemeral-picker";
+import { PhotoEditor } from "./photo-editor";
 import { IconButton } from "./ui";
 
 export interface PickedFile {
   file: LocalFile;
   spoiler: boolean;
+  /** The video with its sound, kept while it is muted so unmuting is instant. */
+  unmuted?: LocalFile;
 }
 
 const visual = (kind: UploadKind) => kind === "image" || kind === "video";
+const editable = (file: LocalFile) => file.kind === "image" && file.mime !== "image/gif";
+
+function Pill({ on, label, Icon, title, onPress }: { on: boolean; label?: string; Icon: typeof Pencil; title: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityLabel={title}
+      accessibilityState={{ selected: on }}
+      style={[styles.pill, { backgroundColor: on ? brand : "rgba(0,0,0,0.45)" }]}
+    >
+      <Icon size={14} color={on ? brandInk : "#fff"} />
+      {!!label && <Text style={{ color: on ? brandInk : "#fff", fontSize: 12, fontWeight: "600" }}>{label}</Text>}
+    </Pressable>
+  );
+}
 
 function Preview({
   item,
   large,
   onToggleSpoiler,
+  onEdit,
+  onToggleMute,
   onRemove,
 }: {
   item: PickedFile;
   large: boolean;
   onToggleSpoiler: () => void;
+  onEdit: () => void;
+  onToggleMute: () => void;
   onRemove: () => void;
 }) {
   const t = useTheme();
@@ -50,18 +73,27 @@ function Preview({
         </View>
       )}
       <View style={styles.previewBar}>
-        <Pressable
-          onPress={onToggleSpoiler}
-          accessibilityLabel={item.spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
-          style={[styles.spoilerToggle, { backgroundColor: item.spoiler ? brand : "rgba(0,0,0,0.45)" }]}
-        >
-          <EyeOff size={14} color={item.spoiler ? brandInk : "#fff"} />
-          {large && (
-            <Text style={{ color: item.spoiler ? brandInk : "#fff", fontSize: 12, fontWeight: "600" }}>
-              {item.spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
-            </Text>
+        <View style={styles.pills}>
+          <Pill
+            on={item.spoiler}
+            Icon={EyeOff}
+            title={item.spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
+            label={large ? (item.spoiler ? tr.composer.spoilerOn : tr.summary.spoiler) : undefined}
+            onPress={onToggleSpoiler}
+          />
+          {editable(file) && (
+            <Pill on={false} Icon={Pencil} title={tr.composer.editPhoto} label={large ? tr.composer.edit : undefined} onPress={onEdit} />
           )}
-        </Pressable>
+          {file.kind === "video" && (
+            <Pill
+              on={!!item.unmuted}
+              Icon={item.unmuted ? VolumeX : Volume2}
+              title={item.unmuted ? tr.composer.unmute : tr.composer.mute}
+              label={large ? (item.unmuted ? tr.composer.muted : tr.composer.mute) : undefined}
+              onPress={onToggleMute}
+            />
+          )}
+        </View>
         <Pressable onPress={onRemove} accessibilityLabel={tr.common.remove} style={styles.remove}>
           <X size={16} color="#fff" />
         </Pressable>
@@ -89,6 +121,9 @@ export function AttachDialog({
   const [items, setItems] = useState<PickedFile[]>(() => files.map((file) => ({ file, spoiler: false })));
   const [caption, setCaption] = useState(initialCaption);
   const [ephemeral, setEphemeral] = useState(initialEphemeral);
+  const [editing, setEditing] = useState<PickedFile | null>(null);
+  const [muting, setMuting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const media = items.filter((i) => visual(i.file.kind));
   const others = items.filter((i) => !visual(i.file.kind));
@@ -100,6 +135,28 @@ export function AttachDialog({
     if (!next.length) onCancel();
     setItems(next);
   };
+  const swap = (it: PickedFile, file: LocalFile, unmuted?: LocalFile) =>
+    setItems((list) => list.map((i) => (i === it ? { ...i, file, unmuted } : i)));
+  async function toggleMute(it: PickedFile) {
+    setError(null);
+    if (it.unmuted) return swap(it, it.unmuted);
+    setMuting(true);
+    try {
+      const muted = await muteVideo(it.file);
+      if (muted) swap(it, muted, it.file);
+      else setError(tr.composer.couldNotMute);
+    } catch {
+      setError(tr.composer.couldNotMute);
+    } finally {
+      setMuting(false);
+    }
+  }
+  const handlers = (it: PickedFile) => ({
+    onToggleSpoiler: () => toggle(it),
+    onEdit: () => setEditing(it),
+    onToggleMute: () => void toggleMute(it),
+    onRemove: () => remove(it),
+  });
 
   const title =
     media.length && !others.length
@@ -122,18 +179,12 @@ export function AttachDialog({
 
           <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
             {single ? (
-              <Preview item={media[0]!} large onToggleSpoiler={() => toggle(media[0]!)} onRemove={() => remove(media[0]!)} />
+              <Preview item={media[0]!} large {...handlers(media[0]!)} />
             ) : (
               media.length > 0 && (
                 <View style={styles.grid}>
                   {media.map((item) => (
-                    <Preview
-                      key={item.file.uri}
-                      item={item}
-                      large={false}
-                      onToggleSpoiler={() => toggle(item)}
-                      onRemove={() => remove(item)}
-                    />
+                    <Preview key={item.file.uri} item={item} large={false} {...handlers(item)} />
                   ))}
                 </View>
               )
@@ -157,6 +208,11 @@ export function AttachDialog({
                 {tr.composer.spoilerTip}
               </Text>
             )}
+            {!!error && (
+              <Text accessibilityRole="alert" style={{ color: t.danger, fontSize: 14, paddingHorizontal: 4 }}>
+                {error}
+              </Text>
+            )}
             <View style={styles.ephemeralRow}>
               <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>{tr.composer.selfDestructAfterViewing}</Text>
               <EphemeralPicker value={ephemeral} onChange={setEphemeral} />
@@ -176,14 +232,25 @@ export function AttachDialog({
             />
             <Pressable
               onPress={() => items.length && onSend(items, caption, ephemeral)}
+              disabled={muting}
               accessibilityLabel={tr.common.send}
-              style={({ pressed }) => [styles.send, pressed && { transform: [{ scale: 0.95 }] }]}
+              style={({ pressed }) => [styles.send, muting && { opacity: 0.5 }, pressed && { transform: [{ scale: 0.95 }] }]}
             >
               <SendHorizontal size={20} color={brandInk} />
             </Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>
+      {editing && (
+        <PhotoEditor
+          file={editing.file}
+          onCancel={() => setEditing(null)}
+          onDone={(file) => {
+            setEditing(null);
+            swap(editing, file);
+          }}
+        />
+      )}
     </Modal>
   );
 }
@@ -199,7 +266,8 @@ const styles = StyleSheet.create({
   videoStub: { backgroundColor: "#292524", alignItems: "center", justifyContent: "center", gap: 4 },
   stubText: { color: "#fff", fontSize: 12 },
   previewBar: { position: "absolute", top: 6, left: 6, right: 6, flexDirection: "row", justifyContent: "space-between" },
-  spoilerToggle: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
+  pills: { flexDirection: "row", gap: 4 },
+  pill: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
   remove: {
     width: 28,
     height: 28,

@@ -3,25 +3,16 @@ import {
   inviteSummary,
   LOCALES,
   LOCALE_NAMES,
+  quotaSummary,
+  MAX_CONTACT_LINKS,
   type SessionDTO,
   type UpdateMeInput,
-  USERNAME_PATTERN,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Check, LogOut, Monitor, Smartphone } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
-import { formatCode, contactUrl, shareContact, shareInvite, timeAgo } from "@/lib/format";
-import {
-  CHAT_THEMES,
-  CUSTOM_THEME_COLORS,
-  type ChatTheme,
-  customTheme,
-  customThemeColor,
-  customThemeId,
-  themeName,
-} from "@six/shared";
-import { useChatThemeStore } from "@/lib/chat-themes";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { formatCode, contactUrl, sendAtLabel, shareContact, shareInvite, timeAgo } from "@/lib/format";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { playChime, useNotifyPrefs } from "@/lib/notify";
 import { pickAvatar } from "@/lib/media";
@@ -33,12 +24,11 @@ import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
 import { AppLockSettings } from "./app-lock";
 import { Avatar } from "./avatar";
-import { Wallpaper } from "./chat-background";
-import { CustomThemePicker } from "./custom-theme";
 import { QrCode } from "./qr-code";
+import { ScheduleDialog } from "./scheduled";
 import { NewInvite } from "./invites";
 import { Sheet } from "./sheet";
-import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton } from "./ui";
+import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
 
 function ProfileCard() {
@@ -115,111 +105,6 @@ function ProfileCard() {
   );
 }
 
-export function Toggle({
-  label,
-  hint,
-  value,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  value: boolean;
-  disabled?: boolean;
-  onChange: (on: boolean) => void;
-}) {
-  const t = useTheme();
-  return (
-    <Pressable
-      onPress={() => !disabled && onChange(!value)}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: value, disabled }}
-      style={[styles.cardRow, disabled && { opacity: 0.6 }]}
-    >
-      <View style={{ flex: 1 }}>
-        <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{label}</Text>
-        <Text style={{ color: t.muted, fontSize: 13 }}>{hint}</Text>
-      </View>
-      <Switch
-        value={value}
-        disabled={disabled}
-        onValueChange={onChange}
-        trackColor={{ true: brand, false: t.ring }}
-        thumbColor="#fff"
-      />
-    </Pressable>
-  );
-}
-
-function ThemeSwatch({
-  theme,
-  on,
-  label,
-  onPress,
-}: {
-  theme: ChatTheme;
-  on: boolean;
-  label: string;
-  onPress: () => void;
-}) {
-  const t = useTheme();
-  const w = t.dark ? theme.dark : theme.light;
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ selected: on }}
-      accessibilityLabel={label}
-      style={{ alignItems: "center", gap: 6 }}
-    >
-      <View style={[styles.swatch, { borderColor: on ? brand : t.border }]}>
-        <Wallpaper theme={theme} dark={t.dark} id={`swatch-${theme.id}`} />
-        <View style={[styles.swatchBubble, { backgroundColor: w.bubble }]} />
-        <View style={[styles.swatchBubble, styles.swatchIn, { backgroundColor: t.bubbleIn }]} />
-      </View>
-      <Text style={{ color: on ? brand : t.textSoft, fontSize: 12, fontWeight: on ? "700" : "500" }}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function ChatBackgroundPicker() {
-  const tr = useT();
-  const current = useChatThemeStore((s) => s.id);
-  const choose = useChatThemeStore((s) => s.set);
-  const [custom, setCustom] = useState(false);
-  const customHex = customThemeColor(current);
-  return (
-    <View>
-      <SectionTitle>{tr.settings.defaultBackground}</SectionTitle>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}>
-        {CHAT_THEMES.map((theme) => (
-          <ThemeSwatch
-            key={theme.id}
-            theme={theme}
-            on={theme.id === current}
-            label={themeName(theme.id, tr)}
-            onPress={() => choose(theme.id)}
-          />
-        ))}
-        <ThemeSwatch
-          theme={customTheme(customHex ?? CUSTOM_THEME_COLORS[3]!)}
-          on={!!customHex}
-          label={tr.common.custom}
-          onPress={() => setCustom(true)}
-        />
-      </ScrollView>
-      {custom && (
-        <CustomThemePicker
-          title={tr.settings.defaultCustomBackground}
-          current={current}
-          onPick={(mine, theirs) => choose(customThemeId(mine, theirs))}
-          onClose={() => setCustom(false)}
-        />
-      )}
-    </View>
-  );
-}
-
 function NotificationSettings() {
   const tr = useT();
   const prefs = useNotifyPrefs();
@@ -278,116 +163,136 @@ function LanguagePicker() {
   );
 }
 
+function CodeRow({ code, label, children }: { code: string; label: string; children: React.ReactNode }) {
+  const t = useTheme();
+  return (
+    <View style={styles.cardRow}>
+      <View style={[styles.qr, { width: 112, height: 112, backgroundColor: "#fff" }]}>
+        <QrCode value={contactUrl(code)} size={112} />
+      </View>
+      <View style={{ flex: 1, gap: 4 }}>
+        <Text style={{ color: t.muted, fontSize: 13 }}>{label}</Text>
+        <Text style={[styles.code, { color: t.text }]}>{formatCode(code)}</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", marginLeft: -10 }}>{children}</View>
+      </View>
+    </View>
+  );
+}
+
 function FindMe() {
   const t = useTheme();
   const tr = useT();
+  const qc = useQueryClient();
   const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
-  const [username, setUsername] = useState(user.username ?? "");
   const [confirmReset, setConfirmReset] = useState(false);
+  const [choosing, setChoosing] = useState(false);
+  const [pickingDate, setPickingDate] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const me = useQuery({
     queryKey: ["me"],
     queryFn: async () => unwrap(await six.api.GET("/v1/me")),
   });
   useEffect(() => {
-    if (!me.data) return;
-    setUser(me.data);
-    setUsername(me.data.username ?? "");
+    if (me.data) setUser(me.data);
   }, [me.data, setUser]);
-
-  const update = useMutation({
-    mutationFn: async (body: UpdateMeInput) => unwrap(await six.api.PATCH("/v1/me", { body })),
-    onSuccess: (u) => {
-      setUser(u);
-      setUsername(u.username ?? "");
-    },
-  });
 
   const reset = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/me/contact-code")),
     onSuccess: setUser,
   });
 
-  const typed = username.trim().replace(/^@/, "").toLowerCase();
-  const dirty = typed !== (user.username ?? "");
-  const valid = typed === "" || USERNAME_PATTERN.test(typed);
-  const save = () => dirty && valid && update.mutate({ username: typed || null });
-
-  const hint = update.isError
-    ? update.error instanceof SixApiError
-      ? (tr.settings.usernameErrors[update.error.code] ?? update.error.message)
-      : tr.common.couldNotSave
-    : !valid
-      ? tr.settings.usernameErrors.VALIDATION_FAILED
-      : tr.settings.usernameHint;
+  const links = useQuery({
+    queryKey: ["contact-links"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/me/contact-links")).items,
+  });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["contact-links"] });
+  const create = useMutation({
+    mutationFn: async (expiresAt: Date | null) =>
+      unwrap(await six.api.POST("/v1/me/contact-links", { body: { expiresAt: expiresAt?.toISOString() ?? null } })),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: async (code: string) =>
+      unwrap(await six.api.DELETE("/v1/me/contact-links/{code}", { params: { path: { code } } })),
+    onSuccess: refresh,
+  });
+  const items = links.data ?? [];
 
   return (
     <View>
       <SectionTitle>{tr.settings.findMe}</SectionTitle>
       <Card>
-        <View style={styles.cardRow}>
-          <View style={[styles.qr, { width: 112, height: 112, backgroundColor: "#fff" }]}>
-            {user.contactCode && <QrCode value={contactUrl(user.contactCode)} size={112} />}
-          </View>
-          <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ color: t.muted, fontSize: 13 }}>{tr.settings.contactCode}</Text>
-            <Text style={[styles.code, { color: t.text }]}>{user.contactCode ? formatCode(user.contactCode) : "…"}</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", marginLeft: -10 }}>
-              <TextButton
-                title={tr.common.shareLink}
-                color={t.text}
-                disabled={!user.contactCode}
-                onPress={() => void shareContact(user.contactCode)}
-              />
-              <TextButton title={tr.settings.newCode} onPress={() => setConfirmReset(true)} disabled={reset.isPending} />
-            </View>
-          </View>
-        </View>
-        <Divider />
-        <View style={[styles.cardRow, { alignItems: "flex-start", flexDirection: "column", gap: 6 }]}>
-          <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.username}</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "stretch" }}>
-            <View style={[styles.usernameField, { backgroundColor: t.field }]}>
-              <Text style={{ color: t.muted, fontSize: 16 }}>@</Text>
-              <TextInput
-                value={username}
-                onChangeText={(v) => {
-                  setUsername(v);
-                  update.reset();
-                }}
-                onSubmitEditing={save}
-                placeholder={tr.settings.usernamePlaceholder}
-                placeholderTextColor={t.faint}
-                maxLength={21}
-                autoCapitalize="none"
-                autoCorrect={false}
-                spellCheck={false}
-                returnKeyType="done"
-                accessibilityLabel={tr.settings.username}
-                style={{ flex: 1, color: t.text, fontSize: 16, paddingVertical: 8 }}
-              />
-            </View>
-            {dirty && (
-              <TextButton title={tr.common.save} color={t.text} onPress={save} disabled={!valid || update.isPending} />
-            )}
-          </View>
-          <Text style={{ color: update.isError || !valid ? t.danger : t.muted, fontSize: 13 }}>{hint}</Text>
-        </View>
-        <Divider />
-        <Toggle
-          label={tr.settings.findByEmail}
-          hint={tr.settings.findByEmailHint(user.email)}
-          value={user.findByEmail}
-          disabled={update.isPending}
-          onChange={(findByEmail) => update.mutate({ findByEmail })}
-        />
+        {user.contactCode ? (
+          <CodeRow code={user.contactCode} label={tr.settings.contactCode}>
+            <TextButton title={tr.common.shareLink} color={t.text} onPress={() => void shareContact(user.contactCode)} />
+            <TextButton title={tr.settings.newCode} onPress={() => setConfirmReset(true)} disabled={reset.isPending} />
+          </CodeRow>
+        ) : null}
+        <Text style={{ color: t.muted, fontSize: 13, paddingHorizontal: 16, paddingBottom: 16 }}>{tr.settings.oneUseHint}</Text>
       </Card>
+
+      <View style={{ height: 24 }} />
+      <SectionTitle>{tr.settings.reusableCodes}</SectionTitle>
+      <Card>
+        <Text style={{ color: t.muted, fontSize: 13, padding: 16 }}>{tr.settings.reusableHint}</Text>
+        {items.map((l) => (
+          <View key={l.code}>
+            <Divider />
+            <CodeRow
+              code={l.code}
+              label={l.expiresAt ? tr.settings.worksUntil(sendAtLabel(l.expiresAt)) : tr.settings.worksUntilDeleted}
+            >
+              <TextButton title={tr.common.shareLink} color={t.text} onPress={() => void shareContact(l.code)} />
+              <TextButton title={tr.common.delete} onPress={() => setDeleting(l.code)} />
+            </CodeRow>
+          </View>
+        ))}
+        {items.length < MAX_CONTACT_LINKS && (
+          <>
+            <Divider />
+            <Pressable onPress={() => setChoosing(true)} disabled={create.isPending} style={styles.cardRow}>
+              <Text style={{ color: brand, fontWeight: "600", fontSize: 15 }}>{tr.settings.newReusableCode}</Text>
+            </Pressable>
+          </>
+        )}
+      </Card>
+
       {confirmReset && (
         <Sheet
           title={tr.settings.resetCodeWarning}
           actions={[{ label: tr.settings.getNewCode, destructive: true, onSelect: () => reset.mutate() }]}
           onClose={() => setConfirmReset(false)}
+        />
+      )}
+      {choosing && (
+        <Sheet
+          title={tr.settings.newReusableCode}
+          actions={[
+            { label: tr.settings.untilDeleted, onSelect: () => create.mutate(null) },
+            { label: tr.settings.untilDate, onSelect: () => setPickingDate(true) },
+          ]}
+          onClose={() => setChoosing(false)}
+        />
+      )}
+      {pickingDate && (
+        <ScheduleDialog
+          title={tr.settings.stopsWorking}
+          confirm={tr.settings.create}
+          initial={new Date(Date.now() + 7 * 864e5)}
+          onPick={(at) => {
+            setPickingDate(false);
+            create.mutate(at);
+          }}
+          onClose={() => setPickingDate(false)}
+        />
+      )}
+      {deleting && (
+        <Sheet
+          title={tr.settings.deleteCodeWarning}
+          actions={[{ label: tr.common.delete, destructive: true, onSelect: () => remove.mutate(deleting) }]}
+          onClose={() => setDeleting(null)}
         />
       )}
     </View>
@@ -408,6 +313,11 @@ function Invites() {
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
 
+  const quota = useQuery({
+    queryKey: ["invite-quota"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/me/invite-quota")),
+  });
+
   const revoke = useMutation({
     mutationFn: async (code: string) =>
       unwrap(await six.api.POST("/v1/invites/{code}/revoke", { params: { path: { code } } })),
@@ -415,13 +325,19 @@ function Invites() {
   });
 
   const items = invites.data?.pages.flatMap((p) => p.items) ?? [];
+  const used = quota.data && quotaSummary(quota.data, tr);
+  const full = quota.data?.limit != null && quota.data.invited >= quota.data.limit;
 
   return (
     <View>
       <SectionTitle>{tr.settings.inviteFriends}</SectionTitle>
       <Card>
         <View style={styles.cardRow}>
-          <Text style={{ flex: 1, color: t.textSoft, fontSize: 14 }}>{tr.settings.inviteHint}</Text>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={{ color: t.textSoft, fontSize: 14 }}>{tr.settings.inviteHint}</Text>
+            {used && <Text style={{ color: t.muted, fontSize: 12 }}>{used}</Text>}
+            {full && <Text style={{ color: t.text, fontSize: 12 }}>{tr.settings.inviteLimitReached}</Text>}
+          </View>
           <PrimaryButton title={tr.settings.newLink} onPress={() => setCreating(true)} />
         </View>
         {items.map((i) => {
@@ -601,7 +517,6 @@ export function SettingsPanel() {
         <ProfileCard />
         <LanguagePicker />
         <FindMe />
-        <ChatBackgroundPicker />
         <NotificationSettings />
         <Invites />
         <Referrals />
@@ -644,11 +559,7 @@ const styles = StyleSheet.create({
   },
   nameInput: { flex: 1, fontSize: 18, fontWeight: "500", paddingVertical: 2 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
-  swatch: { width: 78, height: 112, borderRadius: 14, borderWidth: 2, overflow: "hidden" },
-  swatchBubble: { position: "absolute", right: 8, top: 22, width: 36, height: 14, borderRadius: 7 },
-  swatchIn: { left: 8, right: undefined, top: 46, width: 44 },
   qr: { borderRadius: 8, overflow: "hidden" },
-  usernameField: { flex: 1, flexDirection: "row", alignItems: "center", gap: 2, borderRadius: 10, paddingHorizontal: 10 },
   code: { fontFamily: "monospace", fontSize: 16, fontWeight: "700", letterSpacing: 2 },
   deviceIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },

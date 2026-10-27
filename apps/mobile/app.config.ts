@@ -33,6 +33,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     "expo-secure-store",
+    ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock with Face ID." }],
+    ["expo-location", { locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to send your location when you choose to." }],
     "expo-image",
     "expo-video",
     "expo-sharing",

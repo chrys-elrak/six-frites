@@ -12,6 +12,8 @@ const en = {
     INVITE_EXPIRED: "That invite link has expired.",
     INVITE_REVOKED: "That invite link was revoked.",
     INVITE_EXHAUSTED: "That invite link has already been used up.",
+    INVITE_REQUIRED: "Six Frites is invite-only. Ask someone who's already on it to send you an invite link.",
+    ACCOUNT_QUEUED: "You're on the waiting list and will join Six Frites soon. Try signing in again later.",
     INVALID_GOOGLE_TOKEN: "Google sign-in failed. Please try again.",
     DEVELOPER_ERROR:
       "Google sign-in isn't set up for this build yet. Its package name and SHA-1 must be registered in Google Cloud.",
@@ -57,6 +59,10 @@ const fr: typeof en = {
     INVITE_EXPIRED: "Ce lien d'invitation a expiré.",
     INVITE_REVOKED: "Ce lien d'invitation a été révoqué.",
     INVITE_EXHAUSTED: "Ce lien d'invitation a déjà été entièrement utilisé.",
+    INVITE_REQUIRED:
+      "Six Frites est accessible sur invitation uniquement. Demandez un lien d'invitation à quelqu'un qui y est déjà.",
+    ACCOUNT_QUEUED:
+      "Vous êtes sur la liste d'attente et rejoindrez Six Frites bientôt. Réessayez de vous connecter plus tard.",
     INVALID_GOOGLE_TOKEN: "Échec de la connexion Google. Veuillez réessayer.",
     DEVELOPER_ERROR:
       "La connexion Google n'est pas encore configurée pour cette version de l'app. Son nom de package et son SHA-1 doivent être enregistrés dans Google Cloud.",
@@ -102,6 +108,8 @@ const mg: typeof en = {
     INVITE_EXPIRED: "Lany daty io rohy fanasana io.",
     INVITE_REVOKED: "Nofoanana io rohy fanasana io.",
     INVITE_EXHAUSTED: "Efa lany ny fampiasana io rohy fanasana io.",
+    INVITE_REQUIRED: "Amin'ny fanasana ihany no hidirana ao amin'ny Six Frites. Angataho rohy fanasana ny olona efa ao.",
+    ACCOUNT_QUEUED: "Ao amin'ny lisitry ny miandry ianao ary hiditra ao amin'ny Six Frites tsy ho ela. Andramo miditra indray any aoriana.",
     INVALID_GOOGLE_TOKEN: "Tsy nahomby ny fidirana amin'ny Google. Andramo indray.",
     DEVELOPER_ERROR:
       "Mbola tsy voalamina ho an'ity kinova ity ny fidirana amin'ny Google. Tsy maintsy soratana ao amin'ny Google Cloud ny anaran'ny package sy ny SHA-1-ny.",

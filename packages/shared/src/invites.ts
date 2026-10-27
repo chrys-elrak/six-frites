@@ -63,6 +63,13 @@ export const ReferralDTO = z.object({
 });
 export type ReferralDTO = z.infer<typeof ReferralDTO>;
 
+export const InviteQuota = z.object({
+  limit: z.number().int().nullable().describe("How many people your links can bring in; null means no limit"),
+  invited: z.number().int().describe("People who joined with your links"),
+  waiting: z.number().int().describe("People who signed up with your links after you hit the limit"),
+});
+export type InviteQuota = z.infer<typeof InviteQuota>;
+
 export const AcceptInviteResult = z.object({
   referrer: PublicUser,
 });
@@ -77,6 +84,13 @@ function inviteState(i: InviteDTO, t: Dict) {
   return t.settings.expiresIn(
     hours < 24 ? t.time.duration(Math.ceil(hours), "hour") : t.time.duration(Math.ceil(hours / 24), "day"),
   );
+}
+
+/** "3 of 10 invites used · 2 waiting", or null when there's no limit. */
+export function quotaSummary(q: InviteQuota, t: Dict) {
+  if (q.limit === null) return null;
+  const used = t.settings.invitesUsed(q.invited, q.limit);
+  return q.waiting ? `${used} · ${t.settings.invitesWaiting(q.waiting)}` : used;
 }
 
 /** "2 of 5 joined · Expires in 3 days", or why the link no longer works. */

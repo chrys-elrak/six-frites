@@ -34,6 +34,7 @@ export function useRecorder() {
 
   useEffect(() => () => recorder.current?.stream.getTracks().forEach((t) => t.stop()), []);
 
+  /** Resolves true once recording, false if the microphone couldn't be opened. */
   async function start() {
     setError(null);
     try {
@@ -57,8 +58,10 @@ export function useRecorder() {
       setElapsed(0);
       rec.start(250);
       setRecording(true);
+      return true;
     } catch {
       setError(getT().composer.micDenied);
+      return false;
     }
   }
 

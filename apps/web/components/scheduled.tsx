@@ -17,11 +17,13 @@ import { PrimaryButton } from "./ui";
 
 export function ScheduleDialog({
   title,
+  confirm,
   initial,
   onPick,
   onClose,
 }: {
   title: string;
+  confirm?: string;
   initial?: Date;
   onPick: (at: Date) => void;
   onClose: () => void;
@@ -77,7 +79,7 @@ export function ScheduleDialog({
             {tr.common.cancel}
           </button>
           <PrimaryButton type="submit" className="flex-1">
-            {tr.chat.schedule}
+            {confirm ?? tr.chat.schedule}
           </PrimaryButton>
         </div>
       </form>

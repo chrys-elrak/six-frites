@@ -15,7 +15,6 @@ import { brand, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { BubbleColorsContext } from "@/lib/bubble-colors";
 import { startCall, useCall } from "@/lib/calls";
-import { useChatTheme } from "@/lib/chat-themes";
 import { useKeyChanges } from "@/lib/e2ee";
 import { useTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
@@ -48,8 +47,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const frozen = !!chat.data && isFrozen(chat.data);
   useWatchPresence(peerId && !frozen ? [peerId] : []);
   const presence = usePresence(frozen ? undefined : peerId);
-  const defaultTheme = useChatTheme();
-  const theme = chat.data?.theme ? chatTheme(chat.data.theme) : defaultTheme;
+  const theme = chatTheme(chat.data?.theme);
   const colors = t.dark ? theme.dark : theme.light;
   const bubble = useMemo(
     () => ({ bg: colors.bubble, ink: colors.bubbleInk, theirBg: colors.theirBubble, theirInk: colors.theirBubbleInk }),

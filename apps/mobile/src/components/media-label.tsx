@@ -3,7 +3,9 @@ import {
   CircleUserRound,
   Film,
   Image as ImageIcon,
+  ListChecks,
   type LucideIcon,
+  MapPin,
   MessageSquare,
   Mic,
   Paperclip,
@@ -22,6 +24,8 @@ const mediaIcons: Record<string, LucideIcon> = {
   gif: Film,
   sticker: Sticker,
   service: Timer,
+  location: MapPin,
+  checklist: ListChecks,
 };
 
 export type MediaType = Exclude<MessageDTO["type"], "text">;

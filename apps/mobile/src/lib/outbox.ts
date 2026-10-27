@@ -1,4 +1,13 @@
-import type { EncryptedFile, EphemeralInput, MessageEntity, ReplyPreview, UploadKind } from "@six/shared";
+import type {
+  Checklist,
+  EncryptedFile,
+  EphemeralInput,
+  GeoPoint,
+  GifDTO,
+  MessageEntity,
+  ReplyPreview,
+  UploadKind,
+} from "@six/shared";
 import { create } from "zustand";
 
 export interface PendingAttachment {
@@ -10,6 +19,7 @@ export interface PendingAttachment {
   width: number | null;
   height: number | null;
   durationMs: number | null;
+  sticker?: boolean;
   progress: number;
   uploadId: string | null;
   /** Set once an encrypted copy was uploaded: what the recipient needs to decrypt it. */
@@ -25,6 +35,9 @@ export interface PendingMessage {
   spoiler: boolean;
   ephemeral: EphemeralInput | null;
   attachment: PendingAttachment | null;
+  gif?: GifDTO;
+  location?: GeoPoint;
+  checklist?: Checklist;
   createdAt: string;
   status: "sending" | "failed";
 }

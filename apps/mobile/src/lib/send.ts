@@ -1,7 +1,10 @@
 import { type Realtime, encryptFile } from "@six/sdk";
 import {
+  type Checklist,
   type EncryptedFile,
   type EphemeralInput,
+  type GeoPoint,
+  type GifDTO,
   type MessageDTO,
   type MessageEntity,
   type UploadKind,
@@ -25,6 +28,7 @@ export interface LocalFile {
   width?: number | null;
   height?: number | null;
   durationMs?: number | null;
+  sticker?: boolean;
 }
 
 export interface Draft {
@@ -34,6 +38,9 @@ export interface Draft {
   spoiler?: boolean;
   ephemeral?: EphemeralInput | null;
   file?: LocalFile;
+  gif?: GifDTO;
+  location?: GeoPoint;
+  checklist?: Checklist;
 }
 
 /** Encrypts a picked file into the cache so it can be uploaded like any other file. */
@@ -51,6 +58,7 @@ async function sealFile(localUrl: string, a: NonNullable<PendingMessage["attachm
     width: a.width,
     height: a.height,
     durationMs: a.durationMs,
+    ...(a.sticker && { sticker: true }),
   };
   return { uri: out.uri, file };
 }
@@ -62,11 +70,11 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
   try {
     const meId = useSession.getState().user!.id;
     const chat = await chatFor(qc, chatId);
-    const encrypt = await shouldEncrypt(meId, chat);
+    const encrypt = !pending.gif && (await shouldEncrypt(meId, chat));
 
     let attachmentId = pending.attachment?.uploadId ?? undefined;
     let file = pending.attachment?.file;
-    if (pending.attachment && (!attachmentId || (encrypt && !file))) {
+    if (pending.attachment && !pending.gif && (!attachmentId || (encrypt && !file))) {
       const { kind, name, mime, localUrl } = pending.attachment;
       const sealed = encrypt ? await sealFile(localUrl, pending.attachment) : null;
       const blob = await (await fetch(sealed?.uri ?? localUrl)).blob();
@@ -89,6 +97,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       replyToId: pending.replyTo?.id,
       ephemeral: pending.ephemeral ?? undefined,
     };
+    const type = pending.location ? ("location" as const) : pending.checklist ? ("checklist" as const) : undefined;
     const m = encrypt
       ? await e2eeFor(meId)!.send(
           chatId,
@@ -100,14 +109,19 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             spoiler: pending.spoiler || undefined,
             replyText: pending.replyTo ? pending.replyTo.text : undefined,
             file,
+            location: pending.location,
+            checklist: pending.checklist,
           },
-          (encrypted) => realtime.sendMessage(chatId, { ...base, encrypted }),
+          (encrypted) => realtime.sendMessage(chatId, { ...base, encrypted, type }),
         )
       : await realtime.sendMessage(chatId, {
           ...base,
           text: pending.text || undefined,
           entities: pending.entities.length ? pending.entities : undefined,
+          gifId: pending.gif?.id,
           spoiler: pending.spoiler || undefined,
+          location: pending.location,
+          checklist: pending.checklist,
         });
     insertMessage(qc, m);
     patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
@@ -118,7 +132,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
 }
 
 export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string, draft: Draft) {
-  const { replyTo, file } = draft;
+  const { replyTo, file, gif } = draft;
   const pending: PendingMessage = {
     clientId: randomUUID(),
     chatId,
@@ -148,10 +162,27 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
           width: file.width ?? null,
           height: file.height ?? null,
           durationMs: file.durationMs ?? null,
+          sticker: file.sticker,
           progress: 0,
           uploadId: null,
         }
-      : null,
+      : gif
+        ? {
+            kind: "gif",
+            name: gif.title,
+            mime: "image/webp",
+            size: 0,
+            localUrl: gif.previewUrl,
+            width: gif.width,
+            height: gif.height,
+            durationMs: null,
+            progress: 1,
+            uploadId: null,
+          }
+        : null,
+    gif,
+    location: draft.location,
+    checklist: draft.checklist,
     createdAt: new Date().toISOString(),
     status: "sending",
   };

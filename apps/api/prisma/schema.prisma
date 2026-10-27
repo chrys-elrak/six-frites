@@ -14,10 +14,8 @@ model User {
   displayName String
   avatarUrl   String?
   avatarKey   String?
-  username    String?   @unique
   contactCode String    @unique @default(dbgenerated("random_code()"))
   alias       String    @default(dbgenerated("random_alias()"))
-  findByEmail Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   bannedAt    DateTime?
@@ -29,9 +27,12 @@ model User {
   backupWrapped  String?
   backupPinTries Int       @default(0)
   appLockHash    String?
+  inviteLimit    Int       @default(10)
+  queuedAt       DateTime?
 
   sessions       Session[]
   invites        Invite[]
+  contactLinks   ContactLink[]
   referredBy     Referral?          @relation("referee")
   referrals      Referral[]         @relation("referrer")
   memberships    ChatMember[]
@@ -51,6 +52,7 @@ model User {
   reportsAgainst Report[]           @relation("target")
   devices        Device[]
   messageBackups MessageBackup[]
+  checklistMarks ChecklistMark[]
 }
 
 model Report {
@@ -72,6 +74,18 @@ model Report {
 
   @@index([status, createdAt])
   @@index([targetId, status])
+}
+
+model ContactLink {
+  id        String    @id @default(cuid())
+  code      String    @unique @default(dbgenerated("random_code()"))
+  userId    String
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model Invite {
@@ -255,6 +269,8 @@ model Message {
   stickerId    String?
   replyToId    String?
   action       Json?
+  location     Json?
+  checklist    Json?
   encrypted    Boolean   @default(false)
   senderDevice String?
   createdAt    DateTime  @default(now())
@@ -274,10 +290,24 @@ model Message {
   reactions        MessageReaction[]
   envelopes        MessageEnvelope[]
   backups          MessageBackup[]
+  marks            ChecklistMark[]
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
   @@index([expiresAt])
+}
+
+model ChecklistMark {
+  messageId String
+  item      Int
+  userId    String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, item])
+  @@index([userId])
 }
 
 model ScheduledMessage {

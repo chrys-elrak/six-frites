@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { bearer, chatHelpers, useApp } from "./helpers.js";
+import { env } from "../src/env.js";
+import { type Auth, bearer, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { signUp, get, call } = chatHelpers(ctx);
@@ -89,5 +90,52 @@ describe("invites", () => {
     const res = await ctx.app.inject({ url: "/v1/invites/NOPE2345" });
     expect(res.statusCode).toBe(404);
     expect(res.json().error.code).toBe("INVITE_NOT_FOUND");
+  });
+
+  it("only lets new people in with an invite, except admins", async () => {
+    const sub = uniqueSub("gatekeeper");
+    const host: Auth = (await loginAs(ctx.app, sub)).json();
+    env.INVITE_ONLY = true;
+    try {
+      const res = await loginAs(ctx.app, uniqueSub("walk-in"));
+      expect(res.statusCode).toBe(403);
+      expect(res.json().error.code).toBe("INVITE_REQUIRED");
+
+      expect((await loginAs(ctx.app, "the-admin")).statusCode).toBe(200);
+      expect((await loginAs(ctx.app, sub)).statusCode).toBe(200);
+      const { code } = await createInvite(host.accessToken);
+      expect((await signUp("invited", { inviteCode: code })).accessToken).toBeTypeOf("string");
+    } finally {
+      env.INVITE_ONLY = false;
+    }
+  });
+
+  it("queues sign-ups past the inviter's limit until an admin raises it", async () => {
+    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const host = await signUp("popular");
+    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 10, invited: 0, waiting: 0 });
+    await call(boss, "POST", `/v1/admin/users/${host.user.id}/invite-limit`, { limit: 1 });
+    const { code } = await createInvite(host.accessToken, { maxUses: 3 });
+
+    await signUp("first", { inviteCode: code });
+    const late = uniqueSub("late");
+    const queued = await loginAs(ctx.app, late, "ios", { inviteCode: code });
+    expect(queued.statusCode).toBe(403);
+    expect(queued.json().error.code).toBe("ACCOUNT_QUEUED");
+    expect((await loginAs(ctx.app, late)).json().error.code).toBe("ACCOUNT_QUEUED");
+    expect((await call(boss, "POST", "/v1/contacts", { q: `${late}@example.com` })).json().error.code).toBe("USER_NOT_FOUND");
+
+    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 1, invited: 1, waiting: 1 });
+    expect((await get(host, "/v1/me/referrals")).items).toHaveLength(1);
+    expect(await get(boss, `/v1/admin/users/${host.user.id}`)).toMatchObject({ inviteLimit: 1, invited: 1, waiting: 1 });
+
+    const raised = await call(boss, "POST", `/v1/admin/users/${host.user.id}/invite-limit`, { limit: 2 });
+    expect(raised.json()).toMatchObject({ inviteLimit: 2, invited: 2, waiting: 0 });
+    const admitted = await loginAs(ctx.app, late);
+    expect(admitted.statusCode).toBe(200);
+    const contacts = await get(admitted.json(), "/v1/contacts");
+    expect(contacts.items.map((c: { user: { id: string } }) => c.user.id)).toContain(host.user.id);
+
+    expect((await get(boss, "/v1/me/invite-quota")).limit).toBeNull();
   });
 });
