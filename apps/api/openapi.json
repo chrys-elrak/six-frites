@@ -3852,141 +3852,25 @@
                       ],
                       "additionalProperties": false
                     },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
                         "valid",
                         "expired",
-                        "exhausted"
+                        "exhausted",
+                        "revoked"
                       ]
                     }
                   },
                   "required": [
                     "code",
                     "inviter",
+                    "message",
                     "status"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/me/invite": {
-      "get": {
-        "summary": "Your invite link",
-        "tags": [
-          "invites"
-        ],
-        "description": "Everyone has exactly one. It's made on first call, never expires and has no use limit.",
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "maxUses": {
-                      "nullable": true,
-                      "type": "integer",
-                      "minimum": -9007199254740991,
-                      "maximum": 9007199254740991
-                    },
-                    "uses": {
-                      "type": "integer",
-                      "minimum": -9007199254740991,
-                      "maximum": 9007199254740991
-                    },
-                    "expiresAt": {
-                      "nullable": true,
-                      "type": "string",
-                      "format": "date-time",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "maxUses",
-                    "uses",
-                    "expiresAt",
-                    "createdAt"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/me/invite/reset": {
-      "post": {
-        "summary": "Get a new invite link",
-        "tags": [
-          "invites"
-        ],
-        "description": "The old link stops working. People who already joined with it stay.",
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "maxUses": {
-                      "nullable": true,
-                      "type": "integer",
-                      "minimum": -9007199254740991,
-                      "maximum": 9007199254740991
-                    },
-                    "uses": {
-                      "type": "integer",
-                      "minimum": -9007199254740991,
-                      "maximum": 9007199254740991
-                    },
-                    "expiresAt": {
-                      "nullable": true,
-                      "type": "string",
-                      "format": "date-time",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "maxUses",
-                    "uses",
-                    "expiresAt",
-                    "createdAt"
                   ],
                   "additionalProperties": false
                 }
@@ -3998,31 +3882,48 @@
     },
     "/v1/invites": {
       "post": {
-        "summary": "Your invite link (deprecated)",
+        "summary": "Create an invite link",
         "tags": [
           "invites"
         ],
-        "description": "Kept for older apps: returns the same link as GET /me/invite. The body is ignored.",
+        "description": "Only new accounts count towards maxUses. Someone who already has an account can still open it to add you.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {},
-                "additionalProperties": {}
+                "properties": {
+                  "message": {
+                    "description": "Shown to whoever opens the link, before they sign in",
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "maxUses": {
+                    "default": 1,
+                    "description": "How many new accounts can be made with it",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  "expiresInDays": {
+                    "default": 7,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 30
+                  }
+                }
               }
             }
           }
         },
-        "deprecated": true,
         "security": [
           {
             "bearer": []
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "Default Response",
             "content": {
               "application/json": {
@@ -4030,6 +3931,10 @@
                   "type": "object",
                   "properties": {
                     "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
                       "type": "string"
                     },
                     "maxUses": {
@@ -4041,13 +3946,23 @@
                     "uses": {
                       "type": "integer",
                       "minimum": -9007199254740991,
-                      "maximum": 9007199254740991
+                      "maximum": 9007199254740991,
+                      "description": "Accounts made with it; people who already had one don't count"
                     },
                     "expiresAt": {
                       "nullable": true,
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "valid",
+                        "expired",
+                        "exhausted",
+                        "revoked"
+                      ]
                     },
                     "createdAt": {
                       "type": "string",
@@ -4057,9 +3972,11 @@
                   },
                   "required": [
                     "code",
+                    "message",
                     "maxUses",
                     "uses",
                     "expiresAt",
+                    "status",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4116,6 +4033,10 @@
                           "code": {
                             "type": "string"
                           },
+                          "message": {
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "maxUses": {
                             "nullable": true,
                             "type": "integer",
@@ -4125,13 +4046,23 @@
                           "uses": {
                             "type": "integer",
                             "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
+                            "maximum": 9007199254740991,
+                            "description": "Accounts made with it; people who already had one don't count"
                           },
                           "expiresAt": {
                             "nullable": true,
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "valid",
+                              "expired",
+                              "exhausted",
+                              "revoked"
+                            ]
                           },
                           "createdAt": {
                             "type": "string",
@@ -4141,9 +4072,11 @@
                         },
                         "required": [
                           "code",
+                          "message",
                           "maxUses",
                           "uses",
                           "expiresAt",
+                          "status",
                           "createdAt"
                         ],
                         "additionalProperties": false
@@ -4157,6 +4090,95 @@
                   "required": [
                     "items",
                     "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/invites/{code}/revoke": {
+      "post": {
+        "summary": "Revoke one of your invite links",
+        "tags": [
+          "invites"
+        ],
+        "description": "Nobody can use it any more. People who already joined with it stay connected.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "maxUses": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "uses": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Accounts made with it; people who already had one don't count"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "valid",
+                        "expired",
+                        "exhausted",
+                        "revoked"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "maxUses",
+                    "uses",
+                    "expiresAt",
+                    "status",
+                    "createdAt"
                   ],
                   "additionalProperties": false
                 }

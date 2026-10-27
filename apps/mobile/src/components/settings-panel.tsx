@@ -1,7 +1,6 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
-  type Dict,
-  type InviteDTO,
+  inviteSummary,
   LOCALES,
   LOCALE_NAMES,
   type SessionDTO,
@@ -38,6 +37,7 @@ import { Avatar } from "./avatar";
 import { Wallpaper } from "./chat-background";
 import { CustomThemePicker } from "./custom-theme";
 import { QrCode } from "./qr-code";
+import { NewInvite } from "./invites";
 import { Sheet } from "./sheet";
 import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton } from "./ui";
 
@@ -393,22 +393,12 @@ function FindMe() {
   );
 }
 
-function usesLabel(i: InviteDTO, tr: Dict) {
-  const uses = tr.settings.joined(i.uses);
-  return i.maxUses === null ? uses : `${uses} · ${tr.settings.left(i.maxUses - i.uses)}`;
-}
-
-function expiryLabel(i: InviteDTO, tr: Dict) {
-  if (!i.expiresAt) return tr.settings.neverExpires;
-  const ms = Date.parse(i.expiresAt) - Date.now();
-  if (ms <= 0) return tr.settings.expired;
-  return tr.settings.expiresIn(tr.time.duration(Math.ceil(ms / 864e5), "day"));
-}
-
 function Invites() {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [revoking, setRevoking] = useState<string | null>(null);
   const invites = useInfiniteQuery({
     queryKey: ["invites"],
     initialPageParam: undefined as string | undefined,
@@ -417,12 +407,10 @@ function Invites() {
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
 
-  const create = useMutation({
-    mutationFn: async () => unwrap(await six.api.POST("/v1/invites", { body: {} })),
-    onSuccess: async (invite) => {
-      await qc.invalidateQueries({ queryKey: ["invites"] });
-      await shareInvite(invite.code);
-    },
+  const revoke = useMutation({
+    mutationFn: async (code: string) =>
+      unwrap(await six.api.POST("/v1/invites/{code}/revoke", { params: { path: { code } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
   });
 
   const items = invites.data?.pages.flatMap((p) => p.items) ?? [];
@@ -433,22 +421,29 @@ function Invites() {
       <Card>
         <View style={styles.cardRow}>
           <Text style={{ flex: 1, color: t.textSoft, fontSize: 14 }}>{tr.settings.inviteHint}</Text>
-          <PrimaryButton title={tr.settings.newLink} onPress={() => create.mutate()} disabled={create.isPending} />
+          <PrimaryButton title={tr.settings.newLink} onPress={() => setCreating(true)} />
         </View>
         {items.map((i) => {
-          const dead =
-            (i.expiresAt !== null && Date.parse(i.expiresAt) < Date.now()) || (i.maxUses !== null && i.uses >= i.maxUses);
+          const dead = i.status !== "valid" || (i.expiresAt !== null && Date.parse(i.expiresAt) < Date.now());
           return (
             <View key={i.code}>
               <Divider />
               <View style={[styles.cardRow, dead && { opacity: 0.5 }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.code, { color: t.text }]}>{i.code}</Text>
-                  <Text style={{ color: t.muted, fontSize: 13 }}>
-                    {usesLabel(i, tr)} · {expiryLabel(i, tr)}
-                  </Text>
+                  {i.message && (
+                    <Text numberOfLines={1} style={{ color: t.text, fontSize: 14, fontStyle: "italic" }}>
+                      “{i.message}”
+                    </Text>
+                  )}
+                  <Text style={{ color: t.muted, fontSize: 13 }}>{inviteSummary(i, tr)}</Text>
                 </View>
-                {!dead && <TextButton title={tr.common.share} onPress={() => void shareInvite(i.code)} />}
+                {!dead && (
+                  <View style={{ alignItems: "flex-end" }}>
+                    <TextButton title={tr.common.share} onPress={() => void shareInvite(i.code)} />
+                    <TextButton title={tr.settings.revoke} color={t.danger} onPress={() => setRevoking(i.code)} />
+                  </View>
+                )}
               </View>
             </View>
           );
@@ -462,6 +457,14 @@ function Invites() {
           </>
         )}
       </Card>
+      {creating && <NewInvite onClose={() => setCreating(false)} />}
+      {revoking && (
+        <Sheet
+          title={tr.settings.revokeWarning}
+          actions={[{ label: tr.settings.revoke, destructive: true, onSelect: () => revoke.mutate(revoking) }]}
+          onClose={() => setRevoking(null)}
+        />
+      )}
     </View>
   );
 }
@@ -485,9 +488,12 @@ function Referrals() {
             {i > 0 && <Divider />}
             <View style={styles.cardRow}>
               <Avatar user={r.user} />
-              <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontWeight: "500" }}>
-                {r.user.displayName}
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={1} style={{ color: t.text, fontWeight: "500" }}>
+                  {r.user.displayName}
+                </Text>
+                <Text style={{ color: t.muted, fontSize: 12, fontFamily: "monospace" }}>{tr.settings.viaLink(r.inviteCode)}</Text>
+              </View>
               <Text style={{ color: t.muted, fontSize: 13 }}>{timeAgo(r.createdAt)}</Text>
             </View>
           </View>

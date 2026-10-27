@@ -28,7 +28,7 @@ model User {
   appLockHash    String?
 
   sessions       Session[]
-  invite         Invite?
+  invites        Invite[]
   referredBy     Referral?          @relation("referee")
   referrals      Referral[]         @relation("referrer")
   memberships    ChatMember[]
@@ -74,14 +74,18 @@ model Report {
 model Invite {
   id        String    @id @default(cuid())
   code      String    @unique
-  creatorId String    @unique
+  creatorId String
+  message   String?
   maxUses   Int?
   uses      Int       @default(0)
   expiresAt DateTime?
+  revokedAt DateTime?
   createdAt DateTime  @default(now())
 
   creator   User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   referrals Referral[]
+
+  @@index([creatorId, createdAt])
 }
 
 model Referral {

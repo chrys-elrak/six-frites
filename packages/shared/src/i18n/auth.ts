@@ -10,6 +10,7 @@ const en = {
   errors: {
     INVITE_NOT_FOUND: "That invite link doesn't exist.",
     INVITE_EXPIRED: "That invite link has expired.",
+    INVITE_REVOKED: "That invite link was revoked.",
     INVITE_EXHAUSTED: "That invite link has already been used up.",
     INVALID_GOOGLE_TOKEN: "Google sign-in failed. Please try again.",
     DEVELOPER_ERROR:
@@ -22,6 +23,7 @@ const en = {
   invitedYou: (name: string) => `${name} invited you to Six Frites`,
   inviteExpired: "This invite has expired.",
   inviteUsedUp: "This invite has already been used up.",
+  inviteRevoked: "This invite was revoked.",
   signInToAccept: "Sign in to accept",
   yourInvite: "This is your invite link. Share it with a friend.",
   acceptInvite: "Accept invite",
@@ -31,6 +33,7 @@ const en = {
     INVITE_OWN: "This is your own invite.",
     INVITE_EXPIRED: "This invite has expired.",
     INVITE_EXHAUSTED: "This invite has already been used up.",
+    INVITE_REVOKED: "This invite was revoked.",
   },
   getAndroidApp: "Get the Android app",
   androidApp: "Android app",
@@ -52,6 +55,7 @@ const fr: typeof en = {
   errors: {
     INVITE_NOT_FOUND: "Ce lien d'invitation n'existe pas.",
     INVITE_EXPIRED: "Ce lien d'invitation a expiré.",
+    INVITE_REVOKED: "Ce lien d'invitation a été révoqué.",
     INVITE_EXHAUSTED: "Ce lien d'invitation a déjà été entièrement utilisé.",
     INVALID_GOOGLE_TOKEN: "Échec de la connexion Google. Veuillez réessayer.",
     DEVELOPER_ERROR:
@@ -64,6 +68,7 @@ const fr: typeof en = {
   invitedYou: (name) => `${name} vous invite sur Six Frites`,
   inviteExpired: "Cette invitation a expiré.",
   inviteUsedUp: "Cette invitation a déjà été entièrement utilisée.",
+  inviteRevoked: "Cette invitation a été révoquée.",
   signInToAccept: "Se connecter pour accepter",
   yourInvite: "C'est votre lien d'invitation. Partagez-le avec un(e) ami(e).",
   acceptInvite: "Accepter l'invitation",
@@ -73,6 +78,7 @@ const fr: typeof en = {
     INVITE_OWN: "C'est votre propre invitation.",
     INVITE_EXPIRED: "Cette invitation a expiré.",
     INVITE_EXHAUSTED: "Cette invitation a déjà été entièrement utilisée.",
+    INVITE_REVOKED: "Cette invitation a été révoquée.",
   },
   getAndroidApp: "Télécharger l'app Android",
   androidApp: "Application Android",
@@ -94,6 +100,7 @@ const mg: typeof en = {
   errors: {
     INVITE_NOT_FOUND: "Tsy misy io rohy fanasana io.",
     INVITE_EXPIRED: "Lany daty io rohy fanasana io.",
+    INVITE_REVOKED: "Nofoanana io rohy fanasana io.",
     INVITE_EXHAUSTED: "Efa lany ny fampiasana io rohy fanasana io.",
     INVALID_GOOGLE_TOKEN: "Tsy nahomby ny fidirana amin'ny Google. Andramo indray.",
     DEVELOPER_ERROR:
@@ -106,6 +113,7 @@ const mg: typeof en = {
   invitedYou: (name) => `Manasa anao ho ao amin'ny Six Frites i ${name}`,
   inviteExpired: "Lany daty io fanasana io.",
   inviteUsedUp: "Efa lany ny fampiasana io fanasana io.",
+  inviteRevoked: "Nofoanana io fanasana io.",
   signInToAccept: "Midira mba hanekena",
   yourInvite: "Ity no rohy fanasanao. Zarao amin'ny namana iray izy.",
   acceptInvite: "Ekeo ny fanasana",
@@ -115,6 +123,7 @@ const mg: typeof en = {
     INVITE_OWN: "Fanasana avy aminao ihany ity.",
     INVITE_EXPIRED: "Lany daty io fanasana io.",
     INVITE_EXHAUSTED: "Efa lany ny fampiasana io fanasana io.",
+    INVITE_REVOKED: "Nofoanana io fanasana io.",
   },
   getAndroidApp: "Ampidino ny rindranasa Android",
   androidApp: "Rindranasa Android",

@@ -1,16 +1,16 @@
 import { unwrap } from "@six/sdk";
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Pencil, Search, Share2, UserPlus, Users } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { shareInvite } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ContactEditor } from "./contact-editor";
+import { NewInvite } from "./invites";
 import { EmptyState, IconButton, ScreenHeader } from "./ui";
 
 export const contactKeys = { all: ["contacts"] as const, list: (q: string) => ["contacts", q] as const };
@@ -31,6 +31,7 @@ export function ContactList() {
   const q = useDebounced(query.trim());
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [inviting, setInviting] = useState(false);
 
   const contacts = useInfiniteQuery({
     queryKey: contactKeys.list(q),
@@ -38,11 +39,6 @@ export function ContactList() {
     queryFn: async ({ pageParam }) =>
       unwrap(await six.api.GET("/v1/contacts", { params: { query: { q: q || undefined, cursor: pageParam } } })),
     getNextPageParam: (last) => last.nextCursor ?? undefined,
-  });
-
-  const invite = useMutation({
-    mutationFn: async () => unwrap(await six.api.POST("/v1/invites", { body: {} })),
-    onSuccess: (i) => shareInvite(i.code),
   });
 
   const items = contacts.data?.pages.flatMap((p) => p.items) ?? [];
@@ -83,8 +79,7 @@ export function ContactList() {
             <Text style={{ color: brand, fontSize: 15, fontWeight: "600" }}>{tr.contacts.addContact}</Text>
           </Pressable>
           <Pressable
-            onPress={() => invite.mutate()}
-            disabled={invite.isPending}
+            onPress={() => setInviting(true)}
             style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
           >
             <View style={[styles.inviteIcon, { backgroundColor: "rgba(235,138,0,0.15)" }]}>
@@ -131,6 +126,7 @@ export function ContactList() {
       />
 
       {adding && <AddContact onClose={() => setAdding(false)} />}
+      {inviting && <NewInvite onClose={() => setInviting(false)} />}
       {editing && <ContactEditor userId={editing} onClose={() => setEditing(null)} />}
     </View>
   );

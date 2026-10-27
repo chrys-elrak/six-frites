@@ -2,8 +2,10 @@
 
 import { SixApiError } from "@six/sdk";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
+import { InviteCard, invitePreviewQuery } from "@/components/invite-card";
 import { Logo } from "@/components/logo";
 import { unlock } from "@/lib/app-lock";
 import { deviceName, useSession } from "@/lib/session";
@@ -15,7 +17,9 @@ function LoginForm() {
   const tr = useT();
   const router = useRouter();
   const params = useSearchParams();
-  const inviteCode = params.get("invite") ?? undefined;
+  const invite = params.get("invite");
+  const preview = useQuery({ ...invitePreviewQuery(invite ?? ""), enabled: !!invite });
+  const inviteCode = invite && (preview.isPending || preview.data?.status === "valid") ? invite : undefined;
   const next = params.get("next");
   const home = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
   const status = useSession((s) => s.status);
@@ -25,8 +29,8 @@ function LoginForm() {
 
   useEffect(() => {
     if (status !== "authed" || signingIn.current) return;
-    router.replace(inviteCode ? `/invite/${encodeURIComponent(inviteCode)}` : home);
-  }, [status, router, inviteCode, home]);
+    router.replace(invite ? `/invite/${encodeURIComponent(invite)}` : home);
+  }, [status, router, invite, home]);
 
   async function onCredential(idToken: string) {
     signingIn.current = true;
@@ -53,17 +57,24 @@ function LoginForm() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-8 px-4 pb-[env(safe-area-inset-bottom)]">
-      <div className="space-y-3 text-center">
-        <Logo className="mx-auto size-20 drop-shadow-sm" />
-        <h1 className="text-2xl font-semibold tracking-tight">Six Frites</h1>
-        <p className="text-sm text-stone-500 dark:text-stone-400">
-          {inviteCode
-            ? tr.auth.invitedSignIn
-            : next?.startsWith("/add/")
-              ? tr.auth.signInToAdd
-              : tr.auth.signInToContinue}
-        </p>
-      </div>
+      {preview.data ? (
+        <div className="space-y-3 text-center">
+          <InviteCard invite={preview.data} />
+          {inviteCode && <p className="text-sm text-stone-500 dark:text-stone-400">{tr.auth.invitedSignIn}</p>}
+        </div>
+      ) : (
+        <div className="space-y-3 text-center">
+          <Logo className="mx-auto size-20 drop-shadow-sm" />
+          <h1 className="text-2xl font-semibold tracking-tight">Six Frites</h1>
+          <p className="text-sm text-stone-500 dark:text-stone-400">
+            {preview.isError
+              ? tr.auth.errors.INVITE_NOT_FOUND
+              : next?.startsWith("/add/")
+                ? tr.auth.signInToAdd
+                : tr.auth.signInToContinue}
+          </p>
+        </div>
+      )}
 
       <div className="space-y-3">
         <GoogleButton onCredential={onCredential} />

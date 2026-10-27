@@ -4,8 +4,9 @@ import { SixApiError, unwrap } from "@six/sdk";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { SearchX } from "lucide-react";
 import Link from "next/link";
-import { use } from "react";
-import { Avatar } from "@/components/avatar";
+import { useRouter } from "next/navigation";
+import { use, useEffect } from "react";
+import { InviteCard, invitePreviewQuery } from "@/components/invite-card";
 import { PrimaryButton } from "@/components/ui";
 import { shareInvite } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -27,19 +28,19 @@ function Shell({ children }: { children: React.ReactNode }) {
 export default function InvitePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
   const tr = useT();
+  const router = useRouter();
   const { status, user } = useSession();
-
-  const preview = useQuery({
-    queryKey: ["invite", code],
-    queryFn: async () => unwrap(await six.api.GET("/v1/invites/{code}", { params: { path: { code } } })),
-    retry: false,
-  });
+  const preview = useQuery(invitePreviewQuery(code));
 
   const accept = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
   });
 
-  if (preview.isPending || status === "loading") {
+  useEffect(() => {
+    if (status === "anon") router.replace(`/login?invite=${encodeURIComponent(code)}`);
+  }, [status, router, code]);
+
+  if (preview.isPending || status !== "authed") {
     return <main className="grid min-h-dvh place-items-center text-sm text-stone-500">{tr.common.loading}</main>;
   }
 
@@ -55,33 +56,15 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
     );
   }
 
-  const { inviter, status: inviteStatus } = preview.data;
-  const isMine = user?.id === inviter.id;
+  const isMine = user?.id === preview.data.inviter.id;
 
   return (
     <Shell>
-      <Avatar user={inviter} size="lg" />
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold">{tr.auth.invitedYou(inviter.displayName)}</h1>
-        {inviteStatus !== "valid" && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {inviteStatus === "expired" ? tr.auth.inviteExpired : tr.auth.inviteUsedUp}
-          </p>
-        )}
-      </div>
+      <InviteCard invite={preview.data} />
 
-      {inviteStatus === "valid" && (
+      {preview.data.status === "valid" && (
         <div className="w-full space-y-3">
-          {status === "anon" && (
-            <Link
-              href={`/login?invite=${encodeURIComponent(preview.data.code)}`}
-              className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white dark:bg-stone-100 dark:text-stone-900"
-            >
-              {tr.auth.signInToAccept}
-            </Link>
-          )}
-
-          {status === "authed" && isMine && (
+          {isMine && (
             <>
               <p className="text-sm text-stone-500">{tr.auth.yourInvite}</p>
               <PrimaryButton className="w-full" onClick={() => void shareInvite(preview.data.code)}>
@@ -90,7 +73,7 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
             </>
           )}
 
-          {status === "authed" && !isMine && !accept.isSuccess && (
+          {!isMine && !accept.isSuccess && (
             <PrimaryButton className="w-full" onClick={() => accept.mutate()} disabled={accept.isPending}>
               {tr.auth.acceptInvite}
             </PrimaryButton>

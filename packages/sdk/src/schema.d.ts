@@ -1959,8 +1959,9 @@ export interface paths {
                                 /** Format: uri */
                                 avatarUrl: string | null;
                             };
+                            message: string | null;
                             /** @enum {string} */
-                            status: "valid" | "expired" | "exhausted";
+                            status: "valid" | "expired" | "exhausted" | "revoked";
                         };
                     };
                 };
@@ -1968,100 +1969,6 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/me/invite": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Your invite link
-         * @description Everyone has exactly one. It's made on first call, never expires and has no use limit.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            code: string;
-                            maxUses: number | null;
-                            uses: number;
-                            /** Format: date-time */
-                            expiresAt: string | null;
-                            /** Format: date-time */
-                            createdAt: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/me/invite/reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get a new invite link
-         * @description The old link stops working. People who already joined with it stay.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            code: string;
-                            maxUses: number | null;
-                            uses: number;
-                            /** Format: date-time */
-                            expiresAt: string | null;
-                            /** Format: date-time */
-                            createdAt: string;
-                        };
-                    };
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -2097,10 +2004,14 @@ export interface paths {
                         "application/json": {
                             items: {
                                 code: string;
+                                message: string | null;
                                 maxUses: number | null;
+                                /** @description Accounts made with it; people who already had one don't count */
                                 uses: number;
                                 /** Format: date-time */
                                 expiresAt: string | null;
+                                /** @enum {string} */
+                                status: "valid" | "expired" | "exhausted" | "revoked";
                                 /** Format: date-time */
                                 createdAt: string;
                             }[];
@@ -2112,9 +2023,8 @@ export interface paths {
         };
         put?: never;
         /**
-         * Your invite link (deprecated)
-         * @deprecated
-         * @description Kept for older apps: returns the same link as GET /me/invite. The body is ignored.
+         * Create an invite link
+         * @description Only new accounts count towards maxUses. Someone who already has an account can still open it to add you.
          */
         post: {
             parameters: {
@@ -2126,10 +2036,71 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        [key: string]: unknown;
+                        /** @description Shown to whoever opens the link, before they sign in */
+                        message?: string;
+                        /**
+                         * @description How many new accounts can be made with it
+                         * @default 1
+                         */
+                        maxUses?: number;
+                        /** @default 7 */
+                        expiresInDays?: number;
                     };
                 };
             };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            message: string | null;
+                            maxUses: number | null;
+                            /** @description Accounts made with it; people who already had one don't count */
+                            uses: number;
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                            /** @enum {string} */
+                            status: "valid" | "expired" | "exhausted" | "revoked";
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invites/{code}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke one of your invite links
+         * @description Nobody can use it any more. People who already joined with it stay connected.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
             responses: {
                 /** @description Default Response */
                 200: {
@@ -2139,10 +2110,14 @@ export interface paths {
                     content: {
                         "application/json": {
                             code: string;
+                            message: string | null;
                             maxUses: number | null;
+                            /** @description Accounts made with it; people who already had one don't count */
                             uses: number;
                             /** Format: date-time */
                             expiresAt: string | null;
+                            /** @enum {string} */
+                            status: "valid" | "expired" | "exhausted" | "revoked";
                             /** Format: date-time */
                             createdAt: string;
                         };

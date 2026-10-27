@@ -1,10 +1,12 @@
 import { SixApiError } from "@six/sdk";
+import { useQuery } from "@tanstack/react-query";
 import { type Href, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { isErrorWithCode } from "react-native-nitro-google-signin";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { InviteCard, invitePreviewQuery } from "@/components/invites";
 import { Logo } from "@/components/logo";
 import { Notice } from "@/components/ui";
 import { unlock } from "@/lib/app-lock";
@@ -40,6 +42,8 @@ export default function Login() {
   const t = useTheme();
   const tr = useT();
   const { invite, next } = useLocalSearchParams<{ invite?: string; next?: string }>();
+  const preview = useQuery({ ...invitePreviewQuery(invite ?? ""), enabled: !!invite });
+  const inviteCode = invite && (preview.isPending || preview.data?.status === "valid") ? invite : undefined;
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -53,9 +57,9 @@ export default function Login() {
         return;
       }
       unlock();
-      await six.auth.loginWithGoogle(idToken, { inviteCode: invite, deviceName: deviceName() });
-      if (invite) {
-        await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: invite } } }).catch(() => null);
+      await six.auth.loginWithGoogle(idToken, { inviteCode, deviceName: deviceName() });
+      if (inviteCode) {
+        await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
       }
       if (next?.startsWith("/")) router.replace(next as Href);
     } catch (err) {
@@ -69,17 +73,24 @@ export default function Login() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: t.bg }]}>
-      <View style={styles.hero}>
-        <Logo size={80} />
-        <Text style={[styles.title, { color: t.text }]}>Six Frites</Text>
-        <Text style={{ color: t.muted, fontSize: 14 }}>
-          {invite
-            ? tr.auth.invitedSignIn
-            : next?.startsWith("/add/")
-              ? tr.auth.signInToAdd
-              : tr.auth.signInToContinue}
-        </Text>
-      </View>
+      {preview.data ? (
+        <View style={styles.hero}>
+          <InviteCard invite={preview.data} />
+          {inviteCode && <Text style={{ color: t.muted, fontSize: 14 }}>{tr.auth.invitedSignIn}</Text>}
+        </View>
+      ) : (
+        <View style={styles.hero}>
+          <Logo size={80} />
+          <Text style={[styles.title, { color: t.text }]}>Six Frites</Text>
+          <Text style={{ color: t.muted, fontSize: 14 }}>
+            {preview.isError
+              ? tr.auth.errors.INVITE_NOT_FOUND
+              : next?.startsWith("/add/")
+                ? tr.auth.signInToAdd
+                : tr.auth.signInToContinue}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.actions}>
         {GOOGLE_WEB_CLIENT_ID ? (

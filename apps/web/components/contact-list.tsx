@@ -1,17 +1,16 @@
 "use client";
 
 import { unwrap } from "@six/sdk";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Pencil, Search, Share2, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { shareInvite } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ContactEditor } from "./contact-editor";
-import { inviteQuery } from "./invites";
+import { NewInviteDialog } from "./invites";
 
 export const contactKeys = { all: ["contacts"] as const, list: (q: string) => ["contacts", q] as const };
 
@@ -28,9 +27,9 @@ export function ContactList() {
   const tr = useT();
   const [query, setQuery] = useState("");
   const q = useDebounced(query.trim());
-  const [flash, setFlash] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [inviting, setInviting] = useState(false);
 
   const contacts = useInfiniteQuery({
     queryKey: contactKeys.list(q),
@@ -38,17 +37,6 @@ export function ContactList() {
     queryFn: async ({ pageParam }) =>
       unwrap(await six.api.GET("/v1/contacts", { params: { query: { q: q || undefined, cursor: pageParam } } })),
     getNextPageParam: (last) => last.nextCursor ?? undefined,
-  });
-
-  const qc = useQueryClient();
-  const invite = useMutation({
-    mutationFn: () => qc.fetchQuery(inviteQuery),
-    onSuccess: async (i) => {
-      if ((await shareInvite(i.code)) === "copied") {
-        setFlash(tr.contacts.inviteCopied);
-        setTimeout(() => setFlash(null), 2000);
-      }
-    },
   });
 
   const items = contacts.data?.pages.flatMap((p) => p.items) ?? [];
@@ -80,16 +68,16 @@ export function ContactList() {
           <span className="font-medium text-brand">{tr.contacts.addContact}</span>
         </button>
         <button
-          onClick={() => invite.mutate()}
-          disabled={invite.isPending}
-          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-100 disabled:opacity-60 dark:hover:bg-stone-900"
+          onClick={() => setInviting(true)}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-100 dark:hover:bg-stone-900"
         >
           <span className="grid size-11 place-items-center rounded-full bg-brand/15 text-brand">
             <Share2 className="size-5" />
           </span>
-          <span className="font-medium text-brand">{flash ?? tr.contacts.inviteFriend}</span>
+          <span className="font-medium text-brand">{tr.contacts.inviteFriend}</span>
         </button>
         {adding && <AddContact onClose={() => setAdding(false)} />}
+        {inviting && <NewInviteDialog onClose={() => setInviting(false)} />}
 
         {contacts.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
         {contacts.isError && <p className="p-4 text-sm text-red-600">{tr.contacts.loadFailed}</p>}

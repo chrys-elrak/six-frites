@@ -1,10 +1,10 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { SearchX } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Avatar } from "@/components/avatar";
+import { InviteCard, invitePreviewQuery } from "@/components/invites";
 import { EmptyState, Loading, Notice, PrimaryButton, TextButton } from "@/components/ui";
 import { shareInvite } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -18,11 +18,7 @@ export default function InviteScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const { status, user } = useSession();
 
-  const preview = useQuery({
-    queryKey: ["invite", code],
-    queryFn: async () => unwrap(await six.api.GET("/v1/invites/{code}", { params: { path: { code } } })),
-    retry: false,
-  });
+  const preview = useQuery(invitePreviewQuery(code));
 
   const accept = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
@@ -30,6 +26,7 @@ export default function InviteScreen() {
 
   const home = <TextButton title={tr.auth.goHome} onPress={() => router.replace("/")} />;
 
+  if (status !== "authed") return <Redirect href={{ pathname: "/login", params: { invite: code } }} />;
   if (preview.isPending) return <Loading />;
 
   if (preview.isError) {
@@ -43,36 +40,21 @@ export default function InviteScreen() {
     );
   }
 
-  const { inviter, status: inviteStatus } = preview.data;
-  const isMine = user?.id === inviter.id;
+  const isMine = user?.id === preview.data.inviter.id;
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: t.bg }]}>
-      <Avatar user={inviter} size="lg" />
-      <View style={{ gap: 4 }}>
-        <Text style={[styles.title, { color: t.text }]}>{tr.auth.invitedYou(inviter.displayName)}</Text>
-        {inviteStatus !== "valid" && (
-          <Text style={{ color: t.danger, textAlign: "center" }}>
-            {inviteStatus === "expired" ? tr.auth.inviteExpired : tr.auth.inviteUsedUp}
-          </Text>
-        )}
-      </View>
+      <InviteCard invite={preview.data} />
 
-      {inviteStatus === "valid" && (
+      {preview.data.status === "valid" && (
         <View style={styles.actions}>
-          {status !== "authed" && (
-            <PrimaryButton
-              title={tr.auth.signInToAccept}
-              onPress={() => router.replace({ pathname: "/login", params: { invite: preview.data.code } })}
-            />
-          )}
-          {status === "authed" && isMine && (
+          {isMine && (
             <>
               <Text style={{ color: t.muted, textAlign: "center" }}>{tr.auth.yourInvite}</Text>
               <PrimaryButton title={tr.common.shareLink} onPress={() => void shareInvite(preview.data.code)} />
             </>
           )}
-          {status === "authed" && !isMine && !accept.isSuccess && (
+          {!isMine && !accept.isSuccess && (
             <PrimaryButton title={tr.auth.acceptInvite} onPress={() => accept.mutate()} disabled={accept.isPending} />
           )}
           {accept.isSuccess && (
@@ -95,6 +77,5 @@ export default function InviteScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, alignItems: "center", justifyContent: "center", gap: 24, paddingHorizontal: 24 },
-  title: { fontSize: 20, fontWeight: "700", textAlign: "center" },
   actions: { width: "100%", maxWidth: 400, gap: 12 },
 });
