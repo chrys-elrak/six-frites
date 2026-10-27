@@ -7,7 +7,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: data.icon || "/icon.svg",
+      icon: data.icon || "/icon-192.png",
       badge: "/icon.svg",
       tag: data.chatId,
       renotify: true,

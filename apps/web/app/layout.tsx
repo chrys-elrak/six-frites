@@ -7,6 +7,7 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Six Frites",
   description: "Chat with the people who matter.",
+  appleWebApp: { title: "Six Frites", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
