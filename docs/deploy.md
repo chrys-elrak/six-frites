@@ -35,8 +35,13 @@ From a checkout on your machine:
 
 ```sh
 git archive HEAD | ssh root@164.68.110.193 'cd /root/six-frites && tar -x'
+comm -23 <(git log --no-renames --diff-filter=D --name-only --pretty=format: | grep -v '^$' | grep -v '^\.env' | sort -u) \
+  <(git ls-tree -r --name-only HEAD | sort -u) | ssh root@164.68.110.193 "cd /root/six-frites && xargs -r -d '\n' rm -f --"
 ssh root@164.68.110.193 'cd /root/six-frites && cp infra/traefik/six-frites.yml /root/traefik/config/dynamic/ && docker compose -f docker-compose.prod.yml up -d --build'
 ```
+
+`tar -x` only adds and overwrites, so the second line deletes files the repo no longer has. Left behind, they break
+the web build's type check.
 
 Migrations run when the API starts. Logs: `docker compose -f docker-compose.prod.yml logs -f api worker web`.
 
