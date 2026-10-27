@@ -243,6 +243,10 @@ describe("socket", () => {
     expect(await a.emitWithAck("chat:typing", { chatId, typing: true })).toMatchObject({ ok: true });
     expect(await got).toEqual({ chatId, userId: host.user.id, typing: true });
 
+    const recording = new Promise((resolve) => b.once("typing", resolve));
+    await a.emitWithAck("chat:typing", { chatId, typing: true, kind: "voice" });
+    expect(await recording).toEqual({ chatId, userId: host.user.id, typing: true, kind: "voice" });
+
     const denied = await c.emitWithAck("chat:typing", { chatId, typing: true });
     expect(denied).toMatchObject({ ok: false, error: { code: "CHAT_NOT_FOUND" } });
 

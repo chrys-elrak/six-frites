@@ -1,27 +1,27 @@
+import type { TypingKind } from "@six/shared";
 import { create } from "zustand";
 
 const TTL = 6000;
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
 interface TypingState {
-  byChat: Record<string, string[]>;
-  set: (chatId: string, userId: string, typing: boolean) => void;
+  byChat: Record<string, Record<string, TypingKind>>;
+  set: (chatId: string, userId: string, kind: TypingKind | null) => void;
 }
 
 export const useTypingStore = create<TypingState>((set, get) => ({
   byChat: {},
-  set(chatId, userId, typing) {
+  set(chatId, userId, kind) {
     const key = `${chatId}:${userId}`;
     clearTimeout(timers.get(key));
     timers.delete(key);
-    if (typing) timers.set(key, setTimeout(() => get().set(chatId, userId, false), TTL));
+    if (kind) timers.set(key, setTimeout(() => get().set(chatId, userId, null), TTL));
 
-    const current = get().byChat[chatId] ?? [];
-    const has = current.includes(userId);
-    if (typing === has) return;
-    const next = typing ? [...current, userId] : current.filter((id) => id !== userId);
-    set((s) => ({ byChat: { ...s.byChat, [chatId]: next } }));
+    const { [userId]: was = null, ...others } = get().byChat[chatId] ?? {};
+    if (was === kind) return;
+    set((s) => ({ byChat: { ...s.byChat, [chatId]: kind ? { ...others, [userId]: kind } : others } }));
   },
 }));
 
-export const useIsTyping = (chatId: string) => useTypingStore((s) => (s.byChat[chatId]?.length ?? 0) > 0);
+export const useTyping = (chatId: string) =>
+  useTypingStore((s) => Object.values(s.byChat[chatId] ?? {})[0] ?? null);

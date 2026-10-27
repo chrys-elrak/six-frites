@@ -13,7 +13,7 @@ import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
-import { useIsTyping } from "@/lib/typing";
+import { useTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { MediaLabel } from "./message-list";
@@ -88,7 +88,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
   const router = useRouter();
   const [menu, setMenu] = useState(false);
   const press = useLongPress(() => setMenu(true));
-  const typing = useIsTyping(chat.id);
+  const typing = useTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
   const online = usePresence(peer.id === meId || frozen ? undefined : peer.id)?.online;
@@ -122,7 +122,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
                     : "text-stone-500 dark:text-stone-400"
               }`}
             >
-              {typing ? tr.chats.typing : <Preview chat={chat} meId={meId} />}
+              {typing ? tr.chats.typing[typing] : <Preview chat={chat} meId={meId} />}
             </p>
             {chat.pinned && !unread && (
               <Pin aria-label={tr.chats.pinned} className="size-3.5 shrink-0 rotate-45 text-stone-400" />

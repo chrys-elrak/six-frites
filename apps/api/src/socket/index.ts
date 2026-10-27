@@ -106,14 +106,14 @@ export function createSocketServer(http: HttpServer) {
     socket.on(
       "chat:typing",
       handle(async (p) => {
-        const { chatId, typing } = TypingInput.parse(p);
+        const { chatId, typing, kind } = TypingInput.parse(p);
         await assertMember(prisma, chatId, userId);
         const blocked = await blockedWith(prisma, userId);
         const others = (
           await prisma.chatMember.findMany({ where: { chatId, userId: { not: userId } }, select: { userId: true } })
         ).filter((m) => !blocked.has(m.userId));
         if (others.length) {
-          io.to(others.map((m) => rooms.user(m.userId))).emit("typing", { chatId, userId, typing });
+          io.to(others.map((m) => rooms.user(m.userId))).emit("typing", { chatId, userId, typing, kind });
         }
         return null;
       }),

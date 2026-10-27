@@ -16,7 +16,7 @@ import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
-import { useIsTyping } from "@/lib/typing";
+import { useTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { BubbleColors, ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
@@ -43,7 +43,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const typing = useIsTyping(chatId);
+  const typing = useTyping(chatId);
   const selecting = useSelection((s) => s.chatId === chatId);
   const selectedIds = useSelection((s) => s.ids);
   const clearSelection = useSelection((s) => s.clear);
@@ -158,7 +158,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                 {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
               </span>
               {typing ? (
-                <span className="block text-xs font-medium text-brand">{tr.chats.typing}</span>
+                <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
               ) : (
                 (shownPresence || muted || c.archived || c.autoDeleteSecs) && (
                   <span className="block truncate text-xs text-stone-500">

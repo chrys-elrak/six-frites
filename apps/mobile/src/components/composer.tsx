@@ -1,4 +1,11 @@
-import { type EntityType, type EphemeralInput, emojifyEnd, emojifyTyped, maskSpoilers } from "@six/shared";
+import {
+  type EntityType,
+  type EphemeralInput,
+  type TypingKind,
+  emojifyEnd,
+  emojifyTyped,
+  maskSpoilers,
+} from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   RecordingPresets,
@@ -134,6 +141,25 @@ export function Composer({
   }, [realtime, chatId, text, editing]);
 
   useEffect(() => () => realtime?.setTyping(chatId, false), [realtime, chatId]);
+
+  const busyWith: TypingKind | null = recording
+    ? "voice"
+    : noteRecorder || picked?.some((f) => f.kind === "video")
+      ? "video"
+      : picked?.some((f) => f.kind === "image")
+        ? "photo"
+        : null;
+
+  useEffect(() => {
+    if (!realtime || !busyWith) return;
+    const ping = () => realtime.setTyping(chatId, true, busyWith);
+    ping();
+    const timer = setInterval(ping, 4000);
+    return () => {
+      clearInterval(timer);
+      realtime.setTyping(chatId, false);
+    };
+  }, [realtime, chatId, busyWith]);
 
   function change(value: string) {
     setText(value);

@@ -5,6 +5,7 @@ import {
   type EphemeralInput,
   type GifDTO,
   type StickerDTO,
+  type TypingKind,
   type UploadKind,
   emojifyEnd,
   emojifyTyped,
@@ -216,6 +217,25 @@ export function Composer({
   }, [realtime, chatId, text, editing]);
 
   useEffect(() => () => realtime?.setTyping(chatId, false), [realtime, chatId]);
+
+  const busyWith: TypingKind | null = recorder.recording
+    ? "voice"
+    : noteRecorder || picked?.some((f) => f.type.startsWith("video/"))
+      ? "video"
+      : camera || picked?.some((f) => f.type.startsWith("image/"))
+        ? "photo"
+        : null;
+
+  useEffect(() => {
+    if (!realtime || !busyWith) return;
+    const ping = () => realtime.setTyping(chatId, true, busyWith);
+    ping();
+    const timer = setInterval(ping, 4000);
+    return () => {
+      clearInterval(timer);
+      realtime.setTyping(chatId, false);
+    };
+  }, [realtime, chatId, busyWith]);
 
   useEffect(() => {
     const el = ref.current;

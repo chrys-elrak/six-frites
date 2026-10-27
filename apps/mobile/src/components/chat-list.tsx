@@ -27,7 +27,7 @@ import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { usePresence, useWatchPresence } from "@/lib/presence";
-import { useIsTyping } from "@/lib/typing";
+import { useTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { MediaIcon, mediaLabel } from "./media-label";
@@ -116,7 +116,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const t = useTheme();
   const tr = useT();
   const [menu, setMenu] = useState(false);
-  const typing = useIsTyping(chat.id);
+  const typing = useTyping(chat.id);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const online = usePresence(peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
@@ -145,7 +145,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
           <View style={styles.rowLine}>
             <View style={{ flex: 1 }}>
               {typing ? (
-                <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing}</Text>
+                <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing[typing]}</Text>
               ) : (
                 <Preview chat={chat} meId={meId} color={unread ? t.text : t.muted} />
               )}

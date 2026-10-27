@@ -17,7 +17,7 @@ import { BubbleColorsContext } from "@/lib/bubble-colors";
 import { startCall, useCall } from "@/lib/calls";
 import { useChatTheme } from "@/lib/chat-themes";
 import { useKeyChanges } from "@/lib/e2ee";
-import { useIsTyping } from "@/lib/typing";
+import { useTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
@@ -40,7 +40,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const typing = useIsTyping(chatId);
+  const typing = useTyping(chatId);
   const inCall = useCall((s) => s.call !== null);
   const keyChanges = useKeyChanges((s) => s.userIds);
   const dismissKeyChange = useKeyChanges((s) => s.dismiss);
@@ -144,7 +144,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                 {c.title}
               </Text>
               {typing ? (
-                <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing}</Text>
+                <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
               ) : (
                 (presence || c.muted || c.archived || !!c.autoDeleteSecs) && (
                   <Text numberOfLines={1} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>

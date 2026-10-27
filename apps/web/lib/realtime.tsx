@@ -58,7 +58,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (cha
       const m = e.data;
       insertMessage(qc, m);
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
-      else useTypingStore.getState().set(m.chatId, m.senderId, false);
+      else useTypingStore.getState().set(m.chatId, m.senderId, null);
       const viewing = activeChatId === m.chatId && document.visibilityState === "visible";
       const found = patchChat(qc, m.chatId, (c) => ({
         ...c,
@@ -154,7 +154,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           .then((h) => me.current && applyEvent(qc, me.current, h, (chatId) => router.push(`/chats/${chatId}`)))
           .catch((err) => console.error("could not apply event:", err));
       },
-      onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing),
+      onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing ? (e.kind ?? "text") : null),
       onStatus: setStatus,
       onResyncRequired: () => void qc.invalidateQueries(),
     });

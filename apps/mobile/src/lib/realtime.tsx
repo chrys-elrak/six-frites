@@ -44,7 +44,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       const m = e.data;
       insertMessage(qc, m);
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
-      else useTypingStore.getState().set(m.chatId, m.senderId, false);
+      else useTypingStore.getState().set(m.chatId, m.senderId, null);
       const viewing = activeChatId === m.chatId && AppState.currentState === "active";
       if (m.senderId !== meId) {
         const chat = cachedChat(qc, m.chatId);
@@ -146,7 +146,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     startE2EE(meId);
     const rt = six.realtime({
       onEvent: (e) => me.current && applyEvent(qc, me.current, e),
-      onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing),
+      onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing ? (e.kind ?? "text") : null),
       onStatus: setStatus,
       onResyncRequired: () => void qc.invalidateQueries(),
     });

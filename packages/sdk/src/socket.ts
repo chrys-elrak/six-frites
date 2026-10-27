@@ -9,6 +9,7 @@ import type {
   SendMessageInput,
   ServerToClientEvents,
   TypingDTO,
+  TypingKind,
 } from "@six/shared";
 import { SixApiError, unwrap } from "./errors.js";
 import type { RestClient } from "./rest.js";
@@ -160,22 +161,25 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     return res.data;
   }
 
-  const typingSentAt = new Map<string, number>();
+  const typingSent = new Map<string, { at: number; kind: TypingKind }>();
 
   return {
     socket,
-    /** Call on every keystroke; it throttles itself. Pass false when the draft is sent or cleared. */
-    setTyping(chatId: string, typing: boolean) {
+    /**
+     * Call on every keystroke, or every few seconds while recording or picking media; it throttles itself
+     * unless `kind` changes. Pass false when the draft is sent or cleared.
+     */
+    setTyping(chatId: string, typing: boolean, kind: TypingKind = "text") {
       if (!socket.connected) return;
-      const last = typingSentAt.get(chatId);
+      const last = typingSent.get(chatId);
       if (typing) {
-        if (last && Date.now() - last < 3000) return;
-        typingSentAt.set(chatId, Date.now());
+        if (last?.kind === kind && Date.now() - last.at < 3000) return;
+        typingSent.set(chatId, { at: Date.now(), kind });
       } else {
         if (!last) return;
-        typingSentAt.delete(chatId);
+        typingSent.delete(chatId);
       }
-      socket.emit("chat:typing", { chatId, typing });
+      socket.emit("chat:typing", { chatId, typing, kind });
     },
     start() {
       opts.onStatus?.("connecting");

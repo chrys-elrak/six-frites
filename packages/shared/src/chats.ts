@@ -339,7 +339,11 @@ export const ChatDeliveredDTO = z.object({
 });
 export type ChatDeliveredDTO = z.infer<typeof ChatDeliveredDTO>;
 
-export const TypingInput = z.object({ chatId: Id, typing: z.boolean() });
+/** What a member is busy with in the composer. Older clients leave it out, which means "text". */
+export const TypingKind = z.enum(["text", "voice", "video", "photo"]);
+export type TypingKind = z.infer<typeof TypingKind>;
+
+export const TypingInput = z.object({ chatId: Id, typing: z.boolean(), kind: TypingKind.optional() });
 export type TypingInput = z.infer<typeof TypingInput>;
 
 export const TypingDTO = TypingInput.extend({ userId: Id });
