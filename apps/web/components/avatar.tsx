@@ -1,7 +1,9 @@
-import type { PublicUser } from "@six/shared";
+import { aliasAvatar, type PublicUser } from "@six/shared";
 import { useT } from "@/lib/i18n";
 
-const sizes = { sm: "size-9 text-sm", md: "size-14 text-xl", lg: "size-20 text-3xl" };
+const sizes = { sm: "size-9", md: "size-14", lg: "size-20" };
+const letters = { sm: "text-sm", md: "text-xl", lg: "text-3xl" };
+const aliasText = { sm: "text-[9px]", md: "text-[13px]", lg: "text-lg" };
 
 export function Avatar({
   user,
@@ -38,9 +40,21 @@ function Picture({ user, size }: { user: Pick<PublicUser, "displayName" | "avata
       />
     );
   }
+  const alias = aliasAvatar(user.displayName);
+  if (alias) {
+    return (
+      <div
+        style={{ backgroundImage: alias.gradient }}
+        className={`${sizes[size]} ${aliasText[size]} flex shrink-0 flex-col items-center justify-center rounded-full leading-none text-white`}
+      >
+        <span className="text-[1.5em] font-bold">F</span>
+        <span className="font-semibold tabular-nums opacity-90">{alias.number}</span>
+      </div>
+    );
+  }
   return (
     <div
-      className={`${sizes[size]} grid shrink-0 place-items-center rounded-full bg-brand font-semibold text-brand-ink`}
+      className={`${sizes[size]} ${letters[size]} grid shrink-0 place-items-center rounded-full bg-brand font-semibold text-brand-ink`}
     >
       {user.displayName.slice(0, 1).toUpperCase()}
     </div>

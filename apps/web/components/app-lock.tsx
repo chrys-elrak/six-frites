@@ -20,8 +20,8 @@ export function AppLockSettings() {
   const tr = useT();
   const hasLock = useSession((s) => s.user!.hasAppLock);
   const setUser = useSession((s) => s.setUser);
-  const [setting, setSetting] = useState(false);
-  const remove = useMutation({
+  const [turningOn, setTurningOn] = useState(false);
+  const turnOff = useMutation({
     mutationFn: async () => unwrap(await six.api.DELETE("/v1/me/app-lock")),
     onSuccess: setUser,
   });
@@ -37,35 +37,26 @@ export function AppLockSettings() {
           <p className="text-sm text-stone-500 dark:text-stone-400">
             {hasLock ? tr.settings.appLock.onHint : tr.settings.appLock.offHint}
           </p>
-          {remove.isError && (
+          {turnOff.isError && (
             <p className="text-sm text-red-600 dark:text-red-400">{tr.common.somethingWrongRetry}</p>
           )}
-          <div className="flex flex-wrap gap-1">
-            <button
-              onClick={() => setSetting(true)}
-              className="rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
-            >
-              {hasLock ? tr.settings.appLock.change : tr.settings.appLock.set}
-            </button>
-            {hasLock && (
-              <button
-                onClick={() => remove.mutate()}
-                disabled={remove.isPending}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-              >
-                {tr.common.remove}
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => (hasLock ? turnOff.mutate() : setTurningOn(true))}
+            disabled={turnOff.isPending}
+            className="rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
+          >
+            {hasLock ? tr.settings.appLock.turnOff : tr.settings.appLock.turnOn}
+          </button>
         </div>
       </Card>
-      {setting && <SetCodeDialog hasLock={hasLock} onClose={() => setSetting(false)} />}
+      {turningOn && <TurnOnDialog onClose={() => setTurningOn(false)} />}
     </section>
   );
 }
 
-function SetCodeDialog({ hasLock, onClose }: { hasLock: boolean; onClose: () => void }) {
+function TurnOnDialog({ onClose }: { onClose: () => void }) {
   const tr = useT();
+  const hasCode = useSession((s) => s.user!.hasContactPin);
   const setUser = useSession((s) => s.setUser);
   const [code, setCode] = useState("");
   const [again, setAgain] = useState("");
@@ -77,8 +68,8 @@ function SetCodeDialog({ hasLock, onClose }: { hasLock: boolean; onClose: () => 
       onClose();
     },
   });
-  const mismatch = again.length >= code.length && again.length > 0 && again !== code;
-  const ready = code.length >= 4 && again === code;
+  const mismatch = !hasCode && again.length >= code.length && again.length > 0 && again !== code;
+  const ready = code.length >= 4 && (hasCode || again === code);
 
   return (
     <Dialog onClose={onClose}>
@@ -89,12 +80,17 @@ function SetCodeDialog({ hasLock, onClose }: { hasLock: boolean; onClose: () => 
           if (ready) save.mutate();
         }}
       >
-        <h2 className="text-lg font-semibold">
-          {hasLock ? tr.settings.appLock.changeTitle : tr.settings.appLock.setTitle}
-        </h2>
-        <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.appLock.hint}</p>
-        <CodeInput label={tr.contacts.privacy.new} value={code} onChange={setCode} autoFocus />
-        <CodeInput label={tr.contacts.privacy.again} value={again} onChange={setAgain} />
+        <h2 className="text-lg font-semibold">{tr.settings.appLock.turnOnTitle}</h2>
+        <p className="text-sm text-stone-600 dark:text-stone-300">
+          {hasCode ? tr.settings.appLock.useCode : tr.settings.appLock.newCode}
+        </p>
+        <CodeInput
+          label={hasCode ? tr.contacts.privacy.title : tr.contacts.privacy.new}
+          value={code}
+          onChange={setCode}
+          autoFocus
+        />
+        {!hasCode && <CodeInput label={tr.contacts.privacy.again} value={again} onChange={setAgain} />}
         {(save.isError || mismatch) && (
           <p className="text-sm text-red-600 dark:text-red-400">
             {save.isError ? codeError(save.error, tr, tr.settings.appLock.errors) : tr.contacts.privacy.mismatch}
@@ -109,7 +105,7 @@ function SetCodeDialog({ hasLock, onClose }: { hasLock: boolean; onClose: () => 
             {tr.common.cancel}
           </button>
           <PrimaryButton type="submit" className="flex-1" disabled={!ready || save.isPending}>
-            {tr.common.save}
+            {tr.settings.appLock.turnOn}
           </PrimaryButton>
         </div>
       </form>

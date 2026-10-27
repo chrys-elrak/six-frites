@@ -69,7 +69,7 @@ export function SettingsPanel() {
         </button>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4">
+        <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4 lg:block lg:max-w-7xl lg:columns-2 lg:gap-6 lg:p-6 2xl:columns-3 lg:[&>*]:mb-6 lg:[&>*]:break-inside-avoid">
           <ProfileCard />
           <AndroidDownload />
           <LanguagePicker />
@@ -85,7 +85,7 @@ export function SettingsPanel() {
           <BlockedPeople />
           <DeleteAccount />
           <AdminLink />
-          <p className="px-1 pb-2 text-center text-xs leading-relaxed text-stone-400">
+          <p className="px-1 pb-2 text-center text-xs leading-relaxed text-stone-400 lg:[column-span:all]">
             {tr.settings.creditsFrom}{" "}
             <a
               href="https://googlefonts.github.io/noto-emoji-animation/"

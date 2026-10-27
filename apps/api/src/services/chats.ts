@@ -23,9 +23,8 @@ import {
   visibleTo,
 } from "./messages.js";
 import { blockState } from "./blocks.js";
-import { applyOverride, loadOverrides } from "./contacts.js";
+import { profilesFor } from "./contacts.js";
 import { purgeUploads } from "./uploads.js";
-import { toPublicUser } from "./users.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
 
@@ -59,15 +58,8 @@ function muteData({ muted, mutedUntil }: Pick<UpdateChatInput, "muted" | "mutedU
 async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Promise<ChatDTO> {
   const me = chat.members.find((m) => m.userId === viewerId);
   if (!me) throw new AppError("CHAT_NOT_FOUND");
-  const overrides = await loadOverrides(
-    db,
-    viewerId,
-    chat.members.filter((m) => m.userId !== viewerId).map((m) => m.userId),
-  );
-  const members = chat.members.map((m) => ({
-    ...m,
-    shown: applyOverride(toPublicUser(m.user), overrides.get(m.userId)),
-  }));
+  const shown = await profilesFor(db, viewerId, chat.members.map((m) => m.userId));
+  const members = chat.members.map((m) => ({ ...m, shown: shown(m.user) }));
   const others = members.filter((m) => m.userId !== viewerId);
   const peer = others[0];
   const blocks = peer ? await blockState(db, viewerId, peer.userId) : { byMe: false, byThem: false };
@@ -103,6 +95,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     archived: me.archived,
     ...muteState(me),
     pinned: me.pinned,
+    sharingProfile: me.showProfile,
     autoDeleteSecs: chat.autoDeleteSecs,
     theme: chat.theme,
     scheduledCount,

@@ -4,8 +4,7 @@ import { CODE_ALPHABET } from "../lib/codes.js";
 import { withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { ensureDirectChat, getChat } from "./chats.js";
-import { applyOverride, findContact, loadOverrides } from "./contacts.js";
-import { toPublicUser } from "./users.js";
+import { findContact, profilesFor } from "./contacts.js";
 
 const CODE_PATTERN = new RegExp(`^[${CODE_ALPHABET}]{8}$`);
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,13 +38,13 @@ async function resolve(userId: string, q: string) {
 
 export async function findUser(userId: string, q: string): Promise<FoundUserDTO> {
   const user = await resolve(userId, q);
-  const [overrides, chat] = await Promise.all([
-    loadOverrides(prisma, userId, [user.id]),
+  const [shown, chat] = await Promise.all([
+    profilesFor(prisma, userId, [user.id]),
     prisma.chat.findUnique({ where: { directKey: [userId, user.id].sort().join(":") }, select: { id: true } }),
   ]);
   return {
-    user: applyOverride(toPublicUser(user), overrides.get(user.id)),
-    username: user.username,
+    user: shown(user),
+    username: q.replace(/^@/, "").toLowerCase() === user.username ? user.username : null,
     chatId: chat?.id ?? null,
   };
 }

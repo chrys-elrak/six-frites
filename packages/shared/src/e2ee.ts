@@ -147,3 +147,22 @@ export const SetBackupKeyInput = z.object({
     .describe("@six/crypto backupKeyId of the key derived from your recovery key"),
 });
 export type SetBackupKeyInput = z.infer<typeof SetBackupKeyInput>;
+
+const BackupPin = z.string().regex(/^\d{6}$/).describe("6 digits");
+
+export const SetBackupPinInput = SetBackupKeyInput.extend({
+  pin: BackupPin,
+  wrapped: Blob(128).describe("Your backup key sealed with the PIN and your backup secret (@six/crypto wrapBackupKey)"),
+});
+export type SetBackupPinInput = z.infer<typeof SetBackupPinInput>;
+
+export const BackupPinInput = z.object({ pin: BackupPin });
+export type BackupPinInput = z.infer<typeof BackupPinInput>;
+
+export const BackupSecretDTO = z.object({ secret: Key.describe("Mixed into wrapBackupKey; always the same for you") });
+export type BackupSecretDTO = z.infer<typeof BackupSecretDTO>;
+
+export const UnlockedBackupDTO = BackupSecretDTO.extend({
+  wrapped: z.string().describe("Open it with @six/crypto unwrapBackupKey to get your backup key"),
+});
+export type UnlockedBackupDTO = z.infer<typeof UnlockedBackupDTO>;

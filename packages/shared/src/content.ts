@@ -21,6 +21,7 @@ export const EncryptedFile = z.object({
     .nullable()
     .optional()
     .describe("A small JPEG preview as a data: URL, shown until the file is downloaded"),
+  sticker: z.boolean().optional().describe("A sticker sent from the keyboard, shown without a bubble"),
 });
 export type EncryptedFile = z.infer<typeof EncryptedFile>;
 

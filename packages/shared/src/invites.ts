@@ -2,11 +2,13 @@ import { z } from "zod";
 import { Id, IsoDate } from "./common.js";
 import type { Dict } from "./i18n/index.js";
 
-export const PublicUser = z.object({
-  id: Id,
-  displayName: z.string(),
-  avatarUrl: z.string().url().nullable(),
-});
+export const PublicUser = z
+  .object({
+    id: Id,
+    displayName: z.string(),
+    avatarUrl: z.string().url().nullable(),
+  })
+  .describe("Their alias and no photo, unless they share their profile with you");
 export type PublicUser = z.infer<typeof PublicUser>;
 
 export const MAX_INVITE_USES = 10;

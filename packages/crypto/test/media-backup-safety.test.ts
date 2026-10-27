@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CryptoError,
   MEDIA_CHUNK,
+  b64,
   backupKeyId,
   decryptMedia,
   deriveBackupKey,
@@ -18,7 +19,9 @@ import {
   safetyNumber,
   sealBackup,
   unpad,
+  unwrapBackupKey,
   utf8,
+  wrapBackupKey,
 } from "../src/index.js";
 
 const randomBytes = (n: number) => {
@@ -91,6 +94,15 @@ describe("backup", () => {
     expect(code(() => openBackup(key, sealed, utf8("client-2")))).toBe("DECRYPT_FAILED");
     const other = deriveBackupKey(generateRecoveryKey().entropy);
     expect(code(() => openBackup(other, sealed, utf8("client-1")))).toBe("DECRYPT_FAILED");
+  });
+
+  it("wraps the backup key under a PIN and the server's secret", () => {
+    const key = deriveBackupKey(random(32));
+    const secret = b64(random(32));
+    const wrapped = wrapBackupKey(key, "123456", secret);
+    expect(unwrapBackupKey(wrapped, "123456", secret)).toEqual(key);
+    expect(code(() => unwrapBackupKey(wrapped, "123457", secret))).toBe("BAD_RECOVERY_KEY");
+    expect(code(() => unwrapBackupKey(wrapped, "123456", b64(random(32))))).toBe("BAD_RECOVERY_KEY");
   });
 
   it("gives the same id for the same key and different ids otherwise", () => {

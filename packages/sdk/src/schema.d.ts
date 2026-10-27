@@ -63,9 +63,13 @@ export interface paths {
                                 findByEmail: boolean;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
+                                /** @description What people see instead of your name and photo, until you share them */
+                                alias: string;
                                 /** @description Whether seeing the real name of a renamed contact needs your code */
                                 hasContactPin: boolean;
-                                /** @description Whether the apps ask for your app lock code when they open */
+                                /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                hasBackupPin: boolean;
+                                /** @description Whether the apps ask for your privacy code when they open */
                                 hasAppLock: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -134,9 +138,13 @@ export interface paths {
                                 findByEmail: boolean;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
+                                /** @description What people see instead of your name and photo, until you share them */
+                                alias: string;
                                 /** @description Whether seeing the real name of a renamed contact needs your code */
                                 hasContactPin: boolean;
-                                /** @description Whether the apps ask for your app lock code when they open */
+                                /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                hasBackupPin: boolean;
+                                /** @description Whether the apps ask for your privacy code when they open */
                                 hasAppLock: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1339,9 +1347,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1433,9 +1445,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1488,9 +1504,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1554,9 +1574,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1602,9 +1626,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1627,8 +1655,8 @@ export interface paths {
         };
         get?: never;
         /**
-         * Set the code the apps ask for when they open
-         * @description 4 to 8 digits. Replaces any code already set.
+         * Turn on the app lock
+         * @description The apps then ask for the privacy code when they open. Send it as `code` (WRONG_APP_LOCK_CODE if it doesn't match); with no privacy code yet, `code` becomes it.
          */
         put: {
             parameters: {
@@ -1665,9 +1693,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1677,7 +1709,7 @@ export interface paths {
             };
         };
         post?: never;
-        /** Remove the app lock */
+        /** Turn off the app lock */
         delete: {
             parameters: {
                 query?: never;
@@ -1707,9 +1739,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -1733,8 +1769,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Check the app lock code
-         * @description WRONG_APP_LOCK_CODE if it doesn't match. Always passes when no app lock is set.
+         * Check the privacy code to unlock the app
+         * @description WRONG_APP_LOCK_CODE if it doesn't match. Always passes when the app lock is off.
          */
         post: {
             parameters: {
@@ -1793,6 +1829,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             items: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
                                 user: {
                                     id: string;
                                     displayName: string;
@@ -1953,6 +1990,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             code: string;
+                            /** @description Their alias and no photo, unless they share their profile with you */
                             inviter: {
                                 id: string;
                                 displayName: string;
@@ -2159,6 +2197,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /** @description Their alias and no photo, unless they share their profile with you */
                             referrer: {
                                 id: string;
                                 displayName: string;
@@ -2205,6 +2244,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 id: string;
+                                /** @description Their alias and no photo, unless they share their profile with you */
                                 user: {
                                     id: string;
                                     displayName: string;
@@ -2263,6 +2303,7 @@ export interface paths {
                                 type: "direct";
                                 title: string;
                                 members: {
+                                    /** @description Their alias and no photo, unless they share their profile with you */
                                     user: {
                                         id: string;
                                         displayName: string;
@@ -2445,6 +2486,8 @@ export interface paths {
                                  */
                                 mutedUntil: string | null;
                                 pinned: boolean;
+                                /** @description You show the other person your real name and photo; until then they only see your alias */
+                                sharingProfile: boolean;
                                 /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                 autoDeleteSecs: number | null;
                                 /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
@@ -2509,6 +2552,7 @@ export interface paths {
                             type: "direct";
                             title: string;
                             members: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
                                 user: {
                                     id: string;
                                     displayName: string;
@@ -2691,6 +2735,8 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
+                            /** @description You show the other person your real name and photo; until then they only see your alias */
+                            sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
                             /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
@@ -2718,12 +2764,16 @@ export interface paths {
         post?: never;
         /**
          * Delete a chat
-         * @description `scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people.
+         * @description `scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people. With `from` and/or `to`, only the messages sent in that range are deleted, as with DELETE /messages, and the chat stays.
          */
         delete: {
             parameters: {
                 query?: {
                     scope?: "me" | "all";
+                    /** @description Only delete the messages sent from this time on, instead of the whole chat */
+                    from?: string;
+                    /** @description Only delete the messages sent up to this time, instead of the whole chat */
+                    to?: string;
                 };
                 header?: never;
                 path: {
@@ -2790,6 +2840,7 @@ export interface paths {
                             type: "direct";
                             title: string;
                             members: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
                                 user: {
                                     id: string;
                                     displayName: string;
@@ -2972,6 +3023,8 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
+                            /** @description You show the other person your real name and photo; until then they only see your alias */
+                            sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
                             /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
@@ -5392,10 +5445,12 @@ export interface paths {
                                     avatarUrl: string | null;
                                 };
                                 chatId: string;
-                                /** @description Their own name; null while you show them under a name you gave them */
+                                /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
                                 originalName: string | null;
                                 customName: string | null;
                                 hasCustomPhoto: boolean;
+                                /** @description You show them your real name and photo */
+                                sharingProfile: boolean;
                             }[];
                             nextCursor: string | null;
                         };
@@ -5439,10 +5494,12 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            /** @description Their own name; null while you show them under a name you gave them */
+                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
                             originalName: string | null;
                             customName: string | null;
                             hasCustomPhoto: boolean;
+                            /** @description You show them your real name and photo */
+                            sharingProfile: boolean;
                         };
                     };
                 };
@@ -5491,6 +5548,7 @@ export interface paths {
                                 /** Format: uri */
                                 avatarUrl: string | null;
                             };
+                            /** @description Only when you searched by it */
                             username: string | null;
                             /** @description Your direct chat with them, if you already have one */
                             chatId: string | null;
@@ -5604,10 +5662,12 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            /** @description Their own name; null while you show them under a name you gave them */
+                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
                             originalName: string | null;
                             customName: string | null;
                             hasCustomPhoto: boolean;
+                            /** @description You show them your real name and photo */
+                            sharingProfile: boolean;
                         };
                     };
                 };
@@ -5682,15 +5742,79 @@ export interface paths {
                                 avatarUrl: string | null;
                             };
                             chatId: string;
-                            /** @description Their own name; null while you show them under a name you gave them */
+                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
                             originalName: string | null;
                             customName: string | null;
                             hasCustomPhoto: boolean;
+                            /** @description You show them your real name and photo */
+                            sharingProfile: boolean;
                         };
                     };
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/contacts/{userId}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Show or hide your real name and photo to a contact
+         * @description Everyone else sees your alias and no photo. Both of you get chat.updated; adding each other again starts hidden.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        shared: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description With your custom name and photo applied */
+                            user: {
+                                id: string;
+                                displayName: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                            };
+                            chatId: string;
+                            /** @description Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them */
+                            originalName: string | null;
+                            customName: string | null;
+                            hasCustomPhoto: boolean;
+                            /** @description You show them your real name and photo */
+                            sharingProfile: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/contacts/{userId}/reveal": {
@@ -6138,6 +6262,7 @@ export interface paths {
                                     type: "direct";
                                     title: string;
                                     members: {
+                                        /** @description Their alias and no photo, unless they share their profile with you */
                                         user: {
                                             id: string;
                                             displayName: string;
@@ -6320,6 +6445,8 @@ export interface paths {
                                      */
                                     mutedUntil: string | null;
                                     pinned: boolean;
+                                    /** @description You show the other person your real name and photo; until then they only see your alias */
+                                    sharingProfile: boolean;
                                     /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                     autoDeleteSecs: number | null;
                                     /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
@@ -6842,9 +6969,13 @@ export interface paths {
                             findByEmail: boolean;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
                             /** @description Whether seeing the real name of a renamed contact needs your code */
                             hasContactPin: boolean;
-                            /** @description Whether the apps ask for your app lock code when they open */
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
                             hasAppLock: boolean;
                             /** Format: date-time */
                             createdAt: string;
@@ -6854,6 +6985,173 @@ export interface paths {
             };
         };
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/backup-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the secret to seal your backup key with
+         * @description Mix it with the PIN in @six/crypto wrapBackupKey before PUT /v1/me/backup-pin.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Mixed into wrapBackupKey; always the same for you */
+                            secret: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/backup-pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Protect your backup key with a 6-digit PIN
+         * @description Replaces any PIN already set, without needing it. A backupKeyId other than the current one starts a new backup and deletes the old one.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description @six/crypto backupKeyId of the key derived from your recovery key */
+                        backupKeyId: string;
+                        /** @description 6 digits */
+                        pin: string;
+                        /** @description Your backup key sealed with the PIN and your backup secret (@six/crypto wrapBackupKey) */
+                        wrapped: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            username: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Whether people who type your exact email can find you */
+                            findByEmail: boolean;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** @description What people see instead of your name and photo, until you share them */
+                            alias: string;
+                            /** @description Whether seeing the real name of a renamed contact needs your code */
+                            hasContactPin: boolean;
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your privacy code when they open */
+                            hasAppLock: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/backup-pin/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get your backup key back with your PIN
+         * @description WRONG_BACKUP_PIN with `triesLeft` in its details if it doesn't match. After 10 wrong PINs in a row the backup is deleted along with the PIN (BACKUP_PIN_NOT_SET from then on).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description 6 digits */
+                        pin: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Mixed into wrapBackupKey; always the same for you */
+                            secret: string;
+                            /** @description Open it with @six/crypto unwrapBackupKey to get your backup key */
+                            wrapped: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -7942,6 +8240,53 @@ export interface paths {
                             }[];
                             nextCursor: string | null;
                         };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/link-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The preview card for a link in a message
+         * @description The server fetches the page and its picture, so the site never learns who reads the link. Null when the page has no title or can't be reached.
+         */
+        get: {
+            parameters: {
+                query: {
+                    url: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            siteName: string;
+                            title: string;
+                            description: string | null;
+                            /** @description A small WebP of the page's picture as a data: URL, so readers never contact the site themselves */
+                            image: string | null;
+                        } | null;
                     };
                 };
             };

@@ -3,7 +3,7 @@ import { type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { getChat } from "./chats.js";
-import { toPublicUser } from "./users.js";
+import { profilesFor } from "./contacts.js";
 
 const directKey = (a: string, b: string) => [a, b].sort().join(":");
 
@@ -80,5 +80,6 @@ export async function listBlocked(userId: string): Promise<{ items: BlockedUserD
     include: { blocked: true },
     orderBy: { createdAt: "desc" },
   });
-  return { items: rows.map((r) => ({ user: toPublicUser(r.blocked), createdAt: r.createdAt.toISOString() })) };
+  const shown = await profilesFor(prisma, userId, rows.map((r) => r.blockedId));
+  return { items: rows.map((r) => ({ user: shown(r.blocked), createdAt: r.createdAt.toISOString() })) };
 }

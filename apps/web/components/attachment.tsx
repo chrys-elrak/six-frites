@@ -97,7 +97,7 @@ function view(a: ShownAttachment, decrypted: Decrypted | null) {
     name: d.name,
     size: d.size,
     url: d.url,
-    thumbUrl: d.thumbUrl,
+    thumbUrl: d.mime === "image/gif" && d.url ? d.url : d.thumbUrl,
     width: d.width,
     height: d.height,
     durationMs: d.durationMs,

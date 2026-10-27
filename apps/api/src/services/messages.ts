@@ -1,6 +1,7 @@
 import { type Message, Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
+  type DeleteChatQuery,
   type DeleteMessagesQuery,
   type EncryptedInput,
   type EncryptionDTO,
@@ -512,6 +513,16 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
     return [];
   });
   await purgeUploads(detached);
+}
+
+/** Deletes the messages of one chat sent between `from` and `to` (either may be open), like deleteMessages. */
+export async function deleteMessagesBetween(userId: string, chatId: string, { scope, from, to }: DeleteChatQuery) {
+  await assertMember(prisma, chatId, userId);
+  const inRange = await prisma.message.findMany({
+    where: { chatId, createdAt: { gte: from && new Date(from), lte: to && new Date(to) } },
+    select: { id: true },
+  });
+  if (inRange.length) await deleteMessages(userId, { ids: inRange.map((m) => m.id), scope });
 }
 
 /** Permanently deletes, for everyone, messages whose chat auto-delete deadline has passed. */

@@ -6,9 +6,7 @@ import type { Upload } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 import { getObjectBytes, headObject, putObject } from "../lib/storage.js";
 import { finishUpload } from "../services/uploads.js";
-import { ffmpeg, probe, waveform } from "./ffmpeg.js";
-
-const THUMB = ["-frames:v", "1", "-vf", "scale='min(480,iw)':-2", "-c:v", "libwebp", "-quality", "80"];
+import { THUMB, ffmpeg, probe, waveform } from "./ffmpeg.js";
 
 async function store(upload: Upload, dir: string, file: string, name: string, contentType: string) {
   const key = upload.key.replace(/original$/, name);

@@ -47,3 +47,27 @@ export function openBackup(backupKey: Uint8Array, sealed: string, ad: Uint8Array
     throw new CryptoError("DECRYPT_FAILED", "Backup entry could not be decrypted with this recovery key");
   }
 }
+
+const PIN_INFO = utf8("SixFrites_BackupPin_v1");
+
+const pinKey = (pin: string, serverSecret: string) =>
+  hkdf(sha256, concatBytes(fromB64(serverSecret), utf8(pin)), new Uint8Array(32), PIN_INFO, 32);
+
+/**
+ * Seals the backup key under a short PIN mixed with a secret the server derives and never stores.
+ * The server hands the sealed key back only after checking the PIN, with a few tries at most, so
+ * someone holding just the database can't guess the PIN offline.
+ */
+export function wrapBackupKey(backupKey: Uint8Array, pin: string, serverSecret: string) {
+  const nonce = randomBytes(24);
+  return b64(concatBytes(nonce, xchacha20poly1305(pinKey(pin, serverSecret), nonce).encrypt(backupKey)));
+}
+
+export function unwrapBackupKey(wrapped: string, pin: string, serverSecret: string) {
+  const bytes = fromB64(wrapped);
+  try {
+    return xchacha20poly1305(pinKey(pin, serverSecret), bytes.subarray(0, 24)).decrypt(bytes.subarray(24));
+  } catch {
+    throw new CryptoError("BAD_RECOVERY_KEY", "That PIN does not open this backup");
+  }
+}

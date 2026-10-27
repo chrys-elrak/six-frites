@@ -122,13 +122,21 @@
                           "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                           "type": "string"
                         },
+                        "alias": {
+                          "type": "string",
+                          "description": "What people see instead of your name and photo, until you share them"
+                        },
                         "hasContactPin": {
                           "type": "boolean",
                           "description": "Whether seeing the real name of a renamed contact needs your code"
                         },
+                        "hasBackupPin": {
+                          "type": "boolean",
+                          "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                        },
                         "hasAppLock": {
                           "type": "boolean",
-                          "description": "Whether the apps ask for your app lock code when they open"
+                          "description": "Whether the apps ask for your privacy code when they open"
                         },
                         "createdAt": {
                           "type": "string",
@@ -145,7 +153,9 @@
                         "contactCode",
                         "findByEmail",
                         "backupKeyId",
+                        "alias",
                         "hasContactPin",
+                        "hasBackupPin",
                         "hasAppLock",
                         "createdAt"
                       ],
@@ -245,13 +255,21 @@
                           "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                           "type": "string"
                         },
+                        "alias": {
+                          "type": "string",
+                          "description": "What people see instead of your name and photo, until you share them"
+                        },
                         "hasContactPin": {
                           "type": "boolean",
                           "description": "Whether seeing the real name of a renamed contact needs your code"
                         },
+                        "hasBackupPin": {
+                          "type": "boolean",
+                          "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                        },
                         "hasAppLock": {
                           "type": "boolean",
-                          "description": "Whether the apps ask for your app lock code when they open"
+                          "description": "Whether the apps ask for your privacy code when they open"
                         },
                         "createdAt": {
                           "type": "string",
@@ -268,7 +286,9 @@
                         "contactCode",
                         "findByEmail",
                         "backupKeyId",
+                        "alias",
                         "hasContactPin",
+                        "hasBackupPin",
                         "hasAppLock",
                         "createdAt"
                       ],
@@ -2821,13 +2841,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -2844,7 +2872,9 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
                   ],
@@ -2943,13 +2973,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -2966,7 +3004,9 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
                   ],
@@ -3082,13 +3122,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3105,7 +3153,9 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
                   ],
@@ -3194,13 +3244,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3217,7 +3275,9 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
                   ],
@@ -3298,13 +3358,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3321,7 +3389,9 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
                   ],
@@ -3335,11 +3405,11 @@
     },
     "/v1/me/app-lock": {
       "put": {
-        "summary": "Set the code the apps ask for when they open",
+        "summary": "Turn on the app lock",
         "tags": [
           "me"
         ],
-        "description": "4 to 8 digits. Replaces any code already set.",
+        "description": "The apps then ask for the privacy code when they open. Send it as `code` (WRONG_APP_LOCK_CODE if it doesn't match); with no privacy code yet, `code` becomes it.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3406,13 +3476,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3429,7 +3507,9 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
                   ],
@@ -3441,7 +3521,7 @@
         }
       },
       "delete": {
-        "summary": "Remove the app lock",
+        "summary": "Turn off the app lock",
         "tags": [
           "me"
         ],
@@ -3492,13 +3572,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3515,7 +3603,9 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
                   ],
@@ -3529,11 +3619,11 @@
     },
     "/v1/me/app-lock/unlock": {
       "post": {
-        "summary": "Check the app lock code",
+        "summary": "Check the privacy code to unlock the app",
         "tags": [
           "me"
         ],
-        "description": "WRONG_APP_LOCK_CODE if it doesn't match. Always passes when no app lock is set.",
+        "description": "WRONG_APP_LOCK_CODE if it doesn't match. Always passes when the app lock is off.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3621,7 +3711,8 @@
                               "displayName",
                               "avatarUrl"
                             ],
-                            "additionalProperties": false
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
                           },
                           "createdAt": {
                             "type": "string",
@@ -3850,7 +3941,8 @@
                         "displayName",
                         "avatarUrl"
                       ],
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "description": "Their alias and no photo, unless they share their profile with you"
                     },
                     "message": {
                       "nullable": true,
@@ -4240,7 +4332,8 @@
                         "displayName",
                         "avatarUrl"
                       ],
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "description": "Their alias and no photo, unless they share their profile with you"
                     }
                   },
                   "required": [
@@ -4324,7 +4417,8 @@
                               "displayName",
                               "avatarUrl"
                             ],
-                            "additionalProperties": false
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
                           },
                           "inviteCode": {
                             "type": "string"
@@ -4458,7 +4552,8 @@
                                     "displayName",
                                     "avatarUrl"
                                   ],
-                                  "additionalProperties": false
+                                  "additionalProperties": false,
+                                  "description": "Their alias and no photo, unless they share their profile with you"
                                 },
                                 "lastDeliveredMessageId": {
                                   "nullable": true,
@@ -5157,6 +5252,10 @@
                           "pinned": {
                             "type": "boolean"
                           },
+                          "sharingProfile": {
+                            "type": "boolean",
+                            "description": "You show the other person your real name and photo; until then they only see your alias"
+                          },
                           "autoDeleteSecs": {
                             "nullable": true,
                             "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -5213,6 +5312,7 @@
                           "muted",
                           "mutedUntil",
                           "pinned",
+                          "sharingProfile",
                           "autoDeleteSecs",
                           "theme",
                           "scheduledCount",
@@ -5312,7 +5412,8 @@
                               "displayName",
                               "avatarUrl"
                             ],
-                            "additionalProperties": false
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
                           },
                           "lastDeliveredMessageId": {
                             "nullable": true,
@@ -6011,6 +6112,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "sharingProfile": {
+                      "type": "boolean",
+                      "description": "You show the other person your real name and photo; until then they only see your alias"
+                    },
                     "autoDeleteSecs": {
                       "nullable": true,
                       "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -6067,6 +6172,7 @@
                     "muted",
                     "mutedUntil",
                     "pinned",
+                    "sharingProfile",
                     "autoDeleteSecs",
                     "theme",
                     "scheduledCount",
@@ -6193,7 +6299,8 @@
                               "displayName",
                               "avatarUrl"
                             ],
-                            "additionalProperties": false
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
                           },
                           "lastDeliveredMessageId": {
                             "nullable": true,
@@ -6892,6 +6999,10 @@
                     "pinned": {
                       "type": "boolean"
                     },
+                    "sharingProfile": {
+                      "type": "boolean",
+                      "description": "You show the other person your real name and photo; until then they only see your alias"
+                    },
                     "autoDeleteSecs": {
                       "nullable": true,
                       "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -6948,6 +7059,7 @@
                     "muted",
                     "mutedUntil",
                     "pinned",
+                    "sharingProfile",
                     "autoDeleteSecs",
                     "theme",
                     "scheduledCount",
@@ -6970,7 +7082,7 @@
         "tags": [
           "chats"
         ],
-        "description": "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people.",
+        "description": "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people. With `from` and/or `to`, only the messages sent in that range are deleted, as with DELETE /messages, and the chat stays.",
         "parameters": [
           {
             "schema": {
@@ -6984,6 +7096,28 @@
             "in": "query",
             "name": "scope",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "Only delete the messages sent from this time on, instead of the whole chat"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Only delete the messages sent up to this time, instead of the whole chat"
           },
           {
             "schema": {
@@ -14928,7 +15062,7 @@
                           },
                           "originalName": {
                             "nullable": true,
-                            "description": "Their own name; null while you show them under a name you gave them",
+                            "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
                             "type": "string"
                           },
                           "customName": {
@@ -14937,6 +15071,10 @@
                           },
                           "hasCustomPhoto": {
                             "type": "boolean"
+                          },
+                          "sharingProfile": {
+                            "type": "boolean",
+                            "description": "You show them your real name and photo"
                           }
                         },
                         "required": [
@@ -14944,7 +15082,8 @@
                           "chatId",
                           "originalName",
                           "customName",
-                          "hasCustomPhoto"
+                          "hasCustomPhoto",
+                          "sharingProfile"
                         ],
                         "additionalProperties": false
                       }
@@ -15035,7 +15174,7 @@
                     },
                     "originalName": {
                       "nullable": true,
-                      "description": "Their own name; null while you show them under a name you gave them",
+                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
                       "type": "string"
                     },
                     "customName": {
@@ -15044,6 +15183,10 @@
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
+                    },
+                    "sharingProfile": {
+                      "type": "boolean",
+                      "description": "You show them your real name and photo"
                     }
                   },
                   "required": [
@@ -15051,7 +15194,8 @@
                     "chatId",
                     "originalName",
                     "customName",
-                    "hasCustomPhoto"
+                    "hasCustomPhoto",
+                    "sharingProfile"
                   ],
                   "additionalProperties": false
                 }
@@ -15120,6 +15264,7 @@
                     },
                     "username": {
                       "nullable": true,
+                      "description": "Only when you searched by it",
                       "type": "string"
                     },
                     "chatId": {
@@ -15281,7 +15426,7 @@
                     },
                     "originalName": {
                       "nullable": true,
-                      "description": "Their own name; null while you show them under a name you gave them",
+                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
                       "type": "string"
                     },
                     "customName": {
@@ -15290,6 +15435,10 @@
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
+                    },
+                    "sharingProfile": {
+                      "type": "boolean",
+                      "description": "You show them your real name and photo"
                     }
                   },
                   "required": [
@@ -15297,7 +15446,8 @@
                     "chatId",
                     "originalName",
                     "customName",
-                    "hasCustomPhoto"
+                    "hasCustomPhoto",
+                    "sharingProfile"
                   ],
                   "additionalProperties": false
                 }
@@ -15393,7 +15543,7 @@
                     },
                     "originalName": {
                       "nullable": true,
-                      "description": "Their own name; null while you show them under a name you gave them",
+                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
                       "type": "string"
                     },
                     "customName": {
@@ -15402,6 +15552,10 @@
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
+                    },
+                    "sharingProfile": {
+                      "type": "boolean",
+                      "description": "You show them your real name and photo"
                     }
                   },
                   "required": [
@@ -15409,7 +15563,8 @@
                     "chatId",
                     "originalName",
                     "customName",
-                    "hasCustomPhoto"
+                    "hasCustomPhoto",
+                    "sharingProfile"
                   ],
                   "additionalProperties": false
                 }
@@ -15451,6 +15606,116 @@
                   "enum": [
                     null
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contacts/{userId}/profile": {
+      "put": {
+        "summary": "Show or hide your real name and photo to a contact",
+        "tags": [
+          "contacts"
+        ],
+        "description": "Everyone else sees your alias and no photo. Both of you get chat.updated; adding each other again starts hidden.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shared": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "shared"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "displayName",
+                        "avatarUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "With your custom name and photo applied"
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "originalName": {
+                      "nullable": true,
+                      "description": "Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them",
+                      "type": "string"
+                    },
+                    "customName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "hasCustomPhoto": {
+                      "type": "boolean"
+                    },
+                    "sharingProfile": {
+                      "type": "boolean",
+                      "description": "You show them your real name and photo"
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "chatId",
+                    "originalName",
+                    "customName",
+                    "hasCustomPhoto",
+                    "sharingProfile"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -17060,7 +17325,8 @@
                                             "displayName",
                                             "avatarUrl"
                                           ],
-                                          "additionalProperties": false
+                                          "additionalProperties": false,
+                                          "description": "Their alias and no photo, unless they share their profile with you"
                                         },
                                         "lastDeliveredMessageId": {
                                           "nullable": true,
@@ -17759,6 +18025,10 @@
                                   "pinned": {
                                     "type": "boolean"
                                   },
+                                  "sharingProfile": {
+                                    "type": "boolean",
+                                    "description": "You show the other person your real name and photo; until then they only see your alias"
+                                  },
                                   "autoDeleteSecs": {
                                     "nullable": true,
                                     "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -17815,6 +18085,7 @@
                                   "muted",
                                   "mutedUntil",
                                   "pinned",
+                                  "sharingProfile",
                                   "autoDeleteSecs",
                                   "theme",
                                   "scheduledCount",
@@ -18917,13 +19188,21 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
                     "hasContactPin": {
                       "type": "boolean",
                       "description": "Whether seeing the real name of a renamed contact needs your code"
                     },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
                     "hasAppLock": {
                       "type": "boolean",
-                      "description": "Whether the apps ask for your app lock code when they open"
+                      "description": "Whether the apps ask for your privacy code when they open"
                     },
                     "createdAt": {
                       "type": "string",
@@ -18940,9 +19219,242 @@
                     "contactCode",
                     "findByEmail",
                     "backupKeyId",
+                    "alias",
                     "hasContactPin",
+                    "hasBackupPin",
                     "hasAppLock",
                     "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/backup-secret": {
+      "get": {
+        "summary": "Get the secret to seal your backup key with",
+        "tags": [
+          "encryption"
+        ],
+        "description": "Mix it with the PIN in @six/crypto wrapBackupKey before PUT /v1/me/backup-pin.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "secret": {
+                      "type": "string",
+                      "pattern": "^[\\w-]{43}$",
+                      "description": "Mixed into wrapBackupKey; always the same for you"
+                    }
+                  },
+                  "required": [
+                    "secret"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/backup-pin": {
+      "put": {
+        "summary": "Protect your backup key with a 6-digit PIN",
+        "tags": [
+          "encryption"
+        ],
+        "description": "Replaces any PIN already set, without needing it. A backupKeyId other than the current one starts a new backup and deletes the old one.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "backupKeyId": {
+                    "type": "string",
+                    "pattern": "^[\\w-]{22}$",
+                    "description": "@six/crypto backupKeyId of the key derived from your recovery key"
+                  },
+                  "pin": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$",
+                    "description": "6 digits"
+                  },
+                  "wrapped": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[\\w-]+$",
+                    "description": "Your backup key sealed with the PIN and your backup secret (@six/crypto wrapBackupKey)"
+                  }
+                },
+                "required": [
+                  "backupKeyId",
+                  "pin",
+                  "wrapped"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "username": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contactCode": {
+                      "type": "string",
+                      "description": "Share it (or its QR code) so people can find you"
+                    },
+                    "findByEmail": {
+                      "type": "boolean",
+                      "description": "Whether people who type your exact email can find you"
+                    },
+                    "backupKeyId": {
+                      "nullable": true,
+                      "description": "Identifies the key from your recovery key; null until you set up a recovery key",
+                      "type": "string"
+                    },
+                    "alias": {
+                      "type": "string",
+                      "description": "What people see instead of your name and photo, until you share them"
+                    },
+                    "hasContactPin": {
+                      "type": "boolean",
+                      "description": "Whether seeing the real name of a renamed contact needs your code"
+                    },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
+                    "hasAppLock": {
+                      "type": "boolean",
+                      "description": "Whether the apps ask for your privacy code when they open"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "avatarUrl",
+                    "username",
+                    "contactCode",
+                    "findByEmail",
+                    "backupKeyId",
+                    "alias",
+                    "hasContactPin",
+                    "hasBackupPin",
+                    "hasAppLock",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/backup-pin/unlock": {
+      "post": {
+        "summary": "Get your backup key back with your PIN",
+        "tags": [
+          "encryption"
+        ],
+        "description": "WRONG_BACKUP_PIN with `triesLeft` in its details if it doesn't match. After 10 wrong PINs in a row the backup is deleted along with the PIN (BACKUP_PIN_NOT_SET from then on).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pin": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$",
+                    "description": "6 digits"
+                  }
+                },
+                "required": [
+                  "pin"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "secret": {
+                      "type": "string",
+                      "pattern": "^[\\w-]{43}$",
+                      "description": "Mixed into wrapBackupKey; always the same for you"
+                    },
+                    "wrapped": {
+                      "type": "string",
+                      "description": "Open it with @six/crypto unwrapBackupKey to get your backup key"
+                    }
+                  },
+                  "required": [
+                    "secret",
+                    "wrapped"
                   ],
                   "additionalProperties": false
                 }
@@ -21170,6 +21682,69 @@
                   "required": [
                     "items",
                     "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/link-preview": {
+      "get": {
+        "summary": "The preview card for a link in a message",
+        "tags": [
+          "chats"
+        ],
+        "description": "The server fetches the page and its picture, so the site never learns who reads the link. Null when the page has no title or can't be reached.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000,
+              "pattern": "^https?:\\/\\/\\S+$"
+            },
+            "in": "query",
+            "name": "url",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "type": "object",
+                  "properties": {
+                    "siteName": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "image": {
+                      "nullable": true,
+                      "description": "A small WebP of the page's picture as a data: URL, so readers never contact the site themselves",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "siteName",
+                    "title",
+                    "description",
+                    "image"
                   ],
                   "additionalProperties": false
                 }

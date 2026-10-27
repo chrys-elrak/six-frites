@@ -123,16 +123,17 @@ describe("chat settings", () => {
 describe("contacts", () => {
   it("lists connections alphabetically with search and a cursor", async () => {
     const host = await signUp("hub");
-    for (const name of ["Zoé", "adam", "Bea"]) {
+    for (const name of ["Zed", "adam", "Bea"]) {
       const invite = await call(host, "POST", "/v1/invites", {});
-      await signUp(name, { inviteCode: invite.json().code });
+      const guest = await signUp(name, { inviteCode: invite.json().code });
+      await call(guest, "PUT", `/v1/contacts/${host.user.id}/profile`, { shared: true });
     }
     const names = (page: { items: { user: { displayName: string } }[] }) =>
       page.items.map((c) => c.user.displayName.split("-")[0]);
 
     const first = await get(host, "/v1/contacts?limit=2");
     const second = await get(host, `/v1/contacts?limit=2&cursor=${first.nextCursor}`);
-    expect([...names(first), ...names(second)]).toEqual(["adam", "Bea", "Zoé"]);
+    expect([...names(first), ...names(second)]).toEqual(["adam", "Bea", "Zed"]);
     expect(second.nextCursor).toBeNull();
     expect(names(await get(host, "/v1/contacts?q=BE"))).toEqual(["Bea"]);
   });
@@ -144,6 +145,7 @@ const PNG_1PX =
 describe("your own name and photo", () => {
   it("reach the people you chat with, and the old photo is deleted", async () => {
     const { host, guest, chatId } = await makeFriends();
+    await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: true });
     const head = (await get(guest, "/v1/sync")).cursor;
 
     const me = (await call(host, "PATCH", "/v1/me", { displayName: "Chef", photo: PNG_1PX })).json();
@@ -161,6 +163,39 @@ describe("your own name and photo", () => {
 
     expect((await call(host, "PATCH", "/v1/me", { photo: null })).json().avatarUrl).toBeNull();
     expect((await fetch(me.avatarUrl)).status).toBe(404);
+  });
+
+  it("stay hidden behind an alias until shared with that contact", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await call(host, "PATCH", "/v1/me", { photo: PNG_1PX });
+    const me = await get(host, "/v1/me");
+    expect(me.alias).toMatch(/^Frite \d{4}$/);
+    const seen = async () =>
+      (await get(guest, `/v1/chats/${chatId}`)).members.find((m: { user: { id: string } }) => m.user.id === host.user.id).user;
+
+    expect(await seen()).toEqual({ id: host.user.id, displayName: me.alias, avatarUrl: null });
+    expect((await get(guest, `/v1/chats/${chatId}`)).title).toBe(me.alias);
+    expect((await get(guest, "/v1/contacts")).items[0]).toMatchObject({
+      user: { displayName: me.alias, avatarUrl: null },
+      originalName: me.alias,
+    });
+    expect((await get(guest, "/v1/contacts?q=host")).items).toEqual([]);
+    const invite = (await call(host, "POST", "/v1/invites", {})).json();
+    expect((await get(guest, `/v1/invites/${invite.code}`)).inviter).toEqual({
+      id: host.user.id,
+      displayName: me.alias,
+      avatarUrl: null,
+    });
+
+    const shared = (await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: true })).json();
+    expect(shared.sharingProfile).toBe(true);
+    expect((await get(host, `/v1/chats/${chatId}`)).sharingProfile).toBe(true);
+    expect(await seen()).toMatchObject({ displayName: me.displayName, avatarUrl: expect.any(String) });
+    expect((await get(guest, "/v1/contacts?q=host")).items).toHaveLength(1);
+    expect((await get(guest, `/v1/chats/${chatId}`)).sharingProfile).toBe(false);
+
+    await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: false });
+    expect(await seen()).toEqual({ id: host.user.id, displayName: me.alias, avatarUrl: null });
   });
 });
 
@@ -210,6 +245,7 @@ describe("custom contact names and photos", () => {
 
   it("hide a renamed contact's real name behind your code", async () => {
     const { host, guest } = await makeFriends();
+    await call(guest, "PUT", `/v1/contacts/${host.user.id}/profile`, { shared: true });
     const url = `/v1/contacts/${guest.user.id}`;
     const renamed = (await call(host, "PATCH", url, { displayName: "Bestie" })).json();
     expect(renamed).toMatchObject({ customName: "Bestie", originalName: null });
@@ -331,25 +367,57 @@ describe("deleting chats", () => {
     expect((await get(host, `/v1/chats/${chatId}`)).lastMessage).toBeNull();
     expect(JSON.stringify(await get(host, "/v1/sync?since=0"))).not.toContain("gone soon");
   });
+
+  it("deletes only the messages sent in a time range", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const tick = () => new Promise((r) => setTimeout(r, 5));
+    const old = (await send(host, chatId, "old")).json();
+    await tick();
+    const middle = (await send(guest, chatId, "middle")).json();
+    await tick();
+    await send(host, chatId, "new");
+    const at = (iso: string) => encodeURIComponent(iso);
+
+    const mine = await call(host, "DELETE", `/v1/chats/${chatId}?scope=me&from=${at(middle.createdAt)}&to=${at(middle.createdAt)}`);
+    expect(mine.statusCode).toBe(204);
+    expect(texts(await get(host, `/v1/chats/${chatId}/messages`))).toEqual(["new", "old"]);
+    expect(texts(await get(guest, `/v1/chats/${chatId}/messages`))).toEqual(["new", "middle", "old"]);
+
+    await call(guest, "DELETE", `/v1/chats/${chatId}?scope=all&to=${at(old.createdAt)}`);
+    expect(texts(await get(guest, `/v1/chats/${chatId}/messages`))).toEqual(["new", "middle", null]);
+    expect((await get(host, "/v1/chats")).items[0].id).toBe(chatId);
+
+    const backwards = await call(host, "DELETE", `/v1/chats/${chatId}?from=${at(middle.createdAt)}&to=${at(old.createdAt)}`);
+    expect(backwards.json().error.code).toBe("VALIDATION_FAILED");
+  });
 });
 
 describe("app lock", () => {
-  it("checks the code the apps ask for when they open", async () => {
+  it("unlocks with the privacy code", async () => {
     const me = await signUp("locked");
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(204);
 
     expect((await call(me, "PUT", "/v1/me/app-lock", { code: "12ab" })).json().error.code).toBe("VALIDATION_FAILED");
-    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "1234" })).json().hasAppLock).toBe(true);
+    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "1234" })).json()).toMatchObject({
+      hasAppLock: true,
+      hasContactPin: true,
+    });
     expect((await get(me, "/v1/me")).hasAppLock).toBe(true);
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "0000" })).json().error.code).toBe(
       "WRONG_APP_LOCK_CODE",
     );
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(204);
 
-    await call(me, "PUT", "/v1/me/app-lock", { code: "56789" });
-    expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(403);
+    await call(me, "PUT", "/v1/me/contact-pin", { pin: "56789", currentPin: "1234" });
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "56789" })).statusCode).toBe(204);
 
-    expect((await call(me, "DELETE", "/v1/me/app-lock")).json().hasAppLock).toBe(false);
+    expect((await call(me, "DELETE", "/v1/me/app-lock")).json()).toMatchObject({ hasAppLock: false, hasContactPin: true });
+    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "1234" })).json().error.code).toBe("WRONG_APP_LOCK_CODE");
+    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "56789" })).json().hasAppLock).toBe(true);
+
+    expect((await call(me, "DELETE", "/v1/me/contact-pin", { currentPin: "56789" })).json()).toMatchObject({
+      hasAppLock: false,
+      hasContactPin: false,
+    });
   });
 });

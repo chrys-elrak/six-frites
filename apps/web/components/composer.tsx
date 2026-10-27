@@ -46,7 +46,8 @@ import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRecorder } from "@/lib/recorder";
 import { useSession } from "@/lib/session";
-import { queueMessage, replyQuote } from "@/lib/send";
+import { type Draft, queueMessage, replyQuote } from "@/lib/send";
+import { looksLikeSticker } from "@/lib/image";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 
 const drafts = new Map<string, string>();
@@ -328,7 +329,7 @@ export function Composer({
     if (mode) cancel();
   }
 
-  function sendGifOrSticker(extra: { gif?: GifDTO; sticker?: StickerDTO }) {
+  function sendGifOrSticker(extra: { gif?: GifDTO; sticker?: StickerDTO; file?: Draft["file"] }) {
     if (!realtime || editing) return;
     void queueMessage(qc, realtime, chatId, {
       text: "",
@@ -343,6 +344,14 @@ export function Composer({
 
   function sendFiles(files: FileList | File[]) {
     setPicked([...files]);
+  }
+
+  /** A GIF or sticker from the keyboard goes straight out as one; anything else pasted opens the attach dialog. */
+  async function sendPasted(files: File[]) {
+    const [file] = files;
+    const sticker = files.length === 1 && (await looksLikeSticker(file!));
+    if (files.length !== 1 || (file!.type !== "image/gif" && !sticker)) return sendFiles(files);
+    sendGifOrSticker({ file: { blob: file!, kind: "image", name: file!.name || "image", mime: file!.type, sticker } });
   }
 
   function sendPicked(items: PickedFile[], caption: string, chosen: EphemeralInput | null) {
@@ -531,7 +540,7 @@ export function Composer({
                   const files = [...e.clipboardData.files];
                   if (!files.length || editing) return;
                   e.preventDefault();
-                  sendFiles(files);
+                  void sendPasted(files);
                 }}
                 onKeyDown={(e) => {
                   if (shortcut(e)) return;

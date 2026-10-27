@@ -1,7 +1,7 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Shuffle, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateContact } from "@/lib/actions";
@@ -12,7 +12,7 @@ import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
 import { CodeInput, codeError } from "./privacy-code";
-import { PrimaryButton } from "./ui";
+import { PrimaryButton, Toggle } from "./ui";
 import { Portal } from "./portal";
 import { ReportDialog } from "./report-dialog";
 import { SafetyNumber } from "./safety-number";
@@ -37,6 +37,11 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [pin, setPin] = useState("");
   const [revealed, setRevealed] = useState<string | null>(null);
   const [revealError, setRevealError] = useState<string | null>(null);
+  const share = useMutation({
+    mutationFn: async (shared: boolean) =>
+      unwrap(await six.api.PUT("/v1/contacts/{userId}/profile", { params: { path: { userId } }, body: { shared } })),
+    onSuccess: (dto) => qc.setQueryData(["contact", userId], dto),
+  });
 
   async function reveal() {
     setRevealError(null);
@@ -270,6 +275,16 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                   {revealError && <p className="text-red-600 dark:text-red-400">{revealError}</p>}
                 </div>
               )}
+
+              <div className="overflow-hidden rounded-xl bg-stone-50 dark:bg-stone-800/50">
+                <Toggle
+                  label={tr.contacts.shareProfile}
+                  hint={tr.contacts.shareProfileHint}
+                  checked={share.isPending ? !!share.variables : c.sharingProfile}
+                  disabled={share.isPending}
+                  onChange={(on) => share.mutate(on)}
+                />
+              </div>
 
               <SafetyNumber userId={userId} name={c.user.displayName} />
 

@@ -40,3 +40,18 @@ export async function urlToAvatarDataUrl(src: string): Promise<string> {
   await img.decode();
   return squareJpeg(img, img.naturalWidth || SIZE, img.naturalHeight || SIZE);
 }
+
+/** Keyboards send stickers as PNG or WebP with see-through corners, which photos and screenshots don't have. */
+export async function looksLikeSticker(file: Blob) {
+  if (file.type !== "image/png" && file.type !== "image/webp") return false;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const { width: w, height: h } = bitmap;
+    const ctx = new OffscreenCanvas(w, h).getContext("2d")!;
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    return [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]].some(([x, y]) => ctx.getImageData(x!, y!, 1, 1).data[3]! < 255);
+  } catch {
+    return false;
+  }
+}

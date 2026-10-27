@@ -11,6 +11,7 @@ export default defineConfig({
       DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgresql://six:six@localhost:5432/six?schema=test",
       GOOGLE_CLIENT_IDS: "test-client",
       JWT_SECRET: "test-secret-test-secret-test-secret-123",
+      BACKUP_PIN_SECRET: "test-backup-pin-secret-test-secret-123",
       S3_ENDPOINT: process.env.S3_ENDPOINT ?? "http://localhost:8333",
       S3_PUBLIC_ENDPOINT: process.env.S3_PUBLIC_ENDPOINT ?? "http://localhost:8333",
       S3_BUCKET: "six-test",

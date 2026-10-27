@@ -1,4 +1,4 @@
-import { type MessageDTO, maskSpoilers } from "./chats.js";
+import { type MessageDTO, type MessageType, maskSpoilers } from "./chats.js";
 import { chatTheme, customThemeColor } from "./chat-themes.js";
 import type { Dict } from "./i18n/index.js";
 
@@ -58,17 +58,25 @@ export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | nul
   return a?.secs ? t.summary.setAutoDelete(who, durationLabel(a.secs, t)) : t.summary.turnedOffAutoDelete(who);
 }
 
+/** What a message shows as: GIFs and stickers sent from the keyboard travel as images. */
+export function shownType(m: Pick<MessageDTO, "type" | "attachment"> & { file?: { sticker?: boolean } }): MessageType {
+  if (m.type !== "image") return m.type;
+  if (m.file?.sticker) return "sticker";
+  return m.attachment?.mime === "image/gif" ? "gif" : "image";
+}
+
 /**
  * A one-line description of a message for chat previews and notifications. Never reveals spoilers
  * or self-destructing content.
  */
-export function previewText(m: MessageDTO, t: Dict) {
-  if (m.type === "service") return serviceText(m, t);
+export function previewText(m: MessageDTO & { file?: { sticker?: boolean } }, t: Dict) {
+  const type = shownType(m);
+  if (type === "service") return serviceText(m, t);
   if (m.ephemeral) return t.summary.selfDestructing;
   if (m.deletedAt) return t.summary.messageDeleted;
-  if (m.type === "sticker") return m.sticker ? `${m.sticker.emoji} ${t.summary.kinds.sticker}` : t.summary.kinds.sticker;
+  if (type === "sticker") return m.sticker ? `${m.sticker.emoji} ${t.summary.kinds.sticker}` : t.summary.kinds.sticker;
   const caption = m.text ? (m.spoiler && m.type === "text" ? t.summary.spoiler : maskSpoilers(m.text, m.entities)) : "";
-  if (m.type === "text") return caption;
-  const label = m.type === "file" && m.attachment ? t.summary.fileNamed(m.attachment.name) : t.summary.kinds[m.type];
+  if (type === "text") return caption;
+  const label = type === "file" && m.attachment ? t.summary.fileNamed(m.attachment.name) : t.summary.kinds[type];
   return caption ? `${label} · ${caption}` : label;
 }

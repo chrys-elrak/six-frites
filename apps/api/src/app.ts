@@ -20,6 +20,7 @@ import callRoutes from "./routes/calls.js";
 import chatRoutes from "./routes/chats.js";
 import deviceRoutes from "./routes/devices.js";
 import inviteRoutes from "./routes/invites.js";
+import linkRoutes from "./routes/links.js";
 import meRoutes from "./routes/me.js";
 import sessionRoutes from "./routes/sessions.js";
 import presenceRoutes from "./routes/presence.js";
@@ -80,6 +81,7 @@ export async function buildApp() {
       await v1.register(pushRoutes);
       await v1.register(presenceRoutes);
       await v1.register(stickerRoutes);
+      await v1.register(linkRoutes);
     },
     { prefix: "/v1" },
   );

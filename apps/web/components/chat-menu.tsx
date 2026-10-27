@@ -3,11 +3,13 @@
 import {
   AUTO_DELETE_PRESETS,
   CHAT_THEMES,
+  DELETE_RANGE_PRESETS,
   MUTE_PRESETS,
   type ChatDTO,
   type DeleteScope,
   customThemeColor,
   customThemeId,
+  dayRange,
   durationLabel,
   isMuted,
   themeName,
@@ -15,31 +17,97 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
-import { sendAtLabel } from "@/lib/format";
+import { sendAtLabel, toLocalInput } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemeDialog } from "./chat-background";
+import { Dialog } from "./dialog";
 import { Sheet } from "./sheet";
+import { PrimaryButton } from "./ui";
+
+type Range = { from?: string; to?: string };
+
+const dayInput = (d: Date) => toLocalInput(d).slice(0, 10);
+
+function DateRangeDialog({ onPick, onClose }: { onPick: (range: Range) => void; onClose: () => void }) {
+  const tr = useT();
+  const today = dayInput(new Date());
+  const [from, setFrom] = useState(() => dayInput(new Date(Date.now() - 7 * 864e5)));
+  const [to, setTo] = useState(today);
+  const fields = [
+    { label: tr.chat.rangeFrom, value: from, set: setFrom },
+    { label: tr.chat.rangeTo, value: to, set: setTo },
+  ];
+  return (
+    <Dialog onClose={onClose}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onPick(dayRange(new Date(`${from}T00:00`), new Date(`${to}T00:00`)));
+        }}
+        className="space-y-4 p-4"
+      >
+        <h2 className="text-center font-semibold">{tr.chat.deleteWhich}</h2>
+        {fields.map(({ label, value, set }) => (
+          <label key={label} className="block space-y-1 text-sm font-medium">
+            <span>{label}</span>
+            <input
+              type="date"
+              required
+              value={value}
+              max={today}
+              onChange={(e) => set(e.target.value)}
+              className="block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800"
+            />
+          </label>
+        ))}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
+          >
+            {tr.common.cancel}
+          </button>
+          <PrimaryButton type="submit" className="flex-1">
+            {tr.common.next}
+          </PrimaryButton>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
 
 export function ChatMenu({
   chat,
   peerName,
   onClose,
   onDeleted,
+  onChooseMessages,
 }: {
   chat: ChatDTO;
   peerName: string;
   onClose: () => void;
   onDeleted?: (scope: DeleteScope) => void;
+  onChooseMessages?: () => void;
 }) {
   const tr = useT();
   const qc = useQueryClient();
   const [view, setView] = useState<
-    "menu" | "delete" | "mute" | "autoDelete" | "custom" | "theme" | "customTheme" | "block" | "removeContact"
-  >(
-    "menu",
-  );
+    | "menu"
+    | "delete"
+    | "deleteScope"
+    | "dates"
+    | "mute"
+    | "autoDelete"
+    | "custom"
+    | "theme"
+    | "customTheme"
+    | "block"
+    | "removeContact"
+  >("menu");
+  const [range, setRange] = useState<Range | undefined>(undefined);
   const meId = useSession((s) => s.user?.id);
   const peerId = chat.members.find((m) => m.user.id !== meId)?.user.id;
   const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
@@ -49,8 +117,8 @@ export function ChatMenu({
 
   async function remove(scope: DeleteScope) {
     try {
-      await deleteChat(qc, chat.id, scope);
-      onDeleted?.(scope);
+      await deleteChat(qc, chat.id, scope, range);
+      if (!range) onDeleted?.(scope);
     } catch {
       void qc.invalidateQueries({ queryKey: ["chats"] });
     }
@@ -76,15 +144,41 @@ export function ChatMenu({
     );
   }
 
+  const pick = (chosen: Range | undefined) => {
+    setRange(chosen);
+    setView("deleteScope");
+  };
+
   if (view === "delete") {
     return (
       <Sheet
-        title={tr.chat.deleteChatTitle}
+        title={tr.chat.deleteWhich}
+        onClose={onClose}
+        actions={[
+          { label: tr.chat.deleteEverything, keepOpen: true, onSelect: () => pick(undefined) },
+          ...DELETE_RANGE_PRESETS.map((p) => ({
+            label: tr.chat[p.label],
+            keepOpen: true,
+            onSelect: () => pick({ from: new Date(Date.now() - p.secs * 1000).toISOString() }),
+          })),
+          { label: tr.chat.chooseDates, keepOpen: true, onSelect: () => setView("dates") },
+          ...(onChooseMessages ? [{ label: tr.chat.chooseMessages, onSelect: onChooseMessages }] : []),
+        ]}
+      />
+    );
+  }
+
+  if (view === "dates") return <DateRangeDialog onPick={pick} onClose={onClose} />;
+
+  if (view === "deleteScope") {
+    return (
+      <Sheet
+        title={range ? tr.chat.deleteRangeTitle : tr.chat.deleteChatTitle}
         onClose={onClose}
         actions={[
           { label: tr.chat.deleteForMe, destructive: true, onSelect: () => void remove("me") },
           {
-            label: tr.chat.deleteAllFor(peerName),
+            label: range ? tr.chat.deleteThisFor(peerName) : tr.chat.deleteAllFor(peerName),
             destructive: true,
             onSelect: () => void remove("all"),
           },

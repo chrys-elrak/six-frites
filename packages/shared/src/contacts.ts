@@ -5,11 +5,18 @@ import { PublicUser } from "./invites.js";
 export const ContactDTO = z.object({
   user: PublicUser.describe("With your custom name and photo applied"),
   chatId: Id,
-  originalName: z.string().nullable().describe("Their own name; null while you show them under a name you gave them"),
+  originalName: z
+    .string()
+    .nullable()
+    .describe("Their own name, or their alias if they don't share it with you; null while you show them under a name you gave them"),
   customName: z.string().nullable(),
   hasCustomPhoto: z.boolean(),
+  sharingProfile: z.boolean().describe("You show them your real name and photo"),
 });
 export type ContactDTO = z.infer<typeof ContactDTO>;
+
+export const ShareProfileInput = z.object({ shared: z.boolean() });
+export type ShareProfileInput = z.infer<typeof ShareProfileInput>;
 
 export const ContactListQuery = z.object({
   q: z.string().trim().max(64).optional(),
@@ -47,7 +54,7 @@ export type FindUserQuery = z.infer<typeof FindUserQuery>;
 
 export const FoundUserDTO = z.object({
   user: PublicUser.describe("With your custom name and photo applied if you already know them"),
-  username: z.string().nullable(),
+  username: z.string().nullable().describe("Only when you searched by it"),
   chatId: Id.nullable().describe("Your direct chat with them, if you already have one"),
 });
 export type FoundUserDTO = z.infer<typeof FoundUserDTO>;

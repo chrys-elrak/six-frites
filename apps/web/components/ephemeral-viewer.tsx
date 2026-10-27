@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, X } from "lucide-react";
+import { Flame, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Hydrated } from "@/lib/e2ee";
 import { shortRule } from "@/lib/ephemeral";
@@ -35,15 +35,16 @@ function Countdown({ msLeft, total }: { msLeft: number; total: number }) {
   );
 }
 
+const Spinner = () => <Loader2 className="size-8 animate-spin text-white/70" aria-hidden />;
+
 function Media({ attachment }: { attachment: ShownAttachment }) {
-  const tr = useT();
   const url = useAttachmentUrl(attachment);
   const a = attachment.data;
   if (a.kind === "image") {
     return url ? (
       <ProtectedImage src={url} fit="contain" className="h-[70dvh] w-[min(90vw,64rem)]" />
     ) : (
-      <p className="text-sm text-white/60">{tr.common.loading}</p>
+      <Spinner />
     );
   }
   if (a.kind === "video") {
@@ -59,7 +60,7 @@ function Media({ attachment }: { attachment: ShownAttachment }) {
         className="max-h-[70dvh] max-w-full"
       />
     ) : (
-      <p className="text-sm text-white/60">{tr.common.loading}</p>
+      <Spinner />
     );
   }
   return (
@@ -69,14 +70,17 @@ function Media({ attachment }: { attachment: ShownAttachment }) {
   );
 }
 
-/** Full-screen view of an opened self-destructing message; closing it, or its timer running out, ends it. */
+/**
+ * Full-screen view of an opened self-destructing message; closing it, or its timer running out, ends it.
+ * With no message yet it shows a spinner while the message is being opened.
+ */
 export function EphemeralViewer({
   message,
   expiresAt,
   mine,
   onClose,
 }: {
-  message: Hydrated;
+  message: Hydrated | null;
   expiresAt: string | null;
   mine: boolean;
   onClose: () => void;
@@ -84,7 +88,7 @@ export function EphemeralViewer({
   const tr = useT();
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
   const [now, setNow] = useState(Date.now());
-  const e = message.ephemeral;
+  const e = message?.ephemeral;
   const msLeft = deadline ? Math.max(0, deadline - now) : null;
 
   useEffect(() => {
@@ -103,9 +107,9 @@ export function EphemeralViewer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const a = message.attachment;
+  const a = message?.attachment;
   const viewsLeft = e?.maxViews ? e.maxViews - e.views : null;
-  const text = message.text ?? "";
+  const text = message?.text ?? "";
 
   return (
     <Portal>
@@ -121,19 +125,22 @@ export function EphemeralViewer({
             {e && shortRule(e, tr)}
           </span>
           {msLeft !== null && e?.ttlSeconds && <Countdown msLeft={msLeft} total={e.ttlSeconds * 1000} />}
-          <button
-            onClick={onClose}
-            aria-label={tr.common.close}
-            className="grid size-10 place-items-center rounded-full hover:bg-white/10"
-          >
-            <X className="size-6" />
-          </button>
+          {message && (
+            <button
+              onClick={onClose}
+              aria-label={tr.common.close}
+              className="grid size-10 place-items-center rounded-full hover:bg-white/10"
+            >
+              <X className="size-6" />
+            </button>
+          )}
         </div>
 
         <div className="grid min-h-0 flex-1 place-items-center overflow-y-auto p-4">
           <div className="flex max-h-full max-w-full flex-col items-center gap-4">
-            {a && <Media attachment={{ source: "server", data: a, file: message.file }} />}
-            {text && (
+            {!message && <Spinner />}
+            {message && a && <Media attachment={{ source: "server", data: a, file: message.file }} />}
+            {message && text && (
               <p className="max-w-lg text-center text-lg leading-relaxed break-words whitespace-pre-wrap select-none">
                 {message.entities.length
                   ? segments(text, message.entities).map((seg, i) => (
@@ -148,7 +155,7 @@ export function EphemeralViewer({
         </div>
 
         <p className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-white/60">
-          {mine
+          {mine || !message
             ? null
             : viewsLeft === 0
               ? tr.messages.goneOnClose

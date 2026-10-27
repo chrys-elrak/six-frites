@@ -139,10 +139,10 @@ describe("E2EE client", () => {
     expect(await textOf(guest, await latest(guest, chatId))).toBe("made it");
   });
 
-  it("restores history on a new device with the recovery key", async () => {
+  it("restores history on a new device with the PIN", async () => {
     const { sub, guestSub, phone, guest, chatId, members } = await setup();
-    const words = await phone.e2ee.createRecoveryKey();
-    const guestWords = await guest.e2ee.createRecoveryKey();
+    await phone.e2ee.setBackupPin("123456");
+    await guest.e2ee.setBackupPin("654321");
     await say(phone, chatId, members, "before the new phone");
     await say(guest, chatId, members, "reply before");
     expect(await textOf(guest, (await get(guest.auth, `/v1/chats/${chatId}/messages`)).items[1])).toBe(
@@ -156,34 +156,68 @@ describe("E2EE client", () => {
     const [reply, mine] = (await get(newPhone.auth, `/v1/chats/${chatId}/messages`)).items;
     expect(await newPhone.e2ee.open(mine)).toMatchObject({ status: "unavailable", reason: "no-envelope" });
 
-    const me = await get(newPhone.auth, "/v1/me");
-    await expect(newPhone.e2ee.restoreRecoveryKey(guestWords, me.backupKeyId)).rejects.toMatchObject({
-      code: "BACKUP_KEY_MISMATCH",
+    await expect(newPhone.e2ee.unlockWithPin("654321")).rejects.toMatchObject({
+      code: "WRONG_BACKUP_PIN",
+      details: { triesLeft: 9 },
     });
-    await newPhone.e2ee.restoreRecoveryKey(words, me.backupKeyId);
+    await newPhone.e2ee.unlockWithPin("123456");
     expect(await textOf(newPhone, mine)).toBe("before the new phone");
     expect(await textOf(newPhone, reply)).toBe("reply before");
 
     const newGuest = appFor((await loginAs(ctx.app, guestSub)).json());
-    await newGuest.e2ee.restoreRecoveryKey(guestWords, (await get(newGuest.auth, "/v1/me")).backupKeyId);
+    await newGuest.e2ee.unlockWithPin("654321");
     const theirs = (await get(newGuest.auth, `/v1/chats/${chatId}/messages`)).items;
     expect(await textOf(newGuest, theirs[1])).toBe("before the new phone");
     expect(await textOf(newGuest, theirs[0])).toBe("reply before");
   });
 
-  it("backs up messages read before the recovery key was made", async () => {
+  it("backs up messages read before the PIN was set", async () => {
     const { sub, phone, guest, chatId, members } = await setup();
-    await say(guest, chatId, members, "read before the key");
-    expect(await textOf(phone, await latest(phone, chatId))).toBe("read before the key");
+    await say(guest, chatId, members, "read before the PIN");
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("read before the PIN");
 
-    const words = await phone.e2ee.createRecoveryKey();
-    expect(await textOf(phone, await latest(phone, chatId))).toBe("read before the key");
+    await phone.e2ee.setBackupPin("123456");
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("read before the PIN");
     await new Promise((r) => setTimeout(r, 2300));
 
     const newPhone = appFor((await loginAs(ctx.app, sub)).json());
-    await newPhone.e2ee.restoreRecoveryKey(words, (await get(newPhone.auth, "/v1/me")).backupKeyId);
-    expect(await textOf(newPhone, await latest(newPhone, chatId))).toBe("read before the key");
+    await newPhone.e2ee.unlockWithPin("123456");
+    expect(await textOf(newPhone, await latest(newPhone, chatId))).toBe("read before the PIN");
   });
+
+  it("keeps the backup when the PIN changes and deletes it after 10 wrong PINs", async () => {
+    const { sub, phone, guest, chatId, members } = await setup();
+    await phone.e2ee.setBackupPin("111111");
+    await say(guest, chatId, members, "kept");
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("kept");
+    await new Promise((r) => setTimeout(r, 2300));
+    await phone.e2ee.setBackupPin("222222");
+
+    const newPhone = appFor((await loginAs(ctx.app, sub)).json());
+    await expect(newPhone.e2ee.unlockWithPin("111111")).rejects.toMatchObject({ code: "WRONG_BACKUP_PIN" });
+    await newPhone.e2ee.unlockWithPin("222222");
+    expect(await textOf(newPhone, await latest(newPhone, chatId))).toBe("kept");
+
+    const tries = await Promise.all(
+      Array.from({ length: 12 }, () => newPhone.e2ee.unlockWithPin("000000").catch((e) => e.code)),
+    );
+    expect(tries.filter((c) => c === "WRONG_BACKUP_PIN")).toHaveLength(10);
+    expect(tries.filter((c) => c === "BACKUP_PIN_NOT_SET")).toHaveLength(2);
+    await expect(newPhone.e2ee.unlockWithPin("222222")).rejects.toMatchObject({ code: "BACKUP_PIN_NOT_SET" });
+    expect(await get(newPhone.auth, "/v1/me")).toMatchObject({ hasBackupPin: false, backupKeyId: null });
+
+    await phone.e2ee.setBackupPin("333333");
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("kept");
+    await new Promise((r) => setTimeout(r, 2300));
+    const again = appFor((await loginAs(ctx.app, sub)).json());
+    await again.e2ee.unlockWithPin("333333");
+    expect(await textOf(again, await latest(again, chatId))).toBe("kept");
+
+    const fresh = appFor((await loginAs(ctx.app, sub)).json());
+    const user = await fresh.e2ee.setBackupPin("444444");
+    expect(await phone.e2ee.hasRecoveryKey(user.backupKeyId)).toBe(false);
+    expect(await phone.e2ee.hasRecoveryKey(null)).toBe(false);
+  }, 15_000);
 
   it("agrees on safety numbers and reports a reinstall", async () => {
     const { guestSub, phone, laptop, guest, chatId, members } = await setup();

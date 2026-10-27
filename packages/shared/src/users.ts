@@ -14,8 +14,10 @@ export const UserDTO = z.object({
     .string()
     .nullable()
     .describe("Identifies the key from your recovery key; null until you set up a recovery key"),
+  alias: z.string().describe("What people see instead of your name and photo, until you share them"),
   hasContactPin: z.boolean().describe("Whether seeing the real name of a renamed contact needs your code"),
-  hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
+  hasBackupPin: z.boolean().describe("Whether a new device can restore your backup with your 6-digit PIN"),
+  hasAppLock: z.boolean().describe("Whether the apps ask for your privacy code when they open"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;
@@ -57,3 +59,21 @@ export type RemoveContactPinInput = z.infer<typeof RemoveContactPinInput>;
 
 export const AppLockInput = z.object({ code: ContactPin });
 export type AppLockInput = z.infer<typeof AppLockInput>;
+
+const ALIAS_GRADIENTS = [
+  ["#f97316", "#c2410c"],
+  ["#f43f5e", "#be123c"],
+  ["#3b82f6", "#1d4ed8"],
+  ["#10b981", "#047857"],
+  ["#8b5cf6", "#6d28d9"],
+  ["#ec4899", "#be185d"],
+  ["#14b8a6", "#0f766e"],
+  ["#f59e0b", "#b45309"],
+] as const;
+
+export function aliasAvatar(name: string): { number: string; gradient: string } | null {
+  const number = /^Frite (\d+)$/.exec(name)?.[1];
+  if (!number) return null;
+  const [from, to] = ALIAS_GRADIENTS[Number(number) % ALIAS_GRADIENTS.length]!;
+  return { number, gradient: `linear-gradient(135deg, ${from}, ${to})` };
+}

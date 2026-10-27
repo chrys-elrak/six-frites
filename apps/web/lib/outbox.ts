@@ -19,6 +19,7 @@ export interface PendingAttachment {
   height: number | null;
   progress: number;
   uploadId: string | null;
+  sticker?: boolean;
 }
 
 export interface PendingMessage {

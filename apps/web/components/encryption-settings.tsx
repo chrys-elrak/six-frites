@@ -1,6 +1,7 @@
 "use client";
 
 import { SixApiError } from "@six/sdk";
+import type { Dict } from "@six/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { useState } from "react";
@@ -9,29 +10,38 @@ import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
+import { CodeInput } from "./privacy-code";
 import { Card, PrimaryButton, SectionTitle } from "./ui";
 
 export const recoveryKeyQuery = ["recovery-key"] as const;
 
 export function useHasRecoveryKey() {
+  const backupKeyId = useSession((s) => s.user?.backupKeyId ?? null);
   return useQuery({
-    queryKey: recoveryKeyQuery,
-    queryFn: async () => (await e2ee()?.hasRecoveryKey()) ?? false,
+    queryKey: [...recoveryKeyQuery, backupKeyId],
+    queryFn: async () => (await e2ee()?.hasRecoveryKey(backupKeyId)) ?? false,
   });
 }
 
 export function EncryptionSettings() {
   const tr = useT();
+  const bp = tr.settings.backupPin;
   const user = useSession((s) => s.user)!;
   const hasKey = useHasRecoveryKey();
-  const [dialog, setDialog] = useState<"create" | "restore" | null>(null);
+  const [dialog, setDialog] = useState<"pin" | "restore" | "words" | null>(null);
 
-  const accountHasKey = user.backupKeyId !== null;
+  const legacy = user.backupKeyId !== null && !user.hasBackupPin;
   const status = hasKey.data
-    ? tr.settings.keyOnBrowser
-    : accountHasKey
-      ? tr.settings.keyOnAccount
-      : tr.settings.noKey;
+    ? user.hasBackupPin
+      ? bp.on
+      : bp.noPin
+    : user.hasBackupPin
+      ? bp.locked
+      : legacy
+        ? tr.settings.keyOnAccount
+        : bp.noPin;
+  const primary = "rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700";
+  const secondary = "rounded-lg px-3 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800";
 
   return (
     <section className="space-y-3">
@@ -42,112 +52,157 @@ export function EncryptionSettings() {
         </span>
         <div className="min-w-0 flex-1 space-y-2">
           <div>
-            <p className="font-medium">{tr.settings.recoveryKey}</p>
+            <p className="font-medium">{bp.title}</p>
             <p className="text-sm text-stone-500 dark:text-stone-400">{status}</p>
           </div>
-          {!hasKey.isPending && !hasKey.data && (
+          {!hasKey.isPending && (
             <div className="flex flex-wrap gap-1">
-              {accountHasKey && (
-                <button
-                  onClick={() => setDialog("restore")}
-                  className="rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
-                >
-                  {tr.settings.enterRecoveryKey}
+              {hasKey.data ? (
+                <button onClick={() => setDialog("pin")} className={primary}>
+                  {user.hasBackupPin ? bp.change : bp.create}
+                </button>
+              ) : user.hasBackupPin ? (
+                <>
+                  <button onClick={() => setDialog("restore")} className={primary}>
+                    {bp.enter}
+                  </button>
+                  <button onClick={() => setDialog("pin")} className={secondary}>
+                    {bp.forgot}
+                  </button>
+                </>
+              ) : legacy ? (
+                <>
+                  <button onClick={() => setDialog("words")} className={primary}>
+                    {tr.settings.enterRecoveryKey}
+                  </button>
+                  <button onClick={() => setDialog("pin")} className={secondary}>
+                    {tr.settings.lostKey}
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => setDialog("pin")} className={primary}>
+                  {bp.create}
                 </button>
               )}
-              <button
-                onClick={() => setDialog("create")}
-                className={
-                  accountHasKey
-                    ? "rounded-lg px-3 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-                    : "rounded-lg bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
-                }
-              >
-                {accountHasKey ? tr.settings.lostKey : tr.settings.createRecoveryKey}
-              </button>
             </div>
           )}
         </div>
       </Card>
-      {dialog === "create" && <CreateKeyDialog replacing={accountHasKey} onClose={() => setDialog(null)} />}
-      {dialog === "restore" && <RestoreKeyDialog onClose={() => setDialog(null)} />}
+      {(dialog === "pin" || dialog === "restore") && (
+        <PinDialog restoring={dialog === "restore"} onClose={() => setDialog(null)} />
+      )}
+      {dialog === "words" && <RestoreKeyDialog onClose={() => setDialog(null)} />}
     </section>
   );
 }
 
-function CreateKeyDialog({ replacing, onClose }: { replacing: boolean; onClose: () => void }) {
+/**
+ * Shows the PIN dialog once per visit when this device can't read past messages but a PIN would
+ * fix it, or when there is no backup yet. Never offers a new PIN on a device without the key while
+ * the account has one, since that would start over and lose the old backup.
+ */
+export function BackupPinPrompt() {
+  const user = useSession((s) => s.user)!;
+  const hasKey = useHasRecoveryKey();
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed || hasKey.isPending || hasKey.isError) return null;
+  const restoring = !hasKey.data && user.hasBackupPin;
+  const creating = !user.hasBackupPin && (hasKey.data || !user.backupKeyId);
+  if (!restoring && !creating) return null;
+  return <PinDialog restoring={restoring} prompted onClose={() => setDismissed(true)} />;
+}
+
+function pinError(err: unknown, tr: Dict) {
+  if (!(err instanceof SixApiError)) return tr.common.somethingWrongRetry;
+  if (err.code === "WRONG_BACKUP_PIN") return tr.settings.backupPin.wrong((err.details as { triesLeft: number }).triesLeft);
+  if (err.code === "BACKUP_PIN_NOT_SET") return tr.settings.backupPin.notSet;
+  return tr.settings.appLock.errors[err.code] ?? tr.common.somethingWrongRetry;
+}
+
+/** Asks for the backup PIN to restore past messages, or for a new PIN to protect them. */
+function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boolean; prompted?: boolean; onClose: () => void }) {
   const tr = useT();
+  const bp = tr.settings.backupPin;
   const qc = useQueryClient();
+  const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
-  const [saved, setSaved] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const create = useMutation({
+  const hasKey = useHasRecoveryKey().data === true;
+  const [restoring, setRestoring] = useState(initial);
+  const [pin, setPin] = useState("");
+  const [again, setAgain] = useState("");
+  const save = useMutation({
     mutationFn: async () => {
       const client = e2ee();
       if (!client) throw new Error("Encryption is not ready");
-      const words = await client.createRecoveryKey();
+      if (restoring) await client.unlockWithPin(pin);
+      else setUser(await client.setBackupPin(pin));
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: recoveryKeyQuery });
+      void qc.invalidateQueries({ queryKey: ["messages"] });
+      void qc.invalidateQueries({ queryKey: ["chats"] });
+      onClose();
+    },
+    onError: async (err) => {
+      setPin("");
+      const gone =
+        err instanceof SixApiError &&
+        (err.code === "BACKUP_PIN_NOT_SET" || (err.details as { triesLeft?: number } | undefined)?.triesLeft === 0);
+      if (!gone) return;
+      setRestoring(false);
       const { data } = await six.api.GET("/v1/me");
       if (data) setUser(data);
-      void qc.invalidateQueries({ queryKey: recoveryKeyQuery });
-      return words;
     },
   });
-  const words = create.data;
+  const ready = pin.length === 6 && (restoring || again === pin);
+  const mismatch = !restoring && again.length === 6 && again !== pin;
+  const title = restoring ? bp.restoreTitle : hasKey && user.hasBackupPin ? bp.changeTitle : bp.createTitle;
 
   return (
-    <Dialog onClose={() => (!words || saved) && onClose()}>
-      <div className="space-y-4 p-5">
-        <h2 className="text-lg font-semibold">{words ? tr.settings.yourRecoveryKey : tr.settings.createRecoveryKey}</h2>
-        {!words ? (
-          <>
-            <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.createIntro}</p>
-            {replacing && (
-              <p className="text-sm text-red-600 dark:text-red-400">{tr.settings.replaceWarning}</p>
-            )}
-            {create.isError && <p className="text-sm text-red-600 dark:text-red-400">{tr.settings.couldNotCreateKey}</p>}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
-              >
-                {tr.common.cancel}
-              </button>
-              <PrimaryButton className="flex-1" disabled={create.isPending} onClick={() => create.mutate()}>
-                {tr.settings.showWords}
-              </PrimaryButton>
-            </div>
-          </>
-        ) : (
-          <>
-            <ol className="grid grid-cols-3 gap-x-3 gap-y-1.5 rounded-xl bg-stone-100 p-3 font-mono text-sm dark:bg-stone-800">
-              {words.split(" ").map((w, i) => (
-                <li key={i} className="flex gap-1.5">
-                  <span className="w-5 text-right text-stone-400">{i + 1}</span>
-                  {w}
-                </li>
-              ))}
-            </ol>
-            <button
-              type="button"
-              onClick={() => {
-                void navigator.clipboard.writeText(words);
-                setCopied(true);
-              }}
-              className="w-full rounded-xl bg-stone-100 px-4 py-2 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
-            >
-              {copied ? tr.common.copied : tr.settings.copyToPasswordManager}
-            </button>
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="mt-0.5" />
-              {tr.settings.savedWordsCheck}
-            </label>
-            <PrimaryButton className="w-full" disabled={!saved} onClick={onClose}>
-              {tr.common.done}
-            </PrimaryButton>
-          </>
+    <Dialog onClose={onClose}>
+      <form
+        className="space-y-4 p-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (ready && !save.isPending) save.mutate();
+        }}
+      >
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <p className="text-sm text-stone-600 dark:text-stone-300">{restoring ? bp.restoreHint : bp.createHint}</p>
+        {!restoring && !hasKey && user.backupKeyId && (
+          <p className="text-sm text-red-600 dark:text-red-400">{bp.newBackupWarning}</p>
         )}
-      </div>
+        <CodeInput key={String(restoring)} label={bp.pin} value={pin} onChange={(v) => setPin(v.slice(0, 6))} autoFocus />
+        {!restoring && <CodeInput label={bp.again} value={again} onChange={(v) => setAgain(v.slice(0, 6))} />}
+        {(save.isError || mismatch) && (
+          <p className="text-sm text-red-600 dark:text-red-400">{save.isError ? pinError(save.error, tr) : bp.mismatch}</p>
+        )}
+        {restoring && (
+          <button
+            type="button"
+            onClick={() => {
+              setRestoring(false);
+              setPin("");
+              save.reset();
+            }}
+            className="text-sm text-stone-500 underline-offset-2 hover:underline"
+          >
+            {bp.forgot}
+          </button>
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
+          >
+            {prompted ? bp.later : tr.common.cancel}
+          </button>
+          <PrimaryButton type="submit" className="flex-1" disabled={!ready || save.isPending}>
+            {restoring ? bp.restore : tr.common.save}
+          </PrimaryButton>
+        </div>
+      </form>
     </Dialog>
   );
 }

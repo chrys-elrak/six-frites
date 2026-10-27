@@ -33,14 +33,19 @@ export function toUserDTO(u: User): UserDTO {
     contactCode: u.contactCode,
     findByEmail: u.findByEmail,
     backupKeyId: u.backupKeyId,
+    alias: u.alias,
     hasContactPin: u.contactPinHash !== null,
-    hasAppLock: u.appLockHash !== null,
+    hasBackupPin: u.backupPinHash !== null,
+    hasAppLock: u.appLock && u.contactPinHash !== null,
     createdAt: u.createdAt.toISOString(),
   };
 }
 
-export function toPublicUser(u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey">) {
-  return { id: u.id, displayName: u.displayName, avatarUrl: avatarOf(u) };
+/** Someone as others see them: their alias and no photo, unless they share their profile. */
+export function toPublicUser(u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey" | "alias">, shared: boolean) {
+  return shared
+    ? { id: u.id, displayName: u.displayName, avatarUrl: avatarOf(u) }
+    : { id: u.id, displayName: u.alias, avatarUrl: null };
 }
 
 /** Sends everyone who shares a chat with `userId` that chat again, after their name or photo changed. */
@@ -126,6 +131,7 @@ export async function deleteAccount(userId: string) {
         googleSub: `deleted:${userId}`,
         email: `deleted-${userId}@deleted.invalid`,
         displayName: "Deleted account",
+        alias: "Deleted account",
         avatarUrl: null,
         avatarKey: null,
         username: null,
@@ -133,6 +139,8 @@ export async function deleteAccount(userId: string) {
         findByEmail: false,
         lastSeenAt: null,
         backupKeyId: null,
+        backupPinHash: null,
+        backupWrapped: null,
         deletedAt: new Date(),
       },
     });
@@ -151,12 +159,12 @@ export async function deleteAccount(userId: string) {
 
 const scryptAsync = promisify(scrypt) as (pin: string, salt: Buffer, len: number) => Promise<Buffer>;
 
-async function hashPin(pin: string) {
+export async function hashPin(pin: string) {
   const salt = randomBytes(16);
   return `${salt.toString("base64")}:${(await scryptAsync(pin, salt, 32)).toString("base64")}`;
 }
 
-async function pinMatches(stored: string, pin: string) {
+export async function pinMatches(stored: string, pin: string) {
   const [salt, hash] = stored.split(":") as [string, string];
   const expected = Buffer.from(hash, "base64");
   const actual = await scryptAsync(pin, Buffer.from(salt, "base64"), expected.length);
@@ -185,19 +193,30 @@ export async function setContactPin(userId: string, input: SetContactPinInput) {
 
 export async function removeContactPin(userId: string, input: RemoveContactPinInput) {
   await checkContactPin(userId, input.currentPin, true);
-  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { contactPinHash: null } }));
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { contactPinHash: null, appLock: false } }));
 }
 
-/** Sets or replaces the app lock code. No old code is needed: only an unlocked app reaches this. */
+/**
+ * Turns the app lock on. It unlocks with the privacy code, so `code` must match it, or becomes it when none is
+ * set yet. Turning the lock off needs no code: only an unlocked app gets there.
+ */
 export async function setAppLock(userId: string, input: AppLockInput) {
-  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: await hashPin(input.code) } }));
+  const { contactPinHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { contactPinHash: true } });
+  if (contactPinHash && !(await pinMatches(contactPinHash, input.code))) throw new AppError("WRONG_APP_LOCK_CODE");
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { appLock: true, ...(!contactPinHash && { contactPinHash: await hashPin(input.code) }) },
+  });
+  return toUserDTO(user);
 }
 
 export async function removeAppLock(userId: string) {
-  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: null } }));
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLock: false } }));
 }
 
 export async function unlockApp(userId: string, input: AppLockInput) {
-  const { appLockHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true } });
-  if (appLockHash && !(await pinMatches(appLockHash, input.code))) throw new AppError("WRONG_APP_LOCK_CODE");
+  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLock: true, contactPinHash: true } });
+  if (u.appLock && u.contactPinHash && !(await pinMatches(u.contactPinHash, input.code))) {
+    throw new AppError("WRONG_APP_LOCK_CODE");
+  }
 }

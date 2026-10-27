@@ -4,6 +4,8 @@ import { promisify } from "node:util";
 const exec = promisify(execFile);
 const MAX_BUFFER = 64 * 1024 * 1024;
 
+export const THUMB = ["-frames:v", "1", "-vf", "scale='min(480,iw)':-2", "-c:v", "libwebp", "-quality", "80"];
+
 export async function ffmpeg(args: string[]) {
   await exec("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", ...args], { maxBuffer: MAX_BUFFER });
 }

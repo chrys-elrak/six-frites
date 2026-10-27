@@ -17,7 +17,6 @@ import {
   fromUtf8,
   generateIdentity,
   generateOneTimePreKeys,
-  generateRecoveryKey,
   generateSignedPreKey,
   identityFromJSON,
   identityToJSON,
@@ -26,13 +25,16 @@ import {
   publicIdentity,
   publicIdentityFromJSON,
   publicIdentityToJSON,
+  randomBytes,
   recoveryKeyFromWords,
   safetyNumber,
   sameIdentity,
   sealBackup,
   sessionFromJSON,
   sessionToJSON,
+  unwrapBackupKey,
   utf8,
+  wrapBackupKey,
 } from "@six/crypto";
 import {
   type CallSignal,
@@ -523,17 +525,39 @@ export class E2EE {
     return raw ? fromB64(raw) : null;
   }
 
-  async hasRecoveryKey() {
-    return (await this.store.get("backupKey")) !== null;
+  /**
+   * Whether this device holds the account's backup key, or a key the account can adopt when it has
+   * none. A key the account has since replaced is dropped, so this device stops sealing backups with it.
+   */
+  async hasRecoveryKey(accountBackupKeyId: string | null) {
+    const key = await this.backupKey();
+    if (key && accountBackupKeyId && backupKeyId(key) !== accountBackupKeyId) {
+      await this.store.delete("backupKey");
+      return false;
+    }
+    return key !== null;
   }
 
-  /** Makes a new recovery key, shown to the user once as 24 words, and starts backing up with it. */
-  async createRecoveryKey() {
-    const { entropy, words } = generateRecoveryKey();
-    const key = deriveBackupKey(entropy);
-    unwrap(await this.api.PUT("/v1/me/backup-key", { body: { backupKeyId: backupKeyId(key) } }));
+  /**
+   * Protects this device's backup key with a 6-digit PIN, so a new device only needs the PIN to
+   * read past messages. Without a key on this device it makes a new one, which starts a new backup.
+   */
+  async setBackupPin(pin: string) {
+    const key = (await this.backupKey()) ?? deriveBackupKey(randomBytes(32));
+    const { secret } = unwrap(await this.api.GET("/v1/me/backup-secret"));
+    const user = unwrap(
+      await this.api.PUT("/v1/me/backup-pin", {
+        body: { pin, backupKeyId: backupKeyId(key), wrapped: wrapBackupKey(key, pin, secret) },
+      }),
+    );
     await this.store.set("backupKey", b64(key));
-    return words;
+    return user;
+  }
+
+  /** Unlocks backups on this device with the PIN. Throws WRONG_BACKUP_PIN, with `triesLeft` in its details. */
+  async unlockWithPin(pin: string) {
+    const { wrapped, secret } = unwrap(await this.api.POST("/v1/me/backup-pin/unlock", { body: { pin } }));
+    await this.store.set("backupKey", b64(unwrapBackupKey(wrapped, pin, secret)));
   }
 
   /**

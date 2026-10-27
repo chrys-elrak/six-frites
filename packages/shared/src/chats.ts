@@ -292,6 +292,9 @@ export const ChatDTO = z.object({
   muted: z.boolean(),
   mutedUntil: IsoDate.nullable().describe("When a timed mute ends; null while muted for good or not muted"),
   pinned: z.boolean(),
+  sharingProfile: z
+    .boolean()
+    .describe("You show the other person your real name and photo; until then they only see your alias"),
   autoDeleteSecs: z
     .number()
     .int()
@@ -385,8 +388,32 @@ export const UpdateChatInput = z
   .refine((v) => Object.values(v).some((x) => x !== undefined), "Provide at least one field");
 export type UpdateChatInput = z.infer<typeof UpdateChatInput>;
 
-export const DeleteChatQuery = z.object({ scope: DeleteScope.default("me") });
+export const DeleteChatQuery = z
+  .object({
+    scope: DeleteScope.default("me"),
+    from: IsoDate.optional().describe("Only delete the messages sent from this time on, instead of the whole chat"),
+    to: IsoDate.optional().describe("Only delete the messages sent up to this time, instead of the whole chat"),
+  })
+  .refine((q) => !q.from || !q.to || Date.parse(q.from) <= Date.parse(q.to), {
+    message: "`from` must not be after `to`",
+    path: ["from"],
+  });
 export type DeleteChatQuery = z.infer<typeof DeleteChatQuery>;
+
+/** "Delete chat" shortcuts for the messages sent in the last hour, day or week. */
+export const DELETE_RANGE_PRESETS = [
+  { label: "deleteLastHour", secs: 3600 },
+  { label: "deleteLastDay", secs: 86400 },
+  { label: "deleteLastWeek", secs: 7 * 86400 },
+] as const;
+
+/** DeleteChatQuery's `from` and `to` covering two whole local days and every day between, in either order. */
+export function dayRange(a: Date, b: Date) {
+  const [first, last] = a <= b ? [a, b] : [b, a];
+  const from = new Date(first.getFullYear(), first.getMonth(), first.getDate());
+  const to = new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1, 0, 0, 0, -1);
+  return { from: from.toISOString(), to: to.toISOString() };
+}
 
 export const ChatDeletedDTO = z.object({ chatId: Id, scope: DeleteScope });
 export type ChatDeletedDTO = z.infer<typeof ChatDeletedDTO>;

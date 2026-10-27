@@ -13,10 +13,9 @@ import { activeSessions } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
 import { pushQueue } from "../lib/queue.js";
 import { pushProviders } from "../push/providers.js";
-import { applyOverride, loadOverrides } from "./contacts.js";
+import { profilesFor } from "./contacts.js";
 import { messageInclude, toMessageDTO } from "./messages.js";
 import { memberMuted } from "./chats.js";
-import { toPublicUser } from "./users.js";
 
 /** Delay before pushing, so a message read straight away in an open app doesn't also buzz a phone. */
 export const PUSH_DELAY_MS = 3000;
@@ -98,8 +97,7 @@ export async function deliverPush(messageId: string, userId: string) {
   const targets = await targetsFor(userId);
   if (!targets.length) return 0;
 
-  const overrides = await loadOverrides(prisma, userId, [m.senderId]);
-  const sender = applyOverride(toPublicUser(m.sender), overrides.get(m.senderId));
+  const sender = (await profilesFor(prisma, userId, [m.senderId]))(m.sender);
   const dto = toMessageDTO(m, userId);
   return sendToAll(targets, (t) => ({
     title: sender.displayName,
@@ -129,8 +127,7 @@ export async function deliverReactionPush(
 
   const reactor = await prisma.user.findUnique({ where: { id: reactorId } });
   if (!reactor) return 0;
-  const overrides = await loadOverrides(prisma, userId, [reactorId]);
-  const who = applyOverride(toPublicUser(reactor), overrides.get(reactorId));
+  const who = (await profilesFor(prisma, userId, [reactorId]))(reactor);
   const dto = toMessageDTO(m, userId);
   return sendToAll(targets, (t) => ({
     title: who.displayName,

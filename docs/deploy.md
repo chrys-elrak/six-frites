@@ -21,8 +21,9 @@ cd /root/six-frites
 cp .env.production.example .env
 ```
 
-Fill in the secrets in `.env`. Each of `POSTGRES_PASSWORD`, `JWT_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` and
+Fill in the secrets in `.env`. Each of `POSTGRES_PASSWORD`, `JWT_SECRET`, `BACKUP_PIN_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` and
 `TURN_SECRET` can be `openssl rand -hex 32`. Web push keys come from `npx web-push generate-vapid-keys`.
+Never change `BACKUP_PIN_SECRET` once set: message backups protected by a PIN can't be opened without it.
 `FCM_SERVICE_ACCOUNT` is the Firebase service account key for Android push (Firebase console, Project settings >
 Service accounts > Generate new private key), the whole JSON on one line in single quotes.
 

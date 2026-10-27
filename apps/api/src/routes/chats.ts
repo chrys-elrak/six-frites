@@ -8,6 +8,7 @@ import {
   AddContactInput,
   ContactDTO,
   RevealContactInput,
+  ShareProfileInput,
   RevealedContactDTO,
   ContactListQuery,
   FindUserQuery,
@@ -34,11 +35,12 @@ import {
   page,
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
-import { findContact, listContacts, removeContact, revealContact, updateContact } from "../services/contacts.js";
+import { findContact, listContacts, removeContact, revealContact, shareProfile, updateContact } from "../services/contacts.js";
 import { blockUser, unblockUser } from "../services/blocks.js";
 import { addContact, findUser } from "../services/discovery.js";
 import {
   deleteMessages,
+  deleteMessagesBetween,
   editMessage,
   listMessages,
   setReaction,
@@ -108,7 +110,8 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["chats"],
         summary: "Delete a chat",
         description:
-          "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people.",
+          "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people. " +
+          "With `from` and/or `to`, only the messages sent in that range are deleted, as with DELETE /messages, and the chat stays.",
         security,
         params: ChatParams,
         querystring: DeleteChatQuery,
@@ -116,7 +119,9 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req, reply) => {
-      await deleteChat(req.auth.userId, req.params.id, req.query.scope);
+      const { scope, from, to } = req.query;
+      if (from || to) await deleteMessagesBetween(req.auth.userId, req.params.id, req.query);
+      else await deleteChat(req.auth.userId, req.params.id, scope);
       return reply.status(204).send(null);
     },
   );
@@ -479,6 +484,23 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => updateContact(req.auth.userId, req.params.userId, req.body),
+  );
+
+  app.put(
+    "/contacts/:userId/profile",
+    {
+      schema: {
+        tags: ["contacts"],
+        summary: "Show or hide your real name and photo to a contact",
+        description:
+          "Everyone else sees your alias and no photo. Both of you get chat.updated; adding each other again starts hidden.",
+        security,
+        params: z.object({ userId: Id }),
+        body: ShareProfileInput,
+        response: { 200: ContactDTO },
+      },
+    },
+    (req) => shareProfile(req.auth.userId, req.params.userId, req.body.shared),
   );
 
   app.delete(

@@ -2,7 +2,7 @@
 
 import { type MessageDTO, durationLabel, isMuted } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Lock, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -111,6 +111,20 @@ export function Conversation({ chatId }: { chatId: string }) {
   const shownPresence = frozen ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
 
+  const selectable = () =>
+    (messages.data?.pages.flatMap((p) => p.items) ?? []).filter((m) => m.type !== "service").map((m) => m.id);
+
+  function chooseMessages() {
+    const newest = selectable()[0];
+    if (newest) useSelection.getState().start(chatId, newest);
+  }
+
+  function selectBetween() {
+    const ids = selectable();
+    const at = selectedIds.map((id) => ids.indexOf(id)).filter((i) => i >= 0);
+    if (at.length) useSelection.setState({ ids: ids.slice(Math.min(...at), Math.max(...at) + 1) });
+  }
+
   function removeSelected(scope: "me" | "all") {
     const byId = new Map<string, MessageDTO>(
       (messages.data?.pages.flatMap((p) => p.items) ?? []).map((m) => [m.id, m]),
@@ -128,6 +142,11 @@ export function Conversation({ chatId }: { chatId: string }) {
             <X className="size-5" />
           </button>
           <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}</p>
+          {count >= 2 && (
+            <button onClick={selectBetween} aria-label={tr.chat.selectBetween} title={tr.chat.selectBetween} className={iconButton}>
+              <ChevronsUpDown className="size-5" />
+            </button>
+          )}
           <button
             onClick={() => setConfirmDelete(true)}
             disabled={count === 0}
@@ -244,6 +263,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           peerName={peer.displayName}
           onClose={() => setMenu(false)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
+          onChooseMessages={chooseMessages}
         />
       )}
       {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}

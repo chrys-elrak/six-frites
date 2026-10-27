@@ -19,4 +19,5 @@ export * from "./chat-themes.js";
 export * from "./socket.js";
 export * from "./admin.js";
 export * from "./releases.js";
+export * from "./links.js";
 export * from "./i18n/index.js";

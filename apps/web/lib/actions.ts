@@ -135,8 +135,11 @@ export async function deleteMessages(qc: QueryClient, chatId: string, messages: 
   if (live.length) applyDeleted(qc, chatId, live, scope);
   if (tombstones.length) applyDeleted(qc, chatId, tombstones, "me");
   try {
-    const ids = messages.map((m) => m.id).join(",");
-    unwrap(await six.api.DELETE("/v1/messages", { params: { query: { ids, scope } } }));
+    const ids = messages.map((m) => m.id);
+    for (let i = 0; i < ids.length; i += 100) {
+      const query = { ids: ids.slice(i, i + 100).join(","), scope };
+      unwrap(await six.api.DELETE("/v1/messages", { params: { query } }));
+    }
   } catch (err) {
     await qc.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
     throw err;
@@ -153,7 +156,6 @@ export async function updateContact(
   input: { displayName?: string | null; photo?: string | null },
 ) {
   const contact = unwrap(await six.api.PATCH("/v1/contacts/{userId}", { params: { path: { userId } }, body: input }));
-  void qc.invalidateQueries({ queryKey: ["contacts"] });
   void qc.invalidateQueries({ queryKey: ["contact", userId] });
   void qc.invalidateQueries({ queryKey: ["referrals"] });
   void qc.invalidateQueries({ queryKey: chatKeys.lists });
@@ -165,7 +167,6 @@ export async function updateContact(
 export async function removeContact(qc: QueryClient, chatId: string, userId: string) {
   unwrap(await six.api.DELETE("/v1/contacts/{userId}", { params: { path: { userId } } }));
   removeChat(qc, chatId);
-  void qc.invalidateQueries({ queryKey: ["contacts"] });
 }
 
 export async function updateChatSettings(
@@ -237,7 +238,13 @@ export async function sendScheduledNow(qc: QueryClient, s: ScheduledMessageDTO) 
   void qc.invalidateQueries({ queryKey: scheduledKey(s.chatId) });
 }
 
-export async function deleteChat(qc: QueryClient, chatId: string, scope: DeleteScope) {
-  unwrap(await six.api.DELETE("/v1/chats/{id}", { params: { path: { id: chatId }, query: { scope } } }));
-  applyChatDeleted(qc, chatId, scope);
+/** Deletes the whole chat, or with `range` only the messages sent in it, which the server's message.deleted removes. */
+export async function deleteChat(
+  qc: QueryClient,
+  chatId: string,
+  scope: DeleteScope,
+  range?: { from?: string; to?: string },
+) {
+  unwrap(await six.api.DELETE("/v1/chats/{id}", { params: { path: { id: chatId }, query: { scope, ...range } } }));
+  if (!range) applyChatDeleted(qc, chatId, scope);
 }

@@ -16,6 +16,7 @@ model User {
   avatarKey   String?
   username    String?   @unique
   contactCode String    @unique @default(dbgenerated("random_code()"))
+  alias       String    @default(dbgenerated("random_alias()"))
   findByEmail Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -24,8 +25,11 @@ model User {
   lastSeenAt  DateTime?
   deletedAt   DateTime?
   backupKeyId String?
+  backupPinHash  String?
+  backupWrapped  String?
+  backupPinTries Int       @default(0)
   contactPinHash String?
-  appLockHash    String?
+  appLock        Boolean   @default(false)
 
   sessions       Session[]
   invites        Invite[]
@@ -225,6 +229,7 @@ model ChatMember {
   lastReadAt             DateTime?
   hidden                 Boolean   @default(false)
   clearedAt              DateTime?
+  showProfile            Boolean   @default(false)
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

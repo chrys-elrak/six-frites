@@ -23,7 +23,7 @@ export interface Draft {
   replyTo?: MessageDTO;
   spoiler?: boolean;
   ephemeral?: EphemeralInput | null;
-  file?: { blob: Blob; kind: UploadKind; name: string; mime: string };
+  file?: { blob: Blob; kind: UploadKind; name: string; mime: string; sticker?: boolean };
   gif?: GifDTO;
   sticker?: StickerDTO;
 }
@@ -47,10 +47,10 @@ async function imageSize(blob: Blob) {
 async function sealFile(pending: PendingMessage, blob: Blob) {
   const saved = sealedFiles.get(pending.clientId);
   if (saved) return saved;
-  const { kind, name, mime, width, height } = pending.attachment!;
+  const { kind, name, mime, width, height, sticker } = pending.attachment!;
   const [bytes, meta] = await Promise.all([blob.arrayBuffer(), mediaMeta(blob, kind)]);
   const { data, key, digest } = encryptFile(new Uint8Array(bytes));
-  const file: EncryptedFile = { key, digest, name, mime, size: blob.size, width, height, ...meta };
+  const file: EncryptedFile = { key, digest, name, mime, size: blob.size, width, height, ...meta, ...(sticker && { sticker }) };
   const sealed = { file, blob: new Blob([data as Uint8Array<ArrayBuffer>]) };
   sealedFiles.set(pending.clientId, sealed);
   return sealed;
@@ -162,6 +162,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           ...(file.kind === "image" ? await imageSize(file.blob) : { width: null, height: null }),
           progress: 0,
           uploadId: null,
+          sticker: file.sticker,
         }
       : gif
         ? {

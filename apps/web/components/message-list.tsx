@@ -7,12 +7,15 @@ import {
   type EphemeralDTO,
   type MessageDTO,
   type MessageEntity,
+  type MessageType,
   type ReplyPreview,
   type StickerDTO,
   type ViewMessageResult,
+  previewLink,
   serviceSentence,
+  splitLinks,
 } from "@six/shared";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Ban,
   Check,
@@ -63,7 +66,7 @@ import { useRealtime } from "@/lib/realtime";
 import { deliver } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
-import { useSwipeRight } from "@/lib/swipe";
+import { useSwipe } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { EphemeralViewer } from "./ephemeral-viewer";
@@ -297,8 +300,9 @@ const mediaIcons = {
   sticker: StickerIcon,
 } as const;
 
-export function MediaLabel({ type }: { type: keyof typeof mediaIcons }) {
+export function MediaLabel({ type }: { type: MessageType }) {
   const tr = useT();
+  if (type === "text" || type === "service") return null;
   const Icon = mediaIcons[type];
   return (
     <>
@@ -316,13 +320,16 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
     row.spoiler && !row.attachment
       ? [...row.entities, { type: "spoiler" as const, offset: 0, length: text.length }]
       : row.entities;
-  if (entities.length === 0) return <>{text}</>;
+  if (entities.length === 0) return <Linked text={text} />;
 
   return (
     <>
       {segments(text, entities).map((seg, i) => {
-        const styled = <Styled styles={seg.styles}>{seg.text}</Styled>;
-        if (!seg.styles.has("spoiler") || revealed) return <span key={i}>{styled}</span>;
+        const hidden = seg.styles.has("spoiler") && !revealed;
+        const styled = (
+          <Styled styles={seg.styles}>{hidden || seg.styles.has("code") ? seg.text : <Linked text={seg.text} />}</Styled>
+        );
+        if (!hidden) return <span key={i}>{styled}</span>;
         return (
           <span
             key={i}
@@ -342,6 +349,49 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
         );
       })}
     </>
+  );
+}
+
+function Linked({ text }: { text: string }) {
+  return (
+    <>
+      {splitLinks(text).map((part, i) =>
+        part.href ? (
+          <a key={i} href={part.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+            {part.text}
+          </a>
+        ) : (
+          part.text
+        ),
+      )}
+    </>
+  );
+}
+
+function LinkCard({ url, mine }: { url: string; mine: boolean }) {
+  const { data } = useQuery({
+    queryKey: ["link-preview", url],
+    queryFn: async () => unwrap(await six.api.GET("/v1/link-preview", { params: { query: { url } } })),
+    staleTime: Infinity,
+    retry: false,
+  });
+  if (!data) return null;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`mb-1 block w-72 max-w-full overflow-hidden rounded-lg border-l-4 text-[13px] leading-snug ${
+        mine ? "border-brand-ink/40 bg-black/10" : "border-brand bg-black/5 dark:bg-white/10"
+      }`}
+    >
+      {data.image && <img src={data.image} alt="" draggable={false} className="aspect-[1.91] w-full object-cover" />}
+      <span className="block px-2 py-1">
+        <span className="block truncate opacity-70">{data.siteName}</span>
+        <span className="line-clamp-2 font-semibold">{data.title}</span>
+        {data.description && <span className="line-clamp-3 opacity-80">{data.description}</span>}
+      </span>
+    </a>
   );
 }
 
@@ -452,7 +502,10 @@ function Bubble({
   const anchor = () => bubble.current!.getBoundingClientRect();
   const press = useLongPress(selectable ? onToggle : onMenu);
   const reactable = !selecting && !frozen && canReact(row);
-  const swipe = useSwipeRight(!selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null);
+  const swipe = useSwipe(
+    !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
+    row.mine ? -1 : 1,
+  );
 
   function onTap(e: React.MouseEvent) {
     if (!reactable || (e.target as Element).closest("a, button, video, audio, input")) return;
@@ -479,12 +532,17 @@ function Bubble({
   const visual = !sealed && row.attachment && ["image", "video", "gif"].includes(row.attachment.data.kind);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const sticker = !sealed && !row.deleted ? row.sticker : null;
+  const loose = !sealed && !row.deleted && row.attachment?.source === "server" && !!row.attachment.file?.sticker;
   const hasText = !!row.text || row.deleted || row.locked;
+  const link =
+    !sealed && !row.deleted && !row.locked && !row.attachment && !row.spoiler && row.text
+      ? previewLink(row.text, row.entities)
+      : null;
   const radius = mine
     ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
     : `rounded-tr-2xl rounded-br-2xl ${groupStart ? "rounded-tl-2xl" : "rounded-tl-md"} ${groupEnd ? "rounded-bl-2xl" : "rounded-bl-md"}`;
   const tone =
-    jumbo || note || sticker
+    jumbo || note || sticker || loose
       ? "bg-transparent text-stone-900 dark:text-stone-100"
       : row.deleted
         ? "bg-transparent text-stone-500 ring-1 ring-inset ring-stone-300 dark:ring-stone-700"
@@ -517,7 +575,10 @@ function Bubble({
           )}
         </span>
       )}
-      <div ref={swipe.hint} className="pointer-events-none absolute inset-y-0 left-3 flex items-center opacity-0">
+      <div
+        ref={swipe.hint}
+        className={`pointer-events-none absolute inset-y-0 flex items-center opacity-0 ${mine ? "right-3" : "left-3"}`}
+      >
         <span className="grid size-8 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm">
           <Reply className="size-4" />
         </span>
@@ -530,7 +591,7 @@ function Bubble({
               {...press}
               onClick={onTap}
               onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
-              className={`${radius} ${tone} ${jumbo || note || sticker ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${radius} ${tone} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -552,6 +613,7 @@ function Bubble({
                   onReveal={() => revealMedia(row.key)}
                 />
               )}
+              {link && <LinkCard url={link} mine={mine} />}
               {sealed ? (
                 <div className="flex items-end gap-2">
                   <Sealed row={row} onOpen={onOpenEphemeral} />
@@ -679,6 +741,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [reactAt, setReactAt] = useState<{ row: MsgRow; anchor: DOMRect } | null>(null);
     const closeReactBar = useCallback(() => setReactAt(null), []);
     const [viewing, setViewing] = useState<(ViewMessageResult & { message: Hydrated }) | null>(null);
+    const [opening, setOpening] = useState(false);
     const viewingRef = useRef(viewing);
     viewingRef.current = viewing;
     const closeViewer = useCallback(() => {
@@ -710,11 +773,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       const id = row.id;
       if (!id) return;
       if (row.mine && row.message) return setViewing({ message: row.message, expiresAt: null });
+      setOpening(true);
       try {
         const result = unwrap(await six.api.POST("/v1/messages/{id}/view", { params: { path: { id } } }));
         setViewing({ ...result, message: await hydrate(result.message) });
       } catch {
         void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
+      } finally {
+        setOpening(false);
       }
     }
 
@@ -941,11 +1007,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           />
         )}
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
-        {viewing && (
+        {(viewing || opening) && (
           <EphemeralViewer
-            message={viewing.message}
-            expiresAt={viewing.expiresAt}
-            mine={viewing.message.senderId === meId}
+            message={viewing?.message ?? null}
+            expiresAt={viewing?.expiresAt ?? null}
+            mine={viewing?.message.senderId === meId}
             onClose={closeViewer}
           />
         )}

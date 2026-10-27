@@ -7,6 +7,7 @@ x-app-env: &app-env
   REDIS_URL: redis://redis:6379
   GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS}
   JWT_SECRET: ${JWT_SECRET}
+  BACKUP_PIN_SECRET: ${BACKUP_PIN_SECRET:?set BACKUP_PIN_SECRET in .env}
   S3_ENDPOINT: http://storage:8333
   S3_PUBLIC_ENDPOINT: https://${DOMAIN}
   S3_REGION: us-east-1

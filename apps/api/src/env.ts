@@ -10,6 +10,7 @@ const Env = z.object({
   QUEUE_PREFIX: z.string().default("six"),
   GOOGLE_CLIENT_IDS: z.string().transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
   JWT_SECRET: z.string().min(32),
+  BACKUP_PIN_SECRET: z.string().min(32),
   S3_ENDPOINT: z.string().url(),
   S3_PUBLIC_ENDPOINT: z.string().url(),
   S3_REGION: z.string().default("us-east-1"),

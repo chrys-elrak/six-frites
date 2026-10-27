@@ -335,8 +335,8 @@ export function ChatBackgroundPicker() {
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.defaultBackground}</SectionTitle>
-      <Card className="p-3">
-        <div role="radiogroup" aria-label={tr.settings.defaultBackground} className="flex gap-3 overflow-x-auto pb-1">
+      <Card className="p-2">
+        <div role="radiogroup" aria-label={tr.settings.defaultBackground} className="flex gap-3 overflow-x-auto p-1 pb-2">
           {CHAT_THEMES.map((theme) => (
             <ThemeSwatch
               key={theme.id}

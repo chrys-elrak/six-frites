@@ -6,9 +6,9 @@ const en = {
   messagesChannel: "Messages",
   signOut: "Sign out",
   signOutWithKey:
-    "Sign out? Your encrypted messages are removed from this browser. You can read them again with your recovery key.",
+    "Sign out? Your encrypted messages are removed from this browser. You'll get them back with your backup PIN.",
   signOutWithoutKey:
-    "Sign out? Your encrypted messages are removed from this browser, and without a recovery key you won't be able to read them here again.",
+    "Sign out? Your encrypted messages are removed from this browser, and without a backup PIN you won't be able to read them here again.",
   creditsFrom: "Animated emoji from",
   creditsBy: "by Google, licensed",
   creditsData: "Emoji data from Emojibase.",
@@ -16,6 +16,8 @@ const en = {
   changePhoto: "Change your photo",
   displayName: "Display name",
   removePhoto: "Remove photo",
+  seenAs: (alias: string) =>
+    `People see you as ${alias}, without your photo, unless you share your profile with them from their contact page.`,
 
   findMe: "How people find you",
   contactCode: "Your contact code",
@@ -96,32 +98,10 @@ const en = {
 
   encryption: "Encryption",
   e2ee: "End-to-end encryption",
-  recoveryKey: "Recovery key",
-  keyOnBrowser: "Your recovery key is set up on this browser. New messages are backed up with it.",
   keyOnAccount: "Enter your recovery key to read your older encrypted messages on this browser.",
-  noKey: "Create a recovery key so you can read your messages again after signing out or on a new device.",
-  keyOnPhone: "Your recovery key is set up. New messages are backed up so a new phone can read them.",
   keyOnAccountPhone: "You have a recovery key. Enter it here to read messages from before this phone.",
-  noKeyPhone: "Without a recovery key, a new phone can't read your past encrypted messages.",
   enterRecoveryKey: "Enter recovery key",
-  lostKey: "Lost it? Create a new one instead",
-  createRecoveryKey: "Create a recovery key",
-  createNewRecoveryKey: "Create a new recovery key",
-  yourRecoveryKey: "Your recovery key",
-  createIntro:
-    "You'll get 24 words. They're the only way to read your encrypted messages after you sign out or on a new device. Nobody else can recover them for you, not even us.",
-  createIntroPhone:
-    "You'll see 24 words once. Write them down or save them in a password manager. With them, a new phone can read your encrypted messages. Six Frites can't recover them for you.",
-  replaceWarning: "Your old recovery key will stop working, and backups made with it can't be opened anymore.",
-  replaceWarningPhone: "Your old recovery key will stop working and its backups will be deleted.",
-  couldNotCreateKey: "Couldn't create a recovery key. Try again.",
-  showWords: "Show my 24 words",
-  creating: "Creating…",
-  notNow: "Not now",
-  copyToPasswordManager: "Copy to a password manager",
-  savedWordsCheck: "I saved these words somewhere safe. They won't be shown again.",
-  screenshotsBlocked: "Screenshots are blocked in Six Frites, so write these down.",
-  savedThem: "I've saved them",
+  lostKey: "Lost it? Start over with a PIN",
   enterYourRecoveryKey: "Enter your recovery key",
   restoreHint: "Type or paste the 24 words, separated by spaces.",
   restorePlaceholder: "24 words, separated by spaces",
@@ -133,6 +113,34 @@ const en = {
   unlock: "Unlock",
   unlockMessages: "Unlock my messages",
   checking: "Checking…",
+  backupPin: {
+    title: "Message backup",
+    on: "Your messages are backed up. On a new device, your 6-digit PIN brings them back.",
+    noPin: "Create a 6-digit PIN to read your messages again after signing out or on a new device.",
+    locked: "Enter your 6-digit PIN to read your earlier messages on this device.",
+    create: "Create a PIN",
+    change: "Change PIN",
+    enter: "Enter PIN",
+    forgot: "Forgot your PIN?",
+    createTitle: "Create your backup PIN",
+    createHint:
+      "Choose 6 digits you'll remember. You'll enter them when you sign in on a new device. Six Frites can't recover your PIN for you.",
+    changeTitle: "Change your backup PIN",
+    restoreTitle: "Restore your messages",
+    restoreHint: "This device can't read your earlier messages yet. Enter your 6-digit backup PIN to restore them.",
+    pin: "PIN",
+    again: "Same PIN again",
+    mismatch: "The PINs don't match.",
+    newBackupWarning:
+      "A new PIN on this device starts a new backup: messages saved in the old one can't be read anymore.",
+    restore: "Restore",
+    later: "Later",
+    wrong: (left: number) =>
+      left
+        ? `Wrong PIN. ${left} ${left === 1 ? "try" : "tries"} left.`
+        : "Wrong PIN. Your backup is locked now: create a new PIN.",
+    notSet: "There's no PIN backup anymore. Create a new PIN.",
+  },
   calculatingSafetyNumber: "Calculating safety number…",
   safetyNumber: "Safety number",
   safetyNumberHint:
@@ -151,19 +159,21 @@ const en = {
   useColours: "Use these colours",
   appLock: {
     title: "App lock",
-    onHint: "Six Frites asks for your code when it opens and after 5 minutes away, on all your devices.",
-    offHint: "Ask for a code when Six Frites opens and after 5 minutes away, on all your devices.",
-    set: "Set code",
-    change: "Change code",
-    setTitle: "Lock the app",
-    changeTitle: "Change app lock code",
-    hint: "4 to 8 digits. If you forget it, sign out, sign in again with Google and change it here.",
+    onHint: "Six Frites asks for your privacy code when it opens and after 5 minutes away, on all your devices.",
+    offHint: "Ask for your privacy code when Six Frites opens and after 5 minutes away, on all your devices.",
+    turnOn: "Turn on",
+    turnOff: "Turn off",
+    turnOnTitle: "Lock the app",
+    useCode:
+      "Enter your privacy code: it will unlock Six Frites. If you forget it, sign out, sign in again and turn the lock off here.",
+    newCode:
+      "Choose a privacy code of 4 to 8 digits. It unlocks Six Frites and shows the real names of contacts you renamed.",
     locked: "Six Frites is locked",
-    enterCode: "Enter your app lock code.",
+    enterCode: "Enter your privacy code.",
     unlock: "Unlock",
     forgot: "Forgot your code? Sign out",
     errors: {
-      WRONG_APP_LOCK_CODE: "That's not your app lock code.",
+      WRONG_APP_LOCK_CODE: "That's not your privacy code.",
       RATE_LIMITED: "Too many tries. Wait a minute.",
       VALIDATION_FAILED: "Use 4 to 8 digits.",
     } as ByCode<"WRONG_APP_LOCK_CODE">,
@@ -175,9 +185,9 @@ const fr: typeof en = {
   messagesChannel: "Messages",
   signOut: "Se déconnecter",
   signOutWithKey:
-    "Se déconnecter ? Vos messages chiffrés seront supprimés de ce navigateur. Vous pourrez les relire avec votre clé de récupération.",
+    "Se déconnecter ? Vos messages chiffrés seront supprimés de ce navigateur. Vous les retrouverez avec votre code PIN de sauvegarde.",
   signOutWithoutKey:
-    "Se déconnecter ? Vos messages chiffrés seront supprimés de ce navigateur et, sans clé de récupération, vous ne pourrez plus les lire ici.",
+    "Se déconnecter ? Vos messages chiffrés seront supprimés de ce navigateur et, sans code PIN de sauvegarde, vous ne pourrez plus les lire ici.",
   creditsFrom: "Emoji animés issus de",
   creditsBy: "par Google, sous licence",
   creditsData: "Données emoji fournies par Emojibase.",
@@ -185,6 +195,8 @@ const fr: typeof en = {
   changePhoto: "Changer votre photo",
   displayName: "Nom affiché",
   removePhoto: "Supprimer la photo",
+  seenAs: (alias) =>
+    `Les autres vous voient comme ${alias}, sans photo, sauf si vous leur partagez votre profil depuis leur fiche contact.`,
 
   findMe: "Comment vous trouver",
   contactCode: "Votre code de contact",
@@ -266,34 +278,10 @@ const fr: typeof en = {
 
   encryption: "Chiffrement",
   e2ee: "Chiffrement de bout en bout",
-  recoveryKey: "Clé de récupération",
-  keyOnBrowser: "Votre clé de récupération est configurée sur ce navigateur. Les nouveaux messages sont sauvegardés avec elle.",
   keyOnAccount: "Saisissez votre clé de récupération pour lire vos anciens messages chiffrés sur ce navigateur.",
-  noKey: "Créez une clé de récupération pour pouvoir relire vos messages après une déconnexion ou sur un nouvel appareil.",
-  keyOnPhone:
-    "Votre clé de récupération est configurée. Les nouveaux messages sont sauvegardés pour qu'un nouveau téléphone puisse les lire.",
   keyOnAccountPhone: "Vous avez une clé de récupération. Saisissez-la ici pour lire les messages antérieurs à ce téléphone.",
-  noKeyPhone: "Sans clé de récupération, un nouveau téléphone ne pourra pas lire vos anciens messages chiffrés.",
   enterRecoveryKey: "Saisir la clé de récupération",
-  lostKey: "Perdue ? Créez-en une nouvelle",
-  createRecoveryKey: "Créer une clé de récupération",
-  createNewRecoveryKey: "Créer une nouvelle clé de récupération",
-  yourRecoveryKey: "Votre clé de récupération",
-  createIntro:
-    "Vous allez recevoir 24 mots. C'est le seul moyen de lire vos messages chiffrés après une déconnexion ou sur un nouvel appareil. Personne d'autre ne peut les récupérer pour vous, pas même nous.",
-  createIntroPhone:
-    "Vous verrez 24 mots une seule fois. Notez-les ou enregistrez-les dans un gestionnaire de mots de passe. Grâce à eux, un nouveau téléphone pourra lire vos messages chiffrés. Six Frites ne peut pas les récupérer pour vous.",
-  replaceWarning:
-    "Votre ancienne clé de récupération ne fonctionnera plus, et les sauvegardes faites avec elle ne pourront plus être ouvertes.",
-  replaceWarningPhone: "Votre ancienne clé de récupération ne fonctionnera plus et ses sauvegardes seront supprimées.",
-  couldNotCreateKey: "Impossible de créer une clé de récupération. Réessayez.",
-  showWords: "Afficher mes 24 mots",
-  creating: "Création…",
-  notNow: "Pas maintenant",
-  copyToPasswordManager: "Copier dans un gestionnaire de mots de passe",
-  savedWordsCheck: "J'ai noté ces mots en lieu sûr. Ils ne seront plus affichés.",
-  screenshotsBlocked: "Les captures d'écran sont bloquées dans Six Frites : notez ces mots.",
-  savedThem: "Je les ai notés",
+  lostKey: "Perdue ? Recommencez avec un code PIN",
   enterYourRecoveryKey: "Saisissez votre clé de récupération",
   restoreHint: "Tapez ou collez les 24 mots, séparés par des espaces.",
   restorePlaceholder: "24 mots, séparés par des espaces",
@@ -305,6 +293,35 @@ const fr: typeof en = {
   unlock: "Déverrouiller",
   unlockMessages: "Déverrouiller mes messages",
   checking: "Vérification…",
+  backupPin: {
+    title: "Sauvegarde des messages",
+    on: "Vos messages sont sauvegardés. Sur un nouvel appareil, votre code PIN à 6 chiffres les restaure.",
+    noPin: "Créez un code PIN à 6 chiffres pour relire vos messages après une déconnexion ou sur un nouvel appareil.",
+    locked: "Saisissez votre code PIN à 6 chiffres pour lire vos anciens messages sur cet appareil.",
+    create: "Créer un code PIN",
+    change: "Modifier le code PIN",
+    enter: "Saisir le code PIN",
+    forgot: "Code PIN oublié ?",
+    createTitle: "Créez votre code PIN de sauvegarde",
+    createHint:
+      "Choisissez 6 chiffres faciles à retenir. Vous les saisirez en vous connectant sur un nouvel appareil. Six Frites ne peut pas récupérer votre code PIN pour vous.",
+    changeTitle: "Modifier votre code PIN de sauvegarde",
+    restoreTitle: "Restaurez vos messages",
+    restoreHint:
+      "Cet appareil ne peut pas encore lire vos anciens messages. Saisissez votre code PIN de sauvegarde à 6 chiffres pour les restaurer.",
+    pin: "Code PIN",
+    again: "Le même code PIN",
+    mismatch: "Les codes PIN ne correspondent pas.",
+    newBackupWarning:
+      "Un nouveau code PIN sur cet appareil démarre une nouvelle sauvegarde : les messages de l'ancienne ne pourront plus être lus.",
+    restore: "Restaurer",
+    later: "Plus tard",
+    wrong: (left) =>
+      left
+        ? `Code PIN incorrect. Encore ${left} essai${left > 1 ? "s" : ""}.`
+        : "Code PIN incorrect. Votre sauvegarde est verrouillée : créez un nouveau code PIN.",
+    notSet: "Il n'y a plus de sauvegarde par code PIN. Créez un nouveau code PIN.",
+  },
   calculatingSafetyNumber: "Calcul du numéro de sécurité…",
   safetyNumber: "Numéro de sécurité",
   safetyNumberHint:
@@ -323,19 +340,23 @@ const fr: typeof en = {
   useColours: "Utiliser ces couleurs",
   appLock: {
     title: "Verrouillage de l'app",
-    onHint: "Six Frites demande votre code à l'ouverture et après 5 minutes d'absence, sur tous vos appareils.",
-    offHint: "Demandez un code à l'ouverture de Six Frites et après 5 minutes d'absence, sur tous vos appareils.",
-    set: "Définir un code",
-    change: "Modifier le code",
-    setTitle: "Verrouiller l'app",
-    changeTitle: "Modifier le code de verrouillage",
-    hint: "4 à 8 chiffres. Si vous l'oubliez, déconnectez-vous, reconnectez-vous avec Google et modifiez-le ici.",
+    onHint:
+      "Six Frites demande votre code de confidentialité à l'ouverture et après 5 minutes d'absence, sur tous vos appareils.",
+    offHint:
+      "Demandez votre code de confidentialité à l'ouverture de Six Frites et après 5 minutes d'absence, sur tous vos appareils.",
+    turnOn: "Activer",
+    turnOff: "Désactiver",
+    turnOnTitle: "Verrouiller l'app",
+    useCode:
+      "Saisissez votre code de confidentialité : il déverrouillera Six Frites. Si vous l'oubliez, déconnectez-vous, reconnectez-vous et désactivez le verrouillage ici.",
+    newCode:
+      "Choisissez un code de confidentialité de 4 à 8 chiffres. Il déverrouille Six Frites et affiche le vrai nom des contacts que vous avez renommés.",
     locked: "Six Frites est verrouillé",
-    enterCode: "Saisissez votre code de verrouillage.",
+    enterCode: "Saisissez votre code de confidentialité.",
     unlock: "Déverrouiller",
     forgot: "Code oublié ? Se déconnecter",
     errors: {
-      WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de verrouillage.",
+      WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de confidentialité.",
       RATE_LIMITED: "Trop de tentatives. Patientez une minute.",
       VALIDATION_FAILED: "Utilisez 4 à 8 chiffres.",
     },
@@ -347,9 +368,9 @@ const mg: typeof en = {
   messagesChannel: "Hafatra",
   signOut: "Hivoaka",
   signOutWithKey:
-    "Hivoaka? Hofafana amin'ity navigateur ity ny hafatrao voaaro. Azonao vakiana indray izy ireo amin'ny alalan'ny lakile famerenanao.",
+    "Hivoaka? Hofafana amin'ity navigateur ity ny hafatrao voaaro. Hamerina azy ireo ny kaody PIN fitahirizanao.",
   signOutWithoutKey:
-    "Hivoaka? Hofafana amin'ity navigateur ity ny hafatrao voaaro, ary raha tsy manana lakile famerenana ianao dia tsy ho voavakinao eto intsony izy ireo.",
+    "Hivoaka? Hofafana amin'ity navigateur ity ny hafatrao voaaro, ary raha tsy manana kaody PIN fitahirizana ianao dia tsy ho voavakinao eto intsony izy ireo.",
   creditsFrom: "Emoji mihetsika avy amin'ny",
   creditsBy: "an'i Google, manaraka ny fahazoan-dalana",
   creditsData: "Angona emoji avy amin'ny Emojibase.",
@@ -357,6 +378,8 @@ const mg: typeof en = {
   changePhoto: "Ovay ny sarinao",
   displayName: "Anarana aseho",
   removePhoto: "Esory ny sary",
+  seenAs: (alias) =>
+    `Hitan'ny hafa ho ${alias} ianao, tsy misy sary, raha tsy zarainao aminy ny mombamomba anao avy amin'ny pejiny.`,
 
   findMe: "Ahoana no ahitan'ny olona anao",
   contactCode: "Ny kaody mpifandray anao",
@@ -438,32 +461,10 @@ const mg: typeof en = {
 
   encryption: "Fiarovana",
   e2ee: "Fiarovana tanteraka (end-to-end)",
-  recoveryKey: "Lakile famerenana",
-  keyOnBrowser: "Efa voapetraka amin'ity navigateur ity ny lakile famerenanao. Voatahiry miaraka aminy ny hafatra vaovao.",
   keyOnAccount: "Ampidiro ny lakile famerenanao mba hamakiana ireo hafatra voaaro taloha amin'ity navigateur ity.",
-  noKey: "Mamorona lakile famerenana mba hahafahanao mamaky indray ny hafatrao rehefa avy nivoaka na amin'ny fitaovana vaovao.",
-  keyOnPhone: "Efa voapetraka ny lakile famerenanao. Voatahiry ny hafatra vaovao mba ho voavakin'ny finday vaovao.",
   keyOnAccountPhone: "Manana lakile famerenana ianao. Ampidiro eto izy mba hamakiana ireo hafatra talohan'ity finday ity.",
-  noKeyPhone: "Raha tsy misy lakile famerenana dia tsy ho voavakin'ny finday vaovao ireo hafatrao voaaro taloha.",
   enterRecoveryKey: "Ampidiro ny lakile famerenana",
-  lostKey: "Very? Mamorona vaovao",
-  createRecoveryKey: "Mamorona lakile famerenana",
-  createNewRecoveryKey: "Mamorona lakile famerenana vaovao",
-  yourRecoveryKey: "Ny lakile famerenanao",
-  createIntro:
-    "Teny 24 no homena anao. Izy ireo ihany no ahafahana mamaky ny hafatrao voaaro rehefa avy nivoaka ianao na amin'ny fitaovana vaovao. Tsy misy olon-kafa afaka mamerina azy ireo ho anao, na izahay aza.",
-  createIntroPhone:
-    "Indray mandeha monja no hahitanao teny 24. Soraty na tehirizo ao amin'ny mpitahiry tenimiafina izy ireo. Amin'izy ireo no ahafahan'ny finday vaovao mamaky ny hafatrao voaaro. Tsy afaka mamerina azy ireo ho anao ny Six Frites.",
-  replaceWarning: "Tsy hiasa intsony ny lakile famerenanao taloha, ary tsy ho voasokatra intsony ireo tahiry natao taminy.",
-  replaceWarningPhone: "Tsy hiasa intsony ny lakile famerenanao taloha ary hofafana ireo tahiriny.",
-  couldNotCreateKey: "Tsy voaforona ny lakile famerenana. Andramo indray.",
-  showWords: "Asehoy ireo teny 24",
-  creating: "Mamorona…",
-  notNow: "Aoka aloha",
-  copyToPasswordManager: "Adikao any amin'ny mpitahiry tenimiafina",
-  savedWordsCheck: "Voatahiriko tany amin'ny toerana azo antoka ireo teny ireo. Tsy haseho intsony izy ireo.",
-  screenshotsBlocked: "Voasakana ao amin'ny Six Frites ny fakana sary efijery, ka soraty ireo teny ireo.",
-  savedThem: "Voatahiriko izy ireo",
+  lostKey: "Very? Manomboka indray amin'ny kaody PIN",
   enterYourRecoveryKey: "Ampidiro ny lakile famerenanao",
   restoreHint: "Soraty na apetaho ireo teny 24, misaraka amin'ny elanelana.",
   restorePlaceholder: "Teny 24, misaraka amin'ny elanelana",
@@ -475,6 +476,33 @@ const mg: typeof en = {
   unlock: "Sokafy",
   unlockMessages: "Sokafy ny hafatro",
   checking: "Manamarina…",
+  backupPin: {
+    title: "Tahirin'ny hafatra",
+    on: "Voatahiry ny hafatrao. Amin'ny fitaovana vaovao, ny kaody PIN misy isa 6 no mamerina azy ireo.",
+    noPin: "Mamorona kaody PIN misy isa 6 mba hahafahanao mamaky indray ny hafatrao rehefa avy nivoaka na amin'ny fitaovana vaovao.",
+    locked: "Ampidiro ny kaody PIN misy isa 6 mba hamakiana ireo hafatrao taloha amin'ity fitaovana ity.",
+    create: "Mamorona kaody PIN",
+    change: "Ovay ny kaody PIN",
+    enter: "Ampidiro ny kaody PIN",
+    forgot: "Hadinonao ny kaody PIN?",
+    createTitle: "Mamorona ny kaody PIN fitahirizanao",
+    createHint:
+      "Mifidiana isa 6 tsy ho hadinoinao. Hampidirinao izy ireo rehefa miditra amin'ny fitaovana vaovao ianao. Tsy afaka mamerina ny kaody PIN-nao ho anao ny Six Frites.",
+    changeTitle: "Ovay ny kaody PIN fitahirizanao",
+    restoreTitle: "Avereno ny hafatrao",
+    restoreHint:
+      "Mbola tsy mahavaky ireo hafatrao taloha ity fitaovana ity. Ampidiro ny kaody PIN fitahirizanao misy isa 6 mba hamerenana azy ireo.",
+    pin: "Kaody PIN",
+    again: "Averina ny kaody PIN",
+    mismatch: "Tsy mitovy ireo kaody PIN.",
+    newBackupWarning:
+      "Manomboka tahiry vaovao ny kaody PIN vaovao amin'ity fitaovana ity: tsy ho voavaky intsony ireo hafatra tao amin'ny taloha.",
+    restore: "Avereno",
+    later: "Aoka aloha",
+    wrong: (left) =>
+      left ? `Diso ny kaody PIN. Andrana ${left} sisa.` : "Diso ny kaody PIN. Voahidy ny tahirinao: mamorona kaody PIN vaovao.",
+    notSet: "Tsy misy tahiry amin'ny kaody PIN intsony. Mamorona kaody PIN vaovao.",
+  },
   calculatingSafetyNumber: "Manisa ny laharana fiarovana…",
   safetyNumber: "Laharana fiarovana",
   safetyNumberHint:
@@ -493,19 +521,23 @@ const mg: typeof en = {
   useColours: "Ampiasao ireo loko ireo",
   appLock: {
     title: "Hidin'ny fampiharana",
-    onHint: "Angatahin'ny Six Frites ny kaodinao rehefa sokafana sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
-    offHint: "Mangataha kaody rehefa sokafana ny Six Frites sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
-    set: "Mametraha kaody",
-    change: "Ovay ny kaody",
-    setTitle: "Hidio ny fampiharana",
-    changeTitle: "Ovay ny kaody hidy",
-    hint: "Isa 4 ka hatramin'ny 8. Raha hadinonao izy, mivoaha, midira indray amin'ny Google ary ovay eto.",
+    onHint:
+      "Angatahin'ny Six Frites ny kaody fiarovanao rehefa sokafana sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
+    offHint:
+      "Mangataha ny kaody fiarovanao rehefa sokafana ny Six Frites sy aorian'ny 5 minitra tsy nampiasana azy, amin'ny fitaovanao rehetra.",
+    turnOn: "Alefaso",
+    turnOff: "Vonoy",
+    turnOnTitle: "Hidio ny fampiharana",
+    useCode:
+      "Ampidiro ny kaody fiarovanao: izy no hanokatra ny Six Frites. Raha hadinonao izy, mivoaha, midira indray ary vonoy eto ny hidy.",
+    newCode:
+      "Mifidiana kaody fiarovana misy isa 4 ka hatramin'ny 8. Izy no manokatra ny Six Frites sy mampiseho ny tena anaran'ny mpifandray novanao anarana.",
     locked: "Mihidy ny Six Frites",
-    enterCode: "Ampidiro ny kaody hidinao.",
+    enterCode: "Ampidiro ny kaody fiarovanao.",
     unlock: "Sokafy",
     forgot: "Hadinonao ny kaody? Hivoaka",
     errors: {
-      WRONG_APP_LOCK_CODE: "Tsy io no kaody hidinao.",
+      WRONG_APP_LOCK_CODE: "Tsy io no kaody fiarovanao.",
       RATE_LIMITED: "Be loatra ny andrana. Andraso iray minitra.",
       VALIDATION_FAILED: "Mampiasà isa 4 ka hatramin'ny 8.",
     },

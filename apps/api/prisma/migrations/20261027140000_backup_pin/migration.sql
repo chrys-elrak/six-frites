@@ -1,0 +1,3 @@
+ALTER TABLE "User" ADD COLUMN "backupPinHash" TEXT;
+ALTER TABLE "User" ADD COLUMN "backupWrapped" TEXT;
+ALTER TABLE "User" ADD COLUMN "backupPinTries" INTEGER NOT NULL DEFAULT 0;

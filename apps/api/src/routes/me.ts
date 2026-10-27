@@ -99,8 +99,9 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
       schema: {
         tags: ["me"],
-        summary: "Set the code the apps ask for when they open",
-        description: "4 to 8 digits. Replaces any code already set.",
+        summary: "Turn on the app lock",
+        description:
+          "The apps then ask for the privacy code when they open. Send it as `code` (WRONG_APP_LOCK_CODE if it doesn't match); with no privacy code yet, `code` becomes it.",
         security: [{ bearer: [] }],
         body: AppLockInput,
         response: { 200: UserDTO },
@@ -114,7 +115,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         tags: ["me"],
-        summary: "Remove the app lock",
+        summary: "Turn off the app lock",
         security: [{ bearer: [] }],
         response: { 200: UserDTO },
       },
@@ -128,8 +129,8 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
       schema: {
         tags: ["me"],
-        summary: "Check the app lock code",
-        description: "WRONG_APP_LOCK_CODE if it doesn't match. Always passes when no app lock is set.",
+        summary: "Check the privacy code to unlock the app",
+        description: "WRONG_APP_LOCK_CODE if it doesn't match. Always passes when the app lock is off.",
         security: [{ bearer: [] }],
         body: AppLockInput,
         response: { 204: z.null() },

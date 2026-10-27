@@ -1,16 +1,15 @@
 "use client";
 
-import { MessageCircle, Settings, Users } from "lucide-react";
+import { MessageCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import { isMuted } from "@six/shared";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
-export type Tab = "chats" | "contacts" | "settings";
+export type Tab = "chats" | "settings";
 
 const tabs = [
   { id: "chats", href: "/", Icon: MessageCircle },
-  { id: "contacts", href: "/contacts", Icon: Users },
   { id: "settings", href: "/settings", Icon: Settings },
 ] as const;
 
@@ -20,7 +19,7 @@ export function TabBar({ active }: { active: Tab }) {
   const unread = chats.data?.filter((c) => !isMuted(c) && c.unreadCount > 0).length ?? 0;
 
   return (
-    <nav className="grid shrink-0 grid-cols-3 border-t border-stone-200 bg-stone-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-stone-800 dark:bg-stone-950/95">
+    <nav className="grid shrink-0 grid-cols-2 border-t md:px-[max(0px,calc(50%-8rem))] border-stone-200 bg-stone-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-stone-800 dark:bg-stone-950/95">
       {tabs.map(({ id, href, Icon }) => {
         const on = active === id;
         return (

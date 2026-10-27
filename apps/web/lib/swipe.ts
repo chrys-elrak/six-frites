@@ -5,11 +5,12 @@ import { useRef } from "react";
 const TRIGGER = 64;
 
 /**
- * Drag a row to the right with a finger to fire `onSwipe`, like replying in Messenger. Vertical drags are left
- * to the scroller, so the row needs `touch-action: pan-y`. Moves `moving` and fades in `hint` straight through
- * the DOM so a long chat doesn't re-render on every finger move.
+ * Drag a row toward the middle with a finger to fire `onSwipe`, like replying in Messenger: right for their
+ * messages, left (`dir` -1) for yours. Vertical drags are left to the scroller, so the row needs
+ * `touch-action: pan-y`. Moves `moving` and fades in `hint` straight through the DOM so a long chat doesn't
+ * re-render on every finger move.
  */
-export function useSwipeRight(onSwipe: (() => void) | null) {
+export function useSwipe(onSwipe: (() => void) | null, dir: 1 | -1) {
   const moving = useRef<HTMLDivElement>(null);
   const hint = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
@@ -21,7 +22,7 @@ export function useSwipeRight(onSwipe: (() => void) | null) {
     const transition = animate ? "transform 200ms, opacity 200ms" : "none";
     if (moving.current) {
       moving.current.style.transition = transition;
-      moving.current.style.transform = x ? `translateX(${x}px)` : "";
+      moving.current.style.transform = x ? `translateX(${x * dir}px)` : "";
     }
     if (hint.current) {
       const shown = Math.min(x / TRIGGER, 1);
@@ -47,7 +48,7 @@ export function useSwipeRight(onSwipe: (() => void) | null) {
       onPointerMove: (e: React.PointerEvent) => {
         const s = start.current;
         if (!s) return;
-        const x = e.clientX - s.x;
+        const x = (e.clientX - s.x) * dir;
         const y = e.clientY - s.y;
         if (!dragging.current) {
           if (Math.hypot(x, y) < 10) return;

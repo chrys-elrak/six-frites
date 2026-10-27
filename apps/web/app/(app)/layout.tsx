@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LockScreen } from "@/components/app-lock";
 import { ChatList } from "@/components/chat-list";
-import { ContactList } from "@/components/contact-list";
 import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
 import { type Tab, TabBar } from "@/components/tab-bar";
@@ -19,13 +18,13 @@ import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { CallScreen } from "@/components/call-screen";
+import { BackupPinPrompt } from "@/components/encryption-settings";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
 const tabRoutes: Record<string, Tab> = {
   "/": "chats",
   "/archived": "chats",
-  "/contacts": "contacts",
   "/settings": "settings",
 };
 
@@ -75,6 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const topLevel = tabRoutes[pathname];
   const tab = topLevel ?? "chats";
+  const wide = tab === "settings";
 
   return (
     <RealtimeProvider>
@@ -88,20 +88,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex md:w-80 md:shrink-0 md:border-r lg:w-96 dark:border-stone-800`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex ${wide ? "md:flex-1" : "md:w-80 md:shrink-0 md:border-r lg:w-96"} dark:border-stone-800`}
           >
             <div className="min-h-0 flex-1">
               {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
-              {tab === "contacts" && <ContactList />}
               {tab === "settings" && <SettingsPanel />}
             </div>
-            <TabBar active={tab} />
           </aside>
-          <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col md:flex`}>{children}</section>
+          <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col ${wide ? "" : "md:flex"}`}>
+            {children}
+          </section>
+        </div>
+        <div className={`${topLevel ? "" : "hidden"} md:block`}>
+          <TabBar active={tab} />
         </div>
       </div>
       {!locked && <Toasts />}
       {!locked && <UpdatePrompt />}
+      {!locked && <BackupPinPrompt />}
       <CallScreen />
       <UnreadTitle />
       {locked && <LockScreen />}

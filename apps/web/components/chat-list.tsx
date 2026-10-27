@@ -1,7 +1,21 @@
 "use client";
 
-import { type ChatDTO, isMuted, maskSpoilers, serviceText } from "@six/shared";
-import { Archive, Ban, BellOff, ChevronLeft, EyeOff, Flame, Lock, MessageCircle, MoreHorizontal, Pin } from "lucide-react";
+import { type ChatDTO, isMuted, maskSpoilers, serviceText, shownType } from "@six/shared";
+import {
+  Archive,
+  Ban,
+  BellOff,
+  ChevronLeft,
+  EyeOff,
+  Flame,
+  Lock,
+  MessageCircle,
+  MoreHorizontal,
+  Pin,
+  Search,
+  Share2,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,8 +28,10 @@ import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
+import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
+import { NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
 import { ServiceIcon, callLabel } from "./service-icon";
 
@@ -62,7 +78,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
       <span className="inline-flex max-w-full items-center gap-1">
         {m.senderId === meId && tr.chats.youPrefix}
         {m.sticker?.emoji}
-        <MediaLabel type={m.type} />
+        <MediaLabel type={shownType(m as Hydrated)} />
         {voiceLength}
         {m.type === "file" && m.attachment && !m.text && <span className="truncate">· {m.attachment.name}</span>}
         {m.text && <span className="truncate">· {maskSpoilers(m.text, m.entities)}</span>}
@@ -174,13 +190,16 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
     live: null,
   }[status];
 
-  const visible = chats.data?.filter((c) => c.lastMessage !== null) ?? [];
-  const archivedCount = archivedChats.data?.filter((c) => c.lastMessage !== null).length ?? 0;
+  const [query, setQuery] = useState("");
+  const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
+  const needle = query.trim().toLowerCase();
+  const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
+  const archivedCount = archivedChats.data?.length ?? 0;
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800">
+      <header className="flex flex-wrap items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800">
         {archived && (
           <Link
             href="/"
@@ -194,10 +213,42 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           <h1 className="text-xl font-semibold tracking-tight">{archived ? tr.common.archived : tr.common.chats}</h1>
           {statusText && <p className="text-xs text-stone-500">{statusText}</p>}
         </div>
+        {!archived && (
+          <>
+            <button
+              onClick={() => setDialog("invite")}
+              aria-label={tr.contacts.inviteFriend}
+              title={tr.contacts.inviteFriend}
+              className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+            >
+              <Share2 className="size-5" />
+            </button>
+            <button
+              onClick={() => setDialog("add")}
+              aria-label={tr.contacts.addContact}
+              title={tr.contacts.addContact}
+              className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+            >
+              <UserPlus className="size-5" />
+            </button>
+          </>
+        )}
+        <label className="flex w-full items-center gap-2 rounded-xl bg-stone-200/70 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-800">
+          <Search className="size-4 shrink-0" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={tr.contacts.search}
+            aria-label={tr.contacts.search}
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-stone-900 outline-none placeholder:text-stone-500 md:text-sm dark:text-stone-100"
+          />
+        </label>
       </header>
+      {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
+      {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        {!archived && archivedCount > 0 && (
+        {!archived && !needle && archivedCount > 0 && (
           <Link
             href="/archived"
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-900"
@@ -211,7 +262,10 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         )}
         {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
         {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
-        {chats.isSuccess && visible.length === 0 && (archived || archivedCount === 0) && (
+        {chats.isSuccess && needle && visible.length === 0 && (
+          <p className="p-8 text-center text-sm text-stone-500">{tr.contacts.noMatch(query.trim())}</p>
+        )}
+        {chats.isSuccess && !needle && visible.length === 0 && (archived || archivedCount === 0) && (
           <div className="flex flex-col items-center gap-3 p-8 text-center">
             <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
               {archived ? (
@@ -224,12 +278,12 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             {!archived && (
               <>
                 <p className="text-sm text-stone-500">{tr.chats.noChatsHint}</p>
-                <Link
-                  href="/contacts"
+                <button
+                  onClick={() => setDialog("add")}
                   className="rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-stone-100 dark:text-stone-900"
                 >
-                  {tr.chats.openContacts}
-                </Link>
+                  {tr.contacts.addContact}
+                </button>
               </>
             )}
           </div>

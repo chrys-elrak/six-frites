@@ -13,7 +13,7 @@ import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
 import { scrubMessageEvents } from "./messages.js";
 import { purgeUploads } from "./uploads.js";
-import { avatarOf, checkContactPin } from "./users.js";
+import { avatarOf, checkContactPin, toPublicUser } from "./users.js";
 
 interface Override {
   displayName: string | null;
@@ -22,17 +22,30 @@ interface Override {
 
 const photoUrl = (o: Override) => (o.photoKey ? presignGet(o.photoKey) : null);
 
-export function applyOverride(user: PublicUser, o: Override | undefined): PublicUser {
+function applyOverride(user: PublicUser, o: Override | undefined): PublicUser {
   if (!o) return user;
   return { ...user, displayName: o.displayName ?? user.displayName, avatarUrl: photoUrl(o) ?? user.avatarUrl };
 }
 
-/** The custom names and photos `ownerId` has given to these users. */
-export async function loadOverrides(db: Tx, ownerId: string, userIds: string[]) {
-  const rows = userIds.length
-    ? await db.contactOverride.findMany({ where: { ownerId, contactId: { in: userIds } } })
+/**
+ * How `viewerId` sees these users: their alias and no photo unless they share their profile with
+ * the viewer, and the name and photo the viewer gave them on top of that.
+ */
+export async function profilesFor(db: Tx, viewerId: string, userIds: string[]) {
+  const others = userIds.filter((id) => id !== viewerId);
+  const overrides = others.length
+    ? await db.contactOverride.findMany({ where: { ownerId: viewerId, contactId: { in: others } } })
     : [];
-  return new Map<string, Override>(rows.map((r) => [r.contactId, r]));
+  const sharing = others.length
+    ? await db.chatMember.findMany({
+        where: { userId: { in: others }, showProfile: true, chat: { members: { some: { userId: viewerId } } } },
+        select: { userId: true },
+      })
+    : [];
+  const byId = new Map<string, Override>(overrides.map((o) => [o.contactId, o]));
+  const shared = new Set(sharing.map((m) => m.userId));
+  return (u: Parameters<typeof toPublicUser>[0]) =>
+    applyOverride(toPublicUser(u, u.id === viewerId || shared.has(u.id)), byId.get(u.id));
 }
 
 function encodeCursor(name: string, id: string) {
@@ -55,6 +68,7 @@ interface ContactRow {
   avatarKey: string | null;
   customName: string | null;
   photoKey: string | null;
+  sharingProfile: boolean;
   name: string;
 }
 
@@ -66,6 +80,7 @@ function toContactDTO(r: ContactRow): ContactDTO {
     originalName: r.customName === null ? r.originalName : null,
     customName: r.customName,
     hasCustomPhoto: r.photoKey !== null,
+    sharingProfile: r.sharingProfile,
   };
 }
 
@@ -74,9 +89,12 @@ const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
   return prisma.$queryRaw<ContactRow[]>`
     SELECT * FROM (
-      SELECT cm."chatId", u.id, u."displayName" AS "originalName", u."avatarUrl", u."avatarKey",
-             o."displayName" AS "customName", o."photoKey",
-             COALESCE(o."displayName", u."displayName") AS name
+      SELECT cm."chatId", u.id,
+             CASE WHEN cm."showProfile" THEN u."displayName" ELSE u.alias END AS "originalName",
+             CASE WHEN cm."showProfile" THEN u."avatarUrl" END AS "avatarUrl",
+             CASE WHEN cm."showProfile" THEN u."avatarKey" END AS "avatarKey",
+             o."displayName" AS "customName", o."photoKey", me."showProfile" AS "sharingProfile",
+             COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE u.alias END) AS name
       FROM "ChatMember" cm
       JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct'
       JOIN "ChatMember" me ON me."chatId" = cm."chatId" AND me."userId" = ${userId}
@@ -169,6 +187,16 @@ export async function updateContact(ownerId: string, contactId: string, input: U
     await deleteObjects([previousKey]).catch(() => null);
   }
   return toContactDTO(await getContact(ownerId, contactId));
+}
+
+/** Shows or hides the user's real name and photo to a contact, who otherwise sees their alias. */
+export async function shareProfile(userId: string, contactId: string, shared: boolean) {
+  const { chatId } = await getContact(userId, contactId);
+  await withEvents(async (tx, emit) => {
+    await tx.chatMember.update({ where: { chatId_userId: { chatId, userId } }, data: { showProfile: shared } });
+    for (const id of [userId, contactId]) emit(id, "chat.updated", await getChat(id, chatId, tx));
+  });
+  return toContactDTO(await getContact(userId, contactId));
 }
 
 /**

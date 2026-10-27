@@ -12,7 +12,7 @@ import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { ensureDirectChat } from "./chats.js";
-import { applyOverride, loadOverrides } from "./contacts.js";
+import { profilesFor } from "./contacts.js";
 import { toPublicUser } from "./users.js";
 
 export function normalizeCode(code: string) {
@@ -70,7 +70,7 @@ export async function previewInvite(code: string): Promise<InvitePreview> {
   if (!invite) throw new AppError("INVITE_NOT_FOUND");
   return {
     code: invite.code,
-    inviter: toPublicUser(invite.creator),
+    inviter: toPublicUser(invite.creator, false),
     message: invite.message,
     status: inviteStatus(invite),
   };
@@ -111,12 +111,14 @@ export async function acceptInvite(userId: string, code: string) {
     where: { refereeId: userId },
     include: { referrer: true, invite: { select: { code: true } } },
   });
-  if (existing?.invite.code === normalizeCode(code)) return { referrer: toPublicUser(existing.referrer) };
+  if (existing?.invite.code === normalizeCode(code)) {
+    return { referrer: (await profilesFor(prisma, userId, [existing.referrerId]))(existing.referrer) };
+  }
 
   return withEvents(async (tx, emit) => {
     const invite = await usableInvite(tx, code, userId);
     await ensureDirectChat(tx, emit, invite.creatorId, userId);
-    return { referrer: toPublicUser(invite.creator) };
+    return { referrer: (await profilesFor(tx, userId, [invite.creatorId]))(invite.creator) };
   });
 }
 
@@ -126,10 +128,10 @@ export async function listReferrals(userId: string, q: PageQuery) {
     include: { referee: true, invite: { select: { code: true } } },
     ...pageArgs(q),
   });
-  const overrides = await loadOverrides(prisma, userId, rows.map((r) => r.refereeId));
+  const shown = await profilesFor(prisma, userId, rows.map((r) => r.refereeId));
   return toPage(rows, q, (r) => ({
     id: r.id,
-    user: applyOverride(toPublicUser(r.referee), overrides.get(r.refereeId)),
+    user: shown(r.referee),
     inviteCode: r.invite.code,
     createdAt: r.createdAt.toISOString(),
   }));
