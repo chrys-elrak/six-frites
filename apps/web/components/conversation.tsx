@@ -224,8 +224,8 @@ export function Conversation({ chatId }: { chatId: string }) {
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         <ChatBackground themeId={c.theme} />
-        <BubbleColors themeId={c.theme} scope="chat-bubbles" />
-        <div className="chat-bubbles relative flex min-h-0 flex-1 flex-col">
+        <BubbleColors themeId={c.theme} scope="chat-colors" />
+        <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
           <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
         </div>
       </div>
@@ -249,12 +249,14 @@ export function Conversation({ chatId }: { chatId: string }) {
       )}
       {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
       {!selecting && !frozen && (
-        <Composer
-          chatId={chatId}
-          nameOf={nameOf}
-          scheduledCount={c.scheduledCount}
-          onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
-        />
+        <div className="chat-colors contents">
+          <Composer
+            chatId={chatId}
+            nameOf={nameOf}
+            scheduledCount={c.scheduledCount}
+            onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
+          />
+        </div>
       )}
 
       {menu && (
