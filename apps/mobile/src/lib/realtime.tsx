@@ -54,7 +54,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
         ...c,
         lastMessage: m,
         lastActivityAt: m.createdAt,
-        unreadCount: m.senderId === meId ? c.unreadCount : c.unreadCount + 1,
+        unreadCount: m.senderId === meId ? 0 : c.unreadCount + 1,
       }));
       if (!found) void qc.invalidateQueries({ queryKey: chatKeys.lists });
       break;
