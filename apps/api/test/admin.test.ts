@@ -209,3 +209,24 @@ describe("storage", () => {
     expect(stats.gifCacheBytes).toBeGreaterThanOrEqual(500);
   });
 });
+
+describe("ads", () => {
+  it("can be turned off for some people and back on", async () => {
+    const a = await signUp("ads-a");
+    const b = await signUp("ads-b");
+    expect((await get(a, "/v1/me")).ads).toBe(true);
+    expect((await call(a, "POST", "/v1/admin/users/ads", { userIds: [b.user.id], ads: false })).statusCode).toBe(403);
+
+    const boss = await admin();
+    const off = await call(boss, "POST", "/v1/admin/users/ads", { userIds: [a.user.id, b.user.id], ads: false });
+    expect(off.statusCode, off.body).toBe(204);
+    expect((await get(a, "/v1/me")).ads).toBe(false);
+    expect((await get(boss, `/v1/admin/users/${b.user.id}`)).ads).toBe(false);
+    const event = await prisma.changeEvent.findFirst({ where: { userId: a.user.id, type: "me.updated" }, orderBy: { id: "desc" } });
+    expect(event?.payload).toMatchObject({ ads: false });
+
+    await call(boss, "POST", "/v1/admin/users/ads", { userIds: [b.user.id], ads: true });
+    expect((await get(b, "/v1/me")).ads).toBe(true);
+    expect((await get(a, "/v1/me")).ads).toBe(false);
+  });
+});

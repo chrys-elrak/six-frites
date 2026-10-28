@@ -15,6 +15,7 @@ import {
   InviteLimitInput,
   ReportDTO,
   ResolveReportInput,
+  SetAdsInput,
   StickerDTO,
   page,
 } from "@six/shared";
@@ -28,6 +29,7 @@ import {
   getUser,
   listStickerPacks,
   listUsers,
+  setAds,
   setInviteLimit,
   signOutEverywhere,
   unbanUser,
@@ -141,6 +143,23 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setInviteLimit(req.params.id, req.body.limit),
+  );
+
+  app.post(
+    "/admin/users/ads",
+    {
+      schema: {
+        tags,
+        summary: "Turn ads on or off for some users",
+        security,
+        body: SetAdsInput,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await setAds(req.body.userIds, req.body.ads);
+      return reply.status(204).send(null);
+    },
   );
 
   app.post(

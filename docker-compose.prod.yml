@@ -82,6 +82,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://${DOMAIN:?set DOMAIN in .env}
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:?set GOOGLE_WEB_CLIENT_ID in .env}
+        NEXT_PUBLIC_ADSENSE_CLIENT: ${ADSENSE_CLIENT:-}
+        NEXT_PUBLIC_ADSENSE_SLOT: ${ADSENSE_SLOT:-}
     command: sh -c "npx prisma migrate deploy && exec npx tsx src/server.ts"
     networks:
       default:

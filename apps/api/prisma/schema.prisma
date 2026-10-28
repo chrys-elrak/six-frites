@@ -29,6 +29,7 @@ model User {
   appLockHash    String?
   inviteLimit    Int       @default(10)
   queuedAt       DateTime?
+  adsDisabled    Boolean   @default(false)
 
   sessions       Session[]
   invites        Invite[]

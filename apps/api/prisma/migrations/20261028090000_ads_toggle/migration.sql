@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "adsDisabled" BOOLEAN NOT NULL DEFAULT false;

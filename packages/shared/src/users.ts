@@ -15,6 +15,7 @@ export const UserDTO = z.object({
   alias: z.string().describe("What people see instead of your name and photo, until you share them"),
   hasBackupPin: z.boolean().describe("Whether a new device can restore your backup with your 6-digit PIN"),
   hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
+  ads: z.boolean().describe("Whether the apps show you ads; admins can turn them off for you"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;

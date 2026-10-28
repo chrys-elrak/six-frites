@@ -144,7 +144,7 @@ function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void 
   );
 }
 
-function UserRow({ u }: { u: AdminUserDTO }) {
+function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; onCheck: (on: boolean) => void }) {
   const qc = useQueryClient();
   const [banning, setBanning] = useState(false);
   const [limiting, setLimiting] = useState(false);
@@ -157,6 +157,13 @@ function UserRow({ u }: { u: AdminUserDTO }) {
 
   return (
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onCheck(e.target.checked)}
+        aria-label={`Select ${u.displayName}`}
+        className="size-4 accent-brand"
+      />
       <Avatar user={u} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
@@ -164,6 +171,7 @@ function UserRow({ u }: { u: AdminUserDTO }) {
           {u.admin && <span className="ml-1.5 text-xs text-brand">Admin</span>}
           {u.bannedAt && <span className="ml-1.5 text-xs text-red-600 dark:text-red-400">Banned</span>}
           {u.queued && <span className="ml-1.5 text-xs text-amber-600 dark:text-amber-400">Waiting</span>}
+          {!u.ads && <span className="ml-1.5 text-xs text-emerald-600 dark:text-emerald-400">No ads</span>}
         </p>
         <p className="truncate text-xs text-stone-500">{u.email}</p>
         <p className="text-xs text-stone-500">
@@ -237,6 +245,8 @@ function UserRow({ u }: { u: AdminUserDTO }) {
 }
 
 export function Users() {
+  const qc = useQueryClient();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "banned">("all");
@@ -266,6 +276,21 @@ export function Users() {
   });
   const items = users.data?.pages.flatMap((p) => p.items) ?? [];
 
+  function check(id: string, on: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  async function setAds(ads: boolean) {
+    unwrap(await six.api.POST("/v1/admin/users/ads", { body: { userIds: [...selected], ads } }));
+    setSelected(new Set());
+    refreshAdmin(qc);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -288,13 +313,39 @@ export function Users() {
           ]}
         />
       </div>
+      {selected.size > 0 && (
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-2xl bg-white px-4 py-2.5 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+          <span className="flex-1 text-sm font-medium">{selected.size} selected</span>
+          <button
+            type="button"
+            onClick={() => void setAds(false)}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
+          >
+            Turn ads off
+          </button>
+          <button
+            type="button"
+            onClick={() => void setAds(true)}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
+          >
+            Turn ads on
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-stone-100 dark:hover:bg-stone-800"
+          >
+            Clear
+          </button>
+        </div>
+      )}
       <ul className="divide-y divide-stone-100 rounded-2xl bg-white shadow-sm ring-1 ring-stone-200 dark:divide-stone-800 dark:bg-stone-900 dark:ring-stone-800">
         {users.isPending && <li className="p-6 text-center text-sm text-stone-500">Loading…</li>}
         {!users.isPending && items.length === 0 && (
           <li className="p-6 text-center text-sm text-stone-500">Nobody matches.</li>
         )}
         {items.map((u) => (
-          <UserRow key={u.id} u={u} />
+          <UserRow key={u.id} u={u} checked={selected.has(u.id)} onCheck={(on) => check(u.id, on)} />
         ))}
       </ul>
       {users.hasNextPage && (

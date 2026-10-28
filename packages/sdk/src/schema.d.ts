@@ -66,6 +66,8 @@ export interface paths {
                                 hasBackupPin: boolean;
                                 /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
+                                /** @description Whether the apps show you ads; admins can turn them off for you */
+                                ads: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -136,6 +138,8 @@ export interface paths {
                                 hasBackupPin: boolean;
                                 /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
+                                /** @description Whether the apps show you ads; admins can turn them off for you */
+                                ads: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -349,6 +353,8 @@ export interface paths {
                                 invited: number;
                                 /** @description People waiting for them to get a higher limit */
                                 waiting: number;
+                                /** @description Whether they see ads */
+                                ads: boolean;
                             }[];
                             nextCursor: string | null;
                         };
@@ -417,6 +423,8 @@ export interface paths {
                             invited: number;
                             /** @description People waiting for them to get a higher limit */
                             waiting: number;
+                            /** @description Whether they see ads */
+                            ads: boolean;
                         };
                     };
                 };
@@ -494,6 +502,8 @@ export interface paths {
                             invited: number;
                             /** @description People waiting for them to get a higher limit */
                             waiting: number;
+                            /** @description Whether they see ads */
+                            ads: boolean;
                         };
                     };
                 };
@@ -560,6 +570,8 @@ export interface paths {
                             invited: number;
                             /** @description People waiting for them to get a higher limit */
                             waiting: number;
+                            /** @description Whether they see ads */
+                            ads: boolean;
                         };
                     };
                 };
@@ -635,7 +647,52 @@ export interface paths {
                             invited: number;
                             /** @description People waiting for them to get a higher limit */
                             waiting: number;
+                            /** @description Whether they see ads */
+                            ads: boolean;
                         };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/ads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn ads on or off for some users */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        userIds: string[];
+                        ads: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
                     };
                 };
             };
@@ -701,6 +758,8 @@ export interface paths {
                             invited: number;
                             /** @description People waiting for them to get a higher limit */
                             waiting: number;
+                            /** @description Whether they see ads */
+                            ads: boolean;
                         };
                     };
                 };
@@ -1450,6 +1509,8 @@ export interface paths {
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1538,6 +1599,8 @@ export interface paths {
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1592,6 +1655,8 @@ export interface paths {
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1781,6 +1846,8 @@ export interface paths {
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1822,6 +1889,8 @@ export interface paths {
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -7124,6 +7193,8 @@ export interface paths {
                                     hasBackupPin: boolean;
                                     /** @description Whether the apps ask for your app lock code when they open */
                                     hasAppLock: boolean;
+                                    /** @description Whether the apps show you ads; admins can turn them off for you */
+                                    ads: boolean;
                                     /** Format: date-time */
                                     createdAt: string;
                                 };
@@ -7591,6 +7662,8 @@ export interface paths {
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -7702,6 +7775,8 @@ export interface paths {
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };

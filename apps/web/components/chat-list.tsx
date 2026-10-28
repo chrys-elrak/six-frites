@@ -28,6 +28,7 @@ import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
+import { AdBanner } from "./ad-banner";
 import { useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
@@ -303,6 +304,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} />
         ))}
       </div>
+      <AdBanner />
     </div>
   );
 }

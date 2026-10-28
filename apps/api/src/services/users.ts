@@ -30,6 +30,7 @@ export function toUserDTO(u: User): UserDTO {
     alias: u.alias,
     hasBackupPin: u.backupPinHash !== null,
     hasAppLock: u.appLockHash !== null,
+    ads: !u.adsDisabled,
     createdAt: u.createdAt.toISOString(),
   };
 }

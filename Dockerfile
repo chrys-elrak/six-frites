@@ -20,5 +20,7 @@ RUN cd apps/api && DATABASE_URL=postgresql://build@localhost/build npx prisma ge
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_ADSENSE_CLIENT
+ARG NEXT_PUBLIC_ADSENSE_SLOT
 ENV NODE_ENV=production
 RUN npm run build -w @six/web

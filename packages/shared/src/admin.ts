@@ -40,6 +40,7 @@ export const AdminUserDTO = AdminUserRef.extend({
   inviteLimit: z.number().int(),
   invited: z.number().int().describe("People who joined with their links"),
   waiting: z.number().int().describe("People waiting for them to get a higher limit"),
+  ads: z.boolean().describe("Whether they see ads"),
 });
 export type AdminUserDTO = z.infer<typeof AdminUserDTO>;
 
@@ -96,6 +97,9 @@ export type AdminUserQuery = z.infer<typeof AdminUserQuery>;
 
 export const InviteLimitInput = z.object({ limit: z.number().int().min(0).max(100_000) });
 export type InviteLimitInput = z.infer<typeof InviteLimitInput>;
+
+export const SetAdsInput = z.object({ userIds: z.array(Id).min(1).max(100), ads: z.boolean() });
+export type SetAdsInput = z.infer<typeof SetAdsInput>;
 
 export const BanUserInput = z.object({ reason: z.string().trim().min(1).max(500) });
 export type BanUserInput = z.infer<typeof BanUserInput>;

@@ -9,6 +9,7 @@ import {
   type CreateStickerPackInput,
 } from "@six/shared";
 import type { Prisma } from "../generated/prisma/client.js";
+import { withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { isAdminEmail } from "../plugins/auth.js";
@@ -16,6 +17,7 @@ import { admitQueued, invitesOf } from "./referrals.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
 import { SEEDED_PREFIX, attachSticker, isSeededPack, toStickerDTO } from "./stickers.js";
+import { toUserDTO } from "./users.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -44,6 +46,7 @@ function toAdminUser(u: UserRow, storageBytes: number, invites: { invited: numbe
     queued: u.queuedAt !== null,
     inviteLimit: u.inviteLimit,
     ...invites,
+    ads: !u.adsDisabled,
   };
 }
 
@@ -115,6 +118,14 @@ export async function setInviteLimit(userId: string, limit: number) {
   });
   await admitQueued(userId);
   return getUser(userId);
+}
+
+/** Turns ads on or off for these people; their open apps pick it up at once. */
+export async function setAds(userIds: string[], ads: boolean) {
+  await withEvents(async (tx, emit) => {
+    await tx.user.updateMany({ where: { id: { in: userIds } }, data: { adsDisabled: !ads } });
+    for (const u of await tx.user.findMany({ where: { id: { in: userIds } } })) emit(u.id, "me.updated", toUserDTO(u));
+  });
 }
 
 const packInclude = {

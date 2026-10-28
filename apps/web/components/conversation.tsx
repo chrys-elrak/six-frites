@@ -17,6 +17,7 @@ import { sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
+import { AdBanner } from "./ad-banner";
 import { Avatar } from "./avatar";
 import { BubbleColors, ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
@@ -232,6 +233,7 @@ export function Conversation({ chatId }: { chatId: string }) {
               <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
             </div>
           </div>
+          {!selecting && <AdBanner />}
           {!selecting && keysChanged && (
             <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
               <ShieldAlert className="size-4 shrink-0" />

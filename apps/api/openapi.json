@@ -126,6 +126,10 @@
                           "type": "boolean",
                           "description": "Whether the apps ask for your app lock code when they open"
                         },
+                        "ads": {
+                          "type": "boolean",
+                          "description": "Whether the apps show you ads; admins can turn them off for you"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -142,6 +146,7 @@
                         "alias",
                         "hasBackupPin",
                         "hasAppLock",
+                        "ads",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -244,6 +249,10 @@
                           "type": "boolean",
                           "description": "Whether the apps ask for your app lock code when they open"
                         },
+                        "ads": {
+                          "type": "boolean",
+                          "description": "Whether the apps show you ads; admins can turn them off for you"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -260,6 +269,7 @@
                         "alias",
                         "hasBackupPin",
                         "hasAppLock",
+                        "ads",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -660,6 +670,10 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991,
                             "description": "People waiting for them to get a higher limit"
+                          },
+                          "ads": {
+                            "type": "boolean",
+                            "description": "Whether they see ads"
                           }
                         },
                         "required": [
@@ -680,7 +694,8 @@
                           "queued",
                           "inviteLimit",
                           "invited",
-                          "waiting"
+                          "waiting",
+                          "ads"
                         ],
                         "additionalProperties": false
                       }
@@ -818,6 +833,10 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "People waiting for them to get a higher limit"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether they see ads"
                     }
                   },
                   "required": [
@@ -838,7 +857,8 @@
                     "queued",
                     "inviteLimit",
                     "invited",
-                    "waiting"
+                    "waiting",
+                    "ads"
                   ],
                   "additionalProperties": false
                 }
@@ -985,6 +1005,10 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "People waiting for them to get a higher limit"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether they see ads"
                     }
                   },
                   "required": [
@@ -1005,7 +1029,8 @@
                     "queued",
                     "inviteLimit",
                     "invited",
-                    "waiting"
+                    "waiting",
+                    "ads"
                   ],
                   "additionalProperties": false
                 }
@@ -1131,6 +1156,10 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "People waiting for them to get a higher limit"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether they see ads"
                     }
                   },
                   "required": [
@@ -1151,7 +1180,8 @@
                     "queued",
                     "inviteLimit",
                     "invited",
-                    "waiting"
+                    "waiting",
+                    "ads"
                   ],
                   "additionalProperties": false
                 }
@@ -1298,6 +1328,10 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "People waiting for them to get a higher limit"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether they see ads"
                     }
                   },
                   "required": [
@@ -1318,9 +1352,67 @@
                     "queued",
                     "inviteLimit",
                     "invited",
-                    "waiting"
+                    "waiting",
+                    "ads"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/ads": {
+      "post": {
+        "summary": "Turn ads on or off for some users",
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userIds": {
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "ads": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "userIds",
+                  "ads"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -1444,6 +1536,10 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "People waiting for them to get a higher limit"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether they see ads"
                     }
                   },
                   "required": [
@@ -1464,7 +1560,8 @@
                     "queued",
                     "inviteLimit",
                     "invited",
-                    "waiting"
+                    "waiting",
+                    "ads"
                   ],
                   "additionalProperties": false
                 }
@@ -3111,6 +3208,10 @@
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
                     },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3127,6 +3228,7 @@
                     "alias",
                     "hasBackupPin",
                     "hasAppLock",
+                    "ads",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3220,6 +3322,10 @@
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
                     },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3236,6 +3342,7 @@
                     "alias",
                     "hasBackupPin",
                     "hasAppLock",
+                    "ads",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3354,6 +3461,10 @@
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
                     },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3370,6 +3481,7 @@
                     "alias",
                     "hasBackupPin",
                     "hasAppLock",
+                    "ads",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3628,6 +3740,10 @@
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
                     },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3644,6 +3760,7 @@
                     "alias",
                     "hasBackupPin",
                     "hasAppLock",
+                    "ads",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3709,6 +3826,10 @@
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
                     },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3725,6 +3846,7 @@
                     "alias",
                     "hasBackupPin",
                     "hasAppLock",
+                    "ads",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -20659,6 +20781,10 @@
                                     "type": "boolean",
                                     "description": "Whether the apps ask for your app lock code when they open"
                                   },
+                                  "ads": {
+                                    "type": "boolean",
+                                    "description": "Whether the apps show you ads; admins can turn them off for you"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -20675,6 +20801,7 @@
                                   "alias",
                                   "hasBackupPin",
                                   "hasAppLock",
+                                  "ads",
                                   "createdAt"
                                 ],
                                 "additionalProperties": false
@@ -21585,6 +21712,10 @@
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
                     },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -21601,6 +21732,7 @@
                     "alias",
                     "hasBackupPin",
                     "hasAppLock",
+                    "ads",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -21739,6 +21871,10 @@
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
                     },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -21755,6 +21891,7 @@
                     "alias",
                     "hasBackupPin",
                     "hasAppLock",
+                    "ads",
                     "createdAt"
                   ],
                   "additionalProperties": false
