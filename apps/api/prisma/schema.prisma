@@ -244,6 +244,7 @@ model ChatMember {
   hidden                 Boolean   @default(false)
   clearedAt              DateTime?
   showProfile            Boolean   @default(false)
+  safeView               Boolean   @default(false)
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -269,6 +270,7 @@ model Message {
   attachmentId String?
   stickerId    String?
   replyToId    String?
+  groupId      String?
   action       Json?
   location     Json?
   checklist    Json?
@@ -322,7 +324,12 @@ model ScheduledMessage {
   maxViews     Int?
   ttlSeconds   Int?
   attachmentId String?  @unique
+  stickerId    String?
   replyToId    String?
+  groupId      String?
+  type         String?
+  location     Json?
+  checklist    Json?
   encrypted    Json?
   senderDevice String?
   sendAt       DateTime

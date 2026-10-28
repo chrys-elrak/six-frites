@@ -51,12 +51,13 @@ import {
   type ListViewToken,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import { applyEdited, check, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
-import { isFrozen, useMessages } from "@/lib/chats";
+import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, react, selfDestruct } from "@/lib/actions";
+import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
+import { messagePhoto } from "@/lib/media";
 import { emojiOnly } from "@/lib/emoji";
-import { canResend, shortRule } from "@/lib/ephemeral";
+import { EPHEMERAL_OPTIONS, canResend, shortRule } from "@/lib/ephemeral";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
@@ -70,7 +71,14 @@ import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
 import { brand, brandInk, flame, stone, type Theme, useTheme } from "@/lib/theme";
 import { AnimatedEmoji } from "./animated-emoji";
-import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
+import {
+  AlbumViewer,
+  AttachmentView,
+  Lightbox,
+  type LightboxItem,
+  type ShownAttachment,
+  lightboxItem,
+} from "./attachment";
 import { ChecklistView } from "./checklist";
 import { LocationCard } from "./location-card";
 import { EmojiPicker } from "./emoji-picker";
@@ -97,6 +105,8 @@ interface MsgRow {
   deleted: boolean;
   edited: boolean;
   attachment: ShownAttachment | null;
+  groupId: string | null;
+  album: AlbumItem[] | null;
   location: GeoPoint | null;
   checklist: Checklist | null;
   checks: ChecklistMark[];
@@ -109,6 +119,36 @@ interface MsgRow {
 }
 
 const VIEWABILITY = { itemVisiblePercentThreshold: 1 };
+
+interface AlbumItem {
+  key: string;
+  message: MessageDTO | null;
+  attachment: ShownAttachment;
+  spoiler: boolean;
+}
+
+const albumKinds = ["image", "video"];
+
+/** Whether two rows are photos or videos sent together, so they show as one album. */
+const sameAlbum = (a: MsgRow, b: Omit<MsgRow, "kind" | "groupStart" | "groupEnd" | "delivery">) =>
+  !!a.groupId &&
+  a.groupId === b.groupId &&
+  a.mine === b.mine &&
+  !a.deleted &&
+  !b.deleted &&
+  !a.ephemeral &&
+  !b.ephemeral &&
+  !!a.attachment &&
+  !!b.attachment &&
+  albumKinds.includes(a.attachment.data.kind) &&
+  albumKinds.includes(b.attachment.data.kind);
+
+const albumItem = (r: Pick<MsgRow, "key" | "message" | "attachment" | "spoiler">): AlbumItem => ({
+  key: r.key,
+  message: r.message,
+  attachment: r.attachment!,
+  spoiler: r.spoiler,
+});
 
 type Row = { kind: "day"; key: string; at: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
 
@@ -147,6 +187,8 @@ function buildRows(
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
         attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
+        groupId: m.groupId ?? null,
+        album: null,
         location: m.location ?? null,
         checklist: m.checklist ?? null,
         checks: m.checks ?? [],
@@ -176,6 +218,8 @@ function buildRows(
           attachment: p.attachment
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
             : null,
+          groupId: p.groupId ?? null,
+          album: null,
           location: p.location ?? null,
           checklist: p.checklist ?? null,
           checks: [],
@@ -221,6 +265,13 @@ function buildRows(
       a.senderId === it.senderId &&
       sameDay(a.createdAt, it.createdAt) &&
       Math.abs(Date.parse(a.createdAt) - Date.parse(it.createdAt)) < 5 * 60_000;
+    const last = rows[rows.length - 1];
+    if (last?.kind === "msg" && sameAlbum(last, r)) {
+      last.album = [...(last.album ?? [albumItem(last)]), albumItem(r)];
+      if (!last.text && r.text) Object.assign(last, { text: r.text, entities: r.entities });
+      last.groupEnd = !close(next);
+      return;
+    }
     rows.push({
       ...r,
       kind: "msg",
@@ -485,6 +536,51 @@ function SenderBadge({ e, color, onResend }: { e: EphemeralDTO; color: string; o
   );
 }
 
+/** An album as one grid: two per row up to four, three per row after that, the leftovers made wider on top. */
+function AlbumGrid({
+  items,
+  mine,
+  width,
+  hidden,
+  chip,
+  onReveal,
+  onOpen,
+}: {
+  items: AlbumItem[];
+  mine: boolean;
+  width: number;
+  hidden: (item: AlbumItem) => boolean;
+  chip: (item: AlbumItem) => string | undefined;
+  onReveal: (key: string) => void;
+  onOpen: (index: number) => void;
+}) {
+  const perRow = items.length <= 4 ? 2 : 3;
+  const extra = items.length % perRow;
+  const gap = 2;
+  return (
+    <View style={{ width, flexDirection: "row", flexWrap: "wrap", gap, borderRadius: 12, overflow: "hidden" }}>
+      {items.map((it, i) => {
+        const inRow = extra && i < extra ? extra : perRow;
+        const side = Math.floor((width - gap * (inRow - 1)) / inRow);
+        return (
+          <View key={it.key} style={{ width: side, height: inRow === 1 ? Math.floor(width / 2) : side }}>
+            <AttachmentView
+              attachment={it.attachment}
+              mine={mine}
+              tile
+              maxWidth={side}
+              onOpen={() => onOpen(i)}
+              hidden={hidden(it)}
+              hiddenLabel={chip(it)}
+              onReveal={() => onReveal(it.key)}
+            />
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 function Bubble({
   row,
   highlighted,
@@ -502,6 +598,8 @@ function Bubble({
   meId,
   onReact,
   onCheck,
+  onOpenAlbum,
+  safe,
   frozen,
 }: {
   row: MsgRow;
@@ -520,13 +618,18 @@ function Bubble({
   meId: string;
   onReact: (emoji: string) => void;
   onCheck: (item: number) => void;
+  onOpenAlbum: (items: ShownAttachment[], start: number) => void;
+  /** Safe view is on: their photos and videos stay blurred until tapped. */
+  safe: boolean;
   frozen: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
   const bubble = useBubbleColors();
   const selectable = selecting && row.message !== null;
-  const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
+  const revealedMedia = useSpoilers((s) => s.revealed);
+  const blurred = (key: string, spoiler: boolean) => (spoiler || (safe && !row.mine)) && !revealedMedia[key];
+  const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
   const e = row.ephemeral;
@@ -650,15 +753,30 @@ function Bubble({
             <Quote reply={row.replyTo} mine={mine && !bare} name={nameOf(row.replyTo.senderId)} onPress={() => onQuote(row.replyTo!.id)} />
           )}
           {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} color={fg} onResend={onResend} />}
-          {row.attachment && !row.deleted && !sealed && (
-            <AttachmentView
-              attachment={row.attachment}
+          {row.album && !row.deleted && !sealed ? (
+            <AlbumGrid
+              items={row.album}
               mine={mine}
-              onOpen={onOpen}
-              hidden={row.spoiler && !mediaRevealed}
-              onReveal={() => revealMedia(row.key)}
-              maxWidth={maxWidth - 8}
+              width={Math.min(280, maxWidth - 8)}
+              hidden={(it) => blurred(it.key, it.spoiler)}
+              chip={(it) => chip(it.spoiler)}
+              onReveal={revealMedia}
+              onOpen={(i) => onOpenAlbum(row.album!.map((it) => it.attachment), i)}
             />
+          ) : (
+            row.attachment &&
+            !row.deleted &&
+            !sealed && (
+              <AttachmentView
+                attachment={row.attachment}
+                mine={mine}
+                onOpen={onOpen}
+                hidden={["image", "video", "gif"].includes(row.attachment.data.kind) && blurred(row.key, row.spoiler)}
+                hiddenLabel={chip(row.spoiler)}
+                onReveal={() => revealMedia(row.key)}
+                maxWidth={maxWidth - 8}
+              />
+            )
           )}
           {link && <LinkCard url={link} mine={mine} width={Math.min(280, maxWidth - 24)} />}
           {row.location && !row.deleted && <LocationCard point={row.location} mine={mine} />}
@@ -742,6 +860,8 @@ function Bubble({
 
 export interface MessageListHandle {
   scrollToBottom: () => void;
+  /** Loads the history down to this message if needed, then scrolls to it and highlights it. */
+  jumpTo: (messageId: string) => void;
 }
 
 export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: string; onSeen: () => void }>(
@@ -763,9 +883,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const atBottom = useRef(true);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [anchor, setAnchor] = useState<Anchor | null>(null);
-    const [confirmDelete, setConfirmDelete] = useState<MessageDTO | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
+    const [album, setAlbum] = useState<{ items: LightboxItem[]; start: number } | null>(null);
+    const [destructFor, setDestructFor] = useState<MessageDTO | null>(null);
     const [reactingTo, setReactingTo] = useState<MessageDTO | null>(null);
     const [viewing, setViewing] = useState<ViewMessageResult | null>(null);
     const [opening, setOpening] = useState(false);
@@ -837,7 +959,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       [ordered, pending, meId, peerDeliveredAt, peerReadAt],
     );
     const scrollToBottom = () => list.current?.scrollToOffset({ offset: 0, animated: true });
-    useImperativeHandle(handle, () => ({ scrollToBottom }));
+    const [jumping, setJumping] = useState<string | null>(null);
+    useImperativeHandle(handle, () => ({
+      scrollToBottom,
+      jumpTo: (id) => {
+        setJumping(id);
+        void loadUntil(qc, chat.id, id).then((found) => !found && setJumping(null));
+      },
+    }));
 
     useEffect(() => {
       if (atBottom.current) onSeen();
@@ -855,8 +984,20 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       if (atBottom.current && !wasAtBottom) onSeen();
     }
 
+    function rowIndex(id: string) {
+      return rows.findIndex((r) => r.kind === "msg" && (r.id === id || !!r.album?.some((it) => it.message?.id === id)));
+    }
+
+    useEffect(() => {
+      const index = jumping ? rowIndex(jumping) : -1;
+      if (index < 0) return;
+      setJumping(null);
+      list.current?.scrollToIndex({ index, viewPosition: 0.5, animated: false });
+      setHighlight(jumping);
+    }, [jumping, rows]);
+
     function jumpTo(id: string) {
-      const index = rows.findIndex((r) => r.kind === "msg" && r.id === id);
+      const index = rowIndex(id);
       if (index < 0) return;
       list.current?.scrollToIndex({ index, viewPosition: 0.5, animated: true });
       setHighlight(id);
@@ -921,10 +1062,35 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
                 : []),
             ]),
+        ...(row.mine &&
+        !frozen &&
+        !m.ephemeral &&
+        !row.album &&
+        m.type === "image" &&
+        m.attachment?.status === "ready" &&
+        m.attachment.mime !== "image/gif"
+          ? [
+              {
+                label: tr.messages.editAndResend,
+                onSelect: () =>
+                  void messagePhoto(m).then(
+                    (file) => useComposerMode.getState().hand(chat.id, file),
+                    () => null,
+                  ),
+              },
+            ]
+          : []),
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
           : []),
-        { label: tr.common.delete, destructive: true, onSelect: () => setConfirmDelete(m) },
+        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist"].includes(m.type)
+          ? [{ label: tr.messages.makeSelfDestruct, onSelect: () => setDestructFor(m) }]
+          : []),
+        {
+          label: tr.common.delete,
+          destructive: true,
+          onSelect: () => setConfirmDelete(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
+        },
       ];
     }
 
@@ -1026,6 +1192,13 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   meId={meId}
                   onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
                   onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
+                  onOpenAlbum={(items, start) => {
+                    const shown = items.map(lightboxItem);
+                    if (!shown[start]) return;
+                    const ready = shown.filter((x) => x !== null);
+                    setAlbum({ items: ready, start: ready.indexOf(shown[start]!) });
+                  }}
+                  safe={chat.safeView}
                   frozen={frozen}
                 />
               )
@@ -1049,6 +1222,17 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           }}
         />
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
+        {album && <AlbumViewer items={album.items} start={album.start} onClose={() => setAlbum(null)} />}
+        {destructFor && (
+          <Sheet
+            title={tr.messages.selfDestructTitle}
+            onClose={() => setDestructFor(null)}
+            actions={EPHEMERAL_OPTIONS.map((o) => ({
+              label: o.label,
+              onSelect: () => void selfDestruct(qc, destructFor, o.value),
+            }))}
+          />
+        )}
         {(viewing || opening) && (
           <EphemeralViewer
             message={viewing?.message ?? null}
@@ -1062,19 +1246,19 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             title={tr.messages.deleteTitle}
             onClose={() => setConfirmDelete(null)}
             actions={[
-              ...(chat.type === "direct" || confirmDelete.senderId === meId
+              ...(chat.type === "direct" || confirmDelete[0]!.senderId === meId
                 ? [
                     {
                       label: chat.type === "direct" ? tr.messages.deleteForMeAnd(chat.title) : tr.messages.deleteForEveryone,
                       destructive: true,
-                      onSelect: () => void deleteMessage(qc, confirmDelete, "all").catch(() => null),
+                      onSelect: () => void deleteMessages(qc, chat.id, confirmDelete, "all").catch(() => null),
                     },
                   ]
                 : []),
               {
                 label: tr.messages.deleteForMe,
                 destructive: true,
-                onSelect: () => void deleteMessage(qc, confirmDelete, "me").catch(() => null),
+                onSelect: () => void deleteMessages(qc, chat.id, confirmDelete, "me").catch(() => null),
               },
             ]}
           />

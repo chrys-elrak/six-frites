@@ -216,6 +216,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const needle = query.trim().toLowerCase();
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   const archivedCount = archivedChats.data?.length ?? 0;
+  const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
   const showArchive = !archived && !needle && archivedCount > 0;
   const scroller = useRef<HTMLDivElement>(null);
   const archiveRow = useRef<HTMLAnchorElement>(null);
@@ -299,7 +300,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
                 <Archive className="size-5" />
               </span>
               <span className="flex-1">{tr.common.archived}</span>
-              <span className="text-stone-500">{archivedCount}</span>
+              {archivedUnread > 0 && (
+                <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
+                  {archivedUnread > 99 ? "99+" : archivedUnread}
+                </span>
+              )}
             </Link>
           )}
           {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}

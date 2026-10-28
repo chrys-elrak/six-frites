@@ -28,6 +28,7 @@ export function ChatMenu({
   onClose,
   onDeleted,
   onChooseMessages,
+  onSharedMedia,
 }: {
   chat: ChatDTO;
   peerName: string;
@@ -35,6 +36,7 @@ export function ChatMenu({
   onClose: () => void;
   onDeleted?: (scope: DeleteScope) => void;
   onChooseMessages?: () => void;
+  onSharedMedia?: (tab: "search" | "media") => void;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -217,11 +219,21 @@ export function ChatMenu({
       title={chat.title}
       onClose={onClose}
       actions={[
+        ...(onSharedMedia
+          ? [
+              { label: tr.chat.search, onSelect: () => onSharedMedia("search") },
+              { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
+            ]
+          : []),
         { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
         { label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) },
         {
           label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
           onSelect: () => settings({ archived: !chat.archived }),
+        },
+        {
+          label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
+          onSelect: () => settings({ safeView: !chat.safeView }),
         },
         ...(isFrozen(chat)
           ? []

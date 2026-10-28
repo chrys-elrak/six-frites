@@ -30,7 +30,15 @@ type Range = { from?: string; to?: string };
 
 const dayInput = (d: Date) => toLocalInput(d).slice(0, 10);
 
-function DateRangeDialog({ onPick, onClose }: { onPick: (range: Range) => void; onClose: () => void }) {
+export function DateRangeDialog({
+  title,
+  onPick,
+  onClose,
+}: {
+  title?: string;
+  onPick: (range: Range) => void;
+  onClose: () => void;
+}) {
   const tr = useT();
   const today = dayInput(new Date());
   const [from, setFrom] = useState(() => dayInput(new Date(Date.now() - 7 * 864e5)));
@@ -48,7 +56,7 @@ function DateRangeDialog({ onPick, onClose }: { onPick: (range: Range) => void; 
         }}
         className="space-y-4 p-4"
       >
-        <h2 className="text-center font-semibold">{tr.chat.deleteWhich}</h2>
+        <h2 className="text-center font-semibold">{title ?? tr.chat.deleteWhich}</h2>
         {fields.map(({ label, value, set }) => (
           <label key={label} className="block space-y-1 text-sm font-medium">
             <span>{label}</span>
@@ -85,12 +93,14 @@ export function ChatMenu({
   onClose,
   onDeleted,
   onChooseMessages,
+  onSharedMedia,
 }: {
   chat: ChatDTO;
   peerName: string;
   onClose: () => void;
   onDeleted?: (scope: DeleteScope) => void;
   onChooseMessages?: () => void;
+  onSharedMedia?: (tab: "search" | "media") => void;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -289,6 +299,12 @@ export function ChatMenu({
       title={chat.title}
       onClose={onClose}
       actions={[
+        ...(onSharedMedia
+          ? [
+              { label: tr.chat.search, onSelect: () => onSharedMedia("search") },
+              { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
+            ]
+          : []),
         { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
         isMuted(chat)
           ? {
@@ -299,6 +315,10 @@ export function ChatMenu({
         {
           label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
           onSelect: () => settings({ archived: !chat.archived }),
+        },
+        {
+          label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
+          onSelect: () => settings({ safeView: !chat.safeView }),
         },
         ...(frozen
           ? []

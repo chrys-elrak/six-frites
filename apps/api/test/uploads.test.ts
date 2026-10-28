@@ -81,6 +81,26 @@ describe("uploads", () => {
     await (await mediaQueue().getJob(image.id))?.remove();
   });
 
+  it("lists a chat's shared media, files and links, without deleted or self-destructing ones", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const image = await upload(host, "image", "image/png", Buffer.from("not really a png"), "pic.png");
+    const photo = (await send(host, chatId, "look", { attachmentId: image.id })).json();
+    await (await mediaQueue().getJob(image.id))?.remove();
+    const doc = (await send(guest, chatId, "cv", { attachmentId: (await upload(guest, "file", "text/plain", Buffer.from("cv"))).id })).json();
+    const gone = (await send(guest, chatId, "old", { attachmentId: (await upload(guest, "file", "text/plain", Buffer.from("x"))).id })).json();
+    await call(guest, "DELETE", `/v1/messages?ids=${gone.id}&scope=all`);
+    const link = (await send(host, chatId, "see https://example.com")).json();
+    await send(host, chatId, "no link here");
+    await send(host, chatId, "www.secret.mg", { ephemeral: { maxViews: 1 } });
+
+    const ids = async (only: string) =>
+      (await get(guest, `/v1/chats/${chatId}/messages?only=${only}`)).items.map((m: { id: string }) => m.id);
+    expect(await ids("media")).toEqual([photo.id]);
+    expect(await ids("files")).toEqual([doc.id]);
+    expect(await ids("links")).toEqual([link.id]);
+    expect((await get(guest, `/v1/chats/${chatId}/messages?only=gifs`)).error.code).toBe("VALIDATION_FAILED");
+  });
+
   it("deletes the stored files when the message is deleted for everyone", async () => {
     const { host, guest, chatId } = await makeFriends();
     const file = await upload(host, "file", "text/plain", Buffer.from("secret doc"));

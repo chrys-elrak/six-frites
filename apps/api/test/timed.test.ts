@@ -138,6 +138,47 @@ describe("scheduled messages", () => {
     ).toBe("VALIDATION_FAILED");
   });
 
+  it("sends stickers, locations and checklists too", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const pack = (await call(host, "POST", "/v1/sticker-packs", { title: "Later" })).json();
+    const sticker = await prisma.sticker.create({
+      data: { packId: pack.id, emoji: "⏰", lottieUrl: "https://example.com/later.json" },
+    });
+    const contents = [
+      { stickerId: sticker.id },
+      { location: { lat: -18.9, lng: 47.5 } },
+      { checklist: { title: "Trip", items: ["Tickets"] } },
+    ];
+    for (const content of contents) {
+      const s = await call(host, "POST", `/v1/chats/${chatId}/scheduled-messages`, {
+        clientId: `s-${Math.random()}`,
+        sendAt: inAnHour(),
+        ...content,
+      });
+      expect(s.statusCode, s.body).toBe(201);
+    }
+    expect((await get(host, `/v1/chats/${chatId}/scheduled-messages`)).items.map((s: { type: string }) => s.type)).toEqual(
+      ["sticker", "location", "checklist"],
+    );
+    expect(
+      (
+        await call(host, "POST", `/v1/chats/${chatId}/scheduled-messages`, {
+          clientId: "gone",
+          sendAt: inAnHour(),
+          stickerId: "nope",
+        })
+      ).json().error.code,
+    ).toBe("STICKER_NOT_FOUND");
+
+    await prisma.scheduledMessage.updateMany({ where: { chatId }, data: { sendAt: new Date(Date.now() - 1000) } });
+    await sendDueScheduled();
+    expect((await get(guest, `/v1/chats/${chatId}/messages`)).items.reverse()).toMatchObject([
+      { type: "sticker", sticker: { id: sticker.id } },
+      { type: "location", location: { lat: -18.9, lng: 47.5 } },
+      { type: "checklist", checklist: { title: "Trip" } },
+    ]);
+  });
+
   it("holds on to its file until it is sent", async () => {
     const { host, guest, chatId } = await makeFriends();
     const file = await prisma.upload.create({

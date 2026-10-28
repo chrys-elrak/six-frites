@@ -25,12 +25,25 @@ import { ChatMenu } from "./chat-menu";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
 import { MessageList, type MessageListHandle } from "./message-list";
+import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 
 const headerClass =
-  "flex items-center gap-2 border-b border-stone-200 bg-stone-50/90 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90";
+  "absolute inset-x-0 top-0 z-10 flex items-center gap-2 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
 const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
+
+function useHeight() {
+  const [el, setEl] = useState<HTMLElement | null>(null);
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    if (!el) return;
+    const observer = new ResizeObserver(() => setHeight(el.offsetHeight));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [el]);
+  return [setEl, height] as const;
+}
 
 export function Conversation({ chatId }: { chatId: string }) {
   const tr = useT();
@@ -43,8 +56,11 @@ export function Conversation({ chatId }: { chatId: string }) {
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [shared, setShared] = useState<SharedTab | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pickerSlot, setPickerSlot] = useState<HTMLDivElement | null>(null);
+  const [head, headHeight] = useHeight();
+  const [foot, footHeight] = useHeight();
   const typing = useTyping(chatId);
   const selecting = useSelection((s) => s.chatId === chatId);
   const selectedIds = useSelection((s) => s.ids);
@@ -137,133 +153,141 @@ export function Conversation({ chatId }: { chatId: string }) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      {selecting ? (
-        <header className={headerClass}>
-          <button onClick={clearSelection} aria-label={tr.chat.cancelSelection} className={iconButton}>
-            <X className="size-5" />
-          </button>
-          <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}</p>
-          {count >= 2 && (
-            <button onClick={selectBetween} aria-label={tr.chat.selectBetween} title={tr.chat.selectBetween} className={iconButton}>
-              <ChevronsUpDown className="size-5" />
-            </button>
-          )}
-          <button
-            onClick={() => setConfirmDelete(true)}
-            disabled={count === 0}
-            aria-label={tr.chat.deleteSelected}
-            className={`${iconButton} text-red-600 disabled:opacity-40 dark:text-red-400`}
-          >
-            <Trash2 className="size-5" />
-          </button>
-        </header>
-      ) : (
-        <header className={headerClass}>
-          <Link
-            href={c.archived ? "/archived" : "/"}
-            aria-label={tr.common.backToChats}
-            className={`${iconButton} md:hidden`}
-          >
-            <ChevronLeft className="size-6" />
-          </Link>
-          <button
-            onClick={() => setEditing(true)}
-            className="flex min-w-0 flex-1 items-center gap-2 rounded-xl py-0.5 pr-2 text-left hover:bg-stone-200/60 dark:hover:bg-stone-800/60"
-            aria-label={tr.chat.editContact(c.title)}
-          >
-            <Avatar user={peer} online={shownPresence?.online} />
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1 font-semibold">
-                <span className="truncate">{c.title}</span>
-                {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
-              </span>
-              {typing ? (
-                <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
-              ) : (
-                (shownPresence || muted || c.archived || c.autoDeleteSecs) && (
-                  <span className="block truncate text-xs text-stone-500">
-                    {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
-                    {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs) && " · "}
-                    {[
-                      !shownPresence?.online && presenceLabel(shownPresence),
-                      c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
-                      muted && (c.mutedUntil ? tr.chat.mutedUntil(sendAtLabel(c.mutedUntil)) : tr.common.muted),
-                      c.archived && tr.common.archived,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                )
+    <div className="relative flex h-full min-h-0 flex-col">
+      <ChatBackground themeId={c.theme} />
+      <div className="relative flex min-h-0 flex-1">
+        <div className="relative flex min-w-0 flex-1 flex-col">
+          {selecting ? (
+            <header ref={head} className={headerClass}>
+              <button onClick={clearSelection} aria-label={tr.chat.cancelSelection} className={iconButton}>
+                <X className="size-5" />
+              </button>
+              <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}</p>
+              {count >= 2 && (
+                <button onClick={selectBetween} aria-label={tr.chat.selectBetween} title={tr.chat.selectBetween} className={iconButton}>
+                  <ChevronsUpDown className="size-5" />
+                </button>
               )}
-            </span>
-          </button>
-          {!frozen && (
-            <>
               <button
-                onClick={() => void startCall(c, meId, false)}
-                disabled={inCall || !realtime}
-                aria-label={tr.chat.voiceCall}
-                className={`${iconButton} disabled:opacity-40`}
+                onClick={() => setConfirmDelete(true)}
+                disabled={count === 0}
+                aria-label={tr.chat.deleteSelected}
+                className={`${iconButton} text-red-600 disabled:opacity-40 dark:text-red-400`}
               >
-                <Phone className="size-5" />
+                <Trash2 className="size-5" />
               </button>
+            </header>
+          ) : (
+            <header ref={head} className={headerClass}>
+              <Link
+                href={c.archived ? "/archived" : "/"}
+                aria-label={tr.common.backToChats}
+                className={`${iconButton} md:hidden`}
+              >
+                <ChevronLeft className="size-6" />
+              </Link>
               <button
-                onClick={() => void startCall(c, meId, true)}
-                disabled={inCall || !realtime}
-                aria-label={tr.chat.videoCall}
-                className={`${iconButton} disabled:opacity-40`}
+                onClick={() => setEditing(true)}
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-xl py-0.5 pr-2 text-left hover:bg-stone-200/60 dark:hover:bg-stone-800/60"
+                aria-label={tr.chat.editContact(c.title)}
               >
-                <Video className="size-5" />
+                <Avatar user={peer} online={shownPresence?.online} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1 font-semibold">
+                    <span className="truncate">{c.title}</span>
+                    {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
+                  </span>
+                  {typing ? (
+                    <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
+                  ) : (
+                    (shownPresence || muted || c.archived || c.autoDeleteSecs) && (
+                      <span className="block truncate text-xs text-stone-500">
+                        {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
+                        {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs) && " · "}
+                        {[
+                          !shownPresence?.online && presenceLabel(shownPresence),
+                          c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
+                          muted && (c.mutedUntil ? tr.chat.mutedUntil(sendAtLabel(c.mutedUntil)) : tr.common.muted),
+                          c.archived && tr.common.archived,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    )
+                  )}
+                </span>
               </button>
-            </>
+              {!frozen && (
+                <>
+                  <button
+                    onClick={() => void startCall(c, meId, false)}
+                    disabled={inCall || !realtime}
+                    aria-label={tr.chat.voiceCall}
+                    className={`${iconButton} disabled:opacity-40`}
+                  >
+                    <Phone className="size-5" />
+                  </button>
+                  <button
+                    onClick={() => void startCall(c, meId, true)}
+                    disabled={inCall || !realtime}
+                    aria-label={tr.chat.videoCall}
+                    className={`${iconButton} disabled:opacity-40`}
+                  >
+                    <Video className="size-5" />
+                  </button>
+                </>
+              )}
+              <button onClick={() => setMenu(true)} aria-label={tr.chat.options} className={iconButton}>
+                <MoreVertical className="size-5" />
+              </button>
+            </header>
           )}
-          <button onClick={() => setMenu(true)} aria-label={tr.chat.options} className={iconButton}>
-            <MoreVertical className="size-5" />
-          </button>
-        </header>
-      )}
-
-      <div className="flex min-h-0 flex-1">
-        <div className="flex min-w-0 flex-1 flex-col">
           <div className="relative flex min-h-0 flex-1 flex-col">
-            <ChatBackground themeId={c.theme} />
             <BubbleColors themeId={c.theme} scope="chat-colors" />
             <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
-              <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
-            </div>
-          </div>
-          {!selecting && <AdBanner />}
-          {!selecting && keysChanged && (
-            <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-              <ShieldAlert className="size-4 shrink-0" />
-              <p className="min-w-0 flex-1">
-                {tr.chat.securityCodeChanged(peer.displayName)}
-              </p>
-              <button onClick={() => setEditing(true)} className="shrink-0 font-semibold underline-offset-2 hover:underline">
-                {tr.chat.verify}
-              </button>
-              <button
-                onClick={() => dismissKeys(peer.id)}
-                aria-label={tr.common.dismiss}
-                className="shrink-0 rounded-full p-1"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          )}
-          {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
-          {!selecting && !frozen && (
-            <div className="chat-colors contents">
-              <Composer
-                chatId={chatId}
-                nameOf={nameOf}
-                scheduledCount={c.scheduledCount}
-                onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
-                pickerSlot={pickerSlot}
+              <MessageList
+                ref={list}
+                chat={c}
+                meId={meId}
+                onSeen={onSeen}
+                insetTop={headHeight}
+                insetBottom={footHeight}
               />
             </div>
-          )}
+          </div>
+          <div ref={foot} className="absolute inset-x-0 bottom-0 z-20">
+            {!selecting && <AdBanner />}
+            {!selecting && keysChanged && (
+              <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                <ShieldAlert className="size-4 shrink-0" />
+                <p className="min-w-0 flex-1">
+                  {tr.chat.securityCodeChanged(peer.displayName)}
+                </p>
+                <button onClick={() => setEditing(true)} className="shrink-0 font-semibold underline-offset-2 hover:underline">
+                  {tr.chat.verify}
+                </button>
+                <button
+                  onClick={() => dismissKeys(peer.id)}
+                  aria-label={tr.common.dismiss}
+                  className="shrink-0 rounded-full p-1"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            )}
+            {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
+            {!selecting && !frozen && (
+              <div className="chat-colors contents">
+                <Composer
+                  chatId={chatId}
+                  nameOf={nameOf}
+                  scheduledCount={c.scheduledCount}
+                  onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
+                  pickerSlot={pickerSlot}
+                />
+              </div>
+            )}
+          </div>
         </div>
         <div ref={setPickerSlot} className="chat-colors contents" />
       </div>
@@ -275,6 +299,18 @@ export function Conversation({ chatId }: { chatId: string }) {
           onClose={() => setMenu(false)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
+          onSharedMedia={setShared}
+        />
+      )}
+      {shared && (
+        <SharedMedia
+          chat={c}
+          initial={shared}
+          onJump={(id) => {
+            setShared(null);
+            list.current?.jumpTo(id);
+          }}
+          onClose={() => setShared(null)}
         />
       )}
       {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}

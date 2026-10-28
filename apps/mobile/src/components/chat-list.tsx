@@ -211,6 +211,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
   const archivedCount = archivedChats.data?.length ?? 0;
+  const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
 
   const header = archived ? undefined : (
     <>
@@ -224,7 +225,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             <Archive size={20} color={t.muted} />
           </View>
           <Text style={[styles.archiveText, { color: t.textSoft }]}>{tr.common.archived}</Text>
-          <Text style={{ color: t.muted }}>{archivedCount}</Text>
+          {archivedUnread > 0 && (
+            <View style={[styles.badge, { backgroundColor: brand }]}>
+              <Text style={[styles.badgeText, { color: brandInk }]}>{archivedUnread > 99 ? "99+" : archivedUnread}</Text>
+            </View>
+          )}
         </Pressable>
       )}
     </>

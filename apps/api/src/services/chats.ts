@@ -95,6 +95,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     archived: me.archived,
     ...muteState(me),
     pinned: me.pinned,
+    safeView: me.safeView,
     sharingProfile: me.showProfile,
     autoDeleteSecs: chat.autoDeleteSecs,
     theme: chat.theme,

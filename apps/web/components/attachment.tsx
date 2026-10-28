@@ -1,9 +1,9 @@
 "use client";
 
 import type { AttachmentDTO, EncryptedFile } from "@six/shared";
-import { AlertCircle, Download, EyeOff, FileText, Loader2, Pause, Play, X } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Download, EyeOff, FileText, Loader2, Pause, Play, X } from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { decryptedUrl } from "@/lib/e2ee";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -188,6 +188,7 @@ export function VoicePlayer({
   waveform,
   mine,
   label,
+  compact = false,
 }: {
   autoPlay?: boolean;
   url: string | null;
@@ -195,6 +196,7 @@ export function VoicePlayer({
   waveform: number[] | null;
   mine: boolean;
   label?: string;
+  compact?: boolean;
 }) {
   const tr = useT();
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -250,20 +252,24 @@ export function VoicePlayer({
 
   const done = total ? position / total : 0;
   return (
-    <div className="flex w-60 max-w-full items-center gap-3 py-1">
+    <div className={`flex max-w-full items-center ${compact ? "min-w-0 flex-1 gap-2" : "w-60 gap-3 py-1"}`}>
       <button
         type="button"
         onClick={toggle}
         disabled={!url}
         aria-label={isPlaying ? tr.messages.pause : (label ?? tr.messages.playVoice)}
-        className={`grid size-10 shrink-0 place-items-center rounded-full disabled:opacity-50 ${
+        className={`grid ${compact ? "size-8" : "size-10"} shrink-0 place-items-center rounded-full disabled:opacity-50 ${
           mine ? "bg-brand-ink text-brand" : "bg-brand text-brand-ink"
         }`}
       >
         {isPlaying ? <Pause className="size-5 fill-current" /> : <Play className="ml-0.5 size-5 fill-current" />}
       </button>
-      <div className="min-w-0 flex-1">
-        <div onClick={seek} className="flex h-8 cursor-pointer items-center gap-[2px]" aria-hidden>
+      <div className={`min-w-0 flex-1 ${compact ? "flex items-center gap-2" : ""}`}>
+        <div
+          onClick={seek}
+          className={`flex cursor-pointer items-center gap-[2px] ${compact ? "h-6 min-w-0 flex-1" : "h-8"}`}
+          aria-hidden
+        >
           {bars.map((v, i) => (
             <span
               key={i}
@@ -272,7 +278,7 @@ export function VoicePlayer({
             />
           ))}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           <p className="text-[11px] opacity-70">{formatDuration(isPlaying || position ? position : total)}</p>
           <SpeedButton className={mine ? "bg-brand-ink/15" : "bg-brand/15 text-brand"} />
         </div>
@@ -400,15 +406,21 @@ export function AttachmentView({
   mine,
   onOpen,
   hidden = false,
+  hiddenLabel,
   onReveal,
   autoPlay = false,
+  tile = false,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
   onOpen: (item: LightboxItem) => void;
   hidden?: boolean;
+  /** What the chip on a hidden photo says; a spoiler by default. */
+  hiddenLabel?: string;
   onReveal?: () => void;
   autoPlay?: boolean;
+  /** Fill the parent, as one tile of an album, instead of sizing to the photo. */
+  tile?: boolean;
 }) {
   const tr = useT();
   const kind = attachment.data.kind;
@@ -433,12 +445,17 @@ export function AttachmentView({
     }
   }, [wanted, decrypted?.url, a.kind, a.name, a.thumbUrl, onOpen]);
 
+  const box = (w: number | null, h: number | null) => {
+    const size = boxSize(w, h);
+    return tile ? { width: "100%", height: "100%" } : { width: size.width, aspectRatio: size.aspectRatio, maxWidth: "100%" };
+  };
+  const hiddenChip = hiddenLabel ?? tr.summary.spoiler;
+
   if (a.kind === "gif") {
-    const size = boxSize(a.width, a.height);
     return (
       <div
-        className="relative overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700"
-        style={{ width: size.width, aspectRatio: size.aspectRatio, maxWidth: "100%" }}
+        className={`relative overflow-hidden bg-stone-200 dark:bg-stone-700 ${tile ? "" : "rounded-xl"}`}
+        style={box(a.width, a.height)}
       >
         {hidden ? (
           <button
@@ -448,7 +465,7 @@ export function AttachmentView({
             className="spoiler absolute inset-0 grid place-items-center rounded-none text-white/85"
           >
             <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white">
-              <EyeOff className="size-3.5" /> {tr.summary.spoiler}
+              <EyeOff className="size-3.5" /> {hiddenChip}
             </span>
           </button>
         ) : attachment.source === "local" ? (
@@ -474,7 +491,6 @@ export function AttachmentView({
   }
 
   if (a.kind === "image" || a.kind === "video") {
-    const size = boxSize(a.width, a.height);
     const ready = a.state === "ready" && (a.url || decrypted);
     const open = () => {
       if (!ready) return;
@@ -486,8 +502,8 @@ export function AttachmentView({
         type="button"
         onClick={hidden ? onReveal : open}
         disabled={!ready && !hidden}
-        className="relative block overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700"
-        style={{ width: size.width, aspectRatio: size.aspectRatio, maxWidth: "100%" }}
+        className={`relative block overflow-hidden bg-stone-200 dark:bg-stone-700 ${tile ? "" : "rounded-xl"}`}
+        style={box(a.width, a.height)}
         aria-label={hidden ? tr.messages.revealSpoiler : a.kind === "image" ? tr.messages.openPhoto : tr.messages.playVideo}
       >
         {a.thumbUrl && (
@@ -501,7 +517,7 @@ export function AttachmentView({
             <span className="spoiler absolute inset-0 rounded-none text-white/85" aria-hidden />
             <span className="absolute inset-0 grid place-items-center">
               <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                <EyeOff className="size-3.5" /> {tr.summary.spoiler}
+                <EyeOff className="size-3.5" /> {hiddenChip}
               </span>
             </span>
           </>
@@ -646,6 +662,107 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
               className="max-h-full max-w-full"
             />
           )}
+        </div>
+      </div>
+    </Portal>
+  );
+}
+
+function AlbumSlide({ attachment }: { attachment: ShownAttachment }) {
+  const decrypted = useDecrypted(attachment, true);
+  const a = view(attachment, decrypted);
+  if (!a.url) return <Loader2 className="size-8 animate-spin text-white/70" />;
+  return a.kind === "video" ? (
+    <video
+      src={a.url}
+      poster={a.thumbUrl ?? undefined}
+      controls
+      controlsList="nodownload noremoteplayback"
+      disablePictureInPicture
+      autoPlay
+      playsInline
+      {...noSave}
+      className="max-h-full max-w-full"
+    />
+  ) : (
+    <ProtectedImage src={a.url} fit="contain" className="size-full" />
+  );
+}
+
+/** Shows an album's photos and videos one at a time: swipe, the arrow keys or the side buttons move between them. */
+export function AlbumViewer({
+  items,
+  start,
+  onClose,
+  onShow,
+}: {
+  items: ShownAttachment[];
+  start: number;
+  onClose: () => void;
+  /** Adds a "Show in chat" button that hands back the index of the photo on screen. */
+  onShow?: (index: number) => void;
+}) {
+  const tr = useT();
+  const [index, setIndex] = useState(start);
+  const touch = useRef<number | null>(null);
+  const go = useCallback((by: number) => setIndex((i) => Math.min(items.length - 1, Math.max(0, i + by))), [items.length]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft") go(-1);
+      else if (e.key === "ArrowRight") go(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, go]);
+
+  const side = "absolute top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 disabled:opacity-0";
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-50 flex flex-col bg-black/95" role="dialog" aria-modal>
+        <div className="flex items-center justify-between gap-1 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <span className="flex-1 px-3 text-sm text-white/80 tabular-nums">
+            {index + 1} / {items.length}
+          </span>
+          {onShow && (
+            <button
+              onClick={() => onShow(index)}
+              className="rounded-full px-3 py-2 text-sm font-medium text-white hover:bg-white/10"
+            >
+              {tr.chat.showInChat}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            aria-label={tr.common.close}
+            className="grid size-10 place-items-center rounded-full text-white hover:bg-white/10"
+          >
+            <X className="size-6" />
+          </button>
+        </div>
+        <div
+          className="relative grid min-h-0 flex-1 touch-pan-y place-items-center p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+          onClick={(e) => e.target === e.currentTarget && onClose()}
+          onTouchStart={(e) => (touch.current = e.touches[0]!.clientX)}
+          onTouchEnd={(e) => {
+            const dx = e.changedTouches[0]!.clientX - (touch.current ?? e.changedTouches[0]!.clientX);
+            touch.current = null;
+            if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+          }}
+        >
+          <AlbumSlide key={index} attachment={items[index]!} />
+          <button onClick={() => go(-1)} disabled={index === 0} aria-label={tr.messages.previous} className={`${side} left-3`}>
+            <ChevronLeft className="size-6" />
+          </button>
+          <button
+            onClick={() => go(1)}
+            disabled={index === items.length - 1}
+            aria-label={tr.messages.next}
+            className={`${side} right-3`}
+          >
+            <ChevronRight className="size-6" />
+          </button>
         </div>
       </div>
     </Portal>

@@ -55,11 +55,11 @@ import {
   useState,
 } from "react";
 import { VList, type VListHandle } from "virtua";
-import { applyEdited, check, deleteMessage, markOpenedLocally, react } from "@/lib/actions";
-import { type Hydrated, hydrate } from "@/lib/e2ee";
-import { shortRule } from "@/lib/ephemeral";
+import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, react, selfDestruct } from "@/lib/actions";
+import { type Hydrated, hydrate, messageFile } from "@/lib/e2ee";
+import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
-import { useMessages } from "@/lib/chats";
+import { loadUntil, useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
 import { emojiOnly } from "@/lib/emoji";
@@ -73,7 +73,7 @@ import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
-import { AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
+import { AlbumViewer, AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { ChecklistView } from "./checklist";
 import { LocationCard } from "./location-card";
 import { EphemeralViewer } from "./ephemeral-viewer";
@@ -102,6 +102,8 @@ interface MsgRow {
   deleted: boolean;
   edited: boolean;
   attachment: ShownAttachment | null;
+  groupId: string | null;
+  album: AlbumItem[] | null;
   sticker: StickerDTO | null;
   location: GeoPoint | null;
   checklist: Checklist | null;
@@ -113,6 +115,36 @@ interface MsgRow {
   groupEnd: boolean;
   delivery: Delivery | null;
 }
+
+interface AlbumItem {
+  key: string;
+  message: Hydrated | null;
+  attachment: ShownAttachment;
+  spoiler: boolean;
+}
+
+const albumKinds = ["image", "video"];
+
+/** Whether two rows are photos or videos sent together, so they show as one album. */
+const sameAlbum = (a: MsgRow, b: Omit<MsgRow, "kind" | "groupStart" | "groupEnd" | "delivery">) =>
+  !!a.groupId &&
+  a.groupId === b.groupId &&
+  a.mine === b.mine &&
+  !a.deleted &&
+  !b.deleted &&
+  !a.ephemeral &&
+  !b.ephemeral &&
+  !!a.attachment &&
+  !!b.attachment &&
+  albumKinds.includes(a.attachment.data.kind) &&
+  albumKinds.includes(b.attachment.data.kind);
+
+const albumItem = (r: Pick<MsgRow, "key" | "message" | "attachment" | "spoiler">): AlbumItem => ({
+  key: r.key,
+  message: r.message,
+  attachment: r.attachment!,
+  spoiler: r.spoiler,
+});
 
 type Row = { kind: "day"; key: string; at: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
 
@@ -148,6 +180,8 @@ function buildRows(
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
         attachment: m.attachment ? { source: "server" as const, data: m.attachment, file: m.file } : null,
+        groupId: m.groupId ?? null,
+        album: null,
         sticker: m.sticker,
         location: m.location,
         checklist: m.checklist,
@@ -178,6 +212,8 @@ function buildRows(
           attachment: p.attachment
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
             : null,
+          groupId: p.groupId ?? null,
+          album: null,
           sticker: p.sticker,
           location: p.location ?? null,
           checklist: p.checklist ?? null,
@@ -226,6 +262,13 @@ function buildRows(
       a.senderId === it.senderId &&
       sameDay(a.createdAt, it.createdAt) &&
       Math.abs(Date.parse(a.createdAt) - Date.parse(it.createdAt)) < 5 * 60_000;
+    const last = rows[rows.length - 1];
+    if (last?.kind === "msg" && sameAlbum(last, r)) {
+      last.album = [...(last.album ?? [albumItem(last)]), albumItem(r)];
+      if (!last.text && r.text) Object.assign(last, { text: r.text, entities: r.entities });
+      last.groupEnd = !close(next);
+      return;
+    }
     rows.push({
       ...r,
       kind: "msg",
@@ -392,6 +435,48 @@ function Linked({ text }: { text: string }) {
   );
 }
 
+const SPAN: Record<number, string> = { 6: "col-span-6", 3: "col-span-3", 2: "col-span-2" };
+
+/** An album as one grid: two per row up to four, three per row after that, the leftovers made wider on top. */
+function AlbumGrid({
+  items,
+  mine,
+  hidden,
+  chip,
+  onReveal,
+  onOpen,
+}: {
+  items: AlbumItem[];
+  mine: boolean;
+  hidden: (item: AlbumItem) => boolean;
+  chip: (item: AlbumItem) => string | undefined;
+  onReveal: (key: string) => void;
+  onOpen: (index: number) => void;
+}) {
+  const perRow = items.length <= 4 ? 2 : 3;
+  const extra = items.length % perRow;
+  return (
+    <div className="grid w-72 max-w-full grid-cols-6 gap-0.5 overflow-hidden rounded-xl">
+      {items.map((it, i) => {
+        const span = extra && i < extra ? 6 / extra : 6 / perRow;
+        return (
+          <div key={it.key} className={`${SPAN[span]} ${span === 6 ? "aspect-[2/1]" : "aspect-square"}`}>
+            <AttachmentView
+              attachment={it.attachment}
+              mine={mine}
+              tile
+              onOpen={() => onOpen(i)}
+              hidden={hidden(it)}
+              hiddenLabel={chip(it)}
+              onReveal={() => onReveal(it.key)}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function LinkCard({ url, mine }: { url: string; mine: boolean }) {
   const { data } = useQuery({
     queryKey: ["link-preview", url],
@@ -500,6 +585,8 @@ function Bubble({
   onReact,
   onReactButton,
   onCheck,
+  onOpenAlbum,
+  safe,
   frozen,
 }: {
   row: MsgRow;
@@ -519,6 +606,9 @@ function Bubble({
   onReact: (emoji: string) => void;
   onReactButton: (anchor: DOMRect) => void;
   onCheck: (item: number) => void;
+  onOpenAlbum: (items: ShownAttachment[], start: number) => void;
+  /** Safe view is on: their photos and videos stay blurred until tapped. */
+  safe: boolean;
   frozen: boolean;
 }) {
   const tr = useT();
@@ -540,7 +630,7 @@ function Bubble({
       onReact("❤️");
     } else lastTap.current = e.timeStamp;
   }
-  const mediaRevealed = useSpoilers((s) => !!s.revealed[row.key]);
+  const revealedMedia = useSpoilers((s) => s.revealed);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
   const e = row.ephemeral;
@@ -556,6 +646,8 @@ function Bubble({
       ? emojiOnly(row.text)
       : null;
   const visual = !sealed && row.attachment && ["image", "video", "gif"].includes(row.attachment.data.kind);
+  const blurred = (key: string, spoiler: boolean) => (spoiler || (safe && !mine)) && !revealedMedia[key];
+  const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const sticker = !sealed && !row.deleted ? row.sticker : null;
   const loose = !sealed && !row.deleted && row.attachment?.source === "server" && !!row.attachment.file?.sticker;
@@ -630,14 +722,28 @@ function Bubble({
                 />
               )}
               {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} onResend={onResend} />}
-              {row.attachment && !row.deleted && !sealed && (
-                <AttachmentView
-                  attachment={row.attachment}
+              {row.album && !row.deleted && !sealed ? (
+                <AlbumGrid
+                  items={row.album}
                   mine={mine}
-                  onOpen={onOpen}
-                  hidden={row.spoiler && !mediaRevealed}
-                  onReveal={() => revealMedia(row.key)}
+                  hidden={(it) => blurred(it.key, it.spoiler)}
+                  chip={(it) => chip(it.spoiler)}
+                  onReveal={revealMedia}
+                  onOpen={(i) => onOpenAlbum(row.album!.map((it) => it.attachment), i)}
                 />
+              ) : (
+                row.attachment &&
+                !row.deleted &&
+                !sealed && (
+                  <AttachmentView
+                    attachment={row.attachment}
+                    mine={mine}
+                    onOpen={onOpen}
+                    hidden={visual ? blurred(row.key, row.spoiler) : false}
+                    hiddenLabel={chip(row.spoiler)}
+                    onReveal={() => revealMedia(row.key)}
+                  />
+                )
               )}
               {link && <LinkCard url={link} mine={mine} />}
               {row.location && !row.deleted && <LocationCard point={row.location} mine={mine} />}
@@ -748,10 +854,15 @@ const canReact = (row: MsgRow) =>
 
 export interface MessageListHandle {
   scrollToBottom: () => void;
+  /** Loads the history down to this message if needed, then scrolls to it and highlights it. */
+  jumpTo: (messageId: string) => void;
 }
 
-export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: string; onSeen: () => void }>(
-  function MessageList({ chat, meId, onSeen }, handle) {
+export const MessageList = forwardRef<
+  MessageListHandle,
+  { chat: ChatDTO; meId: string; onSeen: () => void; insetTop?: number; insetBottom?: number }
+>(
+  function MessageList({ chat, meId, onSeen, insetTop = 0, insetBottom = 0 }, handle) {
     const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
     const tr = useT();
     const qc = useQueryClient();
@@ -768,9 +879,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [reporting, setReporting] = useState<MessageDTO | null>(null);
-    const [confirmDelete, setConfirmDelete] = useState<MessageDTO | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
+    const [album, setAlbum] = useState<{ items: ShownAttachment[]; start: number } | null>(null);
+    const [destructFor, setDestructFor] = useState<MessageDTO | null>(null);
     const [packFor, setPackFor] = useState<string | null>(null);
     const [reactFor, setReactFor] = useState<MessageDTO | null>(null);
     const [reactAt, setReactAt] = useState<{ row: MsgRow; anchor: DOMRect } | null>(null);
@@ -842,9 +955,28 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const shift = firstKey.current !== undefined && rows[0]?.key !== firstKey.current;
 
     const scrollToBottom = () => {
-      if (rows.length) list.current?.scrollToIndex(rows.length - 1, { align: "end" });
+      if (rows.length) list.current?.scrollToIndex(rows.length - 1, { align: "end", offset: insetTop + insetBottom + 16 });
     };
-    useImperativeHandle(handle, () => ({ scrollToBottom }));
+    const [jumping, setJumping] = useState<string | null>(null);
+    useImperativeHandle(handle, () => ({
+      scrollToBottom,
+      jumpTo: (id) => {
+        setJumping(id);
+        void loadUntil(qc, chat.id, id).then((found) => !found && setJumping(null));
+      },
+    }));
+
+    useEffect(() => {
+      const index = jumping ? rowIndex(jumping) : -1;
+      if (index < 0) return;
+      setJumping(null);
+      list.current?.scrollToIndex(index, { align: "center" });
+      setHighlight(jumping);
+    }, [jumping, rows]);
+
+    useEffect(() => {
+      if (atBottom.current) scrollToBottom();
+    }, [insetTop, insetBottom]);
 
     useLayoutEffect(() => {
       const appended = rows.length > 0 && rows[rows.length - 1]!.key !== lastKey.current;
@@ -877,8 +1009,12 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       if (offset < 300 && messages.hasNextPage && !messages.isFetchingNextPage) void messages.fetchNextPage();
     }
 
+    function rowIndex(id: string) {
+      return rows.findIndex((r) => r.kind === "msg" && (r.id === id || !!r.album?.some((it) => it.message?.id === id)));
+    }
+
     function jumpTo(id: string) {
-      const index = rows.findIndex((r) => r.kind === "msg" && r.id === id);
+      const index = rowIndex(id);
       if (index < 0) return;
       list.current?.scrollToIndex(index, { align: "center", smooth: true });
       setHighlight(id);
@@ -927,8 +1063,33 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         !m.undecryptable
           ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
           : []),
+        ...(row.mine &&
+        !frozen &&
+        !m.ephemeral &&
+        !row.album &&
+        m.type === "image" &&
+        m.attachment?.status === "ready" &&
+        (m.file?.mime ?? m.attachment.mime) !== "image/gif"
+          ? [
+              {
+                label: tr.messages.editAndResend,
+                onSelect: () =>
+                  void messageFile(m).then(
+                    (file) => useComposerMode.getState().hand(chat.id, file),
+                    () => null,
+                  ),
+              },
+            ]
+          : []),
+        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist"].includes(m.type)
+          ? [{ label: tr.messages.makeSelfDestruct, onSelect: () => setDestructFor(m) }]
+          : []),
         ...(row.mine ? [] : [{ label: tr.common.report, onSelect: () => setReporting(m) }]),
-        { label: tr.common.delete, destructive: true, onSelect: () => setConfirmDelete(m) },
+        {
+          label: tr.common.delete,
+          destructive: true,
+          onSelect: () => setConfirmDelete(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
+        },
       ];
     }
 
@@ -950,8 +1111,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           data={rows}
           shift={shift}
           onScroll={onScroll}
-          className="overscroll-contain py-2"
-          style={{ height: "auto", maxHeight: "100%", contain: "content" }}
+          className="overscroll-contain"
+          style={{
+            height: "auto",
+            maxHeight: "100%",
+            contain: "content",
+            paddingTop: insetTop + 8,
+            paddingBottom: insetBottom + 8,
+          }}
         >
           {(row) =>
             row.kind === "day" ? (
@@ -996,6 +1163,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 meId={meId}
                 onReact={(emoji) => !frozen && row.message && void react(qc, row.message, meId, emoji)}
                 onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
+                onOpenAlbum={(items, start) => setAlbum({ items, start })}
+                safe={chat.safeView}
                 frozen={frozen}
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
               />
@@ -1047,6 +1216,17 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           />
         )}
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
+        {album && <AlbumViewer items={album.items} start={album.start} onClose={() => setAlbum(null)} />}
+        {destructFor && (
+          <Sheet
+            title={tr.messages.selfDestructTitle}
+            onClose={() => setDestructFor(null)}
+            actions={EPHEMERAL_OPTIONS.map((o) => ({
+              label: o.label,
+              onSelect: () => void selfDestruct(qc, destructFor, o.value),
+            }))}
+          />
+        )}
         {(viewing || opening) && (
           <EphemeralViewer
             message={viewing?.message ?? null}
@@ -1068,19 +1248,19 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             title={tr.messages.deleteTitle}
             onClose={() => setConfirmDelete(null)}
             actions={[
-              ...(chat.type === "direct" || confirmDelete.senderId === meId
+              ...(chat.type === "direct" || confirmDelete[0]!.senderId === meId
                 ? [
                     {
                       label: chat.type === "direct" ? tr.messages.deleteForMeAnd(chat.title) : tr.messages.deleteForEveryone,
                       destructive: true,
-                      onSelect: () => void deleteMessage(qc, confirmDelete, "all").catch(() => null),
+                      onSelect: () => void deleteMessages(qc, chat.id, confirmDelete, "all").catch(() => null),
                     },
                   ]
                 : []),
               {
                 label: tr.messages.deleteForMe,
                 destructive: true,
-                onSelect: () => void deleteMessage(qc, confirmDelete, "me").catch(() => null),
+                onSelect: () => void deleteMessages(qc, chat.id, confirmDelete, "me").catch(() => null),
               },
             ]}
           />

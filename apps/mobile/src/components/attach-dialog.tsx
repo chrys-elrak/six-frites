@@ -104,12 +104,14 @@ function Preview({
 
 export function AttachDialog({
   files,
+  editFirst = false,
   initialCaption,
   initialEphemeral,
   onCancel,
   onSend,
 }: {
   files: LocalFile[];
+  editFirst?: boolean;
   initialCaption: string;
   initialEphemeral: EphemeralInput | null;
   onCancel: () => void;
@@ -121,7 +123,7 @@ export function AttachDialog({
   const [items, setItems] = useState<PickedFile[]>(() => files.map((file) => ({ file, spoiler: false })));
   const [caption, setCaption] = useState(initialCaption);
   const [ephemeral, setEphemeral] = useState(initialEphemeral);
-  const [editing, setEditing] = useState<PickedFile | null>(null);
+  const [editing, setEditing] = useState<PickedFile | null>(() => (editFirst ? items[0]! : null));
   const [muting, setMuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

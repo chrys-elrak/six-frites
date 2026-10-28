@@ -5,7 +5,7 @@ import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { AlertCircle, Download, EyeOff, FileText, Pause, Play, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { shareRemoteFile } from "@/lib/download";
@@ -154,6 +154,7 @@ export function VoicePlayer({
   mine,
   autoPlay = false,
   label,
+  compact = false,
 }: {
   url: string | null;
   durationMs: number | null;
@@ -161,6 +162,7 @@ export function VoicePlayer({
   mine: boolean;
   autoPlay?: boolean;
   label?: string;
+  compact?: boolean;
 }) {
   const tr = useT();
   const player = useAudioPlayer(null);
@@ -214,12 +216,12 @@ export function VoicePlayer({
   const bubble = useBubbleColors();
   const fg = mine ? bubble.ink : (bubble.theirInk ?? undefined);
   return (
-    <View style={styles.voice}>
+    <View style={[styles.voice, compact && styles.voiceCompact]}>
       <Pressable
         onPress={toggle}
         disabled={!url}
         accessibilityLabel={status.playing ? tr.messages.pause : (label ?? tr.messages.playVoice)}
-        style={[styles.voiceButton, { backgroundColor: mine ? bubble.ink : brand, opacity: url ? 1 : 0.5 }]}
+        style={[styles.voiceButton, compact && styles.voiceButtonCompact, { backgroundColor: mine ? bubble.ink : brand, opacity: url ? 1 : 0.5 }]}
       >
         {status.playing ? (
           <Pause size={20} color={mine ? bubble.bg : brandInk} fill={mine ? bubble.bg : brandInk} />
@@ -227,11 +229,11 @@ export function VoicePlayer({
           <Play size={20} color={mine ? bubble.bg : brandInk} fill={mine ? bubble.bg : brandInk} style={{ marginLeft: 2 }} />
         )}
       </Pressable>
-      <View style={{ flex: 1 }}>
+      <View style={compact ? styles.voiceLine : { flex: 1 }}>
         <Pressable
           onPress={(e) => seek(e.nativeEvent.locationX)}
           onLayout={(e) => setBarsWidth(e.nativeEvent.layout.width)}
-          style={styles.bars}
+          style={[styles.bars, compact && styles.barsCompact]}
         >
           {bars.map((v, i) => (
             <View
@@ -399,22 +401,35 @@ function VideoNoteCover({
   );
 }
 
+/** What the lightbox needs to show a photo or video, or null while it isn't ready. */
+export function lightboxItem(a: ShownAttachment): LightboxItem | null {
+  const v = view(a);
+  if (!v.url || (v.kind !== "image" && v.kind !== "video") || (a.source === "server" && v.state !== "ready")) return null;
+  return { kind: v.kind, url: v.url, poster: v.thumbUrl, name: v.name, mime: v.mime };
+}
+
 export function AttachmentView({
   attachment,
   mine,
   onOpen,
   hidden = false,
+  hiddenLabel,
   onReveal,
   maxWidth,
   autoPlay = false,
+  tile = false,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
   onOpen: (item: LightboxItem) => void;
   hidden?: boolean;
+  /** What the chip on a hidden photo says; a spoiler by default. */
+  hiddenLabel?: string;
   onReveal?: () => void;
   maxWidth: number;
   autoPlay?: boolean;
+  /** Fill the parent, as one tile of an album, instead of sizing to the photo. */
+  tile?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -423,7 +438,7 @@ export function AttachmentView({
   const [busy, setBusy] = useState(false);
 
   if (a.kind === "gif") {
-    const size = boxSize(a.width, a.height, Math.min(280, maxWidth));
+    const size = tile ? styles.tile : boxSize(a.width, a.height, Math.min(280, maxWidth));
     return (
       <Pressable
         onPress={onReveal}
@@ -435,7 +450,7 @@ export function AttachmentView({
           <View style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: "rgba(0,0,0,0.25)" }]}>
             <View style={styles.chip}>
               <EyeOff size={14} color="#fff" />
-              <Text style={styles.chipText}>{tr.summary.spoiler}</Text>
+              <Text style={styles.chipText}>{hiddenLabel ?? tr.summary.spoiler}</Text>
             </View>
           </View>
         ) : attachment.source === "local" ? (
@@ -448,7 +463,7 @@ export function AttachmentView({
   }
 
   if (a.kind === "image" || a.kind === "video") {
-    const size = boxSize(a.width, a.height, Math.min(280, maxWidth));
+    const size = tile ? styles.tile : boxSize(a.width, a.height, Math.min(280, maxWidth));
     const ready = a.state === "ready" && a.url;
     const open = () =>
       ready &&
@@ -473,7 +488,7 @@ export function AttachmentView({
           <View style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: "rgba(0,0,0,0.25)" }]}>
             <View style={styles.chip}>
               <EyeOff size={14} color="#fff" />
-              <Text style={styles.chipText}>{tr.summary.spoiler}</Text>
+              <Text style={styles.chipText}>{hiddenLabel ?? tr.summary.spoiler}</Text>
             </View>
           </View>
         )}
@@ -614,6 +629,69 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
   );
 }
 
+/** An album's photos and videos, one per page: swipe between them. Only the video on screen plays. */
+export function AlbumViewer({
+  items,
+  start,
+  onClose,
+  onShow,
+}: {
+  items: LightboxItem[];
+  start: number;
+  onClose: () => void;
+  /** Adds a "Show in chat" button that hands back the index of the photo on screen. */
+  onShow?: (index: number) => void;
+}) {
+  const tr = useT();
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const [index, setIndex] = useState(start);
+  const pageHeight = height - insets.top - insets.bottom - 56;
+
+  return (
+    <Modal animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+      <View style={styles.lightbox}>
+        <FlatList
+          data={items}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          initialScrollIndex={start}
+          getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
+          keyExtractor={(item, i) => `${i}:${item.url}`}
+          onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+          renderItem={({ item, index: i }) => (
+            <View style={{ width, height: pageHeight, marginTop: insets.top + 56 }}>
+              {item.kind === "video" && i === index ? (
+                <LightboxVideo url={item.url} />
+              ) : (
+                <Image
+                  source={{ uri: item.kind === "image" ? item.url : (item.poster ?? undefined) }}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="contain"
+                />
+              )}
+            </View>
+          )}
+        />
+        <View style={[styles.albumBar, { top: insets.top }]}>
+          <Text style={[styles.albumCount, { flex: 1 }]}>
+            {index + 1} / {items.length}
+          </Text>
+          {onShow && (
+            <Pressable onPress={() => onShow(index)} style={styles.showInChat}>
+              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "500" }}>{tr.chat.showInChat}</Text>
+            </Pressable>
+          )}
+          <Pressable accessibilityLabel={tr.common.close} onPress={onClose} style={styles.lightboxButton}>
+            <X size={26} color="#fff" />
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   center: { alignItems: "center", justifyContent: "center" },
   overlay: { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.25)" },
@@ -628,6 +706,7 @@ const styles = StyleSheet.create({
   },
   chipText: { color: "#fff", fontSize: 11 },
   visual: { borderRadius: 12, overflow: "hidden", maxWidth: "100%" },
+  tile: { width: "100%", height: "100%", borderRadius: 0 },
   play: {
     width: 48,
     height: 48,
@@ -651,6 +730,10 @@ const styles = StyleSheet.create({
   bar: { flex: 1, borderRadius: 2 },
   small: { fontSize: 11, opacity: 0.7, color: stone[500] },
   voiceFoot: { flexDirection: "row", alignItems: "center", gap: 6 },
+  voiceCompact: { width: "100%", gap: 8, paddingVertical: 0 },
+  voiceButtonCompact: { width: 32, height: 32, borderRadius: 16 },
+  voiceLine: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
+  barsCompact: { flex: 1, height: 24 },
   speed: { borderRadius: 999, paddingHorizontal: 6, paddingVertical: 1 },
   voiceState: { flexDirection: "row", alignItems: "center", gap: 4 },
   note: { width: NOTE, height: NOTE },
@@ -670,4 +753,16 @@ const styles = StyleSheet.create({
   lightbox: { flex: 1, backgroundColor: "#000" },
   lightboxBar: { position: "absolute", right: 8, flexDirection: "row", gap: 4, paddingTop: 8 },
   lightboxButton: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  albumBar: {
+    position: "absolute",
+    left: 0,
+    right: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 8,
+    paddingLeft: 20,
+  },
+  albumCount: { color: "rgba(255,255,255,0.8)", fontSize: 15, fontVariant: ["tabular-nums"] },
+  showInChat: { paddingHorizontal: 12, height: 44, justifyContent: "center" },
 });

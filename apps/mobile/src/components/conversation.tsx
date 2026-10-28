@@ -24,6 +24,7 @@ import { ChatMenu } from "./chat-menu";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
 import { MessageList, type MessageListHandle } from "./message-list";
+import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 import { IconButton, Loading, ScreenHeader, TextButton } from "./ui";
 
@@ -38,6 +39,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [shared, setShared] = useState<SharedTab | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const typing = useTyping(chatId);
   const inCall = useCall((s) => s.call !== null);
@@ -130,8 +132,9 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <ChatBackground themeId={c.theme} />
       {selecting ? (
-        <ScreenHeader>
+        <ScreenHeader background={t.bar}>
           <IconButton Icon={X} label={tr.chat.cancelSelection} onPress={clearSelection} />
           <Text style={[styles.title, { color: t.text }]}>{tr.chat.selected(count)}</Text>
           {count >= 2 && <IconButton Icon={ChevronsUpDown} label={tr.chat.selectBetween} onPress={selectBetween} />}
@@ -144,7 +147,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           />
         </ScreenHeader>
       ) : (
-        <ScreenHeader>
+        <ScreenHeader background={t.bar}>
           <IconButton Icon={ChevronLeft} label={tr.common.backToChats} size={26} onPress={goBack} />
           <Pressable
             onPress={() => setEditing(true)}
@@ -201,7 +204,6 @@ export function Conversation({ chatId }: { chatId: string }) {
       )}
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
-          <ChatBackground themeId={c.theme} />
           <BubbleColorsContext.Provider value={bubble}>
             <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
           </BubbleColorsContext.Provider>
@@ -227,6 +229,18 @@ export function Conversation({ chatId }: { chatId: string }) {
           onClose={() => setMenu(false)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
+          onSharedMedia={setShared}
+        />
+      )}
+      {shared && (
+        <SharedMedia
+          chat={c}
+          initial={shared}
+          onJump={(id) => {
+            setShared(null);
+            list.current?.jumpTo(id);
+          }}
+          onClose={() => setShared(null)}
         />
       )}
       {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}

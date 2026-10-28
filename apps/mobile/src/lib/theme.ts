@@ -21,6 +21,7 @@ export const flame = "#f97316";
 const light = {
   dark: false,
   bg: stone[50],
+  bar: "rgba(250,250,249,0.8)",
   surface: "#ffffff",
   surfaceAlt: stone[100],
   field: stone[100],
@@ -47,6 +48,7 @@ const light = {
 const dark: typeof light = {
   dark: true,
   bg: stone[950],
+  bar: "rgba(12,10,9,0.7)",
   surface: stone[900],
   surfaceAlt: stone[800],
   field: stone[800],

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Id, IsoDate } from "./common.js";
+import { Id, IsoDate, PageQuery } from "./common.js";
 import { AttachmentDTO } from "./uploads.js";
 import { PublicUser } from "./invites.js";
 import { StickerDTO } from "./stickers.js";
@@ -34,6 +34,29 @@ export const mapsUrl = (p: GeoPoint) => `https://www.google.com/maps/search/?api
 export const coordsLabel = (p: GeoPoint) => `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
 
 export const CHECKLIST = { title: 128, item: 200, items: 30 } as const;
+
+/** Most photos and videos one album holds, as on Telegram. */
+export const MAX_ALBUM = 10;
+
+/**
+ * Album ids for files sent together, one per file: photos and videos share an id, ten at a time;
+ * anything else, or a lone photo, gets none.
+ */
+export function albumIds(kinds: string[], newId: () => string): (string | undefined)[] {
+  const visual = (k: string) => k === "image" || k === "video";
+  if (kinds.filter(visual).length < 2) return kinds.map(() => undefined);
+  let id = newId();
+  let count = 0;
+  return kinds.map((k) => {
+    if (!visual(k)) return undefined;
+    if (count === MAX_ALBUM) {
+      id = newId();
+      count = 0;
+    }
+    count++;
+    return id;
+  });
+}
 
 export const Checklist = z.object({
   title: z.string().trim().min(1).max(CHECKLIST.title),
@@ -194,6 +217,21 @@ export function isMuted(chat: { muted: boolean; mutedUntil: string | null }, now
   return chat.muted && (chat.mutedUntil === null || Date.parse(chat.mutedUntil) > now);
 }
 
+export const MessageListQuery = PageQuery.extend({
+  only: z
+    .enum(["media", "files", "links", "text"])
+    .optional()
+    .describe(
+      "media: photos and videos; files; links: text messages that may hold a link (every encrypted one, since only your device can read it); text: messages that can hold text, captions included, for searching on your device. Leaves out deleted and self-destructing messages.",
+    ),
+  from: IsoDate.optional().describe("Only messages sent at or after this time"),
+  to: IsoDate.optional().describe("Only messages sent before this time"),
+  until: Id.optional().describe(
+    "Ignore `limit` and keep going until this message is in the page (up to 2000 messages), to jump to it",
+  ),
+});
+export type MessageListQuery = z.infer<typeof MessageListQuery>;
+
 export const MessageDTO = z.object({
   id: Id,
   chatId: Id,
@@ -206,6 +244,7 @@ export const MessageDTO = z.object({
   attachment: AttachmentDTO.nullable(),
   sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
+  groupId: z.string().nullable().describe("Photos and videos sent together share it and show as one album"),
   replyTo: ReplyPreview.nullable(),
   action: ServiceAction.nullable(),
   location: GeoPoint.nullable(),
@@ -285,6 +324,11 @@ export const SendMessageInput = z
       .optional()
       .describe("With `encrypted`: the content is a location or a checklist rather than text or a file"),
     replyToId: Id.optional(),
+    groupId: z
+      .string()
+      .regex(/^[\w-]{1,64}$/)
+      .optional()
+      .describe("The same id on photos and videos sent together, so they show as one album"),
     spoiler: z.boolean().optional(),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
     encrypted: EncryptedInput.optional(),
@@ -359,6 +403,7 @@ export const ChatDTO = z.object({
   muted: z.boolean(),
   mutedUntil: IsoDate.nullable().describe("When a timed mute ends; null while muted for good or not muted"),
   pinned: z.boolean(),
+  safeView: z.boolean().describe("Your setting: blur the photos and videos the other person sends until you tap them"),
   sharingProfile: z
     .boolean()
     .describe("You show the other person your real name and photo; until then they only see your alias"),
@@ -435,6 +480,7 @@ export const UpdateChatInput = z
       .optional()
       .describe("With `muted: true`, unmute on its own at this time. Leave out or null to stay muted."),
     pinned: z.boolean().optional(),
+    safeView: z.boolean().optional().describe("Just for you: blur the photos and videos the other person sends"),
     autoDeleteSecs: z
       .number()
       .int()
@@ -524,12 +570,7 @@ export const SCHEDULE_LIMITS = { perChat: 100, maxAheadSeconds: 365 * 24 * 60 * 
 
 export const ScheduleMessageInput = SendMessageInput.safeExtend({
   sendAt: IsoDate.describe("When to send it, in the future and at most a year ahead"),
-})
-  .refine((v) => !v.stickerId, { message: "Stickers can't be scheduled", path: ["stickerId"] })
-  .refine((v) => !v.location && !v.checklist && !v.type, {
-    message: "Locations and checklists can't be scheduled",
-    path: ["location"],
-  });
+});
 export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
 
 export const ScheduledMessageDTO = z.object({

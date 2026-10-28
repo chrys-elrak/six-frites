@@ -1,8 +1,10 @@
 import type { Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
+  type Checklist,
   type EditScheduledInput,
   type EncryptedInput,
+  type GeoPoint,
   type MessageDTO,
   type MessageType,
   SCHEDULE_LIMITS,
@@ -36,7 +38,9 @@ function toScheduledDTO(s: ScheduledRow): ScheduledMessageDTO {
     id: s.id,
     chatId: s.chatId,
     clientId: s.clientId,
-    type: (s.attachment?.kind ?? "text") as MessageType,
+    type: (s.stickerId
+      ? "sticker"
+      : (s.attachment?.kind ?? s.type ?? (s.location ? "location" : s.checklist ? "checklist" : "text"))) as MessageType,
     text: s.text,
     entities: entitiesOf(s),
     spoiler: s.spoiler,
@@ -118,6 +122,9 @@ export async function scheduleMessage(
       if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
     }
     const upload = input.attachmentId ? await claimForMessage(tx, userId, input.attachmentId) : null;
+    if (input.stickerId && !(await tx.sticker.findFirst({ where: { id: input.stickerId, removedAt: null } }))) {
+      throw new AppError("STICKER_NOT_FOUND");
+    }
     checkEncryption(await tx.chat.findUniqueOrThrow({ where: { id: chatId } }), input, upload);
     let senderDevice: string | null = null;
     if (input.encrypted) {
@@ -136,7 +143,12 @@ export async function scheduleMessage(
         maxViews: input.ephemeral?.maxViews ?? null,
         ttlSeconds: input.ephemeral?.ttlSeconds ?? null,
         attachmentId: input.attachmentId ?? null,
+        stickerId: input.stickerId ?? null,
         replyToId: input.replyToId ?? null,
+        groupId: input.groupId ?? null,
+        type: input.type ?? null,
+        ...(input.location && { location: input.location }),
+        ...(input.checklist && { checklist: input.checklist }),
         ...(input.encrypted && { encrypted: input.encrypted, senderDevice }),
         sendAt,
       },
@@ -207,11 +219,19 @@ async function deliverScheduled(id: string, ownerId?: string) {
       {
         clientId: s.clientId,
         attachmentId: s.attachmentId ?? undefined,
+        stickerId: s.stickerId ?? undefined,
         replyToId: s.replyToId ?? undefined,
+        groupId: s.groupId ?? undefined,
         ephemeral: ephemeral ? { maxViews: s.maxViews ?? undefined, ttlSeconds: s.ttlSeconds ?? undefined } : undefined,
         ...(encrypted
-          ? { encrypted }
-          : { text: s.text ?? undefined, entities: entitiesOf(s), spoiler: s.spoiler }),
+          ? { encrypted, type: (s.type as "location" | "checklist" | null) ?? undefined }
+          : {
+              text: s.text ?? undefined,
+              entities: entitiesOf(s),
+              spoiler: s.spoiler,
+              location: (s.location as GeoPoint | null) ?? undefined,
+              checklist: (s.checklist as Checklist | null) ?? undefined,
+            }),
       },
       { scheduled: { senderDevice: s.senderDevice } },
     );

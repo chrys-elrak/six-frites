@@ -173,9 +173,11 @@ const dayLabel = (d: Date) => d.toLocaleDateString(getLocale(), { weekday: "shor
 
 /** Picks two days, up to today, for deleting the messages sent from the first through the last. */
 export function DateRangeDialog({
+  title,
   onPick,
   onClose,
 }: {
+  title?: string;
   onPick: (range: { from: string; to: string }) => void;
   onClose: () => void;
 }) {
@@ -189,7 +191,7 @@ export function DateRangeDialog({
   return (
     <Overlay onClose={onClose}>
       <View style={{ padding: 16, gap: 14 }}>
-        <Text style={[styles.title, { color: t.text }]}>{tr.chat.deleteWhich}</Text>
+        <Text style={[styles.title, { color: t.text }]}>{title ?? tr.chat.deleteWhich}</Text>
         <Stepper
           t={t}
           kind="day"

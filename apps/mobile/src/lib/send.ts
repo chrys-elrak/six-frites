@@ -1,4 +1,4 @@
-import { type Realtime, encryptFile } from "@six/sdk";
+import { type Realtime, encryptFile, unwrap } from "@six/sdk";
 import {
   type Checklist,
   type EncryptedFile,
@@ -7,6 +7,7 @@ import {
   type GifDTO,
   type MessageDTO,
   type MessageEntity,
+  type SendMessageInput,
   type UploadKind,
   maskSpoilers,
 } from "@six/shared";
@@ -41,6 +42,8 @@ export interface Draft {
   gif?: GifDTO;
   location?: GeoPoint;
   checklist?: Checklist;
+  groupId?: string;
+  sendAt?: Date | null;
 }
 
 /** Encrypts a picked file into the cache so it can be uploaded like any other file. */
@@ -96,8 +99,16 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       attachmentId,
       replyToId: pending.replyTo?.id,
       ephemeral: pending.ephemeral ?? undefined,
+      groupId: pending.groupId,
     };
     const type = pending.location ? ("location" as const) : pending.checklist ? ("checklist" as const) : undefined;
+    const later = pending.sendAt && Date.parse(pending.sendAt) > Date.now() + 5000 ? pending.sendAt : null;
+    const post = async (body: SendMessageInput) => {
+      if (!later) return realtime.sendMessage(chatId, body);
+      const params = { path: { id: chatId } };
+      unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params, body: { ...body, sendAt: later } }));
+      return null;
+    };
     const m = encrypt
       ? await e2eeFor(meId)!.send(
           chatId,
@@ -112,9 +123,9 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             location: pending.location,
             checklist: pending.checklist,
           },
-          (encrypted) => realtime.sendMessage(chatId, { ...base, encrypted, type }),
+          (encrypted) => post({ ...base, encrypted, type }),
         )
-      : await realtime.sendMessage(chatId, {
+      : await post({
           ...base,
           text: pending.text || undefined,
           entities: pending.entities.length ? pending.entities : undefined,
@@ -123,8 +134,10 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           location: pending.location,
           checklist: pending.checklist,
         });
-    insertMessage(qc, m);
-    patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
+    if (m) {
+      insertMessage(qc, m);
+      patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
+    }
     outbox.remove(chatId, clientId);
   } catch {
     outbox.setStatus(chatId, clientId, "failed");
@@ -183,6 +196,8 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
     gif,
     location: draft.location,
     checklist: draft.checklist,
+    groupId: draft.groupId,
+    sendAt: draft.sendAt?.toISOString(),
     createdAt: new Date().toISOString(),
     status: "sending",
   };

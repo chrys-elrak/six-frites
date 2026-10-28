@@ -154,3 +154,25 @@ describe("self-destructing messages", () => {
     expect((await view(guest, normal.id)).json()).toMatchObject({ message: { text: "plain", ephemeral: null }, expiresAt: null });
   });
 });
+
+describe("making a sent message self-destruct", () => {
+  const destruct = (who: Auth, id: string, rule: object) => call(who, "POST", `/v1/messages/${id}/self-destruct`, rule);
+
+  it("locks it for the recipient until they open it, and drops it from the sync log", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const sent = (await send(host, chatId, "should not have said that")).json();
+    expect((await latest(guest, chatId)).text).toBe("should not have said that");
+
+    expect((await destruct(guest, sent.id, { maxViews: 1 })).json().error.code).toBe("NOT_MESSAGE_SENDER");
+    const locked = await destruct(host, sent.id, { maxViews: 1 });
+    expect(locked.statusCode, locked.body).toBe(200);
+    expect(locked.json()).toMatchObject({ text: "should not have said that", ephemeral: { maxViews: 1, locked: false } });
+    expect(await latest(guest, chatId)).toMatchObject({ text: null, ephemeral: { locked: true } });
+    const synced = await get(guest, "/v1/sync");
+    expect(JSON.stringify(synced)).not.toContain("should not have said that");
+
+    expect((await view(guest, sent.id)).json().message.text).toBe("should not have said that");
+    expect((await latest(guest, chatId)).ephemeral).toMatchObject({ expired: true });
+    expect((await destruct(host, sent.id, { ttlSeconds: 30 })).json().error.code).toBe("MESSAGE_NOT_EDITABLE");
+  });
+});

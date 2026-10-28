@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { FULL_CROP, cropPixels, dragCrop, stripAudio, turnCrop } from "../src/media-edit.js";
+import {
+  FULL_CROP,
+  NO_EDIT,
+  type PhotoEdit,
+  cropPixels,
+  dragCrop,
+  flipEdit,
+  isEdited,
+  labelAt,
+  scaleLabel,
+  stripAudio,
+  turnCrop,
+  turnEdit,
+} from "../src/media-edit.js";
 
 const u32 = (n: number) => [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
 const ascii = (s: string) => [...s].map((c) => c.charCodeAt(0));
@@ -78,5 +91,50 @@ describe("crop", () => {
 
   it("turns into whole pixels inside the image", () => {
     expect(cropPixels({ x: 0.5, y: 0.5, w: 0.5, h: 0.5 }, 101, 99)).toEqual({ originX: 51, originY: 50, width: 50, height: 49 });
+  });
+});
+
+/** Where a point of the original photo ends up once it is turned and mirrored as `e` says. */
+function orient(e: PhotoEdit, [x, y]: [number, number]): [number, number] {
+  for (let i = 0; i < e.turns; i++) [x, y] = [y, 1 - x];
+  return e.flipped ? [1 - x, y] : [x, y];
+}
+
+describe("photo edits", () => {
+  const drawn: PhotoEdit = {
+    ...NO_EDIT,
+    strokes: [{ color: "#fff", size: 0.01, points: [0.1, 0.2, 0.3, 0.4] }],
+    labels: [{ text: "hi", x: 0.25, y: 0.75, size: 0.05, color: "#fff" }],
+  };
+
+  it("turns and flips the photo the same way as what is drawn on it", () => {
+    let e = drawn;
+    for (const step of [turnEdit, flipEdit, turnEdit, turnEdit, flipEdit, turnEdit, flipEdit]) {
+      const next = step(e);
+      const p: [number, number] = [0.15, 0.6];
+      const moved = step({ ...NO_EDIT, labels: [{ ...drawn.labels[0]!, x: orient(e, p)[0], y: orient(e, p)[1] }] }).labels[0]!;
+      orient(next, p).forEach((v, i) => expect(v).toBeCloseTo(i ? moved.y : moved.x));
+      e = next;
+    }
+  });
+
+  it("comes back to the start after four turns or two flips", () => {
+    for (const round of [turnEdit(turnEdit(turnEdit(turnEdit(drawn)))), flipEdit(flipEdit(drawn))]) {
+      expect(round).toMatchObject({ turns: 0, flipped: false });
+      round.strokes[0]!.points.forEach((v, i) => expect(v).toBeCloseTo(drawn.strokes[0]!.points[i]!));
+    }
+    expect(isEdited(turnEdit(turnEdit(turnEdit(turnEdit(NO_EDIT)))))).toBe(false);
+    expect(isEdited(drawn)).toBe(true);
+  });
+
+  it("finds the label under a point", () => {
+    expect(labelAt(drawn.labels, 0.25, 0.75, 1000, 1000)).toBe(0);
+    expect(labelAt(drawn.labels, 0.6, 0.75, 1000, 1000)).toBe(-1);
+    expect(labelAt([scaleLabel(drawn.labels[0]!, 3)], 0.37, 0.75, 1000, 1000)).toBe(0);
+  });
+
+  it("keeps resized labels within reason", () => {
+    expect(scaleLabel(drawn.labels[0]!, 0.01).size).toBe(0.015);
+    expect(scaleLabel(drawn.labels[0]!, 100).size).toBe(0.6);
   });
 });

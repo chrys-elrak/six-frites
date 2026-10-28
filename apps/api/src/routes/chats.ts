@@ -18,11 +18,12 @@ import {
   DeleteMessagesQuery,
   EditMessageInput,
   EditScheduledInput,
+  EphemeralInput,
   Id,
   MarkDeliveredInput,
   MarkReadInput,
   MessageDTO,
-  PageQuery,
+  MessageListQuery,
   ReactInput,
   ReactionEmoji,
   ScheduleMessageInput,
@@ -44,6 +45,7 @@ import {
   deleteMessagesBetween,
   editMessage,
   listMessages,
+  makeEphemeral,
   setReaction,
   resendMessage,
   sendMessage,
@@ -226,6 +228,23 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
     (req) => resendMessage(req.auth.userId, req.params.id),
   );
 
+  app.post(
+    "/messages/:id/self-destruct",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Make a message you already sent self-destruct",
+        description:
+          "Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, location or checklist.",
+        security,
+        params: MessageParams,
+        body: EphemeralInput,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => makeEphemeral(req.auth.userId, req.params.id, req.body),
+  );
+
   app.delete(
     "/messages",
     {
@@ -253,7 +272,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         summary: "Messages in a chat, newest first",
         security,
         params: ChatParams,
-        querystring: PageQuery,
+        querystring: MessageListQuery,
         response: { 200: page(MessageDTO) },
       },
     },

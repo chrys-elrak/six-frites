@@ -70,6 +70,35 @@ export function useMessages(chatId: string) {
   });
 }
 
+const UNTIL_MAX = 2000;
+
+/**
+ * Loads older messages until `messageId` is among them, so the list can scroll to it. The server sends
+ * everything down to it in one page (up to 2000 messages); false when it isn't in the chat any more.
+ */
+export async function loadUntil(qc: QueryClient, chatId: string, messageId: string) {
+  const key = chatKeys.messages(chatId);
+  for (;;) {
+    const data = qc.getQueryData<Messages>(key);
+    if (!data) return false;
+    if (data.pages.some((p) => p.items.some((m) => m.id === messageId))) return true;
+    const cursor = data.pages.at(-1)?.nextCursor;
+    if (!cursor) return false;
+    const page = unwrap(
+      await six.api.GET("/v1/chats/{id}/messages", {
+        params: { path: { id: chatId }, query: { limit: 50, cursor, until: messageId } },
+      }),
+    );
+    const items = await hydrateAll(page.items);
+    qc.setQueryData<Messages>(key, (d) =>
+      d && d.pages.at(-1)?.nextCursor === cursor
+        ? { pages: [...d.pages, { ...page, items }], pageParams: [...d.pageParams, cursor] }
+        : d,
+    );
+    if (page.items.length < UNTIL_MAX && !page.items.some((m) => m.id === messageId)) return false;
+  }
+}
+
 export function insertMessage(qc: QueryClient, m: MessageDTO) {
   qc.setQueryData<Messages>(chatKeys.messages(m.chatId), (data) => {
     if (!data) return data;

@@ -1,0 +1,2 @@
+ALTER TABLE "ChatMember" ADD COLUMN "safeView" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Message" ADD COLUMN "groupId" TEXT;

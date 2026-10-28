@@ -5183,6 +5183,11 @@
                                 ],
                                 "additionalProperties": false
                               },
+                              "groupId": {
+                                "nullable": true,
+                                "description": "Photos and videos sent together share it and show as one album",
+                                "type": "string"
+                              },
                               "replyTo": {
                                 "nullable": true,
                                 "type": "object",
@@ -5602,6 +5607,7 @@
                               "attachment",
                               "sticker",
                               "ephemeral",
+                              "groupId",
                               "replyTo",
                               "action",
                               "location",
@@ -5636,6 +5642,10 @@
                           },
                           "pinned": {
                             "type": "boolean"
+                          },
+                          "safeView": {
+                            "type": "boolean",
+                            "description": "Your setting: blur the photos and videos the other person sends until you tap them"
                           },
                           "sharingProfile": {
                             "type": "boolean",
@@ -5697,6 +5707,7 @@
                           "muted",
                           "mutedUntil",
                           "pinned",
+                          "safeView",
                           "sharingProfile",
                           "autoDeleteSecs",
                           "theme",
@@ -6135,6 +6146,11 @@
                           ],
                           "additionalProperties": false
                         },
+                        "groupId": {
+                          "nullable": true,
+                          "description": "Photos and videos sent together share it and show as one album",
+                          "type": "string"
+                        },
                         "replyTo": {
                           "nullable": true,
                           "type": "object",
@@ -6554,6 +6570,7 @@
                         "attachment",
                         "sticker",
                         "ephemeral",
+                        "groupId",
                         "replyTo",
                         "action",
                         "location",
@@ -6588,6 +6605,10 @@
                     },
                     "pinned": {
                       "type": "boolean"
+                    },
+                    "safeView": {
+                      "type": "boolean",
+                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
                     },
                     "sharingProfile": {
                       "type": "boolean",
@@ -6649,6 +6670,7 @@
                     "muted",
                     "mutedUntil",
                     "pinned",
+                    "safeView",
                     "sharingProfile",
                     "autoDeleteSecs",
                     "theme",
@@ -6694,6 +6716,10 @@
                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                   },
                   "pinned": {
+                    "type": "boolean"
+                  },
+                  "safeView": {
+                    "description": "Just for you: blur the photos and videos the other person sends",
                     "type": "boolean"
                   },
                   "autoDeleteSecs": {
@@ -7114,6 +7140,11 @@
                           ],
                           "additionalProperties": false
                         },
+                        "groupId": {
+                          "nullable": true,
+                          "description": "Photos and videos sent together share it and show as one album",
+                          "type": "string"
+                        },
                         "replyTo": {
                           "nullable": true,
                           "type": "object",
@@ -7533,6 +7564,7 @@
                         "attachment",
                         "sticker",
                         "ephemeral",
+                        "groupId",
                         "replyTo",
                         "action",
                         "location",
@@ -7567,6 +7599,10 @@
                     },
                     "pinned": {
                       "type": "boolean"
+                    },
+                    "safeView": {
+                      "type": "boolean",
+                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
                     },
                     "sharingProfile": {
                       "type": "boolean",
@@ -7628,6 +7664,7 @@
                     "muted",
                     "mutedUntil",
                     "pinned",
+                    "safeView",
                     "sharingProfile",
                     "autoDeleteSecs",
                     "theme",
@@ -8212,6 +8249,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
                     "replyTo": {
                       "nullable": true,
                       "type": "object",
@@ -8631,6 +8673,7 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",
@@ -9000,6 +9043,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
                     "replyTo": {
                       "nullable": true,
                       "type": "object",
@@ -9419,6 +9467,7 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",
@@ -9778,6 +9827,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
                     "replyTo": {
                       "nullable": true,
                       "type": "object",
@@ -10197,6 +10251,7 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",
@@ -10574,6 +10629,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
                     "replyTo": {
                       "nullable": true,
                       "type": "object",
@@ -10993,6 +11053,7 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",
@@ -11344,6 +11405,11 @@
                             "resendUntil"
                           ],
                           "additionalProperties": false
+                        },
+                        "groupId": {
+                          "nullable": true,
+                          "description": "Photos and videos sent together share it and show as one album",
+                          "type": "string"
                         },
                         "replyTo": {
                           "nullable": true,
@@ -11764,6 +11830,7 @@
                         "attachment",
                         "sticker",
                         "ephemeral",
+                        "groupId",
                         "replyTo",
                         "action",
                         "location",
@@ -12126,6 +12193,11 @@
                         "resendUntil"
                       ],
                       "additionalProperties": false
+                    },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
                     },
                     "replyTo": {
                       "nullable": true,
@@ -12546,6 +12618,805 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
+                    "replyTo",
+                    "action",
+                    "location",
+                    "checklist",
+                    "checks",
+                    "createdAt",
+                    "editedAt",
+                    "deletedAt",
+                    "expiresAt",
+                    "reactions",
+                    "encryption"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/self-destruct": {
+      "post": {
+        "summary": "Make a message you already sent self-destruct",
+        "tags": [
+          "messages"
+        ],
+        "description": "Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, location or checklist.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "maxViews": {
+                    "description": "Destroy after this many views by the recipient",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  "ttlSeconds": {
+                    "description": "Destroy this many seconds after the recipient first opens it",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 604800
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video",
+                        "video_note",
+                        "voice",
+                        "file",
+                        "gif",
+                        "sticker",
+                        "service",
+                        "location",
+                        "checklist"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "strike",
+                              "code",
+                              "spoiler"
+                            ]
+                          },
+                          "offset": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "offset",
+                          "length"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "spoiler": {
+                      "type": "boolean"
+                    },
+                    "attachment": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        },
+                        "encrypted": {
+                          "type": "boolean",
+                          "description": "The file is encrypted; its key, name, type and preview are in the message content"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform",
+                        "encrypted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sticker": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "packId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "emoji": {
+                          "type": "string"
+                        },
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "lottie",
+                            "image"
+                          ],
+                          "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Null while an uploaded sticker is still being processed",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "packId",
+                        "emoji",
+                        "format",
+                        "url",
+                        "width",
+                        "height"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ephemeral": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "maxViews": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "ttlSeconds": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "views": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many times the recipient opened it"
+                        },
+                        "firstViewedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "locked": {
+                          "type": "boolean",
+                          "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                        },
+                        "expired": {
+                          "type": "boolean",
+                          "description": "Its views or timer ran out; the recipient can no longer open it"
+                        },
+                        "purged": {
+                          "type": "boolean",
+                          "description": "Content permanently deleted; it can no longer be resent"
+                        },
+                        "resent": {
+                          "type": "boolean",
+                          "description": "The sender re-armed it after it was opened"
+                        },
+                        "resendsLeft": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How many more times the sender can re-arm it"
+                        },
+                        "resendUntil": {
+                          "nullable": true,
+                          "description": "Until when the sender can resend it, once it has been opened",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "maxViews",
+                        "ttlSeconds",
+                        "views",
+                        "firstViewedAt",
+                        "locked",
+                        "expired",
+                        "purged",
+                        "resent",
+                        "resendsLeft",
+                        "resendUntil"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
+                    "replyTo": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker",
+                            "service",
+                            "location",
+                            "checklist"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        },
+                        "encrypted": {
+                          "type": "boolean",
+                          "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "senderId",
+                        "type",
+                        "text",
+                        "spoiler",
+                        "ephemeral",
+                        "deleted",
+                        "encrypted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "action": {
+                      "nullable": true,
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "auto_delete"
+                              ]
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "secs"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "theme"
+                              ]
+                            },
+                            "theme": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "theme"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "e2ee"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "call"
+                              ]
+                            },
+                            "video": {
+                              "type": "boolean"
+                            },
+                            "secs": {
+                              "nullable": true,
+                              "description": "How long it lasted; null if it was missed or declined",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "video",
+                            "secs"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ],
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checklist": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "items": {
+                          "minItems": 1,
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Index in the checklist's items"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Who marked it done"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "userId",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The checklist items marked done; either person can tick them"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "editedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "deletedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "nullable": true,
+                      "description": "When the chat's auto-delete timer removes it for everyone",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "reactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "emoji": {
+                            "type": "string"
+                          },
+                          "userIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        },
+                        "required": [
+                          "emoji",
+                          "userIds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "One entry per emoji, oldest first; a person can add several different emoji"
+                    },
+                    "encryption": {
+                      "nullable": true,
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "type": "object",
+                      "properties": {
+                        "senderDeviceId": {
+                          "nullable": true,
+                          "description": "The device that encrypted it; open the envelope with your session with it",
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "envelopes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "deviceId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "envelope": {
+                                "type": "object",
+                                "properties": {
+                                  "v": {
+                                    "type": "number",
+                                    "enum": [
+                                      1
+                                    ]
+                                  },
+                                  "x3dh": {
+                                    "type": "object",
+                                    "properties": {
+                                      "identity": {
+                                        "type": "object",
+                                        "properties": {
+                                          "signPub": {
+                                            "type": "string",
+                                            "pattern": "^[\\w-]{43}$",
+                                            "description": "Ed25519 identity key"
+                                          },
+                                          "dhPub": {
+                                            "type": "string",
+                                            "pattern": "^[\\w-]{43}$",
+                                            "description": "X25519 identity key, signed by signPub"
+                                          },
+                                          "dhSig": {
+                                            "type": "string",
+                                            "pattern": "^[\\w-]{86}$",
+                                            "description": "A 64-byte Ed25519 signature, base64url without padding"
+                                          }
+                                        },
+                                        "required": [
+                                          "signPub",
+                                          "dhPub",
+                                          "dhSig"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "ephemeral": {
+                                        "type": "string",
+                                        "pattern": "^[\\w-]{43}$",
+                                        "description": "A 32-byte public key, base64url without padding"
+                                      },
+                                      "signedPreKeyId": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 4294967295
+                                      },
+                                      "oneTimePreKeyId": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 4294967295
+                                      }
+                                    },
+                                    "required": [
+                                      "identity",
+                                      "ephemeral",
+                                      "signedPreKeyId",
+                                      "oneTimePreKeyId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "header": {
+                                    "type": "string",
+                                    "maxLength": 128,
+                                    "pattern": "^[\\w-]+$"
+                                  },
+                                  "body": {
+                                    "type": "string",
+                                    "maxLength": 65536,
+                                    "pattern": "^[\\w-]+$"
+                                  }
+                                },
+                                "required": [
+                                  "v",
+                                  "header",
+                                  "body"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "deviceId",
+                              "envelope"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "Only the envelopes for your own devices"
+                        },
+                        "backup": {
+                          "nullable": true,
+                          "description": "Your backup copy, if you stored one",
+                          "type": "string",
+                          "maxLength": 65536,
+                          "pattern": "^[\\w-]+$"
+                        }
+                      },
+                      "required": [
+                        "senderDeviceId",
+                        "envelopes",
+                        "backup"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "chatId",
+                    "senderId",
+                    "clientId",
+                    "type",
+                    "text",
+                    "entities",
+                    "spoiler",
+                    "attachment",
+                    "sticker",
+                    "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",
@@ -12646,6 +13517,53 @@
             "in": "query",
             "name": "limit",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "media",
+                "files",
+                "links",
+                "text"
+              ]
+            },
+            "in": "query",
+            "name": "only",
+            "required": false,
+            "description": "media: photos and videos; files; links: text messages that may hold a link (every encrypted one, since only your device can read it); text: messages that can hold text, captions included, for searching on your device. Leaves out deleted and self-destructing messages."
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "Only messages sent at or after this time"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Only messages sent before this time"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "description": "Ignore `limit` and keep going until this message is in the page (up to 2000 messages), to jump to it"
           },
           {
             "schema": {
@@ -12972,6 +13890,11 @@
                               "resendUntil"
                             ],
                             "additionalProperties": false
+                          },
+                          "groupId": {
+                            "nullable": true,
+                            "description": "Photos and videos sent together share it and show as one album",
+                            "type": "string"
                           },
                           "replyTo": {
                             "nullable": true,
@@ -13392,6 +14315,7 @@
                           "attachment",
                           "sticker",
                           "ephemeral",
+                          "groupId",
                           "replyTo",
                           "action",
                           "location",
@@ -13560,6 +14484,11 @@
                   "replyToId": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "groupId": {
+                    "description": "The same id on photos and videos sent together, so they show as one album",
+                    "type": "string",
+                    "pattern": "^[\\w-]{1,64}$"
                   },
                   "spoiler": {
                     "type": "boolean"
@@ -14023,6 +14952,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
                     "replyTo": {
                       "nullable": true,
                       "type": "object",
@@ -14442,6 +15376,7 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",
@@ -15055,6 +15990,11 @@
                   "replyToId": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "groupId": {
+                    "description": "The same id on photos and videos sent together, so they show as one album",
+                    "type": "string",
+                    "pattern": "^[\\w-]{1,64}$"
                   },
                   "spoiler": {
                     "type": "boolean"
@@ -16609,6 +17549,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
                     "replyTo": {
                       "nullable": true,
                       "type": "object",
@@ -17028,6 +17973,7 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",
@@ -18300,6 +19246,11 @@
                                     ],
                                     "additionalProperties": false
                                   },
+                                  "groupId": {
+                                    "nullable": true,
+                                    "description": "Photos and videos sent together share it and show as one album",
+                                    "type": "string"
+                                  },
                                   "replyTo": {
                                     "nullable": true,
                                     "type": "object",
@@ -18719,6 +19670,7 @@
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
+                                  "groupId",
                                   "replyTo",
                                   "action",
                                   "location",
@@ -19058,6 +20010,11 @@
                                     ],
                                     "additionalProperties": false
                                   },
+                                  "groupId": {
+                                    "nullable": true,
+                                    "description": "Photos and videos sent together share it and show as one album",
+                                    "type": "string"
+                                  },
                                   "replyTo": {
                                     "nullable": true,
                                     "type": "object",
@@ -19477,6 +20434,7 @@
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
+                                  "groupId",
                                   "replyTo",
                                   "action",
                                   "location",
@@ -20001,6 +20959,11 @@
                                         ],
                                         "additionalProperties": false
                                       },
+                                      "groupId": {
+                                        "nullable": true,
+                                        "description": "Photos and videos sent together share it and show as one album",
+                                        "type": "string"
+                                      },
                                       "replyTo": {
                                         "nullable": true,
                                         "type": "object",
@@ -20420,6 +21383,7 @@
                                       "attachment",
                                       "sticker",
                                       "ephemeral",
+                                      "groupId",
                                       "replyTo",
                                       "action",
                                       "location",
@@ -20454,6 +21418,10 @@
                                   },
                                   "pinned": {
                                     "type": "boolean"
+                                  },
+                                  "safeView": {
+                                    "type": "boolean",
+                                    "description": "Your setting: blur the photos and videos the other person sends until you tap them"
                                   },
                                   "sharingProfile": {
                                     "type": "boolean",
@@ -20515,6 +21483,7 @@
                                   "muted",
                                   "mutedUntil",
                                   "pinned",
+                                  "safeView",
                                   "sharingProfile",
                                   "autoDeleteSecs",
                                   "theme",
@@ -22457,6 +23426,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "groupId": {
+                      "nullable": true,
+                      "description": "Photos and videos sent together share it and show as one album",
+                      "type": "string"
+                    },
                     "replyTo": {
                       "nullable": true,
                       "type": "object",
@@ -22876,6 +23850,7 @@
                     "attachment",
                     "sticker",
                     "ephemeral",
+                    "groupId",
                     "replyTo",
                     "action",
                     "location",

@@ -2588,6 +2588,8 @@ export interface paths {
                                          */
                                         resendUntil: string | null;
                                     } | null;
+                                    /** @description Photos and videos sent together share it and show as one album */
+                                    groupId: string | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
@@ -2695,6 +2697,8 @@ export interface paths {
                                  */
                                 mutedUntil: string | null;
                                 pinned: boolean;
+                                /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                                safeView: boolean;
                                 /** @description You show the other person your real name and photo; until then they only see your alias */
                                 sharingProfile: boolean;
                                 /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
@@ -2856,6 +2860,8 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -2963,6 +2969,8 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
+                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            safeView: boolean;
                             /** @description You show the other person your real name and photo; until then they only see your alias */
                             sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
@@ -3048,6 +3056,8 @@ export interface paths {
                          */
                         mutedUntil?: string | null;
                         pinned?: boolean;
+                        /** @description Just for you: blur the photos and videos the other person sends */
+                        safeView?: boolean;
                         /** @description For both people: delete messages sent from now on this many seconds after sending. null turns it off. */
                         autoDeleteSecs?: number | null;
                         /** @description For both people: the chat background, a theme id or custom:#rrggbb. null goes back to each person's default. */
@@ -3163,6 +3173,8 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -3270,6 +3282,8 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
+                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            safeView: boolean;
                             /** @description You show the other person your real name and photo; until then they only see your alias */
                             sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
@@ -3451,6 +3465,8 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -3672,6 +3688,8 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -3893,6 +3911,8 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -4117,6 +4137,8 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -4338,6 +4360,8 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -4563,6 +4587,238 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            action: ({
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
+                            }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/{id}/self-destruct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a message you already sent self-destruct
+         * @description Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, location or checklist.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Destroy after this many views by the recipient */
+                        maxViews?: number;
+                        /** @description Destroy this many seconds after the recipient first opens it */
+                        ttlSeconds?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /** @enum {string} */
+                                status: "pending" | "processing" | "ready" | "failed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -4727,6 +4983,14 @@ export interface paths {
                 query?: {
                     cursor?: string;
                     limit?: number;
+                    /** @description media: photos and videos; files; links: text messages that may hold a link (every encrypted one, since only your device can read it); text: messages that can hold text, captions included, for searching on your device. Leaves out deleted and self-destructing messages. */
+                    only?: "media" | "files" | "links" | "text";
+                    /** @description Only messages sent at or after this time */
+                    from?: string;
+                    /** @description Only messages sent before this time */
+                    to?: string;
+                    /** @description Ignore `limit` and keep going until this message is in the page (up to 2000 messages), to jump to it */
+                    until?: string;
                 };
                 header?: never;
                 path: {
@@ -4824,6 +5088,8 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -4979,6 +5245,8 @@ export interface paths {
                          */
                         type?: "location" | "checklist";
                         replyToId?: string;
+                        /** @description The same id on photos and videos sent together, so they show as one album */
+                        groupId?: string;
                         spoiler?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
                         ephemeral?: {
@@ -5107,6 +5375,8 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -5393,6 +5663,8 @@ export interface paths {
                          */
                         type?: "location" | "checklist";
                         replyToId?: string;
+                        /** @description The same id on photos and videos sent together, so they show as one album */
+                        groupId?: string;
                         spoiler?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
                         ephemeral?: {
@@ -5850,6 +6122,8 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -6587,6 +6861,8 @@ export interface paths {
                                          */
                                         resendUntil: string | null;
                                     } | null;
+                                    /** @description Photos and videos sent together share it and show as one album */
+                                    groupId: string | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
@@ -6771,6 +7047,8 @@ export interface paths {
                                          */
                                         resendUntil: string | null;
                                     } | null;
+                                    /** @description Photos and videos sent together share it and show as one album */
+                                    groupId: string | null;
                                     replyTo: {
                                         id: string;
                                         senderId: string;
@@ -7001,6 +7279,8 @@ export interface paths {
                                              */
                                             resendUntil: string | null;
                                         } | null;
+                                        /** @description Photos and videos sent together share it and show as one album */
+                                        groupId: string | null;
                                         replyTo: {
                                             id: string;
                                             senderId: string;
@@ -7108,6 +7388,8 @@ export interface paths {
                                      */
                                     mutedUntil: string | null;
                                     pinned: boolean;
+                                    /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                                    safeView: boolean;
                                     /** @description You show the other person your real name and photo; until then they only see your alias */
                                     sharingProfile: boolean;
                                     /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
@@ -8058,6 +8340,8 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
                             replyTo: {
                                 id: string;
                                 senderId: string;

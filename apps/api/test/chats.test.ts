@@ -294,3 +294,23 @@ describe("locations and checklists", () => {
     expect((await post(host, chatId, { checklist: { title: "Empty", items: [] } })).statusCode).toBe(400);
   });
 });
+
+describe("safe view and albums", () => {
+  const { call } = chatHelpers(ctx);
+
+  it("keeps safe view as each person's own chat setting", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    expect((await get(guest, `/v1/chats/${chatId}`)).safeView).toBe(false);
+    const on = await call(guest, "PATCH", `/v1/chats/${chatId}`, { safeView: true });
+    expect(on.json()).toMatchObject({ safeView: true });
+    expect((await get(host, `/v1/chats/${chatId}`)).safeView).toBe(false);
+  });
+
+  it("tags messages sent together with the same album id", async () => {
+    const { host, chatId } = await makeFriends();
+    const sent = await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: "album-1", text: "one", groupId: "g-1" });
+    expect(sent.json()).toMatchObject({ groupId: "g-1" });
+    expect((await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: "album-2", text: "two", groupId: "bad id!" })).statusCode).toBe(400);
+  });
+});
+

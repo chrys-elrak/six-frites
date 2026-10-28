@@ -37,12 +37,13 @@ export function splitLinks(text: string): { text: string; href: string | null }[
   return parts;
 }
 
-/** The first link outside code and spoilers: the one a message shows a preview card for. */
-export function previewLink(text: string, entities: MessageEntity[] = []) {
+/** The links outside code and spoilers, in order: what a chat's shared links list shows. */
+export function messageLinks(text: string, entities: MessageEntity[] = []) {
   const hidden = entities.filter((e) => e.type === "code" || e.type === "spoiler");
-  for (const m of text.matchAll(LINK)) {
-    const end = m.index + m[0].length;
-    if (!hidden.some((e) => e.offset < end && m.index < e.offset + e.length)) return href(m[0]);
-  }
-  return null;
+  return [...text.matchAll(LINK)]
+    .filter((m) => !hidden.some((e) => e.offset < m.index + m[0].length && m.index < e.offset + e.length))
+    .map((m) => ({ text: m[0], href: href(m[0]) }));
 }
+
+/** The first link outside code and spoilers: the one a message shows a preview card for. */
+export const previewLink = (text: string, entities: MessageEntity[] = []) => messageLinks(text, entities)[0]?.href ?? null;

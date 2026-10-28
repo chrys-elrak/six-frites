@@ -1,5 +1,5 @@
 import { kindFor } from "@six/sdk";
-import { ACCEPTED_TYPES, type CropRect, MAX_UPLOAD_BYTES, cropPixels, stripAudio } from "@six/shared";
+import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES, type MessageDTO, type PhotoEdit, cropPixels, orientedSize, stripAudio } from "@six/shared";
 import { randomUUID } from "expo-crypto";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Paths } from "expo-file-system";
@@ -54,15 +54,36 @@ async function asSendableImage(file: LocalFile): Promise<LocalFile> {
   return saveImage(file, await ImageManipulator.manipulate(file.uri).renderAsync());
 }
 
-/** Turns a photo `turns` quarters counter-clockwise, then crops it. */
-export async function editPhoto(file: LocalFile, source: ImageRef, turns: number, crop: CropRect) {
-  const odd = turns % 2 === 1;
-  const rendered = await ImageManipulator.manipulate(source)
-    .rotate(-90 * turns)
-    .crop(cropPixels(crop, odd ? source.height : source.width, odd ? source.width : source.height))
-    .renderAsync();
-  const format = file.mime === "image/png" ? SaveFormat.PNG : file.mime === "image/webp" ? SaveFormat.WEBP : SaveFormat.JPEG;
-  return saveImage(file, rendered, format);
+const formatFor = (file: LocalFile) =>
+  file.mime === "image/png" ? SaveFormat.PNG : file.mime === "image/webp" ? SaveFormat.WEBP : SaveFormat.JPEG;
+
+/** Turns, mirrors and crops a width × height photo at full size, for edits with nothing drawn on them. */
+export async function editPhoto(file: LocalFile, edit: PhotoEdit, width: number, height: number) {
+  const oriented = orientedSize(width, height, edit.turns);
+  let context = ImageManipulator.manipulate(file.uri).rotate(-90 * edit.turns);
+  if (edit.flipped) context = context.flip("horizontal");
+  const rendered = await context.crop(cropPixels(edit.crop, oriented.width, oriented.height)).renderAsync();
+  return saveImage(file, rendered, formatFor(file));
+}
+
+/** Saves a drawn-on photo the editor exported as base64 PNG. */
+export async function editedFromPng(file: LocalFile, base64: string) {
+  const png = new File(Paths.cache, `edited-${randomUUID()}.png`);
+  png.create();
+  await png.write(base64, { encoding: "base64" });
+  const photo = await saveImage(file, await ImageManipulator.manipulate(png.uri).renderAsync(), formatFor(file));
+  png.delete();
+  return photo;
+}
+
+/** The photo a message carries as a file on this phone, downloading it first when it isn't here yet. */
+export async function messagePhoto(m: MessageDTO): Promise<LocalFile> {
+  const a = m.attachment!;
+  if (!a.url) throw new Error("The photo is not ready");
+  const uri = a.url.startsWith("file:")
+    ? a.url
+    : (await File.downloadFileAsync(a.url, new File(Paths.cache, `photo-${randomUUID()}-${a.name.replace(/[^\w.-]+/g, "_")}`))).uri;
+  return { uri, kind: "image", name: a.name, mime: a.mime, size: a.size, width: a.width, height: a.height };
 }
 
 /** A copy of the video with its sound taken out, or null when it isn't an MP4 or MOV that can be edited. */

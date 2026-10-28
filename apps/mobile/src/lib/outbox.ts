@@ -8,6 +8,7 @@ import type {
   ReplyPreview,
   UploadKind,
 } from "@six/shared";
+import { useMemo } from "react";
 import { create } from "zustand";
 
 export interface PendingAttachment {
@@ -38,6 +39,8 @@ export interface PendingMessage {
   gif?: GifDTO;
   location?: GeoPoint;
   checklist?: Checklist;
+  groupId?: string;
+  sendAt?: string;
   createdAt: string;
   status: "sending" | "failed";
 }
@@ -76,4 +79,8 @@ export const useOutbox = create<OutboxState>((set) => ({
 }));
 
 const EMPTY: PendingMessage[] = [];
-export const usePending = (chatId: string) => useOutbox((s) => s.byChat[chatId] ?? EMPTY);
+/** Pending messages to show in the chat; a scheduled one only shows if it failed, to retry it. */
+export function usePending(chatId: string) {
+  const all = useOutbox((s) => s.byChat[chatId] ?? EMPTY);
+  return useMemo(() => all.filter((m) => !m.sendAt || m.status === "failed"), [all]);
+}

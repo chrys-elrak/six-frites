@@ -4,6 +4,7 @@ import {
   type EphemeralInput,
   type GifDTO,
   type TypingKind,
+  albumIds,
   emojiQuery,
   emojifyEnd,
   emojifyTyped,
@@ -37,14 +38,15 @@ import {
   X,
 } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { randomUUID } from "expo-crypto";
 import { File, Paths } from "expo-file-system";
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, findNodeHandle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { editMessage, scheduleMessage } from "@/lib/actions";
+import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
 import { useDrafts } from "@/lib/drafts";
 import { shortRule } from "@/lib/ephemeral";
-import { formatDuration } from "@/lib/format";
+import { formatDuration, sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 import { pickFiles, pickMedia, receivedImage, takePhoto } from "@/lib/media";
@@ -141,12 +143,27 @@ export function Composer({
   const [preview, setPreview] = useState<{ kind: RecordMode; file: LocalFile } | null>(null);
   const [picked, setPicked] = useState<LocalFile[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
+  const handed = useComposerMode((s) => s.handed[chatId]);
+  const resent = useRef<LocalFile[] | null>(null);
+  useEffect(() => {
+    if (!handed) return;
+    resent.current = [handed];
+    setPicked(resent.current);
+    useComposerMode.getState().hand(chatId, undefined);
+  }, [handed, chatId]);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
-  const [scheduling, setScheduling] = useState(false);
+  const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
+  const [sendAt, setSendAt] = useState<Date | null>(null);
   const [showScheduled, setShowScheduled] = useState(false);
+
+  function queue(draft: Draft) {
+    if (!realtime) return;
+    queueMessage(qc, realtime, chatId, { ...draft, sendAt: draft.sendAt ?? sendAt });
+    setSendAt(null);
+  }
 
   const editing = mode?.kind === "edit" ? mode.message : null;
 
@@ -278,7 +295,7 @@ export function Composer({
   function sendGif(gif: GifDTO) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
-    queueMessage(qc, realtime, chatId, {
+    queue({
       text: "",
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral,
@@ -296,32 +313,10 @@ export function Composer({
     onSent();
   }
 
-  async function schedule(when: Date) {
-    setScheduling(false);
-    setError(null);
-    try {
-      await scheduleMessage(
-        qc,
-        chatId,
-        {
-          text: parsed.text,
-          entities: parsed.entities.length ? parsed.entities : undefined,
-          replyToId: mode?.kind === "reply" ? mode.message.id : undefined,
-          spoiler: spoiler || undefined,
-          ephemeral: ephemeral ?? undefined,
-        },
-        when,
-      );
-    } catch {
-      setError(tr.composer.couldNotSchedule);
-      return;
-    }
-    realtime?.setTyping(chatId, false);
-    setSpoiler(false);
-    setEphemeral(null);
-    useDrafts.getState().set(chatId, "");
-    setText("");
-    if (mode) cancel();
+  function schedule(when: Date) {
+    setScheduling(null);
+    if (scheduling === "now") send(undefined, ephemeral, when);
+    else setSendAt(when);
   }
 
   async function submit() {
@@ -347,10 +342,11 @@ export function Composer({
     send();
   }
 
-  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral) {
+  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral, at?: Date) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
-    queueMessage(qc, realtime, chatId, {
+    queue({
+      sendAt: at,
       text: file ? "" : parsed.text,
       entities: file ? [] : parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
@@ -370,9 +366,11 @@ export function Composer({
     if (!realtime) return;
     const { text: captionText, entities } = parseMarkup(emojifyEnd(caption));
     realtime.setTyping(chatId, false);
+    const albums = chosen ? [] : albumIds(items.map((it) => it.file.kind), randomUUID);
     items.forEach(({ file, spoiler: hidden }, i) => {
       const first = i === 0;
-      queueMessage(qc, realtime, chatId, {
+      queue({
+        groupId: albums[i],
         text: first ? captionText : "",
         entities: first ? entities : [],
         replyTo: first && mode?.kind === "reply" ? mode.message : undefined,
@@ -386,7 +384,7 @@ export function Composer({
 
   function sendSpecial(extra: Pick<Draft, "location" | "checklist">) {
     if (!realtime) return;
-    queueMessage(qc, realtime, chatId, {
+    queue({
       text: "",
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ...extra,
@@ -510,7 +508,7 @@ export function Composer({
         onLayout={(e) => setBarHeight(e.nativeEvent.layout.height)}
         style={[
           styles.bar,
-          { backgroundColor: t.bg, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 8) },
+          { backgroundColor: t.bar, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 8) },
         ]}
       >
         {mode?.kind === "reply" && (
@@ -533,6 +531,17 @@ export function Composer({
             </Text>
             <Pressable onPress={() => setEphemeral(null)} accessibilityLabel={tr.composer.turnOffSelfDestruct} hitSlop={8} style={styles.round32}>
               <X size={16} color={flame} />
+            </Pressable>
+          </View>
+        )}
+        {sendAt && !editing && (
+          <View style={styles.ephemeralBar}>
+            <CalendarClock size={16} color={brand} />
+            <Text style={{ flex: 1, color: brand, fontSize: 14 }}>
+              {tr.composer.scheduledFor(sendAtLabel(sendAt.toISOString()))}
+            </Text>
+            <Pressable onPress={() => setSendAt(null)} accessibilityLabel={tr.composer.dontSchedule} hitSlop={8} style={styles.round32}>
+              <X size={16} color={brand} />
             </Pressable>
           </View>
         )}
@@ -664,6 +673,7 @@ export function Composer({
                     waveform={null}
                     mine={false}
                     label={tr.composer.playPreview}
+                    compact
                   />
                 ) : (
                   <Text numberOfLines={1} style={{ color: t.text, fontSize: 14 }}>
@@ -686,7 +696,7 @@ export function Composer({
           ) : (
             <Pressable
               onPress={() => void submit()}
-              onLongPress={editing ? undefined : () => canSubmit && setScheduling(true)}
+              onLongPress={editing ? undefined : () => canSubmit && setScheduling("now")}
               accessibilityHint={editing ? undefined : tr.composer.holdToSchedule}
               disabled={!canSubmit}
               accessibilityLabel={editing ? tr.common.save : tr.common.send}
@@ -713,6 +723,7 @@ export function Composer({
             { label: tr.composer.audio, onSelect: () => void pick(() => pickFiles("audio/*")) },
             { label: tr.composer.location, onSelect: () => setAskLocation(true) },
             { label: tr.composer.checklist, onSelect: () => setWritingChecklist(true) },
+            { label: tr.composer.scheduleMessage, onSelect: () => setScheduling("next") },
           ]}
         />
       )}
@@ -727,12 +738,18 @@ export function Composer({
         <NewChecklist onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
       {scheduling && (
-        <ScheduleDialog title={tr.composer.scheduleMessage} onClose={() => setScheduling(false)} onPick={(when) => void schedule(when)} />
+        <ScheduleDialog
+          title={tr.composer.scheduleMessage}
+          initial={sendAt ?? undefined}
+          onClose={() => setScheduling(null)}
+          onPick={schedule}
+        />
       )}
       {showScheduled && <ScheduledPanel chatId={chatId} onClose={() => setShowScheduled(false)} />}
       {picked && (
         <AttachDialog
           files={picked}
+          editFirst={picked === resent.current}
           initialCaption={editing ? "" : text}
           initialEphemeral={ephemeral}
           onCancel={closePicker}

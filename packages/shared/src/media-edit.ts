@@ -41,6 +41,111 @@ export function cropPixels(c: CropRect, width: number, height: number) {
   };
 }
 
+/** A pen or blur stroke: points are x, y pairs as fractions of the photo, size a fraction of its longer side. */
+export interface Stroke {
+  blur?: boolean;
+  color: string;
+  size: number;
+  points: number[];
+}
+
+/** Fonts for text on photos. Both apps ship these files and load them under these family names. */
+export const LABEL_FONTS = {
+  classic: null,
+  serif: "DMSerifDisplay",
+  marker: "PermanentMarker",
+  script: "Pacifico",
+  typewriter: "SpecialElite",
+} as const;
+export type LabelFont = keyof typeof LABEL_FONTS;
+
+/** Text or an emoji centred on x, y (fractions of the photo); size is a fraction of the longer side. */
+export interface Label {
+  emoji?: boolean;
+  font?: LabelFont;
+  text: string;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+}
+
+/**
+ * Everything done to a photo in the editor. The photo is turned `turns` quarters counter-clockwise, then
+ * mirrored when `flipped`; the crop box, strokes and labels are all placed on that turned photo.
+ */
+export interface PhotoEdit {
+  turns: number;
+  flipped: boolean;
+  crop: CropRect;
+  strokes: Stroke[];
+  labels: Label[];
+}
+
+export const NO_EDIT: PhotoEdit = { turns: 0, flipped: false, crop: FULL_CROP, strokes: [], labels: [] };
+
+export const EDIT_COLORS = ["#ffffff", "#111111", "#ef4444", "#f97316", "#facc15", "#22c55e", "#3b82f6", "#a855f7"];
+export const PEN_SIZES = [0.006, 0.012, 0.024];
+export const BLUR_SIZES = [0.04, 0.07, 0.11];
+export const TEXT_SIZES = [0.045, 0.07, 0.1];
+export const EMOJI_SIZES = [0.08, 0.14, 0.22];
+export const LABEL_LINE = 1.2;
+
+export const orientedSize = (width: number, height: number, turns: number) =>
+  turns % 2 ? { width: height, height: width } : { width, height };
+
+function moveAll(e: PhotoEdit, f: (x: number, y: number) => [number, number]) {
+  return {
+    strokes: e.strokes.map((s) => ({ ...s, points: s.points.flatMap((v, i) => (i % 2 ? [] : f(v, s.points[i + 1]!))) })),
+    labels: e.labels.map((l) => {
+      const [x, y] = f(l.x, l.y);
+      return { ...l, x, y };
+    }),
+  };
+}
+
+/** Turns the photo and everything on it a quarter counter-clockwise; labels move with it but stay upright. */
+export const turnEdit = (e: PhotoEdit): PhotoEdit => ({
+  turns: (e.turns + (e.flipped ? 3 : 1)) % 4,
+  flipped: e.flipped,
+  crop: turnCrop(e.crop),
+  ...moveAll(e, (x, y) => [y, 1 - x]),
+});
+
+/** Mirrors the photo and everything on it left to right; labels move with it but still read normally. */
+export const flipEdit = (e: PhotoEdit): PhotoEdit => ({
+  turns: e.turns,
+  flipped: !e.flipped,
+  crop: { ...e.crop, x: 1 - e.crop.x - e.crop.w },
+  ...moveAll(e, (x, y) => [1 - x, y]),
+});
+
+export const isEdited = (e: PhotoEdit) =>
+  e.turns > 0 || e.flipped || e.strokes.length > 0 || e.labels.length > 0 || e.crop.w < 1 || e.crop.h < 1;
+
+/** Half the width and height, in pixels, of a label on a width × height photo, guessed from its text. */
+export function labelBox(l: Label, width: number, height: number) {
+  const font = l.size * Math.max(width, height);
+  const lines = l.text.split("\n");
+  return {
+    halfW: (Math.max(...lines.map((s) => [...s].length)) * 0.62 * font) / 2 + font * 0.3,
+    halfH: (lines.length * LABEL_LINE * font) / 2 + font * 0.3,
+  };
+}
+
+/** The topmost label under x, y (fractions of a width × height photo), or -1. */
+export function labelAt(labels: Label[], x: number, y: number, width: number, height: number) {
+  for (let i = labels.length - 1; i >= 0; i--) {
+    const l = labels[i]!;
+    const { halfW, halfH } = labelBox(l, width, height);
+    if (Math.abs((x - l.x) * width) <= halfW && Math.abs((y - l.y) * height) <= halfH) return i;
+  }
+  return -1;
+}
+
+/** A label scaled by `factor`, kept between barely readable and most of the photo. */
+export const scaleLabel = (l: Label, factor: number): Label => ({ ...l, size: clamp(l.size * factor, 0.015, 0.6) });
+
 interface Box {
   type: string;
   start: number;

@@ -27,7 +27,7 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
       : tr.chat.blockedYou(peerName);
 
   return (
-    <div className="flex items-center gap-3 border-t border-stone-200 bg-stone-50/90 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-stone-800 dark:bg-stone-950/90">
+    <div className="flex items-center gap-3 border-t border-black/5 bg-stone-50/45 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
       <Icon className="size-5 shrink-0 text-stone-400" />
       <p className="min-w-0 flex-1 text-sm text-stone-600 dark:text-stone-300">{text}</p>
       {chat.blockedByMe && !chat.peerDeleted && (

@@ -2,13 +2,12 @@ import { type Hydrated, unwrap } from "@six/sdk";
 import {
   type ChatDTO,
   type DeleteScope,
+  type EphemeralInput,
   type MessageDTO,
   type MessageEntity,
-  type ScheduleMessageInput,
   type ScheduledMessageDTO,
   maskSpoilers,
 } from "@six/shared";
-import { randomUUID } from "expo-crypto";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   chatFor,
@@ -20,7 +19,7 @@ import {
   resetMessages,
   upsertChat,
 } from "./chats";
-import { e2eeFor, shouldEncrypt } from "./e2ee";
+import { e2eeFor } from "./e2ee";
 import { useSession } from "./session";
 import { six } from "./six";
 
@@ -75,6 +74,11 @@ export async function check(qc: QueryClient, m: MessageDTO, meId: string, item: 
   } catch {
     void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
   }
+}
+
+/** Makes one of my sent messages self-destruct for the other person, with this rule. */
+export async function selfDestruct(qc: QueryClient, m: MessageDTO, rule: EphemeralInput) {
+  applyEdited(qc, unwrap(await six.api.POST("/v1/messages/{id}/self-destruct", { params: { path: { id: m.id } }, body: rule })));
 }
 
 /** Shows a self-destructing message as opened straight away instead of waiting for the server's update. */
@@ -182,7 +186,7 @@ export async function removeContact(qc: QueryClient, chatId: string, userId: str
 export async function updateChatSettings(
   qc: QueryClient,
   chatId: string,
-  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned" | "autoDeleteSecs" | "theme">>,
+  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned" | "safeView" | "autoDeleteSecs" | "theme">>,
 ) {
   const chat = unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input }));
   upsertChat(qc, chat);
@@ -219,38 +223,6 @@ export async function deleteAccount() {
 }
 
 export const scheduledKey = (chatId: string) => ["scheduled", chatId] as const;
-
-export async function scheduleMessage(
-  qc: QueryClient,
-  chatId: string,
-  input: Omit<ScheduleMessageInput, "clientId" | "sendAt">,
-  sendAt: Date,
-) {
-  const clientId = randomUUID();
-  const params = { path: { id: chatId } };
-  const meId = useSession.getState().user!.id;
-  const chat = await chatFor(qc, chatId);
-  if (await shouldEncrypt(meId, chat)) {
-    const { text, entities, spoiler, ...rest } = input;
-    await e2eeFor(meId)!.send(
-      chatId,
-      chat.members.map((x) => x.user.id),
-      clientId,
-      { text, entities, spoiler },
-      async (encrypted) =>
-        unwrap(
-          await six.api.POST("/v1/chats/{id}/scheduled-messages", {
-            params,
-            body: { ...rest, clientId, encrypted, sendAt: sendAt.toISOString() },
-          }),
-        ),
-    );
-  } else {
-    const body = { ...input, clientId, sendAt: sendAt.toISOString() };
-    unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params, body }));
-  }
-  void qc.invalidateQueries({ queryKey: scheduledKey(chatId) });
-}
 
 export async function rescheduleMessage(qc: QueryClient, s: ScheduledMessageDTO, sendAt: Date) {
   const body = { sendAt: sendAt.toISOString() };

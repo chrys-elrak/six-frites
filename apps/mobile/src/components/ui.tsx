@@ -129,10 +129,12 @@ export function ScreenHeader({
   children,
   border = true,
   inset = true,
+  background,
 }: {
   children: React.ReactNode;
   border?: boolean;
   inset?: boolean;
+  background?: string;
 }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
@@ -140,7 +142,7 @@ export function ScreenHeader({
     <View
       style={[
         styles.header,
-        { paddingTop: inset ? Math.max(insets.top, 8) + 4 : 12, backgroundColor: t.bg, borderColor: t.border },
+        { paddingTop: inset ? Math.max(insets.top, 8) + 4 : 12, backgroundColor: background ?? t.bg, borderColor: t.border },
         border && { borderBottomWidth: StyleSheet.hairlineWidth },
       ]}
     >

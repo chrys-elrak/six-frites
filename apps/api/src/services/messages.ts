@@ -8,11 +8,12 @@ import {
   type EncryptedInput,
   type EncryptionDTO,
   type EditMessageInput,
+  type EphemeralInput,
   type GeoPoint,
   type MessageDTO,
   type MessageEntity,
+  type MessageListQuery,
   type MessageType,
-  type PageQuery,
   type ReplyPreview,
   type SendMessageInput,
   type ServiceAction,
@@ -139,6 +140,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
               : null,
         }
       : null,
+    groupId: m.groupId,
     replyTo: r ? toReplyPreview(r) : null,
     action: (m.action as ServiceAction | null) ?? null,
     location: hideContent ? null : ((m.location as GeoPoint | null) ?? null),
@@ -168,14 +170,37 @@ async function memberIds(tx: Tx, chatId: string) {
   return members.map((m) => m.userId);
 }
 
-export async function listMessages(userId: string, chatId: string, q: PageQuery) {
+const SHARED: Record<NonNullable<MessageListQuery["only"]>, Prisma.MessageWhereInput> = {
+  media: { type: { in: ["image", "video"] } },
+  files: { type: "file" },
+  links: {
+    type: "text",
+    OR: [
+      { encrypted: true },
+      { text: { contains: "http", mode: "insensitive" } },
+      { text: { contains: "www.", mode: "insensitive" } },
+    ],
+  },
+  text: { type: { in: ["text", "image", "video", "file"] } },
+};
+
+const UNTIL_MAX = 2000;
+
+export async function listMessages(userId: string, chatId: string, q: MessageListQuery) {
   const member = await assertMember(prisma, chatId, userId);
-  const rows = await prisma.message.findMany({
-    where: { chatId, ...visibleTo(userId, member.clearedAt) },
-    include: messageInclude,
-    ...pageArgs(q),
-  });
-  return toPage(rows, q, (m) => toMessageDTO(m, userId));
+  const where: Prisma.MessageWhereInput = {
+    chatId,
+    ...visibleTo(userId, member.clearedAt),
+    ...(q.only && { ...SHARED[q.only], deletedAt: null, maxViews: null, ttlSeconds: null }),
+    ...((q.from || q.to) && { createdAt: { gte: q.from, lt: q.to } }),
+  };
+  const target = q.until ? await prisma.message.findFirst({ where: { id: q.until, chatId } }) : null;
+  const upTo = target
+    ? await prisma.message.count({ where: { AND: [where, { createdAt: { gte: target.createdAt } }] } })
+    : 0;
+  const page = { ...q, limit: Math.min(Math.max(q.limit, upTo), UNTIL_MAX) };
+  const rows = await prisma.message.findMany({ where, include: messageInclude, ...pageArgs(page) });
+  return toPage(rows, page, (m) => toMessageDTO(m, userId));
 }
 
 async function findByClientId(senderId: string, chatId: string, clientId: string) {
@@ -292,6 +317,7 @@ export async function createMessage(
       maxViews: content?.ephemeral?.maxViews ?? null,
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,
+      groupId: content?.groupId ?? null,
       ...("action" in input && { action: input.action }),
       ...(content?.location && { location: content.location }),
       ...(content?.checklist && { checklist: content.checklist }),
@@ -641,6 +667,36 @@ export async function purgeMessage(messageId: string, cycle: number) {
     const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
     if (!m || !m.expiredAt || m.purgedAt || m.resendCount !== cycle) return;
     await wipeContent(tx, emit, m, 0);
+  });
+}
+
+/**
+ * Turns a message the sender already sent into a self-destructing one: it locks for the recipient
+ * until they open it, then goes like any other. Their backup copy and the sync log's copies go, so
+ * the old content can't come back from there.
+ */
+export async function makeEphemeral(userId: string, messageId: string, rule: EphemeralInput): Promise<MessageDTO> {
+  return withEvents(async (tx, emit) => {
+    await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
+    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
+    await assertMember(tx, m.chatId, userId).catch(() => {
+      throw new AppError("MESSAGE_NOT_FOUND");
+    });
+    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can make it self-destruct");
+    if (isEphemeral(m) || ["service", "sticker", "location", "checklist"].includes(m.type)) {
+      throw new AppError("MESSAGE_NOT_EDITABLE", "This message can't be made to self-destruct");
+    }
+
+    await tx.message.update({
+      where: { id: messageId },
+      data: { maxViews: rule.maxViews ?? null, ttlSeconds: rule.ttlSeconds ?? null },
+    });
+    await tx.messageBackup.deleteMany({ where: { messageId, userId: { not: userId } } });
+    await scrubMessageEvents(tx, [messageId]);
+    await notifyMembers(tx, emit, messageId);
+    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    return toMessageDTO(updated, userId);
   });
 }
 

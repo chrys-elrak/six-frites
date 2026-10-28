@@ -178,6 +178,16 @@ export function decryptedUrl(a: Pick<AttachmentDTO, "id" | "url">, file: Encrypt
   return url;
 }
 
+/** The file a message carries, decrypted when it needs to be. */
+export async function messageFile(m: Hydrated): Promise<File> {
+  const a = m.attachment!;
+  const url = a.encrypted && m.file ? await decryptedUrl(a, m.file) : a.url;
+  if (!url) throw new Error("The file is not ready");
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  return new File([await res.blob()], m.file?.name ?? a.name, { type: m.file?.mime ?? a.mime });
+}
+
 /** Signs out after wiping this browser's keys, as the server forgets this device too. */
 export async function signOut() {
   await forgetE2EE();
