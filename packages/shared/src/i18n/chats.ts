@@ -31,7 +31,7 @@ const en = {
   outgoingCall: (video: boolean, clock: string) => `Outgoing ${video ? "video" : "voice"} call · ${clock}`,
   incomingCall: (video: boolean, clock: string) => `Incoming ${video ? "video" : "voice"} call · ${clock}`,
   pickChat: "Pick a chat to start talking.",
-  archivedHint: "Archived chats stay here until a new message arrives or you unarchive them.",
+  archivedHint: "Archived chats are muted and stay here until you unarchive them.",
   settingsHint: "Your profile, invites and devices.",
 };
 
@@ -74,7 +74,7 @@ const fr: typeof en = {
   incomingCall: (video, clock) => `Appel ${video ? "vidéo" : "vocal"} entrant · ${clock}`,
   pickChat: "Choisissez une discussion pour commencer à échanger.",
   archivedHint:
-    "Les discussions archivées restent ici jusqu'à l'arrivée d'un nouveau message ou jusqu'à ce que vous les désarchiviez.",
+    "Les discussions archivées sont en sourdine et restent ici jusqu'à ce que vous les désarchiviez.",
   settingsHint: "Votre profil, vos invitations et vos appareils.",
 };
 
@@ -112,7 +112,7 @@ const mg: typeof en = {
   incomingCall: (video, clock) => `Antso ${video ? "an-tsary" : "am-peo"} miditra · ${clock}`,
   pickChat: "Misafidiana resaka iray hanombohanao miresaka.",
   archivedHint:
-    "Mijanona eto ny resaka arsiva mandra-pahatongan'ny hafatra vaovao na mandra-pamoahanao azy ao amin'ny arsiva.",
+    "Mangina ny resaka arsiva ary mijanona eto mandra-pamoahanao azy ao amin'ny arsiva.",
   settingsHint: "Ny mombamomba anao, ny fanasana ary ny fitaovanao.",
 };
 

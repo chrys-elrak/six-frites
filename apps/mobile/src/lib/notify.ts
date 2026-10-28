@@ -56,12 +56,12 @@ export function playChime() {
 const FRESH_MS = 60_000;
 
 /**
- * Sounds and shows a new message from someone else, unless its chat is muted, it is the chat on
- * screen, or it is an old message caught up after being offline. In the background the push
+ * Sounds and shows a new message from someone else, unless its chat is muted or archived, it is the
+ * chat on screen, or it is an old message caught up after being offline. In the background the push
  * notification covers it.
  */
 export function notifyIncoming(m: MessageDTO, chat: ChatDTO | undefined, viewing: boolean) {
-  if (chat?.muted || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
+  if (chat?.muted || chat?.archived || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
   const sender = chat?.members.find((x) => x.user.id === m.senderId)?.user;
   const t = getT();
   const title = sender?.displayName ?? chat?.title ?? t.summary.newMessage;
@@ -83,7 +83,7 @@ export function notifyReaction(
   message: MessageDTO | undefined,
   viewing: boolean,
 ) {
-  if (chat?.muted || viewing || Date.now() - Date.parse(createdAt) > FRESH_MS) return;
+  if (chat?.muted || chat?.archived || viewing || Date.now() - Date.parse(createdAt) > FRESH_MS) return;
   const reactor = chat?.members.find((x) => x.user.id === e.userId)?.user;
   const t = getT();
   const title = reactor?.displayName ?? chat?.title ?? t.common.someone;

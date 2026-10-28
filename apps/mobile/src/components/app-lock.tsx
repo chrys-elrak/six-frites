@@ -126,9 +126,18 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
 
 /**
  * Covers the app until the app lock code is entered. A modal, so it also sits above any dialog left open.
- * Forgetting the code means signing out and in again.
+ * Forgetting the code means signing out and in again. With `onCancel` it guards a single screen, like the
+ * archived chats, and can be backed out of instead.
  */
-export function LockScreen() {
+export function LockScreen({
+  title,
+  onUnlock = unlock,
+  onCancel,
+}: {
+  title?: string;
+  onUnlock?: () => void;
+  onCancel?: () => void;
+}) {
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();
@@ -138,7 +147,7 @@ export function LockScreen() {
   const biometric = useBiometricUnlock((s) => s.on);
 
   function askFingerprint() {
-    void checkBiometrics(tr.settings.appLock.fingerprintPrompt, tr.settings.appLock.useCode).then((ok) => ok && unlock());
+    void checkBiometrics(tr.settings.appLock.fingerprintPrompt, tr.settings.appLock.useCode).then((ok) => ok && onUnlock());
   }
 
   useEffect(() => {
@@ -151,7 +160,7 @@ export function LockScreen() {
     setError(null);
     try {
       unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } }));
-      unlock();
+      onUnlock();
     } catch (err) {
       setCode("");
       setError(codeError(err, tr, tr.settings.appLock.errors));
@@ -161,7 +170,7 @@ export function LockScreen() {
   }
 
   return (
-    <Modal statusBarTranslucent navigationBarTranslucent onRequestClose={() => {}}>
+    <Modal statusBarTranslucent navigationBarTranslucent onRequestClose={onCancel ?? (() => {})}>
       <KeyboardAvoidingView
         behavior="padding"
         style={[styles.lock, { backgroundColor: t.bg, paddingTop: insets.top, paddingBottom: insets.bottom }]}
@@ -169,7 +178,7 @@ export function LockScreen() {
         <View style={styles.body}>
           <View style={{ alignItems: "center", gap: 12 }}>
             <Logo size={56} />
-            <Text style={[styles.title, { color: t.text }]}>{tr.settings.appLock.locked}</Text>
+            <Text style={[styles.title, { color: t.text }]}>{title ?? tr.settings.appLock.locked}</Text>
           </View>
           <CodeInput
             label={tr.settings.appLock.enterCode}
@@ -195,7 +204,11 @@ export function LockScreen() {
               style={{ alignSelf: "center" }}
             />
           )}
-          <TextButton title={tr.settings.appLock.forgot} onPress={() => void logout()} />
+          {onCancel ? (
+            <TextButton title={tr.common.cancel} onPress={onCancel} />
+          ) : (
+            <TextButton title={tr.settings.appLock.forgot} onPress={() => void logout()} />
+          )}
         </View>
       </KeyboardAvoidingView>
     </Modal>

@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
 import { useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
@@ -29,6 +30,7 @@ import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
 import { AdBanner } from "./ad-banner";
+import { LockScreen } from "./app-lock";
 import { useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
@@ -188,9 +190,16 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
   );
 }
 
+/**
+ * The chat list, or with `archived` the archived chats behind the app lock code. The archived row sits
+ * just above the top of the list, so it only shows when the list is pulled down.
+ */
 export function ChatList({ archived = false }: { archived?: boolean }) {
   const tr = useT();
+  const router = useRouter();
   const meId = useSession((s) => s.user!.id);
+  const hasAppLock = useSession((s) => s.user!.hasAppLock);
+  const archiveOpen = useAppLock((s) => s.archiveOpen);
   const chats = useChats(archived);
   const archivedChats = useChats(true);
   const { status } = useRealtime();
@@ -207,7 +216,26 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const needle = query.trim().toLowerCase();
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   const archivedCount = archivedChats.data?.length ?? 0;
+  const showArchive = !archived && !needle && archivedCount > 0;
+  const scroller = useRef<HTMLDivElement>(null);
+  const archiveRow = useRef<HTMLAnchorElement>(null);
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
+
+  useEffect(() => {
+    if (pathname === "/") setArchiveOpen(false);
+  }, [pathname]);
+
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    const row = archiveRow.current;
+    if (el && row && el.scrollTop < row.offsetHeight) el.scrollTop = row.offsetHeight;
+  }, [showArchive, pathname]);
+
+  if (archived && hasAppLock && !archiveOpen) {
+    return (
+      <LockScreen title={tr.common.archived} onUnlock={() => setArchiveOpen(true)} onCancel={() => router.push("/")} />
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -259,50 +287,53 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        {!archived && !needle && archivedCount > 0 && (
-          <Link
-            href="/archived"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-900"
-          >
-            <span className="grid size-14 place-items-center rounded-full bg-stone-200/70 text-stone-500 dark:bg-stone-800">
-              <Archive className="size-5" />
-            </span>
-            <span className="flex-1">{tr.common.archived}</span>
-            <span className="text-stone-500">{archivedCount}</span>
-          </Link>
-        )}
-        {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
-        {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
-        {chats.isSuccess && needle && visible.length === 0 && (
-          <p className="p-8 text-center text-sm text-stone-500">{tr.contacts.noMatch(query.trim())}</p>
-        )}
-        {chats.isSuccess && !needle && visible.length === 0 && (archived || archivedCount === 0) && (
-          <div className="flex flex-col items-center gap-3 p-8 text-center">
-            <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
-              {archived ? (
-                <Archive className="size-8" strokeWidth={1.6} />
-              ) : (
-                <MessageCircle className="size-8" strokeWidth={1.6} />
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className={showArchive ? "min-h-[calc(100%+5rem)]" : undefined}>
+          {showArchive && (
+            <Link
+              ref={archiveRow}
+              href="/archived"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-900"
+            >
+              <span className="grid size-14 place-items-center rounded-full bg-stone-200/70 text-stone-500 dark:bg-stone-800">
+                <Archive className="size-5" />
+              </span>
+              <span className="flex-1">{tr.common.archived}</span>
+              <span className="text-stone-500">{archivedCount}</span>
+            </Link>
+          )}
+          {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
+          {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
+          {chats.isSuccess && needle && visible.length === 0 && (
+            <p className="p-8 text-center text-sm text-stone-500">{tr.contacts.noMatch(query.trim())}</p>
+          )}
+          {chats.isSuccess && !needle && visible.length === 0 && (
+            <div className="flex flex-col items-center gap-3 p-8 text-center">
+              <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
+                {archived ? (
+                  <Archive className="size-8" strokeWidth={1.6} />
+                ) : (
+                  <MessageCircle className="size-8" strokeWidth={1.6} />
+                )}
+              </span>
+              <p className="font-medium">{archived ? tr.chats.noArchived : tr.chats.noChats}</p>
+              {!archived && (
+                <>
+                  <p className="text-sm text-stone-500">{tr.chats.noChatsHint}</p>
+                  <button
+                    onClick={() => setDialog("add")}
+                    className="rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-stone-100 dark:text-stone-900"
+                  >
+                    {tr.contacts.addContact}
+                  </button>
+                </>
               )}
-            </span>
-            <p className="font-medium">{archived ? tr.chats.noArchived : tr.chats.noChats}</p>
-            {!archived && (
-              <>
-                <p className="text-sm text-stone-500">{tr.chats.noChatsHint}</p>
-                <button
-                  onClick={() => setDialog("add")}
-                  className="rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-stone-100 dark:text-stone-900"
-                >
-                  {tr.contacts.addContact}
-                </button>
-              </>
-            )}
-          </div>
-        )}
-        {visible.map((c) => (
-          <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} />
-        ))}
+            </div>
+          )}
+          {visible.map((c) => (
+            <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} />
+          ))}
+        </div>
       </div>
       <AdBanner />
     </div>

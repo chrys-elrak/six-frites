@@ -1,6 +1,6 @@
 import { type ChatDTO, maskSpoilers, serviceText, shownType } from "@six/shared";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   Archive,
   Ban,
@@ -20,7 +20,7 @@ import {
   UserPlus,
   Video,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 import { isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
@@ -205,6 +205,8 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
 
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
+  const [pulled, setPulled] = useState(false);
+  useFocusEffect(useCallback(() => () => setPulled(false), []));
   const needle = query.trim().toLowerCase();
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
@@ -213,7 +215,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const header = archived ? undefined : (
     <>
       <UpdateBanner />
-      {!needle && archivedCount > 0 && (
+      {pulled && !needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}
           style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
@@ -270,7 +272,10 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         refreshControl={
           <RefreshControl
             refreshing={chats.isRefetching}
-            onRefresh={() => void chats.refetch()}
+            onRefresh={() => {
+              setPulled(true);
+              void chats.refetch();
+            }}
             colors={[brand]}
             progressBackgroundColor={t.surface}
           />
@@ -282,7 +287,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             <Text style={[styles.note, { color: t.danger }]}>{tr.chats.couldNotLoad}</Text>
           ) : needle ? (
             <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.contacts.noMatch(query.trim())}</Text>
-          ) : archived || archivedCount === 0 ? (
+          ) : (
             <EmptyState
               Icon={archived ? Archive : MessageCircle}
               title={archived ? tr.chats.noArchived : tr.chats.noChats}
@@ -296,7 +301,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
                 </View>
               )}
             </EmptyState>
-          ) : undefined
+          )
         }
       />
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}

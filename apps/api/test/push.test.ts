@@ -94,6 +94,14 @@ describe("push notifications", () => {
     expect(await deliverPush(muted.id, host.user.id)).toBe(0);
   });
 
+  it("treats an archived chat as muted", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await subscribe(guest);
+    await call(guest, "PATCH", `/v1/chats/${chatId}`, { archived: true });
+    const archived = (await send(host, chatId, "psst")).json();
+    expect(await deliverPush(archived.id, guest.user.id)).toBe(0);
+  });
+
   it("stops muting once a timed mute ends", async () => {
     const { host, guest, chatId } = await makeFriends();
     await subscribe(guest);

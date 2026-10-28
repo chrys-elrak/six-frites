@@ -104,15 +104,26 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** Covers the app until the app lock code is entered. Forgetting it means signing out and in again. */
-export function LockScreen() {
+/**
+ * Covers the app until the app lock code is entered. Forgetting it means signing out and in again. With
+ * `onCancel` it guards a single screen, like the archived chats, and can be backed out of instead.
+ */
+export function LockScreen({
+  title,
+  onUnlock = unlock,
+  onCancel,
+}: {
+  title?: string;
+  onUnlock?: () => void;
+  onCancel?: () => void;
+}) {
   const tr = useT();
   const [code, setCode] = useState("");
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const hasKey = useHasRecoveryKey();
   const check = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } })),
-    onSuccess: unlock,
+    onSuccess: () => onUnlock(),
     onError: () => setCode(""),
   });
 
@@ -126,7 +137,7 @@ export function LockScreen() {
         }}
       >
         <Logo className="mx-auto size-14" />
-        <h1 className="text-center text-xl font-semibold">{tr.settings.appLock.locked}</h1>
+        <h1 className="text-center text-xl font-semibold">{title ?? tr.settings.appLock.locked}</h1>
         <CodeInput label={tr.settings.appLock.enterCode} value={code} onChange={setCode} autoFocus />
         {check.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">
@@ -138,10 +149,10 @@ export function LockScreen() {
         </PrimaryButton>
         <button
           type="button"
-          onClick={() => setConfirmSignOut(true)}
+          onClick={onCancel ?? (() => setConfirmSignOut(true))}
           className="block w-full text-center text-sm text-stone-500 underline-offset-2 hover:underline"
         >
-          {tr.settings.appLock.forgot}
+          {onCancel ? tr.common.cancel : tr.settings.appLock.forgot}
         </button>
       </form>
       {confirmSignOut && (
