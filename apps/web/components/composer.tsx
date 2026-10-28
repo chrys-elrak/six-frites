@@ -141,10 +141,9 @@ export function Composer({
   const [camera, setCamera] = useState(false);
   const recorder = useRecorder();
   const [recMode, setRecMode] = useState<RecordMode>("voice");
-  const [capture, setCapture] = useState<{ kind: RecordMode; locked: boolean } | null>(null);
+  const [capture, setCapture] = useState<{ kind: RecordMode } | null>(null);
   const captureNow = useRef(capture);
   captureNow.current = capture;
-  const [slide, setSlide] = useState(0);
   const [noteMs, setNoteMs] = useState(0);
   const [noteBottom, setNoteBottom] = useState(0);
   const note = useRef<VideoNoteHandle>(null);
@@ -492,9 +491,8 @@ export function Composer({
     });
   }
 
-  function startCapture(locked: boolean) {
+  function startCapture() {
     setError(null);
-    setSlide(0);
     setNoteMs(0);
     if (recMode === "video") {
       setNoteBottom(window.innerHeight - (form.current?.getBoundingClientRect().top ?? window.innerHeight));
@@ -504,7 +502,7 @@ export function Composer({
         else if (!captureNow.current) recorder.cancel();
       });
     }
-    setCapture({ kind: recMode, locked });
+    setCapture({ kind: recMode });
   }
 
   async function finishCapture() {
@@ -636,16 +634,14 @@ export function Composer({
 
         <div className="flex items-end gap-1.5">
           {capture || preview ? (
-            (capture?.locked || preview) && (
-              <button
-                type="button"
-                onClick={preview ? () => closePreview(false) : cancelCapture}
-                aria-label={tr.composer.discardRecording}
-                className="grid size-10 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-              >
-                <Trash2 className="size-5" />
-              </button>
-            )
+            <button
+              type="button"
+              onClick={preview ? () => closePreview(false) : cancelCapture}
+              aria-label={tr.composer.discardRecording}
+              className="grid size-10 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+            >
+              <Trash2 className="size-5" />
+            </button>
           ) : !editing && (
             <>
               <button
@@ -802,32 +798,21 @@ export function Composer({
               <span className="font-mono text-sm tabular-nums">
                 {formatDuration(capture.kind === "voice" ? recorder.elapsed : noteMs)}
               </span>
-              {capture.locked ? (
-                <>
-                  <span className="truncate text-sm text-stone-500">{tr.composer.recording}</span>
-                  <span className="ml-auto flex shrink-0 items-center gap-1">
-                    {capture.kind === "voice" && (
-                      <button
-                        type="button"
-                        onClick={() => void previewCapture()}
-                        aria-label={tr.composer.stopRecording}
-                        title={tr.composer.stopRecording}
-                        className="grid size-8 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-                      >
-                        <Square className="size-4 fill-current" />
-                      </button>
-                    )}
-                    <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
-                  </span>
-                </>
-              ) : (
-                <span
-                  className="ml-auto truncate text-sm text-stone-500"
-                  style={{ transform: `translateX(${slide / 2}px)`, opacity: Math.max(0.2, 1 + slide / 110) }}
-                >
-                  ‹ {tr.composer.slideToCancel}
-                </span>
-              )}
+              <span className="truncate text-sm text-stone-500">{tr.composer.recording}</span>
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                {capture.kind === "voice" && (
+                  <button
+                    type="button"
+                    onClick={() => void previewCapture()}
+                    aria-label={tr.composer.stopRecording}
+                    title={tr.composer.stopRecording}
+                    className="grid size-8 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                  >
+                    <Square className="size-4 fill-current" />
+                  </button>
+                )}
+                <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
+              </span>
             </div>
           )}
           {preview && (
@@ -854,15 +839,11 @@ export function Composer({
           {showMic ? (
             <RecordButton
               mode={preview?.kind ?? recMode}
-              state={preview ? "locked" : capture ? (capture.locked ? "locked" : "holding") : "idle"}
+              active={!!(capture || preview)}
               disabled={!realtime}
               onToggle={() => setRecMode((m) => (m === "voice" ? "video" : "voice"))}
               onStart={startCapture}
-              onLock={() => setCapture((c) => c && { ...c, locked: true })}
-              onRelease={() => void finishCapture()}
-              onCancel={cancelCapture}
               onSend={() => (preview ? closePreview(true) : void finishCapture())}
-              onSlide={setSlide}
             />
           ) : (
             <button

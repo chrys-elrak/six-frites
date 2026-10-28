@@ -131,10 +131,9 @@ export function Composer({
   const [askLocation, setAskLocation] = useState(false);
   const [writingChecklist, setWritingChecklist] = useState(false);
   const [recMode, setRecMode] = useState<RecordMode>("voice");
-  const [capture, setCapture] = useState<{ kind: RecordMode; locked: boolean } | null>(null);
+  const [capture, setCapture] = useState<{ kind: RecordMode } | null>(null);
   const captureNow = useRef(capture);
   captureNow.current = capture;
-  const [slide, setSlide] = useState(0);
   const [noteMs, setNoteMs] = useState(0);
   const [barHeight, setBarHeight] = useState(0);
   const note = useRef<VideoNoteHandle>(null);
@@ -451,9 +450,8 @@ export function Composer({
     };
   }
 
-  function startCapture(locked: boolean) {
+  function startCapture() {
     setError(null);
-    setSlide(0);
     setNoteMs(0);
     if (recMode === "video") Keyboard.dismiss();
     else {
@@ -462,7 +460,7 @@ export function Composer({
         else if (!captureNow.current) void stopRecording();
       });
     }
-    setCapture({ kind: recMode, locked });
+    setCapture({ kind: recMode });
   }
 
   async function finishCapture() {
@@ -586,15 +584,13 @@ export function Composer({
 
         <View style={styles.row}>
           {capture || preview ? (
-            (capture?.locked || preview) && (
-              <Pressable
-                onPress={preview ? () => closePreview(false) : cancelCapture}
-                accessibilityLabel={tr.composer.discardRecording}
-                style={styles.round40}
-              >
-                <Trash2 size={20} color={t.danger} />
-              </Pressable>
-            )
+            <Pressable
+              onPress={preview ? () => closePreview(false) : cancelCapture}
+              accessibilityLabel={tr.composer.discardRecording}
+              style={styles.round40}
+            >
+              <Trash2 size={20} color={t.danger} />
+            </Pressable>
           ) : !editing && (
             <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel={tr.composer.attach} style={styles.round40}>
               <Paperclip size={22} color={t.muted} />
@@ -644,36 +640,18 @@ export function Composer({
               <Text style={{ color: t.text, fontFamily: "monospace" }}>
                 {formatDuration(capture.kind === "voice" ? recState.durationMillis : noteMs)}
               </Text>
-              {capture.locked ? (
-                <>
-                  <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>{tr.composer.recording}</Text>
-                  {capture.kind === "voice" && (
-                    <Pressable
-                      onPress={() => void previewCapture()}
-                      accessibilityLabel={tr.composer.stopRecording}
-                      hitSlop={6}
-                      style={styles.round32}
-                    >
-                      <Square size={16} color={t.danger} fill={t.danger} />
-                    </Pressable>
-                  )}
-                  <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
-                </>
-              ) : (
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    flex: 1,
-                    color: t.muted,
-                    fontSize: 14,
-                    textAlign: "right",
-                    opacity: Math.max(0.2, 1 + slide / 110),
-                    transform: [{ translateX: slide / 2 }],
-                  }}
+              <Text style={{ color: t.muted, fontSize: 14, flex: 1 }}>{tr.composer.recording}</Text>
+              {capture.kind === "voice" && (
+                <Pressable
+                  onPress={() => void previewCapture()}
+                  accessibilityLabel={tr.composer.stopRecording}
+                  hitSlop={6}
+                  style={styles.round32}
                 >
-                  ‹ {tr.composer.slideToCancel}
-                </Text>
+                  <Square size={16} color={t.danger} fill={t.danger} />
+                </Pressable>
               )}
+              <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
             </View>
           )}
           {preview && (
@@ -699,15 +677,11 @@ export function Composer({
           {showMic ? (
             <RecordButton
               mode={preview?.kind ?? recMode}
-              state={preview ? "locked" : capture ? (capture.locked ? "locked" : "holding") : "idle"}
+              active={!!(capture || preview)}
               disabled={!realtime}
               onToggle={() => setRecMode((m) => (m === "voice" ? "video" : "voice"))}
               onStart={startCapture}
-              onLock={() => setCapture((c) => c && { ...c, locked: true })}
-              onRelease={() => void finishCapture()}
-              onCancel={cancelCapture}
               onSend={() => (preview ? closePreview(true) : void finishCapture())}
-              onSlide={setSlide}
             />
           ) : (
             <Pressable
