@@ -4,7 +4,7 @@ import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-au
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { AlertCircle, Download, EyeOff, FileText, FileX, Pause, Play, X } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "./text";
 import {
@@ -165,6 +165,7 @@ export function VoicePlayer({
   autoPlay = false,
   label,
   compact = false,
+  meta,
 }: {
   url: string | null;
   durationMs: number | null;
@@ -173,6 +174,7 @@ export function VoicePlayer({
   autoPlay?: boolean;
   label?: string;
   compact?: boolean;
+  meta?: ReactNode;
 }) {
   const tr = useT();
   const player = useAudioPlayer(null);
@@ -267,6 +269,7 @@ export function VoicePlayer({
             tint={mine ? bubble.ink : brand}
             bg={mine ? alpha(bubble.ink, 0.15) : "rgba(235,138,0,0.15)"}
           />
+          {meta}
         </View>
       </View>
     </View>
@@ -428,6 +431,7 @@ export function AttachmentView({
   maxWidth,
   autoPlay = false,
   tile = false,
+  meta,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
@@ -440,6 +444,7 @@ export function AttachmentView({
   autoPlay?: boolean;
   /** Fill the parent, as one tile of an album, instead of sizing to the photo. */
   tile?: boolean;
+  meta?: ReactNode;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -560,6 +565,7 @@ export function AttachmentView({
           waveform={a.waveform}
           mine={mine}
           autoPlay={autoPlay}
+          meta={meta}
         />
         {a.state !== "ready" && (
           <View style={styles.voiceState}>

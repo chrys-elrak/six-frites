@@ -651,6 +651,11 @@ function Bubble({
   const visual = !sealed && row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const hasText = !!row.text || row.deleted || !!row.locked;
+  const inlineVoice =
+    !sealed &&
+    !hasText &&
+    row.attachment?.data.kind === "voice" &&
+    !(row.attachment.source === "server" && row.attachment.data.status === "removed");
   const link =
     !sealed && !row.deleted && !row.locked && !row.attachment && !row.spoiler && row.text
       ? previewLink(row.text, row.entities)
@@ -785,6 +790,13 @@ function Bubble({
                 hiddenLabel={chip(row.spoiler)}
                 onReveal={() => revealMedia(row.key)}
                 maxWidth={maxWidth - 8}
+                meta={
+                  inlineVoice && (
+                    <View style={[styles.metaRow, { paddingTop: 0 }]}>
+                      <Meta row={row} color={metaColor} t={t} />
+                    </View>
+                  )
+                }
               />
             )
           )}
@@ -821,7 +833,7 @@ function Bubble({
             <View style={[styles.jumboMeta, { alignSelf: mine ? "flex-end" : "flex-start", marginTop: 4 }]}>
               <Meta row={row} color="#fff" t={t} />
             </View>
-          ) : (
+          ) : inlineVoice ? null : (
             <View style={[styles.textRow, visual && (hasText ? styles.caption : styles.mediaMeta)]}>
               {row.deleted ? (
                 <View style={styles.deleted}>

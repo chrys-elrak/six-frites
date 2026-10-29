@@ -189,6 +189,7 @@ export function VoicePlayer({
   mine,
   label,
   compact = false,
+  meta,
 }: {
   autoPlay?: boolean;
   url: string | null;
@@ -197,6 +198,7 @@ export function VoicePlayer({
   mine: boolean;
   label?: string;
   compact?: boolean;
+  meta?: React.ReactNode;
 }) {
   const tr = useT();
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -281,6 +283,7 @@ export function VoicePlayer({
         <div className="flex shrink-0 items-center gap-1.5">
           <p className="text-[11px] opacity-70">{formatDuration(isPlaying || position ? position : total)}</p>
           <SpeedButton className={mine ? "bg-brand-ink/15" : "bg-brand/15 text-brand"} />
+          {meta}
         </div>
       </div>
     </div>
@@ -410,6 +413,7 @@ export function AttachmentView({
   onReveal,
   autoPlay = false,
   tile = false,
+  meta,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
@@ -421,6 +425,7 @@ export function AttachmentView({
   autoPlay?: boolean;
   /** Fill the parent, as one tile of an album, instead of sizing to the photo. */
   tile?: boolean;
+  meta?: React.ReactNode;
 }) {
   const tr = useT();
   const kind = attachment.data.kind;
@@ -578,6 +583,7 @@ export function AttachmentView({
           durationMs={a.durationMs}
           waveform={a.waveform}
           mine={mine}
+          meta={meta}
         />
         {a.state !== "ready" && (
           <p className="flex items-center gap-1 text-[11px] opacity-70">

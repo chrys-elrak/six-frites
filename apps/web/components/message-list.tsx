@@ -662,6 +662,18 @@ function Bubble({
   const sticker = !sealed && !row.deleted ? row.sticker : null;
   const loose = !sealed && !row.deleted && row.attachment?.source === "server" && !!row.attachment.file?.sticker;
   const hasText = !!row.text || row.deleted || row.locked;
+  const inlineVoice =
+    !sealed &&
+    !hasText &&
+    row.attachment?.data.kind === "voice" &&
+    !(row.attachment.source === "server" && row.attachment.data.status === "removed");
+  const stamp = (
+    <>
+      {row.edited && !row.deleted && <span className="opacity-70">{tr.messages.edited}</span>}
+      <span className="opacity-70">{clockTime(row.createdAt)}</span>
+      {row.delivery && <Ticks delivery={row.delivery} />}
+    </>
+  );
   const link =
     !sealed && !row.deleted && !row.locked && !row.attachment && !row.spoiler && row.text
       ? previewLink(row.text, row.entities)
@@ -752,6 +764,11 @@ function Bubble({
                     hidden={visual ? blurred(row.key, row.spoiler) : false}
                     hiddenLabel={chip(row.spoiler)}
                     onReveal={() => revealMedia(row.key)}
+                    meta={
+                      inlineVoice && (
+                        <span className="ml-auto flex items-center gap-1 text-[11px] leading-none">{stamp}</span>
+                      )
+                    }
                   />
                 )
               )}
@@ -800,7 +817,7 @@ function Bubble({
                     {row.delivery && <Ticks delivery={row.delivery} pill />}
                   </span>
                 </div>
-              ) : (
+              ) : inlineVoice ? null : (
                 <p
                   className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""} ${
                     visual ? "px-2 pt-1 pb-0.5" : ""
@@ -821,9 +838,7 @@ function Bubble({
                     <MessageText row={row} selectable={selectable} />
                   )}
                   <span className="float-right ml-2 mt-1.5 flex translate-y-0.5 items-center gap-1 text-[11px] leading-none">
-                    {row.edited && !row.deleted && <span className="opacity-70">{tr.messages.edited}</span>}
-                    <span className="opacity-70">{clockTime(row.createdAt)}</span>
-                    {row.delivery && <Ticks delivery={row.delivery} />}
+                    {stamp}
                   </span>
                 </p>
               )}
