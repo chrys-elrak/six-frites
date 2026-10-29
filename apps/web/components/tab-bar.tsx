@@ -1,15 +1,16 @@
 "use client";
 
-import { MessageCircle, Settings } from "lucide-react";
+import { Gamepad2, MessageCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import { isMuted } from "@six/shared";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
-export type Tab = "chats" | "settings";
+export type Tab = "chats" | "games" | "settings";
 
 const tabs = [
   { id: "chats", href: "/", Icon: MessageCircle },
+  { id: "games", href: "/games", Icon: Gamepad2 },
   { id: "settings", href: "/settings", Icon: Settings },
 ] as const;
 
@@ -19,7 +20,7 @@ export function TabBar({ active }: { active: Tab }) {
   const unread = chats.data?.filter((c) => !isMuted(c) && c.unreadCount > 0).length ?? 0;
 
   return (
-    <nav className="grid shrink-0 grid-cols-2 border-t border-stone-200 bg-stone-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:bg-transparent md:py-3 md:backdrop-blur-none dark:border-stone-800 dark:bg-stone-950/95 dark:md:bg-transparent">
+    <nav className="grid shrink-0 grid-cols-3 border-t border-stone-200 bg-stone-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:bg-transparent md:py-3 md:backdrop-blur-none dark:border-stone-800 dark:bg-stone-950/95 dark:md:bg-transparent">
       {tabs.map(({ id, href, Icon }) => {
         const on = active === id;
         return (

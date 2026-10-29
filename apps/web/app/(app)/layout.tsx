@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LockScreen } from "@/components/app-lock";
 import { ChatList } from "@/components/chat-list";
+import { GamesPanel } from "@/components/games-panel";
 import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
 import { type Tab, TabBar } from "@/components/tab-bar";
@@ -26,6 +27,7 @@ import { useT } from "@/lib/i18n";
 const tabRoutes: Record<string, Tab> = {
   "/": "chats",
   "/archived": "chats",
+  "/games": "games",
   "/settings": "settings",
 };
 
@@ -76,7 +78,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const topLevel = tabRoutes[pathname];
   const tab = topLevel ?? "chats";
-  const wide = tab === "settings";
+  const wide = tab === "settings" || tab === "games";
 
   return (
     <RealtimeProvider>
@@ -95,6 +97,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <div className="min-h-0 min-w-0 flex-1">
               {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
+              {tab === "games" && <GamesPanel />}
               {tab === "settings" && <SettingsPanel />}
             </div>
             <TabBar active={tab} />
