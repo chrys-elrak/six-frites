@@ -1,14 +1,15 @@
 "use client";
 
 import { kindFor } from "@six/sdk";
-import { type EphemeralInput, type UploadKind, stripAudio } from "@six/shared";
-import { EyeOff, FileText, Pencil, SendHorizontal, Volume2, VolumeX, X } from "lucide-react";
+import { type EphemeralInput, type UploadKind, stripAudio, trimVideo } from "@six/shared";
+import { EyeOff, FileText, Pencil, Scissors, SendHorizontal, Volume2, VolumeX, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { formatBytes } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { PhotoEditor } from "./photo-editor";
 import { Portal } from "./portal";
+import { VideoTrimmer } from "./video-trimmer";
 
 export interface PickedFile {
   file: File;
@@ -36,6 +37,7 @@ function Preview({
   onToggleSpoiler,
   onEdit,
   onToggleMute,
+  onCut,
   onRemove,
 }: {
   item: Item;
@@ -44,6 +46,7 @@ function Preview({
   onToggleSpoiler: () => void;
   onEdit: () => void;
   onToggleMute: () => void;
+  onCut: () => void;
   onRemove: () => void;
 }) {
   const tr = useT();
@@ -100,6 +103,12 @@ function Preview({
               {large && (item.unmuted ? tr.composer.muted : tr.composer.mute)}
             </button>
           )}
+          {item.kind === "video" && (
+            <button type="button" onClick={onCut} title={tr.composer.cutVideo} className={pill(false)}>
+              <Scissors className="size-3.5" />
+              {large && tr.composer.cut}
+            </button>
+          )}
         </div>
         <button
           type="button"
@@ -144,7 +153,8 @@ export function AttachDialog({
   const [ephemeral, setEphemeral] = useState(initialEphemeral);
   const [editing, setEditing] = useState<Item | null>(() => (editFirst ? items[0]! : null));
   const [error, setError] = useState<string | null>(null);
-  const [muting, setMuting] = useState(false);
+  const [cutting, setCutting] = useState<Item | null>(null);
+  const [busy, setBusy] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const made = Object.fromEntries(items.map((i) => [i.id, URL.createObjectURL(i.file)]));
@@ -173,24 +183,42 @@ export function AttachDialog({
   async function toggleMute(item: Item) {
     setError(null);
     if (item.unmuted) return swap(item.id, item.unmuted);
-    setMuting(true);
+    setBusy(true);
     try {
       const bytes = new Uint8Array(await item.file.arrayBuffer());
       if (stripAudio(bytes)) swap(item.id, new File([bytes], item.file.name, { type: item.file.type }), item.file);
       else setError(tr.composer.couldNotMute);
     } finally {
-      setMuting(false);
+      setBusy(false);
+    }
+  }
+  /** Cuts the video, and its copy with sound when it's muted, to the same part. */
+  async function cut(item: Item, from: number, to: number) {
+    setCutting(null);
+    setError(null);
+    setBusy(true);
+    const trim = async (f: File) => {
+      const out = trimVideo(new Uint8Array(await f.arrayBuffer()), from, to);
+      return out && new File([out], f.name, { type: f.type });
+    };
+    try {
+      const file = await trim(item.file);
+      if (!file) return setError(tr.composer.cantCut);
+      swap(item.id, file, (item.unmuted && (await trim(item.unmuted))) || undefined);
+    } finally {
+      setBusy(false);
     }
   }
   const handlers = (item: Item) => ({
     onToggleSpoiler: () => update(item.id, { spoiler: !item.spoiler }),
     onEdit: () => setEditing(item),
     onToggleMute: () => void toggleMute(item),
+    onCut: () => setCutting(item),
     onRemove: () => remove(item.id),
   });
   const send = () =>
     items.length &&
-    !muting &&
+    !busy &&
     onSend(
       items.map(({ file, kind, spoiler }) => ({ file, kind, spoiler })),
       caption,
@@ -302,7 +330,7 @@ export function AttachDialog({
             />
             <button
               type="submit"
-              disabled={muting}
+              disabled={busy}
               aria-label={tr.common.send}
               className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition active:scale-95 disabled:opacity-50"
             >
@@ -311,6 +339,13 @@ export function AttachDialog({
           </form>
         </div>
       </div>
+      {cutting && (
+        <VideoTrimmer
+          file={cutting.file}
+          onCancel={() => setCutting(null)}
+          onDone={(from, to) => void cut(cutting, from, to)}
+        />
+      )}
       {editing && (
         <PhotoEditor
           file={editing.file}

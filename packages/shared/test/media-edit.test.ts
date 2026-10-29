@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   FULL_CROP,
@@ -9,11 +10,14 @@ import {
   isEdited,
   labelAt,
   scaleLabel,
+  cutStart,
   stripAudio,
+  trimVideo,
   turnCrop,
   turnEdit,
   MAX_ZOOM,
   NO_ZOOM,
+  videoCuts,
   zoomTo,
 } from "../src/media-edit.js";
 
@@ -151,5 +155,31 @@ describe("zoomTo", () => {
     expect(zoomTo(z, 2, at, { x: 1000, y: 20 }, 400, 300)).toEqual({ s: 2, x: 200, y: 60 });
     expect(zoomTo(z, 9, at, at, 400, 300).s).toBe(MAX_ZOOM);
     expect(zoomTo(z, 0.5, at, at, 400, 300)).toEqual({ s: 1, x: 0, y: 0 });
+  });
+});
+
+describe("trimVideo", () => {
+  const clip = new Uint8Array(readFileSync(new URL("./fixtures/clip.mp4", import.meta.url)));
+  const seconds = (xs: number[]) => xs.map((x) => Math.round(x * 1000) / 1000);
+
+  it("lists where a cut can start: the keyframes", () => {
+    const cuts = videoCuts(clip)!;
+    expect(cuts.duration).toBeCloseTo(4, 1);
+    expect(seconds(cuts.keyframes)).toEqual([0, 1, 2, 3]);
+    expect(cutStart(cuts.keyframes, 1.7)).toBe(1);
+  });
+
+  it("keeps what shows from the keyframe to the end, starting at 0", () => {
+    const out = trimVideo(clip, 1.5, 3.2)!;
+    const cuts = videoCuts(out)!;
+    expect(cuts.duration).toBeCloseTo(2.2, 2);
+    expect(seconds(cuts.keyframes)).toEqual([0, 1, 2]);
+    expect(out.length).toBeLessThan(clip.length * 0.75);
+  });
+
+  it("refuses cuts too short to keep and files it can't read", () => {
+    expect(trimVideo(clip, 3, 3.05)).toBeNull();
+    expect(trimVideo(new Uint8Array(16), 0, 1)).toBeNull();
+    expect(videoCuts(new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, 0, 0, 0, 0]))).toBeNull();
   });
 });

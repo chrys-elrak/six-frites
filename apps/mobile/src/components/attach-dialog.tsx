@@ -1,6 +1,6 @@
 import type { EphemeralInput, UploadKind } from "@six/shared";
 import { Image } from "expo-image";
-import { EyeOff, FileText, Pencil, Play, SendHorizontal, Volume2, VolumeX, X } from "lucide-react-native";
+import { EyeOff, FileText, Pencil, Play, Scissors, SendHorizontal, Volume2, VolumeX, X } from "lucide-react-native";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
@@ -8,12 +8,13 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { muteVideo } from "@/lib/media";
+import { cutVideo, muteVideo } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { PhotoEditor } from "./photo-editor";
 import { IconButton } from "./ui";
+import { VideoTrimmer } from "./video-trimmer";
 
 export interface PickedFile {
   file: LocalFile;
@@ -45,6 +46,7 @@ function Preview({
   onToggleSpoiler,
   onEdit,
   onToggleMute,
+  onCut,
   onRemove,
 }: {
   item: PickedFile;
@@ -52,6 +54,7 @@ function Preview({
   onToggleSpoiler: () => void;
   onEdit: () => void;
   onToggleMute: () => void;
+  onCut: () => void;
   onRemove: () => void;
 }) {
   const t = useTheme();
@@ -94,6 +97,9 @@ function Preview({
               onPress={onToggleMute}
             />
           )}
+          {file.kind === "video" && (
+            <Pill on={false} Icon={Scissors} title={tr.composer.cutVideo} label={large ? tr.composer.cut : undefined} onPress={onCut} />
+          )}
         </View>
         <Pressable onPress={onRemove} accessibilityLabel={tr.common.remove} style={styles.remove}>
           <X size={16} color="#fff" />
@@ -125,7 +131,8 @@ export function AttachDialog({
   const [caption, setCaption] = useState(initialCaption);
   const [ephemeral, setEphemeral] = useState(initialEphemeral);
   const [editing, setEditing] = useState<PickedFile | null>(() => (editFirst ? items[0]! : null));
-  const [muting, setMuting] = useState(false);
+  const [cutting, setCutting] = useState<PickedFile | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const media = items.filter((i) => visual(i.file.kind));
@@ -143,7 +150,7 @@ export function AttachDialog({
   async function toggleMute(it: PickedFile) {
     setError(null);
     if (it.unmuted) return swap(it, it.unmuted);
-    setMuting(true);
+    setBusy(true);
     try {
       const muted = await muteVideo(it.file);
       if (muted) swap(it, muted, it.file);
@@ -151,13 +158,29 @@ export function AttachDialog({
     } catch {
       setError(tr.composer.couldNotMute);
     } finally {
-      setMuting(false);
+      setBusy(false);
+    }
+  }
+  /** Cuts the video, and its copy with sound when it's muted, to the same part. */
+  async function cut(it: PickedFile, from: number, to: number) {
+    setCutting(null);
+    setError(null);
+    setBusy(true);
+    try {
+      const file = await cutVideo(it.file, from, to);
+      if (!file) return setError(tr.composer.cantCut);
+      swap(it, file, (it.unmuted && (await cutVideo(it.unmuted, from, to))) || undefined);
+    } catch {
+      setError(tr.composer.cantCut);
+    } finally {
+      setBusy(false);
     }
   }
   const handlers = (it: PickedFile) => ({
     onToggleSpoiler: () => toggle(it),
     onEdit: () => setEditing(it),
     onToggleMute: () => void toggleMute(it),
+    onCut: () => setCutting(it),
     onRemove: () => remove(it),
   });
 
@@ -235,15 +258,22 @@ export function AttachDialog({
             />
             <Pressable
               onPress={() => items.length && onSend(items, caption, ephemeral)}
-              disabled={muting}
+              disabled={busy}
               accessibilityLabel={tr.common.send}
-              style={({ pressed }) => [styles.send, muting && { opacity: 0.5 }, pressed && { transform: [{ scale: 0.95 }] }]}
+              style={({ pressed }) => [styles.send, busy && { opacity: 0.5 }, pressed && { transform: [{ scale: 0.95 }] }]}
             >
               <SendHorizontal size={20} color={brandInk} />
             </Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>
+      {cutting && (
+        <VideoTrimmer
+          file={cutting.file}
+          onCancel={() => setCutting(null)}
+          onDone={(from, to) => void cut(cutting, from, to)}
+        />
+      )}
       {editing && (
         <PhotoEditor
           file={editing.file}

@@ -1,5 +1,15 @@
 import { kindFor } from "@six/sdk";
-import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES, type MessageDTO, type PhotoEdit, cropPixels, orientedSize, stripAudio } from "@six/shared";
+import {
+  ACCEPTED_TYPES,
+  MAX_UPLOAD_BYTES,
+  type MessageDTO,
+  type PhotoEdit,
+  cropPixels,
+  orientedSize,
+  stripAudio,
+  trimVideo,
+  videoCuts,
+} from "@six/shared";
 import { randomUUID } from "expo-crypto";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Paths } from "expo-file-system";
@@ -94,6 +104,22 @@ export async function muteVideo(file: LocalFile): Promise<LocalFile | null> {
   out.create();
   await out.write(bytes);
   return { ...file, uri: out.uri };
+}
+
+/** The video's length and the keyframes a cut can start on, or null when it can't be cut. */
+export async function readVideoCuts(file: LocalFile) {
+  return videoCuts(await new File(file.uri).bytes());
+}
+
+/** A copy of the video cut to `from`–`to` seconds (from snaps back to a keyframe), or null when it can't be cut. */
+export async function cutVideo(file: LocalFile, from: number, to: number): Promise<LocalFile | null> {
+  const bytes = trimVideo(await new File(file.uri).bytes(), from, to);
+  if (!bytes) return null;
+  const out = new File(Paths.cache, `cut-${randomUUID()}.${file.name.split(".").pop()}`);
+  out.create();
+  await out.write(bytes);
+  const duration = videoCuts(bytes)?.duration;
+  return { ...file, uri: out.uri, size: bytes.length, durationMs: duration ? Math.round(duration * 1000) : file.durationMs };
 }
 
 async function fromPickerAsset(a: ImagePicker.ImagePickerAsset): Promise<LocalFile> {
