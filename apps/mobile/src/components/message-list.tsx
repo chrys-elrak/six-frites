@@ -39,6 +39,7 @@ import {
 } from "lucide-react-native";
 import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Linking,
   type NativeScrollEvent,
@@ -887,6 +888,17 @@ export interface MessageListHandle {
   jumpTo: (messageId: string) => void;
 }
 
+function OlderLoader() {
+  const bubble = useBubbleColors();
+  return (
+    <View style={styles.older}>
+      <View style={[styles.olderDot, { backgroundColor: bubble.bg }]}>
+        <ActivityIndicator size="small" color={bubble.ink} />
+      </View>
+    </View>
+  );
+}
+
 export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: string; onSeen: () => void }>(
   function MessageList({ chat, meId, onSeen }, handle) {
     const t = useTheme();
@@ -1155,6 +1167,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 80 }}
             onEndReachedThreshold={0.5}
             onEndReached={() => messages.hasNextPage && !messages.isFetchingNextPage && void messages.fetchNextPage()}
+            ListFooterComponent={messages.isFetchingNextPage ? <OlderLoader /> : undefined}
             onScrollToIndexFailed={(info) => {
               list.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
               setTimeout(() => list.current?.scrollToIndex({ index: info.index, viewPosition: 0.5 }), 100);
@@ -1309,6 +1322,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   empty: { flex: 1, alignItems: "center", justifyContent: "flex-end", gap: 8, paddingBottom: 32 },
   day: { alignItems: "center", paddingVertical: 10 },
+  older: { alignItems: "center", paddingVertical: 8 },
+  olderDot: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   dayText: { fontSize: 12, fontWeight: "600", paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, overflow: "hidden" },
   line: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12 },
   side: { flex: 1 },

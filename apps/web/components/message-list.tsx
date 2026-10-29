@@ -32,6 +32,7 @@ import {
   Flame,
   Image as ImageIcon,
   ListChecks,
+  Loader2,
   Lock,
   MapPin,
   Mic,
@@ -1140,6 +1141,13 @@ export const MessageList = forwardRef<
           <div className="flex flex-col items-center pb-8 text-center text-sm">
             <span className="rounded-full bg-black/25 px-4 py-1.5 text-white backdrop-blur-sm">
               {tr.messages.empty}
+            </span>
+          </div>
+        )}
+        {messages.isFetchingNextPage && (
+          <div className="pointer-events-none absolute inset-x-0 z-10 flex justify-center" style={{ top: insetTop + 8 }}>
+            <span className="grid size-8 place-items-center rounded-full bg-brand text-brand-ink shadow-md">
+              <Loader2 className="size-4 animate-spin" />
             </span>
           </div>
         )}
