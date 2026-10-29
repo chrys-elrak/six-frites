@@ -31,17 +31,26 @@ In Google Cloud, add `https://six-frites.koera.mg` to the web client's Authorize
 
 ## Deploy and update
 
-From a checkout on your machine:
+Every push to `main` deploys on its own (`.github/workflows/deploy.yml`). To deploy the current commit by hand:
 
 ```sh
-git archive HEAD | ssh root@164.68.110.193 'cd /root/six-frites && tar -x'
-comm -23 <(git log --no-renames --diff-filter=D --name-only --pretty=format: | grep -v '^$' | grep -v '^\.env' | sort -u) \
-  <(git ls-tree -r --name-only HEAD | sort -u) | ssh root@164.68.110.193 "cd /root/six-frites && xargs -r -d '\n' rm -f --"
-ssh root@164.68.110.193 'cd /root/six-frites && cp infra/traefik/six-frites.yml /root/traefik/config/dynamic/ && docker compose -f docker-compose.prod.yml up -d --build'
+npm run deploy
 ```
 
-`tar -x` only adds and overwrites, so the second line deletes files the repo no longer has. Left behind, they break
-the web build's type check.
+`scripts/deploy.sh` copies the committed code to the server and deletes the files the repo no longer has, since
+leftovers break the web build's type check. It then rebuilds and restarts the containers, and waits for `/health`.
+Uncommitted changes aren't deployed. It uses `~/.ssh/id_chrysrakk`; set `DEPLOY_KEY` to use another key.
+
+The workflow needs two repository secrets, set once:
+
+```sh
+ssh-keygen -t ed25519 -N '' -C six-frites-deploy -f ~/.ssh/six-frites-deploy
+ssh -i ~/.ssh/id_chrysrakk -o IdentitiesOnly=yes root@164.68.110.193 'cat >> ~/.ssh/authorized_keys' < ~/.ssh/six-frites-deploy.pub
+gh secret set DEPLOY_SSH_KEY < ~/.ssh/six-frites-deploy
+ssh-keyscan 164.68.110.193 | gh secret set DEPLOY_KNOWN_HOSTS
+```
+
+To revoke it, remove the `six-frites-deploy` line from the server's `~/.ssh/authorized_keys`.
 
 Migrations run when the API starts. Logs: `docker compose -f docker-compose.prod.yml logs -f api worker web`.
 

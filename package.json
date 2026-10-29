@@ -12,7 +12,8 @@
     "db:migrate": "npm run db:migrate -w @six/api",
     "dev:web": "npm run dev -w @six/web",
     "sdk:generate": "npm run openapi -w @six/api && npm run generate -w @six/sdk",
-    "build:android": "npm run build:android -w @six/mobile"
+    "build:android": "npm run build:android -w @six/mobile",
+    "deploy": "scripts/deploy.sh"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
