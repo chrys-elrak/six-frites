@@ -150,7 +150,11 @@ const albumItem = (r: Pick<MsgRow, "key" | "message" | "attachment" | "spoiler">
   spoiler: r.spoiler,
 });
 
-type Row = { kind: "day"; key: string; at: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
+type Row =
+  | { kind: "day"; key: string; at: string }
+  | { kind: "unread"; key: string }
+  | { kind: "service"; key: string; message: MessageDTO }
+  | MsgRow;
 
 interface Item {
   senderId: string;
@@ -167,6 +171,7 @@ function buildRows(
   meId: string,
   peerDeliveredAt: number,
   peerReadAt: number,
+  unreadAfter: number | null,
 ): Row[] {
   const sent = new Set(messages.filter((m) => m.senderId === meId).map((m) => m.clientId));
   const items: Item[] = [
@@ -248,11 +253,16 @@ function buildRows(
   ];
 
   const rows: Row[] = [];
+  let unreadShown = unreadAfter === null;
   items.forEach((it, i) => {
     const prev = items[i - 1];
     const next = items[i + 1];
     if (!prev || !sameDay(prev.createdAt, it.createdAt)) {
       rows.push({ kind: "day", key: `day:${it.createdAt}`, at: it.createdAt });
+    }
+    if (!unreadShown && it.senderId !== meId && !it.row.deleted && Date.parse(it.createdAt) > unreadAfter!) {
+      unreadShown = true;
+      rows.push({ kind: "unread", key: "unread" });
     }
     const r = it.row;
     if (r.message?.type === "service") {
@@ -941,6 +951,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         peers.length ? Math.min(...peers.map((m) => (pick(m) ? Date.parse(pick(m)!) : 0))) : 0;
       return { peerDeliveredAt: earliest((m) => m.lastDeliveredAt), peerReadAt: earliest((m) => m.lastReadAt) };
     }, [chat.members, meId]);
+    const [unreadAfter] = useState(() => {
+      if (!chat.unreadCount) return null;
+      const read = chat.members.find((m) => m.user.id === meId)?.lastReadAt;
+      return read ? Date.parse(read) : 0;
+    });
 
     const loaded = useMemo(() => messages.data?.pages.flatMap((p) => p.items) ?? [], [messages.data]);
     const { shown, see } = useHydratedMessages(meId, loaded);
@@ -955,8 +970,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     ).current;
     const ordered = useMemo(() => shown.slice().reverse(), [shown]);
     const rows = useMemo(
-      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt).reverse(),
-      [ordered, pending, meId, peerDeliveredAt, peerReadAt],
+      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter).reverse(),
+      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter],
     );
     const scrollToBottom = () => list.current?.scrollToOffset({ offset: 0, animated: true });
     const [jumping, setJumping] = useState<string | null>(null);
@@ -1135,6 +1150,12 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
               row.kind === "day" ? (
                 <View style={styles.day}>
                   <Text style={[styles.dayText, styles.onWallpaper]}>{dayLabel(row.at)}</Text>
+                </View>
+              ) : row.kind === "unread" ? (
+                <View style={styles.service}>
+                  <View style={[styles.serviceChip, styles.onWallpaper]}>
+                    <Text style={{ color: "#fff", fontSize: 12 }}>{tr.messages.unread}</Text>
+                  </View>
                 </View>
               ) : row.kind === "service" ? (
                 <View style={styles.service}>

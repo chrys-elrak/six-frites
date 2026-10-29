@@ -146,7 +146,11 @@ const albumItem = (r: Pick<MsgRow, "key" | "message" | "attachment" | "spoiler">
   spoiler: r.spoiler,
 });
 
-type Row = { kind: "day"; key: string; at: string } | { kind: "service"; key: string; message: MessageDTO } | MsgRow;
+type Row =
+  | { kind: "day"; key: string; at: string }
+  | { kind: "unread"; key: string }
+  | { kind: "service"; key: string; message: MessageDTO }
+  | MsgRow;
 
 interface Item {
   senderId: string;
@@ -160,6 +164,7 @@ function buildRows(
   meId: string,
   peerDeliveredAt: number,
   peerReadAt: number,
+  unreadAfter: number | null,
 ): Row[] {
   const sent = new Set(messages.filter((m) => m.senderId === meId).map((m) => m.clientId));
   const items: Item[] = [
@@ -245,11 +250,16 @@ function buildRows(
   ];
 
   const rows: Row[] = [];
+  let unreadShown = unreadAfter === null;
   items.forEach((it, i) => {
     const prev = items[i - 1];
     const next = items[i + 1];
     if (!prev || !sameDay(prev.createdAt, it.createdAt)) {
       rows.push({ kind: "day", key: `day:${it.createdAt}`, at: it.createdAt });
+    }
+    if (!unreadShown && it.senderId !== meId && !it.row.deleted && Date.parse(it.createdAt) > unreadAfter!) {
+      unreadShown = true;
+      rows.push({ kind: "unread", key: "unread" });
     }
     const r = it.row;
     if (r.message?.type === "service") {
@@ -945,14 +955,19 @@ export const MessageList = forwardRef<
         peers.length ? Math.min(...peers.map((m) => (pick(m) ? Date.parse(pick(m)!) : 0))) : 0;
       return { peerDeliveredAt: earliest((m) => m.lastDeliveredAt), peerReadAt: earliest((m) => m.lastReadAt) };
     }, [chat.members, meId]);
+    const [unreadAfter] = useState(() => {
+      if (!chat.unreadCount) return null;
+      const read = chat.members.find((m) => m.user.id === meId)?.lastReadAt;
+      return read ? Date.parse(read) : 0;
+    });
 
     const ordered = useMemo(
       () => (messages.data?.pages.flatMap((p) => p.items) ?? []).slice().reverse(),
       [messages.data],
     );
     const rows = useMemo(
-      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt),
-      [ordered, pending, meId, peerDeliveredAt, peerReadAt],
+      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter),
+      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter],
     );
     const firstKey = useRef<string | undefined>(undefined);
     const lastKey = useRef<string | undefined>(undefined);
@@ -1129,6 +1144,12 @@ export const MessageList = forwardRef<
               <div key={row.key} className="flex justify-center py-3">
                 <span className="rounded-full bg-black/25 px-3 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
                   {dayLabel(row.at)}
+                </span>
+              </div>
+            ) : row.kind === "unread" ? (
+              <div key={row.key} className="flex justify-center py-2">
+                <span className="rounded-full bg-black/25 px-3 py-1 text-xs text-white backdrop-blur-sm">
+                  {tr.messages.unread}
                 </span>
               </div>
             ) : row.kind === "service" ? (

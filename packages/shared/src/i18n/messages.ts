@@ -15,6 +15,7 @@ const en = {
   deleteForMeAnd: (name: string) => `Delete for me and ${name}`,
   reportMessage: "Report message",
   empty: "No messages yet. Say hello!",
+  unread: "Unread messages",
   deleted: "This message was deleted",
   waiting: "Waiting for this message",
   waitingHint:
@@ -94,6 +95,7 @@ const fr: typeof en = {
   deleteForMeAnd: (name) => `Supprimer pour moi et ${name}`,
   reportMessage: "Signaler le message",
   empty: "Aucun message pour l'instant. Dites bonjour !",
+  unread: "Messages non lus",
   deleted: "Ce message a été supprimé",
   waiting: "En attente de ce message",
   waitingHint:
@@ -173,6 +175,7 @@ const mg: typeof en = {
   deleteForMeAnd: (name) => `Fafao amiko sy amin'i ${name}`,
   reportMessage: "Tatero ny hafatra",
   empty: "Mbola tsy misy hafatra. Lazao hoe salama!",
+  unread: "Hafatra mbola tsy voavaky",
   deleted: "Voafafa ity hafatra ity",
   waiting: "Miandry ity hafatra ity",
   waitingHint:
