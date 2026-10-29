@@ -58,12 +58,9 @@ key to read history on a new device.
 
 ## Mobile app
 
-Build the release app against production by setting these in `apps/mobile/.env` before building:
-
-```
-EXPO_PUBLIC_API_URL=https://six-frites.koera.mg
-EXPO_PUBLIC_WEB_URL=https://six-frites.koera.mg
-```
+Build the release APK against production with `npm run build:android`. It points the app at
+`https://six-frites.koera.mg`, regenerates `apps/mobile/android` and prints the APK's path, version and sha256.
+Bump `version` and `android.versionCode` in `apps/mobile/app.config.ts` first.
 
 For push notifications on Android, register the `com.sixfrites.app` Android app in the same Firebase project as
 `FCM_SERVICE_ACCOUNT` and put its `google-services.json` in `apps/mobile/`. Builds without that file still work,
