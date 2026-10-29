@@ -772,7 +772,6 @@ export function Composer({
               }}
               rows={1}
               maxLength={4000}
-              enterKeyHint={editing ? "done" : "send"}
               placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
               aria-label={tr.common.message}
               className="max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
