@@ -231,3 +231,37 @@ export function stripAudio(bytes: Uint8Array): boolean {
     return false;
   }
 }
+
+/** How a zoomed photo sits in its box: scale `s`, shifted by x and y from the centre, in pixels. */
+export interface ZoomView {
+  s: number;
+  x: number;
+  y: number;
+}
+
+export const NO_ZOOM: ZoomView = { s: 1, x: 0, y: 0 };
+
+export const MAX_ZOOM = 4;
+
+/**
+ * Scales `was` to `s` so the spot that sat under the point `from` ends up under `to` (both relative to the
+ * centre of a w×h box), without letting the photo's edges come inside the box. Pass the same point twice
+ * to zoom in place; keep `s` to pan.
+ */
+export function zoomTo(
+  was: ZoomView,
+  s: number,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  w: number,
+  h: number,
+): ZoomView {
+  const z = clamp(s, 1, MAX_ZOOM);
+  const mx = ((z - 1) * w) / 2;
+  const my = ((z - 1) * h) / 2;
+  return {
+    s: z,
+    x: clamp(to.x - ((from.x - was.x) * z) / was.s, -mx, mx),
+    y: clamp(to.y - ((from.y - was.y) * z) / was.s, -my, my),
+  };
+}

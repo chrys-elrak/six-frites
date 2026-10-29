@@ -29,7 +29,7 @@ import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 
 const headerClass =
-  "absolute inset-x-0 top-0 z-10 flex items-center gap-2 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
+  "absolute inset-x-0 top-0 z-10 flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
 const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
 
@@ -201,7 +201,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                     <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
                   ) : (
                     (shownPresence || muted || c.archived || c.autoDeleteSecs) && (
-                      <span className="block truncate text-xs text-stone-500">
+                      <span className="line-clamp-2 text-xs text-stone-500">
                         {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
                         {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs) && " · "}
                         {[

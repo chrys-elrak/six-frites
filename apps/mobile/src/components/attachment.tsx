@@ -1,4 +1,4 @@
-import type { AttachmentDTO } from "@six/shared";
+import { type AttachmentDTO, NO_ZOOM, type ZoomView, zoomTo } from "@six/shared";
 import { useEvent } from "expo";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Image } from "expo-image";
@@ -6,6 +6,15 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { AlertCircle, Download, EyeOff, FileText, Pause, Play, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import {
+  GestureDetector,
+  GestureHandlerRootView,
+  usePanGesture,
+  usePinchGesture,
+  useSimultaneousGestures,
+  useTapGesture,
+} from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { shareRemoteFile } from "@/lib/download";
@@ -604,17 +613,101 @@ export function LightboxVideo({ url }: { url: string }) {
   return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="contain" nativeControls />;
 }
 
+/**
+ * A full-screen photo in a width×height page that zooms with a pinch or a double tap and drags around once
+ * zoomed in. `onZoom` says when it leaves or gets back to its normal size, so an album can stop paging meanwhile.
+ */
+function ZoomImage({
+  uri,
+  width,
+  height,
+  onZoom,
+}: {
+  uri: string;
+  width: number;
+  height: number;
+  onZoom?: (zoomed: boolean) => void;
+}) {
+  const [zoomed, setZoomed] = useState(false);
+  const s = useSharedValue(1);
+  const x = useSharedValue(0);
+  const y = useSharedValue(0);
+  const view = useRef(NO_ZOOM);
+  const pinchStart = useRef({ was: NO_ZOOM, at: { x: 0, y: 0 } });
+  const panStart = useRef(NO_ZOOM);
+  const latest = useRef({ width, height, onZoom });
+  latest.current = { width, height, onZoom };
+
+  const center = (px: number, py: number) => ({ x: px - latest.current.width / 2, y: py - latest.current.height / 2 });
+  const fit = (was: ZoomView, scale: number, from: { x: number; y: number }, to: { x: number; y: number }) =>
+    zoomTo(was, scale, from, to, latest.current.width, latest.current.height);
+
+  function show(v: ZoomView, animate = false) {
+    const big = v.s > 1;
+    if (big !== view.current.s > 1) {
+      setZoomed(big);
+      latest.current.onZoom?.(big);
+    }
+    view.current = v;
+    s.value = animate ? withTiming(v.s, { duration: 200 }) : v.s;
+    x.value = animate ? withTiming(v.x, { duration: 200 }) : v.x;
+    y.value = animate ? withTiming(v.y, { duration: 200 }) : v.y;
+  }
+
+  const pinch = usePinchGesture({
+    runOnJS: true,
+    onActivate: (e) => (pinchStart.current = { was: view.current, at: center(e.focalX, e.focalY) }),
+    onUpdate: (e) => {
+      const { was, at } = pinchStart.current;
+      show(fit(was, was.s * e.scale, at, center(e.focalX, e.focalY)));
+    },
+  });
+  const pan = usePanGesture({
+    enabled: zoomed,
+    maxPointers: 1,
+    runOnJS: true,
+    onActivate: () => (panStart.current = view.current),
+    onUpdate: (e) => {
+      const was = panStart.current;
+      show(fit(was, was.s, { x: 0, y: 0 }, { x: e.translationX, y: e.translationY }));
+    },
+  });
+  const doubleTap = useTapGesture({
+    numberOfTaps: 2,
+    runOnJS: true,
+    onActivate: (e) => {
+      const at = center(e.x, e.y);
+      show(view.current.s > 1 ? NO_ZOOM : fit(view.current, 2.5, at, at), true);
+    },
+  });
+  const gestures = useSimultaneousGestures(pinch, pan, doubleTap);
+  const moving = useAnimatedStyle(() => ({
+    transform: [{ translateX: x.value }, { translateY: y.value }, { scale: s.value }],
+  }));
+
+  return (
+    <GestureDetector gesture={gestures}>
+      <View style={[StyleSheet.absoluteFill, { overflow: "hidden" }]}>
+        <Animated.View style={[StyleSheet.absoluteFill, moving]}>
+          <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="contain" />
+        </Animated.View>
+      </View>
+    </GestureDetector>
+  );
+}
+
 export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () => void }) {
   const tr = useT();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
+  const pageHeight = height - insets.top - insets.bottom - 56;
 
   return (
     <Modal animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
-      <View style={styles.lightbox}>
-        <View style={{ width, height: height - insets.top - insets.bottom - 56, marginTop: insets.top + 56 }}>
+      <GestureHandlerRootView style={styles.lightbox}>
+        <View style={{ width, height: pageHeight, marginTop: insets.top + 56 }}>
           {item.kind === "image" ? (
-            <Image source={{ uri: item.url }} style={StyleSheet.absoluteFill} contentFit="contain" />
+            <ZoomImage uri={item.url} width={width} height={pageHeight} />
           ) : (
             <LightboxVideo url={item.url} />
           )}
@@ -624,7 +717,7 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
             <X size={26} color="#fff" />
           </Pressable>
         </View>
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
@@ -646,15 +739,17 @@ export function AlbumViewer({
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [index, setIndex] = useState(start);
+  const [zoomed, setZoomed] = useState(false);
   const pageHeight = height - insets.top - insets.bottom - 56;
 
   return (
     <Modal animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
-      <View style={styles.lightbox}>
+      <GestureHandlerRootView style={styles.lightbox}>
         <FlatList
           data={items}
           horizontal
           pagingEnabled
+          scrollEnabled={!zoomed}
           showsHorizontalScrollIndicator={false}
           initialScrollIndex={start}
           getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
@@ -664,12 +759,10 @@ export function AlbumViewer({
             <View style={{ width, height: pageHeight, marginTop: insets.top + 56 }}>
               {item.kind === "video" && i === index ? (
                 <LightboxVideo url={item.url} />
+              ) : item.kind === "image" ? (
+                <ZoomImage uri={item.url} width={width} height={pageHeight} onZoom={setZoomed} />
               ) : (
-                <Image
-                  source={{ uri: item.kind === "image" ? item.url : (item.poster ?? undefined) }}
-                  style={StyleSheet.absoluteFill}
-                  contentFit="contain"
-                />
+                <Image source={{ uri: item.poster ?? undefined }} style={StyleSheet.absoluteFill} contentFit="contain" />
               )}
             </View>
           )}
@@ -687,7 +780,7 @@ export function AlbumViewer({
             <X size={26} color="#fff" />
           </Pressable>
         </View>
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }

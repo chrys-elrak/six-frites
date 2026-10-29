@@ -165,7 +165,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
         className="size-4 accent-brand"
       />
       <Avatar user={u} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-40 flex-1">
         <p className="truncate text-sm font-medium">
           {u.displayName}
           {u.admin && <span className="ml-1.5 text-xs text-brand">Admin</span>}
@@ -189,7 +189,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
         {u.banReason && <p className="text-xs text-red-600 dark:text-red-400">Ban reason: {u.banReason}</p>}
       </div>
       {!u.admin && (
-        <div className="flex gap-2">
+        <div className="ml-auto flex gap-2">
           <button
             type="button"
             onClick={() => setLimiting(true)}

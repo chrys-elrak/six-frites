@@ -163,7 +163,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                 <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
               ) : (
                 (presence || c.muted || c.archived || !!c.autoDeleteSecs) && (
-                  <Text numberOfLines={1} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>
+                  <Text numberOfLines={2} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>
                     {[
                       presenceLabel(presence),
                       c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),

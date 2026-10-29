@@ -594,7 +594,7 @@ function Bubble({
   selecting: boolean;
   selected: boolean;
   nameOf: (userId: string) => string;
-  onMenu: () => void;
+  onMenu: (at?: { x: number; y: number }) => void;
   onReply: () => void;
   onQuote: (id: string) => void;
   onToggle: () => void;
@@ -822,7 +822,7 @@ function Bubble({
               <ReactionChips message={row.message} meId={meId} mine={mine} nameOf={nameOf} onReact={onReact} />
             )}
             {row.delivery === "failed" && (
-              <button onClick={onMenu} className="text-xs font-medium text-red-600 dark:text-red-400">
+              <button onClick={() => onMenu()} className="text-xs font-medium text-red-600 dark:text-red-400">
                 {tr.messages.notSent}
               </button>
             )}
@@ -837,7 +837,10 @@ function Bubble({
             </button>
           )}
           <button
-            onClick={onMenu}
+            onClick={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              onMenu({ x: r.left, y: r.bottom });
+            }}
             aria-label={tr.messages.options}
             className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
           >
@@ -878,6 +881,7 @@ export const MessageList = forwardRef<
     const atBottom = useRef(true);
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
+    const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
     const [reporting, setReporting] = useState<MessageDTO | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
@@ -1152,7 +1156,10 @@ export const MessageList = forwardRef<
                 selecting={selecting}
                 selected={row.id !== null && selecting && selectedIds.includes(row.id)}
                 nameOf={nameOf}
-                onMenu={() => setMenuFor(row)}
+                onMenu={(at) => {
+                  setMenuFor(row);
+                  setMenuAt(at);
+                }}
                 onReply={() => row.message && setMode(chat.id, { kind: "reply", message: row.message })}
                 onQuote={jumpTo}
                 onToggle={() => row.id && toggleSelected(row.id)}
@@ -1173,9 +1180,9 @@ export const MessageList = forwardRef<
         </VList>
 
         {menuFor && (
-          <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)}>
+          <Sheet actions={actionsFor(menuFor)} at={menuAt} onClose={() => setMenuFor(null)}>
             {!frozen && canReact(menuFor) && (
-              <div className="rounded-full bg-white px-1.5 py-1 shadow-xl dark:bg-stone-900">
+              <div className="rounded-full bg-white px-1.5 py-1 shadow-xl ring-1 ring-black/5 dark:bg-stone-900 dark:ring-white/10">
                 <ReactionBar
                   message={menuFor.message!}
                   meId={meId}

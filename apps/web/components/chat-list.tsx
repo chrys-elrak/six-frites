@@ -107,8 +107,8 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
 function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: boolean }) {
   const tr = useT();
   const router = useRouter();
-  const [menu, setMenu] = useState(false);
-  const press = useLongPress(() => setMenu(true));
+  const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
+  const press = useLongPress((at) => setMenu({ at }));
   const typing = useTyping(chat.id);
   const draft = useDrafts((s) => (active ? undefined : s.byChat[chat.id]));
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
@@ -172,7 +172,10 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
         </div>
       </Link>
       <button
-        onClick={() => setMenu(true)}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          setMenu({ at: { x: r.left, y: r.bottom } });
+        }}
         aria-label={tr.chats.optionsFor(chat.title)}
         className="absolute top-1/2 right-2 hidden size-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-stone-500 opacity-0 shadow-sm transition group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:bg-stone-800/90"
       >
@@ -182,7 +185,8 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
         <ChatMenu
           chat={chat}
           peerName={peer.displayName}
-          onClose={() => setMenu(false)}
+          at={menu.at}
+          onClose={() => setMenu(null)}
           onDeleted={(scope) => scope === "me" && active && router.replace("/")}
         />
       )}

@@ -2,7 +2,7 @@
 
 import { unwrap } from "@six/sdk";
 import { useMutation } from "@tanstack/react-query";
-import { Lock } from "lucide-react";
+import { Delete, Lock } from "lucide-react";
 import { useState } from "react";
 import { unlock } from "@/lib/app-lock";
 import { signOut } from "@/lib/e2ee";
@@ -104,6 +104,42 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** On-screen digits for mouse users; touch screens get the numeric keyboard instead. */
+function Keypad({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const tr = useT();
+  const key = "grid size-16 place-items-center rounded-full text-2xl font-medium hover:bg-stone-200 active:scale-95 dark:hover:bg-stone-800";
+
+  return (
+    <div className="hidden grid-cols-3 justify-items-center gap-3 pointer-fine:grid">
+      {[..."123456789", "", "0"].map((d) =>
+        d ? (
+          <button
+            key={d}
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onChange((value + d).slice(0, 8))}
+            className={`${key} bg-stone-100 dark:bg-stone-900`}
+          >
+            {d}
+          </button>
+        ) : (
+          <span key="gap" />
+        ),
+      )}
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => onChange(value.slice(0, -1))}
+        disabled={!value}
+        aria-label={tr.settings.appLock.eraseDigit}
+        className={`${key} text-stone-500 disabled:opacity-30`}
+      >
+        <Delete className="size-6" />
+      </button>
+    </div>
+  );
+}
+
 /**
  * Covers the app until the app lock code is entered. Forgetting it means signing out and in again. With
  * `onCancel` it guards a single screen, like the archived chats, and can be backed out of instead.
@@ -139,6 +175,7 @@ export function LockScreen({
         <Logo className="mx-auto size-14" />
         <h1 className="text-center text-xl font-semibold">{title ?? tr.settings.appLock.locked}</h1>
         <CodeInput label={tr.settings.appLock.enterCode} value={code} onChange={setCode} autoFocus />
+        <Keypad value={code} onChange={setCode} />
         {check.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">
             {codeError(check.error, tr, tr.settings.appLock.errors)}

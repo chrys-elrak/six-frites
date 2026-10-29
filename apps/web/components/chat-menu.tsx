@@ -94,6 +94,7 @@ export function ChatMenu({
   onDeleted,
   onChooseMessages,
   onSharedMedia,
+  at,
 }: {
   chat: ChatDTO;
   peerName: string;
@@ -101,6 +102,7 @@ export function ChatMenu({
   onDeleted?: (scope: DeleteScope) => void;
   onChooseMessages?: () => void;
   onSharedMedia?: (tab: "search" | "media") => void;
+  at?: { x: number; y: number };
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -297,6 +299,7 @@ export function ChatMenu({
   return (
     <Sheet
       title={chat.title}
+      at={at}
       onClose={onClose}
       actions={[
         ...(onSharedMedia

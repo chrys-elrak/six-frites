@@ -22,10 +22,12 @@ function swallowNextClick() {
   window.addEventListener("keydown", done, true);
 }
 
-export function useLongPress(onLongPress: () => void, ms = 450) {
+/** Right-clicks with a mouse also count, and pass the pointer position so a menu can open there. */
+export function useLongPress(onLongPress: (at?: { x: number; y: number }) => void, ms = 450) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const origin = useRef<{ x: number; y: number } | null>(null);
   const fired = useRef(false);
+  const touch = useRef(false);
 
   const clear = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -36,7 +38,8 @@ export function useLongPress(onLongPress: () => void, ms = 450) {
   return {
     onPointerDown: (e: React.PointerEvent) => {
       fired.current = false;
-      if (e.pointerType !== "touch") return;
+      touch.current = e.pointerType === "touch";
+      if (!touch.current) return;
       origin.current = { x: e.clientX, y: e.clientY };
       timer.current = setTimeout(() => {
         clear();
@@ -58,7 +61,7 @@ export function useLongPress(onLongPress: () => void, ms = 450) {
       if (fired.current) return;
       fired.current = true;
       swallowNextClick();
-      onLongPress();
+      onLongPress(touch.current ? undefined : { x: e.clientX, y: e.clientY });
     },
   };
 }

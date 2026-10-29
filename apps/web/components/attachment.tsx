@@ -1,6 +1,6 @@
 "use client";
 
-import type { AttachmentDTO, EncryptedFile } from "@six/shared";
+import { type AttachmentDTO, type EncryptedFile, NO_ZOOM, type ZoomView, zoomTo } from "@six/shared";
 import { AlertCircle, ChevronLeft, ChevronRight, Download, EyeOff, FileText, Loader2, Pause, Play, X } from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -623,6 +623,104 @@ export function AttachmentView({
   );
 }
 
+type Point = { x: number; y: number };
+
+/**
+ * A full-screen photo that zooms with a pinch, a double tap (or click) or the wheel, and drags around once
+ * zoomed in. While it's zoomed or pinched, swipes stay here instead of flipping the album around it.
+ */
+function ZoomImage({ src }: { src: string }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(NO_ZOOM);
+  const [live, setLive] = useState(false);
+  const current = useRef(zoom);
+  current.current = zoom;
+  const points = useRef(new Map<number, Point>());
+  const gesture = useRef<{ was: ZoomView; mid: Point; d: number; moved: boolean } | null>(null);
+  const keepSwipe = useRef(true);
+  const lastTap = useRef(0);
+
+  const local = (e: { clientX: number; clientY: number }) => {
+    const r = box.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left - r.width / 2, y: e.clientY - r.top - r.height / 2 };
+  };
+  const zoomBox = (s: number, from: Point, to: Point, was = current.current) => {
+    const r = box.current!.getBoundingClientRect();
+    return zoomTo(was, s, from, to, r.width, r.height);
+  };
+  const span = () => {
+    const [a, b = a] = [...points.current.values()];
+    return { mid: { x: (a!.x + b!.x) / 2, y: (a!.y + b!.y) / 2 }, d: Math.hypot(a!.x - b!.x, a!.y - b!.y) };
+  };
+  const anchor = (moved: boolean) => (gesture.current = { was: current.current, ...span(), moved });
+
+  useEffect(() => {
+    const el = box.current!;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const p = local(e);
+      setZoom((z) => zoomBox(z.s * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.002)), p, p, z));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  function lift(e: React.PointerEvent) {
+    if (!points.current.delete(e.pointerId)) return;
+    if (points.current.size) return void anchor(true);
+    const moved = gesture.current?.moved;
+    gesture.current = null;
+    setLive(false);
+    if (moved || e.type === "pointercancel") return;
+    if (e.timeStamp - lastTap.current > 300) {
+      lastTap.current = e.timeStamp;
+      return;
+    }
+    lastTap.current = 0;
+    const p = local(e);
+    setZoom((z) => (z.s > 1 ? NO_ZOOM : zoomBox(2.5, p, p, z)));
+  }
+
+  return (
+    <div
+      ref={box}
+      className={`size-full touch-none overflow-hidden ${zoom.s > 1 ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"}`}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        points.current.set(e.pointerId, local(e));
+        const many = points.current.size > 1;
+        keepSwipe.current = !many && current.current.s === 1;
+        anchor(many || !!gesture.current?.moved);
+      }}
+      onPointerMove={(e) => {
+        const g = gesture.current;
+        if (!g || !points.current.has(e.pointerId)) return;
+        points.current.set(e.pointerId, local(e));
+        const { mid, d } = span();
+        if (!g.moved && Math.hypot(mid.x - g.mid.x, mid.y - g.mid.y) < 8) return;
+        g.moved = true;
+        if (points.current.size === 1 && g.was.s === 1) return;
+        setLive(true);
+        setZoom(zoomBox(g.d ? (g.was.s * d) / g.d : g.was.s, g.mid, mid, g.was));
+      }}
+      onPointerUp={lift}
+      onPointerCancel={lift}
+      onTouchEnd={(e) => !keepSwipe.current && e.stopPropagation()}
+    >
+      <ProtectedImage
+        src={src}
+        fit="contain"
+        className="size-full"
+        style={{
+          transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`,
+          transition: live ? "none" : "transform 200ms ease-out",
+        }}
+      />
+    </div>
+  );
+}
+
 export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () => void }) {
   const tr = useT();
   useEffect(() => {
@@ -648,7 +746,7 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           {item.kind === "image" ? (
-            <ProtectedImage src={item.url} fit="contain" className="size-full" />
+            <ZoomImage src={item.url} />
           ) : (
             <video
               src={item.url}
@@ -685,7 +783,7 @@ function AlbumSlide({ attachment }: { attachment: ShownAttachment }) {
       className="max-h-full max-w-full"
     />
   ) : (
-    <ProtectedImage src={a.url} fit="contain" className="size-full" />
+    <ZoomImage src={a.url} />
   );
 }
 

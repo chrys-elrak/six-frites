@@ -12,6 +12,9 @@ import {
   stripAudio,
   turnCrop,
   turnEdit,
+  MAX_ZOOM,
+  NO_ZOOM,
+  zoomTo,
 } from "../src/media-edit.js";
 
 const u32 = (n: number) => [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
@@ -136,5 +139,17 @@ describe("photo edits", () => {
   it("keeps resized labels within reason", () => {
     expect(scaleLabel(drawn.labels[0]!, 0.01).size).toBe(0.015);
     expect(scaleLabel(drawn.labels[0]!, 100).size).toBe(0.6);
+  });
+});
+
+describe("zoomTo", () => {
+  it("keeps the pinched spot under the fingers and the photo inside its box", () => {
+    const at = { x: 50, y: -20 };
+    const z = zoomTo(NO_ZOOM, 2, at, at, 400, 300);
+    expect(z).toEqual({ s: 2, x: -50, y: 20 });
+    expect((at.x - z.x) / z.s).toBe(at.x);
+    expect(zoomTo(z, 2, at, { x: 1000, y: 20 }, 400, 300)).toEqual({ s: 2, x: 200, y: 60 });
+    expect(zoomTo(z, 9, at, at, 400, 300).s).toBe(MAX_ZOOM);
+    expect(zoomTo(z, 0.5, at, at, 400, 300)).toEqual({ s: 1, x: 0, y: 0 });
   });
 });

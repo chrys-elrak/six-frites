@@ -690,7 +690,7 @@ export function Composer({
             </>
           )}
           <div
-            className={`relative min-h-10 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800 ${
+            className={`relative min-h-10 min-w-0 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800 ${
               capture || preview ? "hidden" : "flex"
             }`}
           >
@@ -764,7 +764,7 @@ export function Composer({
                   cancel();
                   return;
                 }
-                const desktop = window.matchMedia("(pointer: fine)").matches;
+                const desktop = window.matchMedia("(any-pointer: fine)").matches;
                 if (e.key === "Enter" && !e.shiftKey && desktop && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   void submit();
@@ -775,7 +775,7 @@ export function Composer({
               enterKeyHint={editing ? "done" : "send"}
               placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
               aria-label={tr.common.message}
-              className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
+              className="max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
             />
             <button
               type="button"

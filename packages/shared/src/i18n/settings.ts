@@ -182,6 +182,7 @@ const en = {
     fingerprintPrompt: "Unlock Six Frites",
     useFingerprint: "Use fingerprint",
     useCode: "Use code",
+    eraseDigit: "Erase last digit",
     errors: {
       WRONG_APP_LOCK_CODE: "That's not your app lock code.",
       RATE_LIMITED: "Too many tries. Wait a minute.",
@@ -373,6 +374,7 @@ const fr: typeof en = {
     fingerprintPrompt: "Déverrouiller Six Frites",
     useFingerprint: "Utiliser l'empreinte",
     useCode: "Utiliser le code",
+    eraseDigit: "Effacer le dernier chiffre",
     errors: {
       WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de verrouillage.",
       RATE_LIMITED: "Trop de tentatives. Patientez une minute.",
@@ -562,6 +564,7 @@ const mg: typeof en = {
     fingerprintPrompt: "Sokafy ny Six Frites",
     useFingerprint: "Ampiasao ny dian-tanana",
     useCode: "Ampiasao ny kaody",
+    eraseDigit: "Fafao ny isa farany",
     errors: {
       WRONG_APP_LOCK_CODE: "Tsy io no kaodin'ny hidinao.",
       RATE_LIMITED: "Be loatra ny andrana. Andraso iray minitra.",
