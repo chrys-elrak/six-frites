@@ -1,4 +1,4 @@
-import { type AttachmentDTO, NO_ZOOM, type ZoomView, zoomTo } from "@six/shared";
+import { type AttachmentDTO, NO_ZOOM, type ZoomView, fitWaveform, zoomTo } from "@six/shared";
 import { useEvent } from "expo";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Image } from "expo-image";
@@ -182,7 +182,7 @@ export function VoicePlayer({
   const status = useAudioPlayerStatus(player);
   const loaded = useRef(false);
   const [barsWidth, setBarsWidth] = useState(1);
-  const bars = waveform ?? Array.from({ length: 48 }, () => 18);
+  const bars = waveform ? fitWaveform(waveform) : Array.from({ length: 48 }, () => 18);
   const total = durationMs ?? (status.duration ? status.duration * 1000 : 0);
   const position = status.currentTime * 1000;
   const stop = useRef(() => player.pause()).current;
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
   },
   voice: { flexDirection: "row", alignItems: "center", gap: 12, width: 240, maxWidth: "100%", paddingVertical: 4 },
   voiceButton: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  bars: { flexDirection: "row", alignItems: "center", gap: 2, height: 32 },
+  bars: { flexDirection: "row", alignItems: "center", gap: 2, height: 32, overflow: "hidden" },
   bar: { flex: 1, borderRadius: 2 },
   small: { fontSize: 11, opacity: 0.7, color: stone[500] },
   voiceFoot: { flexDirection: "row", alignItems: "center", gap: 6 },

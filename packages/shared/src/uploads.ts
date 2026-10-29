@@ -11,6 +11,14 @@ export const encryptedSize = (plainBytes: number) => 16 + plainBytes + 16 * Math
 
 export const ENCRYPTED_MIME = "application/octet-stream";
 
+/** Squeezes a waveform into at most `count` bars, keeping each group's peak, so it fits a message bubble. */
+export function fitWaveform(bars: number[], count = 48) {
+  if (bars.length <= count) return bars;
+  return Array.from({ length: count }, (_, i) =>
+    Math.max(...bars.slice(Math.floor((i * bars.length) / count), Math.floor(((i + 1) * bars.length) / count))),
+  );
+}
+
 export const UploadKind = z
   .enum(["image", "video", "video_note", "voice", "file", "gif", "sticker"])
   .describe("`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs");

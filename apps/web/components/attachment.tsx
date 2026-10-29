@@ -1,6 +1,6 @@
 "use client";
 
-import { type AttachmentDTO, type EncryptedFile, NO_ZOOM, type ZoomView, zoomTo } from "@six/shared";
+import { type AttachmentDTO, type EncryptedFile, NO_ZOOM, type ZoomView, fitWaveform, zoomTo } from "@six/shared";
 import { AlertCircle, ChevronLeft, ChevronRight, Download, EyeOff, FileText, FileX, Loader2, Pause, Play, X } from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -206,7 +206,7 @@ export function VoicePlayer({
   const [position, setPosition] = useState(0);
   const [loadedMs, setLoadedMs] = useState(0);
   const rate = usePlaybackRate((s) => s.rate);
-  const bars = waveform ?? Array.from({ length: 48 }, () => 18);
+  const bars = waveform ? fitWaveform(waveform) : Array.from({ length: 48 }, () => 18);
   const total = durationMs ?? loadedMs;
 
   useEffect(() => () => audio.current?.pause(), []);
@@ -269,7 +269,7 @@ export function VoicePlayer({
       <div className={`flex min-w-0 flex-1 items-center ${compact ? "gap-2" : "flex-wrap gap-x-2"}`}>
         <div
           onClick={seek}
-          className={`flex cursor-pointer items-center gap-[2px] ${compact ? "h-6 min-w-0 flex-1" : "h-8 min-w-40 flex-1"}`}
+          className={`flex cursor-pointer items-center gap-[2px] overflow-hidden ${compact ? "h-6 min-w-0 flex-1" : "h-8 min-w-40 flex-1"}`}
           aria-hidden
         >
           {bars.map((v, i) => (
