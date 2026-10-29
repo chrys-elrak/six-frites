@@ -24,6 +24,7 @@ import {
   MarkReadInput,
   MessageDTO,
   MessageListQuery,
+  MessageTimingDTO,
   ReactInput,
   ReactionEmoji,
   ScheduleMessageInput,
@@ -46,6 +47,7 @@ import {
   editMessage,
   listMessages,
   makeEphemeral,
+  messageTiming,
   setReaction,
   resendMessage,
   sendMessage,
@@ -127,6 +129,22 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       else await deleteChat(req.auth.userId, req.params.id, scope);
       return reply.status(204).send(null);
     },
+  );
+
+  app.get(
+    "/messages/:id/timing",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "How long a message took to reach the server and then the recipient",
+        description:
+          "Times are on the server's clock: apps send `sentAt` with the message and `at` with their delivery acknowledgement, both corrected with the socket `ping`.",
+        security,
+        params: MessageParams,
+        response: { 200: MessageTimingDTO },
+      },
+    },
+    (req) => messageTiming(req.auth.userId, req.params.id),
   );
 
   app.patch(

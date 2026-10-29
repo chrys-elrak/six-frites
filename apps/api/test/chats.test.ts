@@ -127,6 +127,23 @@ describe("delivery receipts", () => {
     expect(g.lastDeliveredMessageId).toBe(m3.id);
     expect((await deliver(m2.id)).body).toBe("null");
   });
+
+  it("times the trip from the sender's app to the recipient's device", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const { call } = chatHelpers(ctx);
+    const old = (await send(host, chatId, "from an older app")).json();
+    const sentAt = new Date(Date.now() - 300).toISOString();
+    const m = (await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: `c-${Math.random()}`, text: "hi", sentAt })).json();
+
+    expect(await get(guest, `/v1/messages/${m.id}/timing`)).toEqual({ sentAt, serverAt: m.createdAt, arrivedAt: null });
+
+    await call(guest, "POST", `/v1/chats/${chatId}/read`, {});
+    const at = new Date(Date.parse(m.createdAt) + 1).toISOString();
+    expect((await call(guest, "POST", `/v1/chats/${chatId}/delivered`, { messageId: m.id, at })).body).toBe("null");
+
+    expect((await get(host, `/v1/messages/${m.id}/timing`)).arrivedAt).toBe(at);
+    expect((await get(host, `/v1/messages/${old.id}/timing`)).arrivedAt).toBeNull();
+  });
 });
 
 describe("sync", () => {

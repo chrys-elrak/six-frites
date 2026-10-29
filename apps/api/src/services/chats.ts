@@ -8,6 +8,7 @@ import {
   type ChatDeliveredDTO,
   type ChatReadDTO,
   type DeleteScope,
+  type MarkDeliveredInput,
   type MarkReadInput,
   type ServiceAction,
   type UpdateChatInput,
@@ -173,12 +174,23 @@ async function findTarget(tx: Tx, chatId: string, messageId: string | undefined)
 export async function markDelivered(
   userId: string,
   chatId: string,
-  input: MarkReadInput,
+  input: MarkDeliveredInput,
 ): Promise<ChatDeliveredDTO | null> {
   return withEvents(async (tx, emit) => {
     const member = await assertMember(tx, chatId, userId);
     const target = await findTarget(tx, chatId, input.messageId);
     if (!target) return null;
+    const arrivedAt = new Date(Math.min(Date.now(), Math.max(input.at ? Date.parse(input.at) : Date.now(), target.createdAt.getTime())));
+    await tx.message.updateMany({
+      where: {
+        chatId,
+        senderId: { not: userId },
+        sentAt: { not: null },
+        arrivedAt: null,
+        createdAt: { lte: target.createdAt, gte: new Date(target.createdAt.getTime() - 7 * 86_400_000) },
+      },
+      data: { arrivedAt },
+    });
     const floor = [member.lastDeliveredAt, member.lastReadAt].filter((d): d is Date => d !== null);
     if (floor.some((d) => d >= target.createdAt)) return null;
 

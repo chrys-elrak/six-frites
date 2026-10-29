@@ -11,6 +11,7 @@ import {
   type EphemeralInput,
   type GeoPoint,
   type MessageDTO,
+  type MessageTimingDTO,
   type MessageEntity,
   type MessageListQuery,
   type MessageType,
@@ -332,6 +333,7 @@ export async function createMessage(
         envelopes: { create: envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
       }),
       ...(encrypted?.backup && { backups: { create: { userId, sealed: encrypted.backup } } }),
+      sentAt: content?.sentAt && !opts.scheduled ? new Date(Math.min(Date.parse(content.sentAt), createdAt.getTime())) : null,
       createdAt,
       expiresAt: content && chat.autoDeleteSecs ? new Date(createdAt.getTime() + chat.autoDeleteSecs * 1000) : null,
     },
@@ -452,6 +454,18 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
   });
+}
+
+export async function messageTiming(userId: string, messageId: string): Promise<MessageTimingDTO> {
+  const message = await prisma.message.findUnique({ where: { id: messageId } });
+  const member = message && (await prisma.chatMember.findUnique({ where: { chatId_userId: { chatId: message.chatId, userId } } }));
+  const visible = member && (await prisma.message.count({ where: { id: messageId, ...visibleTo(userId, member.clearedAt) } }));
+  if (!message || !visible) throw new AppError("MESSAGE_NOT_FOUND");
+  return {
+    sentAt: message.sentAt?.toISOString() ?? null,
+    serverAt: message.createdAt.toISOString(),
+    arrivedAt: message.arrivedAt?.toISOString() ?? null,
+  };
 }
 
 async function reactableMessage(tx: Tx, userId: string, messageId: string) {

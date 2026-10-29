@@ -86,6 +86,7 @@ import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { type Anchor, ReactionChips, ReactionPopover } from "./reactions";
 import { styleFor } from "./rich-text";
+import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
 
 type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
@@ -910,6 +911,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
     const [album, setAlbum] = useState<{ items: LightboxItem[]; start: number } | null>(null);
     const [destructFor, setDestructFor] = useState<MessageDTO | null>(null);
+    const [timingFor, setTimingFor] = useState<string | null>(null);
     const [reactingTo, setReactingTo] = useState<MessageDTO | null>(null);
     const [viewing, setViewing] = useState<ViewMessageResult | null>(null);
     const [opening, setOpening] = useState(false);
@@ -1113,6 +1115,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist"].includes(m.type)
           ? [{ label: tr.messages.makeSelfDestruct, onSelect: () => setDestructFor(m) }]
           : []),
+        { label: tr.messages.timing, onSelect: () => setTimingFor(m.id) },
         {
           label: tr.common.delete,
           destructive: true,
@@ -1256,6 +1259,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         />
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
         {album && <AlbumViewer items={album.items} start={album.start} onClose={() => setAlbum(null)} />}
+        {timingFor && <MessageTiming messageId={timingFor} onClose={() => setTimingFor(null)} />}
         {destructFor && (
           <Sheet
             title={tr.messages.selfDestructTitle}

@@ -106,7 +106,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
     const type = pending.location ? ("location" as const) : pending.checklist ? ("checklist" as const) : undefined;
     const later = pending.sendAt && Date.parse(pending.sendAt) > Date.now() + 5000 ? pending.sendAt : null;
     const post = async (body: SendMessageInput) => {
-      if (!later) return realtime.sendMessage(chatId, body);
+      if (!later) return realtime.sendMessage(chatId, { ...body, sentAt: realtime.serverTime(Date.parse(pending.createdAt)) });
       const params = { path: { id: chatId } };
       unwrap(await six.api.POST("/v1/chats/{id}/scheduled-messages", { params, body: { ...body, sendAt: later } }));
       return null;

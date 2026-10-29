@@ -91,8 +91,10 @@ channels:
           properties:
             chatId: { type: string }
             messageId: { type: string }
+            at: { type: string, format: date-time, description: "When messageId reached this device, on the server's clock" }
       ping:
         name: ping
+        summary: Acks with the server's time as `{ at }`; apps use it to put their timestamps on the server's clock.
         payload: { type: object }
 operations:
   receiveChange:

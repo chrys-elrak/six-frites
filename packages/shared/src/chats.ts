@@ -332,6 +332,9 @@ export const SendMessageInput = z
     spoiler: z.boolean().optional(),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
     encrypted: EncryptedInput.optional(),
+    sentAt: IsoDate.optional().describe(
+      "When the sender pressed send, on the server's clock (measure the offset with the socket `ping`). Shown in GET /v1/messages/{id}/timing",
+    ),
   })
   .refine(
     (v) =>
@@ -443,8 +446,32 @@ export const MarkReadInput = z.object({
 });
 export type MarkReadInput = z.infer<typeof MarkReadInput>;
 
-export const MarkDeliveredInput = MarkReadInput;
-export type MarkDeliveredInput = MarkReadInput;
+export const MarkDeliveredInput = MarkReadInput.extend({
+  at: IsoDate.optional().describe("When `messageId` reached this device, on the server's clock. Defaults to now"),
+});
+export type MarkDeliveredInput = z.infer<typeof MarkDeliveredInput>;
+
+export const MessageTimingDTO = z.object({
+  sentAt: IsoDate.nullable().describe("When the sender pressed send; null from older apps"),
+  serverAt: IsoDate.describe("When the server stored it"),
+  arrivedAt: IsoDate.nullable().describe("When it first reached a recipient's device; null until then"),
+});
+export type MessageTimingDTO = z.infer<typeof MessageTimingDTO>;
+
+/** The legs of a message's trip in milliseconds, null where a time is missing. */
+export function messageTrip(t: MessageTimingDTO) {
+  const server = Date.parse(t.serverAt);
+  const sent = t.sentAt ? Date.parse(t.sentAt) : null;
+  const arrived = t.arrivedAt ? Date.parse(t.arrivedAt) : null;
+  return {
+    up: sent === null ? null : server - sent,
+    down: arrived === null ? null : arrived - server,
+    total: sent === null || arrived === null ? null : arrived - sent,
+  };
+}
+
+export const latencyLabel = (ms: number) =>
+  ms < 1000 ? `${ms} ms` : ms < 60_000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms / 60_000)} min`;
 
 export const ChatDeliveredDTO = z.object({
   chatId: Id,

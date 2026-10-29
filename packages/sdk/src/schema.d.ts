@@ -3437,6 +3437,63 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/messages/{id}/timing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How long a message took to reach the server and then the recipient
+         * @description Times are on the server's clock: apps send `sentAt` with the message and `at` with their delivery acknowledgement, both corrected with the socket `ping`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Format: date-time
+                             * @description When the sender pressed send; null from older apps
+                             */
+                            sentAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the server stored it
+                             */
+                            serverAt: string;
+                            /**
+                             * Format: date-time
+                             * @description When it first reached a recipient's device; null until then
+                             */
+                            arrivedAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/messages/{id}": {
         parameters: {
             query?: never;
@@ -5434,6 +5491,11 @@ export interface paths {
                             /** @description The content sealed with your backup key (@six/crypto sealBackup) */
                             backup?: string;
                         };
+                        /**
+                         * Format: date-time
+                         * @description When the sender pressed send, on the server's clock (measure the offset with the socket `ping`). Shown in GET /v1/messages/{id}/timing
+                         */
+                        sentAt?: string;
                     };
                 };
             };
@@ -5858,6 +5920,11 @@ export interface paths {
                             /** @description The content sealed with your backup key (@six/crypto sealBackup) */
                             backup?: string;
                         };
+                        /**
+                         * Format: date-time
+                         * @description When the sender pressed send, on the server's clock (measure the offset with the socket `ping`). Shown in GET /v1/messages/{id}/timing
+                         */
+                        sentAt?: string;
                         /**
                          * Format: date-time
                          * @description When to send it, in the future and at most a year ahead
@@ -6476,6 +6543,11 @@ export interface paths {
                 content: {
                     "application/json": {
                         messageId?: string;
+                        /**
+                         * Format: date-time
+                         * @description When `messageId` reached this device, on the server's clock. Defaults to now
+                         */
+                        at?: string;
                     } | null;
                 };
             };

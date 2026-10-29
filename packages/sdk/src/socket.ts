@@ -55,16 +55,36 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     auth: (cb) => void tokens.getAccessToken().then((token) => cb({ token })),
   });
 
-  const undelivered = new Map<string, string>();
+  let offset = 0;
+  let clockSynced: Promise<void> = Promise.resolve();
+  const serverTime = (ms = Date.now()) => new Date(ms + offset).toISOString();
+
+  /** Estimates how far this device's clock is from the server's, NTP style, from the quickest of three pings. */
+  async function syncClock() {
+    let best = Infinity;
+    for (let i = 0; i < 3; i++) {
+      const t0 = Date.now();
+      const res = await socket.timeout(5000).emitWithAck("ping", {});
+      const t1 = Date.now();
+      if (res.ok && t1 - t0 < best) {
+        best = t1 - t0;
+        offset = Date.parse(res.data.at) + best / 2 - t1;
+      }
+    }
+  }
+
+  const undelivered = new Map<string, { messageId: string; arrived: number }>();
   let deliveryTimer: ReturnType<typeof setTimeout> | null = null;
 
-  function flushDeliveries() {
+  async function flushDeliveries() {
+    await clockSynced;
     deliveryTimer = null;
-    for (const [chatId, messageId] of undelivered) {
+    for (const [chatId, { messageId, arrived }] of undelivered) {
       undelivered.delete(chatId);
+      const body = { messageId, at: serverTime(arrived) };
       const ack = socket.connected
-        ? socket.timeout(10_000).emitWithAck("chat:delivered", { chatId, messageId })
-        : api.POST("/v1/chats/{id}/delivered", { params: { path: { id: chatId } }, body: { messageId } });
+        ? socket.timeout(10_000).emitWithAck("chat:delivered", { chatId, ...body })
+        : api.POST("/v1/chats/{id}/delivered", { params: { path: { id: chatId } }, body });
       void ack.catch(() => null);
     }
   }
@@ -75,8 +95,8 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     cursor = id;
     opts.onEvent(event);
     if (event.type === "message.new" && event.data.senderId !== tokens.userId) {
-      undelivered.set(event.data.chatId, event.data.id);
-      deliveryTimer ??= setTimeout(flushDeliveries, 300);
+      undelivered.set(event.data.chatId, { messageId: event.data.id, arrived: Date.now() });
+      deliveryTimer ??= setTimeout(() => void flushDeliveries(), 300);
     }
   }
 
@@ -115,6 +135,7 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
 
   socket.on("connect", async () => {
     sendPresence();
+    clockSynced = syncClock().catch(() => undefined);
     syncing = true;
     opts.onStatus?.("syncing");
     try {
@@ -165,6 +186,8 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
 
   return {
     socket,
+    /** A time on this device's clock (now by default), moved onto the server's clock. */
+    serverTime,
     /**
      * Call on every keystroke, or every few seconds while recording or picking media; it throttles itself
      * unless `kind` changes. Pass false when the draft is sent or cleared.

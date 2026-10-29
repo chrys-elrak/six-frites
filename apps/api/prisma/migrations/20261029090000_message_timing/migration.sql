@@ -1,0 +1,2 @@
+ALTER TABLE "Message" ADD COLUMN "sentAt" TIMESTAMP(3),
+ADD COLUMN "arrivedAt" TIMESTAMP(3);

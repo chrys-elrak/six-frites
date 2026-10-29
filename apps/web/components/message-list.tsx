@@ -81,6 +81,7 @@ import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
 import { ReactionBar, ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
+import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
 import { ServiceIcon } from "./service-icon";
 import { StickerView } from "./sticker";
@@ -908,6 +909,7 @@ export const MessageList = forwardRef<
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
     const [reporting, setReporting] = useState<MessageDTO | null>(null);
+    const [timingFor, setTimingFor] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
@@ -1118,6 +1120,7 @@ export const MessageList = forwardRef<
         ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist"].includes(m.type)
           ? [{ label: tr.messages.makeSelfDestruct, onSelect: () => setDestructFor(m) }]
           : []),
+        { label: tr.messages.timing, onSelect: () => setTimingFor(m.id) },
         ...(row.mine ? [] : [{ label: tr.common.report, onSelect: () => setReporting(m) }]),
         {
           label: tr.common.delete,
@@ -1286,6 +1289,7 @@ export const MessageList = forwardRef<
           />
         )}
         {packFor && <PackDialog packId={packFor} onClose={() => setPackFor(null)} />}
+        {timingFor && <MessageTiming messageId={timingFor} onClose={() => setTimingFor(null)} />}
         {confirmDelete && (
           <Sheet
             title={tr.messages.deleteTitle}
