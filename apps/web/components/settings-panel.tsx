@@ -17,7 +17,7 @@ import { Invites, Referrals } from "./invites";
 import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
-import { Card, SectionTitle } from "./ui";
+import { Card, SectionTitle, Toggle } from "./ui";
 
 function LanguagePicker() {
   const tr = useT();
@@ -49,6 +49,29 @@ function LanguagePicker() {
   );
 }
 
+function FontPicker() {
+  const tr = useT();
+  const [device, setDevice] = useState(() => document.documentElement.dataset.font !== "plain");
+  return (
+    <section className="space-y-3">
+      <SectionTitle>{tr.settings.font}</SectionTitle>
+      <Card>
+        <Toggle
+          label={tr.settings.deviceFont}
+          hint={tr.settings.deviceFontHint}
+          checked={device}
+          onChange={(on) => {
+            document.cookie = `font=${on ? "device" : "plain"}; path=/; max-age=31536000; samesite=lax`;
+            if (on) delete document.documentElement.dataset.font;
+            else document.documentElement.dataset.font = "plain";
+            setDevice(on);
+          }}
+        />
+      </Card>
+    </section>
+  );
+}
+
 export function SettingsPanel() {
   const tr = useT();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -71,6 +94,7 @@ export function SettingsPanel() {
           <ProfileCard />
           <AndroidDownload />
           <LanguagePicker />
+          <FontPicker />
           <FindMe />
           <NotificationSettings />
           <Invites />

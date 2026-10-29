@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { BrandBar } from "@/components/brand-bar";
 import { MessageCircle, Settings } from "lucide-react-native";
 import { useChats } from "@/lib/chats";
+import { usePlainFont } from "@/lib/font";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 
@@ -10,6 +11,7 @@ export default function TabsLayout() {
   const t = useTheme();
   const tr = useT();
   const chats = useChats();
+  const plain = usePlainFont((s) => s.on);
   const unread = chats.data?.filter((c) => !c.muted && c.unreadCount > 0).length ?? 0;
 
   return (
@@ -21,7 +23,7 @@ export default function TabsLayout() {
           tabBarActiveTintColor: brand,
           tabBarInactiveTintColor: t.muted,
           tabBarStyle: { backgroundColor: t.bg, borderTopColor: t.border },
-          tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+          tabBarLabelStyle: { fontSize: 11, fontWeight: "600", fontFamily: plain ? "Inter" : undefined },
         }}
       >
         <Tabs.Screen

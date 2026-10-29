@@ -1,6 +1,7 @@
 import { aliasAvatar, type PublicUser } from "@six/shared";
 import { Image } from "expo-image";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "./text";
 import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 

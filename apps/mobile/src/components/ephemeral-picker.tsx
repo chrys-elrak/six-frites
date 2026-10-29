@@ -1,7 +1,8 @@
 import type { EphemeralInput } from "@six/shared";
 import { Flame } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
+import { Text } from "./text";
 import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
 import { useT } from "@/lib/i18n";
 import { flame, useTheme } from "@/lib/theme";

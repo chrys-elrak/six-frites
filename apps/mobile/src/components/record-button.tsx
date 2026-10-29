@@ -1,7 +1,8 @@
 import * as Haptics from "expo-haptics";
 import { Mic, SendHorizontal, Video } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "./text";
 import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 

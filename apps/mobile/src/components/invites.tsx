@@ -3,7 +3,8 @@ import { type InvitePreview, MAX_INVITE_DAYS, MAX_INVITE_MESSAGE, MAX_INVITE_USE
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Minus, Plus, X } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { shareInvite } from "@/lib/format";

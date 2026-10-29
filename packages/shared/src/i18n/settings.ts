@@ -3,6 +3,9 @@ type ByCode<K extends string> = Record<K, string> & Partial<Record<string, strin
 
 const en = {
   languageHint: "For the app and notifications on this device.",
+  font: "Font",
+  deviceFont: "Device font",
+  deviceFontHint: "Turn off for a plain font if your device's font is hard to read.",
   messagesChannel: "Messages",
   signOut: "Sign out",
   signOutWithKey:
@@ -193,6 +196,9 @@ const en = {
 
 const fr: typeof en = {
   languageHint: "Pour l'application et les notifications sur cet appareil.",
+  font: "Police",
+  deviceFont: "Police de l'appareil",
+  deviceFontHint: "Désactivez pour une police simple si celle de votre appareil est difficile à lire.",
   messagesChannel: "Messages",
   signOut: "Se déconnecter",
   signOutWithKey:
@@ -385,6 +391,9 @@ const fr: typeof en = {
 
 const mg: typeof en = {
   languageHint: "Ho an'ny fampiharana sy ny fampandrenesana amin'ity fitaovana ity.",
+  font: "Endritsoratra",
+  deviceFont: "Endritsoratry ny fitaovana",
+  deviceFontHint: "Vonoy raha tianao ny endritsoratra tsotra, rehefa sarotra vakiana ny an'ny fitaovanao.",
   messagesChannel: "Hafatra",
   signOut: "Hivoaka",
   signOutWithKey:

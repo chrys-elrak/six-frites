@@ -11,8 +11,10 @@ import {
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Check, LogOut, Monitor, Smartphone } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text, TextInput } from "./text";
 import { formatCode, contactUrl, sendAtLabel, shareContact, shareInvite, timeAgo } from "@/lib/format";
+import { setPlainFont, usePlainFont } from "@/lib/font";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { playChime, useNotifyPrefs } from "@/lib/notify";
 import { pickAvatar } from "@/lib/media";
@@ -158,6 +160,24 @@ function LanguagePicker() {
             </Pressable>
           </View>
         ))}
+      </Card>
+    </View>
+  );
+}
+
+function FontPicker() {
+  const tr = useT();
+  const plain = usePlainFont((s) => s.on);
+  return (
+    <View>
+      <SectionTitle>{tr.settings.font}</SectionTitle>
+      <Card>
+        <Toggle
+          label={tr.settings.deviceFont}
+          hint={tr.settings.deviceFontHint}
+          value={!plain}
+          onChange={(on) => setPlainFont(!on)}
+        />
       </Card>
     </View>
   );
@@ -516,6 +536,7 @@ export function SettingsPanel() {
         <UpdateCard />
         <ProfileCard />
         <LanguagePicker />
+        <FontPicker />
         <FindMe />
         <NotificationSettings />
         <Invites />

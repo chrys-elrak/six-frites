@@ -5,7 +5,8 @@ import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { AlertCircle, Download, EyeOff, FileText, FileX, Pause, Play, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "./text";
 import {
   GestureDetector,
   GestureHandlerRootView,

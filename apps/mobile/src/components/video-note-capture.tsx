@@ -2,7 +2,8 @@ import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo
 import { useVideoPlayer, VideoView } from "expo-video";
 import { RefreshCw, Square } from "lucide-react-native";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "./text";
 import Svg, { Circle, Path } from "react-native-svg";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";

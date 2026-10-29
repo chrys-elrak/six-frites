@@ -1,6 +1,7 @@
 import { type GeoPoint, coordsLabel, mapsUrl } from "@six/shared";
 import { MapPin } from "lucide-react-native";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "./text";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";

@@ -74,6 +74,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         microphonePermission: "Allow $(PRODUCT_NAME) to use the microphone for calls.",
       },
     ],
+    [
+      "expo-font",
+      {
+        android: {
+          fonts: [
+            {
+              fontFamily: "Inter",
+              path: "./assets/fonts/Inter-Variable.ttf",
+              fontDefinitions: [{ weight: 400 }, { weight: 500 }, { weight: 600 }, { weight: 700 }],
+            },
+          ],
+        },
+      },
+    ],
     ["expo-build-properties", { android: { minSdkVersion: 26, extraProguardRules: "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**" } }],
     ...(iosUrlScheme ? [["react-native-nitro-google-signin", { iosUrlScheme }] as [string, object]] : []),
   ],

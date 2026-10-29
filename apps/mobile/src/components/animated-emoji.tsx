@@ -1,6 +1,7 @@
 import LottieView from "lottie-react-native";
 import { useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "./text";
 import { animatedEmojiUrl } from "@/lib/emoji";
 
 export function AnimatedEmoji({ emoji, size }: { emoji: string; size: number }) {

@@ -40,7 +40,8 @@ import {
 import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { randomUUID } from "expo-crypto";
 import { File, Paths } from "expo-file-system";
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, findNodeHandle } from "react-native";
+import { Keyboard, Pressable, ScrollView, StyleSheet, View, findNodeHandle } from "react-native";
+import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";

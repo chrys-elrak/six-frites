@@ -23,9 +23,10 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const accepted = (await headers()).get("accept-language")?.split(",").map((tag) => tag.split(";")[0]!.trim()) ?? [];
-  const locale = pickLocale([(await cookies()).get(LOCALE_COOKIE)?.value, ...accepted]);
+  const jar = await cookies();
+  const locale = pickLocale([jar.get(LOCALE_COOKIE)?.value, ...accepted]);
   return (
-    <html lang={locale}>
+    <html lang={locale} data-font={jar.get("font")?.value === "plain" ? "plain" : undefined}>
       <body>
         <Providers locale={locale}>{children}</Providers>
       </body>

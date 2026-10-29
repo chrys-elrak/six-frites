@@ -45,11 +45,11 @@ import {
   type NativeSyntheticEvent,
   Pressable,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
   type ListViewToken,
 } from "react-native";
+import { Text } from "./text";
 import Animated from "react-native-reanimated";
 import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, react, selfDestruct } from "@/lib/actions";
 import { isFrozen, loadUntil, useMessages } from "@/lib/chats";

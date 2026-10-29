@@ -8,11 +8,10 @@ import {
   type StyleProp,
   StyleSheet,
   Switch,
-  Text,
-  TextInput,
   View,
   type ViewStyle,
 } from "react-native";
+import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
 import { brand, type Theme, useTheme } from "@/lib/theme";

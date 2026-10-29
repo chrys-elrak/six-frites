@@ -29,6 +29,17 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: Inter;
+  src: url("/fonts/Inter-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+html[data-font="plain"] {
+  font-family: Inter, ui-sans-serif, sans-serif;
+}
+
 html,
 body {
   height: 100%;

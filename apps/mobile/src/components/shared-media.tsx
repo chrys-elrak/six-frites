@@ -10,11 +10,10 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHydratedMessages } from "@/lib/e2ee";
 import { dayLabel, listTime } from "@/lib/format";

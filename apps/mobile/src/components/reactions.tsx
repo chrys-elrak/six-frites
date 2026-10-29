@@ -1,7 +1,8 @@
 import { QUICK_REACTIONS, type MessageDTO } from "@six/shared";
 import { Plus } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "./text";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
