@@ -54,6 +54,7 @@ model User {
   devices        Device[]
   messageBackups MessageBackup[]
   checklistMarks ChecklistMark[]
+  gameMoves      GameMove[]
 }
 
 model Report {
@@ -275,6 +276,7 @@ model Message {
   action       Json?
   location     Json?
   checklist    Json?
+  game         Json?
   encrypted    Boolean   @default(false)
   senderDevice String?
   sentAt       DateTime?
@@ -298,6 +300,7 @@ model Message {
   envelopes        MessageEnvelope[]
   backups          MessageBackup[]
   marks            ChecklistMark[]
+  moves            GameMove[]
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
@@ -314,6 +317,20 @@ model ChecklistMark {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([messageId, item])
+  @@index([userId])
+}
+
+model GameMove {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  move      Json
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([messageId, createdAt])
   @@index([userId])
 }
 

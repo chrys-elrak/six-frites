@@ -93,6 +93,8 @@ const en = {
   allReactions: "All reactions",
   nMoreReactions: (n: number) => `${n} more reactions`,
   tapToRemoveYours: "(tap to remove yours)",
+  waitingForReply: "Waiting for a reply…",
+  wins: (name: string) => `${name} wins`,
 };
 
 const fr: typeof en = {
@@ -190,6 +192,8 @@ const fr: typeof en = {
   allReactions: "Toutes les réactions",
   nMoreReactions: (n) => (n > 1 ? `${n} autres réactions` : "1 autre réaction"),
   tapToRemoveYours: "(touchez pour retirer la vôtre)",
+  waitingForReply: "En attente d'une réponse…",
+  wins: (name) => `${name} gagne`,
 };
 
 const mg: typeof en = {
@@ -287,6 +291,8 @@ const mg: typeof en = {
   allReactions: "Ny emoji rehetra",
   nMoreReactions: (n) => `Emoji ${n} hafa`,
   tapToRemoveYours: "(tsindrio raha hanala ny anao)",
+  waitingForReply: "Miandry valiny…",
+  wins: (name) => `Nandresy i ${name}`,
 };
 
 export default { en, fr, mg };

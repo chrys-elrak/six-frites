@@ -61,6 +61,7 @@ import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { NewChecklist } from "./checklist";
+import { NewGame } from "./game";
 import { currentPosition } from "./location-card";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { EphemeralPicker } from "./ephemeral-picker";
@@ -138,6 +139,7 @@ export function Composer({
   const [attachMenu, setAttachMenu] = useState(false);
   const [askLocation, setAskLocation] = useState(false);
   const [writingChecklist, setWritingChecklist] = useState(false);
+  const [startingGame, setStartingGame] = useState(false);
   const [recMode, setRecMode] = useState<RecordMode>("voice");
   const [capture, setCapture] = useState<{ kind: RecordMode } | null>(null);
   const captureNow = useRef(capture);
@@ -168,6 +170,7 @@ export function Composer({
 
   function queue(draft: Draft) {
     if (!realtime) return;
+    if (draft.game) return queueMessage(qc, realtime, chatId, draft);
     queueMessage(qc, realtime, chatId, { ...draft, sendAt: draft.sendAt ?? sendAt });
     setSendAt(null);
   }
@@ -392,7 +395,7 @@ export function Composer({
     reset();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -754,6 +757,7 @@ export function Composer({
             { label: tr.composer.audio, onSelect: () => void pick(() => pickFiles("audio/*")) },
             { label: tr.composer.location, onSelect: () => setAskLocation(true) },
             { label: tr.composer.checklist, onSelect: () => setWritingChecklist(true) },
+            { label: tr.composer.game, onSelect: () => setStartingGame(true) },
             { label: tr.composer.scheduleMessage, onSelect: () => setScheduling("next") },
           ]}
         />
@@ -768,6 +772,7 @@ export function Composer({
       {writingChecklist && (
         <NewChecklist onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
+      {startingGame && <NewGame onClose={() => setStartingGame(false)} onSend={(game) => sendSpecial({ game })} />}
       {scheduling && (
         <ScheduleDialog
           title={tr.composer.scheduleMessage}

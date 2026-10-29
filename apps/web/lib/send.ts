@@ -1,6 +1,7 @@
 import { type Realtime, encryptFile, unwrap } from "@six/sdk";
 import {
   type ChatDTO,
+  type ChatGame,
   type Checklist,
   ENCRYPT_MAX_BYTES,
   type EncryptedFile,
@@ -34,6 +35,7 @@ export interface Draft {
   sticker?: StickerDTO;
   location?: GeoPoint;
   checklist?: Checklist;
+  game?: ChatGame;
   groupId?: string;
   sendAt?: Date | null;
 }
@@ -115,7 +117,13 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       ephemeral: pending.ephemeral ?? undefined,
       groupId: pending.groupId,
     };
-    const type = pending.location ? ("location" as const) : pending.checklist ? ("checklist" as const) : undefined;
+    const type = pending.location
+      ? ("location" as const)
+      : pending.checklist
+        ? ("checklist" as const)
+        : pending.game
+          ? ("game" as const)
+          : undefined;
     const later = pending.sendAt && Date.parse(pending.sendAt) > Date.now() + 5000 ? pending.sendAt : null;
     const post = async (body: SendMessageInput) => {
       if (!later) return realtime.sendMessage(chatId, { ...body, sentAt: realtime.serverTime(Date.parse(pending.createdAt)) });
@@ -137,6 +145,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             file,
             location: pending.location,
             checklist: pending.checklist,
+            game: pending.game,
           },
           (encrypted) => post({ ...base, encrypted, type }),
         )
@@ -150,6 +159,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           effect: pending.effect,
           location: pending.location,
           checklist: pending.checklist,
+          game: pending.game,
         });
     if (sent) {
       const m = await hydrate(sent);
@@ -221,6 +231,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
     sticker: draft.sticker ?? null,
     location: draft.location,
     checklist: draft.checklist,
+    game: draft.game,
     groupId: draft.groupId,
     sendAt: draft.sendAt?.toISOString(),
     createdAt: new Date().toISOString(),

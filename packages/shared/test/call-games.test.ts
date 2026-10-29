@@ -18,6 +18,7 @@ import {
   newDuel,
   rpsOutcome,
 } from "../src/calls.js";
+import { type GameMove, gameAnswer, guessTries } from "../src/games.js";
 
 describe("rock paper scissors", () => {
   const fresh = newDuel<RpsHand>();
@@ -101,5 +102,25 @@ describe("guess the number", () => {
     const solved = { ...NEW_GUESS, ready: true, tries: [{ n: 7, hint: "right" as const }] };
     expect(guessOnReady(solved, 2)).toMatchObject({ round: 2, ready: true, tries: [] });
     expect(guessOnReady(guessNext(solved), 1)).toBeNull();
+  });
+});
+
+describe("games in a chat", () => {
+  const at = new Date().toISOString();
+  const move = (userId: string, m: GameMove) => ({ userId, move: m, at });
+
+  it("settles on the first answer that fits, never the sender's", () => {
+    const moves = [move("me", { hand: "paper" }), move("them", { n: 4 }), move("them", { hand: "scissors" }), move("them", { hand: "rock" })];
+    expect(gameAnswer({ game: "rps", hand: "rock" }, "me", moves)?.move).toEqual({ hand: "scissors" });
+    expect(gameAnswer({ game: "dice", pick: 2, seed: 1 }, "me", moves)).toBeNull();
+  });
+
+  it("hints each new try at the number and stops at the right one", () => {
+    const moves = [50, 50, 20, 42, 7].map((n) => move("them", { n }));
+    expect(guessTries(42, "me", moves)).toEqual([
+      { userId: "them", n: 50, hint: "lower" },
+      { userId: "them", n: 20, hint: "higher" },
+      { userId: "them", n: 42, hint: "right" },
+    ]);
   });
 });

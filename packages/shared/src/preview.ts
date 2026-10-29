@@ -1,5 +1,6 @@
 import { type MessageDTO, type MessageType, maskSpoilers } from "./chats.js";
 import { chatTheme, customThemeColor } from "./chat-themes.js";
+import { GAME_EMOJI } from "./games.js";
 import type { Dict } from "./i18n/index.js";
 
 const DURATIONS = [
@@ -79,6 +80,7 @@ export function previewText(m: MessageDTO & { file?: { sticker?: boolean } }, t:
   const caption = m.text ? (m.spoiler && m.type === "text" ? t.summary.spoiler : maskSpoilers(m.text, m.entities)) : "";
   if (type === "text") return caption;
   if (type === "checklist" && m.checklist) return t.summary.checklistNamed(m.checklist.title);
+  if (type === "game" && m.game) return `${GAME_EMOJI[m.game.game]} ${t.calls[m.game.game]}`;
   const label = type === "file" && m.attachment ? t.summary.fileNamed(m.attachment.name) : t.summary.kinds[type];
   return caption ? `${label} · ${caption}` : label;
 }

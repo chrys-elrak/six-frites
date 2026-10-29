@@ -5,6 +5,7 @@ import { PublicUser } from "./invites.js";
 import { StickerDTO } from "./stickers.js";
 import { isChatThemeId } from "./chat-themes.js";
 import { EncryptedInput, EncryptionDTO } from "./e2ee.js";
+import { ChatGame, GameMoveDTO } from "./games.js";
 
 export const MessageType = z.enum([
   "text",
@@ -18,6 +19,7 @@ export const MessageType = z.enum([
   "service",
   "location",
   "checklist",
+  "game",
 ]);
 export type MessageType = z.infer<typeof MessageType>;
 
@@ -256,6 +258,8 @@ export const MessageDTO = z.object({
   location: GeoPoint.nullable(),
   checklist: Checklist.nullable(),
   checks: z.array(ChecklistMark).describe("The checklist items marked done; either person can tick them"),
+  game: ChatGame.nullable(),
+  moves: z.array(GameMoveDTO).describe("Answers to the game, oldest first; anyone but the sender can play"),
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
   deletedAt: IsoDate.nullable(),
@@ -327,10 +331,11 @@ export const SendMessageInput = z
     stickerId: Id.optional().describe("Send this sticker, on its own"),
     location: GeoPoint.optional().describe("Share a place, on its own"),
     checklist: Checklist.optional().describe("Send a checklist, on its own"),
+    game: ChatGame.optional().describe("Send a game with your move, on its own"),
     type: z
-      .enum(["location", "checklist"])
+      .enum(["location", "checklist", "game"])
       .optional()
-      .describe("With `encrypted`: the content is a location or a checklist rather than text or a file"),
+      .describe("With `encrypted`: the content is a location, a checklist or a game rather than text or a file"),
     replyToId: Id.optional(),
     groupId: z
       .string()
@@ -353,8 +358,9 @@ export const SendMessageInput = z
       v.stickerId ||
       v.location ||
       v.checklist ||
+      v.game ||
       v.encrypted,
-    { message: "Send text, an attachment, a GIF, a sticker, a location, a checklist or encrypted content", path: ["text"] },
+    { message: "Send text, an attachment, a GIF, a sticker, a location, a checklist, a game or encrypted content", path: ["text"] },
   )
   .refine(
     (v) =>
@@ -366,24 +372,25 @@ export const SendMessageInput = z
         !v.gifId &&
         !v.stickerId &&
         !v.location &&
-        !v.checklist),
+        !v.checklist &&
+        !v.game),
     {
       message:
-        "Text, entities, spoilers, locations and checklists go inside the encrypted content; GIFs and stickers are sent on their own",
+        "Text, entities, spoilers, locations, checklists and games go inside the encrypted content; GIFs and stickers are sent on their own",
       path: ["encrypted"],
     },
   )
   .refine((v) => !v.type || v.encrypted, { message: "`type` is only for encrypted content", path: ["type"] })
   .refine(
     (v) =>
-      [v.location, v.checklist, v.type].filter(Boolean).length === 0 ||
-      ([v.location, v.checklist].filter(Boolean).length <= 1 &&
+      [v.location, v.checklist, v.game, v.type].filter(Boolean).length === 0 ||
+      ([v.location, v.checklist, v.game].filter(Boolean).length <= 1 &&
         v.text === undefined &&
         !v.attachmentId &&
         !v.gifId &&
         !v.stickerId &&
         !v.ephemeral),
-    { message: "Locations and checklists are sent on their own", path: ["location"] },
+    { message: "Locations, checklists and games are sent on their own", path: ["location"] },
   )
   .refine((v) => [v.attachmentId, v.gifId, v.stickerId].filter((x) => x !== undefined).length <= 1, {
     message: "Send one attachment, GIF or sticker at a time",
@@ -608,7 +615,7 @@ export const SCHEDULE_LIMITS = { perChat: 100, maxAheadSeconds: 365 * 24 * 60 * 
 
 export const ScheduleMessageInput = SendMessageInput.safeExtend({
   sendAt: IsoDate.describe("When to send it, in the future and at most a year ahead"),
-});
+}).refine((v) => !v.game && v.type !== "game", { message: "Games are played now, not scheduled", path: ["game"] });
 export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
 
 export const ScheduledMessageDTO = z.object({

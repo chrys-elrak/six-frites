@@ -4,6 +4,7 @@ import {
   type CallGame,
   type DicePick,
   type Duel,
+  GAME_EMOJI,
   GUESS_MAX,
   type GuessGame,
   type PublicUser,
@@ -144,8 +145,6 @@ function FloatingReactions({ reactions }: { reactions: Call["reactions"] }) {
     </View>
   );
 }
-
-const GAME_ICONS: Record<CallGame, string> = { rps: "✊", dice: "🎲", guess: "🔢" };
 
 /** Shakes for a beat before the picks show, like fists pumping or a die tumbling. */
 function useShake() {
@@ -380,7 +379,7 @@ function GamesPanel({ call, top }: { call: Call; top: number }) {
                 accessibilityState={{ selected: g === game }}
                 style={[styles.tab, g === game && styles.tabOn]}
               >
-                <Text style={styles.tabIcon}>{GAME_ICONS[g]}</Text>
+                <Text style={styles.tabIcon}>{GAME_EMOJI[g]}</Text>
               </Pressable>
             ))}
           </View>

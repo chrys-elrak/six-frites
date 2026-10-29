@@ -131,10 +131,12 @@ export function guessTry(g: GuessGame, n: number): GuessGame | null {
   return { ...g, tries: [...g.tries, { n, hint: null }] };
 }
 
+export const guessHint = (secret: number, n: number): GuessHint => (n === secret ? "right" : n < secret ? "higher" : "lower");
+
 /** The chooser answers a try; null when it isn't for this round. */
 export function guessOnTry(g: GuessGame, round: number, n: number): { game: GuessGame; hint: GuessHint } | null {
   if (round !== g.round || g.secret === null || guessSolved(g)) return null;
-  const hint: GuessHint = n === g.secret ? "right" : n < g.secret ? "higher" : "lower";
+  const hint = guessHint(g.secret, n);
   return { game: { ...g, tries: [...g.tries, { n, hint }] }, hint };
 }
 

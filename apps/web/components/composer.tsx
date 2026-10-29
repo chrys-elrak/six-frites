@@ -45,6 +45,7 @@ import { isTouch } from "@/lib/camera";
 import { shortRule } from "@/lib/ephemeral";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { ChecklistDialog } from "./checklist";
+import { GameDialog } from "./game";
 import { currentPosition } from "./location-card";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { CameraDialog } from "./camera-dialog";
@@ -148,6 +149,7 @@ export function Composer({
   const [attachMenu, setAttachMenu] = useState(false);
   const [askLocation, setAskLocation] = useState(false);
   const [writingChecklist, setWritingChecklist] = useState(false);
+  const [startingGame, setStartingGame] = useState(false);
   const [camera, setCamera] = useState(false);
   const recorder = useRecorder();
   const [recMode, setRecMode] = useState<RecordMode>("voice");
@@ -184,6 +186,7 @@ export function Composer({
 
   function queue(draft: Draft) {
     if (!realtime) return;
+    if (draft.game) return void queueMessage(qc, realtime, chatId, draft);
     void queueMessage(qc, realtime, chatId, { ...draft, sendAt: draft.sendAt ?? sendAt });
     setSendAt(null);
   }
@@ -201,7 +204,7 @@ export function Composer({
     onSent();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -228,6 +231,7 @@ export function Composer({
     { label: tr.composer.audio, onSelect: () => audioInput.current?.click() },
     { label: tr.composer.location, onSelect: () => setAskLocation(true) },
     { label: tr.composer.checklist, onSelect: () => setWritingChecklist(true) },
+    { label: tr.composer.game, onSelect: () => setStartingGame(true) },
     { label: tr.composer.scheduleMessage, onSelect: () => setScheduling("next") },
   ];
   const editing = mode?.kind === "edit" ? mode.message : null;
@@ -954,6 +958,7 @@ export function Composer({
       {writingChecklist && (
         <ChecklistDialog onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
+      {startingGame && <GameDialog onClose={() => setStartingGame(false)} onSend={(game) => sendSpecial({ game })} />}
       {scheduling && (
         <ScheduleDialog
           title={tr.composer.scheduleMessage}

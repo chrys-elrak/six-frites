@@ -61,6 +61,7 @@ interface Patch {
   spoiler: boolean;
   location: MessageDTO["location"];
   checklist: MessageDTO["checklist"];
+  game: MessageDTO["game"];
   replyText?: string | null;
   file?: EncryptedFile;
   fileUri?: string;
@@ -92,6 +93,7 @@ function patchOf(h: Hydrated): Patch {
     spoiler: h.spoiler,
     location: h.location,
     checklist: h.checklist,
+    game: h.game,
     replyText: h.replyTo?.encrypted ? h.replyTo.text : undefined,
     file: h.file,
     undecryptable: h.undecryptable,
@@ -162,6 +164,7 @@ export function withContent<T extends MessageDTO>(m: T, patch: Patch | undefined
     spoiler: patch.spoiler,
     location: patch.location,
     checklist: patch.checklist,
+    game: patch.game,
     replyTo: m.replyTo && patch.replyText !== undefined ? { ...m.replyTo, text: patch.replyText } : m.replyTo,
     attachment:
       m.attachment && patch.file

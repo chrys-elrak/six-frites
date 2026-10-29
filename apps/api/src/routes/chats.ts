@@ -7,6 +7,7 @@ import {
   ChatReadDTO,
   CHECKLIST,
   CheckItemInput,
+  GameMove,
   AddContactInput,
   AppLockInput,
   ContactDTO,
@@ -59,6 +60,7 @@ import {
   listMessages,
   makeEphemeral,
   messageTiming,
+  playGame,
   setReaction,
   resendMessage,
   sendMessage,
@@ -223,6 +225,24 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => checkItem(req.auth.userId, req.params.id, req.params.item, req.body.done),
+  );
+
+  app.post(
+    "/messages/:id/game",
+    {
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["messages"],
+        summary: "Answer a game",
+        description:
+          "Anyone but the sender can answer: a `hand` for rock paper scissors, a `pick` and `seed` for dice, or `n` to try a number. The first answer that fits settles rock paper scissors and dice; tries go on until one is right. Everyone gets message.edited with the new `moves`.",
+        security,
+        params: z.object({ id: Id }),
+        body: GameMove,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => playGame(req.auth.userId, req.params.id, req.body),
   );
 
   app.post(

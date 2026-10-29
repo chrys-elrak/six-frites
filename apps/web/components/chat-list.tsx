@@ -86,6 +86,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
         {voiceLength}
         {m.type === "file" && m.attachment && !m.text && <span className="truncate">· {m.attachment.name}</span>}
         {m.type === "checklist" && m.checklist && <span className="truncate">· {m.checklist.title}</span>}
+        {m.type === "game" && m.game && <span className="truncate">· {tr.calls[m.game.game]}</span>}
         {m.text && <span className="truncate">· {maskSpoilers(m.text, m.entities)}</span>}
       </span>
     );

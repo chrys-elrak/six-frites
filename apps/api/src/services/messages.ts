@@ -2,6 +2,7 @@ import { type Message, Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   CHECKLIST,
+  type ChatGame,
   type Checklist,
   type DeleteChatQuery,
   type DeleteMessagesQuery,
@@ -9,6 +10,7 @@ import {
   type EncryptionDTO,
   type EditMessageInput,
   type EphemeralInput,
+  type GameMove,
   type GeoPoint,
   type MessageDTO,
   type MessageEffect,
@@ -22,6 +24,7 @@ import {
   type ViewMessageResult,
   ENCRYPT_MAX_BYTES,
   EPHEMERAL_RESEND,
+  MAX_GAME_MOVES,
   MAX_REACTIONS_PER_USER,
   maskSpoilers,
 } from "@six/shared";
@@ -45,6 +48,7 @@ export const messageInclude = {
   envelopes: { include: { device: { select: { userId: true } } } },
   backups: true,
   marks: { orderBy: { item: "asc" } },
+  moves: { orderBy: [{ createdAt: "asc" }, { id: "asc" }] },
 } satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
 
@@ -150,6 +154,10 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     location: hideContent ? null : ((m.location as GeoPoint | null) ?? null),
     checklist: hideContent ? null : ((m.checklist as Checklist | null) ?? null),
     checks: hideContent ? [] : m.marks.map((k) => ({ item: k.item, userId: k.userId, at: k.createdAt.toISOString() })),
+    game: hideContent ? null : ((m.game as ChatGame | null) ?? null),
+    moves: hideContent
+      ? []
+      : m.moves.map((g) => ({ userId: g.userId, move: g.move as GameMove, at: g.createdAt.toISOString() })),
     createdAt: m.createdAt.toISOString(),
     editedAt: m.editedAt?.toISOString() ?? null,
     deletedAt: m.deletedAt?.toISOString() ?? null,
@@ -240,7 +248,11 @@ export function checkEncryption(
   if (upload?.encrypted) throw new AppError("VALIDATION_FAILED", "This file is encrypted; send it in encrypted content");
   if (
     chat.encryptedAt &&
-    (content.text !== undefined || content.location || content.checklist || (upload && upload.kind !== "gif"))
+    (content.text !== undefined ||
+      content.location ||
+      content.checklist ||
+      content.game ||
+      (upload && upload.kind !== "gif"))
   ) {
     throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
   }
@@ -331,6 +343,7 @@ export async function createMessage(
       ...("action" in input && { action: input.action }),
       ...(content?.location && { location: content.location }),
       ...(content?.checklist && { checklist: content.checklist }),
+      ...(content?.game && { game: content.game }),
       encrypted: !!encrypted,
       senderDevice,
       ...(envelopes.length && {
@@ -365,7 +378,7 @@ export async function createMessage(
 }
 
 const kindOf = (c: SendMessageInput) =>
-  c.type ?? (c.location ? "location" : c.checklist ? "checklist" : "text");
+  c.type ?? (c.location ? "location" : c.checklist ? "checklist" : c.game ? "game" : "text");
 
 /** Swaps a `gifId` for a stored copy of that GIF, checking membership first so only members trigger downloads. */
 export async function resolveGif<T extends SendMessageInput>(userId: string, chatId: string, input: T): Promise<T> {
@@ -411,7 +424,7 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     if (
       message.deletedAt ||
       isEphemeral(message) ||
-      ["service", "sticker", "location", "checklist"].includes(message.type)
+      ["service", "sticker", "location", "checklist", "game"].includes(message.type)
     ) {
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
@@ -519,6 +532,26 @@ export async function checkItem(userId: string, messageId: string, item: number,
     if (done) await tx.checklistMark.upsert({ where: key, create: { messageId, item, userId }, update: {} });
     else await tx.checklistMark.deleteMany({ where: { messageId, item } });
 
+    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    return toMessageDTO(updated, userId);
+  });
+}
+
+/**
+ * Answers a game message: a hand, a die pick or a try at the number. Encrypted games keep the
+ * sender's move in the envelopes, so the server only checks it's someone else's game; the apps
+ * settle it from the first answer that fits.
+ */
+export async function playGame(userId: string, messageId: string, move: GameMove) {
+  return withEvents(async (tx, emit) => {
+    await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
+    const message = await reactableMessage(tx, userId, messageId);
+    if (message.type !== "game") throw new AppError("NOT_FOUND", "No such game");
+    if (message.senderId === userId) throw new AppError("FORBIDDEN", "You can't answer your own game");
+    if (message.moves.length >= MAX_GAME_MOVES) throw new AppError("CONFLICT", "This game is over");
+
+    await tx.gameMove.create({ data: { messageId, userId, move } });
     const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
@@ -707,7 +740,7 @@ export async function makeEphemeral(userId: string, messageId: string, rule: Eph
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can make it self-destruct");
-    if (isEphemeral(m) || ["service", "sticker", "location", "checklist"].includes(m.type)) {
+    if (isEphemeral(m) || ["service", "sticker", "location", "checklist", "game"].includes(m.type)) {
       throw new AppError("MESSAGE_NOT_EDITABLE", "This message can't be made to self-destruct");
     }
 

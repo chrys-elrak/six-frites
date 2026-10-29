@@ -98,9 +98,11 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         ? ` · ${m.attachment.name}`
         : m.type === "checklist" && m.checklist
           ? ` · ${m.checklist.title}`
-          : m.text
-          ? ` · ${maskSpoilers(m.text, m.entities)}`
-          : "";
+          : m.type === "game" && m.game
+            ? ` · ${tr.calls[m.game.game]}`
+            : m.text
+              ? ` · ${maskSpoilers(m.text, m.entities)}`
+              : "";
     return line(
       <>
         {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}

@@ -7,6 +7,7 @@ export * from "./chats.js";
 export * from "./e2ee.js";
 export * from "./content.js";
 export * from "./calls.js";
+export * from "./games.js";
 export * from "./contacts.js";
 export * from "./sync.js";
 export * from "./uploads.js";

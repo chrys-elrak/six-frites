@@ -6,6 +6,7 @@ import {
   type CallGame,
   type DicePick,
   type Duel,
+  GAME_EMOJI,
   GUESS_MAX,
   type GuessGame,
   type PublicUser,
@@ -186,8 +187,6 @@ function FloatingReactions({ reactions }: { reactions: Call["reactions"] }) {
     </div>
   );
 }
-
-const GAME_ICONS: Record<CallGame, string> = { rps: "✊", dice: "🎲", guess: "🔢" };
 
 /** Holds the picks back for a beat so the fists can shake or the die can tumble. */
 function useReveal() {
@@ -420,7 +419,7 @@ function GamesPanel({ call, peerName }: { call: Call; peerName: string }) {
                 g === game ? "bg-white/25 ring-1 ring-white/40" : "hover:bg-white/10"
               }`}
             >
-              {GAME_ICONS[g]}
+              {GAME_EMOJI[g]}
             </button>
           ))}
         </div>

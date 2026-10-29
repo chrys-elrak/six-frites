@@ -1,4 +1,5 @@
 import type {
+  ChatGame,
   Checklist,
   EncryptedFile,
   EphemeralInput,
@@ -41,6 +42,7 @@ export interface PendingMessage {
   gif?: GifDTO;
   location?: GeoPoint;
   checklist?: Checklist;
+  game?: ChatGame;
   groupId?: string;
   sendAt?: string;
   createdAt: string;

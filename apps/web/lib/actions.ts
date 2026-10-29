@@ -3,6 +3,7 @@ import {
   type ChatDTO,
   type DeleteScope,
   type EphemeralInput,
+  type GameMove,
   type MessageDTO,
   type MessageEntity,
   type ScheduledMessageDTO,
@@ -69,6 +70,17 @@ export async function check(qc: QueryClient, m: MessageDTO, meId: string, item: 
   try {
     const params = { path: { id: m.id, item } };
     applyEdited(qc, await hydrate(unwrap(await six.api.PUT("/v1/messages/{id}/checklist/{item}", { params, body: { done } }))));
+  } catch {
+    void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
+  }
+}
+
+/** Answers a game message, showing the move before the server answers. */
+export async function play(qc: QueryClient, m: MessageDTO, meId: string, move: GameMove) {
+  applyEdited(qc, { ...m, moves: [...m.moves, { userId: meId, move, at: new Date().toISOString() }] });
+  try {
+    const params = { path: { id: m.id } };
+    applyEdited(qc, await hydrate(unwrap(await six.api.POST("/v1/messages/{id}/game", { params, body: move }))));
   } catch {
     void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
   }

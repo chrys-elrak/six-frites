@@ -3,10 +3,13 @@
 import { unwrap } from "@six/sdk";
 import {
   type ChatDTO,
+  type ChatGame,
   type Checklist,
   type ChecklistMark,
   EPHEMERAL_RESEND,
   type EphemeralDTO,
+  type GameMove,
+  type GameMoveDTO,
   type GeoPoint,
   type MessageDTO,
   type MessageEffect,
@@ -32,6 +35,7 @@ import {
   Film,
   Flame,
   Image as ImageIcon,
+  Gamepad2,
   ListChecks,
   Loader2,
   Lock,
@@ -57,7 +61,7 @@ import {
   useState,
 } from "react";
 import { VList, type VListHandle } from "virtua";
-import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, react, selfDestruct } from "@/lib/actions";
+import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, play, react, selfDestruct } from "@/lib/actions";
 import { type Hydrated, hydrate, messageFile } from "@/lib/e2ee";
 import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
@@ -70,13 +74,14 @@ import { useLongPress } from "@/lib/long-press";
 import { segments } from "@/lib/markup";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
-import { deliver } from "@/lib/send";
+import { deliver, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AlbumViewer, AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { ChecklistView } from "./checklist";
+import { GameView } from "./game";
 import { LocationCard } from "./location-card";
 import { EphemeralViewer } from "./ephemeral-viewer";
 import { PackDialog } from "./pack-dialog";
@@ -114,6 +119,8 @@ interface MsgRow {
   location: GeoPoint | null;
   checklist: Checklist | null;
   checks: ChecklistMark[];
+  game: ChatGame | null;
+  moves: GameMoveDTO[];
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   locked: boolean;
@@ -198,6 +205,8 @@ function buildRows(
         location: m.location,
         checklist: m.checklist,
         checks: m.checks ?? [],
+        game: m.game ?? null,
+        moves: m.moves ?? [],
         type: m.type,
         ephemeral: m.ephemeral,
         locked: !!m.undecryptable,
@@ -231,13 +240,17 @@ function buildRows(
           location: p.location ?? null,
           checklist: p.checklist ?? null,
           checks: [],
+          game: p.game ?? null,
+          moves: [],
           type: (p.sticker
             ? "sticker"
             : p.location
               ? "location"
               : p.checklist
                 ? "checklist"
-                : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
+                : p.game
+                  ? "game"
+                  : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           locked: false,
           ephemeral: p.ephemeral
             ? {
@@ -383,6 +396,7 @@ const mediaIcons = {
   sticker: StickerIcon,
   location: MapPin,
   checklist: ListChecks,
+  game: Gamepad2,
 } as const;
 
 export function MediaLabel({ type }: { type: MessageType }) {
@@ -603,6 +617,8 @@ function Bubble({
   onReact,
   onReactButton,
   onCheck,
+  onPlay,
+  onSendGame,
   onOpenAlbum,
   safe,
   frozen,
@@ -626,6 +642,8 @@ function Bubble({
   onReact: (emoji: string) => void;
   onReactButton: (anchor: DOMRect) => void;
   onCheck: (item: number) => void;
+  onPlay: (move: GameMove) => void;
+  onSendGame: (game: ChatGame) => void;
   onOpenAlbum: (items: ShownAttachment[], start: number) => void;
   /** Safe view is on: their photos and videos stay blurred until tapped. */
   safe: boolean;
@@ -808,6 +826,18 @@ function Bubble({
                   checks={row.checks}
                   nameOf={nameOf}
                   onCheck={row.message && !frozen && !selecting ? onCheck : undefined}
+                />
+              )}
+              {row.game && !row.deleted && (
+                <GameView
+                  game={row.game}
+                  senderId={row.message?.senderId ?? meId}
+                  moves={row.moves}
+                  meId={meId}
+                  mine={mine}
+                  nameOf={nameOf}
+                  onPlay={row.message && !frozen && !selecting ? onPlay : undefined}
+                  onSend={!frozen && !selecting ? onSendGame : undefined}
                 />
               )}
               {sealed ? (
@@ -1139,7 +1169,7 @@ export const MessageList = forwardRef<
           : []),
         ...(!m.ephemeral &&
         row.mine &&
-        !["sticker", "location", "checklist"].includes(m.type) &&
+        !["sticker", "location", "checklist", "game"].includes(m.type) &&
         !frozen &&
         !m.undecryptable
           ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
@@ -1162,7 +1192,7 @@ export const MessageList = forwardRef<
               },
             ]
           : []),
-        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist"].includes(m.type)
+        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist", "game"].includes(m.type)
           ? [{ label: tr.messages.makeSelfDestruct, onSelect: () => setDestructFor(m) }]
           : []),
         { label: tr.messages.timing, onSelect: () => setTimingFor(m.id) },
@@ -1262,6 +1292,8 @@ export const MessageList = forwardRef<
                 meId={meId}
                 onReact={(emoji) => !frozen && row.message && void react(qc, row.message, meId, emoji)}
                 onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
+                onPlay={(move) => row.message && void play(qc, row.message, meId, move)}
+                onSendGame={(game) => realtime && void queueMessage(qc, realtime, chat.id, { text: "", game })}
                 onOpenAlbum={(items, start) => setAlbum({ items, start })}
                 safe={chat.safeView}
                 frozen={frozen}

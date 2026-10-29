@@ -310,6 +310,27 @@ describe("locations and checklists", () => {
     expect((await call(host, "PATCH", `/v1/messages/${id}`, { text: "edited" })).json().error.code).toBe("MESSAGE_NOT_EDITABLE");
     expect((await post(host, chatId, { checklist: { title: "Empty", items: [] } })).statusCode).toBe(400);
   });
+
+  it("lets the other person answer a game, but not the sender", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const sent = await post(host, chatId, { game: { game: "rps", hand: "rock" } });
+    expect(sent.statusCode, sent.body).toBe(201);
+    expect(sent.json()).toMatchObject({ type: "game", game: { game: "rps", hand: "rock" }, moves: [] });
+    const id = sent.json().id;
+    const play = (who: Auth, move: object) => call(who, "POST", `/v1/messages/${id}/game`, move);
+
+    const answered = await play(guest, { hand: "paper" });
+    expect(answered.statusCode, answered.body).toBe(200);
+    expect(answered.json().moves).toMatchObject([{ userId: guest.user.id, move: { hand: "paper" } }]);
+    expect((await play(host, { hand: "scissors" })).json().error.code).toBe("FORBIDDEN");
+    expect((await play(guest, { hand: "lizard" })).statusCode).toBe(400);
+    expect((await call(host, "PATCH", `/v1/messages/${id}`, { text: "edited" })).json().error.code).toBe("MESSAGE_NOT_EDITABLE");
+
+    const text = (await post(host, chatId, { text: "not a game" })).json();
+    expect((await call(guest, "POST", `/v1/messages/${text.id}/game`, { n: 5 })).json().error.code).toBe("NOT_FOUND");
+    expect((await post(host, chatId, { game: { game: "guess", secret: 0 } })).statusCode).toBe(400);
+    expect((await post(host, chatId, { game: { game: "dice", pick: 3, seed: 1 }, text: "hi" })).statusCode).toBe(400);
+  });
 });
 
 describe("safe view and albums", () => {

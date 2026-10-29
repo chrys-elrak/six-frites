@@ -155,7 +155,7 @@ export class E2EE {
     return others.every((id) => devices.some((d) => d.userId === id));
   }
 
-  /** Fills an encrypted message's text, formatting, quote, file, location and checklist in from its content. */
+  /** Fills an encrypted message's text, formatting, quote, file, location, checklist and game in from its content. */
   async hydrate<T extends MessageDTO>(m: T): Promise<Hydrated<T>> {
     const opened = await this.open(m);
     if (opened.status === "plain") return m;
@@ -169,6 +169,7 @@ export class E2EE {
       effect: c.effect ?? null,
       location: c.location ?? null,
       checklist: c.checklist ?? null,
+      game: c.game ?? null,
       replyTo: m.replyTo?.encrypted ? { ...m.replyTo, text: c.replyText ?? null } : m.replyTo,
       attachment:
         m.attachment && c.file

@@ -2,6 +2,7 @@ import type { Dict, MessageDTO } from "@six/shared";
 import {
   CircleUserRound,
   Film,
+  Gamepad2,
   Image as ImageIcon,
   ListChecks,
   type LucideIcon,
@@ -26,6 +27,7 @@ const mediaIcons: Record<string, LucideIcon> = {
   service: Timer,
   location: MapPin,
   checklist: ListChecks,
+  game: Gamepad2,
 };
 
 export type MediaType = Exclude<MessageDTO["type"], "text">;

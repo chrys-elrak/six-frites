@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Id } from "./common.js";
 import { Checklist, GeoPoint, MessageEffect, MessageEntity, entitiesFit } from "./chats.js";
+import { ChatGame } from "./games.js";
 
 const B64 = (bytes: number) => z.string().regex(new RegExp(`^[\\w-]{${Math.ceil((bytes * 4) / 3)}}$`));
 
@@ -45,6 +46,7 @@ export const MessageContent = z
     file: EncryptedFile.optional(),
     location: GeoPoint.optional(),
     checklist: Checklist.optional(),
+    game: ChatGame.optional(),
     replyText: z.string().max(200).nullable().optional().describe("What the quoted message said, as the sender saw it"),
   })
   .refine((c) => entitiesFit(c.text ?? "", c.entities), { message: "Entities fall outside the text", path: ["entities"] });

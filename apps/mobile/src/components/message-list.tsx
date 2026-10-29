@@ -1,9 +1,12 @@
 import { unwrap } from "@six/sdk";
 import {
   type ChatDTO,
+  type ChatGame,
   type Checklist,
   type ChecklistMark,
   EPHEMERAL_RESEND,
+  type GameMove,
+  type GameMoveDTO,
   type GeoPoint,
   serviceSentence,
   type EphemeralDTO,
@@ -54,7 +57,7 @@ import {
 } from "react-native";
 import { Text } from "./text";
 import Animated from "react-native-reanimated";
-import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, react, selfDestruct } from "@/lib/actions";
+import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, play, react, selfDestruct } from "@/lib/actions";
 import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
@@ -68,7 +71,7 @@ import { segments } from "@/lib/markup";
 import { six } from "@/lib/six";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
-import { deliver } from "@/lib/send";
+import { deliver, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
@@ -83,6 +86,7 @@ import {
   lightboxItem,
 } from "./attachment";
 import { ChecklistView } from "./checklist";
+import { GameView } from "./game";
 import { LocationCard } from "./location-card";
 import { EmojiPicker } from "./emoji-picker";
 import { EphemeralViewer } from "./ephemeral-viewer";
@@ -116,6 +120,8 @@ interface MsgRow {
   location: GeoPoint | null;
   checklist: Checklist | null;
   checks: ChecklistMark[];
+  game: ChatGame | null;
+  moves: GameMoveDTO[];
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   locked: "decrypting" | "undecryptable" | null;
@@ -204,6 +210,8 @@ function buildRows(
         location: m.location ?? null,
         checklist: m.checklist ?? null,
         checks: m.checks ?? [],
+        game: m.game ?? null,
+        moves: m.moves ?? [],
         type: m.type,
         ephemeral: m.ephemeral,
         locked: lockOf(m),
@@ -236,11 +244,15 @@ function buildRows(
           location: p.location ?? null,
           checklist: p.checklist ?? null,
           checks: [],
+          game: p.game ?? null,
+          moves: [],
           type: (p.location
             ? "location"
             : p.checklist
               ? "checklist"
-              : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
+              : p.game
+                ? "game"
+                : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           locked: null,
           ephemeral: p.ephemeral
             ? {
@@ -616,6 +628,8 @@ function Bubble({
   meId,
   onReact,
   onCheck,
+  onPlay,
+  onSendGame,
   onOpenAlbum,
   safe,
   frozen,
@@ -638,6 +652,8 @@ function Bubble({
   meId: string;
   onReact: (emoji: string) => void;
   onCheck: (item: number) => void;
+  onPlay: (move: GameMove) => void;
+  onSendGame: (game: ChatGame) => void;
   onOpenAlbum: (items: ShownAttachment[], start: number) => void;
   /** Safe view is on: their photos and videos stay blurred until tapped. */
   safe: boolean;
@@ -838,6 +854,18 @@ function Bubble({
               mine={mine}
               nameOf={nameOf}
               onCheck={row.message && !frozen && !selecting ? onCheck : undefined}
+            />
+          )}
+          {row.game && !row.deleted && (
+            <GameView
+              game={row.game}
+              senderId={row.message?.senderId ?? meId}
+              moves={row.moves}
+              meId={meId}
+              mine={mine}
+              nameOf={nameOf}
+              onPlay={row.message && !frozen && !selecting ? onPlay : undefined}
+              onSend={!frozen && !selecting ? onSendGame : undefined}
             />
           )}
           {sealed ? (
@@ -1169,7 +1197,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
           : []),
-        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist"].includes(m.type)
+        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist", "game"].includes(m.type)
           ? [{ label: tr.messages.makeSelfDestruct, onSelect: () => setDestructFor(m) }]
           : []),
         { label: tr.messages.timing, onSelect: () => setTimingFor(m.id) },
@@ -1286,6 +1314,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   meId={meId}
                   onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
                   onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
+                  onPlay={(move) => row.message && void play(qc, row.message, meId, move)}
+                  onSendGame={(game) => realtime && queueMessage(qc, realtime, chat.id, { text: "", game })}
                   onOpenAlbum={(items, start) => {
                     const shown = items.map(lightboxItem);
                     if (!shown[start]) return;
