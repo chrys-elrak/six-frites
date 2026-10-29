@@ -209,17 +209,21 @@ export function Invites() {
           </div>
           <PrimaryButton onClick={() => setCreating(true)}>{tr.settings.newLink}</PrimaryButton>
         </div>
-        {items.map((i) => (
-          <InviteRow key={i.code} invite={i} onRevoke={() => setRevoking(i.code)} />
-        ))}
-        {invites.hasNextPage && (
-          <button
-            onClick={() => invites.fetchNextPage()}
-            disabled={invites.isFetchingNextPage}
-            className="w-full p-3 text-sm font-medium text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"
-          >
-            {tr.settings.showOlderLinks}
-          </button>
+        {items.length > 0 && (
+          <div className="divide-y divide-stone-200 lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
+            {items.map((i) => (
+              <InviteRow key={i.code} invite={i} onRevoke={() => setRevoking(i.code)} />
+            ))}
+            {invites.hasNextPage && (
+              <button
+                onClick={() => invites.fetchNextPage()}
+                disabled={invites.isFetchingNextPage}
+                className="w-full p-3 text-sm font-medium text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"
+              >
+                {tr.settings.showOlderLinks}
+              </button>
+            )}
+          </div>
         )}
       </Card>
       {creating && <NewInviteDialog onClose={() => setCreating(false)} />}
@@ -247,7 +251,7 @@ export function Referrals() {
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.joinedWithLinks}</SectionTitle>
-      <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+      <Card className="divide-y divide-stone-200 overflow-hidden lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
         {items.map((r) => (
           <div key={r.id} className="flex items-center gap-3 p-4">
             <Avatar user={r.user} />

@@ -78,84 +78,92 @@ export function FindMe() {
   const items = links.data ?? [];
 
   return (
-    <section className="space-y-3">
-      <SectionTitle>{tr.settings.findMe}</SectionTitle>
-      <Card className="overflow-hidden">
-        <CodeRow code={user.contactCode} label={tr.settings.contactCode}>
-          <button onClick={() => void share(user.contactCode)} className={SOFT}>
-            {copied === user.contactCode ? tr.settings.linkCopied : tr.common.shareLink}
-          </button>
-          <button onClick={() => setConfirmReset(true)} disabled={reset.isPending} className={QUIET}>
-            {tr.settings.newCode}
-          </button>
-        </CodeRow>
-        <p className="px-4 pb-4 text-sm text-stone-500 dark:text-stone-400">{tr.settings.oneUseHint}</p>
-      </Card>
-
-      <SectionTitle>{tr.settings.reusableCodes}</SectionTitle>
-      <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
-        <p className="p-4 text-sm text-stone-500 dark:text-stone-400">{tr.settings.reusableHint}</p>
-        {items.map((l) => (
-          <CodeRow
-            key={l.code}
-            code={l.code}
-            label={l.expiresAt ? tr.settings.worksUntil(sendAtLabel(l.expiresAt)) : tr.settings.worksUntilDeleted}
-          >
-            <button onClick={() => void share(l.code)} className={SOFT}>
-              {copied === l.code ? tr.settings.linkCopied : tr.common.shareLink}
+    <>
+      <section className="space-y-3">
+        <SectionTitle>{tr.settings.findMe}</SectionTitle>
+        <Card className="overflow-hidden">
+          <CodeRow code={user.contactCode} label={tr.settings.contactCode}>
+            <button onClick={() => void share(user.contactCode)} className={SOFT}>
+              {copied === user.contactCode ? tr.settings.linkCopied : tr.common.shareLink}
             </button>
-            <button onClick={() => setDeleting(l.code)} className={QUIET}>
-              {tr.common.delete}
+            <button onClick={() => setConfirmReset(true)} disabled={reset.isPending} className={QUIET}>
+              {tr.settings.newCode}
             </button>
           </CodeRow>
-        ))}
-        {items.length < MAX_CONTACT_LINKS && (
-          <button
-            onClick={() => setChoosing(true)}
-            disabled={create.isPending}
-            className="w-full p-4 text-left text-sm font-semibold text-orange-600 hover:bg-stone-50 dark:text-orange-400 dark:hover:bg-stone-800/50"
-          >
-            {tr.settings.newReusableCode}
-          </button>
-        )}
-      </Card>
+          <p className="px-4 pb-4 text-sm text-stone-500 dark:text-stone-400">{tr.settings.oneUseHint}</p>
+        </Card>
+      </section>
 
-      {confirmReset && (
-        <Sheet
-          title={tr.settings.resetCodeWarning}
-          actions={[{ label: tr.settings.getNewCode, destructive: true, onSelect: () => reset.mutate() }]}
-          onClose={() => setConfirmReset(false)}
-        />
-      )}
-      {choosing && (
-        <Sheet
-          title={tr.settings.newReusableCode}
-          actions={[
-            { label: tr.settings.untilDeleted, onSelect: () => create.mutate(null) },
-            { label: tr.settings.untilDate, onSelect: () => setPickingDate(true) },
-          ]}
-          onClose={() => setChoosing(false)}
-        />
-      )}
-      {pickingDate && (
-        <ScheduleDialog
-          title={tr.settings.stopsWorking}
-          confirm={tr.settings.create}
-          initial={new Date(Date.now() + 7 * 864e5)}
-          onPick={(at) => {
-            setPickingDate(false);
-            create.mutate(at);
-          }}
-          onClose={() => setPickingDate(false)}
-        />
-      )}
-      {deleting && (
-        <Sheet
-          title={tr.settings.deleteCodeWarning}
-          actions={[{ label: tr.common.delete, destructive: true, onSelect: () => remove.mutate(deleting) }]}
-          onClose={() => setDeleting(null)}
-        />
-      )}
-    </section>
+      <section className="space-y-3">
+        <SectionTitle>{tr.settings.reusableCodes}</SectionTitle>
+        <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+          <p className="p-4 text-sm text-stone-500 dark:text-stone-400">{tr.settings.reusableHint}</p>
+          {items.length > 0 && (
+            <div className="divide-y divide-stone-200 lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
+              {items.map((l) => (
+                <CodeRow
+                  key={l.code}
+                  code={l.code}
+                  label={l.expiresAt ? tr.settings.worksUntil(sendAtLabel(l.expiresAt)) : tr.settings.worksUntilDeleted}
+                >
+                  <button onClick={() => void share(l.code)} className={SOFT}>
+                    {copied === l.code ? tr.settings.linkCopied : tr.common.shareLink}
+                  </button>
+                  <button onClick={() => setDeleting(l.code)} className={QUIET}>
+                    {tr.common.delete}
+                  </button>
+                </CodeRow>
+              ))}
+            </div>
+          )}
+          {items.length < MAX_CONTACT_LINKS && (
+            <button
+              onClick={() => setChoosing(true)}
+              disabled={create.isPending}
+              className="w-full p-4 text-left text-sm font-semibold text-orange-600 hover:bg-stone-50 dark:text-orange-400 dark:hover:bg-stone-800/50"
+            >
+              {tr.settings.newReusableCode}
+            </button>
+          )}
+        </Card>
+
+        {confirmReset && (
+          <Sheet
+            title={tr.settings.resetCodeWarning}
+            actions={[{ label: tr.settings.getNewCode, destructive: true, onSelect: () => reset.mutate() }]}
+            onClose={() => setConfirmReset(false)}
+          />
+        )}
+        {choosing && (
+          <Sheet
+            title={tr.settings.newReusableCode}
+            actions={[
+              { label: tr.settings.untilDeleted, onSelect: () => create.mutate(null) },
+              { label: tr.settings.untilDate, onSelect: () => setPickingDate(true) },
+            ]}
+            onClose={() => setChoosing(false)}
+          />
+        )}
+        {pickingDate && (
+          <ScheduleDialog
+            title={tr.settings.stopsWorking}
+            confirm={tr.settings.create}
+            initial={new Date(Date.now() + 7 * 864e5)}
+            onPick={(at) => {
+              setPickingDate(false);
+              create.mutate(at);
+            }}
+            onClose={() => setPickingDate(false)}
+          />
+        )}
+        {deleting && (
+          <Sheet
+            title={tr.settings.deleteCodeWarning}
+            actions={[{ label: tr.common.delete, destructive: true, onSelect: () => remove.mutate(deleting) }]}
+            onClose={() => setDeleting(null)}
+          />
+        )}
+      </section>
+    </>
   );
 }

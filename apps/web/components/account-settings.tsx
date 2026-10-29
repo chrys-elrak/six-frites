@@ -32,7 +32,7 @@ export function BlockedPeople() {
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.blockedPeople}</SectionTitle>
-      <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+      <Card className="divide-y divide-stone-200 overflow-hidden lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
         {blocks.data.map((b) => (
           <div key={b.user.id} className="flex items-center gap-3 p-4">
             <Avatar user={b.user} />

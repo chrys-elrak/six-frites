@@ -58,7 +58,7 @@ export function Devices() {
         {tr.settings.devices}
       </SectionTitle>
 
-      <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+      <Card className="divide-y divide-stone-200 overflow-hidden lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
         {sessions.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
         {sessions.isError && <p className="p-4 text-sm text-red-600">{tr.settings.couldNotLoadDevices}</p>}
         {sessions.data?.map((s) => (
