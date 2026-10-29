@@ -18,7 +18,18 @@ import {
   newDuel,
   rpsOutcome,
 } from "../src/calls.js";
-import { type GameMove, gameAnswer, guessTries } from "../src/games.js";
+import {
+  ChatGame,
+  type GameMove,
+  type PenaltyKicks,
+  gameAnswer,
+  gameOver,
+  guessTries,
+  hangman,
+  hangmanWord,
+  penaltyGoals,
+  penaltyOutcome,
+} from "../src/games.js";
 
 describe("rock paper scissors", () => {
   const fresh = newDuel<RpsHand>();
@@ -122,5 +133,27 @@ describe("games in a chat", () => {
       { userId: "them", n: 20, hint: "higher" },
       { userId: "them", n: 42, hint: "right" },
     ]);
+  });
+
+  it("scores a shot unless the keeper dived the same way, and compares the goals", () => {
+    const a: PenaltyKicks = { shots: ["left", "left", "middle", "right", "right"], dives: ["left", "left", "left", "left", "left"] };
+    const b: PenaltyKicks = { shots: ["left", "middle", "middle", "left", "left"], dives: ["left", "middle", "right", "right", "left"] };
+    expect(penaltyGoals(a.shots, b.dives)).toEqual([false, true, true, false, true]);
+    expect(penaltyOutcome(a, b)).toBe(1);
+    expect(penaltyOutcome(b, a)).toBe(-1);
+    expect(ChatGame.safeParse({ game: "penalty", shots: ["left"], dives: ["left"] }).success).toBe(false);
+  });
+
+  it("plays hangman letter by letter until the word is found or the six fries are gone", () => {
+    expect(hangmanWord("Pâté 2!")).toBe("PATE");
+    const found = hangman("FRITES", "me", [..."FRITQES"].map((letter) => move("them", { letter })));
+    expect(found).toMatchObject({ misses: 1, solved: true, lost: false });
+    expect(found.tried.map((t) => t.letter).join("")).toBe("FRITQES");
+
+    const lost = hangman("FRITES", "me", [..."ABCDGHJF"].map((letter) => move("them", { letter })));
+    expect(lost).toMatchObject({ misses: 6, solved: false, lost: true });
+    expect(lost.tried).toHaveLength(6);
+    expect(gameOver({ game: "hangman", word: "FRITES" }, "me", [move("me", { letter: "F" })])).toBe(false);
+    expect(ChatGame.safeParse({ game: "hangman", word: "été" }).success).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { CALL_GAMES, type CallGame, type ChatDTO, GAME_EMOJI } from "@six/shared";
+import { CHAT_GAMES, type ChatDTO, GAME_EMOJI, type GameKind } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,7 @@ export function GamesPanel() {
   const { realtime } = useRealtime();
   const meId = useSession((s) => s.user!.id);
   const chats = useChats();
-  const [game, setGame] = useState<CallGame | null>(null);
+  const [game, setGame] = useState<GameKind | null>(null);
   const [chat, setChat] = useState<ChatDTO | null>(null);
   const playable = (chats.data ?? []).filter(
     (c) => !c.blockedByMe && !c.blockedByThem && !c.peerDeleted && c.members.some((m) => m.user.id !== meId),
@@ -35,7 +35,7 @@ export function GamesPanel() {
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto grid w-full max-w-lg gap-3 p-4 lg:max-w-5xl lg:grid-cols-3 lg:p-6">
-          {CALL_GAMES.map((g) => (
+          {CHAT_GAMES.map((g) => (
             <button
               key={g}
               type="button"

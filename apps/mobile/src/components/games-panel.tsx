@@ -1,4 +1,4 @@
-import { CALL_GAMES, type CallGame, type ChatDTO, GAME_EMOJI } from "@six/shared";
+import { CHAT_GAMES, type ChatDTO, GAME_EMOJI, type GameKind } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { X } from "lucide-react-native";
@@ -25,7 +25,7 @@ export function GamesPanel() {
   const { realtime } = useRealtime();
   const meId = useSession((s) => s.user!.id);
   const chats = useChats();
-  const [game, setGame] = useState<CallGame | null>(null);
+  const [game, setGame] = useState<GameKind | null>(null);
   const [chat, setChat] = useState<ChatDTO | null>(null);
   const playable = (chats.data ?? []).filter((c) => !isFrozen(c) && c.members.some((m) => m.user.id !== meId));
 
@@ -35,7 +35,7 @@ export function GamesPanel() {
         <Text style={[styles.title, { color: t.text }]}>{tr.common.games}</Text>
       </ScreenHeader>
       <ScrollView contentContainerStyle={styles.content}>
-        {CALL_GAMES.map((g) => (
+        {CHAT_GAMES.map((g) => (
           <Pressable
             key={g}
             onPress={() => setGame(g)}

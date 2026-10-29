@@ -2841,6 +2841,15 @@ export interface paths {
                                         /** @enum {string} */
                                         game: "guess";
                                         secret: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "penalty";
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "hangman";
+                                        word: string;
                                     }) | null;
                                     /** @description Answers to the game, oldest first; anyone but the sender can play */
                                     moves: {
@@ -2853,6 +2862,11 @@ export interface paths {
                                             seed: number;
                                         } | {
                                             n: number;
+                                        } | {
+                                            shots: ("left" | "middle" | "right")[];
+                                            dives: ("left" | "middle" | "right")[];
+                                        } | {
+                                            letter: string;
                                         };
                                         /** Format: date-time */
                                         at: string;
@@ -3153,6 +3167,15 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "guess";
                                     secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -3165,6 +3188,11 @@ export interface paths {
                                         seed: number;
                                     } | {
                                         n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -3506,6 +3534,15 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "guess";
                                     secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -3518,6 +3555,11 @@ export interface paths {
                                         seed: number;
                                     } | {
                                         n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -3895,6 +3937,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -3907,6 +3958,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4158,6 +4214,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -4170,6 +4235,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4421,6 +4491,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -4433,6 +4512,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4687,6 +4771,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -4699,6 +4792,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4796,6 +4894,11 @@ export interface paths {
                         seed: number;
                     } | {
                         n: number;
+                    } | {
+                        shots: ("left" | "middle" | "right")[];
+                        dives: ("left" | "middle" | "right")[];
+                    } | {
+                        letter: string;
                     };
                 };
             };
@@ -4961,6 +5064,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -4973,6 +5085,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -5223,6 +5340,15 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "guess";
                                     secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -5235,6 +5361,11 @@ export interface paths {
                                         seed: number;
                                     } | {
                                         n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -5490,6 +5621,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -5502,6 +5642,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -5760,6 +5905,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -5772,6 +5926,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -6071,6 +6230,15 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "guess";
                                     secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -6083,6 +6251,11 @@ export interface paths {
                                         seed: number;
                                     } | {
                                         n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -6203,6 +6376,15 @@ export interface paths {
                             /** @enum {string} */
                             game: "guess";
                             secret: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "penalty";
+                            shots: ("left" | "middle" | "right")[];
+                            dives: ("left" | "middle" | "right")[];
+                        } | {
+                            /** @enum {string} */
+                            game: "hangman";
+                            word: string;
                         };
                         /**
                          * @description With `encrypted`: the content is a location, a checklist or a game rather than text or a file
@@ -6424,6 +6606,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -6436,6 +6627,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -6690,6 +6886,15 @@ export interface paths {
                             /** @enum {string} */
                             game: "guess";
                             secret: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "penalty";
+                            shots: ("left" | "middle" | "right")[];
+                            dives: ("left" | "middle" | "right")[];
+                        } | {
+                            /** @enum {string} */
+                            game: "hangman";
+                            word: string;
                         };
                         /**
                          * @description With `encrypted`: the content is a location, a checklist or a game rather than text or a file
@@ -7246,6 +7451,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -7258,6 +7472,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -8113,6 +8332,15 @@ export interface paths {
                                         /** @enum {string} */
                                         game: "guess";
                                         secret: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "penalty";
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "hangman";
+                                        word: string;
                                     }) | null;
                                     /** @description Answers to the game, oldest first; anyone but the sender can play */
                                     moves: {
@@ -8125,6 +8353,11 @@ export interface paths {
                                             seed: number;
                                         } | {
                                             n: number;
+                                        } | {
+                                            shots: ("left" | "middle" | "right")[];
+                                            dives: ("left" | "middle" | "right")[];
+                                        } | {
+                                            letter: string;
                                         };
                                         /** Format: date-time */
                                         at: string;
@@ -8339,6 +8572,15 @@ export interface paths {
                                         /** @enum {string} */
                                         game: "guess";
                                         secret: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "penalty";
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "hangman";
+                                        word: string;
                                     }) | null;
                                     /** @description Answers to the game, oldest first; anyone but the sender can play */
                                     moves: {
@@ -8351,6 +8593,11 @@ export interface paths {
                                             seed: number;
                                         } | {
                                             n: number;
+                                        } | {
+                                            shots: ("left" | "middle" | "right")[];
+                                            dives: ("left" | "middle" | "right")[];
+                                        } | {
+                                            letter: string;
                                         };
                                         /** Format: date-time */
                                         at: string;
@@ -8613,6 +8860,15 @@ export interface paths {
                                             /** @enum {string} */
                                             game: "guess";
                                             secret: number;
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "penalty";
+                                            shots: ("left" | "middle" | "right")[];
+                                            dives: ("left" | "middle" | "right")[];
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "hangman";
+                                            word: string;
                                         }) | null;
                                         /** @description Answers to the game, oldest first; anyone but the sender can play */
                                         moves: {
@@ -8625,6 +8881,11 @@ export interface paths {
                                                 seed: number;
                                             } | {
                                                 n: number;
+                                            } | {
+                                                shots: ("left" | "middle" | "right")[];
+                                                dives: ("left" | "middle" | "right")[];
+                                            } | {
+                                                letter: string;
                                             };
                                             /** Format: date-time */
                                             at: string;
@@ -9714,6 +9975,15 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "guess";
                                 secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -9726,6 +9996,11 @@ export interface paths {
                                     seed: number;
                                 } | {
                                     n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
                                 };
                                 /** Format: date-time */
                                 at: string;

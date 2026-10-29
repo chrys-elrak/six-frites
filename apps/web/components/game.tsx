@@ -1,23 +1,36 @@
 "use client";
 
 import {
-  CALL_GAMES,
-  type CallGame,
+  CHAT_GAMES,
   type ChatGame,
   type DicePick,
   GAME_EMOJI,
   GUESS_MAX,
+  type GameKind,
   type GameMove,
   type GameMoveDTO,
+  HANGMAN_LETTERS,
+  HANGMAN_LIVES,
+  HANGMAN_WORD,
   NEW_GUESS,
+  PENALTY_ARROWS,
+  PENALTY_KICKS,
+  PENALTY_SIDES,
+  type PenaltyKicks,
+  type PenaltySide,
   RPS_EMOJI,
   RPS_HANDS,
   type RpsHand,
   diceOutcome,
   diceRoll,
   gameAnswer,
+  gameOver,
   guessRange,
   guessTries,
+  hangman,
+  hangmanWord,
+  penaltyGoals,
+  penaltyOutcome,
   rpsOutcome,
 } from "@six/shared";
 import { X } from "lucide-react";
@@ -27,6 +40,7 @@ import { Dialog } from "./dialog";
 
 const dieFace = "grid place-items-center rounded-xl bg-white font-bold text-stone-900 shadow tabular-nums";
 const randomSeed = () => Math.floor(Math.random() * 6);
+const randomSide = () => PENALTY_SIDES[Math.floor(Math.random() * PENALTY_SIDES.length)]!;
 
 /** Shakes for a beat before showing an answer that just came in; older ones show straight away. */
 function useReveal(at: string) {
@@ -98,6 +112,43 @@ function NumberGrid({
         </button>
       ))}
     </div>
+  );
+}
+
+/** Your five shots and five dives, kick by kick, one tap each. */
+function Kicks({ onDone, button }: { onDone: (kicks: PenaltyKicks) => void; button: string }) {
+  const tr = useT();
+  const [picks, setPicks] = useState<PenaltySide[]>([]);
+  const add = (more: PenaltySide[]) => {
+    const all = [...picks, ...more];
+    if (all.length < PENALTY_KICKS * 2) return setPicks(all);
+    onDone({ shots: all.filter((_, i) => i % 2 === 0), dives: all.filter((_, i) => i % 2 === 1) });
+  };
+  const kick = Math.floor(picks.length / 2) + 1;
+  return (
+    <>
+      <p className="mt-2 text-sm font-medium">{picks.length % 2 ? tr.calls.dive(kick) : tr.calls.shoot(kick)}</p>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {PENALTY_SIDES.map((side) => (
+          <button
+            key={side}
+            type="button"
+            onClick={() => add([side])}
+            className={`flex flex-col items-center gap-0.5 rounded-xl py-2 ${button}`}
+          >
+            <span className="text-2xl">{PENALTY_ARROWS[side]}</span>
+            <span className="text-xs opacity-75">{tr.calls.sides[side]}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => add(Array.from({ length: PENALTY_KICKS * 2 - picks.length }, randomSide))}
+        className={`mt-3 rounded-full px-4 py-1.5 text-sm font-medium ${button}`}
+      >
+        {tr.calls.random}
+      </button>
+    </>
   );
 }
 
@@ -218,6 +269,47 @@ function DiceResult({
   );
 }
 
+function PenaltyResult({
+  kicks,
+  answer,
+  senderId,
+  meId,
+  nameOf,
+}: {
+  kicks: PenaltyKicks;
+  answer: { userId: string; kicks: PenaltyKicks; at: string };
+  senderId: string;
+  meId: string;
+  nameOf: (userId: string) => string;
+}) {
+  const revealed = useReveal(answer.at);
+  if (!revealed) return <div className="rps-shake mt-2 text-5xl">⚽</div>;
+  const rows = [
+    { id: senderId, goals: penaltyGoals(kicks.shots, answer.kicks.dives) },
+    { id: answer.userId, goals: penaltyGoals(answer.kicks.shots, kicks.dives) },
+  ];
+  return (
+    <>
+      <div className="reaction-pop mt-2 space-y-1">
+        {rows.map(({ id, goals }) => (
+          <div key={id} className="flex items-center gap-2">
+            <span className="min-w-0 flex-1 truncate text-left text-sm">{nameOf(id)}</span>
+            <span className="text-lg tracking-tight">{goals.map((g) => (g ? "⚽" : "🧤")).join("")}</span>
+            <span className="w-4 text-right font-bold tabular-nums">{goals.filter(Boolean).length}</span>
+          </div>
+        ))}
+      </div>
+      <Verdict
+        outcome={penaltyOutcome(kicks, answer.kicks)}
+        senderId={senderId}
+        answerId={answer.userId}
+        meId={meId}
+        nameOf={nameOf}
+      />
+    </>
+  );
+}
+
 interface PlayProps {
   senderId: string;
   moves: GameMoveDTO[];
@@ -237,6 +329,10 @@ function DuelPlay({ game, senderId, moves, meId, nameOf, onPlay, button }: PlayP
   if (answer && game.game === "dice" && "pick" in answer.move) {
     const reply = { userId: answer.userId, pick: answer.move, at: answer.at };
     return <DiceResult pick={game} answer={reply} senderId={senderId} meId={meId} nameOf={nameOf} />;
+  }
+  if (answer && game.game === "penalty" && "shots" in answer.move) {
+    const reply = { userId: answer.userId, kicks: answer.move, at: answer.at };
+    return <PenaltyResult kicks={game} answer={reply} senderId={senderId} meId={meId} nameOf={nameOf} />;
   }
   if (senderId === meId || !onPlay) {
     return (
@@ -259,6 +355,8 @@ function DuelPlay({ game, senderId, moves, meId, nameOf, onPlay, button }: PlayP
       <p className="mt-1 text-sm opacity-80">{tr.calls.theyPicked(nameOf(senderId))}</p>
       {game.game === "rps" ? (
         <Hands onPick={(hand) => onPlay({ hand })} button={button} />
+      ) : game.game === "penalty" ? (
+        <Kicks onDone={onPlay} button={button} />
       ) : (
         <>
           <p className="text-xs opacity-70">{tr.calls.pickDice}</p>
@@ -318,6 +416,58 @@ function GuessPlay({ secret, senderId, moves, meId, nameOf, onPlay, button }: Pl
   );
 }
 
+function HangmanPlay({ word, senderId, moves, meId, nameOf, onPlay, button }: PlayProps & { word: string }) {
+  const tr = useT();
+  const { tried, misses, solved, lost } = hangman(word, senderId, moves);
+  const last = tried.at(-1);
+  const chooser = senderId === meId;
+  const missed = tried.filter((t) => !t.hit).map((t) => t.letter);
+  return (
+    <>
+      <p className="mt-1 text-sm opacity-80">{chooser ? tr.calls.yourWord : tr.calls.wordPrompt(nameOf(senderId))}</p>
+      <div className="mt-2 flex flex-wrap justify-center gap-0.5 font-mono text-lg font-bold">
+        {[...word].map((c, i) => {
+          const found = tried.some((t) => t.letter === c);
+          return (
+            <span key={i} className={`w-4 border-b-2 border-current ${found ? "" : "opacity-40"}`}>
+              {found || chooser || lost ? c : "\u00a0"}
+            </span>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-xl" aria-label={tr.calls.friesLeft(HANGMAN_LIVES - misses)}>
+        {Array.from({ length: HANGMAN_LIVES }, (_, i) => (
+          <span key={i} className={i < misses ? "opacity-20 grayscale" : ""}>
+            🍟
+          </span>
+        ))}
+      </p>
+      {missed.length > 0 && <p className="text-sm tracking-widest line-through opacity-70">{missed.join("")}</p>}
+      {(solved || lost) && last ? (
+        <Verdict outcome={solved ? -1 : 1} senderId={senderId} answerId={last.userId} meId={meId} nameOf={nameOf} />
+      ) : chooser || !onPlay ? (
+        <p className="mt-2 animate-pulse text-sm opacity-80">
+          {last ? tr.calls.theyAreGuessing(nameOf(last.userId)) : tr.messages.waitingForReply}
+        </p>
+      ) : (
+        <div className="mt-2 grid grid-cols-7 gap-1">
+          {HANGMAN_LETTERS.map((letter) => (
+            <button
+              key={letter}
+              type="button"
+              onClick={() => onPlay({ letter })}
+              disabled={tried.some((t) => t.letter === letter)}
+              className={`aspect-square rounded-md text-sm font-semibold disabled:bg-transparent disabled:opacity-25 ${button}`}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 /** A game message: the sender's move waits in it until someone answers, then both see who won. */
 export function GameView({
   game,
@@ -342,16 +492,19 @@ export function GameView({
   const [again, setAgain] = useState(false);
   const button = `transition active:scale-95 ${mine ? "bg-black/10 hover:bg-black/15" : "bg-brand/15 hover:bg-brand/25"}`;
   const props = { senderId, moves, meId, nameOf, onPlay, button };
-  const over =
-    game.game === "guess"
-      ? guessTries(game.secret, senderId, moves).at(-1)?.hint === "right"
-      : !!gameAnswer(game, senderId, moves);
+  const over = gameOver(game, senderId, moves);
   return (
     <div className="w-72 max-w-full py-1 text-center">
       <p className="font-semibold">
         {GAME_EMOJI[game.game]} {tr.calls[game.game]}
       </p>
-      {game.game === "guess" ? <GuessPlay secret={game.secret} {...props} /> : <DuelPlay game={game} {...props} />}
+      {game.game === "guess" ? (
+        <GuessPlay secret={game.secret} {...props} />
+      ) : game.game === "hangman" ? (
+        <HangmanPlay word={game.word} {...props} />
+      ) : (
+        <DuelPlay game={game} {...props} />
+      )}
       {over && onSend && (
         <button
           type="button"
@@ -372,12 +525,13 @@ export function GameDialog({
   onClose,
   onSend,
 }: {
-  initial?: CallGame;
+  initial?: GameKind;
   onClose: () => void;
   onSend: (game: ChatGame) => void;
 }) {
   const tr = useT();
   const [game, setGame] = useState(initial);
+  const [word, setWord] = useState("");
   const button = "transition active:scale-95 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700";
   const send = (g: ChatGame) => {
     onSend(g);
@@ -398,14 +552,14 @@ export function GameDialog({
       </div>
       <div className="p-4 text-center">
         <div role="tablist" aria-label={tr.calls.games} className="flex gap-2">
-          {CALL_GAMES.map((g) => (
+          {CHAT_GAMES.map((g) => (
             <button
               key={g}
               type="button"
               role="tab"
               aria-selected={g === game}
               onClick={() => setGame(g)}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-xs font-medium transition ${
+              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] leading-tight font-medium transition ${
                 g === game ? "bg-stone-200 dark:bg-stone-700" : "hover:bg-stone-100 dark:hover:bg-stone-800"
               }`}
             >
@@ -424,6 +578,36 @@ export function GameDialog({
             <p className="mt-4 text-sm text-stone-500">{tr.calls.pickDice}</p>
             <Faces onPick={(pick) => send({ game: "dice", pick, seed: randomSeed() })} button={button} />
           </>
+        ) : game === "penalty" ? (
+          <div className="mt-2">
+            <Kicks onDone={(kicks) => send({ game: "penalty", ...kicks })} button={button} />
+          </div>
+        ) : game === "hangman" ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (word.length >= HANGMAN_WORD.min) send({ game: "hangman", word });
+            }}
+          >
+            <p className="mt-4 text-sm text-stone-500">{tr.calls.pickWord}</p>
+            <input
+              value={word}
+              onChange={(e) => setWord(hangmanWord(e.target.value))}
+              maxLength={HANGMAN_WORD.max}
+              aria-label={tr.calls.pickWord}
+              autoFocus
+              autoComplete="off"
+              spellCheck={false}
+              className="mt-2 block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-center font-mono text-[16px] font-bold tracking-widest dark:bg-stone-800"
+            />
+            <button
+              type="submit"
+              disabled={word.length < HANGMAN_WORD.min}
+              className={`mt-3 rounded-full px-4 py-1.5 text-sm font-medium disabled:opacity-50 ${button}`}
+            >
+              {tr.common.send}
+            </button>
+          </form>
         ) : (
           <>
             <p className="mt-4 text-sm text-stone-500">{tr.calls.pickSecret}</p>

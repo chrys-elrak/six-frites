@@ -1,34 +1,49 @@
 import {
-  CALL_GAMES,
-  type CallGame,
+  CHAT_GAMES,
   type ChatGame,
   type DicePick,
   GAME_EMOJI,
   GUESS_MAX,
+  type GameKind,
   type GameMove,
   type GameMoveDTO,
+  HANGMAN_LETTERS,
+  HANGMAN_LIVES,
+  HANGMAN_WORD,
   NEW_GUESS,
+  PENALTY_ARROWS,
+  PENALTY_KICKS,
+  PENALTY_SIDES,
+  type PenaltyKicks,
+  type PenaltySide,
   RPS_EMOJI,
   RPS_HANDS,
   type RpsHand,
   diceOutcome,
   diceRoll,
   gameAnswer,
+  gameOver,
   guessRange,
   guessTries,
+  hangman,
+  hangmanWord,
+  penaltyGoals,
+  penaltyOutcome,
   rpsOutcome,
 } from "@six/shared";
 import { X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text } from "./text";
+import { Text, TextInput } from "./text";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
-import { IconButton } from "./ui";
+import { IconButton, PrimaryButton } from "./ui";
 
 const randomSeed = () => Math.floor(Math.random() * 6);
+const randomSide = () => PENALTY_SIDES[Math.floor(Math.random() * PENALTY_SIDES.length)]!;
 
 interface Colors {
   fg: string;
@@ -111,6 +126,46 @@ function NumberGrid({ onPick, allowed, c }: { onPick: (n: number) => void; allow
         );
       })}
     </View>
+  );
+}
+
+/** Your five shots and five dives, kick by kick, one tap each. */
+function Kicks({ onDone, c }: { onDone: (kicks: PenaltyKicks) => void; c: Colors }) {
+  const tr = useT();
+  const [picks, setPicks] = useState<PenaltySide[]>([]);
+  const add = (more: PenaltySide[]) => {
+    const all = [...picks, ...more];
+    if (all.length < PENALTY_KICKS * 2) return setPicks(all);
+    onDone({ shots: all.filter((_, i) => i % 2 === 0), dives: all.filter((_, i) => i % 2 === 1) });
+  };
+  const kick = Math.floor(picks.length / 2) + 1;
+  return (
+    <>
+      <Text style={[styles.hint, { color: c.fg, fontSize: 14, fontWeight: "600" }]}>
+        {picks.length % 2 ? tr.calls.dive(kick) : tr.calls.shoot(kick)}
+      </Text>
+      <View style={styles.row}>
+        {PENALTY_SIDES.map((side) => (
+          <Pressable
+            key={side}
+            onPress={() => add([side])}
+            accessibilityRole="button"
+            accessibilityLabel={tr.calls.sides[side]}
+            style={({ pressed }) => [styles.choice, { backgroundColor: c.button }, pressed && styles.pressed]}
+          >
+            <Text style={styles.arrow}>{PENALTY_ARROWS[side]}</Text>
+            <Text style={{ color: c.fg, fontSize: 12, opacity: 0.75 }}>{tr.calls.sides[side]}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Pressable
+        onPress={() => add(Array.from({ length: PENALTY_KICKS * 2 - picks.length }, randomSide))}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.pill, { backgroundColor: c.button }, pressed && styles.pressed]}
+      >
+        <Text style={{ color: c.fg, fontSize: 14, fontWeight: "500" }}>{tr.calls.random}</Text>
+      </Pressable>
+    </>
   );
 }
 
@@ -212,6 +267,35 @@ function DiceResult({
   );
 }
 
+function PenaltyResult({
+  kicks,
+  answer,
+  ...props
+}: ResultProps & { kicks: PenaltyKicks; answer: { userId: string; kicks: PenaltyKicks; at: string } }) {
+  const { revealed, style } = useReveal(answer.at);
+  if (!revealed) return <Animated.Text style={[styles.bigHand, style]}>⚽</Animated.Text>;
+  const rows = [
+    { id: props.senderId, goals: penaltyGoals(kicks.shots, answer.kicks.dives) },
+    { id: answer.userId, goals: penaltyGoals(answer.kicks.shots, kicks.dives) },
+  ];
+  return (
+    <>
+      <View style={styles.scores}>
+        {rows.map(({ id, goals }) => (
+          <View key={id} style={styles.scoreRow}>
+            <Text style={{ flex: 1, color: props.fg, fontSize: 14 }} numberOfLines={1}>
+              {props.nameOf(id)}
+            </Text>
+            <Text style={{ fontSize: 16 }}>{goals.map((g) => (g ? "⚽" : "🧤")).join("")}</Text>
+            <Text style={[styles.score, { color: props.fg }]}>{goals.filter(Boolean).length}</Text>
+          </View>
+        ))}
+      </View>
+      <Verdict outcome={penaltyOutcome(kicks, answer.kicks)} answerId={answer.userId} {...props} />
+    </>
+  );
+}
+
 interface PlayProps {
   senderId: string;
   moves: GameMoveDTO[];
@@ -230,6 +314,9 @@ function DuelPlay({ game, senderId, moves, meId, nameOf, onPlay, c }: PlayProps 
   }
   if (answer && game.game === "dice" && "pick" in answer.move) {
     return <DiceResult pick={game} answer={{ userId: answer.userId, pick: answer.move, at: answer.at }} {...result} />;
+  }
+  if (answer && game.game === "penalty" && "shots" in answer.move) {
+    return <PenaltyResult kicks={game} answer={{ userId: answer.userId, kicks: answer.move, at: answer.at }} {...result} />;
   }
   if (senderId === meId || !onPlay) {
     return (
@@ -253,6 +340,8 @@ function DuelPlay({ game, senderId, moves, meId, nameOf, onPlay, c }: PlayProps 
       <Text style={[styles.note, { color: c.fg }]}>{tr.calls.theyPicked(nameOf(senderId))}</Text>
       {game.game === "rps" ? (
         <Hands onPick={(hand) => onPlay({ hand })} c={c} />
+      ) : game.game === "penalty" ? (
+        <Kicks onDone={onPlay} c={c} />
       ) : (
         <>
           <Text style={{ color: c.fg, fontSize: 12, opacity: 0.7, textAlign: "center" }}>{tr.calls.pickDice}</Text>
@@ -309,6 +398,66 @@ function GuessPlay({ secret, senderId, moves, meId, nameOf, onPlay, c }: PlayPro
   );
 }
 
+function HangmanPlay({ word, senderId, moves, meId, nameOf, onPlay, c }: PlayProps & { word: string }) {
+  const tr = useT();
+  const { tried, misses, solved, lost } = hangman(word, senderId, moves);
+  const last = tried.at(-1);
+  const chooser = senderId === meId;
+  const missed = tried.filter((t) => !t.hit).map((t) => t.letter);
+  return (
+    <>
+      <Text style={[styles.note, { color: c.fg }]}>{chooser ? tr.calls.yourWord : tr.calls.wordPrompt(nameOf(senderId))}</Text>
+      <View style={styles.word}>
+        {[...word].map((ch, i) => {
+          const found = tried.some((t) => t.letter === ch);
+          return (
+            <View key={i} style={[styles.slot, { borderColor: c.fg }, !found && { opacity: 0.4 }]}>
+              <Text style={[styles.slotText, { color: c.fg }]}>{found || chooser || lost ? ch : " "}</Text>
+            </View>
+          );
+        })}
+      </View>
+      <View style={styles.fries} accessible accessibilityLabel={tr.calls.friesLeft(HANGMAN_LIVES - misses)}>
+        {Array.from({ length: HANGMAN_LIVES }, (_, i) => (
+          <Text key={i} style={[{ fontSize: 20 }, i < misses && { opacity: 0.2 }]}>
+            🍟
+          </Text>
+        ))}
+      </View>
+      {missed.length > 0 && (
+        <Text style={{ color: c.fg, fontSize: 14, opacity: 0.7, letterSpacing: 3, textDecorationLine: "line-through" }}>
+          {missed.join("")}
+        </Text>
+      )}
+      {(solved || lost) && last ? (
+        <Verdict outcome={solved ? -1 : 1} senderId={senderId} answerId={last.userId} meId={meId} nameOf={nameOf} fg={c.fg} />
+      ) : chooser || !onPlay ? (
+        <Text style={[styles.note, { color: c.fg }]}>
+          {last ? tr.calls.theyAreGuessing(nameOf(last.userId)) : tr.messages.waitingForReply}
+        </Text>
+      ) : (
+        <View style={styles.grid}>
+          {HANGMAN_LETTERS.map((letter) => {
+            const used = tried.some((t) => t.letter === letter);
+            return (
+              <Pressable
+                key={letter}
+                onPress={() => onPlay({ letter })}
+                disabled={used}
+                accessibilityRole="button"
+                accessibilityLabel={letter}
+                style={({ pressed }) => [styles.key, !used && { backgroundColor: c.button }, pressed && styles.pressed]}
+              >
+                <Text style={[styles.keyText, { color: c.fg }, used && { opacity: 0.25 }]}>{letter}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+    </>
+  );
+}
+
 /** A game message: the sender's move waits in it until someone answers, then both see who won. */
 export function GameView({
   game,
@@ -338,16 +487,19 @@ export function GameView({
     button: mine ? alpha(bubble.ink, 0.12) : "rgba(235,138,0,0.15)",
   };
   const props = { senderId, moves, meId, nameOf, onPlay, c };
-  const over =
-    game.game === "guess"
-      ? guessTries(game.secret, senderId, moves).at(-1)?.hint === "right"
-      : !!gameAnswer(game, senderId, moves);
+  const over = gameOver(game, senderId, moves);
   return (
     <View style={styles.view}>
       <Text style={{ color: c.fg, fontSize: 15, fontWeight: "700" }}>
         {GAME_EMOJI[game.game]} {tr.calls[game.game]}
       </Text>
-      {game.game === "guess" ? <GuessPlay secret={game.secret} {...props} /> : <DuelPlay game={game} {...props} />}
+      {game.game === "guess" ? (
+        <GuessPlay secret={game.secret} {...props} />
+      ) : game.game === "hangman" ? (
+        <HangmanPlay word={game.word} {...props} />
+      ) : (
+        <DuelPlay game={game} {...props} />
+      )}
       {over && onSend && (
         <Pressable
           onPress={() => setAgain(true)}
@@ -368,7 +520,7 @@ export function NewGame({
   onClose,
   onSend,
 }: {
-  initial?: CallGame;
+  initial?: GameKind;
   onClose: () => void;
   onSend: (game: ChatGame) => void;
 }) {
@@ -376,6 +528,7 @@ export function NewGame({
   const tr = useT();
   const insets = useSafeAreaInsets();
   const [game, setGame] = useState(initial);
+  const [word, setWord] = useState("");
   const c = { fg: t.text, button: t.field };
   const send = (g: ChatGame) => {
     onSend(g);
@@ -384,14 +537,14 @@ export function NewGame({
   return (
     <Modal transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
-      <View style={styles.wrap} pointerEvents="box-none">
+      <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
           <View style={styles.head}>
             <Text style={[styles.title, { color: t.text }]}>{tr.composer.newGame}</Text>
             <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
           </View>
           <View style={styles.row} accessibilityRole="tablist">
-            {CALL_GAMES.map((g) => (
+            {CHAT_GAMES.map((g) => (
               <Pressable
                 key={g}
                 onPress={() => setGame(g)}
@@ -400,17 +553,51 @@ export function NewGame({
                 style={[styles.choice, g === game && { backgroundColor: t.surfaceAlt }]}
               >
                 <Text style={styles.tabIcon}>{GAME_EMOJI[g]}</Text>
-                <Text style={{ color: t.text, fontSize: 12, fontWeight: "500", textAlign: "center" }}>{tr.calls[g]}</Text>
+                <Text style={{ color: t.text, fontSize: 11, fontWeight: "500", textAlign: "center" }}>{tr.calls[g]}</Text>
               </Pressable>
             ))}
           </View>
-          <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
-            {game === "rps" ? tr.calls.pickHand : game === "dice" ? tr.calls.pickDice : tr.calls.pickSecret}
-          </Text>
+          {game !== "penalty" && (
+            <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
+              {game === "rps"
+                ? tr.calls.pickHand
+                : game === "dice"
+                  ? tr.calls.pickDice
+                  : game === "hangman"
+                    ? tr.calls.pickWord
+                    : tr.calls.pickSecret}
+            </Text>
+          )}
           {game === "rps" ? (
             <Hands onPick={(hand) => send({ game: "rps", hand })} c={c} />
           ) : game === "dice" ? (
             <Faces onPick={(pick) => send({ game: "dice", pick, seed: randomSeed() })} c={c} />
+          ) : game === "penalty" ? (
+            <View style={{ alignItems: "center" }}>
+              <Kicks onDone={(kicks) => send({ game: "penalty", ...kicks })} c={c} />
+            </View>
+          ) : game === "hangman" ? (
+            <>
+              <TextInput
+                value={word}
+                onChangeText={(v) => setWord(hangmanWord(v))}
+                maxLength={HANGMAN_WORD.max}
+                placeholderTextColor={t.muted}
+                accessibilityLabel={tr.calls.pickWord}
+                autoFocus
+                autoCapitalize="characters"
+                autoCorrect={false}
+                autoComplete="off"
+                returnKeyType="send"
+                onSubmitEditing={() => word.length >= HANGMAN_WORD.min && send({ game: "hangman", word })}
+                style={[styles.field, { backgroundColor: t.field, color: t.text }]}
+              />
+              <PrimaryButton
+                title={tr.common.send}
+                disabled={word.length < HANGMAN_WORD.min}
+                onPress={() => send({ game: "hangman", word })}
+              />
+            </>
           ) : (
             <View style={{ alignItems: "center" }}>
               <NumberGrid onPick={(secret) => send({ game: "guess", secret })} allowed={() => true} c={c} />
@@ -424,7 +611,7 @@ export function NewGame({
             </View>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -457,4 +644,15 @@ const styles = StyleSheet.create({
   head: { flexDirection: "row", alignItems: "center", gap: 4 },
   title: { flex: 1, fontSize: 18, fontWeight: "700" },
   tabIcon: { fontSize: 26 },
+  arrow: { fontSize: 26 },
+  scores: { alignSelf: "stretch", gap: 4, marginTop: 8 },
+  scoreRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  score: { width: 16, textAlign: "right", fontSize: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },
+  word: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 2, marginTop: 8 },
+  slot: { width: 16, borderBottomWidth: 2, alignItems: "center" },
+  slotText: { fontSize: 18, fontWeight: "700" },
+  fries: { flexDirection: "row", gap: 2, marginTop: 8 },
+  key: { width: "13%", aspectRatio: 1, borderRadius: 6, alignItems: "center", justifyContent: "center" },
+  keyText: { fontSize: 14, fontWeight: "600" },
+  field: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 18, fontWeight: "700", letterSpacing: 4, textAlign: "center" },
 });
