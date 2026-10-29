@@ -45,6 +45,25 @@ function useHeight() {
   return [setEl, height] as const;
 }
 
+/**
+ * Escape goes back to the chat list, unless something else takes it: the composer (reply, edit, suggestions),
+ * a text field, or an open dialog, menu or popover. It listens on the document, which hears the key before
+ * the window-level handlers close those overlays.
+ */
+function useEscapeBack(href: string, skip: boolean) {
+  const router = useRouter();
+  useEffect(() => {
+    if (skip) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.isComposing || e.defaultPrevented || e.target instanceof HTMLInputElement) return;
+      if (document.querySelector("[role=dialog], [role=menu], [data-dismissable]")) return;
+      router.push(href);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [href, skip, router]);
+}
+
 export function Conversation({ chatId }: { chatId: string }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -80,6 +99,7 @@ export function Conversation({ chatId }: { chatId: string }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [selecting, clearSelection]);
+  useEscapeBack(chat.data?.archived ? "/archived" : "/", selecting);
 
   const unread = chat.data?.unreadCount ?? 0;
   const onSeen = useCallback(() => {

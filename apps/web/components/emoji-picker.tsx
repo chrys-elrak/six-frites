@@ -97,6 +97,7 @@ export function EmojiButton({
 
   const panel = (
     <div
+      data-dismissable
       className={
         open === "docked"
           ? "flex w-85 shrink-0 flex-col border-l border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"

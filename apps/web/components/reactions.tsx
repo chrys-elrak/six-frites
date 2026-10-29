@@ -124,6 +124,7 @@ export function ReactionPopover({
     <Portal>
       <div
         ref={root}
+        data-dismissable
         style={{ top, left, width }}
         className="reaction-pop fixed z-[60] rounded-full bg-white px-1.5 py-1 shadow-xl ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"
       >
