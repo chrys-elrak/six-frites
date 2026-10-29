@@ -188,7 +188,7 @@ export function Conversation({ chatId }: { chatId: string }) {
               </Link>
               <button
                 onClick={() => setEditing(true)}
-                className="flex min-w-0 flex-1 items-center gap-2 rounded-xl py-0.5 pr-2 text-left hover:bg-stone-200/60 dark:hover:bg-stone-800/60"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-0.5 pr-2 text-left"
                 aria-label={tr.chat.editContact(c.title)}
               >
                 <Avatar user={peer} online={shownPresence?.online} />
