@@ -254,7 +254,7 @@ export function VoicePlayer({
 
   const done = total ? position / total : 0;
   return (
-    <div className={`flex max-w-full items-center ${compact ? "min-w-0 flex-1 gap-2" : "w-60 gap-3 py-1"}`}>
+    <div className={`flex max-w-full items-center ${compact ? "min-w-0 flex-1 gap-2" : "w-96 gap-3 py-1"}`}>
       <button
         type="button"
         onClick={toggle}
@@ -266,10 +266,10 @@ export function VoicePlayer({
       >
         {isPlaying ? <Pause className="size-5 fill-current" /> : <Play className="ml-0.5 size-5 fill-current" />}
       </button>
-      <div className={`min-w-0 flex-1 ${compact ? "flex items-center gap-2" : ""}`}>
+      <div className={`flex min-w-0 flex-1 items-center ${compact ? "gap-2" : "flex-wrap gap-x-2"}`}>
         <div
           onClick={seek}
-          className={`flex cursor-pointer items-center gap-[2px] ${compact ? "h-6 min-w-0 flex-1" : "h-8"}`}
+          className={`flex cursor-pointer items-center gap-[2px] ${compact ? "h-6 min-w-0 flex-1" : "h-8 min-w-40 flex-1"}`}
           aria-hidden
         >
           {bars.map((v, i) => (
@@ -283,8 +283,8 @@ export function VoicePlayer({
         <div className="flex shrink-0 items-center gap-1.5">
           <p className="text-[11px] opacity-70">{formatDuration(isPlaying || position ? position : total)}</p>
           <SpeedButton className={mine ? "bg-brand-ink/15" : "bg-brand/15 text-brand"} />
-          {meta}
         </div>
+        {meta}
       </div>
     </div>
   );
