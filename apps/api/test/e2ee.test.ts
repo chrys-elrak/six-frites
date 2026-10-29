@@ -314,6 +314,26 @@ describe("encrypted messages", () => {
     expect(fromUtf8(decryptMedia(bytes, photo.key, photo.digest))).toBe("pretend this is a jpeg");
   });
 
+  it("takes plain files over 100 MB under an encrypted caption, but not smaller ones", async () => {
+    const { phone, chatId } = await friendsWithDevices();
+    const plainFile = async (size: number) =>
+      (
+        await prisma.upload.create({
+          data: { ownerId: phone.auth.user.id, kind: "file", name: "big.zip", mime: "application/zip", size, storedBytes: 0, key: `t/${Math.random()}`, status: "ready" },
+        })
+      ).id;
+    const sendWith = async (attachmentId: string) =>
+      call(phone.auth, "POST", `/v1/chats/${chatId}/messages`, {
+        clientId: `big-${attachmentId}`,
+        attachmentId,
+        encrypted: { envelopes: await phone.seal(chatId, "caption") },
+      });
+    expect((await sendWith(await plainFile(1024))).json().error.code).toBe("VALIDATION_FAILED");
+    const big = await sendWith(await plainFile(150 * 1024 * 1024));
+    expect(big.statusCode, big.body).toBe(201);
+    expect(big.json()).toMatchObject({ type: "file", attachment: { encrypted: false } });
+  });
+
   it("refuses to attach an encrypted file to a plain message", async () => {
     const { host, chatId } = await makeFriends();
     const presign = await call(host, "POST", "/v1/uploads/presign", {

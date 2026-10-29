@@ -1819,8 +1819,10 @@
                                         "pending",
                                         "processing",
                                         "ready",
-                                        "failed"
-                                      ]
+                                        "failed",
+                                        "removed"
+                                      ],
+                                      "description": "`removed`: a large file a moderator deleted to free space"
                                     },
                                     "name": {
                                       "type": "string"
@@ -2264,8 +2266,10 @@
                                   "pending",
                                   "processing",
                                   "ready",
-                                  "failed"
-                                ]
+                                  "failed",
+                                  "removed"
+                                ],
+                                "description": "`removed`: a large file a moderator deleted to free space"
                               },
                               "name": {
                                 "type": "string"
@@ -2941,6 +2945,198 @@
           "admin"
         ],
         "description": "Hides the pack, stops its stickers being sent, and blanks them in messages that show them.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/large-files": {
+      "get": {
+        "summary": "Files over 100 MB, newest first",
+        "tags": [
+          "admin"
+        ],
+        "description": "These are uploaded unencrypted, so they can be removed to free space.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 30,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "image",
+                              "video",
+                              "video_note",
+                              "voice",
+                              "file",
+                              "gif",
+                              "sticker"
+                            ],
+                            "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "owner": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "bannedAt": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "email",
+                              "avatarUrl",
+                              "bannedAt"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "processing",
+                              "ready",
+                              "failed",
+                              "removed"
+                            ],
+                            "description": "`removed`: a large file a moderator deleted to free space"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "name",
+                          "size",
+                          "owner",
+                          "createdAt",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/large-files/{id}": {
+      "delete": {
+        "summary": "Remove a large file",
+        "tags": [
+          "admin"
+        ],
+        "description": "Deletes it from storage; the messages that carried it say it was removed for being too large.",
         "parameters": [
           {
             "schema": {
@@ -4984,8 +5180,10 @@
                                       "pending",
                                       "processing",
                                       "ready",
-                                      "failed"
-                                    ]
+                                      "failed",
+                                      "removed"
+                                    ],
+                                    "description": "`removed`: a large file a moderator deleted to free space"
                                   },
                                   "name": {
                                     "type": "string"
@@ -5947,8 +6145,10 @@
                                 "pending",
                                 "processing",
                                 "ready",
-                                "failed"
-                              ]
+                                "failed",
+                                "removed"
+                              ],
+                              "description": "`removed`: a large file a moderator deleted to free space"
                             },
                             "name": {
                               "type": "string"
@@ -6941,8 +7141,10 @@
                                 "pending",
                                 "processing",
                                 "ready",
-                                "failed"
-                              ]
+                                "failed",
+                                "removed"
+                              ],
+                              "description": "`removed`: a large file a moderator deleted to free space"
                             },
                             "name": {
                               "type": "string"
@@ -8050,8 +8252,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -8844,8 +9048,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -9628,8 +9834,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -10430,8 +10638,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -11207,8 +11417,10 @@
                                 "pending",
                                 "processing",
                                 "ready",
-                                "failed"
-                              ]
+                                "failed",
+                                "removed"
+                              ],
+                              "description": "`removed`: a large file a moderator deleted to free space"
                             },
                             "name": {
                               "type": "string"
@@ -11995,8 +12207,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -12793,8 +13007,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -13692,8 +13908,10 @@
                                   "pending",
                                   "processing",
                                   "ready",
-                                  "failed"
-                                ]
+                                  "failed",
+                                  "removed"
+                                ],
+                                "description": "`removed`: a large file a moderator deleted to free space"
                               },
                               "name": {
                                 "type": "string"
@@ -14753,8 +14971,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -15529,8 +15749,10 @@
                                   "pending",
                                   "processing",
                                   "ready",
-                                  "failed"
-                                ]
+                                  "failed",
+                                  "removed"
+                                ],
+                                "description": "`removed`: a large file a moderator deleted to free space"
                               },
                               "name": {
                                 "type": "string"
@@ -16263,8 +16485,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -16870,8 +17094,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -17350,8 +17576,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -19047,8 +19275,10 @@
                                           "pending",
                                           "processing",
                                           "ready",
-                                          "failed"
-                                        ]
+                                          "failed",
+                                          "removed"
+                                        ],
+                                        "description": "`removed`: a large file a moderator deleted to free space"
                                       },
                                       "name": {
                                         "type": "string"
@@ -19811,8 +20041,10 @@
                                           "pending",
                                           "processing",
                                           "ready",
-                                          "failed"
-                                        ]
+                                          "failed",
+                                          "removed"
+                                        ],
+                                        "description": "`removed`: a large file a moderator deleted to free space"
                                       },
                                       "name": {
                                         "type": "string"
@@ -20760,8 +20992,10 @@
                                               "pending",
                                               "processing",
                                               "ready",
-                                              "failed"
-                                            ]
+                                              "failed",
+                                              "removed"
+                                            ],
+                                            "description": "`removed`: a large file a moderator deleted to free space"
                                           },
                                           "name": {
                                             "type": "string"
@@ -23227,8 +23461,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -23873,7 +24109,7 @@
     },
     "/v1/uploads/presign": {
       "post": {
-        "summary": "Start an upload (max 25 MB)",
+        "summary": "Start an upload (max 1 GB; encrypted files max 100 MB)",
         "tags": [
           "uploads"
         ],
@@ -23910,7 +24146,7 @@
                   "size": {
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": 26220816
+                    "maximum": 1073741824
                   },
                   "encrypted": {
                     "description": "The file is encrypted end to end: send mime application/octet-stream and a neutral name. The server stores it as-is, with no thumbnail or processing",
@@ -23966,8 +24202,10 @@
                             "pending",
                             "processing",
                             "ready",
-                            "failed"
-                          ]
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
                         },
                         "name": {
                           "type": "string"
@@ -24120,8 +24358,10 @@
                         "pending",
                         "processing",
                         "ready",
-                        "failed"
-                      ]
+                        "failed",
+                        "removed"
+                      ],
+                      "description": "`removed`: a large file a moderator deleted to free space"
                     },
                     "name": {
                       "type": "string"
@@ -24253,8 +24493,10 @@
                         "pending",
                         "processing",
                         "ready",
-                        "failed"
-                      ]
+                        "failed",
+                        "removed"
+                      ],
+                      "description": "`removed`: a large file a moderator deleted to free space"
                     },
                     "name": {
                       "type": "string"

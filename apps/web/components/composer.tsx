@@ -7,6 +7,7 @@ import {
   type GifDTO,
   type TypingKind,
   type UploadKind,
+  MAX_UPLOAD_BYTES,
   albumIds,
   emojiQuery,
   emojifyEnd,
@@ -441,6 +442,9 @@ export function Composer({
   }
 
   function sendFiles(files: FileList | File[]) {
+    const big = [...files].filter((f) => f.size > MAX_UPLOAD_BYTES).map((f) => f.name);
+    if (big.length) return setError(tr.composer.tooLarge(big));
+    setError(null);
     setPicked([...files]);
   }
 

@@ -6,7 +6,6 @@ import {
   MAX_UPLOAD_BYTES,
   type PresignUploadInput,
   type UploadKind,
-  encryptedSize,
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
@@ -82,7 +81,7 @@ export async function completeUpload(ownerId: string, id: string) {
 
   const stored = await headObject(upload.key);
   if (!stored) throw new AppError("UPLOAD_MISSING", "The file has not been uploaded yet");
-  if (stored.size !== upload.size || stored.size > encryptedSize(MAX_UPLOAD_BYTES)) {
+  if (stored.size !== upload.size || stored.size > MAX_UPLOAD_BYTES) {
     await deleteObjects([upload.key]);
     throw new AppError("UPLOAD_MISSING", "The uploaded file does not match what was announced");
   }
@@ -107,6 +106,7 @@ export async function claimForMessage(tx: Tx, senderId: string, uploadId: string
   }
   if (upload.status === "pending") throw new AppError("UPLOAD_NOT_READY", "Complete the upload before sending it");
   if (upload.status === "failed") throw new AppError("UPLOAD_NOT_READY", "This file could not be processed");
+  if (upload.status === "removed") throw new AppError("UPLOAD_NOT_READY", "This file was removed");
   if (upload.messages.length || upload.scheduled) throw new AppError("UPLOAD_IN_USE");
   return upload;
 }

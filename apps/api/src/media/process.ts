@@ -4,13 +4,13 @@ import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import type { Upload } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
-import { getObjectBytes, headObject, putObject } from "../lib/storage.js";
+import { downloadObject, headObject, uploadObject } from "../lib/storage.js";
 import { finishUpload } from "../services/uploads.js";
 import { THUMB, ffmpeg, probe, waveform } from "./ffmpeg.js";
 
 async function store(upload: Upload, dir: string, file: string, name: string, contentType: string) {
   const key = upload.key.replace(/original$/, name);
-  await putObject(key, await readFile(join(dir, file)), contentType);
+  await uploadObject(key, join(dir, file), contentType);
   return key;
 }
 
@@ -139,7 +139,7 @@ export async function processUpload(uploadId: string) {
   const dir = await mkdtemp(join(tmpdir(), "six-media-"));
   try {
     const input = join(dir, "original");
-    await writeFile(input, await getObjectBytes(upload.key));
+    await downloadObject(upload.key, input);
     if ((await stat(input)).size === 0) throw new Error("Empty file");
 
     const result =

@@ -845,8 +845,11 @@ export interface paths {
                                          * @enum {string}
                                          */
                                         kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                        /** @enum {string} */
-                                        status: "pending" | "processing" | "ready" | "failed";
+                                        /**
+                                         * @description `removed`: a large file a moderator deleted to free space
+                                         * @enum {string}
+                                         */
+                                        status: "pending" | "processing" | "ready" | "failed" | "removed";
                                         name: string;
                                         mime: string;
                                         size: number;
@@ -992,8 +995,11 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                    /** @enum {string} */
-                                    status: "pending" | "processing" | "ready" | "failed";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
                                     name: string;
                                     mime: string;
                                     size: number;
@@ -1271,6 +1277,117 @@ export interface paths {
         /**
          * Take a sticker pack down
          * @description Hides the pack, stops its stickers being sent, and blanks them in messages that show them.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/large-files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Files over 100 MB, newest first
+         * @description These are uploaded unencrypted, so they can be removed to free space.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                name: string;
+                                size: number;
+                                owner: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/large-files/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a large file
+         * @description Deletes it from storage; the messages that carried it say it was removed for being too large.
          */
         delete: {
             parameters: {
@@ -2529,8 +2646,11 @@ export interface paths {
                                          * @enum {string}
                                          */
                                         kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                        /** @enum {string} */
-                                        status: "pending" | "processing" | "ready" | "failed";
+                                        /**
+                                         * @description `removed`: a large file a moderator deleted to free space
+                                         * @enum {string}
+                                         */
+                                        status: "pending" | "processing" | "ready" | "failed" | "removed";
                                         name: string;
                                         mime: string;
                                         size: number;
@@ -2801,8 +2921,11 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                    /** @enum {string} */
-                                    status: "pending" | "processing" | "ready" | "failed";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
                                     name: string;
                                     mime: string;
                                     size: number;
@@ -3114,8 +3237,11 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                    /** @enum {string} */
-                                    status: "pending" | "processing" | "ready" | "failed";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
                                     name: string;
                                     mime: string;
                                     size: number;
@@ -3406,8 +3532,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -3629,8 +3758,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -3852,8 +3984,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -4078,8 +4213,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -4301,8 +4439,11 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                    /** @enum {string} */
-                                    status: "pending" | "processing" | "ready" | "failed";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
                                     name: string;
                                     mime: string;
                                     size: number;
@@ -4528,8 +4669,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -4758,8 +4902,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -5029,8 +5176,11 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                    /** @enum {string} */
-                                    status: "pending" | "processing" | "ready" | "failed";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
                                     name: string;
                                     mime: string;
                                     size: number;
@@ -5316,8 +5466,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -5536,8 +5689,11 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                    /** @enum {string} */
-                                    status: "pending" | "processing" | "ready" | "failed";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
                                     name: string;
                                     mime: string;
                                     size: number;
@@ -5739,8 +5895,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -5938,8 +6097,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -6063,8 +6225,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -6802,8 +6967,11 @@ export interface paths {
                                          * @enum {string}
                                          */
                                         kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                        /** @enum {string} */
-                                        status: "pending" | "processing" | "ready" | "failed";
+                                        /**
+                                         * @description `removed`: a large file a moderator deleted to free space
+                                         * @enum {string}
+                                         */
+                                        status: "pending" | "processing" | "ready" | "failed" | "removed";
                                         name: string;
                                         mime: string;
                                         size: number;
@@ -6988,8 +7156,11 @@ export interface paths {
                                          * @enum {string}
                                          */
                                         kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                        /** @enum {string} */
-                                        status: "pending" | "processing" | "ready" | "failed";
+                                        /**
+                                         * @description `removed`: a large file a moderator deleted to free space
+                                         * @enum {string}
+                                         */
+                                        status: "pending" | "processing" | "ready" | "failed" | "removed";
                                         name: string;
                                         mime: string;
                                         size: number;
@@ -7220,8 +7391,11 @@ export interface paths {
                                              * @enum {string}
                                              */
                                             kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                            /** @enum {string} */
-                                            status: "pending" | "processing" | "ready" | "failed";
+                                            /**
+                                             * @description `removed`: a large file a moderator deleted to free space
+                                             * @enum {string}
+                                             */
+                                            status: "pending" | "processing" | "ready" | "failed" | "removed";
                                             name: string;
                                             mime: string;
                                             size: number;
@@ -8281,8 +8455,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -8460,7 +8637,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Start an upload (max 25 MB)
+         * Start an upload (max 1 GB; encrypted files max 100 MB)
          * @description Returns a URL to PUT the file to directly, with the given headers. Then call POST /v1/uploads/{id}/complete.
          */
         post: {
@@ -8501,8 +8678,11 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                                /** @enum {string} */
-                                status: "pending" | "processing" | "ready" | "failed";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
                                 name: string;
                                 mime: string;
                                 size: number;
@@ -8577,8 +8757,11 @@ export interface paths {
                              * @enum {string}
                              */
                             kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                            /** @enum {string} */
-                            status: "pending" | "processing" | "ready" | "failed";
+                            /**
+                             * @description `removed`: a large file a moderator deleted to free space
+                             * @enum {string}
+                             */
+                            status: "pending" | "processing" | "ready" | "failed" | "removed";
                             name: string;
                             mime: string;
                             size: number;
@@ -8638,8 +8821,11 @@ export interface paths {
                              * @enum {string}
                              */
                             kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
-                            /** @enum {string} */
-                            status: "pending" | "processing" | "ready" | "failed";
+                            /**
+                             * @description `removed`: a large file a moderator deleted to free space
+                             * @enum {string}
+                             */
+                            status: "pending" | "processing" | "ready" | "failed" | "removed";
                             name: string;
                             mime: string;
                             size: number;

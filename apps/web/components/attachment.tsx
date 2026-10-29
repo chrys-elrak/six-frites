@@ -1,7 +1,7 @@
 "use client";
 
 import { type AttachmentDTO, type EncryptedFile, NO_ZOOM, type ZoomView, zoomTo } from "@six/shared";
-import { AlertCircle, ChevronLeft, ChevronRight, Download, EyeOff, FileText, Loader2, Pause, Play, X } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Download, EyeOff, FileText, FileX, Loader2, Pause, Play, X } from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { decryptedUrl } from "@/lib/e2ee";
@@ -444,6 +444,22 @@ export function AttachmentView({
       link.click();
     }
   }, [wanted, decrypted?.url, a.kind, a.name, a.thumbUrl, onOpen]);
+
+  if (attachment.source === "server" && attachment.data.status === "removed") {
+    return (
+      <span className="flex w-64 max-w-full items-center gap-3 px-1 py-1 opacity-75">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-stone-500/15">
+          <FileX className="size-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium">{a.name}</span>
+          <span className="block text-xs">
+            {tr.messages.fileRemoved} · {formatBytes(a.size)}
+          </span>
+        </span>
+      </span>
+    );
+  }
 
   const box = (w: number | null, h: number | null) => {
     const size = boxSize(w, h);

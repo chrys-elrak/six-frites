@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { headObject, putObject } from "../src/lib/storage.js";
 import { type Auth, chatHelpers, loginAs, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -228,5 +229,31 @@ describe("ads", () => {
     await call(boss, "POST", "/v1/admin/users/ads", { userIds: [b.user.id], ads: true });
     expect((await get(b, "/v1/me")).ads).toBe(true);
     expect((await get(a, "/v1/me")).ads).toBe(false);
+  });
+});
+
+describe("large files", () => {
+  it("can be sent under an encrypted caption, listed, and removed, leaving the message saying so", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const id = `big${Date.now().toString(36)}`;
+    const key = `u/${host.user.id}/${id}/original`;
+    await putObject(key, Buffer.from("pretend this is 200 MB"), "video/mp4");
+    await prisma.upload.create({
+      data: { id, ownerId: host.user.id, kind: "file", name: "holiday.mp4", mime: "video/mp4", size: 200 * 1024 * 1024, storedBytes: 22, key, status: "ready" },
+    });
+    const sent = (await send(host, chatId, "the video", { attachmentId: id })).json();
+    expect(sent.attachment).toMatchObject({ id, status: "ready", encrypted: false });
+
+    const boss = await admin();
+    expect((await get(guest, "/v1/admin/large-files")).error.code).toBe("FORBIDDEN");
+    const listed = (await get(boss, "/v1/admin/large-files")).items.find((f: { id: string }) => f.id === id);
+    expect(listed).toMatchObject({ name: "holiday.mp4", status: "ready", owner: { id: host.user.id } });
+
+    expect((await call(boss, "DELETE", `/v1/admin/large-files/${id}`)).statusCode).toBe(204);
+    expect(await headObject(key)).toBeNull();
+    const seen = (await get(guest, `/v1/chats/${chatId}/messages`)).items.find((m: { id: string }) => m.id === sent.id);
+    expect(seen.attachment).toMatchObject({ id, status: "removed", url: null });
+    expect((await get(boss, "/v1/admin/large-files")).items.find((f: { id: string }) => f.id === id).status).toBe("removed");
+    expect((await get(guest, `/v1/chats/${chatId}/messages?only=files`)).items).toEqual([]);
   });
 });

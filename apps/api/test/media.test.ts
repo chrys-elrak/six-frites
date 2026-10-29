@@ -6,7 +6,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { describe, expect, it } from "vitest";
 import { probe } from "../src/media/ffmpeg.js";
 import { processUpload } from "../src/media/process.js";
-import { getObjectBytes, headObject, putObject } from "../src/lib/storage.js";
+import { downloadObject, headObject, putObject } from "../src/lib/storage.js";
 import { chatHelpers, prisma, useApp } from "./helpers.js";
 
 const hasFfmpeg = (() => {
@@ -39,7 +39,7 @@ async function stage(ownerId: string, kind: string, mime: string, bytes: Buffer)
 
 async function probeKey(key: string) {
   const file = join(dir, `probe-${createId()}`);
-  execFileSync("sh", ["-c", `cat > ${file}`], { input: await getObjectBytes(key) });
+  await downloadObject(key, file);
   return { ...(await probe(file)), codecs: execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=codec_name", "-of", "csv=p=0", file]).toString().trim().split("\n") };
 }
 

@@ -6,6 +6,7 @@ import { ChevronLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LargeFiles } from "@/components/admin/large-files";
 import { Overview } from "@/components/admin/overview";
 import { Packs } from "@/components/admin/packs";
 import { Reports } from "@/components/admin/reports";
@@ -14,7 +15,7 @@ import { adminKeys, useIsAdmin } from "@/lib/admin";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
-type Tab = "overview" | "reports" | "users" | "stickers";
+type Tab = "overview" | "reports" | "users" | "stickers" | "files";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function AdminPage() {
     { id: "reports", label: open ? `Reports (${open})` : "Reports" },
     { id: "users", label: "People" },
     { id: "stickers", label: "Sticker packs" },
+    { id: "files", label: "Large files" },
   ];
 
   return (
@@ -89,6 +91,7 @@ export default function AdminPage() {
       {tab === "reports" && <Reports />}
       {tab === "users" && <Users />}
       {tab === "stickers" && <Packs />}
+      {tab === "files" && <LargeFiles />}
     </main>
   );
 }

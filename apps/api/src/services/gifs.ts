@@ -1,5 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
-import { AppError, type GifDTO, type GifQuery, MAX_UPLOAD_BYTES } from "@six/shared";
+import { AppError, type GifDTO, type GifQuery } from "@six/shared";
 import type { Redis } from "ioredis";
 import { env } from "../env.js";
 import { prisma } from "../lib/prisma.js";
@@ -18,6 +18,8 @@ const MAX_OFFSET = 4999;
 const CACHE_SECONDS = { trending: 60 * 60, search: 24 * 60 * 60, gif: 24 * 60 * 60 };
 /** How long a provider is left alone after it fails or rate-limits us. Cached answers are still served meanwhile. */
 const PAUSE_SECONDS = 60;
+
+const GIF_MAX_BYTES = 25 * 1024 * 1024;
 
 interface GiphyImage {
   url?: string;
@@ -195,11 +197,11 @@ async function storeGif(gifId: string, key: string) {
 
   const res = await fetch(video.url, { signal: AbortSignal.timeout(20_000) });
   if (!res.ok) throw new AppError("GIFS_UNAVAILABLE", "Could not download the GIF");
-  if (Number(res.headers.get("content-length") ?? 0) > MAX_UPLOAD_BYTES) {
+  if (Number(res.headers.get("content-length") ?? 0) > GIF_MAX_BYTES) {
     throw new AppError("GIFS_UNAVAILABLE", "This GIF is too large");
   }
   const bytes = Buffer.from(await res.arrayBuffer());
-  if (bytes.length > MAX_UPLOAD_BYTES) throw new AppError("GIFS_UNAVAILABLE", "This GIF is too large");
+  if (bytes.length > GIF_MAX_BYTES) throw new AppError("GIFS_UNAVAILABLE", "This GIF is too large");
 
   await putObject(key, bytes, "video/mp4");
   return {

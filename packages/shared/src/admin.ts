@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Id, IsoDate, PageQuery } from "./common.js";
 import { MessageEntity, MessageType } from "./chats.js";
 import { StickerDTO } from "./stickers.js";
-import { AttachmentDTO } from "./uploads.js";
+import { AttachmentDTO, UploadKind, UploadStatus } from "./uploads.js";
 
 export const ReportReason = z.enum(["spam", "harassment", "sexual", "violence", "illegal", "other"]);
 export type ReportReason = z.infer<typeof ReportReason>;
@@ -138,3 +138,14 @@ export const AdminStatsDTO = z.object({
   signups: z.array(z.object({ day: z.string(), count: z.number().int() })).describe("Last 30 days, oldest first"),
 });
 export type AdminStatsDTO = z.infer<typeof AdminStatsDTO>;
+
+export const AdminLargeFileDTO = z.object({
+  id: Id,
+  kind: UploadKind,
+  name: z.string(),
+  size: z.number().int(),
+  owner: AdminUserRef,
+  createdAt: IsoDate,
+  status: UploadStatus,
+});
+export type AdminLargeFileDTO = z.infer<typeof AdminLargeFileDTO>;

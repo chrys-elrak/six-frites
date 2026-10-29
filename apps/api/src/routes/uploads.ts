@@ -15,7 +15,7 @@ const uploadRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
       schema: {
         tags: ["uploads"],
-        summary: "Start an upload (max 25 MB)",
+        summary: "Start an upload (max 1 GB; encrypted files max 100 MB)",
         description:
           "Returns a URL to PUT the file to directly, with the given headers. Then call POST /v1/uploads/{id}/complete.",
         security,

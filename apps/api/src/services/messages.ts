@@ -18,6 +18,7 @@ import {
   type SendMessageInput,
   type ServiceAction,
   type ViewMessageResult,
+  ENCRYPT_MAX_BYTES,
   EPHEMERAL_RESEND,
   MAX_REACTIONS_PER_USER,
   maskSpoilers,
@@ -171,8 +172,8 @@ async function memberIds(tx: Tx, chatId: string) {
 }
 
 const SHARED: Record<NonNullable<MessageListQuery["only"]>, Prisma.MessageWhereInput> = {
-  media: { type: { in: ["image", "video"] } },
-  files: { type: "file" },
+  media: { type: { in: ["image", "video"] }, attachment: { status: { not: "removed" } } },
+  files: { type: "file", attachment: { status: { not: "removed" } } },
   links: {
     type: "text",
     OR: [
@@ -212,18 +213,22 @@ async function findByClientId(senderId: string, chatId: string, clientId: string
   return existing;
 }
 
+/** Files over ENCRYPT_MAX_BYTES are uploaded as they are, but their caption can still be encrypted. */
+const fitsEncrypted = (upload: { encrypted: boolean; size: number }) =>
+  upload.encrypted || upload.size > ENCRYPT_MAX_BYTES;
+
 /**
- * Checks the message fits the chat's encryption: encrypted content only carries encrypted files,
+ * Checks the message fits the chat's encryption: encrypted content only carries encrypted (or large) files,
  * and once a chat is encrypted, text and files must be encrypted too (GIFs and stickers, which
  * carry nothing personal, may still be sent as they are).
  */
 export function checkEncryption(
   chat: { encryptedAt: Date | null },
   content: SendMessageInput,
-  upload: { encrypted: boolean; kind: string } | null,
+  upload: { encrypted: boolean; kind: string; size: number } | null,
 ) {
   if (content.encrypted) {
-    if (upload && !upload.encrypted) {
+    if (upload && !fitsEncrypted(upload)) {
       throw new AppError("VALIDATION_FAILED", "Encrypted messages carry encrypted files");
     }
     return;
@@ -408,7 +413,7 @@ export async function editMessage(userId: string, messageId: string, input: Edit
 
     let updated: MessageRow;
     if (input.encrypted) {
-      if (message.attachment && !message.attachment.encrypted) {
+      if (message.attachment && !fitsEncrypted(message.attachment)) {
         throw new AppError("MESSAGE_NOT_EDITABLE", "A plain file can't get an encrypted caption");
       }
       if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");

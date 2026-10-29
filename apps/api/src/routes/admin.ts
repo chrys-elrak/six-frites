@@ -13,6 +13,8 @@ import {
   CreateStickerPackInput,
   Id,
   InviteLimitInput,
+  AdminLargeFileDTO,
+  PageQuery,
   ReportDTO,
   ResolveReportInput,
   SetAdsInput,
@@ -26,7 +28,9 @@ import {
   banStickerPack,
   banUser,
   createOfficialPack,
+  removeLargeFile,
   getUser,
+  listLargeFiles,
   listStickerPacks,
   listUsers,
   setAds,
@@ -268,6 +272,39 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       await banStickerPack(req.params.id);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.get(
+    "/admin/large-files",
+    {
+      schema: {
+        tags,
+        summary: "Files over 100 MB, newest first",
+        description: "These are uploaded unencrypted, so they can be removed to free space.",
+        security,
+        querystring: PageQuery,
+        response: { 200: page(AdminLargeFileDTO) },
+      },
+    },
+    (req) => listLargeFiles(req.query),
+  );
+
+  app.delete(
+    "/admin/large-files/:id",
+    {
+      schema: {
+        tags,
+        summary: "Remove a large file",
+        description: "Deletes it from storage; the messages that carried it say it was removed for being too large.",
+        security,
+        params: Params,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await removeLargeFile(req.params.id);
       return reply.status(204).send(null);
     },
   );

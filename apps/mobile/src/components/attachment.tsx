@@ -3,7 +3,7 @@ import { useEvent } from "expo";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { AlertCircle, Download, EyeOff, FileText, Pause, Play, X } from "lucide-react-native";
+import { AlertCircle, Download, EyeOff, FileText, FileX, Pause, Play, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import {
@@ -445,6 +445,25 @@ export function AttachmentView({
   const bubble = useBubbleColors();
   const a = view(attachment);
   const [busy, setBusy] = useState(false);
+
+  if (attachment.source === "server" && attachment.data.status === "removed") {
+    const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
+    return (
+      <View style={[styles.file, { opacity: 0.75, paddingHorizontal: 4 }]}>
+        <View style={[styles.fileIcon, { backgroundColor: "rgba(120,113,108,0.15)" }]}>
+          <FileX size={20} color={fg} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text numberOfLines={1} style={{ color: fg, fontSize: 14, fontWeight: "600" }}>
+            {a.name}
+          </Text>
+          <Text style={[styles.small, { color: fg }]}>
+            {tr.messages.fileRemoved} · {formatBytes(a.size)}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   if (a.kind === "gif") {
     const size = tile ? styles.tile : boxSize(a.width, a.height, Math.min(280, maxWidth));

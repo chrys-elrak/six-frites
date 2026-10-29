@@ -1,6 +1,7 @@
 import { type Realtime, encryptFile, unwrap } from "@six/sdk";
 import {
   type Checklist,
+  ENCRYPT_MAX_BYTES,
   type EncryptedFile,
   type EphemeralInput,
   type GeoPoint,
@@ -77,9 +78,10 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
 
     let attachmentId = pending.attachment?.uploadId ?? undefined;
     let file = pending.attachment?.file;
-    if (pending.attachment && !pending.gif && (!attachmentId || (encrypt && !file))) {
+    const seal = encrypt && !!pending.attachment && pending.attachment.size <= ENCRYPT_MAX_BYTES;
+    if (pending.attachment && !pending.gif && (!attachmentId || (seal && !file))) {
       const { kind, name, mime, localUrl } = pending.attachment;
-      const sealed = encrypt ? await sealFile(localUrl, pending.attachment) : null;
+      const sealed = seal ? await sealFile(localUrl, pending.attachment) : null;
       const blob = await (await fetch(sealed?.uri ?? localUrl)).blob();
       const upload = await six.upload(blob, {
         kind,

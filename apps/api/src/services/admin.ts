@@ -1,5 +1,6 @@
 import {
   type AddStickerInput,
+  type AdminLargeFileDTO,
   type AdminPackQuery,
   type AdminStatsDTO,
   type AdminStickerPackDTO,
@@ -7,16 +8,22 @@ import {
   type AdminUserQuery,
   AppError,
   type CreateStickerPackInput,
+  ENCRYPT_MAX_BYTES,
+  type PageQuery,
+  type UploadKind,
+  type UploadStatus,
 } from "@six/shared";
 import type { Prisma } from "../generated/prisma/client.js";
 import { withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
+import { deleteObjects } from "../lib/storage.js";
 import { isAdminEmail } from "../plugins/auth.js";
 import { admitQueued, invitesOf } from "./referrals.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
 import { SEEDED_PREFIX, attachSticker, isSeededPack, toStickerDTO } from "./stickers.js";
+import { finishUpload, uploadKeys } from "./uploads.js";
 import { toUserDTO } from "./users.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -194,6 +201,40 @@ export async function banSticker(stickerId: string) {
   const sticker = await prisma.sticker.findUnique({ where: { id: stickerId }, include: { pack: true } });
   if (!sticker || isSeededPack(sticker.packId)) throw new AppError("STICKER_NOT_FOUND");
   await takeDownStickers({ id: stickerId }, !sticker.pack.builtin);
+}
+
+/** Files over 100 MB, which go up unencrypted, newest first. */
+export async function listLargeFiles(q: PageQuery) {
+  const rows = await prisma.upload.findMany({
+    where: { size: { gt: ENCRYPT_MAX_BYTES } },
+    include: { owner: true },
+    ...pageArgs(q),
+  });
+  return toPage(
+    rows,
+    q,
+    (u): AdminLargeFileDTO => ({
+      id: u.id,
+      kind: u.kind as UploadKind,
+      name: u.name,
+      size: u.size,
+      owner: toUserRef(u.owner),
+      createdAt: u.createdAt.toISOString(),
+      status: u.status as UploadStatus,
+    }),
+  );
+}
+
+/** Deletes a large file from storage; messages that carried it say it was removed. */
+export async function removeLargeFile(uploadId: string) {
+  const upload = await prisma.upload.findUnique({ where: { id: uploadId } });
+  if (!upload || upload.size <= ENCRYPT_MAX_BYTES) throw new AppError("UPLOAD_NOT_FOUND");
+  if (upload.status === "removed") return;
+  if (upload.status !== "ready" && upload.status !== "failed") {
+    throw new AppError("UPLOAD_NOT_READY", "Wait until it has finished uploading and processing");
+  }
+  await finishUpload(uploadId, { status: "removed", storedBytes: 0 });
+  await deleteObjects(uploadKeys(upload));
 }
 
 const total = (rows: { bytes: bigint | null }[]) => Number(rows[0]?.bytes ?? 0);

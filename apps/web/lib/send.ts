@@ -2,6 +2,7 @@ import { type Realtime, encryptFile, unwrap } from "@six/sdk";
 import {
   type ChatDTO,
   type Checklist,
+  ENCRYPT_MAX_BYTES,
   type EncryptedFile,
   type EphemeralInput,
   type GeoPoint,
@@ -77,7 +78,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
     let attachmentId = pending.attachment?.uploadId ?? undefined;
     if (pending.attachment && !pending.gif) {
       const blob = pendingFiles.get(clientId);
-      const sealed = encrypt && blob ? await sealFile(pending, blob) : null;
+      const sealed = encrypt && blob && blob.size <= ENCRYPT_MAX_BYTES ? await sealFile(pending, blob) : null;
       file = sealed?.file;
       if (!attachmentId) {
         if (!blob) throw new Error("The file is no longer available");

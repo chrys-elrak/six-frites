@@ -1,5 +1,9 @@
+import { randomBytes } from "node:crypto";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { headObject } from "../src/lib/storage.js";
+import { downloadObject, headObject, putObject, uploadObject } from "../src/lib/storage.js";
 import { mediaQueue } from "../src/lib/queue.js";
 import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
 
@@ -54,13 +58,17 @@ describe("uploads", () => {
 
     const wrongKind = await call(host, "POST", "/v1/uploads/presign", { kind: "image", mime: "application/pdf", size: 5, name: "a" });
     expect(wrongKind.json().error.code).toBe("VALIDATION_FAILED");
-    const tooBig = await call(host, "POST", "/v1/uploads/presign", {
-      kind: "file",
-      mime: "application/zip",
-      size: 26 * 1024 * 1024,
-      name: "big.zip",
-    });
-    expect(tooBig.json().error.code).toBe("VALIDATION_FAILED");
+    const presignZip = (size: number, encrypted?: boolean) =>
+      call(host, "POST", "/v1/uploads/presign", {
+        kind: "file",
+        size,
+        ...(encrypted ? { mime: "application/octet-stream", name: "encrypted", encrypted } : { mime: "application/zip", name: "big.zip" }),
+      });
+    const gig = await presignZip(1024 * 1024 * 1024);
+    expect(gig.statusCode).toBe(201);
+    await prisma.upload.delete({ where: { id: gig.json().upload.id } });
+    expect((await presignZip(1024 * 1024 * 1024 + 1)).json().error.code).toBe("VALIDATION_FAILED");
+    expect((await presignZip(101 * 1024 * 1024, true)).json().error.code).toBe("VALIDATION_FAILED");
     const withCodec = await call(host, "POST", "/v1/uploads/presign", {
       kind: "voice",
       mime: "audio/webm;codecs=opus",
@@ -99,6 +107,18 @@ describe("uploads", () => {
     expect(await ids("files")).toEqual([doc.id]);
     expect(await ids("links")).toEqual([link.id]);
     expect((await get(guest, `/v1/chats/${chatId}/messages?only=gifs`)).error.code).toBe("VALIDATION_FAILED");
+  });
+
+  it("streams files between storage and disk", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "six-stream-"));
+    const body = randomBytes(300_000);
+    await putObject("t/stream/in", body, "application/octet-stream");
+    await downloadObject("t/stream/in", join(dir, "a"));
+    await uploadObject("t/stream/out", join(dir, "a"), "video/mp4");
+    await downloadObject("t/stream/out", join(dir, "b"));
+    expect((await readFile(join(dir, "b"))).equals(body)).toBe(true);
+    expect(await headObject("t/stream/out")).toMatchObject({ size: body.length, contentType: "video/mp4" });
+    await rm(dir, { recursive: true });
   });
 
   it("deletes the stored files when the message is deleted for everyone", async () => {

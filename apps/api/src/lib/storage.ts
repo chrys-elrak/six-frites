@@ -8,6 +8,10 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createReadStream, createWriteStream } from "node:fs";
+import { stat } from "node:fs/promises";
+import type { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { env } from "../env.js";
 import { presignGetSync } from "./presign.js";
 
@@ -80,13 +84,20 @@ export async function headObject(key: string) {
   }
 }
 
-export async function getObjectBytes(key: string) {
+export async function downloadObject(key: string, path: string) {
   const res = await s3.send(new GetObjectCommand({ Bucket, Key: key }));
-  return Buffer.from(await res.Body!.transformToByteArray());
+  await pipeline(res.Body as Readable, createWriteStream(path));
 }
 
 export async function putObject(key: string, body: Buffer, contentType: string) {
   await s3.send(new PutObjectCommand({ Bucket, Key: key, Body: body, ContentType: contentType }));
+}
+
+export async function uploadObject(key: string, path: string, contentType: string) {
+  const { size } = await stat(path);
+  await s3.send(
+    new PutObjectCommand({ Bucket, Key: key, Body: createReadStream(path), ContentType: contentType, ContentLength: size }),
+  );
 }
 
 export async function deleteObjects(keys: string[]) {

@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { Id } from "./common.js";
 
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
+
+/** Bigger files are uploaded as they are: encrypting means holding the whole file in memory. */
+export const ENCRYPT_MAX_BYTES = 100 * 1024 * 1024;
 
 /** What @six/crypto encryptMedia adds to a file: a 16-byte prefix and a 16-byte tag per 64 KB chunk. */
 export const encryptedSize = (plainBytes: number) => 16 + plainBytes + 16 * Math.max(1, Math.ceil(plainBytes / 65536));
@@ -16,7 +19,9 @@ export type UploadKind = z.infer<typeof UploadKind>;
 /** Stickers are small: a Lottie animation (.tgs or .json) or a static WebP/PNG. */
 export const STICKER_MAX_BYTES = 512 * 1024;
 
-export const UploadStatus = z.enum(["pending", "processing", "ready", "failed"]);
+export const UploadStatus = z
+  .enum(["pending", "processing", "ready", "failed", "removed"])
+  .describe("`removed`: a large file a moderator deleted to free space");
 export type UploadStatus = z.infer<typeof UploadStatus>;
 
 /** Content types accepted per kind. Anything goes for plain files, which are only ever downloaded. */
@@ -42,7 +47,7 @@ export const PresignUploadInput = z
     kind: UploadKind,
     name: z.string().trim().min(1).max(200),
     mime: z.preprocess((v) => (typeof v === "string" ? v.split(";")[0] : v), MimeType),
-    size: z.number().int().min(1).max(encryptedSize(MAX_UPLOAD_BYTES)),
+    size: z.number().int().min(1).max(MAX_UPLOAD_BYTES),
     encrypted: z
       .boolean()
       .optional()
@@ -50,9 +55,13 @@ export const PresignUploadInput = z
         `The file is encrypted end to end: send mime ${ENCRYPTED_MIME} and a neutral name. The server stores it as-is, with no thumbnail or processing`,
       ),
   })
-  .refine((v) => (v.encrypted ? v.mime === ENCRYPTED_MIME : v.size <= MAX_UPLOAD_BYTES), {
-    message: `Encrypted files use ${ENCRYPTED_MIME}; plain files can be at most 25 MB`,
+  .refine((v) => !v.encrypted || v.mime === ENCRYPTED_MIME, {
+    message: `Encrypted files use ${ENCRYPTED_MIME}`,
     path: ["mime"],
+  })
+  .refine((v) => !v.encrypted || v.size <= encryptedSize(ENCRYPT_MAX_BYTES), {
+    message: "Files over 100 MB are sent unencrypted",
+    path: ["size"],
   })
   .refine((v) => !v.encrypted || (v.kind !== "gif" && v.kind !== "sticker"), {
     message: "GIFs and stickers are not encrypted",
