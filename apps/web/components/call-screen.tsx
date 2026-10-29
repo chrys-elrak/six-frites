@@ -1,9 +1,9 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Mic, MicOff, Phone, PhoneOff, Video, VideoOff } from "lucide-react";
+import { Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { type Call, acceptCall, declineCall, hangup, toggleCamera, toggleMute, useCall } from "@/lib/call";
+import { type Call, acceptCall, declineCall, flipCamera, hangup, toggleCamera, toggleMute, useCall } from "@/lib/call";
 import { useChat } from "@/lib/chats";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -100,6 +100,13 @@ function CallView({ call }: { call: Call }) {
   const qc = useQueryClient();
   const chat = useChat(qc, call.chatId);
   useRingtone(call.phase === "incoming");
+  const [cameras, setCameras] = useState(0);
+  useEffect(() => {
+    void navigator.mediaDevices
+      ?.enumerateDevices()
+      .then((d) => setCameras(d.filter((x) => x.kind === "videoinput").length));
+  }, [call.local]);
+  const mirror = call.local?.getVideoTracks()[0]?.getSettings().facingMode === "environment" ? "" : "[transform:scaleX(-1)]";
 
   const peer = chat.data?.members.find((m) => m.user.id === call.peerId)?.user;
   const name = chat.data?.title ?? peer?.displayName ?? tr.calls.call;
@@ -140,8 +147,8 @@ function CallView({ call }: { call: Call }) {
             muted
             className={
               call.phase === "active"
-                ? "absolute right-4 bottom-32 z-10 aspect-[3/4] w-28 rounded-2xl object-cover shadow-lg ring-1 ring-white/20 md:w-40 [transform:scaleX(-1)]"
-                : "absolute inset-0 size-full object-cover opacity-60 [transform:scaleX(-1)]"
+                ? `absolute right-4 bottom-32 z-10 aspect-[3/4] w-28 rounded-2xl object-cover shadow-lg ring-1 ring-white/20 md:w-40 ${mirror}`
+                : `absolute inset-0 size-full object-cover opacity-60 ${mirror}`
             }
           />
         )}
@@ -192,6 +199,16 @@ function CallView({ call }: { call: Call }) {
                   className={`${roundButton} ${call.cameraOn ? "bg-white/15" : "bg-white text-stone-900"}`}
                 >
                   {call.cameraOn ? <Video className="size-6" /> : <VideoOff className="size-6" />}
+                </button>
+              )}
+              {call.video && cameras > 1 && (
+                <button
+                  onClick={() => void flipCamera()}
+                  aria-label={tr.calls.flip}
+                  title={tr.calls.flip}
+                  className={`${roundButton} bg-white/15`}
+                >
+                  <SwitchCamera className="size-6" />
                 </button>
               )}
               <button onClick={() => void hangup()} aria-label={tr.calls.hangUp} className={`${roundButton} bg-red-600`}>

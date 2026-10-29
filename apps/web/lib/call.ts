@@ -237,6 +237,39 @@ export function toggleCamera() {
   void signal({ type: "video", on: cameraOn }).catch(() => null);
 }
 
+let flipping = false;
+
+/** Switches to the other camera (front or back on phones, the next one elsewhere) and sends it in place of the current one. */
+export async function flipCamera() {
+  const current = live;
+  const old = useCall.getState().call?.local?.getVideoTracks()[0];
+  if (!current?.pc || !old || flipping) return;
+  flipping = true;
+  try {
+    const { facingMode, deviceId } = old.getSettings();
+    const cameras = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "videoinput");
+    const next = cameras[(cameras.findIndex((d) => d.deviceId === deviceId) + 1) % cameras.length];
+    const size = { width: { ideal: 1280 }, height: { ideal: 720 } };
+    const target = facingMode
+      ? { facingMode: { exact: facingMode === "user" ? "environment" : "user" } }
+      : { deviceId: { exact: next?.deviceId } };
+    old.stop();
+    const stream = await navigator.mediaDevices
+      .getUserMedia({ video: { ...size, ...target } })
+      .catch(() => navigator.mediaDevices.getUserMedia({ video: { ...size, deviceId: { exact: deviceId } } }));
+    const [track] = stream.getVideoTracks();
+    const local = useCall.getState().call?.local;
+    if (live !== current || !track || !local) return stream.getTracks().forEach((t) => t.stop());
+    track.enabled = useCall.getState().call?.cameraOn ?? true;
+    await current.pc?.getSenders().find((s) => s.track === old)?.replaceTrack(track);
+    local.removeTrack(old);
+    local.addTrack(track);
+    patch({ local: new MediaStream(local.getTracks()) });
+  } finally {
+    flipping = false;
+  }
+}
+
 async function onSignal(dto: CallSignalDTO, meId: string, chats: (chatId: string) => ChatDTO | undefined) {
   const client = e2ee();
   if (!client) return;

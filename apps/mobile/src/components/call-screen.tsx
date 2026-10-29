@@ -123,7 +123,7 @@ export function CallScreen() {
             streamURL={call.local.toURL()}
             style={[styles.self, { bottom: insets.bottom + 250 }]}
             objectFit="cover"
-            mirror
+            mirror={!call.back}
             zOrder={1}
           />
         )}

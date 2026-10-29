@@ -29,6 +29,8 @@ export interface Call {
   startedAt: number | null;
   muted: boolean;
   cameraOff: boolean;
+  /** On the back camera, so the preview isn't mirrored. */
+  back?: boolean;
   peerCameraOff: boolean;
   speaker: boolean;
   local: MediaStream | null;
@@ -236,7 +238,10 @@ export function toggleCamera() {
 }
 
 export function flipCamera() {
-  useCall.getState().call?.local?.getVideoTracks().forEach((t) => t._switchCamera());
+  const call = useCall.getState().call;
+  if (!call?.local) return;
+  call.local.getVideoTracks().forEach((t) => t._switchCamera());
+  patch({ back: !call.back });
 }
 
 export function toggleSpeaker() {
