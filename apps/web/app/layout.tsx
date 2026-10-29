@@ -27,6 +27,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = pickLocale([jar.get(LOCALE_COOKIE)?.value, ...accepted]);
   return (
     <html lang={locale} data-font={jar.get("font")?.value === "plain" ? "plain" : undefined}>
+      <head>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" />
+      </head>
       <body>
         <Providers locale={locale}>{children}</Providers>
       </body>

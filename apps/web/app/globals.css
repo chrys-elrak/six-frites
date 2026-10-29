@@ -3,6 +3,7 @@
 @theme {
   --color-brand: oklch(0.72 0.17 65);
   --color-brand-ink: oklch(0.28 0.06 60);
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 @font-face {
@@ -37,7 +38,7 @@
 }
 
 html[data-font="plain"] {
-  font-family: Inter, ui-sans-serif, sans-serif;
+  font-family: Inter, var(--font-sans);
 }
 
 html,

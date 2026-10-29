@@ -78,7 +78,7 @@ function line(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 function text(ctx: CanvasRenderingContext2D, l: Label, width: number, height: number) {
   const font = l.size * Math.max(width, height);
   const family = familyOf(l.font);
-  ctx.font = family ? `${font}px ${family}, system-ui, sans-serif` : `700 ${font}px system-ui, sans-serif`;
+  ctx.font = family ? `${font}px ${family}, system-ui, sans-serif, "Noto Color Emoji"` : `700 ${font}px system-ui, sans-serif, "Noto Color Emoji"`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
