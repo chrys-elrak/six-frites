@@ -1,8 +1,13 @@
 import {
+  BOARDS,
   CHAT_GAMES,
   type ChatGame,
+  DRAW,
   type DicePick,
+  type DrawStroke,
+  EDIT_COLORS,
   GAME_EMOJI,
+  GAME_TEXT,
   GUESS_MAX,
   type GameKind,
   type GameMove,
@@ -19,21 +24,33 @@ import {
   RPS_EMOJI,
   RPS_HANDS,
   type RpsHand,
+  SHIPS,
+  battleship,
+  boardGame,
   diceOutcome,
   diceRoll,
+  drawStart,
+  drawTo,
   gameAnswer,
   gameOver,
   guessRange,
   guessTries,
   hangman,
   hangmanWord,
+  looseAnswer,
+  myTurn,
   penaltyGoals,
   penaltyOutcome,
+  randomFleet,
   rpsOutcome,
+  strokePath,
+  typedGuesses,
 } from "@six/shared";
-import { X } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
-import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
+import { newGameKey, openGuess, sealGuess } from "@six/sdk";
+import { Undo2, X } from "lucide-react-native";
+import { type ComponentRef, type Dispatch, type SetStateAction, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Modal, PanResponder, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, TextInput } from "./text";
@@ -166,6 +183,253 @@ function Kicks({ onDone, c }: { onDone: (kicks: PenaltyKicks) => void; c: Colors
         <Text style={{ color: c.fg, fontSize: 14, fontWeight: "500" }}>{tr.calls.random}</Text>
       </Pressable>
     </>
+  );
+}
+
+/** Statements or choices, one per row; `note` adds a line under one, such as who picked it. */
+function ChoiceList({
+  items,
+  onPick,
+  note,
+  c,
+}: {
+  items: string[];
+  onPick?: (i: number) => void;
+  note?: (i: number) => string;
+  c: Colors;
+}) {
+  return (
+    <View style={styles.choices}>
+      {items.map((text, i) => (
+        <Pressable
+          key={i}
+          onPress={onPick && (() => onPick(i))}
+          disabled={!onPick}
+          accessibilityRole={onPick ? "button" : undefined}
+          style={({ pressed }) => [styles.choiceRow, { backgroundColor: onPick ? c.button : "rgba(0,0,0,0.05)" }, pressed && styles.pressed]}
+        >
+          <Text style={{ color: c.fg, fontSize: 14 }}>{text}</Text>
+          {!!note?.(i) && <Text style={{ color: c.fg, fontSize: 12, fontWeight: "700", marginTop: 2 }}>{note(i)}</Text>}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+/** Text boxes for statements or choices, with a button beside each to mark the one that's the lie, or yours. */
+function ChoiceWriter({
+  count,
+  mark,
+  markLabel,
+  placeholder,
+  onSend,
+}: {
+  count: number;
+  mark: string;
+  markLabel: string;
+  placeholder: (n: number) => string;
+  onSend: (texts: string[], chosen: number) => void;
+}) {
+  const t = useTheme();
+  const tr = useT();
+  const [texts, setTexts] = useState<string[]>(() => Array(count).fill(""));
+  const [chosen, setChosen] = useState<number | null>(null);
+  const ready = chosen !== null && texts.every((x) => x.trim());
+  return (
+    <>
+      {texts.map((text, i) => (
+        <View key={i} style={styles.writerRow}>
+          <TextInput
+            value={text}
+            onChangeText={(v) => setTexts(texts.map((x, j) => (j === i ? v : x)))}
+            maxLength={GAME_TEXT.line}
+            placeholder={placeholder(i + 1)}
+            placeholderTextColor={t.muted}
+            accessibilityLabel={placeholder(i + 1)}
+            autoFocus={i === 0}
+            style={[styles.input, { flex: 1, backgroundColor: t.field, color: t.text }]}
+          />
+          <Pressable
+            onPress={() => setChosen(i)}
+            accessibilityRole="button"
+            accessibilityLabel={markLabel}
+            accessibilityState={{ selected: chosen === i }}
+            style={[styles.mark, chosen === i ? { backgroundColor: t.surfaceAlt } : { opacity: 0.35 }]}
+          >
+            <Text style={{ fontSize: 22 }}>{mark}</Text>
+          </Pressable>
+        </View>
+      ))}
+      <PrimaryButton title={tr.common.send} disabled={!ready} onPress={() => ready && onSend(texts.map((x) => x.trim()), chosen)} />
+    </>
+  );
+}
+
+function Sketch({ strokes }: { strokes: DrawStroke[] }) {
+  return (
+    <Svg viewBox={`0 0 ${DRAW.scale} ${DRAW.scale}`} width="100%" height="100%" pointerEvents="none">
+      {strokes.map((s, i) => (
+        <Path
+          key={i}
+          d={strokePath(s.points)}
+          stroke={EDIT_COLORS[s.color]}
+          strokeWidth={DRAW.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      ))}
+    </Svg>
+  );
+}
+
+/** The pad owns the strokes while a finger is down, so moves that land before a render still join up. */
+function SketchPad({ strokes, setStrokes }: { strokes: DrawStroke[]; setStrokes: Dispatch<SetStateAction<DrawStroke[]>> }) {
+  const t = useTheme();
+  const tr = useT();
+  const [color, setColor] = useState(1);
+  const live = useRef({ strokes, color: 1, size: 1 });
+  const pan = useMemo(() => {
+    let start = { x: 0, y: 0 };
+    let drawing = false;
+    const update = (next: DrawStroke[]) => {
+      if (next === live.current.strokes) return false;
+      live.current.strokes = next;
+      setStrokes(next);
+      return true;
+    };
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: (e) => {
+        const { strokes: s, color: c, size } = live.current;
+        start = { x: e.nativeEvent.locationX, y: e.nativeEvent.locationY };
+        drawing = update(drawStart(s, c, start.x / size, start.y / size));
+      },
+      onPanResponderMove: (_, g) => {
+        const { strokes: s, size } = live.current;
+        if (drawing) update(drawTo(s, (start.x + g.dx) / size, (start.y + g.dy) / size));
+      },
+      onPanResponderRelease: () => (drawing = false),
+    });
+  }, [setStrokes]);
+  return (
+    <View style={{ alignItems: "center", gap: 8 }}>
+      <View
+        {...pan.panHandlers}
+        onLayout={(e) => (live.current.size = e.nativeEvent.layout.width)}
+        style={[styles.pad, { borderColor: t.border }]}
+      >
+        <Sketch strokes={strokes} />
+      </View>
+      <View style={styles.swatches}>
+        {EDIT_COLORS.map((hex, i) => (
+          <Pressable
+            key={hex}
+            onPress={() => {
+              live.current.color = i;
+              setColor(i);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={hex}
+            accessibilityState={{ selected: color === i }}
+            style={[styles.swatch, { backgroundColor: hex }, color === i && { borderColor: "#eb8a00", borderWidth: 3 }]}
+          />
+        ))}
+        <IconButton
+          Icon={Undo2}
+          size={18}
+          label={tr.composer.undo}
+          onPress={() => {
+            live.current.strokes = live.current.strokes.slice(0, -1);
+            setStrokes(live.current.strokes);
+          }}
+        />
+      </View>
+    </View>
+  );
+}
+
+/** The 5 by 5 sea: misses splash, hits burn once their boat is sunk. Unshot boats show when `show` is set. */
+function Sea({
+  boats,
+  shots,
+  show,
+  onShoot,
+  c,
+}: {
+  boats: number[][];
+  shots: { cell: number; hit: boolean }[];
+  show: boolean;
+  onShoot?: (cell: number) => void;
+  c: Colors;
+}) {
+  const sunk = new Set(boats.filter((b) => b.every((x) => shots.some((s) => s.cell === x))).flat());
+  return (
+    <View style={[styles.board, { width: 220 }]}>
+      {Array.from({ length: SHIPS.size ** 2 }, (_, i) => {
+        const shot = shots.find((s) => s.cell === i);
+        const boat = boats.some((b) => b.includes(i));
+        const open = !!onShoot && !shot;
+        return (
+          <Pressable
+            key={i}
+            onPress={open ? () => onShoot(i) : undefined}
+            disabled={!open}
+            accessibilityRole={open ? "button" : undefined}
+            accessibilityLabel={String(i + 1)}
+            style={({ pressed }) => [
+              styles.seaCell,
+              { backgroundColor: open ? c.button : boat && (show || shot) ? "rgba(14,165,233,0.3)" : "rgba(0,0,0,0.05)" },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={{ fontSize: 18 }}>{shot ? (sunk.has(i) ? "🔥" : shot.hit ? "💥" : "💦") : boat && show ? "🚢" : ""}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function Board({
+  kind,
+  board,
+  win,
+  onMove,
+  c,
+}: {
+  kind: "ttt" | "four";
+  board: (0 | 1 | null)[];
+  win?: number[];
+  onMove?: (move: { cell: number } | { col: number }) => void;
+  c: Colors;
+}) {
+  const { width } = BOARDS[kind];
+  return (
+    <View style={[styles.board, { width: kind === "ttt" ? 180 : 238 }]}>
+      {board.map((p, i) => {
+        const col = i % width;
+        const open = !!onMove && (kind === "ttt" ? p === null : board[col] === null);
+        const mark = p === null ? "" : kind === "ttt" ? (p ? "⭕" : "❌") : p ? "🟡" : "🔴";
+        return (
+          <Pressable
+            key={i}
+            onPress={open ? () => onMove(kind === "ttt" ? { cell: i } : { col }) : undefined}
+            disabled={!open}
+            accessibilityRole={open ? "button" : undefined}
+            accessibilityLabel={String((kind === "ttt" ? i : col) + 1)}
+            style={({ pressed }) => [
+              kind === "ttt" ? styles.tttCell : styles.fourCell,
+              { backgroundColor: win?.includes(i) ? "rgba(22,163,74,0.4)" : open ? c.button : "rgba(0,0,0,0.05)" },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={{ fontSize: kind === "ttt" ? 28 : 16 }}>{mark}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -318,6 +582,49 @@ function DuelPlay({ game, senderId, moves, meId, nameOf, onPlay, c }: PlayProps 
   if (answer && game.game === "penalty" && "shots" in answer.move) {
     return <PenaltyResult kicks={game} answer={{ userId: answer.userId, kicks: answer.move, at: answer.at }} {...result} />;
   }
+  if (answer && game.game === "lie" && "choice" in answer.move) {
+    const { choice } = answer.move;
+    const note = (i: number) =>
+      [i === game.lie && `🤥 ${tr.calls.theLie}`, i === choice && `👆 ${nameOf(answer.userId)}`].filter(Boolean).join(" · ");
+    return (
+      <>
+        <ChoiceList items={game.statements} note={note} c={c} />
+        <Verdict outcome={choice === game.lie ? -1 : 1} answerId={answer.userId} {...result} />
+      </>
+    );
+  }
+  if (answer && game.game === "rather" && "choice" in answer.move) {
+    const { choice } = answer.move;
+    const note = (i: number) => [i === game.choice && nameOf(senderId), i === choice && nameOf(answer.userId)].filter(Boolean).join(" · ");
+    return (
+      <>
+        <Text style={[styles.note, { color: c.fg }]}>{tr.calls.ratherPrompt}</Text>
+        <ChoiceList items={game.options} note={note} c={c} />
+        <Text style={[styles.verdict, { color: c.fg }]}>{choice === game.choice ? tr.calls.sameBrain : tr.calls.notSameBrain}</Text>
+      </>
+    );
+  }
+  if (game.game === "lie" || game.game === "rather") {
+    const items = game.game === "lie" ? game.statements : game.options;
+    const chosen = game.game === "lie" ? game.lie : game.choice;
+    const play = senderId !== meId && onPlay;
+    return (
+      <>
+        {(game.game === "rather" || play) && (
+          <Text style={[styles.note, { color: c.fg }]}>
+            {game.game === "rather" ? tr.calls.ratherPrompt : tr.calls.spotLie(nameOf(senderId))}
+          </Text>
+        )}
+        <ChoiceList
+          items={items}
+          onPick={play ? (choice) => play({ choice }) : undefined}
+          note={senderId === meId ? (i) => (i === chosen ? (game.game === "lie" ? "🤥" : "✓") : "") : undefined}
+          c={c}
+        />
+        {!play && <Text style={[styles.note, { color: c.fg }]}>{tr.messages.waitingForReply}</Text>}
+      </>
+    );
+  }
   if (senderId === meId || !onPlay) {
     return (
       <>
@@ -458,6 +765,159 @@ function HangmanPlay({ word, senderId, moves, meId, nameOf, onPlay, c }: PlayPro
   );
 }
 
+function TypedPlay({
+  game,
+  senderId,
+  moves,
+  meId,
+  nameOf,
+  onPlay,
+  c,
+}: PlayProps & { game: Extract<ChatGame, { game: "riddle" | "sketch" }> }) {
+  const tr = useT();
+  const [text, setText] = useState("");
+  const guesses = typedGuesses(game.answer, senderId, moves, (sealed) => openGuess(game.key, sealed));
+  const last = guesses.at(-1);
+  const chooser = senderId === meId;
+  const submit = () => {
+    const guess = text.trim();
+    if (!guess || !onPlay) return;
+    onPlay({ sealed: sealGuess(game.key, guess) });
+    setText("");
+  };
+  return (
+    <>
+      {game.game === "riddle" ? (
+        <Text style={{ fontSize: 40, marginTop: 6, textAlign: "center" }}>{game.emojis}</Text>
+      ) : (
+        <View style={[styles.pad, { width: "100%", marginTop: 8, borderWidth: 0 }]}>
+          <Sketch strokes={game.strokes} />
+        </View>
+      )}
+      <Text style={[styles.note, { color: c.fg }]}>
+        {chooser || last?.right
+          ? tr.calls.theAnswer(game.answer)
+          : game.game === "riddle"
+            ? tr.calls.riddlePrompt(nameOf(senderId))
+            : tr.calls.drawPrompt(nameOf(senderId))}
+      </Text>
+      {guesses.length > 0 && (
+        <View style={styles.tries}>
+          {guesses.map((g, i) => (
+            <View key={i} style={[styles.chip, { backgroundColor: g.right ? "#16a34a" : c.button }]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.chipText, { color: g.right ? "#fff" : c.fg }, !g.right && { textDecorationLine: "line-through" }]}
+              >
+                {g.text}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+      {last?.right ? (
+        <>
+          <Text style={[styles.verdict, { color: c.fg }]}>{tr.calls.hints.right}</Text>
+          <Text style={{ color: c.fg, fontSize: 14, opacity: 0.8 }}>{tr.calls.foundIn(guesses.length)}</Text>
+        </>
+      ) : chooser || !onPlay ? (
+        <Text style={[styles.note, { color: c.fg }]}>
+          {last ? tr.calls.theyAreGuessing(nameOf(last.userId)) : tr.messages.waitingForReply}
+        </Text>
+      ) : (
+        <View style={[styles.writerRow, { marginTop: 8, alignSelf: "stretch" }]}>
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            maxLength={GAME_TEXT.answer}
+            placeholder={tr.calls.yourGuess}
+            placeholderTextColor={c.fg}
+            accessibilityLabel={tr.calls.yourGuess}
+            returnKeyType="send"
+            onSubmitEditing={submit}
+            style={[styles.guessInput, { color: c.fg, backgroundColor: c.button }]}
+          />
+          <Pressable
+            onPress={submit}
+            disabled={!text.trim()}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.sendPill, { backgroundColor: c.button }, !text.trim() && { opacity: 0.5 }, pressed && styles.pressed]}
+          >
+            <Text style={{ color: c.fg, fontSize: 14, fontWeight: "600" }}>{tr.common.send}</Text>
+          </Pressable>
+        </View>
+      )}
+    </>
+  );
+}
+
+function ShipsPlay({ boats, senderId, moves, meId, nameOf, onPlay, c }: PlayProps & { boats: number[][] }) {
+  const tr = useT();
+  const { shots, sunk, over } = battleship(boats, senderId, moves);
+  const chooser = senderId === meId;
+  const last = shots.at(-1);
+  return (
+    <>
+      {!chooser && <Text style={[styles.note, { color: c.fg }]}>{tr.calls.sinkBoats(nameOf(senderId))}</Text>}
+      <Sea
+        boats={boats}
+        shots={shots}
+        show={chooser || over}
+        onShoot={!chooser && onPlay && !over ? (shot) => onPlay({ shot }) : undefined}
+        c={c}
+      />
+      {over ? (
+        <Text style={[styles.verdict, { color: c.fg }]}>{tr.calls.sunkIn(shots.length)}</Text>
+      ) : (
+        <>
+          <Text style={[styles.note, { color: c.fg }]}>{tr.calls.boatsSunk(sunk.length, boats.length)}</Text>
+          {(chooser || !onPlay) && (
+            <Text style={[styles.note, { color: c.fg, marginTop: 0 }]}>
+              {last ? tr.calls.theyAreGuessing(nameOf(last.userId)) : tr.messages.waitingForReply}
+            </Text>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+function BoardPlay({
+  game,
+  senderId,
+  moves,
+  meId,
+  nameOf,
+  onPlay,
+  c,
+}: PlayProps & { game: Extract<ChatGame, { game: "ttt" | "four" }> }) {
+  const tr = useT();
+  const g = boardGame(game, senderId, moves);
+  const mine = !!onPlay && myTurn(g, senderId, meId);
+  const next = g.turn === 0 ? senderId : g.opponent;
+  return (
+    <>
+      <Board kind={game.game} board={g.board} win={g.win?.cells} onMove={mine ? onPlay : undefined} c={c} />
+      {g.over ? (
+        g.opponent && (
+          <Verdict
+            outcome={g.win ? (g.win.player === 0 ? 1 : -1) : 0}
+            senderId={senderId}
+            answerId={g.opponent}
+            meId={meId}
+            nameOf={nameOf}
+            fg={c.fg}
+          />
+        )
+      ) : (
+        <Text style={[styles.note, { color: c.fg }, mine && { fontWeight: "700", opacity: 1 }]}>
+          {mine ? tr.calls.yourTurn : next ? tr.calls.theirTurn(nameOf(next)) : tr.messages.waitingForReply}
+        </Text>
+      )}
+    </>
+  );
+}
+
 /** A game message: the sender's move waits in it until someone answers, then both see who won. */
 export function GameView({
   game,
@@ -487,7 +947,7 @@ export function GameView({
     button: mine ? alpha(bubble.ink, 0.12) : "rgba(235,138,0,0.15)",
   };
   const props = { senderId, moves, meId, nameOf, onPlay, c };
-  const over = gameOver(game, senderId, moves);
+  const over = gameOver(game, senderId, moves, (sealed) => ("key" in game ? openGuess(game.key, sealed) : null));
   return (
     <View style={styles.view}>
       <Text style={{ color: c.fg, fontSize: 15, fontWeight: "700" }}>
@@ -497,6 +957,12 @@ export function GameView({
         <GuessPlay secret={game.secret} {...props} />
       ) : game.game === "hangman" ? (
         <HangmanPlay word={game.word} {...props} />
+      ) : game.game === "riddle" || game.game === "sketch" ? (
+        <TypedPlay game={game} {...props} />
+      ) : game.game === "ships" ? (
+        <ShipsPlay boats={game.boats} {...props} />
+      ) : game.game === "ttt" || game.game === "four" ? (
+        <BoardPlay game={game} {...props} />
       ) : (
         <DuelPlay game={game} {...props} />
       )}
@@ -510,6 +976,87 @@ export function GameView({
         </Pressable>
       )}
       {again && onSend && <NewGame initial={game.game} onClose={() => setAgain(false)} onSend={onSend} />}
+    </View>
+  );
+}
+
+/** The answer box under a riddle or drawing, matched loosely when they guess. */
+function AnswerForm({ ready, onSend, children }: { ready: boolean; onSend: (answer: string) => void; children: React.ReactNode }) {
+  const t = useTheme();
+  const tr = useT();
+  const [answer, setAnswer] = useState("");
+  const ok = ready && looseAnswer(answer) !== "";
+  return (
+    <>
+      {children}
+      <TextInput
+        value={answer}
+        onChangeText={setAnswer}
+        maxLength={GAME_TEXT.answer}
+        placeholder={tr.calls.answer}
+        placeholderTextColor={t.muted}
+        accessibilityLabel={tr.calls.answer}
+        returnKeyType="send"
+        onSubmitEditing={() => ok && onSend(answer.trim())}
+        style={[styles.input, { backgroundColor: t.field, color: t.text }]}
+      />
+      <Text style={{ color: t.muted, fontSize: 12, textAlign: "center" }}>{tr.calls.looseAnswer}</Text>
+      <PrimaryButton title={tr.common.send} disabled={!ok} onPress={() => ok && onSend(answer.trim())} />
+    </>
+  );
+}
+
+function RiddleForm({ send }: { send: (g: ChatGame) => void }) {
+  const t = useTheme();
+  const tr = useT();
+  const [emojis, setEmojis] = useState("");
+  return (
+    <AnswerForm ready={!!emojis.trim()} onSend={(answer) => send({ game: "riddle", emojis: emojis.trim(), answer, key: newGameKey() })}>
+      <TextInput
+        value={emojis}
+        onChangeText={setEmojis}
+        maxLength={GAME_TEXT.emojis}
+        placeholder="🦁👑"
+        placeholderTextColor={t.muted}
+        accessibilityLabel={tr.calls.riddleEmojis}
+        autoFocus
+        style={[styles.input, { backgroundColor: t.field, color: t.text, fontSize: 26, textAlign: "center" }]}
+      />
+    </AnswerForm>
+  );
+}
+
+function SketchForm({ send }: { send: (g: ChatGame) => void }) {
+  const [strokes, setStrokes] = useState<DrawStroke[]>([]);
+  return (
+    <AnswerForm ready={strokes.length > 0} onSend={(answer) => send({ game: "sketch", strokes, answer, key: newGameKey() })}>
+      <SketchPad strokes={strokes} setStrokes={setStrokes} />
+    </AnswerForm>
+  );
+}
+
+function ShipsForm({ send, c }: { send: (g: ChatGame) => void; c: Colors }) {
+  const tr = useT();
+  const [boats, setBoats] = useState(randomFleet);
+  return (
+    <View style={{ alignItems: "center", gap: 12 }}>
+      <Sea boats={boats} shots={[]} show c={c} />
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <Pressable
+          onPress={() => setBoats(randomFleet())}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.sendPill, { backgroundColor: c.button }, pressed && styles.pressed]}
+        >
+          <Text style={{ color: c.fg, fontSize: 14, fontWeight: "500" }}>{tr.contacts.shuffle}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => send({ game: "ships", boats })}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.sendPill, { backgroundColor: c.button }, pressed && styles.pressed]}
+        >
+          <Text style={{ color: c.fg, fontSize: 14, fontWeight: "700" }}>{tr.common.send}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -529,7 +1076,20 @@ export function NewGame({
   const insets = useSafeAreaInsets();
   const [game, setGame] = useState(initial);
   const [word, setWord] = useState("");
+  const tabs = useRef<ComponentRef<typeof ScrollView>>(null);
   const c = { fg: t.text, button: t.field };
+  const hint: Partial<Record<GameKind, string>> = {
+    rps: tr.calls.pickHand,
+    dice: tr.calls.pickDice,
+    guess: tr.calls.pickSecret,
+    hangman: tr.calls.pickWord,
+    lie: tr.calls.writeLie,
+    rather: tr.calls.writeRather,
+    ships: tr.calls.hideBoats,
+    ttt: tr.calls.firstMove,
+    four: tr.calls.firstMove,
+    sketch: tr.calls.drawSomething,
+  };
   const send = (g: ChatGame) => {
     onSend(g);
     onClose();
@@ -543,31 +1103,29 @@ export function NewGame({
             <Text style={[styles.title, { color: t.text }]}>{tr.composer.newGame}</Text>
             <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
           </View>
-          <View style={styles.row} accessibilityRole="tablist">
+          <ScrollView
+            ref={tabs}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginHorizontal: -20, flexGrow: 0 }}
+            contentContainerStyle={{ gap: 4, paddingHorizontal: 20 }}
+            accessibilityRole="tablist"
+          >
             {CHAT_GAMES.map((g) => (
               <Pressable
                 key={g}
                 onPress={() => setGame(g)}
+                onLayout={g === initial ? (e) => tabs.current?.scrollTo({ x: e.nativeEvent.layout.x - 120, animated: false }) : undefined}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: g === game }}
-                style={[styles.choice, g === game && { backgroundColor: t.surfaceAlt }]}
+                style={[styles.tab, g === game && { backgroundColor: t.surfaceAlt }]}
               >
                 <Text style={styles.tabIcon}>{GAME_EMOJI[g]}</Text>
                 <Text style={{ color: t.text, fontSize: 11, fontWeight: "500", textAlign: "center" }}>{tr.calls[g]}</Text>
               </Pressable>
             ))}
-          </View>
-          {game !== "penalty" && (
-            <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
-              {game === "rps"
-                ? tr.calls.pickHand
-                : game === "dice"
-                  ? tr.calls.pickDice
-                  : game === "hangman"
-                    ? tr.calls.pickWord
-                    : tr.calls.pickSecret}
-            </Text>
-          )}
+          </ScrollView>
+          {hint[game] && <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>{hint[game]}</Text>}
           {game === "rps" ? (
             <Hands onPick={(hand) => send({ game: "rps", hand })} c={c} />
           ) : game === "dice" ? (
@@ -598,6 +1156,31 @@ export function NewGame({
                 onPress={() => send({ game: "hangman", word })}
               />
             </>
+          ) : game === "lie" || game === "rather" ? (
+            <ChoiceWriter
+              key={game}
+              count={game === "lie" ? 3 : 2}
+              mark={game === "lie" ? "🤥" : "🙋"}
+              markLabel={game === "lie" ? tr.calls.theLie : tr.calls.mine}
+              placeholder={game === "lie" ? tr.calls.statement : tr.calls.option}
+              onSend={(texts, chosen) =>
+                send(game === "lie" ? { game, statements: texts, lie: chosen } : { game, options: texts, choice: chosen })
+              }
+            />
+          ) : game === "riddle" ? (
+            <RiddleForm send={send} />
+          ) : game === "sketch" ? (
+            <SketchForm send={send} />
+          ) : game === "ships" ? (
+            <ShipsForm send={send} c={c} />
+          ) : game === "ttt" || game === "four" ? (
+            <Board
+              key={game}
+              kind={game}
+              board={Array(BOARDS[game].width * BOARDS[game].height).fill(null)}
+              onMove={(m) => send("cell" in m ? { game: "ttt", cell: m.cell } : { game: "four", col: m.col })}
+              c={c}
+            />
           ) : (
             <View style={{ alignItems: "center" }}>
               <NumberGrid onPick={(secret) => send({ game: "guess", secret })} allowed={() => true} c={c} />
@@ -645,6 +1228,21 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 18, fontWeight: "700" },
   tabIcon: { fontSize: 26 },
   arrow: { fontSize: 26 },
+  tab: { width: 76, alignItems: "center", gap: 2, paddingVertical: 8, borderRadius: 14 },
+  choices: { alignSelf: "stretch", gap: 6, marginTop: 8 },
+  choiceRow: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  writerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  input: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
+  mark: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  pad: { width: 260, aspectRatio: 1, borderRadius: 12, borderWidth: 1, backgroundColor: "#fff", overflow: "hidden" },
+  swatches: { flexDirection: "row", alignItems: "center", gap: 6 },
+  swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(0,0,0,0.15)" },
+  board: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 8, alignSelf: "center" },
+  seaCell: { width: 40, height: 40, borderRadius: 6, alignItems: "center", justifyContent: "center" },
+  tttCell: { width: 57, height: 57, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  fourCell: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  guessInput: { flex: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, fontSize: 15 },
+  sendPill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999 },
   scores: { alignSelf: "stretch", gap: 4, marginTop: 8 },
   scoreRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   score: { width: 16, textAlign: "right", fontSize: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },

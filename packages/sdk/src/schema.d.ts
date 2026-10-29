@@ -2850,6 +2850,45 @@ export interface paths {
                                         /** @enum {string} */
                                         game: "hangman";
                                         word: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "lie";
+                                        statements: string[];
+                                        lie: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "rather";
+                                        options: string[];
+                                        choice: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "riddle";
+                                        emojis: string;
+                                        answer: string;
+                                        /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                        key: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "ships";
+                                        boats: number[][];
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "ttt";
+                                        cell: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "four";
+                                        col: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "sketch";
+                                        strokes: {
+                                            color: number;
+                                            points: number[];
+                                        }[];
+                                        answer: string;
+                                        /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                        key: string;
                                     }) | null;
                                     /** @description Answers to the game, oldest first; anyone but the sender can play */
                                     moves: {
@@ -2867,6 +2906,16 @@ export interface paths {
                                             dives: ("left" | "middle" | "right")[];
                                         } | {
                                             letter: string;
+                                        } | {
+                                            choice: number;
+                                        } | {
+                                            sealed: string;
+                                        } | {
+                                            shot: number;
+                                        } | {
+                                            cell: number;
+                                        } | {
+                                            col: number;
                                         };
                                         /** Format: date-time */
                                         at: string;
@@ -3176,6 +3225,45 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "hangman";
                                     word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -3193,6 +3281,16 @@ export interface paths {
                                         dives: ("left" | "middle" | "right")[];
                                     } | {
                                         letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -3543,6 +3641,45 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "hangman";
                                     word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -3560,6 +3697,16 @@ export interface paths {
                                         dives: ("left" | "middle" | "right")[];
                                     } | {
                                         letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -3946,6 +4093,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -3963,6 +4149,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4223,6 +4419,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -4240,6 +4475,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4500,6 +4745,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -4517,6 +4801,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4780,6 +5074,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -4797,6 +5130,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -4873,7 +5216,7 @@ export interface paths {
         put?: never;
         /**
          * Answer a game
-         * @description Anyone but the sender can answer: a `hand` for rock paper scissors, a `pick` and `seed` for dice, or `n` to try a number. The first answer that fits settles rock paper scissors and dice; tries go on until one is right. Everyone gets message.edited with the new `moves`.
+         * @description Anyone but the sender can answer: a `hand` for rock paper scissors, a `pick` and `seed` for dice, `n` to try a number, `shots` and `dives` for the penalty shootout, a `letter` for hangman, a `choice` for two truths and a lie or would you rather, a `sealed` typed guess for the emoji riddle or draw and guess, or a `shot` at the boats. On tic-tac-toe (`cell`) and connect four (`col`) the sender takes turns too. The first answer that fits settles the one-go games; the others go on until they end. Everyone gets message.edited with the new `moves`.
          */
         post: {
             parameters: {
@@ -4899,6 +5242,16 @@ export interface paths {
                         dives: ("left" | "middle" | "right")[];
                     } | {
                         letter: string;
+                    } | {
+                        choice: number;
+                    } | {
+                        sealed: string;
+                    } | {
+                        shot: number;
+                    } | {
+                        cell: number;
+                    } | {
+                        col: number;
                     };
                 };
             };
@@ -5073,6 +5426,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -5090,6 +5482,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -5349,6 +5751,45 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "hangman";
                                     word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -5366,6 +5807,16 @@ export interface paths {
                                         dives: ("left" | "middle" | "right")[];
                                     } | {
                                         letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -5630,6 +6081,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -5647,6 +6137,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -5914,6 +6414,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -5931,6 +6470,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -6239,6 +6788,45 @@ export interface paths {
                                     /** @enum {string} */
                                     game: "hangman";
                                     word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
                                 }) | null;
                                 /** @description Answers to the game, oldest first; anyone but the sender can play */
                                 moves: {
@@ -6256,6 +6844,16 @@ export interface paths {
                                         dives: ("left" | "middle" | "right")[];
                                     } | {
                                         letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
                                     };
                                     /** Format: date-time */
                                     at: string;
@@ -6385,6 +6983,45 @@ export interface paths {
                             /** @enum {string} */
                             game: "hangman";
                             word: string;
+                        } | {
+                            /** @enum {string} */
+                            game: "lie";
+                            statements: string[];
+                            lie: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "rather";
+                            options: string[];
+                            choice: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "riddle";
+                            emojis: string;
+                            answer: string;
+                            /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                            key: string;
+                        } | {
+                            /** @enum {string} */
+                            game: "ships";
+                            boats: number[][];
+                        } | {
+                            /** @enum {string} */
+                            game: "ttt";
+                            cell: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "four";
+                            col: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "sketch";
+                            strokes: {
+                                color: number;
+                                points: number[];
+                            }[];
+                            answer: string;
+                            /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                            key: string;
                         };
                         /**
                          * @description With `encrypted`: the content is a location, a checklist or a game rather than text or a file
@@ -6615,6 +7252,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -6632,6 +7308,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -6895,6 +7581,45 @@ export interface paths {
                             /** @enum {string} */
                             game: "hangman";
                             word: string;
+                        } | {
+                            /** @enum {string} */
+                            game: "lie";
+                            statements: string[];
+                            lie: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "rather";
+                            options: string[];
+                            choice: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "riddle";
+                            emojis: string;
+                            answer: string;
+                            /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                            key: string;
+                        } | {
+                            /** @enum {string} */
+                            game: "ships";
+                            boats: number[][];
+                        } | {
+                            /** @enum {string} */
+                            game: "ttt";
+                            cell: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "four";
+                            col: number;
+                        } | {
+                            /** @enum {string} */
+                            game: "sketch";
+                            strokes: {
+                                color: number;
+                                points: number[];
+                            }[];
+                            answer: string;
+                            /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                            key: string;
                         };
                         /**
                          * @description With `encrypted`: the content is a location, a checklist or a game rather than text or a file
@@ -7460,6 +8185,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -7477,6 +8241,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;
@@ -8341,6 +9115,45 @@ export interface paths {
                                         /** @enum {string} */
                                         game: "hangman";
                                         word: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "lie";
+                                        statements: string[];
+                                        lie: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "rather";
+                                        options: string[];
+                                        choice: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "riddle";
+                                        emojis: string;
+                                        answer: string;
+                                        /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                        key: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "ships";
+                                        boats: number[][];
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "ttt";
+                                        cell: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "four";
+                                        col: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "sketch";
+                                        strokes: {
+                                            color: number;
+                                            points: number[];
+                                        }[];
+                                        answer: string;
+                                        /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                        key: string;
                                     }) | null;
                                     /** @description Answers to the game, oldest first; anyone but the sender can play */
                                     moves: {
@@ -8358,6 +9171,16 @@ export interface paths {
                                             dives: ("left" | "middle" | "right")[];
                                         } | {
                                             letter: string;
+                                        } | {
+                                            choice: number;
+                                        } | {
+                                            sealed: string;
+                                        } | {
+                                            shot: number;
+                                        } | {
+                                            cell: number;
+                                        } | {
+                                            col: number;
                                         };
                                         /** Format: date-time */
                                         at: string;
@@ -8581,6 +9404,45 @@ export interface paths {
                                         /** @enum {string} */
                                         game: "hangman";
                                         word: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "lie";
+                                        statements: string[];
+                                        lie: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "rather";
+                                        options: string[];
+                                        choice: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "riddle";
+                                        emojis: string;
+                                        answer: string;
+                                        /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                        key: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "ships";
+                                        boats: number[][];
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "ttt";
+                                        cell: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "four";
+                                        col: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        game: "sketch";
+                                        strokes: {
+                                            color: number;
+                                            points: number[];
+                                        }[];
+                                        answer: string;
+                                        /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                        key: string;
                                     }) | null;
                                     /** @description Answers to the game, oldest first; anyone but the sender can play */
                                     moves: {
@@ -8598,6 +9460,16 @@ export interface paths {
                                             dives: ("left" | "middle" | "right")[];
                                         } | {
                                             letter: string;
+                                        } | {
+                                            choice: number;
+                                        } | {
+                                            sealed: string;
+                                        } | {
+                                            shot: number;
+                                        } | {
+                                            cell: number;
+                                        } | {
+                                            col: number;
                                         };
                                         /** Format: date-time */
                                         at: string;
@@ -8869,6 +9741,45 @@ export interface paths {
                                             /** @enum {string} */
                                             game: "hangman";
                                             word: string;
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "lie";
+                                            statements: string[];
+                                            lie: number;
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "rather";
+                                            options: string[];
+                                            choice: number;
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "riddle";
+                                            emojis: string;
+                                            answer: string;
+                                            /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                            key: string;
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "ships";
+                                            boats: number[][];
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "ttt";
+                                            cell: number;
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "four";
+                                            col: number;
+                                        } | {
+                                            /** @enum {string} */
+                                            game: "sketch";
+                                            strokes: {
+                                                color: number;
+                                                points: number[];
+                                            }[];
+                                            answer: string;
+                                            /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                            key: string;
                                         }) | null;
                                         /** @description Answers to the game, oldest first; anyone but the sender can play */
                                         moves: {
@@ -8886,6 +9797,16 @@ export interface paths {
                                                 dives: ("left" | "middle" | "right")[];
                                             } | {
                                                 letter: string;
+                                            } | {
+                                                choice: number;
+                                            } | {
+                                                sealed: string;
+                                            } | {
+                                                shot: number;
+                                            } | {
+                                                cell: number;
+                                            } | {
+                                                col: number;
                                             };
                                             /** Format: date-time */
                                             at: string;
@@ -9984,6 +10905,45 @@ export interface paths {
                                 /** @enum {string} */
                                 game: "hangman";
                                 word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
                             }) | null;
                             /** @description Answers to the game, oldest first; anyone but the sender can play */
                             moves: {
@@ -10001,6 +10961,16 @@ export interface paths {
                                     dives: ("left" | "middle" | "right")[];
                                 } | {
                                     letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
                                 };
                                 /** Format: date-time */
                                 at: string;

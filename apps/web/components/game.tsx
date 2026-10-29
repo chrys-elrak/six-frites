@@ -1,10 +1,15 @@
 "use client";
 
 import {
+  BOARDS,
   CHAT_GAMES,
   type ChatGame,
+  DRAW,
   type DicePick,
+  type DrawStroke,
+  EDIT_COLORS,
   GAME_EMOJI,
+  GAME_TEXT,
   GUESS_MAX,
   type GameKind,
   type GameMove,
@@ -21,20 +26,31 @@ import {
   RPS_EMOJI,
   RPS_HANDS,
   type RpsHand,
+  SHIPS,
+  battleship,
+  boardGame,
   diceOutcome,
   diceRoll,
+  drawStart,
+  drawTo,
   gameAnswer,
   gameOver,
   guessRange,
   guessTries,
   hangman,
   hangmanWord,
+  looseAnswer,
+  myTurn,
   penaltyGoals,
   penaltyOutcome,
+  randomFleet,
   rpsOutcome,
+  strokePath,
+  typedGuesses,
 } from "@six/shared";
-import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { newGameKey, openGuess, sealGuess } from "@six/sdk";
+import { Undo2, X } from "lucide-react";
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { Dialog } from "./dialog";
 
@@ -149,6 +165,254 @@ function Kicks({ onDone, button }: { onDone: (kicks: PenaltyKicks) => void; butt
         {tr.calls.random}
       </button>
     </>
+  );
+}
+
+/** Statements or choices, one per row; `note` adds a line under one, such as who picked it. */
+function ChoiceList({
+  items,
+  onPick,
+  note,
+  button,
+}: {
+  items: string[];
+  onPick?: (i: number) => void;
+  note?: (i: number) => string;
+  button: string;
+}) {
+  return (
+    <div className="mt-2 space-y-1.5 text-left">
+      {items.map((text, i) => {
+        const body = (
+          <>
+            <span className="block break-words">{text}</span>
+            {note?.(i) && <span className="mt-0.5 block text-xs font-semibold">{note(i)}</span>}
+          </>
+        );
+        return onPick ? (
+          <button key={i} type="button" onClick={() => onPick(i)} className={`block w-full rounded-xl px-3 py-2 text-sm ${button}`}>
+            {body}
+          </button>
+        ) : (
+          <div key={i} className="rounded-xl bg-black/5 px-3 py-2 text-sm">
+            {body}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Text boxes for statements or choices, with a button beside each to mark the one that's the lie, or yours. */
+function ChoiceWriter({
+  count,
+  mark,
+  markLabel,
+  placeholder,
+  onSend,
+  button,
+}: {
+  count: number;
+  mark: string;
+  markLabel: string;
+  placeholder: (n: number) => string;
+  onSend: (texts: string[], chosen: number) => void;
+  button: string;
+}) {
+  const tr = useT();
+  const [texts, setTexts] = useState<string[]>(() => Array(count).fill(""));
+  const [chosen, setChosen] = useState<number | null>(null);
+  const ready = chosen !== null && texts.every((t) => t.trim());
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (ready) onSend(texts.map((t) => t.trim()), chosen);
+      }}
+      className="mt-3 space-y-2"
+    >
+      {texts.map((t, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <input
+            value={t}
+            onChange={(e) => setTexts(texts.map((x, j) => (j === i ? e.target.value : x)))}
+            maxLength={GAME_TEXT.line}
+            placeholder={placeholder(i + 1)}
+            aria-label={placeholder(i + 1)}
+            autoFocus={i === 0}
+            className="min-w-0 flex-1 rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800 md:text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => setChosen(i)}
+            aria-label={markLabel}
+            aria-pressed={chosen === i}
+            className={`grid size-10 shrink-0 place-items-center rounded-full text-xl transition ${
+              chosen === i ? "bg-brand/25 ring-2 ring-brand" : "opacity-40 grayscale hover:opacity-70"
+            }`}
+          >
+            {mark}
+          </button>
+        </div>
+      ))}
+      <button type="submit" disabled={!ready} className={`rounded-full px-4 py-1.5 text-sm font-medium disabled:opacity-50 ${button}`}>
+        {tr.common.send}
+      </button>
+    </form>
+  );
+}
+
+function Sketch({ strokes, className = "", ...props }: { strokes: DrawStroke[] } & React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox={`0 0 ${DRAW.scale} ${DRAW.scale}`} className={`aspect-square w-full rounded-xl bg-white ${className}`} {...props}>
+      {strokes.map((s, i) => (
+        <path
+          key={i}
+          d={strokePath(s.points)}
+          stroke={EDIT_COLORS[s.color]}
+          strokeWidth={DRAW.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      ))}
+    </svg>
+  );
+}
+
+function SketchPad({ strokes, setStrokes }: { strokes: DrawStroke[]; setStrokes: Dispatch<SetStateAction<DrawStroke[]>> }) {
+  const tr = useT();
+  const [color, setColor] = useState(1);
+  const drawing = useRef(false);
+  const at = (e: React.PointerEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height] as const;
+  };
+  return (
+    <>
+      <Sketch
+        strokes={strokes}
+        className="mt-3 cursor-crosshair touch-none ring-1 ring-stone-200 dark:ring-stone-700"
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          const [x, y] = at(e);
+          setStrokes((s) => {
+            const next = drawStart(s, color, x, y);
+            drawing.current = next !== s;
+            return next;
+          });
+        }}
+        onPointerMove={(e) => {
+          if (!drawing.current) return;
+          const [x, y] = at(e);
+          setStrokes((s) => drawTo(s, x, y));
+        }}
+        onPointerUp={() => (drawing.current = false)}
+        onPointerCancel={() => (drawing.current = false)}
+      />
+      <div className="mt-2 flex items-center gap-1.5">
+        {EDIT_COLORS.map((c, i) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setColor(i)}
+            aria-label={c}
+            aria-pressed={color === i}
+            style={{ backgroundColor: c }}
+            className={`size-7 rounded-full ring-1 ring-black/15 ${color === i ? "outline-2 outline-offset-2 outline-brand" : ""}`}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() => setStrokes((s) => s.slice(0, -1))}
+          disabled={!strokes.length}
+          aria-label={tr.composer.undo}
+          className="ml-auto grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 disabled:opacity-40 dark:hover:bg-stone-800"
+        >
+          <Undo2 className="size-4" />
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** The 5 by 5 sea: misses splash, hits burn once their boat is sunk. Unshot boats show when `show` is set. */
+function Sea({
+  boats,
+  shots,
+  show,
+  onShoot,
+  button,
+}: {
+  boats: number[][];
+  shots: { cell: number; hit: boolean }[];
+  show: boolean;
+  onShoot?: (cell: number) => void;
+  button: string;
+}) {
+  const sunk = new Set(boats.filter((b) => b.every((c) => shots.some((s) => s.cell === c))).flat());
+  return (
+    <div className="mx-auto mt-2 grid w-full max-w-60 grid-cols-5 gap-1">
+      {Array.from({ length: SHIPS.size ** 2 }, (_, i) => {
+        const shot = shots.find((s) => s.cell === i);
+        const boat = boats.some((b) => b.includes(i));
+        if (onShoot && !shot) {
+          return (
+            <button key={i} type="button" onClick={() => onShoot(i)} aria-label={String(i + 1)} className={`aspect-square rounded-md ${button}`} />
+          );
+        }
+        return (
+          <span
+            key={i}
+            className={`grid aspect-square place-items-center rounded-md text-lg ${boat && (show || shot) ? "bg-sky-500/30" : "bg-black/5"}`}
+          >
+            {shot ? (sunk.has(i) ? "🔥" : shot.hit ? "💥" : "💦") : boat && show ? "🚢" : ""}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function Board({
+  kind,
+  board,
+  win,
+  onMove,
+  button,
+}: {
+  kind: "ttt" | "four";
+  board: (0 | 1 | null)[];
+  win?: number[];
+  onMove?: (move: { cell: number } | { col: number }) => void;
+  button: string;
+}) {
+  const { width } = BOARDS[kind];
+  return (
+    <div className={`mx-auto mt-2 grid w-full gap-1 ${kind === "ttt" ? "max-w-48 grid-cols-3" : "max-w-64 grid-cols-7"}`}>
+      {board.map((p, i) => {
+        const col = i % width;
+        const open = kind === "ttt" ? p === null : board[col] === null;
+        const mark = p === null ? "" : kind === "ttt" ? (p ? "⭕" : "❌") : p ? "🟡" : "🔴";
+        const cell = `grid aspect-square place-items-center ${kind === "ttt" ? "rounded-lg text-2xl" : "rounded-full text-base"}`;
+        const lit = win?.includes(i) ? "bg-green-600/40" : "";
+        return onMove && open ? (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onMove(kind === "ttt" ? { cell: i } : { col })}
+            aria-label={String((kind === "ttt" ? i : col) + 1)}
+            className={`${cell} ${button}`}
+          >
+            {mark}
+          </button>
+        ) : (
+          <span key={i} className={`${cell} ${lit || "bg-black/5"}`}>
+            {mark}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
@@ -334,6 +598,49 @@ function DuelPlay({ game, senderId, moves, meId, nameOf, onPlay, button }: PlayP
     const reply = { userId: answer.userId, kicks: answer.move, at: answer.at };
     return <PenaltyResult kicks={game} answer={reply} senderId={senderId} meId={meId} nameOf={nameOf} />;
   }
+  if (answer && game.game === "lie" && "choice" in answer.move) {
+    const { choice } = answer.move;
+    const note = (i: number) =>
+      [i === game.lie && `🤥 ${tr.calls.theLie}`, i === choice && `👆 ${nameOf(answer.userId)}`].filter(Boolean).join(" · ");
+    return (
+      <>
+        <ChoiceList items={game.statements} note={note} button={button} />
+        <Verdict outcome={choice === game.lie ? -1 : 1} senderId={senderId} answerId={answer.userId} meId={meId} nameOf={nameOf} />
+      </>
+    );
+  }
+  if (answer && game.game === "rather" && "choice" in answer.move) {
+    const { choice } = answer.move;
+    const note = (i: number) => [i === game.choice && nameOf(senderId), i === choice && nameOf(answer.userId)].filter(Boolean).join(" · ");
+    return (
+      <>
+        <p className="mt-1 text-sm opacity-80">{tr.calls.ratherPrompt}</p>
+        <ChoiceList items={game.options} note={note} button={button} />
+        <p className="reaction-pop mt-2 text-lg font-bold">{choice === game.choice ? tr.calls.sameBrain : tr.calls.notSameBrain}</p>
+      </>
+    );
+  }
+  if (game.game === "lie" || game.game === "rather") {
+    const items = game.game === "lie" ? game.statements : game.options;
+    const chosen = game.game === "lie" ? game.lie : game.choice;
+    const play = senderId !== meId && onPlay;
+    return (
+      <>
+        {(game.game === "rather" || play) && (
+          <p className="mt-1 text-sm opacity-80">
+            {game.game === "rather" ? tr.calls.ratherPrompt : tr.calls.spotLie(nameOf(senderId))}
+          </p>
+        )}
+        <ChoiceList
+          items={items}
+          onPick={play ? (choice) => play({ choice }) : undefined}
+          note={senderId === meId ? (i) => (i === chosen ? (game.game === "lie" ? "🤥" : "✓") : "") : undefined}
+          button={button}
+        />
+        {!play && <p className="mt-2 animate-pulse text-sm opacity-80">{tr.messages.waitingForReply}</p>}
+      </>
+    );
+  }
   if (senderId === meId || !onPlay) {
     return (
       <>
@@ -468,6 +775,150 @@ function HangmanPlay({ word, senderId, moves, meId, nameOf, onPlay, button }: Pl
   );
 }
 
+function TypedPlay({
+  game,
+  senderId,
+  moves,
+  meId,
+  nameOf,
+  onPlay,
+  button,
+}: PlayProps & { game: Extract<ChatGame, { game: "riddle" | "sketch" }> }) {
+  const tr = useT();
+  const [text, setText] = useState("");
+  const guesses = typedGuesses(game.answer, senderId, moves, (sealed) => openGuess(game.key, sealed));
+  const last = guesses.at(-1);
+  const chooser = senderId === meId;
+  return (
+    <>
+      {game.game === "riddle" ? (
+        <p className="mt-2 text-4xl leading-tight break-words">{game.emojis}</p>
+      ) : (
+        <Sketch strokes={game.strokes} className="mt-2" />
+      )}
+      <p className="mt-1 text-sm opacity-80">
+        {chooser || last?.right
+          ? tr.calls.theAnswer(game.answer)
+          : game.game === "riddle"
+            ? tr.calls.riddlePrompt(nameOf(senderId))
+            : tr.calls.drawPrompt(nameOf(senderId))}
+      </p>
+      {guesses.length > 0 && (
+        <div className="mt-2 flex flex-wrap justify-center gap-1">
+          {guesses.map((g, i) => (
+            <span
+              key={i}
+              className={`max-w-full truncate rounded-full px-2 py-0.5 text-sm ${g.right ? "bg-green-600 text-white" : "bg-black/10 line-through"}`}
+            >
+              {g.text}
+            </span>
+          ))}
+        </div>
+      )}
+      {last?.right ? (
+        <>
+          <p className="reaction-pop mt-2 text-lg font-bold">{tr.calls.hints.right}</p>
+          <p className="text-sm opacity-80">{tr.calls.foundIn(guesses.length)}</p>
+        </>
+      ) : chooser || !onPlay ? (
+        <p className="mt-2 animate-pulse text-sm opacity-80">
+          {last ? tr.calls.theyAreGuessing(nameOf(last.userId)) : tr.messages.waitingForReply}
+        </p>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const guess = text.trim();
+            if (!guess) return;
+            onPlay({ sealed: sealGuess(game.key, guess) });
+            setText("");
+          }}
+          className="mt-2 flex gap-1.5"
+        >
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={GAME_TEXT.answer}
+            placeholder={tr.calls.yourGuess}
+            aria-label={tr.calls.yourGuess}
+            autoComplete="off"
+            className="min-w-0 flex-1 rounded-full bg-black/10 px-3 py-1.5 text-[16px] placeholder:text-current placeholder:opacity-60 md:text-sm"
+          />
+          <button type="submit" disabled={!text.trim()} className={`rounded-full px-3 text-sm font-semibold disabled:opacity-50 ${button}`}>
+            {tr.common.send}
+          </button>
+        </form>
+      )}
+    </>
+  );
+}
+
+function ShipsPlay({ boats, senderId, moves, meId, nameOf, onPlay, button }: PlayProps & { boats: number[][] }) {
+  const tr = useT();
+  const { shots, sunk, over } = battleship(boats, senderId, moves);
+  const chooser = senderId === meId;
+  const last = shots.at(-1);
+  return (
+    <>
+      {!chooser && <p className="mt-1 text-sm opacity-80">{tr.calls.sinkBoats(nameOf(senderId))}</p>}
+      <Sea
+        boats={boats}
+        shots={shots}
+        show={chooser || over}
+        onShoot={!chooser && onPlay && !over ? (shot) => onPlay({ shot }) : undefined}
+        button={button}
+      />
+      {over ? (
+        <p className="reaction-pop mt-2 text-lg font-bold">{tr.calls.sunkIn(shots.length)}</p>
+      ) : (
+        <>
+          <p className="mt-2 text-sm opacity-80">{tr.calls.boatsSunk(sunk.length, boats.length)}</p>
+          {(chooser || !onPlay) && (
+            <p className="animate-pulse text-sm opacity-80">
+              {last ? tr.calls.theyAreGuessing(nameOf(last.userId)) : tr.messages.waitingForReply}
+            </p>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+function BoardPlay({
+  game,
+  senderId,
+  moves,
+  meId,
+  nameOf,
+  onPlay,
+  button,
+}: PlayProps & { game: Extract<ChatGame, { game: "ttt" | "four" }> }) {
+  const tr = useT();
+  const g = boardGame(game, senderId, moves);
+  const mine = !!onPlay && myTurn(g, senderId, meId);
+  const next = g.turn === 0 ? senderId : g.opponent;
+  return (
+    <>
+      <Board kind={game.game} board={g.board} win={g.win?.cells} onMove={mine ? onPlay : undefined} button={button} />
+      {g.over ? (
+        g.opponent && (
+          <Verdict
+            outcome={g.win ? (g.win.player === 0 ? 1 : -1) : 0}
+            senderId={senderId}
+            answerId={g.opponent}
+            meId={meId}
+            nameOf={nameOf}
+          />
+        )
+      ) : (
+        <p className={`mt-2 text-sm ${mine ? "font-semibold" : "animate-pulse opacity-80"}`}>
+          {mine ? tr.calls.yourTurn : next ? tr.calls.theirTurn(nameOf(next)) : tr.messages.waitingForReply}
+        </p>
+      )}
+    </>
+  );
+}
+
 /** A game message: the sender's move waits in it until someone answers, then both see who won. */
 export function GameView({
   game,
@@ -492,7 +943,7 @@ export function GameView({
   const [again, setAgain] = useState(false);
   const button = `transition active:scale-95 ${mine ? "bg-black/10 hover:bg-black/15" : "bg-brand/15 hover:bg-brand/25"}`;
   const props = { senderId, moves, meId, nameOf, onPlay, button };
-  const over = gameOver(game, senderId, moves);
+  const over = gameOver(game, senderId, moves, (sealed) => ("key" in game ? openGuess(game.key, sealed) : null));
   return (
     <div className="w-72 max-w-full py-1 text-center">
       <p className="font-semibold">
@@ -502,6 +953,12 @@ export function GameView({
         <GuessPlay secret={game.secret} {...props} />
       ) : game.game === "hangman" ? (
         <HangmanPlay word={game.word} {...props} />
+      ) : game.game === "riddle" || game.game === "sketch" ? (
+        <TypedPlay game={game} {...props} />
+      ) : game.game === "ships" ? (
+        <ShipsPlay boats={game.boats} {...props} />
+      ) : game.game === "ttt" || game.game === "four" ? (
+        <BoardPlay game={game} {...props} />
       ) : (
         <DuelPlay game={game} {...props} />
       )}
@@ -519,6 +976,107 @@ export function GameView({
   );
 }
 
+/** The answer box under a riddle or drawing, matched loosely when they guess. */
+function AnswerForm({
+  ready,
+  onSend,
+  button,
+  children,
+}: {
+  ready: boolean;
+  onSend: (answer: string) => void;
+  button: string;
+  children: React.ReactNode;
+}) {
+  const tr = useT();
+  const [answer, setAnswer] = useState("");
+  const ok = ready && looseAnswer(answer) !== "";
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (ok) onSend(answer.trim());
+      }}
+    >
+      {children}
+      <input
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        maxLength={GAME_TEXT.answer}
+        placeholder={tr.calls.answer}
+        aria-label={tr.calls.answer}
+        autoComplete="off"
+        className="mt-3 block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800 md:text-sm"
+      />
+      <p className="mt-1 text-xs text-stone-500">{tr.calls.looseAnswer}</p>
+      <button type="submit" disabled={!ok} className={`mt-3 rounded-full px-4 py-1.5 text-sm font-medium disabled:opacity-50 ${button}`}>
+        {tr.common.send}
+      </button>
+    </form>
+  );
+}
+
+function RiddleForm({ send, button }: { send: (g: ChatGame) => void; button: string }) {
+  const tr = useT();
+  const [emojis, setEmojis] = useState("");
+  return (
+    <AnswerForm
+      ready={!!emojis.trim()}
+      onSend={(answer) => send({ game: "riddle", emojis: emojis.trim(), answer, key: newGameKey() })}
+      button={button}
+    >
+      <input
+        value={emojis}
+        onChange={(e) => setEmojis(e.target.value)}
+        maxLength={GAME_TEXT.emojis}
+        placeholder="🦁👑"
+        aria-label={tr.calls.riddleEmojis}
+        autoFocus
+        autoComplete="off"
+        className="mt-4 block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-center text-2xl dark:bg-stone-800"
+      />
+    </AnswerForm>
+  );
+}
+
+function SketchForm({ send, button }: { send: (g: ChatGame) => void; button: string }) {
+  const tr = useT();
+  const [strokes, setStrokes] = useState<DrawStroke[]>([]);
+  return (
+    <AnswerForm
+      ready={strokes.length > 0}
+      onSend={(answer) => send({ game: "sketch", strokes, answer, key: newGameKey() })}
+      button={button}
+    >
+      <p className="mt-4 text-sm text-stone-500">{tr.calls.drawSomething}</p>
+      <SketchPad strokes={strokes} setStrokes={setStrokes} />
+    </AnswerForm>
+  );
+}
+
+function ShipsForm({ send, button }: { send: (g: ChatGame) => void; button: string }) {
+  const tr = useT();
+  const [boats, setBoats] = useState(randomFleet);
+  return (
+    <>
+      <p className="mt-4 text-sm text-stone-500">{tr.calls.hideBoats}</p>
+      <Sea boats={boats} shots={[]} show button={button} />
+      <div className="mt-3 flex justify-center gap-2">
+        <button type="button" onClick={() => setBoats(randomFleet())} className={`rounded-full px-4 py-1.5 text-sm font-medium ${button}`}>
+          {tr.contacts.shuffle}
+        </button>
+        <button
+          type="button"
+          onClick={() => send({ game: "ships", boats })}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold ${button}`}
+        >
+          {tr.common.send}
+        </button>
+      </div>
+    </>
+  );
+}
+
 /** Picks a game and your move in it, then sends it as a message. */
 export function GameDialog({
   initial = "rps",
@@ -532,6 +1090,10 @@ export function GameDialog({
   const tr = useT();
   const [game, setGame] = useState(initial);
   const [word, setWord] = useState("");
+  const tabs = useCallback(
+    (el: HTMLDivElement | null) => el?.querySelector("[aria-selected=true]")?.scrollIntoView({ block: "nearest", inline: "center" }),
+    [],
+  );
   const button = "transition active:scale-95 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700";
   const send = (g: ChatGame) => {
     onSend(g);
@@ -551,7 +1113,7 @@ export function GameDialog({
         </button>
       </div>
       <div className="p-4 text-center">
-        <div role="tablist" aria-label={tr.calls.games} className="flex gap-2">
+        <div ref={tabs} role="tablist" aria-label={tr.calls.games} className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1">
           {CHAT_GAMES.map((g) => (
             <button
               key={g}
@@ -559,7 +1121,7 @@ export function GameDialog({
               role="tab"
               aria-selected={g === game}
               onClick={() => setGame(g)}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] leading-tight font-medium transition ${
+              className={`flex w-[4.5rem] shrink-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[11px] leading-tight font-medium transition ${
                 g === game ? "bg-stone-200 dark:bg-stone-700" : "hover:bg-stone-100 dark:hover:bg-stone-800"
               }`}
             >
@@ -608,6 +1170,38 @@ export function GameDialog({
               {tr.common.send}
             </button>
           </form>
+        ) : game === "lie" || game === "rather" ? (
+          <>
+            <p className="mt-4 text-sm text-stone-500">{game === "lie" ? tr.calls.writeLie : tr.calls.writeRather}</p>
+            <ChoiceWriter
+              key={game}
+              count={game === "lie" ? 3 : 2}
+              mark={game === "lie" ? "🤥" : "🙋"}
+              markLabel={game === "lie" ? tr.calls.theLie : tr.calls.mine}
+              placeholder={game === "lie" ? tr.calls.statement : tr.calls.option}
+              onSend={(texts, chosen) =>
+                send(game === "lie" ? { game, statements: texts, lie: chosen } : { game, options: texts, choice: chosen })
+              }
+              button={button}
+            />
+          </>
+        ) : game === "riddle" ? (
+          <RiddleForm send={send} button={button} />
+        ) : game === "sketch" ? (
+          <SketchForm send={send} button={button} />
+        ) : game === "ships" ? (
+          <ShipsForm send={send} button={button} />
+        ) : game === "ttt" || game === "four" ? (
+          <>
+            <p className="mt-4 text-sm text-stone-500">{tr.calls.firstMove}</p>
+            <Board
+              key={game}
+              kind={game}
+              board={Array(BOARDS[game].width * BOARDS[game].height).fill(null)}
+              onMove={(m) => send("cell" in m ? { game: "ttt", cell: m.cell } : { game: "four", col: m.col })}
+              button={button}
+            />
+          </>
         ) : (
           <>
             <p className="mt-4 text-sm text-stone-500">{tr.calls.pickSecret}</p>

@@ -235,7 +235,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["messages"],
         summary: "Answer a game",
         description:
-          "Anyone but the sender can answer: a `hand` for rock paper scissors, a `pick` and `seed` for dice, or `n` to try a number. The first answer that fits settles rock paper scissors and dice; tries go on until one is right. Everyone gets message.edited with the new `moves`.",
+          "Anyone but the sender can answer: a `hand` for rock paper scissors, a `pick` and `seed` for dice, `n` to try a number, `shots` and `dives` for the penalty shootout, a `letter` for hangman, a `choice` for two truths and a lie or would you rather, a `sealed` typed guess for the emoji riddle or draw and guess, or a `shot` at the boats. On tic-tac-toe (`cell`) and connect four (`col`) the sender takes turns too. The first answer that fits settles the one-go games; the others go on until they end. Everyone gets message.edited with the new `moves`.",
         security,
         params: z.object({ id: Id }),
         body: GameMove,

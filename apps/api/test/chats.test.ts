@@ -331,6 +331,20 @@ describe("locations and checklists", () => {
     expect((await post(host, chatId, { game: { game: "guess", secret: 0 } })).statusCode).toBe(400);
     expect((await post(host, chatId, { game: { game: "dice", pick: 3, seed: 1 }, text: "hi" })).statusCode).toBe(400);
   });
+
+  it("lets the sender take turns on a board, but not answer their other games", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const id = (await post(host, chatId, { game: { game: "ttt", cell: 4 } })).json().id;
+    const play = (who: Auth, move: object) => call(who, "POST", `/v1/messages/${id}/game`, move);
+    expect((await play(guest, { cell: 0 })).statusCode).toBe(200);
+    const turn = await play(host, { cell: 8 });
+    expect(turn.statusCode, turn.body).toBe(200);
+    expect(turn.json().moves).toHaveLength(2);
+    expect((await play(host, { hand: "rock" })).json().error.code).toBe("FORBIDDEN");
+    const boats = [[0, 1, 2], [10, 15], [23, 24]];
+    expect((await post(host, chatId, { game: { game: "ships", boats } })).statusCode).toBe(201);
+    expect((await post(host, chatId, { game: { game: "ships", boats: [[0, 1, 3], [10, 15], [23, 24]] } })).statusCode).toBe(400);
+  });
 });
 
 describe("safe view and albums", () => {

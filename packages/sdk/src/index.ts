@@ -18,6 +18,9 @@ export {
   type SignalInput,
   decryptFile,
   encryptFile,
+  newGameKey,
+  openGuess,
+  sealGuess,
 } from "./e2ee.js";
 export type { CursorStore, Realtime, RealtimeOptions, SixSocket } from "./socket.js";
 

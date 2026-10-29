@@ -22,13 +22,22 @@ import {
   ChatGame,
   type GameMove,
   type PenaltyKicks,
+  battleship,
+  boardGame,
+  drawStart,
+  drawTo,
   gameAnswer,
   gameOver,
   guessTries,
   hangman,
   hangmanWord,
+  looseAnswer,
+  myTurn,
   penaltyGoals,
   penaltyOutcome,
+  randomFleet,
+  typedGuesses,
+  validFleet,
 } from "../src/games.js";
 
 describe("rock paper scissors", () => {
@@ -155,5 +164,74 @@ describe("games in a chat", () => {
     expect(lost.tried).toHaveLength(6);
     expect(gameOver({ game: "hangman", word: "FRITES" }, "me", [move("me", { letter: "F" })])).toBe(false);
     expect(ChatGame.safeParse({ game: "hangman", word: "été" }).success).toBe(false);
+  });
+
+  it("settles two truths and a lie or would you rather on the first choice that fits", () => {
+    const rather = { game: "rather", options: ["Fly", "Swim"], choice: 0 } as const;
+    expect(gameAnswer({ ...rather, options: [...rather.options] }, "me", [move("them", { choice: 2 }), move("them", { choice: 1 })])?.move).toEqual({ choice: 1 });
+    const lie = { game: "lie" as const, statements: ["a", "b", "c"], lie: 2 };
+    expect(gameAnswer(lie, "me", [move("me", { choice: 0 }), move("them", { choice: 2 })])?.move).toEqual({ choice: 2 });
+  });
+
+  it("matches typed guesses loosely and stops at the right one", () => {
+    expect(looseAnswer("The Lion King!")).toBe("lion king");
+    expect(looseAnswer("le Roi Lion")).toBe(looseAnswer("Roi lion"));
+    const open = (s: string) => (s.startsWith("x") ? null : s);
+    const moves = ["Simba", "xjunk", "lion  KING", "Bambi"].map((sealed) => move("them", { sealed }));
+    expect(typedGuesses("The Lion King", "me", moves, open)).toEqual([
+      { userId: "them", text: "Simba", right: false },
+      { userId: "them", text: "lion  KING", right: true },
+    ]);
+    expect(ChatGame.safeParse({ game: "riddle", emojis: "🦁👑", answer: "the", key: "k".repeat(43) }).success).toBe(false);
+  });
+
+  it("only takes a fleet of straight boats that don't overlap, and sinks it", () => {
+    expect(validFleet([[0, 1, 2], [10, 15], [23, 24]])).toBe(true);
+    expect(validFleet([[3, 4, 5], [10, 15], [23, 24]])).toBe(false);
+    expect(validFleet([[0, 1, 2], [2, 7], [23, 24]])).toBe(false);
+    expect(validFleet([[0, 6, 12], [10, 15], [23, 24]])).toBe(false);
+    for (let i = 0; i < 50; i++) expect(validFleet(randomFleet())).toBe(true);
+
+    const boats = [[0, 1, 2], [10, 15], [23, 24]];
+    const shots = [0, 0, 1, 2, 5, 10, 15, 23, 24, 9].map((shot) => move("them", { shot }));
+    const sea = battleship(boats, "me", shots);
+    expect(sea).toMatchObject({ over: true });
+    expect(sea.shots).toHaveLength(8);
+    expect(sea.shots.filter((s) => !s.hit)).toHaveLength(1);
+  });
+
+  it("takes turns on the board with whoever answers first", () => {
+    const moves = [
+      move("them", { cell: 0 }),
+      move("other", { cell: 1 }),
+      move("me", { cell: 0 }),
+      move("me", { cell: 2 }),
+      move("them", { cell: 1 }),
+      move("me", { cell: 6 }),
+    ];
+    const g = boardGame({ game: "ttt", cell: 4 }, "me", moves);
+    expect(g.opponent).toBe("them");
+    expect(g.win?.cells.toSorted()).toEqual([2, 4, 6]);
+    expect(g.over).toBe(true);
+    expect(myTurn(boardGame({ game: "ttt", cell: 4 }, "me", []), "me", "other")).toBe(true);
+    expect(myTurn(boardGame({ game: "ttt", cell: 4 }, "me", moves.slice(0, 1)), "me", "other")).toBe(false);
+  });
+
+  it("drops discs to the bottom and finds four in a row", () => {
+    const cols = [1, 0, 1, 0, 1, 0];
+    const moves = cols.map((col, i) => move(i % 2 ? "me" : "them", { col }));
+    const g = boardGame({ game: "four", col: 0 }, "me", moves);
+    expect(g.board[35]).toBe(0);
+    expect(g.board[36]).toBe(1);
+    expect(g.win).toMatchObject({ player: 0 });
+    expect(gameOver({ game: "four", col: 0 }, "me", moves, () => null)).toBe(true);
+  });
+
+  it("keeps drawings small", () => {
+    let strokes = drawStart([], 1, 0.5, 0.5);
+    strokes = drawTo(strokes, 0.501, 0.5);
+    expect(strokes[0]!.points).toEqual([500, 500]);
+    strokes = drawTo(strokes, 0.6, 2);
+    expect(strokes[0]!.points).toEqual([500, 500, 600, 1000]);
   });
 });

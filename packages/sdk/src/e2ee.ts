@@ -605,3 +605,20 @@ export function encryptFile(bytes: Uint8Array) {
 export function decryptFile(data: Uint8Array, file: Pick<EncryptedFile, "key" | "digest">) {
   return decryptMedia(data, fromB64(file.key), fromB64(file.digest));
 }
+
+const GUESS_AD = utf8("six:game-guess");
+
+/** A key for a game with typed answers. It travels inside the game, so only people who can read the game get it. */
+export const newGameKey = () => b64(randomBytes(32));
+
+/** Seals a typed answer with the game's key, so the server never sees the text. */
+export const sealGuess = (key: string, text: string) => sealBackup(fromB64(key), utf8(text), GUESS_AD);
+
+/** The typed answer, or null when it wasn't sealed with this game's key. */
+export function openGuess(key: string, sealed: string) {
+  try {
+    return fromUtf8(openBackup(fromB64(key), sealed, GUESS_AD));
+  } catch {
+    return null;
+  }
+}

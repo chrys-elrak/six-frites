@@ -26,6 +26,7 @@ import {
   EPHEMERAL_RESEND,
   MAX_GAME_MOVES,
   MAX_REACTIONS_PER_USER,
+  isTurnMove,
   maskSpoilers,
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
@@ -539,16 +540,16 @@ export async function checkItem(userId: string, messageId: string, item: number,
 }
 
 /**
- * Answers a game message: a hand, a die pick or a try at the number. Encrypted games keep the
- * sender's move in the envelopes, so the server only checks it's someone else's game; the apps
- * settle it from the first answer that fits.
+ * Answers a game message, or takes a turn on a board. Encrypted games keep the sender's move in the
+ * envelopes, so the server only checks it's someone else's game, or a board move; the apps settle it
+ * from the moves that fit.
  */
 export async function playGame(userId: string, messageId: string, move: GameMove) {
   return withEvents(async (tx, emit) => {
     await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
     const message = await reactableMessage(tx, userId, messageId);
     if (message.type !== "game") throw new AppError("NOT_FOUND", "No such game");
-    if (message.senderId === userId) throw new AppError("FORBIDDEN", "You can't answer your own game");
+    if (message.senderId === userId && !isTurnMove(move)) throw new AppError("FORBIDDEN", "You can't answer your own game");
     if (message.moves.length >= MAX_GAME_MOVES) throw new AppError("CONFLICT", "This game is over");
 
     await tx.gameMove.create({ data: { messageId, userId, move } });
