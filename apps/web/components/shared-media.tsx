@@ -127,7 +127,7 @@ function Search({
 
   return (
     <>
-      <div className="px-3 pb-2">
+      <div className="px-3 py-2">
         <label className="flex items-center gap-2 rounded-xl bg-stone-200/70 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-800">
           <SearchIcon className="size-4 shrink-0" />
           <input
