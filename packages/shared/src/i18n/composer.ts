@@ -1,8 +1,11 @@
 const en = {
-  spoilerPlaceholder: "Spoiler message",
   /** `name` is null when replying to your own message. */
   replyingTo: (name: string | null) => `Replying to ${name ?? "yourself"}`,
   editingMessage: "Editing message",
+  parkDraft: "Save as draft and write another message",
+  parkedDraft: "Draft, tap to continue",
+  voiceEffect: (name: string) => `Voice effect: ${name}`,
+  voiceEffects: { none: "Normal", deep: "Deep", high: "High", robot: "Robot" },
   couldNotSaveEdit: "Couldn't save your edit. Try again.",
   scheduledFor: (when: string) => `Scheduled: ${when}`,
   dontSchedule: "Don't schedule",
@@ -36,8 +39,6 @@ const en = {
   addTask: "Add a task",
   removeTask: "Remove task",
   sendChecklist: "Send checklist",
-  sendAsNormal: "Send as normal message",
-  spoilerHint: "Select text to hide just that part, or tap to send the whole message as a spoiler",
   scheduledCount: (n: number) => `${n} scheduled message${n === 1 ? "" : "s"}`,
   scheduledMessages: "Scheduled messages",
   scheduleMessage: "Schedule message",
@@ -125,9 +126,12 @@ const en = {
 };
 
 const fr: typeof en = {
-  spoilerPlaceholder: "Message spoiler",
   replyingTo: (name) => (name ? `Réponse à ${name}` : "Réponse à vous-même"),
   editingMessage: "Modification du message",
+  parkDraft: "Garder en brouillon et écrire un autre message",
+  parkedDraft: "Brouillon, touchez pour reprendre",
+  voiceEffect: (name) => `Effet de voix : ${name}`,
+  voiceEffects: { none: "Normale", deep: "Grave", high: "Aiguë", robot: "Robot" },
   couldNotSaveEdit: "Impossible d'enregistrer la modification. Réessayez.",
   scheduledFor: (when) => `Programmé : ${when}`,
   dontSchedule: "Ne pas programmer",
@@ -161,9 +165,6 @@ const fr: typeof en = {
   addTask: "Ajouter une tâche",
   removeTask: "Retirer la tâche",
   sendChecklist: "Envoyer la liste",
-  sendAsNormal: "Envoyer comme message normal",
-  spoilerHint:
-    "Sélectionnez du texte pour ne masquer que cette partie, ou appuyez pour envoyer tout le message en spoiler",
   scheduledCount: (n) => `${n} message${n > 1 ? "s" : ""} programmé${n > 1 ? "s" : ""}`,
   scheduledMessages: "Messages programmés",
   scheduleMessage: "Programmer le message",
@@ -251,9 +252,12 @@ const fr: typeof en = {
 };
 
 const mg: typeof en = {
-  spoilerPlaceholder: "Hafatra miafina",
   replyingTo: (name) => (name ? `Mamaly an'i ${name}` : "Mamaly ny hafatrao"),
   editingMessage: "Manova ny hafatra",
+  parkDraft: "Tehirizo ho drafitra dia manorata hafatra hafa",
+  parkedDraft: "Drafitra, kitiho raha hanohy",
+  voiceEffect: (name) => `Fiovan'ny feo: ${name}`,
+  voiceEffects: { none: "Tsotra", deep: "Matevina", high: "Manify", robot: "Robot" },
   couldNotSaveEdit: "Tsy voatahiry ny fanovana. Andramo indray.",
   scheduledFor: (when) => `Voalahatra: ${when}`,
   dontSchedule: "Aza alahatra",
@@ -288,8 +292,6 @@ const mg: typeof en = {
   addTask: "Hanampy asa",
   removeTask: "Esory ny asa",
   sendChecklist: "Alefaso ny lisitra",
-  sendAsNormal: "Alefaso ho hafatra tsotra",
-  spoilerHint: "Fidio ny ampahan-tsoratra hafenina, na tsindrio raha hanafina ny hafatra manontolo",
   scheduledCount: (n) => `Hafatra voalahatra ${n}`,
   scheduledMessages: "Hafatra voalahatra",
   scheduleMessage: "Alaharo ny hafatra",

@@ -6,9 +6,19 @@ import { Text } from "./text";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
+import { useSession } from "@/lib/session";
+import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
+import { EmojiPicker } from "./emoji-picker";
+import { Card, SectionTitle, TextButton } from "./ui";
 
 type Reaction = MessageDTO["reactions"][number];
+
+/** Your own quick reactions, or the app's when you haven't picked any. */
+export function useQuickReactions(): readonly string[] {
+  const own = useSession((s) => s.user?.quickReactions);
+  return own?.length === QUICK_REACTIONS.length ? own : QUICK_REACTIONS;
+}
 
 /** Quick reactions plus a button for the full picker. Each emoji you already have is highlighted and toggles off. */
 export function ReactionBar({
@@ -23,9 +33,10 @@ export function ReactionBar({
   const t = useTheme();
   const tr = useT();
   const chosen = { backgroundColor: "rgba(235,138,0,0.2)" };
+  const quick = useQuickReactions();
   return (
     <View style={styles.bar}>
-      {QUICK_REACTIONS.map((e) => (
+      {quick.map((e) => (
         <Pressable
           key={e}
           onPress={() => onPick(e)}
@@ -228,6 +239,69 @@ export function ReactionPopover({
     >
       <ReactionBar mine={mine} onPick={onPick} onMore={onMore} />
     </Animated.View>
+  );
+}
+
+/** Settings card for your six quick reactions: tap one to swap it for any emoji. */
+export function QuickReactionsSettings() {
+  const t = useTheme();
+  const tr = useT();
+  const quick = useQuickReactions();
+  const setUser = useSession((s) => s.setUser);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function save(next: readonly string[]) {
+    setSaving(true);
+    const res = await six.api.PATCH("/v1/me", { body: { quickReactions: [...next] } }).catch(() => null);
+    if (res?.data) setUser(res.data);
+    setSaving(false);
+  }
+
+  function pick(index: number, emoji: string) {
+    const next = [...quick];
+    const was = next.indexOf(emoji);
+    if (was >= 0) next[was] = next[index]!;
+    next[index] = emoji;
+    void save(next);
+  }
+
+  return (
+    <View>
+      <SectionTitle
+        action={
+          quick.join() !== QUICK_REACTIONS.join() && (
+            <TextButton title={tr.messages.resetQuickReactions} disabled={saving} onPress={() => void save(QUICK_REACTIONS)} />
+          )
+        }
+      >
+        {tr.messages.quickReactions}
+      </SectionTitle>
+      <Card style={{ padding: 16, gap: 12 }}>
+        <Text style={{ color: t.muted, fontSize: 13 }}>{tr.messages.quickReactionsHint}</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          {quick.map((emoji, i) => (
+            <Pressable
+              key={emoji}
+              disabled={saving}
+              onPress={() => setEditing(i)}
+              accessibilityLabel={tr.messages.changeQuickReaction(emoji)}
+              style={({ pressed }) => [styles.quick, { width: 46, height: 46, borderRadius: 23, backgroundColor: pressed ? t.pressed : t.field }]}
+            >
+              <Text style={{ fontSize: 26 }}>{emoji}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+      <EmojiPicker
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        onPick={(emoji) => {
+          if (editing !== null) pick(editing, emoji);
+          setEditing(null);
+        }}
+      />
+    </View>
   );
 }
 

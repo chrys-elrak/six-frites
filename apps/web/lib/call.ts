@@ -1,9 +1,35 @@
 import type { Realtime, SignalInput } from "@six/sdk";
-import type { CallSignal, CallSignalDTO, ChatDTO } from "@six/shared";
+import {
+  type CallReaction,
+  type CallSignal,
+  type CallSignalDTO,
+  type ChatDTO,
+  type CallGame,
+  type DicePick,
+  type Duel,
+  type GuessGame,
+  NEW_GUESS,
+  type RpsHand,
+  diceOutcome,
+  duelNext,
+  duelPick,
+  duelReceive,
+  guessChooser,
+  guessNext,
+  guessOnHint,
+  guessOnReady,
+  guessOnTry,
+  guessSetSecret,
+  guessSolved,
+  guessTry,
+  newDuel,
+  rpsOutcome,
+} from "@six/shared";
 import { create } from "zustand";
 import { e2ee } from "./e2ee";
 import { getT } from "./i18n";
 import { six } from "./six";
+import { type VoiceFx, useVoiceEffect, withVoiceEffect } from "./voice-fx";
 
 const RING_TIMEOUT = 45_000;
 
@@ -23,7 +49,13 @@ export interface Call {
   cameraOn: boolean;
   peerVideo: boolean;
   ended: string | null;
+  reactions: { id: number; emoji: CallReaction; mine: boolean }[];
+  games: { rps: Duel<RpsHand>; dice: Duel<DicePick>; guess: GuessGame };
+  game: CallGame;
+  gameOpen: boolean;
 }
+
+const newGames = (): Call["games"] => ({ rps: newDuel(), dice: newDuel(), guess: NEW_GUESS });
 
 export const useCall = create<{ call: Call | null }>(() => ({ call: null }));
 
@@ -37,6 +69,7 @@ interface Live {
   pendingIce: RTCIceCandidateInit[];
   peerDeviceId: string | null;
   timer: ReturnType<typeof setTimeout> | null;
+  fx: Promise<VoiceFx> | null;
 }
 
 let live: Live | null = null;
@@ -68,6 +101,9 @@ async function connect(video: boolean) {
     for (const t of local.getTracks()) t.stop();
     throw new Error("ENDED");
   }
+  const { muted = false, cameraOn = video } = useCall.getState().call ?? {};
+  for (const t of local.getAudioTracks()) t.enabled = !muted;
+  for (const t of local.getVideoTracks()) t.enabled = cameraOn;
   const pc = new RTCPeerConnection({ iceServers: servers });
   for (const track of local.getTracks()) pc.addTrack(track, local);
   const remote = new MediaStream();
@@ -92,9 +128,27 @@ async function connect(video: boolean) {
     if (pc.connectionState === "failed") void hangup(getT().calls.connectionLost);
   };
   live!.pc = pc;
-  patch({ local, remote, cameraOn: video });
+  patch({ local, remote });
+  void applyVoiceEffect();
   return pc;
 }
+
+/** Puts the voice effect on the call's microphone the first time one is picked, by swapping the track being sent. */
+async function applyVoiceEffect() {
+  const current = live;
+  const raw = useCall.getState().call?.local;
+  if (!current?.pc || current.fx || !raw || useVoiceEffect.getState().effect === "none") return;
+  current.fx = withVoiceEffect(raw);
+  const fx = await current.fx;
+  if (live !== current) return;
+  const [track] = fx.stream.getAudioTracks();
+  for (const t of raw.getAudioTracks()) t.enabled = true;
+  if (track) track.enabled = !useCall.getState().call?.muted;
+  await current.pc!.getSenders().find((s) => s.track?.kind === "audio")?.replaceTrack(track ?? null);
+  patch({ local: fx.stream });
+}
+
+useVoiceEffect.subscribe(() => void applyVoiceEffect());
 
 async function flushIce() {
   const pc = live?.pc;
@@ -119,6 +173,7 @@ function teardown(reason: string | null, log = true) {
   if (!call || call.phase === "ended") return;
   if (live?.timer) clearTimeout(live.timer);
   live?.pc?.close();
+  void live?.fx?.then((fx) => fx.stop());
   for (const t of call.local?.getTracks() ?? []) t.stop();
   live = null;
   if (log) void logCall(call);
@@ -163,6 +218,7 @@ export async function startCall(chat: ChatDTO, meId: string, video: boolean) {
     pendingIce: [],
     peerDeviceId: null,
     timer: null,
+    fx: null,
   };
   useCall.setState({
     call: {
@@ -179,6 +235,10 @@ export async function startCall(chat: ChatDTO, meId: string, video: boolean) {
       cameraOn: video,
       peerVideo: video,
       ended: null,
+      reactions: [],
+      games: newGames(),
+      game: "rps",
+      gameOpen: false,
     },
   });
   try {
@@ -204,6 +264,7 @@ export async function acceptCall() {
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     await signal({ type: "answer", sdp: answer.sdp! });
+    if (call.video && !useCall.getState().call?.cameraOn) void signal({ type: "video", on: false }).catch(() => null);
   } catch (err) {
     void signal({ type: "hangup" }).catch(() => null);
     teardown(mediaError(err));
@@ -222,19 +283,95 @@ export async function hangup(reason = getT().calls.callEnded) {
 
 export function toggleMute() {
   const call = useCall.getState().call;
-  if (!call?.local) return;
+  if (!call) return;
   const muted = !call.muted;
-  for (const t of call.local.getAudioTracks()) t.enabled = !muted;
+  for (const t of call.local?.getAudioTracks() ?? []) t.enabled = !muted;
   patch({ muted });
 }
 
 export function toggleCamera() {
   const call = useCall.getState().call;
-  if (!call?.local || !call.video) return;
+  if (!call?.video) return;
   const cameraOn = !call.cameraOn;
-  for (const t of call.local.getVideoTracks()) t.enabled = cameraOn;
+  for (const t of call.local?.getVideoTracks() ?? []) t.enabled = cameraOn;
   patch({ cameraOn });
-  void signal({ type: "video", on: cameraOn }).catch(() => null);
+  if (call.local) void signal({ type: "video", on: cameraOn }).catch(() => null);
+}
+
+let reactionId = 0;
+
+function showReaction(emoji: CallReaction, mine: boolean) {
+  const id = ++reactionId;
+  const call = useCall.getState().call;
+  if (!call) return;
+  patch({ reactions: [...call.reactions.slice(-20), { id, emoji, mine }] });
+  setTimeout(() => {
+    const reactions = useCall.getState().call?.reactions;
+    if (reactions) patch({ reactions: reactions.filter((r) => r.id !== id) });
+  }, 3000);
+}
+
+export function sendReaction(emoji: CallReaction) {
+  showReaction(emoji, true);
+  void signal({ type: "reaction", emoji }).catch(() => null);
+}
+
+function setGames(games: Partial<Call["games"]>, open?: CallGame) {
+  const call = useCall.getState().call;
+  if (call) patch({ games: { ...call.games, ...games }, ...(open && { game: open, gameOpen: true }) });
+}
+
+/** Opens or switches the game panel, and brings the other side to the same game. */
+export function openGame(gameOpen: boolean, game?: CallGame) {
+  const next = game ?? useCall.getState().call?.game;
+  if (!next) return;
+  patch({ gameOpen, game: next });
+  if (gameOpen) void signal({ type: "game", game: next }).catch(() => null);
+}
+
+export function playHand(hand: RpsHand) {
+  const rps = useCall.getState().call?.games.rps;
+  const next = rps && duelPick(rps, hand, rpsOutcome);
+  if (!next) return;
+  setGames({ rps: next });
+  void signal({ type: "rps", round: next.round, hand }).catch(() => null);
+}
+
+export function rollDice(pick: number) {
+  const mine = { pick, seed: Math.floor(Math.random() * 6) };
+  const dice = useCall.getState().call?.games.dice;
+  const next = dice && duelPick(dice, mine, diceOutcome);
+  if (!next) return;
+  setGames({ dice: next });
+  void signal({ type: "dice", round: next.round, ...mine }).catch(() => null);
+}
+
+export function pickSecret(n: number) {
+  const call = useCall.getState().call;
+  const next = call && guessChooser(call.games.guess.round, call.outgoing) && guessSetSecret(call.games.guess, n);
+  if (!next) return;
+  setGames({ guess: next });
+  void signal({ type: "guessReady", round: next.round }).catch(() => null);
+}
+
+export function sendGuess(n: number) {
+  const guess = useCall.getState().call?.games.guess;
+  const next = guess && guessTry(guess, n);
+  if (!next) return;
+  setGames({ guess: next });
+  void signal({ type: "guessTry", round: next.round, n }).catch(() => null);
+}
+
+export function playAgain(game: CallGame) {
+  const games = useCall.getState().call?.games;
+  if (!games) return;
+  if (game === "guess") {
+    if (guessSolved(games.guess)) setGames({ guess: guessNext(games.guess) });
+  } else if (game === "rps") {
+    if (games.rps.mine && games.rps.theirs) setGames({ rps: duelNext(games.rps) });
+  } else if (games.dice.mine && games.dice.theirs) {
+    setGames({ dice: duelNext(games.dice) });
+  }
 }
 
 let flipping = false;
@@ -307,6 +444,7 @@ async function onSignal(dto: CallSignalDTO, meId: string, chats: (chatId: string
       pendingIce: [],
       peerDeviceId: dto.fromDeviceId,
       timer: null,
+      fx: null,
     };
     useCall.setState({
       call: {
@@ -323,6 +461,10 @@ async function onSignal(dto: CallSignalDTO, meId: string, chats: (chatId: string
         cameraOn: s.video,
         peerVideo: s.video,
         ended: null,
+        reactions: [],
+        games: newGames(),
+        game: "rps",
+        gameOpen: false,
       },
     });
     void signal({ type: "ringing" }).catch(() => null);
@@ -359,6 +501,39 @@ async function handle(call: Call, s: CallSignal, fromDeviceId: string) {
     case "video":
       patch({ peerVideo: s.on });
       break;
+    case "reaction":
+      showReaction(s.emoji, false);
+      break;
+    case "game":
+      patch({ game: s.game, gameOpen: true });
+      break;
+    case "rps": {
+      const rps = duelReceive(call.games.rps, s.round, s.hand, rpsOutcome);
+      if (rps) setGames({ rps }, "rps");
+      break;
+    }
+    case "dice": {
+      const dice = duelReceive(call.games.dice, s.round, { pick: s.pick, seed: s.seed }, diceOutcome);
+      if (dice) setGames({ dice }, "dice");
+      break;
+    }
+    case "guessReady": {
+      const guess = guessOnReady(call.games.guess, s.round);
+      if (guess) setGames({ guess }, "guess");
+      break;
+    }
+    case "guessTry": {
+      const answer = guessOnTry(call.games.guess, s.round, s.n);
+      if (!answer) break;
+      setGames({ guess: answer.game }, "guess");
+      void signal({ type: "guessHint", round: s.round, n: s.n, hint: answer.hint }).catch(() => null);
+      break;
+    }
+    case "guessHint": {
+      const guess = guessOnHint(call.games.guess, s.round, s.n, s.hint);
+      if (guess) setGames({ guess });
+      break;
+    }
     case "reject":
       teardown(getT().calls.declined);
       break;

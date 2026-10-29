@@ -166,6 +166,7 @@ export class E2EE {
       text: c.text ?? null,
       entities: c.entities ?? [],
       spoiler: c.spoiler ?? false,
+      effect: c.effect ?? null,
       location: c.location ?? null,
       checklist: c.checklist ?? null,
       replyTo: m.replyTo?.encrypted ? { ...m.replyTo, text: c.replyText ?? null } : m.replyTo,

@@ -2,13 +2,15 @@
 
 import { SixApiError, unwrap } from "@six/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Shuffle, Trash2, X } from "lucide-react";
+import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { useT } from "@/lib/i18n";
 import { toAvatarDataUrl, urlToAvatarDataUrl } from "@/lib/image";
+import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
+import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { PrimaryButton, Toggle } from "./ui";
 import { Portal } from "./portal";
@@ -30,6 +32,9 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
+  const hasLock = useSession((s) => s.user!.hasAppLock);
+  const [askingCode, setAskingCode] = useState(false);
+  const [label, setLabel] = useState<{ code: string; text: string; saved: string } | null>(null);
   const share = useMutation({
     mutationFn: async (shared: boolean) =>
       unwrap(await six.api.PUT("/v1/contacts/{userId}/profile", { params: { path: { userId } }, body: { shared } })),
@@ -82,6 +87,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     setSaving(true);
     setError(null);
     try {
+      if (label && label.text.trim() !== label.saved) {
+        unwrap(
+          await six.api.PUT("/v1/contacts/{userId}/label", {
+            params: { path: { userId } },
+            body: { code: label.code, label: label.text.trim() || null },
+          }),
+        );
+      }
       const trimmed = (name ?? "").trim();
       const showingRealName = !(trimmed && trimmed !== c.originalName);
       await updateContact(qc, userId, {
@@ -229,6 +242,31 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 />
               </div>
 
+              <div className="space-y-2 rounded-xl bg-stone-50 p-3 dark:bg-stone-800/50">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-stone-600 dark:text-stone-300">
+                  <Lock className="size-4" /> {tr.contacts.privateLabel}
+                </p>
+                {label ? (
+                  <input
+                    autoFocus
+                    value={label.text}
+                    onChange={(e) => setLabel({ ...label, text: e.target.value })}
+                    placeholder={tr.contacts.labelPlaceholder}
+                    maxLength={200}
+                    className="w-full rounded-xl bg-white px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-900"
+                  />
+                ) : (
+                  <>
+                    <p className="text-xs text-stone-500">{hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}</p>
+                    {hasLock && (
+                      <button type="button" onClick={() => setAskingCode(true)} className="text-sm font-medium text-brand">
+                        {tr.contacts.openLabel}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+
               <SafetyNumber userId={userId} name={c.user.displayName} />
 
               {error && (
@@ -251,6 +289,19 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 {tr.contacts.report(c.user.displayName)}
               </button>
             </form>
+          )}
+          {askingCode && (
+            <LockScreen
+              title={tr.contacts.privateLabel}
+              onCancel={() => setAskingCode(false)}
+              onUnlock={() => setAskingCode(false)}
+              check={async (code) => {
+                const res = unwrap(
+                  await six.api.POST("/v1/contacts/{userId}/label", { params: { path: { userId } }, body: { code } }),
+                );
+                setLabel({ code, text: res.label ?? "", saved: res.label ?? "" });
+              }}
+            />
           )}
           {reporting && (
             <ReportDialog

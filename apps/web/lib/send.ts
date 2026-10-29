@@ -8,6 +8,7 @@ import {
   type GeoPoint,
   type GifDTO,
   type MessageDTO,
+  type MessageEffect,
   type MessageEntity,
   type SendMessageInput,
   type StickerDTO,
@@ -26,8 +27,9 @@ export interface Draft {
   entities?: MessageEntity[];
   replyTo?: MessageDTO;
   spoiler?: boolean;
+  effect?: MessageEffect;
   ephemeral?: EphemeralInput | null;
-  file?: { blob: Blob; kind: UploadKind; name: string; mime: string; sticker?: boolean };
+  file?: { blob: Blob; kind: UploadKind; name: string; mime: string; sticker?: boolean; disguised?: boolean };
   gif?: GifDTO;
   sticker?: StickerDTO;
   location?: GeoPoint;
@@ -55,10 +57,21 @@ async function imageSize(blob: Blob) {
 async function sealFile(pending: PendingMessage, blob: Blob) {
   const saved = sealedFiles.get(pending.clientId);
   if (saved) return saved;
-  const { kind, name, mime, width, height, sticker } = pending.attachment!;
+  const { kind, name, mime, width, height, sticker, disguised } = pending.attachment!;
   const [bytes, meta] = await Promise.all([blob.arrayBuffer(), mediaMeta(blob, kind)]);
   const { data, key, digest } = encryptFile(new Uint8Array(bytes));
-  const file: EncryptedFile = { key, digest, name, mime, size: blob.size, width, height, ...meta, ...(sticker && { sticker }) };
+  const file: EncryptedFile = {
+    key,
+    digest,
+    name,
+    mime,
+    size: blob.size,
+    width,
+    height,
+    ...meta,
+    ...(sticker && { sticker }),
+    ...(disguised && { disguised }),
+  };
   const sealed = { file, blob: new Blob([data as Uint8Array<ArrayBuffer>]) };
   sealedFiles.set(pending.clientId, sealed);
   return sealed;
@@ -119,6 +132,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             text: pending.text || undefined,
             entities: pending.entities.length ? pending.entities : undefined,
             spoiler: pending.spoiler || undefined,
+            effect: pending.effect,
             replyText: pending.replyTo ? (pending.replyTo.text?.slice(0, 200) ?? null) : undefined,
             file,
             location: pending.location,
@@ -133,6 +147,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           gifId: pending.gif?.id,
           stickerId: pending.sticker?.id,
           spoiler: pending.spoiler || undefined,
+          effect: pending.effect,
           location: pending.location,
           checklist: pending.checklist,
         });
@@ -174,6 +189,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
         }
       : null,
     spoiler: draft.spoiler ?? false,
+    effect: draft.effect,
     ephemeral: draft.ephemeral ?? null,
     attachment: file
       ? {
@@ -186,6 +202,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           progress: 0,
           uploadId: null,
           sticker: file.sticker,
+          disguised: file.disguised,
         }
       : gif
         ? {

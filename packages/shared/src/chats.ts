@@ -232,6 +232,11 @@ export const MessageListQuery = PageQuery.extend({
 });
 export type MessageListQuery = z.infer<typeof MessageListQuery>;
 
+export const MessageEffect = z
+  .enum(["fire", "gift", "hearts", "confetti"])
+  .describe("How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives");
+export type MessageEffect = z.infer<typeof MessageEffect>;
+
 export const MessageDTO = z.object({
   id: Id,
   chatId: Id,
@@ -241,6 +246,7 @@ export const MessageDTO = z.object({
   text: z.string().nullable(),
   entities: z.array(MessageEntity),
   spoiler: z.boolean(),
+  effect: MessageEffect.nullable(),
   attachment: AttachmentDTO.nullable(),
   sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
@@ -253,12 +259,13 @@ export const MessageDTO = z.object({
   createdAt: IsoDate,
   editedAt: IsoDate.nullable(),
   deletedAt: IsoDate.nullable(),
+  deletedBy: Id.nullable().describe("Who deleted it for everyone: the sender, or the other person in a direct chat"),
   expiresAt: IsoDate.nullable().describe("When the chat's auto-delete timer removes it for everyone"),
   reactions: z
     .array(z.object({ emoji: z.string(), userIds: z.array(Id) }))
     .describe("One entry per emoji, oldest first; a person can add several different emoji"),
   encryption: EncryptionDTO.nullable().describe(
-    "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+    "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
   ),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
@@ -302,6 +309,7 @@ export const MessagesDeletedDTO = z.object({
   scope: DeleteScope.describe(
     "`all`: the messages became deleted placeholders. `me`: remove them from this user's view entirely.",
   ),
+  by: Id.optional().describe("With `all`: who deleted them"),
 });
 export type MessagesDeletedDTO = z.infer<typeof MessagesDeletedDTO>;
 
@@ -330,6 +338,7 @@ export const SendMessageInput = z
       .optional()
       .describe("The same id on photos and videos sent together, so they show as one album"),
     spoiler: z.boolean().optional(),
+    effect: MessageEffect.optional().describe("Only with text"),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
     encrypted: EncryptedInput.optional(),
     sentAt: IsoDate.optional().describe(
@@ -353,6 +362,7 @@ export const SendMessageInput = z
       (v.text === undefined &&
         v.entities === undefined &&
         v.spoiler === undefined &&
+        v.effect === undefined &&
         !v.gifId &&
         !v.stickerId &&
         !v.location &&
@@ -380,6 +390,7 @@ export const SendMessageInput = z
     path: ["attachmentId"],
   })
   .refine((v) => !v.stickerId || v.text === undefined, { message: "Stickers have no caption", path: ["text"] })
+  .refine((v) => !v.effect || v.text !== undefined, { message: "Effects are for text messages", path: ["effect"] })
   .refine((v) => entitiesFit(v.text ?? "", v.entities), {
     message: "Entities fall outside the text",
     path: ["entities"],

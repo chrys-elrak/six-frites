@@ -4,6 +4,7 @@ import type {
   EphemeralInput,
   GeoPoint,
   GifDTO,
+  MessageEffect,
   MessageEntity,
   ReplyPreview,
   StickerDTO,
@@ -23,6 +24,7 @@ export interface PendingAttachment {
   progress: number;
   uploadId: string | null;
   sticker?: boolean;
+  disguised?: boolean;
 }
 
 export interface PendingMessage {
@@ -32,6 +34,7 @@ export interface PendingMessage {
   entities: MessageEntity[];
   replyTo: ReplyPreview | null;
   spoiler: boolean;
+  effect?: MessageEffect;
   ephemeral: EphemeralInput | null;
   attachment: PendingAttachment | null;
   gif: GifDTO | null;

@@ -18,6 +18,7 @@ import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { CallScreen } from "@/components/call-screen";
+import { MiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
@@ -87,6 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Logo className="size-9" />
           <span className="text-lg font-bold tracking-tight">Six Frites</span>
         </Link>
+        <MiniPlayer atTop={!topLevel} />
         <div className="flex min-h-0 flex-1">
           <aside
             className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex md:flex-row ${wide ? "md:flex-1" : "md:w-100 md:shrink-0 md:border-r lg:w-116"} dark:border-stone-800`}

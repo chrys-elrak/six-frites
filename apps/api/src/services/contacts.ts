@@ -3,6 +3,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   type ContactDTO,
+  type ContactLabelInput,
   type ContactListQuery,
   type PublicUser,
   type UpdateContactInput,
@@ -13,7 +14,7 @@ import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
 import { scrubMessageEvents } from "./messages.js";
 import { purgeUploads } from "./uploads.js";
-import { avatarOf, toPublicUser } from "./users.js";
+import { avatarOf, requireAppLock, toPublicUser } from "./users.js";
 
 interface Override {
   displayName: string | null;
@@ -45,7 +46,7 @@ export async function profilesFor(db: Tx, viewerId: string, userIds: string[]) {
   const byId = new Map<string, Override>(overrides.map((o) => [o.contactId, o]));
   const shared = new Set(sharing.map((m) => m.userId));
   return (u: Parameters<typeof toPublicUser>[0]) =>
-    applyOverride(toPublicUser(u, u.id === viewerId || shared.has(u.id)), byId.get(u.id));
+    applyOverride(toPublicUser(u, viewerId, u.id === viewerId || shared.has(u.id)), byId.get(u.id));
 }
 
 function encodeCursor(name: string, id: string) {
@@ -90,11 +91,11 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
   return prisma.$queryRaw<ContactRow[]>`
     SELECT * FROM (
       SELECT cm."chatId", u.id,
-             CASE WHEN cm."showProfile" THEN u."displayName" ELSE u.alias END AS "originalName",
+             CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END AS "originalName",
              CASE WHEN cm."showProfile" THEN u."avatarUrl" END AS "avatarUrl",
              CASE WHEN cm."showProfile" THEN u."avatarKey" END AS "avatarKey",
              o."displayName" AS "customName", o."photoKey", me."showProfile" AS "sharingProfile",
-             COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE u.alias END) AS name
+             COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END) AS name
       FROM "ChatMember" cm
       JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct'
       JOIN "ChatMember" me ON me."chatId" = cm."chatId" AND me."userId" = ${userId}
@@ -169,7 +170,7 @@ export async function updateContact(ownerId: string, contactId: string, input: U
       create: { ownerId, contactId, ...data },
       update: data,
     });
-    if (saved.displayName === null && saved.photoKey === null) {
+    if (saved.displayName === null && saved.photoKey === null && saved.label === null) {
       await tx.contactOverride.delete({ where: { ownerId_contactId: { ownerId, contactId } } });
     }
     emit(ownerId, "chat.updated", await getChat(ownerId, contact.chatId, tx));
@@ -179,6 +180,29 @@ export async function updateContact(ownerId: string, contactId: string, input: U
     await deleteObjects([previousKey]).catch(() => null);
   }
   return toContactDTO(await getContact(ownerId, contactId));
+}
+
+/** The private note `ownerId` keeps about a contact. Never part of any other response; only their app lock code opens it. */
+export async function readLabel(ownerId: string, contactId: string, code: string) {
+  await requireAppLock(ownerId, code);
+  await getContact(ownerId, contactId);
+  const o = await prisma.contactOverride.findUnique({
+    where: { ownerId_contactId: { ownerId, contactId } },
+    select: { label: true },
+  });
+  return { label: o?.label ?? null };
+}
+
+export async function setLabel(ownerId: string, contactId: string, input: ContactLabelInput) {
+  await requireAppLock(ownerId, input.code);
+  await getContact(ownerId, contactId);
+  const key = { ownerId_contactId: { ownerId, contactId } };
+  const label = input.label || null;
+  const saved = await prisma.contactOverride.upsert({ where: key, create: { ownerId, contactId, label }, update: { label } });
+  if (saved.displayName === null && saved.photoKey === null && saved.label === null) {
+    await prisma.contactOverride.delete({ where: key });
+  }
+  return { label: saved.label };
 }
 
 /** Shows or hides the user's real name and photo to a contact, who otherwise sees their alias. */

@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useEffect } from "react";
 import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
@@ -9,6 +10,7 @@ export interface SheetAction {
   onSelect: () => void;
   destructive?: boolean;
   keepOpen?: boolean;
+  checked?: boolean;
 }
 
 export function Sheet({
@@ -45,10 +47,11 @@ export function Sheet({
   };
 
   if (at) {
+    const picking = actions.some((a) => a.checked !== undefined);
     return (
       <Portal>
         <div
-          className="fixed inset-0 z-50"
+          className="fixed inset-0 z-[80]"
           onContextMenu={(e) => {
             e.preventDefault();
             onClose();
@@ -59,19 +62,23 @@ export function Sheet({
             {children}
             <div
               role="menu"
-              className="max-h-[calc(100dvh-5rem)] w-56 overflow-y-auto rounded-xl bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-xl dark:bg-stone-900/95 dark:ring-white/10"
+              className={`max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl bg-white/95 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-xl dark:bg-stone-900/95 dark:ring-white/10 ${
+                picking ? "min-w-40" : "w-56"
+              }`}
             >
               {actions.map((a, i) => (
                 <button
                   type="button"
-                  role="menuitem"
+                  role={picking ? "menuitemradio" : "menuitem"}
+                  aria-checked={a.checked}
                   key={a.label}
-                  autoFocus={i === 0}
+                  autoFocus={a.checked ?? i === 0}
                   onClick={() => select(a)}
-                  className={`block w-full rounded-lg px-3 py-1.5 text-left text-sm hover:bg-stone-100 focus:outline-none focus-visible:bg-stone-100 dark:hover:bg-stone-800 dark:focus-visible:bg-stone-800 ${
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm hover:bg-stone-100 focus:outline-none focus-visible:bg-stone-100 dark:hover:bg-stone-800 dark:focus-visible:bg-stone-800 ${
                     a.destructive ? "text-red-600 dark:text-red-400" : "text-stone-900 dark:text-stone-100"
-                  }`}
+                  } ${a.checked ? "font-semibold" : ""}`}
                 >
+                  {picking && <Check className={`size-4 shrink-0 text-brand ${a.checked ? "" : "invisible"}`} />}
                   {a.label}
                 </button>
               ))}

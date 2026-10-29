@@ -97,12 +97,14 @@ export function markOpenedLocally(qc: QueryClient, chatId: string, messageId: st
   patchChat(qc, chatId, (c) => (c.lastMessage ? { ...c, lastMessage: expire(c.lastMessage) } : c));
 }
 
-export function applyDeleted(qc: QueryClient, chatId: string, ids: string[], scope: DeleteScope) {
+export function applyDeleted(qc: QueryClient, chatId: string, ids: string[], scope: DeleteScope, by?: string) {
   const gone = new Set(ids);
   const now = new Date().toISOString();
   mapMessages(qc, chatId, (x) => {
     if (gone.has(x.id))
-      return scope === "me" ? null : { ...x, text: null, entities: [], deletedAt: x.deletedAt ?? now };
+      return scope === "me"
+        ? null
+        : { ...x, text: null, entities: [], deletedAt: x.deletedAt ?? now, deletedBy: x.deletedBy ?? by ?? null };
     if (scope === "all" && x.replyTo && gone.has(x.replyTo.id)) {
       return { ...x, replyTo: { ...x.replyTo, text: null, deleted: true } };
     }
@@ -146,7 +148,7 @@ export async function deleteMessages(qc: QueryClient, chatId: string, messages: 
   if (!messages.length) return;
   const tombstones = messages.filter((m) => m.deletedAt).map((m) => m.id);
   const live = messages.filter((m) => !m.deletedAt).map((m) => m.id);
-  if (live.length) applyDeleted(qc, chatId, live, scope);
+  if (live.length) applyDeleted(qc, chatId, live, scope, useSession.getState().user?.id);
   if (tombstones.length) applyDeleted(qc, chatId, tombstones, "me");
   try {
     const ids = messages.map((m) => m.id);

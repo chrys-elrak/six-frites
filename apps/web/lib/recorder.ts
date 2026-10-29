@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getT } from "./i18n";
+import { withVoiceEffect } from "./voice-fx";
 
 const TYPES = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus", "audio/webm"];
 const MAX_MS = 10 * 60 * 1000;
@@ -10,6 +11,7 @@ export interface Recording {
   blob: Blob;
   mime: string;
   durationMs: number;
+  disguised: boolean;
 }
 
 /** Records a voice note with MediaRecorder, picking a format the browser supports. */
@@ -21,6 +23,7 @@ export function useRecorder() {
   const chunks = useRef<Blob[]>([]);
   const startedAt = useRef(0);
   const finish = useRef<((r: Recording | null) => void) | null>(null);
+  const release = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!recording) return;
@@ -32,24 +35,27 @@ export function useRecorder() {
     return () => clearInterval(t);
   }, [recording]);
 
-  useEffect(() => () => recorder.current?.stream.getTracks().forEach((t) => t.stop()), []);
+  useEffect(() => () => release.current?.(), []);
 
   /** Resolves true once recording, false if the microphone couldn't be opened. */
   async function start() {
     setError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const fx = await withVoiceEffect(await navigator.mediaDevices.getUserMedia({ audio: true }));
+      release.current = fx.stop;
       const mimeType = TYPES.find((t) => MediaRecorder.isTypeSupported(t));
-      const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const rec = new MediaRecorder(fx.stream, mimeType ? { mimeType } : undefined);
       chunks.current = [];
       rec.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
       rec.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
+        fx.stop();
         const mime = (rec.mimeType || mimeType || "audio/webm").split(";")[0]!;
         const durationMs = Date.now() - startedAt.current;
         setRecording(false);
         finish.current?.(
-          chunks.current.length ? { blob: new Blob(chunks.current, { type: mime }), mime, durationMs } : null,
+          chunks.current.length
+            ? { blob: new Blob(chunks.current, { type: mime }), mime, durationMs, disguised: fx.disguised }
+            : null,
         );
         finish.current = null;
       };

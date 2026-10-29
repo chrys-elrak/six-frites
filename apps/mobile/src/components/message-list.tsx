@@ -8,6 +8,7 @@ import {
   serviceSentence,
   type EphemeralDTO,
   type MessageDTO,
+  type MessageEffect,
   type MessageEntity,
   type ReplyPreview,
   type ViewMessageResult,
@@ -48,6 +49,7 @@ import {
   StyleSheet,
   useWindowDimensions,
   View,
+  type LayoutRectangle,
   type ListViewToken,
 } from "react-native";
 import { Text } from "./text";
@@ -87,6 +89,7 @@ import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { type Anchor, ReactionChips, ReactionPopover } from "./reactions";
 import { styleFor } from "./rich-text";
+import { EffectLayer } from "./message-effects";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
 
@@ -101,6 +104,7 @@ interface MsgRow {
   text: string | null;
   entities: MessageEntity[];
   spoiler: boolean;
+  effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
   createdAt: string;
   mine: boolean;
@@ -188,6 +192,7 @@ function buildRows(
         text: m.text,
         entities: m.entities,
         spoiler: m.spoiler,
+        effect: m.effect ?? null,
         replyTo: m.replyTo,
         createdAt: m.createdAt,
         mine: m.senderId === meId,
@@ -217,6 +222,7 @@ function buildRows(
           text: p.text,
           entities: p.entities,
           spoiler: p.spoiler,
+          effect: p.effect ?? null,
           replyTo: p.replyTo,
           createdAt: p.createdAt,
           mine: true,
@@ -613,6 +619,8 @@ function Bubble({
   onOpenAlbum,
   safe,
   frozen,
+  autoPlay,
+  onVoiceStop,
 }: {
   row: MsgRow;
   highlighted: boolean;
@@ -634,6 +642,8 @@ function Bubble({
   /** Safe view is on: their photos and videos stay blurred until tapped. */
   safe: boolean;
   frozen: boolean;
+  autoPlay: boolean;
+  onVoiceStop: (finished: boolean) => void;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -653,6 +663,13 @@ function Bubble({
   const visual = !sealed && row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const hasText = !!row.text || row.deleted || !!row.locked;
+  const deletedBy = row.message?.deletedBy;
+  const deletedText =
+    deletedBy === meId && !row.mine
+      ? tr.messages.youDeleted(nameOf(row.message!.senderId))
+      : deletedBy && deletedBy !== meId && row.mine
+        ? tr.messages.deletedYours(nameOf(deletedBy))
+        : tr.messages.deleted;
   const inlineVoice =
     !sealed &&
     !hasText &&
@@ -696,6 +713,8 @@ function Bubble({
     row.deleted || bare ? t.muted : mine ? alpha(bubble.ink, 0.7) : bubble.theirInk ? alpha(theirInk, 0.6) : t.muted;
 
   const bubbleRef = useRef<ComponentRef<typeof View>>(null);
+  const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
+  const [fxBox, setFxBox] = useState<LayoutRectangle | null>(null);
   const canReact = !frozen && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
   const latest = useRef({ selectable, selecting, canReact, onToggle, onMenu, onReact });
   latest.current = { selectable, selecting, canReact, onToggle, onMenu, onReact };
@@ -756,6 +775,7 @@ function Bubble({
         <View
           ref={bubbleRef}
           collapsable={false}
+          onLayout={fx ? (e) => setFxBox(e.nativeEvent.layout) : undefined}
           pointerEvents={selectable ? "none" : "auto"}
           style={[
             radius,
@@ -792,6 +812,13 @@ function Bubble({
                 hiddenLabel={chip(row.spoiler)}
                 onReveal={() => revealMedia(row.key)}
                 maxWidth={maxWidth - 8}
+                autoPlay={autoPlay}
+                onStop={onVoiceStop}
+                track={
+                  row.message
+                    ? { chatId: row.message.chatId, title: mine ? tr.common.you : nameOf(row.message.senderId) }
+                    : undefined
+                }
                 meta={
                   inlineVoice && (
                     <View style={[styles.metaRow, { paddingTop: 0 }]}>
@@ -840,7 +867,7 @@ function Bubble({
               {row.deleted ? (
                 <View style={styles.deleted}>
                   <Ban size={14} color={fg} />
-                  <Text style={[styles.text, { color: fg, fontStyle: "italic" }]}>{tr.messages.deleted}</Text>
+                  <Text style={[styles.text, { color: fg, fontStyle: "italic" }]}>{deletedText}</Text>
                 </View>
               ) : row.locked ? (
                 <View style={styles.deleted}>
@@ -862,6 +889,7 @@ function Bubble({
             </View>
           )}
         </View>
+        {fx && fxBox && <EffectLayer effect={fx} id={row.key} box={fxBox} radius={radius} />}
         {row.message && !row.deleted && (
           <ReactionChips
             reactions={row.message.reactions ?? []}
@@ -915,6 +943,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const startSelection = useSelection((s) => s.start);
     const toggleSelected = useSelection((s) => s.toggle);
     const list = useRef<FlatList<Row>>(null);
+    const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [anchor, setAnchor] = useState<Anchor | null>(null);
@@ -1000,6 +1029,22 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter],
     );
     const scrollToBottom = () => list.current?.scrollToOffset({ offset: 0, animated: true });
+
+    /** After a voice message plays to the end, starts the next one if it's a voice message too. Rows run newest first. */
+    function playNext(key: string) {
+      const from = rows.findIndex((r) => r.key === key);
+      const index = rows.findLastIndex((r, i) => i < from && r.kind !== "day" && r.kind !== "unread");
+      const next = rows[index];
+      const voice =
+        next?.kind === "msg" &&
+        next.attachment?.source === "server" &&
+        next.attachment.data.kind === "voice" &&
+        !next.deleted &&
+        !next.ephemeral;
+      if (from < 0 || !voice) return setAutoplay(null);
+      setAutoplay(next.key);
+      list.current?.scrollToIndex({ index, viewPosition: 0.5, animated: true });
+    }
     const [jumping, setJumping] = useState<string | null>(null);
     useImperativeHandle(handle, () => ({
       scrollToBottom,
@@ -1173,7 +1218,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
               setTimeout(() => list.current?.scrollToIndex({ index: info.index, viewPosition: 0.5 }), 100);
             }}
             contentContainerStyle={{ paddingVertical: 8 }}
-            extraData={[selecting, selectedIds, highlight]}
+            extraData={[selecting, selectedIds, highlight, autoplay]}
             renderItem={({ item: row }) =>
               row.kind === "day" ? (
                 <View style={styles.day}>
@@ -1249,6 +1294,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   }}
                   safe={chat.safeView}
                   frozen={frozen}
+                  autoPlay={autoplay === row.key}
+                  onVoiceStop={(finished) =>
+                    finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k))
+                  }
                 />
               )
             }

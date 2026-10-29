@@ -50,6 +50,54 @@ body {
   @apply bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100;
 }
 
+@keyframes fx-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px 1px rgb(249 115 22 / 0.55);
+  }
+  50% {
+    box-shadow: 0 0 18px 4px rgb(239 68 68 / 0.75);
+  }
+}
+
+@keyframes fx-flicker {
+  0%,
+  100% {
+    transform: translateY(0) scale(1) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.15) rotate(4deg);
+  }
+}
+
+@keyframes fx-wiggle {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  80% {
+    transform: rotate(-12deg) scale(1.1);
+  }
+  90% {
+    transform: rotate(12deg) scale(1.1);
+  }
+}
+
+@keyframes fx-fly {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot));
+  }
+}
+
 @keyframes spoiler-drift {
   from {
     background-position: 0 0, 3px 2px;
@@ -79,11 +127,17 @@ body {
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.98);
+    transform: translateY(-16px) scale(0.94);
   }
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes toast-life {
+  to {
+    transform: scaleX(0);
   }
 }
 
@@ -101,5 +155,40 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .reaction-pop {
     animation: reaction-pop 140ms ease-out;
+  }
+}
+
+@keyframes call-reaction {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(-4vh) scale(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift, 0px), -55vh) scale(1);
+  }
+}
+
+@keyframes rps-shake {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-14px) rotate(-14deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .call-reaction {
+    animation: call-reaction 2.8s ease-out forwards;
+  }
+
+  .rps-shake {
+    animation: rps-shake 0.3s ease-in-out 3;
   }
 }

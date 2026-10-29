@@ -6,22 +6,24 @@ import {
   quotaSummary,
   MAX_CONTACT_LINKS,
   type SessionDTO,
+  TONES,
   type UpdateMeInput,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Check, LogOut, Monitor, Smartphone } from "lucide-react-native";
+import { Camera, Check, ChevronRight, LogOut, Monitor, Smartphone, Volume2 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import Constants from "expo-constants";
 import { Text, TextInput } from "./text";
 import { formatCode, contactUrl, sendAtLabel, shareContact, shareInvite, timeAgo } from "@/lib/format";
 import { setPlainFont, usePlainFont } from "@/lib/font";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
-import { playChime, useNotifyPrefs } from "@/lib/notify";
+import { playTone, useNotifyPrefs } from "@/lib/notify";
 import { pickAvatar } from "@/lib/media";
 import { registerPush } from "@/lib/push";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
-import { brand, useTheme } from "@/lib/theme";
+import { brand, brandInk, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
 import { AppLockSettings } from "./app-lock";
@@ -29,6 +31,7 @@ import { Avatar } from "./avatar";
 import { QrCode } from "./qr-code";
 import { ScheduleDialog } from "./scheduled";
 import { NewInvite } from "./invites";
+import { QuickReactionsSettings } from "./reactions";
 import { Sheet } from "./sheet";
 import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
@@ -93,7 +96,7 @@ function ProfileCard() {
           </Text>
         </View>
       </View>
-      <Text style={{ color: t.muted, fontSize: 13, lineHeight: 18 }}>{tr.settings.seenAs(user.alias)}</Text>
+      <Text style={{ color: t.muted, fontSize: 13, lineHeight: 18 }}>{tr.settings.seenAs}</Text>
       {user.avatarUrl && (
         <TextButton
           title={tr.settings.removePhoto}
@@ -107,7 +110,18 @@ function ProfileCard() {
   );
 }
 
+/** Opens Android's settings for the messages channel, whose sound plays when the app is closed. */
+function openChannelSettings() {
+  const pkg = Constants.expoConfig?.android?.package;
+  if (!pkg) return void Linking.openSettings();
+  void Linking.sendIntent("android.settings.CHANNEL_NOTIFICATION_SETTINGS", [
+    { key: "android.provider.extra.APP_PACKAGE", value: pkg },
+    { key: "android.provider.extra.CHANNEL_ID", value: "messages" },
+  ]).catch(() => Linking.openSettings());
+}
+
 function NotificationSettings() {
+  const t = useTheme();
   const tr = useT();
   const prefs = useNotifyPrefs();
   return (
@@ -120,9 +134,44 @@ function NotificationSettings() {
           value={prefs.sound}
           onChange={(on) => {
             prefs.set({ sound: on });
-            if (on) playChime();
+            if (on) playTone();
           }}
         />
+        {prefs.sound && (
+          <View style={styles.tones} accessibilityRole="radiogroup">
+            {TONES.map((tone) => {
+              const on = prefs.tone === tone;
+              return (
+                <Pressable
+                  key={tone}
+                  onPress={() => {
+                    prefs.set({ tone });
+                    playTone(tone);
+                  }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: on }}
+                  style={({ pressed }) => [
+                    styles.tone,
+                    { backgroundColor: on ? brand : t.field, transform: [{ scale: pressed ? 0.95 : 1 }] },
+                  ]}
+                >
+                  <Volume2 size={14} color={on ? brandInk : t.textSoft} />
+                  <Text style={{ color: on ? brandInk : t.text, fontSize: 14, fontWeight: "600" }}>
+                    {tr.settings.tones[tone]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+        <Divider />
+        <Pressable onPress={openChannelSettings} accessibilityRole="button" style={styles.channelRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.closedSound}</Text>
+            <Text style={{ color: t.muted, fontSize: 13 }}>{tr.settings.closedSoundHint}</Text>
+          </View>
+          <ChevronRight size={18} color={t.faint} />
+        </Pressable>
         <Divider />
         <Toggle
           label={tr.settings.popups}
@@ -537,6 +586,7 @@ export function SettingsPanel() {
         <ProfileCard />
         <LanguagePicker />
         <FontPicker />
+        <QuickReactionsSettings />
         <FindMe />
         <NotificationSettings />
         <Invites />
@@ -563,6 +613,9 @@ export function SettingsPanel() {
 }
 
 const styles = StyleSheet.create({
+  tones: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingBottom: 16 },
+  tone: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  channelRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   title: { flex: 1, fontSize: 22, fontWeight: "700", letterSpacing: -0.3, paddingHorizontal: 4 },
   signOut: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6 },
   content: { padding: 16, gap: 24 },

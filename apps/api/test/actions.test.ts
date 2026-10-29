@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pairAlias } from "../src/services/users.js";
 import { chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -65,7 +66,7 @@ describe("deleting messages", () => {
 
     const page = await get(guest, `/v1/chats/${chatId}/messages`);
     const tomb = page.items.find((m: { id: string }) => m.id === secret.id);
-    expect(tomb).toMatchObject({ text: null });
+    expect(tomb).toMatchObject({ text: null, deletedBy: guest.user.id });
     expect(tomb.deletedAt).not.toBeNull();
     expect(page.items.find((m: { id: string }) => m.id === reply.id).replyTo).toMatchObject({
       deleted: true,
@@ -165,25 +166,29 @@ describe("your own name and photo", () => {
     expect((await fetch(me.avatarUrl)).status).toBe(404);
   });
 
-  it("stay hidden behind an alias until shared with that contact", async () => {
+  it("stay hidden behind a different alias for each contact until shared with them", async () => {
+    expect([pairAlias("a", "b"), pairAlias("b", "a")]).toEqual(["Frite 2729", "Frite 7239"]);
     const { host, guest, chatId } = await makeFriends();
+    const other = await signUp("other", { inviteCode: (await call(host, "POST", "/v1/invites", {})).json().code });
     await call(host, "PATCH", "/v1/me", { photo: PNG_1PX });
     const me = await get(host, "/v1/me");
-    expect(me.alias).toMatch(/^Frite \d{4}$/);
+    const alias = pairAlias(guest.user.id, host.user.id);
     const seen = async () =>
       (await get(guest, `/v1/chats/${chatId}`)).members.find((m: { user: { id: string } }) => m.user.id === host.user.id).user;
 
-    expect(await seen()).toEqual({ id: host.user.id, displayName: me.alias, avatarUrl: null });
-    expect((await get(guest, `/v1/chats/${chatId}`)).title).toBe(me.alias);
+    expect(await seen()).toEqual({ id: host.user.id, displayName: alias, avatarUrl: null });
+    expect((await get(guest, `/v1/chats/${chatId}`)).title).toBe(alias);
     expect((await get(guest, "/v1/contacts")).items[0]).toMatchObject({
-      user: { displayName: me.alias, avatarUrl: null },
-      originalName: me.alias,
+      user: { displayName: alias, avatarUrl: null },
+      originalName: alias,
     });
+    expect((await get(guest, `/v1/contacts?q=${encodeURIComponent(alias)}`)).items).toHaveLength(1);
     expect((await get(guest, "/v1/contacts?q=host")).items).toEqual([]);
+    expect((await get(other, "/v1/contacts")).items[0].originalName).toBe(pairAlias(other.user.id, host.user.id));
     const invite = (await call(host, "POST", "/v1/invites", {})).json();
     expect((await get(guest, `/v1/invites/${invite.code}`)).inviter).toEqual({
       id: host.user.id,
-      displayName: me.alias,
+      displayName: expect.stringMatching(/^Frite \d{4}$/),
       avatarUrl: null,
     });
 
@@ -195,7 +200,29 @@ describe("your own name and photo", () => {
     expect((await get(guest, `/v1/chats/${chatId}`)).sharingProfile).toBe(false);
 
     await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: false });
-    expect(await seen()).toEqual({ id: host.user.id, displayName: me.alias, avatarUrl: null });
+    expect(await seen()).toEqual({ id: host.user.id, displayName: alias, avatarUrl: null });
+  });
+});
+
+describe("private contact labels", () => {
+  it("only open with the app lock code and never show up anywhere else", async () => {
+    const { host, guest } = await makeFriends();
+    const url = `/v1/contacts/${guest.user.id}/label`;
+    expect((await call(host, "PUT", url, { code: "1234", label: "x" })).json().error.code).toBe("APP_LOCK_REQUIRED");
+    await call(host, "PUT", "/v1/me/app-lock", { code: "1234" });
+    expect((await call(host, "PUT", url, { code: "9999", label: "x" })).json().error.code).toBe("WRONG_APP_LOCK_CODE");
+    expect((await call(host, "PUT", url, { code: "1234", label: "  From the gym " })).json()).toEqual({ label: "From the gym" });
+    expect((await call(host, "POST", url, { code: "0000" })).json().error.code).toBe("WRONG_APP_LOCK_CODE");
+    expect((await call(host, "POST", url, { code: "1234" })).json()).toEqual({ label: "From the gym" });
+    expect((await call(guest, "POST", `/v1/contacts/${host.user.id}/label`, { code: "1234" })).json().error.code).toBe(
+      "APP_LOCK_REQUIRED",
+    );
+
+    const elsewhere = [`/v1/contacts/${guest.user.id}`, "/v1/contacts", "/v1/chats"];
+    for (const path of elsewhere) expect(JSON.stringify(await get(host, path))).not.toContain("gym");
+
+    expect((await call(host, "PUT", url, { code: "1234", label: null })).json()).toEqual({ label: null });
+    expect(await prisma.contactOverride.count({ where: { ownerId: host.user.id } })).toBe(0);
   });
 });
 

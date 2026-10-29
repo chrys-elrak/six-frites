@@ -15,7 +15,6 @@ model User {
   avatarUrl   String?
   avatarKey   String?
   contactCode String    @unique @default(dbgenerated("random_code()"))
-  alias       String    @default(dbgenerated("random_alias()"))
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   bannedAt    DateTime?
@@ -30,6 +29,7 @@ model User {
   inviteLimit    Int       @default(10)
   queuedAt       DateTime?
   adsDisabled    Boolean   @default(false)
+  quickReactions String[]  @default([])
 
   sessions       Session[]
   invites        Invite[]
@@ -262,6 +262,7 @@ model Message {
   text         String?
   entities     Json?
   spoiler      Boolean   @default(false)
+  effect       String?
   maxViews     Int?
   ttlSeconds   Int?
   expiredAt    DateTime?
@@ -281,6 +282,7 @@ model Message {
   createdAt    DateTime  @default(now())
   editedAt     DateTime?
   deletedAt    DateTime?
+  deletedById  String?
   expiresAt    DateTime?
 
   chat             Chat               @relation(fields: [chatId], references: [id], onDelete: Cascade)
@@ -364,6 +366,7 @@ model ContactOverride {
   contactId   String
   displayName String?
   photoKey    String?
+  label       String?
   updatedAt   DateTime @updatedAt
 
   owner   User @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)

@@ -128,16 +128,19 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
 /**
  * Covers the app until the app lock code is entered. A modal, so it also sits above any dialog left open.
  * Forgetting the code means signing out and in again. With `onCancel` it guards a single screen, like the
- * archived chats, and can be backed out of instead.
+ * archived chats, and can be backed out of instead. With `check` the code goes there instead of the plain
+ * unlock, for actions that need the code itself, like a private label; the fingerprint can't stand in then.
  */
 export function LockScreen({
   title,
   onUnlock = unlock,
   onCancel,
+  check: verify,
 }: {
   title?: string;
   onUnlock?: () => void;
   onCancel?: () => void;
+  check?: (code: string) => Promise<unknown>;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -145,7 +148,7 @@ export function LockScreen({
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const biometric = useBiometricUnlock((s) => s.on);
+  const biometric = useBiometricUnlock((s) => s.on) && !verify;
 
   function askFingerprint() {
     void checkBiometrics(tr.settings.appLock.fingerprintPrompt, tr.settings.appLock.useCode).then((ok) => ok && onUnlock());
@@ -160,7 +163,8 @@ export function LockScreen({
     setBusy(true);
     setError(null);
     try {
-      unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } }));
+      if (verify) await verify(code);
+      else unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } }));
       onUnlock();
     } catch (err) {
       setCode("");

@@ -19,8 +19,8 @@ const en = {
   changePhoto: "Change your photo",
   displayName: "Display name",
   removePhoto: "Remove photo",
-  seenAs: (alias: string) =>
-    `People see you as ${alias}, without your photo, unless you share your profile with them from their contact page.`,
+  seenAs:
+    "Each person sees you under a different alias, without your photo, unless you share your profile with them from their contact page.",
 
   findMe: "How people find you",
   contactCode: "Your contact code",
@@ -69,7 +69,10 @@ const en = {
 
   notifications: "Notifications",
   sound: "Sound",
-  soundHint: "Plays a short chime for new messages.",
+  soundHint: "Plays a short sound for new messages.",
+  tones: { chime: "Chime", pop: "Pop", ding: "Ding", marimba: "Marimba", drop: "Drop", trio: "Trio" },
+  closedSound: "Sound when the app is closed",
+  closedSoundHint: "Pick any of your phone's sounds in Android's settings.",
   popups: "Popups",
   popupsHint: "Shows new messages from other chats while you use the app.",
   whenClosed: "When Six Frites is closed",
@@ -188,6 +191,7 @@ const en = {
     eraseDigit: "Erase last digit",
     errors: {
       WRONG_APP_LOCK_CODE: "That's not your app lock code.",
+      APP_LOCK_REQUIRED: "Turn on the app lock first.",
       RATE_LIMITED: "Too many tries. Wait a minute.",
       VALIDATION_FAILED: "Use 4 to 8 digits.",
     } as ByCode<"WRONG_APP_LOCK_CODE">,
@@ -212,8 +216,8 @@ const fr: typeof en = {
   changePhoto: "Changer votre photo",
   displayName: "Nom affiché",
   removePhoto: "Supprimer la photo",
-  seenAs: (alias) =>
-    `Les autres vous voient comme ${alias}, sans photo, sauf si vous leur partagez votre profil depuis leur fiche contact.`,
+  seenAs:
+    "Chaque personne vous voit sous un alias différent, sans photo, sauf si vous lui partagez votre profil depuis sa fiche contact.",
 
   findMe: "Comment vous trouver",
   contactCode: "Votre code de contact",
@@ -263,7 +267,10 @@ const fr: typeof en = {
 
   notifications: "Notifications",
   sound: "Son",
-  soundHint: "Joue un petit carillon à chaque nouveau message.",
+  soundHint: "Joue un petit son à chaque nouveau message.",
+  tones: { chime: "Carillon", pop: "Pop", ding: "Ding", marimba: "Marimba", drop: "Goutte", trio: "Trio" },
+  closedSound: "Son quand l'app est fermée",
+  closedSoundHint: "Choisissez n'importe quel son du téléphone dans les réglages Android.",
   popups: "Pop-ups",
   popupsHint: "Affiche les nouveaux messages des autres discussions pendant que vous utilisez l'application.",
   whenClosed: "Quand Six Frites est fermé",
@@ -383,6 +390,7 @@ const fr: typeof en = {
     eraseDigit: "Effacer le dernier chiffre",
     errors: {
       WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de verrouillage.",
+      APP_LOCK_REQUIRED: "Activez d'abord le verrouillage de l'app.",
       RATE_LIMITED: "Trop de tentatives. Patientez une minute.",
       VALIDATION_FAILED: "Utilisez 4 à 8 chiffres.",
     },
@@ -407,8 +415,8 @@ const mg: typeof en = {
   changePhoto: "Ovay ny sarinao",
   displayName: "Anarana aseho",
   removePhoto: "Esory ny sary",
-  seenAs: (alias) =>
-    `Hitan'ny hafa ho ${alias} ianao, tsy misy sary, raha tsy zarainao aminy ny mombamomba anao avy amin'ny pejiny.`,
+  seenAs:
+    "Samy mahita solon'anarana hafa ho anao ny tsirairay, tsy misy sary, raha tsy zarainao aminy ny mombamomba anao avy amin'ny pejiny.",
 
   findMe: "Ahoana no ahitan'ny olona anao",
   contactCode: "Ny kaody mpifandray anao",
@@ -459,6 +467,9 @@ const mg: typeof en = {
   notifications: "Fampandrenesana",
   sound: "Feo",
   soundHint: "Mamoaka feo kely isaky ny misy hafatra vaovao.",
+  tones: { chime: "Lakolosy", pop: "Pop", ding: "Ding", marimba: "Marimba", drop: "Rano", trio: "Telo" },
+  closedSound: "Feo rehefa mihidy ny app",
+  closedSoundHint: "Safidio amin'ny fikirana Android izay feo tianao ao amin'ny findainao.",
   popups: "Pop-up",
   popupsHint: "Mampiseho ny hafatra vaovao avy amin'ny resaka hafa raha mampiasa ny fampiharana ianao.",
   whenClosed: "Rehefa mihidy ny Six Frites",
@@ -576,6 +587,7 @@ const mg: typeof en = {
     eraseDigit: "Fafao ny isa farany",
     errors: {
       WRONG_APP_LOCK_CODE: "Tsy io no kaodin'ny hidinao.",
+      APP_LOCK_REQUIRED: "Alefaso aloha ny hidin'ny app.",
       RATE_LIMITED: "Be loatra ny andrana. Andraso iray minitra.",
       VALIDATION_FAILED: "Mampiasà isa 4 ka hatramin'ny 8.",
     },

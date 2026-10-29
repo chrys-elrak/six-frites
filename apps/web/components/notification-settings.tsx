@@ -1,8 +1,10 @@
 "use client";
 
+import { TONES } from "@six/shared";
+import { Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
-import { playChime, unlockAudio, useNotifyPrefs } from "@/lib/notify";
+import { playTone, unlockAudio, useNotifyPrefs } from "@/lib/notify";
 import { disablePush, enablePush, pushSupported } from "@/lib/push";
 import { Card, SectionTitle, Toggle } from "./ui";
 
@@ -59,9 +61,33 @@ export function NotificationSettings() {
           checked={prefs.sound}
           onChange={(on) => {
             prefs.set({ sound: on });
-            if (on) void unlockAudio().then(playChime);
+            if (on) void unlockAudio().then(() => playTone());
           }}
         />
+        {prefs.sound && (
+          <div className="flex flex-wrap gap-2 px-4 py-3" role="radiogroup" aria-label={tr.settings.sound}>
+            {TONES.map((tone) => (
+              <button
+                key={tone}
+                type="button"
+                role="radio"
+                aria-checked={prefs.tone === tone}
+                onClick={() => {
+                  prefs.set({ tone });
+                  void unlockAudio().then(() => playTone(tone));
+                }}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition active:scale-95 ${
+                  prefs.tone === tone
+                    ? "bg-brand text-brand-ink"
+                    : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
+                }`}
+              >
+                <Volume2 className="size-3.5" />
+                {tr.settings.tones[tone]}
+              </button>
+            ))}
+          </div>
+        )}
         <Toggle
           label={tr.settings.popups}
           hint={tr.settings.popupsHint}

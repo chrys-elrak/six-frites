@@ -1,6 +1,6 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Shuffle, Trash2, X } from "lucide-react-native";
+import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
@@ -12,8 +12,10 @@ import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { useT } from "@/lib/i18n";
 import { pickAvatar } from "@/lib/media";
+import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
+import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { SafetyNumber } from "./encryption-settings";
 import { IconButton, Notice, PrimaryButton, Toggle } from "./ui";
@@ -42,6 +44,9 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [picked, setPicked] = useState<number | null>(null);
   const [rendering, setRendering] = useState<string | null>(null);
   const shot = useRef<ComponentRef<typeof View>>(null);
+  const hasLock = useSession((s) => s.user!.hasAppLock);
+  const [askingCode, setAskingCode] = useState(false);
+  const [label, setLabel] = useState<{ code: string; text: string; saved: string } | null>(null);
 
   const c = contact.data;
   if (c && name === null) setName(c.customName ?? "");
@@ -85,6 +90,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
     setSaving(true);
     setError(null);
     try {
+      if (label && label.text.trim() !== label.saved) {
+        unwrap(
+          await six.api.PUT("/v1/contacts/{userId}/label", {
+            params: { path: { userId } },
+            body: { code: label.code, label: label.text.trim() || null },
+          }),
+        );
+      }
       const trimmed = (name ?? "").trim();
       const showingRealName = !(trimmed && trimmed !== c.originalName);
       await updateContact(qc, userId, {
@@ -199,6 +212,35 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 />
               </View>
 
+              <View style={[styles.reveal, { backgroundColor: t.field }]}>
+                <View style={styles.labelHead}>
+                  <Lock size={14} color={t.textSoft} />
+                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.privateLabel}</Text>
+                </View>
+                {label ? (
+                  <TextInput
+                    autoFocus
+                    value={label.text}
+                    onChangeText={(text) => setLabel({ ...label, text })}
+                    placeholder={tr.contacts.labelPlaceholder}
+                    placeholderTextColor={t.muted}
+                    maxLength={200}
+                    style={[styles.input, { backgroundColor: t.surface, color: t.text }]}
+                  />
+                ) : (
+                  <>
+                    <Text style={{ color: t.muted, fontSize: 12 }}>
+                      {hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}
+                    </Text>
+                    {hasLock && (
+                      <Pressable onPress={() => setAskingCode(true)} hitSlop={6}>
+                        <Text style={{ color: brand, fontSize: 14, fontWeight: "600" }}>{tr.contacts.openLabel}</Text>
+                      </Pressable>
+                    )}
+                  </>
+                )}
+              </View>
+
               {error && <Notice tone="error">{error}</Notice>}
               <PrimaryButton title={saving ? tr.common.saving : tr.common.save} disabled={saving} onPress={() => void save()} />
               <SafetyNumber userId={userId} />
@@ -207,6 +249,19 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
         </View>
       </KeyboardAvoidingView>
 
+      {askingCode && (
+        <LockScreen
+          title={tr.contacts.privateLabel}
+          onCancel={() => setAskingCode(false)}
+          onUnlock={() => setAskingCode(false)}
+          check={async (code) => {
+            const res = unwrap(
+              await six.api.POST("/v1/contacts/{userId}/label", { params: { path: { userId } }, body: { code } }),
+            );
+            setLabel({ code, text: res.label ?? "", saved: res.label ?? "" });
+          }}
+        />
+      )}
       {rendering && (
         <View ref={shot} collapsable={false} style={styles.offscreen}>
           <SvgXml xml={rendering} width={192} height={192} />
@@ -239,6 +294,7 @@ const styles = StyleSheet.create({
   suggestion: { width: "14.5%", aspectRatio: 1, borderRadius: 999, borderWidth: 2, borderColor: "transparent", padding: 1 },
   suggestionClip: { flex: 1, borderRadius: 999, overflow: "hidden" },
   reveal: { borderRadius: 12, padding: 12, gap: 8 },
+  labelHead: { flexDirection: "row", alignItems: "center", gap: 6 },
   input: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
   offscreen: { position: "absolute", left: -1000, top: 0, width: 192, height: 192, backgroundColor: "#fff" },
 });

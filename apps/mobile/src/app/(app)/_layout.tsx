@@ -1,7 +1,9 @@
 import { Stack } from "expo-router";
 import { View } from "react-native";
+import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LockScreen } from "@/components/app-lock";
 import { CallScreen } from "@/components/call-screen";
+import { MiniPlayer, useMiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
 import { Toasts } from "@/components/toasts";
 import { useAppLock, useAutoLock } from "@/lib/app-lock";
@@ -14,12 +16,17 @@ export default function AppLayout() {
   const t = useTheme();
   const hasAppLock = useSession((s) => !!s.user?.hasAppLock);
   const locked = useAppLock((s) => s.locked) && hasAppLock;
+  const insets = useSafeAreaInsets();
+  const mini = !!useMiniPlayer();
   usePush();
   useAutoLock();
   return (
     <RealtimeProvider>
       <View style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }} />
+        <MiniPlayer />
+        <SafeAreaInsetsContext.Provider value={mini ? { ...insets, top: 0 } : insets}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }} />
+        </SafeAreaInsetsContext.Provider>
         {!locked && <Toasts />}
         {!locked && <BackupPinPrompt />}
         <CallScreen />

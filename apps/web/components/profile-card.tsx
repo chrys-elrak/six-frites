@@ -90,7 +90,7 @@ export function ProfileCard() {
           <p className="truncate px-2 text-sm text-stone-500 dark:text-stone-400">{user.email}</p>
         </form>
       </div>
-      <p className="text-sm text-stone-500 dark:text-stone-400">{tr.settings.seenAs(user.alias)}</p>
+      <p className="text-sm text-stone-500 dark:text-stone-400">{tr.settings.seenAs}</p>
       {user.avatarUrl && (
         <button
           type="button"

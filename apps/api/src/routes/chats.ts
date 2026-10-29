@@ -8,7 +8,10 @@ import {
   CHECKLIST,
   CheckItemInput,
   AddContactInput,
+  AppLockInput,
   ContactDTO,
+  ContactLabelDTO,
+  ContactLabelInput,
   ShareProfileInput,
   ContactListQuery,
   FindUserQuery,
@@ -37,7 +40,15 @@ import {
   page,
 } from "@six/shared";
 import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
-import { findContact, listContacts, removeContact, shareProfile, updateContact } from "../services/contacts.js";
+import {
+  findContact,
+  listContacts,
+  readLabel,
+  removeContact,
+  setLabel,
+  shareProfile,
+  updateContact,
+} from "../services/contacts.js";
 import { blockUser, unblockUser } from "../services/blocks.js";
 import { addContact, findUser } from "../services/discovery.js";
 import {
@@ -540,6 +551,41 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => updateContact(req.auth.userId, req.params.userId, req.body),
+  );
+
+  app.post(
+    "/contacts/:userId/label",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["contacts"],
+        summary: "Read your private label for a contact",
+        description:
+          "A note only you see, never part of any other response. Needs your app lock `code`: APP_LOCK_REQUIRED if the app lock is off, WRONG_APP_LOCK_CODE if it doesn't match.",
+        security,
+        params: z.object({ userId: Id }),
+        body: AppLockInput,
+        response: { 200: ContactLabelDTO },
+      },
+    },
+    (req) => readLabel(req.auth.userId, req.params.userId, req.body.code),
+  );
+
+  app.put(
+    "/contacts/:userId/label",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["contacts"],
+        summary: "Set or clear your private label for a contact",
+        description: "Same `code` rules as reading it. Send null or an empty label to remove it.",
+        security,
+        params: z.object({ userId: Id }),
+        body: ContactLabelInput,
+        response: { 200: ContactLabelDTO },
+      },
+    },
+    (req) => setLabel(req.auth.userId, req.params.userId, req.body),
   );
 
   app.put(

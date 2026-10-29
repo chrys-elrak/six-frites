@@ -11,6 +11,7 @@ import {
   type EphemeralInput,
   type GeoPoint,
   type MessageDTO,
+  type MessageEffect,
   type MessageTimingDTO,
   type MessageEntity,
   type MessageListQuery,
@@ -120,6 +121,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     text: hideContent ? null : m.text,
     entities: hideContent ? [] : entitiesOf(m),
     spoiler: m.spoiler,
+    effect: hideContent ? null : (m.effect as MessageEffect | null),
     attachment:
       hideContent || !m.attachment
         ? null
@@ -151,6 +153,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     createdAt: m.createdAt.toISOString(),
     editedAt: m.editedAt?.toISOString() ?? null,
     deletedAt: m.deletedAt?.toISOString() ?? null,
+    deletedBy: m.deletedById,
     expiresAt: m.expiresAt?.toISOString() ?? null,
     reactions: m.deletedAt || purged ? [] : groupReactions(m.reactions),
     encryption: encryptionFor(m, viewerId, hideContent),
@@ -320,6 +323,7 @@ export async function createMessage(
       attachmentId: upload?.id ?? null,
       stickerId: content?.stickerId ?? null,
       spoiler: content?.spoiler ?? false,
+      effect: content?.effect ?? null,
       maxViews: content?.ephemeral?.maxViews ?? null,
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,
@@ -563,7 +567,7 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
       const tombstones = messages.filter((m) => m.deletedAt);
       await tx.message.updateMany({
         where: { id: { in: live.map((m) => m.id) } },
-        data: { deletedAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
+        data: { deletedAt: new Date(), deletedById: userId, text: null, entities: Prisma.DbNull, attachmentId: null },
       });
       await dropEncryptedContent(tx, live.map((m) => m.id));
       await scrubMessageEvents(
@@ -582,7 +586,7 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
           });
         }
         for (const id of members) {
-          if (deleted.length) emit(id, "message.deleted", { chatId, messageIds: deleted, scope: "all" });
+          if (deleted.length) emit(id, "message.deleted", { chatId, messageIds: deleted, scope: "all", by: userId });
           if (removed.length) emit(id, "message.deleted", { chatId, messageIds: removed, scope: "me" });
         }
       }

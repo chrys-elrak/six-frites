@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { headObject, putObject } from "../src/lib/storage.js";
+import { pairAlias } from "../src/services/users.js";
 import { type Auth, chatHelpers, loginAs, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -16,6 +17,17 @@ describe("admin access", () => {
     const stats = await get(boss, "/v1/admin/stats");
     expect(stats.users).toBeGreaterThan(0);
     expect(stats.signups).toHaveLength(30);
+  });
+});
+
+describe("aliases", () => {
+  it("lead admins to the person behind them, and to who sees them that way", async () => {
+    const { host, guest } = await makeFriends();
+    const boss = await admin();
+    const alias = pairAlias(guest.user.id, host.user.id).toLowerCase();
+    const found = await get(boss, `/v1/admin/users?q=${encodeURIComponent(alias)}`);
+    const match = found.items.find((u: { id: string }) => u.id === host.user.id);
+    expect(match.seenBy.map((v: { id: string }) => v.id)).toContain(guest.user.id);
   });
 });
 

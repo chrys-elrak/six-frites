@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Id, IsoDate } from "./common.js";
+import { QUICK_REACTIONS, ReactionEmoji } from "./chats.js";
 import { ContactPhoto } from "./contacts.js";
 
 export const UserDTO = z.object({
@@ -12,10 +13,10 @@ export const UserDTO = z.object({
     .string()
     .nullable()
     .describe("Identifies the key from your recovery key; null until you set up a recovery key"),
-  alias: z.string().describe("What people see instead of your name and photo, until you share them"),
   hasBackupPin: z.boolean().describe("Whether a new device can restore your backup with your 6-digit PIN"),
   hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
   ads: z.boolean().describe("Whether the apps show you ads; admins can turn them off for you"),
+  quickReactions: z.array(z.string()).describe("The emojis offered first when you react, in order; empty means the defaults"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;
@@ -31,11 +32,23 @@ export const UpdateMeInput = z.object({
   photo: ContactPhoto.nullable()
     .optional()
     .describe("A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes your photo"),
+  quickReactions: z
+    .array(ReactionEmoji)
+    .length(QUICK_REACTIONS.length)
+    .refine((a) => new Set(a).size === a.length, "Pick each emoji once")
+    .optional()
+    .describe("Your own quick reactions; send the defaults to go back to them"),
 });
 export type UpdateMeInput = z.infer<typeof UpdateMeInput>;
 
 export const AppLockInput = z.object({ code: z.string().regex(/^\d{4,8}$/, "Use 4 to 8 digits") });
 export type AppLockInput = z.infer<typeof AppLockInput>;
+
+export const ContactLabelInput = AppLockInput.extend({ label: z.string().trim().max(200).nullable() });
+export type ContactLabelInput = z.infer<typeof ContactLabelInput>;
+
+export const ContactLabelDTO = z.object({ label: z.string().nullable() });
+export type ContactLabelDTO = z.infer<typeof ContactLabelDTO>;
 
 const ALIAS_GRADIENTS = [
   ["#f97316", "#c2410c"],

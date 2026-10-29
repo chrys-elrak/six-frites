@@ -114,10 +114,6 @@
                           "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                           "type": "string"
                         },
-                        "alias": {
-                          "type": "string",
-                          "description": "What people see instead of your name and photo, until you share them"
-                        },
                         "hasBackupPin": {
                           "type": "boolean",
                           "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -129,6 +125,13 @@
                         "ads": {
                           "type": "boolean",
                           "description": "Whether the apps show you ads; admins can turn them off for you"
+                        },
+                        "quickReactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "The emojis offered first when you react, in order; empty means the defaults"
                         },
                         "createdAt": {
                           "type": "string",
@@ -143,10 +146,10 @@
                         "avatarUrl",
                         "contactCode",
                         "backupKeyId",
-                        "alias",
                         "hasBackupPin",
                         "hasAppLock",
                         "ads",
+                        "quickReactions",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -237,10 +240,6 @@
                           "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                           "type": "string"
                         },
-                        "alias": {
-                          "type": "string",
-                          "description": "What people see instead of your name and photo, until you share them"
-                        },
                         "hasBackupPin": {
                           "type": "boolean",
                           "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -252,6 +251,13 @@
                         "ads": {
                           "type": "boolean",
                           "description": "Whether the apps show you ads; admins can turn them off for you"
+                        },
+                        "quickReactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "The emojis offered first when you react, in order; empty means the defaults"
                         },
                         "createdAt": {
                           "type": "string",
@@ -266,10 +272,10 @@
                         "avatarUrl",
                         "contactCode",
                         "backupKeyId",
-                        "alias",
                         "hasBackupPin",
                         "hasAppLock",
                         "ads",
+                        "quickReactions",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -551,7 +557,7 @@
             "in": "query",
             "name": "q",
             "required": false,
-            "description": "Matches name or email"
+            "description": "Matches name or email, or an alias like Frite 0327"
           },
           {
             "schema": {
@@ -674,6 +680,44 @@
                           "ads": {
                             "type": "boolean",
                             "description": "Whether they see ads"
+                          },
+                          "seenBy": {
+                            "description": "When searching an alias: the people who see this user under it",
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "type": "string"
+                                },
+                                "avatarUrl": {
+                                  "nullable": true,
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "bannedAt": {
+                                  "nullable": true,
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "displayName",
+                                "email",
+                                "avatarUrl",
+                                "bannedAt"
+                              ],
+                              "additionalProperties": false
+                            }
                           }
                         },
                         "required": [
@@ -837,6 +881,44 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether they see ads"
+                    },
+                    "seenBy": {
+                      "description": "When searching an alias: the people who see this user under it",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "bannedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "displayName",
+                          "email",
+                          "avatarUrl",
+                          "bannedAt"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -1009,6 +1091,44 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether they see ads"
+                    },
+                    "seenBy": {
+                      "description": "When searching an alias: the people who see this user under it",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "bannedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "displayName",
+                          "email",
+                          "avatarUrl",
+                          "bannedAt"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -1160,6 +1280,44 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether they see ads"
+                    },
+                    "seenBy": {
+                      "description": "When searching an alias: the people who see this user under it",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "bannedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "displayName",
+                          "email",
+                          "avatarUrl",
+                          "bannedAt"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -1332,6 +1490,44 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether they see ads"
+                    },
+                    "seenBy": {
+                      "description": "When searching an alias: the people who see this user under it",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "bannedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "displayName",
+                          "email",
+                          "avatarUrl",
+                          "bannedAt"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -1540,6 +1736,44 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether they see ads"
+                    },
+                    "seenBy": {
+                      "description": "When searching an alias: the people who see this user under it",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "bannedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "displayName",
+                          "email",
+                          "avatarUrl",
+                          "bannedAt"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -3392,10 +3626,6 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -3407,6 +3637,13 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3421,10 +3658,10 @@
                     "avatarUrl",
                     "contactCode",
                     "backupKeyId",
-                    "alias",
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "quickReactions",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3461,6 +3698,17 @@
                     "nullable": true,
                     "type": "string",
                     "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$"
+                  },
+                  "quickReactions": {
+                    "description": "Your own quick reactions; send the defaults to go back to them",
+                    "minItems": 6,
+                    "maxItems": 6,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 32,
+                      "pattern": "^(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier}|[\\u{E0020}-\\u{E007F}]|\\u200D\\p{Extended_Pictographic})*)$"
+                    }
                   }
                 }
               }
@@ -3506,10 +3754,6 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -3521,6 +3765,13 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3535,10 +3786,10 @@
                     "avatarUrl",
                     "contactCode",
                     "backupKeyId",
-                    "alias",
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "quickReactions",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3645,10 +3896,6 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -3660,6 +3907,13 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3674,10 +3928,10 @@
                     "avatarUrl",
                     "contactCode",
                     "backupKeyId",
-                    "alias",
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "quickReactions",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3924,10 +4178,6 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -3939,6 +4189,13 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3953,10 +4210,10 @@
                     "avatarUrl",
                     "contactCode",
                     "backupKeyId",
-                    "alias",
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "quickReactions",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4010,10 +4267,6 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -4025,6 +4278,13 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
                     "createdAt": {
                       "type": "string",
@@ -4039,10 +4299,10 @@
                     "avatarUrl",
                     "contactCode",
                     "backupKeyId",
-                    "alias",
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "quickReactions",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -5153,6 +5413,17 @@
                               "spoiler": {
                                 "type": "boolean"
                               },
+                              "effect": {
+                                "nullable": true,
+                                "type": "string",
+                                "enum": [
+                                  "fire",
+                                  "gift",
+                                  "hearts",
+                                  "confetti"
+                                ],
+                                "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                              },
                               "attachment": {
                                 "nullable": true,
                                 "type": "object",
@@ -5636,6 +5907,12 @@
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
+                              "deletedBy": {
+                                "nullable": true,
+                                "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                                "type": "string",
+                                "minLength": 1
+                              },
                               "expiresAt": {
                                 "nullable": true,
                                 "description": "When the chat's auto-delete timer removes it for everyone",
@@ -5669,7 +5946,7 @@
                               },
                               "encryption": {
                                 "nullable": true,
-                                "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                                "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                                 "type": "object",
                                 "properties": {
                                   "senderDeviceId": {
@@ -5802,6 +6079,7 @@
                               "text",
                               "entities",
                               "spoiler",
+                              "effect",
                               "attachment",
                               "sticker",
                               "ephemeral",
@@ -5814,6 +6092,7 @@
                               "createdAt",
                               "editedAt",
                               "deletedAt",
+                              "deletedBy",
                               "expiresAt",
                               "reactions",
                               "encryption"
@@ -6117,6 +6396,17 @@
                         },
                         "spoiler": {
                           "type": "boolean"
+                        },
+                        "effect": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "fire",
+                            "gift",
+                            "hearts",
+                            "confetti"
+                          ],
+                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                         },
                         "attachment": {
                           "nullable": true,
@@ -6601,6 +6891,12 @@
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
+                        "deletedBy": {
+                          "nullable": true,
+                          "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "expiresAt": {
                           "nullable": true,
                           "description": "When the chat's auto-delete timer removes it for everyone",
@@ -6634,7 +6930,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -6767,6 +7063,7 @@
                         "text",
                         "entities",
                         "spoiler",
+                        "effect",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -6779,6 +7076,7 @@
                         "createdAt",
                         "editedAt",
                         "deletedAt",
+                        "deletedBy",
                         "expiresAt",
                         "reactions",
                         "encryption"
@@ -7114,6 +7412,17 @@
                         "spoiler": {
                           "type": "boolean"
                         },
+                        "effect": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "fire",
+                            "gift",
+                            "hearts",
+                            "confetti"
+                          ],
+                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                        },
                         "attachment": {
                           "nullable": true,
                           "type": "object",
@@ -7597,6 +7906,12 @@
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
+                        "deletedBy": {
+                          "nullable": true,
+                          "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "expiresAt": {
                           "nullable": true,
                           "description": "When the chat's auto-delete timer removes it for everyone",
@@ -7630,7 +7945,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -7763,6 +8078,7 @@
                         "text",
                         "entities",
                         "spoiler",
+                        "effect",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -7775,6 +8091,7 @@
                         "createdAt",
                         "editedAt",
                         "deletedAt",
+                        "deletedBy",
                         "expiresAt",
                         "reactions",
                         "encryption"
@@ -8290,6 +8607,17 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -8773,6 +9101,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -8806,7 +9140,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -8939,6 +9273,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -8951,6 +9286,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -9086,6 +9422,17 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -9569,6 +9916,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -9602,7 +9955,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -9735,6 +10088,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -9747,6 +10101,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -9872,6 +10227,17 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -10355,6 +10721,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -10388,7 +10760,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -10521,6 +10893,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -10533,6 +10906,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -10676,6 +11050,17 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -11159,6 +11544,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -11192,7 +11583,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -11325,6 +11716,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -11337,6 +11729,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -11454,6 +11847,17 @@
                         },
                         "spoiler": {
                           "type": "boolean"
+                        },
+                        "effect": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "fire",
+                            "gift",
+                            "hearts",
+                            "confetti"
+                          ],
+                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                         },
                         "attachment": {
                           "nullable": true,
@@ -11938,6 +12342,12 @@
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         },
+                        "deletedBy": {
+                          "nullable": true,
+                          "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                          "type": "string",
+                          "minLength": 1
+                        },
                         "expiresAt": {
                           "nullable": true,
                           "description": "When the chat's auto-delete timer removes it for everyone",
@@ -11971,7 +12381,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -12104,6 +12514,7 @@
                         "text",
                         "entities",
                         "spoiler",
+                        "effect",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -12116,6 +12527,7 @@
                         "createdAt",
                         "editedAt",
                         "deletedAt",
+                        "deletedBy",
                         "expiresAt",
                         "reactions",
                         "encryption"
@@ -12244,6 +12656,17 @@
                     },
                     "spoiler": {
                       "type": "boolean"
+                    },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
                     "attachment": {
                       "nullable": true,
@@ -12728,6 +13151,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -12761,7 +13190,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -12894,6 +13323,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -12906,6 +13336,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -13045,6 +13476,17 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -13528,6 +13970,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -13561,7 +14009,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -13694,6 +14142,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -13706,6 +14155,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -13945,6 +14395,17 @@
                           },
                           "spoiler": {
                             "type": "boolean"
+                          },
+                          "effect": {
+                            "nullable": true,
+                            "type": "string",
+                            "enum": [
+                              "fire",
+                              "gift",
+                              "hearts",
+                              "confetti"
+                            ],
+                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "attachment": {
                             "nullable": true,
@@ -14429,6 +14890,12 @@
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
+                          "deletedBy": {
+                            "nullable": true,
+                            "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                            "type": "string",
+                            "minLength": 1
+                          },
                           "expiresAt": {
                             "nullable": true,
                             "description": "When the chat's auto-delete timer removes it for everyone",
@@ -14462,7 +14929,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -14595,6 +15062,7 @@
                           "text",
                           "entities",
                           "spoiler",
+                          "effect",
                           "attachment",
                           "sticker",
                           "ephemeral",
@@ -14607,6 +15075,7 @@
                           "createdAt",
                           "editedAt",
                           "deletedAt",
+                          "deletedBy",
                           "expiresAt",
                           "reactions",
                           "encryption"
@@ -14775,6 +15244,16 @@
                   },
                   "spoiler": {
                     "type": "boolean"
+                  },
+                  "effect": {
+                    "description": "Only with text",
+                    "type": "string",
+                    "enum": [
+                      "fire",
+                      "gift",
+                      "hearts",
+                      "confetti"
+                    ]
                   },
                   "ephemeral": {
                     "description": "Self-destruct after viewing, like Telegram's view-once and timers",
@@ -15014,6 +15493,17 @@
                     },
                     "spoiler": {
                       "type": "boolean"
+                    },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
                     "attachment": {
                       "nullable": true,
@@ -15498,6 +15988,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -15531,7 +16027,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -15664,6 +16160,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -15676,6 +16173,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -16291,6 +16789,16 @@
                   },
                   "spoiler": {
                     "type": "boolean"
+                  },
+                  "effect": {
+                    "description": "Only with text",
+                    "type": "string",
+                    "enum": [
+                      "fire",
+                      "gift",
+                      "hearts",
+                      "confetti"
+                    ]
                   },
                   "ephemeral": {
                     "description": "Self-destruct after viewing, like Telegram's view-once and timers",
@@ -17626,6 +18134,17 @@
                     "spoiler": {
                       "type": "boolean"
                     },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -18109,6 +18628,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -18142,7 +18667,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -18275,6 +18800,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -18287,6 +18813,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"
@@ -19089,6 +19616,142 @@
         }
       }
     },
+    "/v1/contacts/{userId}/label": {
+      "post": {
+        "summary": "Read your private label for a contact",
+        "tags": [
+          "contacts"
+        ],
+        "description": "A note only you see, never part of any other response. Needs your app lock `code`: APP_LOCK_REQUIRED if the app lock is off, WRONG_APP_LOCK_CODE if it doesn't match.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{4,8}$"
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "label"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Set or clear your private label for a contact",
+        "tags": [
+          "contacts"
+        ],
+        "description": "Same `code` rules as reading it. Send null or an empty label to remove it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{4,8}$"
+                  },
+                  "label": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "code",
+                  "label"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "label"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/contacts/{userId}/profile": {
       "put": {
         "summary": "Show or hide your real name and photo to a contact",
@@ -19331,6 +19994,17 @@
                                   "spoiler": {
                                     "type": "boolean"
                                   },
+                                  "effect": {
+                                    "nullable": true,
+                                    "type": "string",
+                                    "enum": [
+                                      "fire",
+                                      "gift",
+                                      "hearts",
+                                      "confetti"
+                                    ],
+                                    "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -19814,6 +20488,12 @@
                                     "format": "date-time",
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
+                                  "deletedBy": {
+                                    "nullable": true,
+                                    "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
                                   "expiresAt": {
                                     "nullable": true,
                                     "description": "When the chat's auto-delete timer removes it for everyone",
@@ -19847,7 +20527,7 @@
                                   },
                                   "encryption": {
                                     "nullable": true,
-                                    "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                                    "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                                     "type": "object",
                                     "properties": {
                                       "senderDeviceId": {
@@ -19980,6 +20660,7 @@
                                   "text",
                                   "entities",
                                   "spoiler",
+                                  "effect",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -19992,6 +20673,7 @@
                                   "createdAt",
                                   "editedAt",
                                   "deletedAt",
+                                  "deletedBy",
                                   "expiresAt",
                                   "reactions",
                                   "encryption"
@@ -20097,6 +20779,17 @@
                                   "spoiler": {
                                     "type": "boolean"
                                   },
+                                  "effect": {
+                                    "nullable": true,
+                                    "type": "string",
+                                    "enum": [
+                                      "fire",
+                                      "gift",
+                                      "hearts",
+                                      "confetti"
+                                    ],
+                                    "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -20580,6 +21273,12 @@
                                     "format": "date-time",
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
+                                  "deletedBy": {
+                                    "nullable": true,
+                                    "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
                                   "expiresAt": {
                                     "nullable": true,
                                     "description": "When the chat's auto-delete timer removes it for everyone",
@@ -20613,7 +21312,7 @@
                                   },
                                   "encryption": {
                                     "nullable": true,
-                                    "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                                    "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                                     "type": "object",
                                     "properties": {
                                       "senderDeviceId": {
@@ -20746,6 +21445,7 @@
                                   "text",
                                   "entities",
                                   "spoiler",
+                                  "effect",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -20758,6 +21458,7 @@
                                   "createdAt",
                                   "editedAt",
                                   "deletedAt",
+                                  "deletedBy",
                                   "expiresAt",
                                   "reactions",
                                   "encryption"
@@ -20809,6 +21510,11 @@
                                       "all"
                                     ],
                                     "description": "`all`: the messages became deleted placeholders. `me`: remove them from this user's view entirely."
+                                  },
+                                  "by": {
+                                    "description": "With `all`: who deleted them",
+                                    "type": "string",
+                                    "minLength": 1
                                   }
                                 },
                                 "required": [
@@ -21047,6 +21753,17 @@
                                       },
                                       "spoiler": {
                                         "type": "boolean"
+                                      },
+                                      "effect": {
+                                        "nullable": true,
+                                        "type": "string",
+                                        "enum": [
+                                          "fire",
+                                          "gift",
+                                          "hearts",
+                                          "confetti"
+                                        ],
+                                        "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                                       },
                                       "attachment": {
                                         "nullable": true,
@@ -21531,6 +22248,12 @@
                                         "format": "date-time",
                                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       },
+                                      "deletedBy": {
+                                        "nullable": true,
+                                        "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
                                       "expiresAt": {
                                         "nullable": true,
                                         "description": "When the chat's auto-delete timer removes it for everyone",
@@ -21564,7 +22287,7 @@
                                       },
                                       "encryption": {
                                         "nullable": true,
-                                        "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                                        "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                                         "type": "object",
                                         "properties": {
                                           "senderDeviceId": {
@@ -21697,6 +22420,7 @@
                                       "text",
                                       "entities",
                                       "spoiler",
+                                      "effect",
                                       "attachment",
                                       "sticker",
                                       "ephemeral",
@@ -21709,6 +22433,7 @@
                                       "createdAt",
                                       "editedAt",
                                       "deletedAt",
+                                      "deletedBy",
                                       "expiresAt",
                                       "reactions",
                                       "encryption"
@@ -22055,10 +22780,6 @@
                                     "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                                     "type": "string"
                                   },
-                                  "alias": {
-                                    "type": "string",
-                                    "description": "What people see instead of your name and photo, until you share them"
-                                  },
                                   "hasBackupPin": {
                                     "type": "boolean",
                                     "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -22070,6 +22791,13 @@
                                   "ads": {
                                     "type": "boolean",
                                     "description": "Whether the apps show you ads; admins can turn them off for you"
+                                  },
+                                  "quickReactions": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "description": "The emojis offered first when you react, in order; empty means the defaults"
                                   },
                                   "createdAt": {
                                     "type": "string",
@@ -22084,10 +22812,10 @@
                                   "avatarUrl",
                                   "contactCode",
                                   "backupKeyId",
-                                  "alias",
                                   "hasBackupPin",
                                   "hasAppLock",
                                   "ads",
+                                  "quickReactions",
                                   "createdAt"
                                 ],
                                 "additionalProperties": false
@@ -22986,10 +23714,6 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -23001,6 +23725,13 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
                     "createdAt": {
                       "type": "string",
@@ -23015,10 +23746,10 @@
                     "avatarUrl",
                     "contactCode",
                     "backupKeyId",
-                    "alias",
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "quickReactions",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -23145,10 +23876,6 @@
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
                       "type": "string"
                     },
-                    "alias": {
-                      "type": "string",
-                      "description": "What people see instead of your name and photo, until you share them"
-                    },
                     "hasBackupPin": {
                       "type": "boolean",
                       "description": "Whether a new device can restore your backup with your 6-digit PIN"
@@ -23160,6 +23887,13 @@
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
                     "createdAt": {
                       "type": "string",
@@ -23174,10 +23908,10 @@
                     "avatarUrl",
                     "contactCode",
                     "backupKeyId",
-                    "alias",
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "quickReactions",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -23516,6 +24250,17 @@
                     },
                     "spoiler": {
                       "type": "boolean"
+                    },
+                    "effect": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "fire",
+                        "gift",
+                        "hearts",
+                        "confetti"
+                      ],
+                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
                     "attachment": {
                       "nullable": true,
@@ -24000,6 +24745,12 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "deletedBy": {
+                      "nullable": true,
+                      "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "expiresAt": {
                       "nullable": true,
                       "description": "When the chat's auto-delete timer removes it for everyone",
@@ -24033,7 +24784,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -24166,6 +24917,7 @@
                     "text",
                     "entities",
                     "spoiler",
+                    "effect",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -24178,6 +24930,7 @@
                     "createdAt",
                     "editedAt",
                     "deletedAt",
+                    "deletedBy",
                     "expiresAt",
                     "reactions",
                     "encryption"

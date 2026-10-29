@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Id } from "./common.js";
-import { Checklist, GeoPoint, MessageEntity, entitiesFit } from "./chats.js";
+import { Checklist, GeoPoint, MessageEffect, MessageEntity, entitiesFit } from "./chats.js";
 
 const B64 = (bytes: number) => z.string().regex(new RegExp(`^[\\w-]{${Math.ceil((bytes * 4) / 3)}}$`));
 
@@ -22,6 +22,10 @@ export const EncryptedFile = z.object({
     .optional()
     .describe("A small JPEG preview as a data: URL, shown until the file is downloaded"),
   sticker: z.boolean().optional().describe("A sticker sent from the keyboard, shown without a bubble"),
+  disguised: z
+    .boolean()
+    .optional()
+    .describe("A voice message recorded with a voice effect; players don't offer effects on it, so it can't be undone"),
 });
 export type EncryptedFile = z.infer<typeof EncryptedFile>;
 
@@ -37,6 +41,7 @@ export const MessageContent = z
     text: z.string().max(4000).optional(),
     entities: z.array(MessageEntity).max(100).optional(),
     spoiler: z.boolean().optional(),
+    effect: MessageEffect.optional(),
     file: EncryptedFile.optional(),
     location: GeoPoint.optional(),
     checklist: Checklist.optional(),

@@ -1,5 +1,30 @@
 import { type Realtime, type SignalInput, unwrap } from "@six/sdk";
-import type { CallSignal, CallSignalDTO, ChatDTO } from "@six/shared";
+import {
+  type CallReaction,
+  type CallSignal,
+  type CallSignalDTO,
+  type ChatDTO,
+  type CallGame,
+  type DicePick,
+  type Duel,
+  type GuessGame,
+  NEW_GUESS,
+  type RpsHand,
+  diceOutcome,
+  duelNext,
+  duelPick,
+  duelReceive,
+  guessChooser,
+  guessNext,
+  guessOnHint,
+  guessOnReady,
+  guessOnTry,
+  guessSetSecret,
+  guessSolved,
+  guessTry,
+  newDuel,
+  rpsOutcome,
+} from "@six/shared";
 import { randomUUID } from "expo-crypto";
 import InCallManager from "react-native-incall-manager";
 import {
@@ -35,7 +60,13 @@ export interface Call {
   speaker: boolean;
   local: MediaStream | null;
   remote: MediaStream | null;
+  reactions: { id: number; emoji: CallReaction; mine: boolean }[];
+  games: { rps: Duel<RpsHand>; dice: Duel<DicePick>; guess: GuessGame };
+  game: CallGame;
+  gameOpen: boolean;
 }
+
+const newGames = (): Call["games"] => ({ rps: newDuel(), dice: newDuel(), guess: NEW_GUESS });
 
 export const useCall = create<{ call: Call | null }>(() => ({ call: null }));
 
@@ -136,6 +167,10 @@ export async function startCall(chat: ChatDTO, video: boolean) {
     speaker: video,
     local: null,
     remote: null,
+    reactions: [],
+    games: newGames(),
+    game: "rps",
+    gameOpen: false,
   };
   useCall.setState({ call });
   try {
@@ -164,12 +199,16 @@ export async function acceptCall() {
     InCallManager.start({ media: call.video ? "video" : "audio" });
     InCallManager.setForceSpeakerphoneOn(call.video);
     const local = await openMedia(call.video);
+    const { muted, cameraOff } = useCall.getState().call ?? call;
+    local.getAudioTracks().forEach((t) => (t.enabled = !muted));
+    local.getVideoTracks().forEach((t) => (t.enabled = !cameraOff));
     patch({ local });
     const conn = await connect(call, local);
     await conn.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: pendingOffer.sdp }));
     const answer = await conn.createAnswer();
     await conn.setLocalDescription(answer);
     await signal(call, { type: "answer", sdp: answer.sdp });
+    if (call.video && useCall.getState().call?.cameraOff) void signal(call, { type: "video", on: false }).catch(() => null);
     await flushIce();
   } catch {
     await end(getT().calls.couldNotConnect, true);
@@ -222,19 +261,19 @@ async function finish(call: Call, reason: string) {
 
 export function toggleMute() {
   const call = useCall.getState().call;
-  if (!call?.local) return;
+  if (!call) return;
   const muted = !call.muted;
-  call.local.getAudioTracks().forEach((t) => (t.enabled = !muted));
+  call.local?.getAudioTracks().forEach((t) => (t.enabled = !muted));
   patch({ muted });
 }
 
 export function toggleCamera() {
   const call = useCall.getState().call;
-  if (!call?.local || !call.video) return;
+  if (!call?.video) return;
   const cameraOff = !call.cameraOff;
-  call.local.getVideoTracks().forEach((t) => (t.enabled = !cameraOff));
+  call.local?.getVideoTracks().forEach((t) => (t.enabled = !cameraOff));
   patch({ cameraOff });
-  void signal(call, { type: "video", on: !cameraOff }).catch(() => null);
+  if (call.local) void signal(call, { type: "video", on: !cameraOff }).catch(() => null);
 }
 
 export function flipCamera() {
@@ -242,6 +281,86 @@ export function flipCamera() {
   if (!call?.local) return;
   call.local.getVideoTracks().forEach((t) => t._switchCamera());
   patch({ back: !call.back });
+}
+
+let reactionId = 0;
+
+function showReaction(emoji: CallReaction, mine: boolean) {
+  const id = ++reactionId;
+  const call = useCall.getState().call;
+  if (!call) return;
+  patch({ reactions: [...call.reactions.slice(-20), { id, emoji, mine }] });
+  setTimeout(() => {
+    const reactions = useCall.getState().call?.reactions;
+    if (reactions) patch({ reactions: reactions.filter((r) => r.id !== id) });
+  }, 3000);
+}
+
+export function sendReaction(emoji: CallReaction) {
+  const call = useCall.getState().call;
+  if (!call) return;
+  showReaction(emoji, true);
+  void signal(call, { type: "reaction", emoji }).catch(() => null);
+}
+
+function setGames(games: Partial<Call["games"]>, open?: CallGame) {
+  const call = useCall.getState().call;
+  if (call) patch({ games: { ...call.games, ...games }, ...(open && { game: open, gameOpen: true }) });
+}
+
+/** Opens or switches the game panel, and brings the other side to the same game. */
+export function openGame(gameOpen: boolean, game?: CallGame) {
+  const call = useCall.getState().call;
+  if (!call) return;
+  const next = game ?? call.game;
+  patch({ gameOpen, game: next });
+  if (gameOpen) void signal(call, { type: "game", game: next }).catch(() => null);
+}
+
+export function playHand(hand: RpsHand) {
+  const call = useCall.getState().call;
+  const next = call && duelPick(call.games.rps, hand, rpsOutcome);
+  if (!next) return;
+  setGames({ rps: next });
+  void signal(call, { type: "rps", round: next.round, hand }).catch(() => null);
+}
+
+export function rollDice(pick: number) {
+  const mine = { pick, seed: Math.floor(Math.random() * 6) };
+  const call = useCall.getState().call;
+  const next = call && duelPick(call.games.dice, mine, diceOutcome);
+  if (!next) return;
+  setGames({ dice: next });
+  void signal(call, { type: "dice", round: next.round, ...mine }).catch(() => null);
+}
+
+export function pickSecret(n: number) {
+  const call = useCall.getState().call;
+  const guess = call?.games.guess;
+  const next = guess && guessChooser(guess.round, call.direction === "outgoing") && guessSetSecret(guess, n);
+  if (!next) return;
+  setGames({ guess: next });
+  void signal(call, { type: "guessReady", round: next.round }).catch(() => null);
+}
+
+export function sendGuess(n: number) {
+  const call = useCall.getState().call;
+  const next = call && guessTry(call.games.guess, n);
+  if (!next) return;
+  setGames({ guess: next });
+  void signal(call, { type: "guessTry", round: next.round, n }).catch(() => null);
+}
+
+export function playAgain(game: CallGame) {
+  const games = useCall.getState().call?.games;
+  if (!games) return;
+  if (game === "guess") {
+    if (guessSolved(games.guess)) setGames({ guess: guessNext(games.guess) });
+  } else if (game === "rps") {
+    if (games.rps.mine && games.rps.theirs) setGames({ rps: duelNext(games.rps) });
+  } else if (games.dice.mine && games.dice.theirs) {
+    setGames({ dice: duelNext(games.dice) });
+  }
 }
 
 export function toggleSpeaker() {
@@ -291,6 +410,10 @@ export async function onCallSignal(dto: CallSignalDTO, chatOf: (chatId: string) 
         speaker: s.video,
         local: null,
         remote: null,
+        reactions: [],
+        games: newGames(),
+        game: "rps",
+        gameOpen: false,
       },
     });
     InCallManager.startRingtone("_DEFAULT_", [0, 600, 900], "playback", RING_MS / 1000);
@@ -329,6 +452,39 @@ export async function onCallSignal(dto: CallSignalDTO, chatOf: (chatId: string) 
     case "video":
       patch({ peerCameraOff: !s.on });
       break;
+    case "reaction":
+      showReaction(s.emoji, false);
+      break;
+    case "game":
+      patch({ game: s.game, gameOpen: true });
+      break;
+    case "rps": {
+      const rps = duelReceive(call.games.rps, s.round, s.hand, rpsOutcome);
+      if (rps) setGames({ rps }, "rps");
+      break;
+    }
+    case "dice": {
+      const dice = duelReceive(call.games.dice, s.round, { pick: s.pick, seed: s.seed }, diceOutcome);
+      if (dice) setGames({ dice }, "dice");
+      break;
+    }
+    case "guessReady": {
+      const guess = guessOnReady(call.games.guess, s.round);
+      if (guess) setGames({ guess }, "guess");
+      break;
+    }
+    case "guessTry": {
+      const answer = guessOnTry(call.games.guess, s.round, s.n);
+      if (!answer) break;
+      setGames({ guess: answer.game }, "guess");
+      void signal(call, { type: "guessHint", round: s.round, n: s.n, hint: answer.hint }).catch(() => null);
+      break;
+    }
+    case "guessHint": {
+      const guess = guessOnHint(call.games.guess, s.round, s.n, s.hint);
+      if (guess) setGames({ guess });
+      break;
+    }
     case "reject":
       await finish(call, getT().calls.declined);
       break;

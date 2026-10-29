@@ -72,7 +72,7 @@ export async function previewInvite(code: string): Promise<InvitePreview> {
   if (!invite) throw new AppError("INVITE_NOT_FOUND");
   return {
     code: invite.code,
-    inviter: toPublicUser(invite.creator, false),
+    inviter: toPublicUser(invite.creator, invite.code, false),
     message: invite.message,
     status: inviteStatus(invite),
   };

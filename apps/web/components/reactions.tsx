@@ -4,11 +4,20 @@ import { type MessageDTO, QUICK_REACTIONS } from "@six/shared";
 import { Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
+import { useSession } from "@/lib/session";
+import { six } from "@/lib/six";
 import { Emojis } from "./emoji-picker";
 import { Portal } from "./portal";
+import { Card, SectionTitle } from "./ui";
 
 export const isMine = (m: MessageDTO, meId: string, emoji: string) =>
   !!m.reactions?.some((r) => r.emoji === emoji && r.userIds.includes(meId));
+
+/** Your own quick reactions, or the app's when you haven't picked any. */
+export function useQuickReactions(): readonly string[] {
+  const own = useSession((s) => s.user?.quickReactions);
+  return own?.length === QUICK_REACTIONS.length ? own : QUICK_REACTIONS;
+}
 
 export function ReactionBar({
   message,
@@ -22,9 +31,10 @@ export function ReactionBar({
   onMore: () => void;
 }) {
   const tr = useT();
+  const quick = useQuickReactions();
   return (
     <div className="flex items-center justify-between gap-1" role="group" aria-label={tr.messages.react}>
-      {QUICK_REACTIONS.map((emoji) => {
+      {quick.map((emoji) => {
         const mine = isMine(message, meId, emoji);
         return (
           <button
@@ -311,5 +321,73 @@ function ReactionList({
         })}
       </div>
     </Portal>
+  );
+}
+
+/** Settings card for your six quick reactions: tap one to swap it for any emoji. */
+export function QuickReactionsSettings() {
+  const tr = useT();
+  const quick = useQuickReactions();
+  const setUser = useSession((s) => s.setUser);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function save(next: readonly string[]) {
+    setSaving(true);
+    const res = await six.api.PATCH("/v1/me", { body: { quickReactions: [...next] } }).catch(() => null);
+    if (res?.data) setUser(res.data);
+    setSaving(false);
+  }
+
+  function pick(index: number, emoji: string) {
+    const next = [...quick];
+    const was = next.indexOf(emoji);
+    if (was >= 0) next[was] = next[index]!;
+    next[index] = emoji;
+    void save(next);
+  }
+
+  const custom = quick.join() !== QUICK_REACTIONS.join();
+  return (
+    <section className="space-y-3">
+      <SectionTitle
+        action={
+          custom && (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void save(QUICK_REACTIONS)}
+              className="text-sm font-medium text-brand disabled:opacity-50"
+            >
+              {tr.messages.resetQuickReactions}
+            </button>
+          )
+        }
+      >
+        {tr.messages.quickReactions}
+      </SectionTitle>
+      <Card>
+        <div className="space-y-3 p-4">
+          <p className="text-sm text-stone-500 dark:text-stone-400">{tr.messages.quickReactionsHint}</p>
+          <div className="flex justify-between gap-1">
+            {quick.map((emoji, i) => (
+              <button
+                key={emoji}
+                type="button"
+                disabled={saving}
+                onClick={() => setEditing(i)}
+                aria-label={tr.messages.changeQuickReaction(emoji)}
+                className="grid size-12 place-items-center rounded-full bg-stone-100 text-2xl transition hover:scale-105 disabled:opacity-50 dark:bg-stone-800"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+      {editing !== null && (
+        <ReactionPicker onPick={(emoji) => pick(editing, emoji)} onClose={() => setEditing(null)} />
+      )}
+    </section>
   );
 }

@@ -142,23 +142,27 @@ function Keypad({ value, onChange }: { value: string; onChange: (v: string) => v
 
 /**
  * Covers the app until the app lock code is entered. Forgetting it means signing out and in again. With
- * `onCancel` it guards a single screen, like the archived chats, and can be backed out of instead.
+ * `onCancel` it guards a single screen, like the archived chats, and can be backed out of instead. With
+ * `check` the code goes there instead of the plain unlock, for actions that need it, like a private label.
  */
 export function LockScreen({
   title,
   onUnlock = unlock,
   onCancel,
+  check: verify,
 }: {
   title?: string;
   onUnlock?: () => void;
   onCancel?: () => void;
+  check?: (code: string) => Promise<unknown>;
 }) {
   const tr = useT();
   const [code, setCode] = useState("");
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const hasKey = useHasRecoveryKey();
   const check = useMutation({
-    mutationFn: async () => unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } })),
+    mutationFn: async () =>
+      verify ? verify(code) : unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } })),
     onSuccess: () => onUnlock(),
     onError: () => setCode(""),
   });

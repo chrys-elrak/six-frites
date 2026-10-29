@@ -1,15 +1,39 @@
 "use client";
 
 import { type AttachmentDTO, type EncryptedFile, NO_ZOOM, type ZoomView, fitWaveform, zoomTo } from "@six/shared";
-import { AlertCircle, ChevronLeft, ChevronRight, Download, EyeOff, FileText, FileX, Loader2, Pause, Play, X } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  EyeOff,
+  FileText,
+  FileX,
+  Loader2,
+  Pause,
+  Play,
+  VenetianMask,
+  X,
+} from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { decryptedUrl, streamUrl } from "@/lib/e2ee";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import type { PendingAttachment } from "@/lib/outbox";
-import { usePlaybackRate } from "@/lib/playback";
+import {
+  claimMedia,
+  pauseVoice,
+  playVoice,
+  seekVoice,
+  setVoiceEffect,
+  stopVoice,
+  usePlaybackRate,
+  useVoice,
+} from "@/lib/playback";
+import type { VoiceEffect } from "@/lib/voice-fx";
 import { Portal } from "./portal";
+import { VoiceEffectSelect } from "./voice-effect-select";
 
 export type ShownAttachment =
   | { source: "server"; data: AttachmentDTO; file?: EncryptedFile }
@@ -160,9 +184,7 @@ function boxSize(width: number | null, height: number | null) {
   return { width: Math.max(120, Math.round(w * scale)), aspectRatio: `${w} / ${h}` };
 }
 
-let playing: HTMLMediaElement | null = null;
-
-function SpeedButton({ className = "" }: { className?: string }) {
+export function SpeedButton({ className = "" }: { className?: string }) {
   const tr = useT();
   const rate = usePlaybackRate((s) => s.rate);
   const next = usePlaybackRate((s) => s.next);
@@ -181,6 +203,10 @@ function SpeedButton({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * A voice note's controls over the shared player. In a chat (`track`) it keeps playing after the bubble goes away,
+ * with the mini player taking over; anywhere else it stops with it.
+ */
 export function VoicePlayer({
   autoPlay = false,
   url,
@@ -190,6 +216,9 @@ export function VoicePlayer({
   label,
   compact = false,
   meta,
+  effects = true,
+  onStop,
+  track,
 }: {
   autoPlay?: boolean;
   url: string | null;
@@ -199,57 +228,47 @@ export function VoicePlayer({
   label?: string;
   compact?: boolean;
   meta?: React.ReactNode;
+  effects?: boolean;
+  onStop?: (finished: boolean) => void;
+  track?: { chatId: string; title: string };
 }) {
   const tr = useT();
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setPlaying] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [loadedMs, setLoadedMs] = useState(0);
-  const rate = usePlaybackRate((s) => s.rate);
+  const stopped = useRef(onStop);
+  stopped.current = onStop;
+  const isPlaying = useVoice((s) => !!url && s.track?.url === url && s.playing);
+  const position = useVoice((s) => (url && s.track?.url === url ? s.position : 0));
+  const loadedMs = useVoice((s) => (url && s.track?.url === url ? s.duration : 0));
+  const playingEffect = useVoice((s) => (url && s.track?.url === url ? s.track.effect : null));
+  const [picked, setPicked] = useState<VoiceEffect>("none");
+  const effect = playingEffect ?? picked;
   const bars = waveform ? fitWaveform(waveform) : Array.from({ length: 48 }, () => 18);
-  const total = durationMs ?? loadedMs;
+  const total = durationMs || loadedMs;
+  const active = () => !!url && useVoice.getState().track?.url === url;
+  const start = () =>
+    url &&
+    void playVoice({
+      url,
+      chatId: track?.chatId ?? null,
+      title: track?.title ?? "",
+      effect,
+      onStop: (finished) => stopped.current?.(finished),
+    });
 
-  useEffect(() => () => audio.current?.pause(), []);
+  useEffect(() => () => void (!track && active() && stopVoice()), [url, track?.chatId]);
+
   useEffect(() => {
-    if (audio.current) audio.current.playbackRate = rate;
-  }, [rate]);
+    if (autoPlay && url) start();
+  }, [autoPlay, url]);
 
-  const autoStarted = useRef(false);
-  useEffect(() => {
-    if (!autoPlay || !url || autoStarted.current) return;
-    autoStarted.current = true;
-    toggle();
-  });
-
-  function toggle() {
-    if (!url) return;
-    if (!audio.current) {
-      const el = new Audio(url);
-      el.playbackRate = rate;
-      el.ontimeupdate = () => setPosition(el.currentTime * 1000);
-      el.ondurationchange = () => Number.isFinite(el.duration) && setLoadedMs(el.duration * 1000);
-      el.onplay = () => setPlaying(true);
-      el.onpause = () => setPlaying(false);
-      el.onended = () => {
-        setPlaying(false);
-        setPosition(0);
-      };
-      audio.current = el;
-    }
-    const el = audio.current;
-    if (el.paused) {
-      if (playing && playing !== el) playing.pause();
-      playing = el;
-      void el.play();
-    } else el.pause();
+  function pickEffect(next: VoiceEffect) {
+    setPicked(next);
+    if (active()) setVoiceEffect(next);
   }
 
   function seek(e: React.MouseEvent<HTMLDivElement>) {
-    const el = audio.current;
-    if (!el || !total) return;
+    if (!active() || !total) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    el.currentTime = (((e.clientX - rect.left) / rect.width) * total) / 1000;
-    setPosition(el.currentTime * 1000);
+    seekVoice(((e.clientX - rect.left) / rect.width) * total);
   }
 
   const done = total ? position / total : 0;
@@ -257,7 +276,7 @@ export function VoicePlayer({
     <div className={`flex max-w-full items-center ${compact ? "min-w-0 flex-1 gap-2" : "w-96 gap-3 py-1"}`}>
       <button
         type="button"
-        onClick={toggle}
+        onClick={() => (isPlaying ? pauseVoice() : start())}
         disabled={!url}
         aria-label={isPlaying ? tr.messages.pause : (label ?? tr.messages.playVoice)}
         className={`grid ${compact ? "size-8" : "size-10"} shrink-0 place-items-center rounded-full disabled:opacity-50 ${
@@ -283,6 +302,18 @@ export function VoicePlayer({
         <div className="flex shrink-0 items-center gap-1.5">
           <p className="text-[11px] opacity-70">{formatDuration(isPlaying || position ? position : total)}</p>
           <SpeedButton className={mine ? "bg-brand-ink/15" : "bg-brand/15 text-brand"} />
+          {!compact && effects && (
+            <VoiceEffectSelect
+              value={effect}
+              onChange={pickEffect}
+              className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
+                effect === "none" ? "opacity-60 hover:opacity-100" : mine ? "bg-brand-ink/15" : "bg-brand/15 text-brand"
+              }`}
+            >
+              <VenetianMask className="size-3.5" />
+              {effect !== "none" && tr.composer.voiceEffects[effect]}
+            </VoiceEffectSelect>
+          )}
         </div>
         {meta}
       </div>
@@ -329,8 +360,7 @@ function VideoNote({
     const el = video.current;
     if (!el || !url) return;
     if (el.paused) {
-      if (playing && playing !== el) playing.pause();
-      playing = el;
+      claimMedia(el);
       el.muted = false;
       el.playbackRate = rate;
       void el.play();
@@ -414,6 +444,8 @@ export function AttachmentView({
   autoPlay = false,
   tile = false,
   meta,
+  onStop,
+  track,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
@@ -426,6 +458,8 @@ export function AttachmentView({
   /** Fill the parent, as one tile of an album, instead of sizing to the photo. */
   tile?: boolean;
   meta?: React.ReactNode;
+  onStop?: (finished: boolean) => void;
+  track?: { chatId: string; title: string };
 }) {
   const tr = useT();
   const kind = attachment.data.kind;
@@ -590,6 +624,9 @@ export function AttachmentView({
           waveform={a.waveform}
           mine={mine}
           meta={meta}
+          effects={!(attachment.source === "server" && attachment.file?.disguised)}
+          onStop={onStop}
+          track={track}
         />
         {a.state !== "ready" && (
           <p className="flex items-center gap-1 text-[11px] opacity-70">

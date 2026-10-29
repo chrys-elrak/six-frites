@@ -187,6 +187,11 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
           )}
         </p>
         {u.banReason && <p className="text-xs text-red-600 dark:text-red-400">Ban reason: {u.banReason}</p>}
+        {u.seenBy && (
+          <p className="text-xs text-brand">
+            Seen under this alias by {u.seenBy.map((v) => `${v.displayName} (${v.email})`).join(", ")}
+          </p>
+        )}
       </div>
       {!u.admin && (
         <div className="ml-auto flex gap-2">
@@ -299,7 +304,7 @@ export function Users() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Search by name or email"
+            placeholder="Search by name, email or alias"
             aria-label="Search users"
             className="w-full rounded-xl bg-white py-2 pr-3 pl-9 text-[16px] ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-stone-900 dark:ring-stone-800"
           />

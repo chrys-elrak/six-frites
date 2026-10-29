@@ -5,6 +5,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { useCamera } from "@/lib/camera";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
+import { withVoiceEffect } from "@/lib/voice-fx";
 
 const MAX_MS = 60_000;
 const SIZE = 480;
@@ -59,19 +60,20 @@ export const VideoNoteCapture = forwardRef<
   handlers.current = { onTick, onLimit };
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
+    let release: (() => void) | null = null;
     let cancelled = false;
     navigator.mediaDevices
       .getUserMedia({ audio: true })
-      .then((s) => {
-        if (cancelled) return s.getTracks().forEach((t) => t.stop());
-        stream = s;
-        setAudio(s);
+      .then(withVoiceEffect)
+      .then((fx) => {
+        if (cancelled) return fx.stop();
+        release = fx.stop;
+        setAudio(fx.stream);
       })
       .catch(() => setMicError(true));
     return () => {
       cancelled = true;
-      stream?.getTracks().forEach((t) => t.stop());
+      release?.();
     };
   }, []);
 

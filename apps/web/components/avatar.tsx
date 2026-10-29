@@ -1,9 +1,9 @@
 import { aliasAvatar, type PublicUser } from "@six/shared";
 import { useT } from "@/lib/i18n";
 
-const sizes = { sm: "size-9", md: "size-14", lg: "size-20" };
-const letters = { sm: "text-sm", md: "text-xl", lg: "text-3xl" };
-const aliasText = { sm: "text-[9px]", md: "text-[13px]", lg: "text-lg" };
+const sizes = { sm: "size-9", md: "size-14", lg: "size-20", xl: "size-28" };
+const letters = { sm: "text-sm", md: "text-xl", lg: "text-3xl", xl: "text-5xl" };
+const aliasText = { sm: "text-[9px]", md: "text-[13px]", lg: "text-lg", xl: "text-2xl" };
 
 export function Avatar({
   user,

@@ -7,6 +7,7 @@ import {
   type GeoPoint,
   type GifDTO,
   type MessageDTO,
+  type MessageEffect,
   type MessageEntity,
   type SendMessageInput,
   type UploadKind,
@@ -38,6 +39,7 @@ export interface Draft {
   entities?: MessageEntity[];
   replyTo?: MessageDTO;
   spoiler?: boolean;
+  effect?: MessageEffect;
   ephemeral?: EphemeralInput | null;
   file?: LocalFile;
   gif?: GifDTO;
@@ -120,6 +122,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             text: pending.text || undefined,
             entities: pending.entities.length ? pending.entities : undefined,
             spoiler: pending.spoiler || undefined,
+            effect: pending.effect,
             replyText: pending.replyTo ? pending.replyTo.text : undefined,
             file,
             location: pending.location,
@@ -133,6 +136,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           entities: pending.entities.length ? pending.entities : undefined,
           gifId: pending.gif?.id,
           spoiler: pending.spoiler || undefined,
+          effect: pending.effect,
           location: pending.location,
           checklist: pending.checklist,
         });
@@ -166,6 +170,7 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
         }
       : null,
     spoiler: draft.spoiler ?? false,
+    effect: draft.effect,
     ephemeral: draft.ephemeral ?? null,
     attachment: file
       ? {

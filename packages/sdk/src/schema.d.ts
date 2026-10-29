@@ -60,14 +60,14 @@ export interface paths {
                                 contactCode: string;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
-                                /** @description What people see instead of your name and photo, until you share them */
-                                alias: string;
                                 /** @description Whether a new device can restore your backup with your 6-digit PIN */
                                 hasBackupPin: boolean;
                                 /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
+                                /** @description The emojis offered first when you react, in order; empty means the defaults */
+                                quickReactions: string[];
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -132,14 +132,14 @@ export interface paths {
                                 contactCode: string;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
-                                /** @description What people see instead of your name and photo, until you share them */
-                                alias: string;
                                 /** @description Whether a new device can restore your backup with your 6-digit PIN */
                                 hasBackupPin: boolean;
                                 /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
+                                /** @description The emojis offered first when you react, in order; empty means the defaults */
+                                quickReactions: string[];
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -308,7 +308,7 @@ export interface paths {
                 query?: {
                     cursor?: string;
                     limit?: number;
-                    /** @description Matches name or email */
+                    /** @description Matches name or email, or an alias like Frite 0327 */
                     q?: string;
                     banned?: "true" | "false";
                 };
@@ -355,6 +355,16 @@ export interface paths {
                                 waiting: number;
                                 /** @description Whether they see ads */
                                 ads: boolean;
+                                /** @description When searching an alias: the people who see this user under it */
+                                seenBy?: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                }[];
                             }[];
                             nextCursor: string | null;
                         };
@@ -425,6 +435,16 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description When searching an alias: the people who see this user under it */
+                            seenBy?: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            }[];
                         };
                     };
                 };
@@ -504,6 +524,16 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description When searching an alias: the people who see this user under it */
+                            seenBy?: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            }[];
                         };
                     };
                 };
@@ -572,6 +602,16 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description When searching an alias: the people who see this user under it */
+                            seenBy?: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            }[];
                         };
                     };
                 };
@@ -649,6 +689,16 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description When searching an alias: the people who see this user under it */
+                            seenBy?: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            }[];
                         };
                     };
                 };
@@ -760,6 +810,16 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description When searching an alias: the people who see this user under it */
+                            seenBy?: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                            }[];
                         };
                     };
                 };
@@ -1620,14 +1680,14 @@ export interface paths {
                             contactCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1689,6 +1749,8 @@ export interface paths {
                         avatarUrl?: string | null;
                         /** @description A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes your photo */
                         photo?: string | null;
+                        /** @description Your own quick reactions; send the defaults to go back to them */
+                        quickReactions?: string[];
                     };
                 };
             };
@@ -1710,14 +1772,14 @@ export interface paths {
                             contactCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1766,14 +1828,14 @@ export interface paths {
                             contactCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1957,14 +2019,14 @@ export interface paths {
                             contactCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2000,14 +2062,14 @@ export interface paths {
                             contactCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2639,6 +2701,11 @@ export interface paths {
                                         length: number;
                                     }[];
                                     spoiler: boolean;
+                                    /**
+                                     * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                     * @enum {string|null}
+                                     */
+                                    effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                     attachment: {
                                         id: string;
                                         /**
@@ -2766,6 +2833,8 @@ export interface paths {
                                     editedAt: string | null;
                                     /** Format: date-time */
                                     deletedAt: string | null;
+                                    /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                    deletedBy: string | null;
                                     /**
                                      * Format: date-time
                                      * @description When the chat's auto-delete timer removes it for everyone
@@ -2776,7 +2845,7 @@ export interface paths {
                                         emoji: string;
                                         userIds: string[];
                                     }[];
-                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                     encryption: {
                                         /** @description The device that encrypted it; open the envelope with your session with it */
                                         senderDeviceId: string | null;
@@ -2914,6 +2983,11 @@ export interface paths {
                                     length: number;
                                 }[];
                                 spoiler: boolean;
+                                /**
+                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                 * @enum {string|null}
+                                 */
+                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 attachment: {
                                     id: string;
                                     /**
@@ -3041,6 +3115,8 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
                                 /**
                                  * Format: date-time
                                  * @description When the chat's auto-delete timer removes it for everyone
@@ -3051,7 +3127,7 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -3230,6 +3306,11 @@ export interface paths {
                                     length: number;
                                 }[];
                                 spoiler: boolean;
+                                /**
+                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                 * @enum {string|null}
+                                 */
+                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 attachment: {
                                     id: string;
                                     /**
@@ -3357,6 +3438,8 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
                                 /**
                                  * Format: date-time
                                  * @description When the chat's auto-delete timer removes it for everyone
@@ -3367,7 +3450,7 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -3582,6 +3665,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -3709,6 +3797,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -3719,7 +3809,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -3808,6 +3898,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -3935,6 +4030,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -3945,7 +4042,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -4034,6 +4131,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -4161,6 +4263,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -4171,7 +4275,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -4263,6 +4367,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -4390,6 +4499,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -4400,7 +4511,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -4489,6 +4600,11 @@ export interface paths {
                                     length: number;
                                 }[];
                                 spoiler: boolean;
+                                /**
+                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                 * @enum {string|null}
+                                 */
+                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 attachment: {
                                     id: string;
                                     /**
@@ -4616,6 +4732,8 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
                                 /**
                                  * Format: date-time
                                  * @description When the chat's auto-delete timer removes it for everyone
@@ -4626,7 +4744,7 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -4719,6 +4837,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -4846,6 +4969,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -4856,7 +4981,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -4952,6 +5077,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -5079,6 +5209,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -5089,7 +5221,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -5226,6 +5358,11 @@ export interface paths {
                                     length: number;
                                 }[];
                                 spoiler: boolean;
+                                /**
+                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                 * @enum {string|null}
+                                 */
+                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 attachment: {
                                     id: string;
                                     /**
@@ -5353,6 +5490,8 @@ export interface paths {
                                 editedAt: string | null;
                                 /** Format: date-time */
                                 deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
                                 /**
                                  * Format: date-time
                                  * @description When the chat's auto-delete timer removes it for everyone
@@ -5363,7 +5502,7 @@ export interface paths {
                                     emoji: string;
                                     userIds: string[];
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -5455,6 +5594,11 @@ export interface paths {
                         /** @description The same id on photos and videos sent together, so they show as one album */
                         groupId?: string;
                         spoiler?: boolean;
+                        /**
+                         * @description Only with text
+                         * @enum {string}
+                         */
+                        effect?: "fire" | "gift" | "hearts" | "confetti";
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
                         ephemeral?: {
                             /** @description Destroy after this many views by the recipient */
@@ -5521,6 +5665,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -5648,6 +5797,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -5658,7 +5809,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -5884,6 +6035,11 @@ export interface paths {
                         /** @description The same id on photos and videos sent together, so they show as one album */
                         groupId?: string;
                         spoiler?: boolean;
+                        /**
+                         * @description Only with text
+                         * @enum {string}
+                         */
+                        effect?: "fire" | "gift" | "hearts" | "confetti";
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
                         ephemeral?: {
                             /** @description Destroy after this many views by the recipient */
@@ -6285,6 +6441,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -6412,6 +6573,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -6422,7 +6585,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -6921,6 +7084,89 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/contacts/{userId}/label": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set or clear your private label for a contact
+         * @description Same `code` rules as reading it. Send null or an empty label to remove it.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                        label: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            label: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        /**
+         * Read your private label for a contact
+         * @description A note only you see, never part of any other response. Needs your app lock `code`: APP_LOCK_REQUIRED if the app lock is off, WRONG_APP_LOCK_CODE if it doesn't match.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            label: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/contacts/{userId}/profile": {
         parameters: {
             query?: never;
@@ -7032,6 +7278,11 @@ export interface paths {
                                         length: number;
                                     }[];
                                     spoiler: boolean;
+                                    /**
+                                     * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                     * @enum {string|null}
+                                     */
+                                    effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                     attachment: {
                                         id: string;
                                         /**
@@ -7159,6 +7410,8 @@ export interface paths {
                                     editedAt: string | null;
                                     /** Format: date-time */
                                     deletedAt: string | null;
+                                    /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                    deletedBy: string | null;
                                     /**
                                      * Format: date-time
                                      * @description When the chat's auto-delete timer removes it for everyone
@@ -7169,7 +7422,7 @@ export interface paths {
                                         emoji: string;
                                         userIds: string[];
                                     }[];
-                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                     encryption: {
                                         /** @description The device that encrypted it; open the envelope with your session with it */
                                         senderDeviceId: string | null;
@@ -7221,6 +7474,11 @@ export interface paths {
                                         length: number;
                                     }[];
                                     spoiler: boolean;
+                                    /**
+                                     * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                     * @enum {string|null}
+                                     */
+                                    effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                     attachment: {
                                         id: string;
                                         /**
@@ -7348,6 +7606,8 @@ export interface paths {
                                     editedAt: string | null;
                                     /** Format: date-time */
                                     deletedAt: string | null;
+                                    /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                    deletedBy: string | null;
                                     /**
                                      * Format: date-time
                                      * @description When the chat's auto-delete timer removes it for everyone
@@ -7358,7 +7618,7 @@ export interface paths {
                                         emoji: string;
                                         userIds: string[];
                                     }[];
-                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                     encryption: {
                                         /** @description The device that encrypted it; open the envelope with your session with it */
                                         senderDeviceId: string | null;
@@ -7403,6 +7663,8 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     scope: "me" | "all";
+                                    /** @description With `all`: who deleted them */
+                                    by?: string;
                                 };
                                 createdAt: string;
                             } | {
@@ -7456,6 +7718,11 @@ export interface paths {
                                             length: number;
                                         }[];
                                         spoiler: boolean;
+                                        /**
+                                         * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                         * @enum {string|null}
+                                         */
+                                        effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                         attachment: {
                                             id: string;
                                             /**
@@ -7583,6 +7850,8 @@ export interface paths {
                                         editedAt: string | null;
                                         /** Format: date-time */
                                         deletedAt: string | null;
+                                        /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                        deletedBy: string | null;
                                         /**
                                          * Format: date-time
                                          * @description When the chat's auto-delete timer removes it for everyone
@@ -7593,7 +7862,7 @@ export interface paths {
                                             emoji: string;
                                             userIds: string[];
                                         }[];
-                                        /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                        /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                                         encryption: {
                                             /** @description The device that encrypted it; open the envelope with your session with it */
                                             senderDeviceId: string | null;
@@ -7715,14 +7984,14 @@ export interface paths {
                                     contactCode: string;
                                     /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                     backupKeyId: string | null;
-                                    /** @description What people see instead of your name and photo, until you share them */
-                                    alias: string;
                                     /** @description Whether a new device can restore your backup with your 6-digit PIN */
                                     hasBackupPin: boolean;
                                     /** @description Whether the apps ask for your app lock code when they open */
                                     hasAppLock: boolean;
                                     /** @description Whether the apps show you ads; admins can turn them off for you */
                                     ads: boolean;
+                                    /** @description The emojis offered first when you react, in order; empty means the defaults */
+                                    quickReactions: string[];
                                     /** Format: date-time */
                                     createdAt: string;
                                 };
@@ -8184,14 +8453,14 @@ export interface paths {
                             contactCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -8297,14 +8566,14 @@ export interface paths {
                             contactCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description What people see instead of your name and photo, until you share them */
-                            alias: string;
                             /** @description Whether a new device can restore your backup with your 6-digit PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -8520,6 +8789,11 @@ export interface paths {
                                 length: number;
                             }[];
                             spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             attachment: {
                                 id: string;
                                 /**
@@ -8647,6 +8921,8 @@ export interface paths {
                             editedAt: string | null;
                             /** Format: date-time */
                             deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
                             /**
                              * Format: date-time
                              * @description When the chat's auto-delete timer removes it for everyone
@@ -8657,7 +8933,7 @@ export interface paths {
                                 emoji: string;
                                 userIds: string[];
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;

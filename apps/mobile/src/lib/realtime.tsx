@@ -79,7 +79,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       break;
     }
     case "message.deleted":
-      applyDeleted(qc, e.data.chatId, e.data.messageIds, e.data.scope);
+      applyDeleted(qc, e.data.chatId, e.data.messageIds, e.data.scope, e.data.by);
       break;
     case "chat.updated":
       upsertChat(qc, e.data);

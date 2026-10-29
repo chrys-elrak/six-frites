@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, scrypt, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomUUID, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import type { User } from "../generated/prisma/client.js";
 import {
@@ -27,19 +27,31 @@ export function toUserDTO(u: User): UserDTO {
     avatarUrl: avatarOf(u),
     contactCode: u.contactCode,
     backupKeyId: u.backupKeyId,
-    alias: u.alias,
     hasBackupPin: u.backupPinHash !== null,
     hasAppLock: u.appLockHash !== null,
     ads: !u.adsDisabled,
+    quickReactions: u.quickReactions,
     createdAt: u.createdAt.toISOString(),
   };
 }
 
-/** Someone as others see them: their alias and no photo, unless they share their profile. */
-export function toPublicUser(u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey" | "alias">, shared: boolean) {
-  return shared
-    ? { id: u.id, displayName: u.displayName, avatarUrl: avatarOf(u) }
-    : { id: u.id, displayName: u.alias, avatarUrl: null };
+/**
+ * The alias `viewerId` sees for `userId`. Each pair gets its own, so two people can't tell they know the same
+ * person by comparing names. Matches the pair_alias SQL function, which the contact list sorts and searches by.
+ */
+export function pairAlias(viewerId: string, userId: string) {
+  const n = parseInt(createHash("md5").update(`${viewerId}:${userId}`).digest("hex").slice(0, 7), 16) % 10000;
+  return `Frite ${String(n).padStart(4, "0")}`;
+}
+
+/** Someone as `viewerId` sees them: their alias for that viewer and no photo, unless they share their profile. */
+export function toPublicUser(
+  u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey" | "deletedAt">,
+  viewerId: string,
+  shared: boolean,
+) {
+  if (shared) return { id: u.id, displayName: u.displayName, avatarUrl: avatarOf(u) };
+  return { id: u.id, displayName: u.deletedAt ? u.displayName : pairAlias(viewerId, u.id), avatarUrl: null };
 }
 
 /** Sends everyone who shares a chat with `userId` that chat again, after their name or photo changed. */
@@ -120,7 +132,6 @@ export async function deleteAccount(userId: string) {
         googleSub: `deleted:${userId}`,
         email: `deleted-${userId}@deleted.invalid`,
         displayName: "Deleted account",
-        alias: "Deleted account",
         avatarUrl: null,
         avatarKey: null,
         contactCode: generateCode(),
@@ -165,6 +176,13 @@ export async function setAppLock(userId: string, input: AppLockInput) {
 
 export async function removeAppLock(userId: string) {
   return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: null } }));
+}
+
+/** Checks `code` against the app lock, which has to be on. */
+export async function requireAppLock(userId: string, code: string) {
+  const { appLockHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true } });
+  if (!appLockHash) throw new AppError("APP_LOCK_REQUIRED");
+  if (!(await pinMatches(appLockHash, code))) throw new AppError("WRONG_APP_LOCK_CODE");
 }
 
 export async function unlockApp(userId: string, input: AppLockInput) {

@@ -17,6 +17,7 @@ import { Invites, Referrals } from "./invites";
 import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
+import { QuickReactionsSettings } from "./reactions";
 import { Card, SectionTitle, Toggle } from "./ui";
 
 function LanguagePicker() {
@@ -95,6 +96,7 @@ export function SettingsPanel() {
           <AndroidDownload />
           <LanguagePicker />
           <FontPicker />
+          <QuickReactionsSettings />
           <FindMe />
           <NotificationSettings />
           <Invites />

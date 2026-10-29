@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { type ChatDTO, type MessageDTO, type MessageReactedDTO, previewText, reactionText } from "@six/shared";
+import { type ChatDTO, type MessageDTO, type MessageReactedDTO, type Tone, previewText, reactionText } from "@six/shared";
 import { type AudioPlayer, createAudioPlayer } from "expo-audio";
 import { AppState } from "react-native";
 import { create } from "zustand";
@@ -10,16 +10,18 @@ const PREFS_KEY = "six:notifications";
 export interface NotifyPrefs {
   sound: boolean;
   popups: boolean;
+  tone: Tone;
 }
 
 /** Notification settings for this device. */
 export const useNotifyPrefs = create<NotifyPrefs & { set: (patch: Partial<NotifyPrefs>) => void }>((set, get) => ({
   sound: true,
   popups: true,
+  tone: "chime",
   set(patch) {
     set(patch);
-    const { sound, popups } = get();
-    void AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups })).catch(() => null);
+    const { sound, popups, tone } = get();
+    void AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups, tone })).catch(() => null);
   },
 }));
 
@@ -46,11 +48,26 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
   }),
 );
 
-let chimePlayer: AudioPlayer | null = null;
+const TONE_FILES: Record<Tone, number> = {
+  chime: require("../../assets/tones/chime.wav"),
+  pop: require("../../assets/tones/pop.wav"),
+  ding: require("../../assets/tones/ding.wav"),
+  marimba: require("../../assets/tones/marimba.wav"),
+  drop: require("../../assets/tones/drop.wav"),
+  trio: require("../../assets/tones/trio.wav"),
+};
 
-export function playChime() {
-  chimePlayer ??= createAudioPlayer(require("../../assets/chime.wav"));
-  void chimePlayer.seekTo(0).then(() => chimePlayer?.play());
+const players = new Map<Tone, AudioPlayer>();
+
+/** Plays the chosen notification tone, or `tone` to try one out. */
+export function playTone(tone = useNotifyPrefs.getState().tone) {
+  let player = players.get(tone);
+  if (!player) {
+    player = createAudioPlayer(TONE_FILES[tone]);
+    players.set(tone, player);
+  }
+  const ready = player;
+  void ready.seekTo(0).then(() => ready.play());
 }
 
 const FRESH_MS = 60_000;
@@ -71,7 +88,7 @@ export function notifyIncoming(m: MessageDTO, chat: ChatDTO | undefined, viewing
 function alert(id: string, chatId: string, title: string, body: string, avatarUrl: string | null) {
   if (AppState.currentState !== "active") return;
   const prefs = useNotifyPrefs.getState();
-  if (prefs.sound) playChime();
+  if (prefs.sound) playTone(prefs.tone);
   if (prefs.popups) useToasts.getState().push({ id, chatId, title, body, avatar: { displayName: title, avatarUrl } });
 }
 

@@ -41,6 +41,10 @@ export const AdminUserDTO = AdminUserRef.extend({
   invited: z.number().int().describe("People who joined with their links"),
   waiting: z.number().int().describe("People waiting for them to get a higher limit"),
   ads: z.boolean().describe("Whether they see ads"),
+  seenBy: z
+    .array(AdminUserRef)
+    .optional()
+    .describe("When searching an alias: the people who see this user under it"),
 });
 export type AdminUserDTO = z.infer<typeof AdminUserDTO>;
 
@@ -87,7 +91,7 @@ export const ResolveReportInput = z.object({
 export type ResolveReportInput = z.infer<typeof ResolveReportInput>;
 
 export const AdminUserQuery = PageQuery.extend({
-  q: z.string().trim().max(100).optional().describe("Matches name or email"),
+  q: z.string().trim().max(100).optional().describe("Matches name or email, or an alias like Frite 0327"),
   banned: z
     .enum(["true", "false"])
     .optional()

@@ -5,8 +5,8 @@ import {
   type EntityType,
   type EphemeralInput,
   type GifDTO,
+  type MessageEffect,
   type TypingKind,
-  type UploadKind,
   MAX_UPLOAD_BYTES,
   albumIds,
   emojiQuery,
@@ -26,11 +26,14 @@ import {
   Flame,
   Italic,
   type LucideIcon,
+  NotebookPen,
   Paperclip,
   SendHorizontal,
+  Sparkles,
   Square,
   Strikethrough,
   Trash2,
+  VenetianMask,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -52,6 +55,7 @@ import { RecordButton, type RecordMode } from "./record-button";
 import { VideoNoteCapture, type VideoNoteHandle, VideoNotePreview } from "./video-note-capture";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { EmojiButton } from "./emoji-picker";
+import { EffectTray } from "./message-effects";
 import { emojiList } from "@/lib/emoji";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration, sendAtLabel } from "@/lib/format";
@@ -62,6 +66,8 @@ import { useSession } from "@/lib/session";
 import { type Draft, queueMessage } from "@/lib/send";
 import { looksLikeSticker } from "@/lib/image";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
+import { useVoiceEffect } from "@/lib/voice-fx";
+import { VoiceEffectSelect } from "./voice-effect-select";
 
 const formats: { type: EntityType; keys: string; Icon: LucideIcon }[] = [
   { type: "bold", keys: "B", Icon: Bold },
@@ -124,9 +130,11 @@ export function Composer({
   const setMode = useComposerMode((s) => s.set);
   const [text, setText] = useState(() => useDrafts.getState().byChat[chatId] ?? "");
   const draftsReady = useDrafts((s) => s.ready);
+  const parkedMarkup = useDrafts((s) => s.parked[chatId]);
+  const effect = useVoiceEffect((s) => s.effect);
+  const parked = parkedMarkup ? parseMarkup(parkedMarkup) : null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [spoiler, setSpoiler] = useState(false);
   const [hasSelection, setHasSelection] = useState(false);
   const [caret, setCaret] = useState(0);
   const [suggested, setSuggested] = useState<{ start: number; end: number; items: EmojiEntry[] } | null>(null);
@@ -166,6 +174,7 @@ export function Composer({
     useComposerMode.getState().hand(chatId, undefined);
   }, [handed, chatId]);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
+  const [effectsOpen, setEffectsOpen] = useState(false);
   const closeCamera = useCallback(() => setCamera(false), []);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
@@ -234,6 +243,13 @@ export function Composer({
   function change(value: string) {
     setText(value);
     if (!editing) useDrafts.getState().set(chatId, value);
+  }
+
+  function swapDraft() {
+    const back = parkedMarkup ?? "";
+    useDrafts.getState().park(chatId, text);
+    change(back);
+    ref.current?.focus();
   }
 
   function typeText(value: string) {
@@ -306,10 +322,6 @@ export function Composer({
     } else return false;
     e.preventDefault();
     return true;
-  }
-
-  function spoilerButton() {
-    if (!wrap("spoiler") && !editing) setSpoiler((v) => !v);
   }
 
   function shortcut(e: React.KeyboardEvent) {
@@ -393,7 +405,7 @@ export function Composer({
     send();
   }
 
-  function send(file?: { blob: Blob; kind: UploadKind; name: string; mime: string }, at?: Date) {
+  function send(file?: Draft["file"], at?: Date, messageEffect?: MessageEffect) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
     queue({
@@ -401,12 +413,12 @@ export function Composer({
       text: parsed.text,
       entities: parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
-      spoiler: file ? false : spoiler,
       ephemeral,
       file,
+      effect: messageEffect,
     });
-    setSpoiler(false);
     setEphemeral(null);
+    setEffectsOpen(false);
     useDrafts.getState().set(chatId, "");
     setText("");
     if (mode) cancel();
@@ -476,7 +488,6 @@ export function Composer({
     });
     useDrafts.getState().set(chatId, "");
     setText("");
-    setSpoiler(false);
     setEphemeral(null);
     if (mode) cancel();
     onSent();
@@ -489,6 +500,7 @@ export function Composer({
       kind: "voice",
       name: `voice-${new Date().toISOString().slice(0, 19)}.${ext}`,
       mime: rec.mime,
+      disguised: rec.disguised,
     });
   }
 
@@ -585,6 +597,24 @@ export function Composer({
             text={maskSpoilers(editing.text ?? "", editing.entities)}
             onCancel={cancel}
           />
+        )}
+        {parked && !editing && (
+          <button
+            type="button"
+            {...keepSelection(swapDraft)}
+            className="flex w-full items-center gap-3 border-l-4 border-stone-400 py-1 pr-3 pl-3 text-left"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold text-stone-500">{tr.composer.parkedDraft}</span>
+              <span className="block truncate text-sm text-stone-600 dark:text-stone-300">
+                {maskSpoilers(parked.text, parked.entities)}
+              </span>
+            </span>
+            <NotebookPen className="size-4 shrink-0 text-stone-400" />
+          </button>
+        )}
+        {effectsOpen && !editing && !!text.trim() && (
+          <EffectTray text={parsed.text} onPick={(chosen) => send(undefined, undefined, chosen)} />
         )}
         {ephemeral && !editing && (
           <div className="flex items-center gap-2 px-1 text-sm text-orange-600 dark:text-orange-400">
@@ -776,22 +806,46 @@ export function Composer({
               }}
               rows={1}
               maxLength={4000}
-              placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
+              placeholder={tr.common.message}
               aria-label={tr.common.message}
               className="max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
             />
-            <button
-              type="button"
-              {...keepSelection(spoilerButton)}
-              aria-pressed={!editing && spoiler}
-              aria-label={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
-              title={tr.composer.spoilerHint}
-              className={`grid size-10 shrink-0 place-items-center rounded-full transition ${
-                spoiler && !editing ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
-              }`}
-            >
-              <EyeOff className="size-5" />
-            </button>
+            {!editing && !!text.trim() && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setEffectsOpen((open) => !open)}
+                aria-label={tr.messages.effects}
+                aria-expanded={effectsOpen}
+                title={tr.messages.effects}
+                className={`grid size-10 shrink-0 place-items-center rounded-full ${
+                  effectsOpen ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                }`}
+              >
+                <Sparkles className="size-5" />
+              </button>
+            )}
+            {!editing && !parked && !!text.trim() && (
+              <button
+                type="button"
+                {...keepSelection(swapDraft)}
+                aria-label={tr.composer.parkDraft}
+                title={tr.composer.parkDraft}
+                className="grid size-10 shrink-0 place-items-center rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+              >
+                <NotebookPen className="size-5" />
+              </button>
+            )}
+            {!editing && !text.trim() && (
+              <VoiceEffectSelect
+                className={`flex h-10 shrink-0 items-center gap-1 rounded-full px-2.5 text-sm font-medium ${
+                  effect === "none" ? "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200" : "text-brand"
+                }`}
+              >
+                <VenetianMask className="size-5" />
+                {effect !== "none" && tr.composer.voiceEffects[effect]}
+              </VoiceEffectSelect>
+            )}
             {!editing && scheduledCount > 0 && (
               <button
                 type="button"

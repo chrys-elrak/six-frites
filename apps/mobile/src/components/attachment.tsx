@@ -1,6 +1,5 @@
 import { type AttachmentDTO, NO_ZOOM, type ZoomView, fitWaveform, zoomTo } from "@six/shared";
 import { useEvent } from "expo";
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { AlertCircle, Download, EyeOff, FileText, FileX, Pause, Play, X } from "lucide-react-native";
@@ -22,7 +21,16 @@ import { shareRemoteFile } from "@/lib/download";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
-import { usePlaybackRate } from "@/lib/playback";
+import {
+  claimPlayback,
+  ensureAudioMode,
+  pauseVoice,
+  playVoice,
+  seekVoice,
+  stopVoice,
+  usePlaybackRate,
+  useVoice,
+} from "@/lib/playback";
 import type { PendingAttachment } from "@/lib/outbox";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
 
@@ -73,21 +81,6 @@ function view(a: ShownAttachment) {
     state: (d.status === "ready" ? "ready" : d.status === "failed" ? "failed" : "processing") as State,
     progress: 1,
   };
-}
-
-let stopCurrent: (() => void) | null = null;
-
-/** Makes sure only one voice note or video message plays at a time. */
-function claimPlayback(stop: () => void) {
-  if (stopCurrent && stopCurrent !== stop) stopCurrent();
-  stopCurrent = stop;
-}
-
-let audioModeSet = false;
-function ensureAudioMode() {
-  if (audioModeSet) return;
-  audioModeSet = true;
-  void setAudioModeAsync({ playsInSilentMode: true }).catch(() => null);
 }
 
 function ProgressRing({ value, size = 44 }: { value: number; size?: number }) {
@@ -141,7 +134,7 @@ function boxSize(width: number | null, height: number | null, maxW: number) {
   return { width: outW, height: Math.round((outW * h) / w) };
 }
 
-function SpeedButton({ tint, bg }: { tint: string; bg: string }) {
+export function SpeedButton({ tint, bg }: { tint: string; bg: string }) {
   const tr = useT();
   const rate = usePlaybackRate((s) => s.rate);
   const next = usePlaybackRate((s) => s.next);
@@ -157,6 +150,10 @@ function SpeedButton({ tint, bg }: { tint: string; bg: string }) {
   );
 }
 
+/**
+ * A voice note's controls over the shared player. In a chat (`track`) it keeps playing after the bubble goes away,
+ * with the mini player taking over; anywhere else it stops with it.
+ */
 export function VoicePlayer({
   url,
   durationMs,
@@ -166,6 +163,8 @@ export function VoicePlayer({
   label,
   compact = false,
   meta,
+  onStop,
+  track,
 }: {
   url: string | null;
   durationMs: number | null;
@@ -175,53 +174,37 @@ export function VoicePlayer({
   label?: string;
   compact?: boolean;
   meta?: ReactNode;
+  onStop?: (finished: boolean) => void;
+  track?: { chatId: string; title: string };
 }) {
   const tr = useT();
-  const player = useAudioPlayer(null);
-  const rate = usePlaybackRate((s) => s.rate);
-  const status = useAudioPlayerStatus(player);
-  const loaded = useRef(false);
   const [barsWidth, setBarsWidth] = useState(1);
+  const stopped = useRef(onStop);
+  stopped.current = onStop;
+  const isPlaying = useVoice((s) => !!url && s.track?.url === url && s.playing);
+  const position = useVoice((s) => (url && s.track?.url === url ? s.position : 0));
+  const loadedMs = useVoice((s) => (url && s.track?.url === url ? s.duration : 0));
   const bars = waveform ? fitWaveform(waveform) : Array.from({ length: 48 }, () => 18);
-  const total = durationMs ?? (status.duration ? status.duration * 1000 : 0);
-  const position = status.currentTime * 1000;
-  const stop = useRef(() => player.pause()).current;
+  const total = durationMs || loadedMs;
+  const active = () => !!url && useVoice.getState().track?.url === url;
+  const start = () =>
+    url &&
+    playVoice({
+      url,
+      chatId: track?.chatId ?? null,
+      title: track?.title ?? "",
+      onStop: (finished) => stopped.current?.(finished),
+    });
+
+  useEffect(() => () => void (!track && active() && stopVoice()), [url, track?.chatId]);
 
   useEffect(() => {
-    if (status.isLoaded) player.setPlaybackRate(rate);
-  }, [player, rate, status.isLoaded]);
-
-  useEffect(() => {
-    if (status.didJustFinish) {
-      player.pause();
-      void player.seekTo(0);
-    }
-  }, [status.didJustFinish, player]);
-
-  function toggle() {
-    if (!url) return;
-    ensureAudioMode();
-    if (!loaded.current) {
-      player.replace({ uri: url });
-      loaded.current = true;
-    }
-    if (status.playing) player.pause();
-    else {
-      claimPlayback(stop);
-      player.play();
-    }
-  }
-
-  const autoStarted = useRef(false);
-  useEffect(() => {
-    if (!autoPlay || !url || autoStarted.current) return;
-    autoStarted.current = true;
-    toggle();
-  });
+    if (autoPlay && url) start();
+  }, [autoPlay, url]);
 
   function seek(x: number) {
-    if (!loaded.current || !total) return;
-    void player.seekTo(((x / barsWidth) * total) / 1000);
+    if (!active() || !total) return;
+    seekVoice((x / barsWidth) * total);
   }
 
   const done = total ? position / total : 0;
@@ -230,12 +213,12 @@ export function VoicePlayer({
   return (
     <View style={[styles.voice, compact && styles.voiceCompact]}>
       <Pressable
-        onPress={toggle}
+        onPress={() => (isPlaying ? pauseVoice() : start())}
         disabled={!url}
-        accessibilityLabel={status.playing ? tr.messages.pause : (label ?? tr.messages.playVoice)}
+        accessibilityLabel={isPlaying ? tr.messages.pause : (label ?? tr.messages.playVoice)}
         style={[styles.voiceButton, compact && styles.voiceButtonCompact, { backgroundColor: mine ? bubble.ink : brand, opacity: url ? 1 : 0.5 }]}
       >
-        {status.playing ? (
+        {isPlaying ? (
           <Pause size={20} color={mine ? bubble.bg : brandInk} fill={mine ? bubble.bg : brandInk} />
         ) : (
           <Play size={20} color={mine ? bubble.bg : brandInk} fill={mine ? bubble.bg : brandInk} style={{ marginLeft: 2 }} />
@@ -263,7 +246,7 @@ export function VoicePlayer({
         </Pressable>
         <View style={styles.voiceFoot}>
           <Text style={[styles.small, fg && { color: fg }]}>
-            {formatDuration(status.playing || position ? position : total)}
+            {formatDuration(isPlaying || position ? position : total)}
           </Text>
           <SpeedButton
             tint={mine ? bubble.ink : brand}
@@ -432,6 +415,8 @@ export function AttachmentView({
   autoPlay = false,
   tile = false,
   meta,
+  onStop,
+  track,
 }: {
   attachment: ShownAttachment;
   mine: boolean;
@@ -445,6 +430,8 @@ export function AttachmentView({
   /** Fill the parent, as one tile of an album, instead of sizing to the photo. */
   tile?: boolean;
   meta?: ReactNode;
+  onStop?: (finished: boolean) => void;
+  track?: { chatId: string; title: string };
 }) {
   const t = useTheme();
   const tr = useT();
@@ -566,6 +553,8 @@ export function AttachmentView({
           mine={mine}
           autoPlay={autoPlay}
           meta={meta}
+          onStop={onStop}
+          track={track}
         />
         {a.state !== "ready" && (
           <View style={styles.voiceState}>

@@ -1,4 +1,4 @@
-import { type ChatDTO, type MessageDTO, type MessageReactedDTO, previewText, reactionText } from "@six/shared";
+import { type ChatDTO, type MessageDTO, type MessageReactedDTO, type Tone, previewText, reactionText } from "@six/shared";
 import { create } from "zustand";
 import { getT } from "./i18n";
 
@@ -9,25 +9,27 @@ export interface NotifyPrefs {
   popups: boolean;
   system: boolean;
   push: boolean;
+  tone: Tone;
 }
 
+const DEFAULTS: NotifyPrefs = { sound: true, popups: true, system: false, push: false, tone: "chime" };
+
 function loadPrefs(): NotifyPrefs {
-  const defaults = { sound: true, popups: true, system: false, push: false };
   try {
-    return { ...defaults, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") };
+    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") };
   } catch {
-    return defaults;
+    return DEFAULTS;
   }
 }
 
 /** Notification settings for this device. */
 export const useNotifyPrefs = create<NotifyPrefs & { set: (patch: Partial<NotifyPrefs>) => void }>((set, get) => ({
-  ...(typeof window === "undefined" ? { sound: true, popups: true, system: false, push: false } : loadPrefs()),
+  ...(typeof window === "undefined" ? DEFAULTS : loadPrefs()),
   set(patch) {
     set(patch);
-    const { sound, popups, system, push } = get();
+    const { sound, popups, system, push, tone } = get();
     try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups, system, push }));
+      localStorage.setItem(PREFS_KEY, JSON.stringify({ sound, popups, system, push, tone }));
     } catch {}
   },
 }));
@@ -53,9 +55,10 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
 
 let audio: AudioContext | null = null;
 
-/** Creates or resumes the audio context; must run inside a user gesture the first time. */
+/** Creates or resumes the audio context and starts loading the chosen tone; must run inside a user gesture the first time. */
 export function unlockAudio() {
   audio ??= new AudioContext();
+  void decode(audio, useNotifyPrefs.getState().tone).catch(() => null);
   return audio.resume();
 }
 
@@ -66,31 +69,33 @@ export function primeAudio() {
   window.addEventListener("keydown", unlock, { once: true });
 }
 
-function chime(ctx: AudioContext) {
-  const now = ctx.currentTime;
-  for (const [freq, offset] of [
-    [880, 0],
-    [1318.5, 0.11],
-  ] as const) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, now + offset);
-    gain.gain.exponentialRampToValueAtTime(0.18, now + offset + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.35);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(now + offset);
-    osc.stop(now + offset + 0.4);
+const decoded = new Map<Tone, Promise<AudioBuffer>>();
+
+function decode(ctx: AudioContext, tone: Tone) {
+  let buffer = decoded.get(tone);
+  if (!buffer) {
+    buffer = fetch(`/tones/${tone}.wav`)
+      .then((r) => r.arrayBuffer())
+      .then((b) => ctx.decodeAudioData(b));
+    buffer.catch(() => decoded.delete(tone));
+    decoded.set(tone, buffer);
   }
+  return buffer;
 }
 
-/** A short two-note chime made with Web Audio, so there is no sound file to ship. */
-export function playChime() {
+/** Plays the chosen notification tone, or `tone` to try one out. */
+export function playTone(tone = useNotifyPrefs.getState().tone) {
   const ctx = audio;
   if (!ctx) return;
-  if (ctx.state === "running") chime(ctx);
-  else void ctx.resume().then(() => ctx.state === "running" && chime(ctx));
+  void Promise.all([decode(ctx, tone), ctx.resume()])
+    .then(([buffer]) => {
+      if (ctx.state !== "running") return;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start();
+    })
+    .catch(() => null);
 }
 
 const FRESH_MS = 60_000;
@@ -152,7 +157,7 @@ function alertUser(
   const prefs = useNotifyPrefs.getState();
   const hidden = document.visibilityState !== "visible";
 
-  if (prefs.sound) playChime();
+  if (prefs.sound) playTone(prefs.tone);
   if (hidden && prefs.push) return;
   if (hidden && prefs.system && "Notification" in window && Notification.permission === "granted") {
     const notification = new Notification(n.title, { body: n.body, icon: avatarUrl ?? "/icon.svg", tag: n.chatId });

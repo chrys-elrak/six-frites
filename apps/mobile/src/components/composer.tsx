@@ -3,6 +3,7 @@ import {
   type EntityType,
   type EphemeralInput,
   type GifDTO,
+  type MessageEffect,
   type TypingKind,
   albumIds,
   emojiQuery,
@@ -30,8 +31,10 @@ import {
   Flame,
   Italic,
   type LucideIcon,
+  NotebookPen,
   Paperclip,
   SendHorizontal,
+  Sparkles,
   Square,
   Strikethrough,
   Trash2,
@@ -42,6 +45,7 @@ import { randomUUID } from "expo-crypto";
 import { File, Paths } from "expo-file-system";
 import { Keyboard, Pressable, ScrollView, StyleSheet, View, findNodeHandle } from "react-native";
 import { Text, TextInput } from "./text";
+import { EffectTray } from "./message-effects";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
@@ -121,9 +125,10 @@ export function Composer({
   const setMode = useComposerMode((s) => s.set);
   const [text, setText] = useState(() => useDrafts.getState().byChat[chatId] ?? "");
   const draftsReady = useDrafts((s) => s.ready);
+  const parkedMarkup = useDrafts((s) => s.parked[chatId]);
+  const parked = parkedMarkup ? parseMarkup(parkedMarkup) : null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [spoiler, setSpoiler] = useState(false);
   const selection = useRef<Range>({ start: 0, end: 0 });
   const [forced, setForced] = useState<Range | undefined>(undefined);
   const [hasSelection, setHasSelection] = useState(false);
@@ -156,6 +161,7 @@ export function Composer({
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
+  const [effectsOpen, setEffectsOpen] = useState(false);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
   const [showScheduled, setShowScheduled] = useState(false);
@@ -228,6 +234,13 @@ export function Composer({
     if (!editing) useDrafts.getState().set(chatId, value);
   }
 
+  function swapDraft() {
+    const back = parkedMarkup ?? "";
+    useDrafts.getState().park(chatId, text);
+    change(back);
+    input.current?.focus();
+  }
+
   function typeText(value: string) {
     const swapped = emojifyTyped(text, value);
     if (!swapped) return change(value);
@@ -253,10 +266,6 @@ export function Composer({
     change(text.slice(0, query.start) + emoji + text.slice(caret));
     setForced({ start: at, end: at });
     setCaret(at);
-  }
-
-  function spoilerButton() {
-    if (!wrap("spoiler") && !editing) setSpoiler((v) => !v);
   }
 
   const parsed = parseMarkup(emojifyEnd(text));
@@ -308,7 +317,6 @@ export function Composer({
   function reset() {
     useDrafts.getState().set(chatId, "");
     setText("");
-    setSpoiler(false);
     setEphemeral(null);
     if (mode) cancel();
     onSent();
@@ -343,7 +351,7 @@ export function Composer({
     send();
   }
 
-  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral, at?: Date) {
+  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral, at?: Date, messageEffect?: MessageEffect) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
     queue({
@@ -351,10 +359,11 @@ export function Composer({
       text: file ? "" : parsed.text,
       entities: file ? [] : parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
-      spoiler: file ? false : spoiler,
       ephemeral: chosen,
       file,
+      effect: messageEffect,
     });
+    setEffectsOpen(false);
     if (file) {
       setEphemeral(null);
       if (mode) cancel();
@@ -522,6 +531,20 @@ export function Composer({
         {editing && (
           <ModeBar label={tr.composer.editingMessage} text={maskSpoilers(editing.text ?? "", editing.entities)} onCancel={cancel} />
         )}
+        {parked && !editing && (
+          <Pressable onPress={swapDraft} style={[styles.modeBar, { borderLeftColor: t.muted, paddingRight: 8 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: t.muted, fontSize: 12, fontWeight: "700" }}>{tr.composer.parkedDraft}</Text>
+              <Text numberOfLines={1} style={{ color: t.textSoft, fontSize: 14 }}>
+                {maskSpoilers(parked.text, parked.entities)}
+              </Text>
+            </View>
+            <NotebookPen size={16} color={t.muted} />
+          </Pressable>
+        )}
+        {effectsOpen && !editing && !!text.trim() && (
+          <EffectTray text={parsed.text} onPick={(chosen) => send(undefined, ephemeral, undefined, chosen)} />
+        )}
         {ephemeral && !editing && (
           <View style={styles.ephemeralBar}>
             <Flame size={16} color={flame} fill={flame} />
@@ -629,19 +652,26 @@ export function Composer({
               }}
               multiline
               maxLength={4000}
-              placeholder={spoiler ? tr.composer.spoilerPlaceholder : tr.common.message}
+              placeholder={tr.common.message}
               placeholderTextColor={t.muted}
               accessibilityLabel={tr.common.message}
               style={[styles.input, { color: t.text }]}
             />
-            <Pressable
-              onPress={spoilerButton}
-              accessibilityLabel={spoiler && !editing ? tr.composer.sendAsNormal : tr.summary.spoiler}
-              accessibilityState={{ selected: !editing && spoiler }}
-              style={styles.round40}
-            >
-              <EyeOff size={20} color={spoiler && !editing ? brand : t.faint} />
-            </Pressable>
+            {!editing && !!text.trim() && (
+              <Pressable
+                onPress={() => setEffectsOpen((open) => !open)}
+                accessibilityLabel={tr.messages.effects}
+                accessibilityState={{ expanded: effectsOpen }}
+                style={styles.round40}
+              >
+                <Sparkles size={20} color={effectsOpen ? brand : t.faint} />
+              </Pressable>
+            )}
+            {!editing && !parked && !!text.trim() && (
+              <Pressable onPress={swapDraft} accessibilityLabel={tr.composer.parkDraft} style={styles.round40}>
+                <NotebookPen size={20} color={t.faint} />
+              </Pressable>
+            )}
             {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
           </View>
           {capture && (

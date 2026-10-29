@@ -1,0 +1,3 @@
+ALTER TABLE "User" ADD COLUMN "quickReactions" TEXT[] DEFAULT ARRAY[]::TEXT[];
+
+ALTER TABLE "Message" ADD COLUMN "effect" TEXT;

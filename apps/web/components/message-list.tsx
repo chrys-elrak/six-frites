@@ -9,6 +9,7 @@ import {
   type EphemeralDTO,
   type GeoPoint,
   type MessageDTO,
+  type MessageEffect,
   type MessageEntity,
   type MessageType,
   type ReplyPreview,
@@ -82,6 +83,8 @@ import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
 import { ReactionBar, ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
+import { EffectLayer } from "./message-effects";
+import { MessageMenu } from "./message-menu";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
 import { ServiceIcon } from "./service-icon";
@@ -98,6 +101,7 @@ interface MsgRow {
   text: string | null;
   entities: MessageEntity[];
   spoiler: boolean;
+  effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
   createdAt: string;
   mine: boolean;
@@ -181,6 +185,7 @@ function buildRows(
         text: m.text,
         entities: m.entities,
         spoiler: m.spoiler,
+        effect: m.effect ?? null,
         replyTo: m.replyTo,
         createdAt: m.createdAt,
         mine: m.senderId === meId,
@@ -211,6 +216,7 @@ function buildRows(
           text: p.text,
           entities: p.entities,
           spoiler: p.spoiler,
+          effect: p.effect ?? null,
           replyTo: p.replyTo,
           createdAt: p.createdAt,
           mine: true,
@@ -600,13 +606,15 @@ function Bubble({
   onOpenAlbum,
   safe,
   frozen,
+  autoPlay,
+  onVoiceStop,
 }: {
   row: MsgRow;
   highlighted: boolean;
   selecting: boolean;
   selected: boolean;
   nameOf: (userId: string) => string;
-  onMenu: (at?: { x: number; y: number }) => void;
+  onMenu: (at?: { x: number; y: number }, rect?: DOMRect) => void;
   onReply: () => void;
   onQuote: (id: string) => void;
   onToggle: () => void;
@@ -622,13 +630,15 @@ function Bubble({
   /** Safe view is on: their photos and videos stay blurred until tapped. */
   safe: boolean;
   frozen: boolean;
+  autoPlay: boolean;
+  onVoiceStop: (finished: boolean) => void;
 }) {
   const tr = useT();
   const selectable = selecting && row.message !== null;
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
   const anchor = () => bubble.current!.getBoundingClientRect();
-  const press = useLongPress(selectable ? onToggle : onMenu);
+  const press = useLongPress(selectable ? onToggle : (at) => onMenu(at, at ? undefined : anchor()));
   const reactable = !selecting && !frozen && canReact(row);
   const swipe = useSwipe(
     !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
@@ -662,8 +672,16 @@ function Bubble({
   const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const sticker = !sealed && !row.deleted ? row.sticker : null;
+  const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
   const loose = !sealed && !row.deleted && row.attachment?.source === "server" && !!row.attachment.file?.sticker;
   const hasText = !!row.text || row.deleted || row.locked;
+  const deletedBy = row.message?.deletedBy;
+  const deletedText =
+    deletedBy === meId && !row.mine
+      ? tr.messages.youDeleted(nameOf(row.message!.senderId))
+      : deletedBy && deletedBy !== meId && row.mine
+        ? tr.messages.deletedYours(nameOf(deletedBy))
+        : tr.messages.deleted;
   const inlineVoice =
     !sealed &&
     !hasText &&
@@ -733,10 +751,11 @@ function Bubble({
               {...press}
               onClick={onTap}
               onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
-              className={`${radius} ${tone} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${fx ? "relative " : ""}${radius} ${tone} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
+              {fx && <EffectLayer effect={fx} id={row.key} />}
               {row.replyTo && !row.deleted && (
                 <Quote
                   reply={row.replyTo}
@@ -766,6 +785,13 @@ function Bubble({
                     hidden={visual ? blurred(row.key, row.spoiler) : false}
                     hiddenLabel={chip(row.spoiler)}
                     onReveal={() => revealMedia(row.key)}
+                    autoPlay={autoPlay}
+                    onStop={onVoiceStop}
+                    track={
+                      row.message
+                        ? { chatId: row.message.chatId, title: row.mine ? tr.common.you : nameOf(row.message.senderId) }
+                        : undefined
+                    }
                     meta={
                       inlineVoice && (
                         <span className="ml-auto flex items-center gap-1 text-[11px] leading-none">{stamp}</span>
@@ -827,7 +853,7 @@ function Bubble({
                 >
                   {!hasText ? null : row.deleted ? (
                     <span className="inline-flex items-center gap-1.5">
-                      <Ban className="size-4" /> {tr.messages.deleted}
+                      <Ban className="size-4" /> {deletedText}
                     </span>
                   ) : row.locked ? (
                     <span
@@ -905,10 +931,12 @@ export const MessageList = forwardRef<
     const startSelection = useSelection((s) => s.start);
     const toggleSelected = useSelection((s) => s.toggle);
     const list = useRef<VListHandle>(null);
+    const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
+    const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
     const [reporting, setReporting] = useState<MessageDTO | null>(null);
     const [timingFor, setTimingFor] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
@@ -1048,6 +1076,22 @@ export const MessageList = forwardRef<
 
     function rowIndex(id: string) {
       return rows.findIndex((r) => r.kind === "msg" && (r.id === id || !!r.album?.some((it) => it.message?.id === id)));
+    }
+
+    /** After a voice message plays to the end, starts the next message if it's a voice message too. */
+    function playNext(key: string) {
+      const from = rows.findIndex((r) => r.key === key);
+      const index = rows.findIndex((r, i) => i > from && r.kind !== "day" && r.kind !== "unread");
+      const next = rows[index];
+      const voice =
+        next?.kind === "msg" &&
+        next.attachment?.source === "server" &&
+        next.attachment.data.kind === "voice" &&
+        !next.deleted &&
+        !next.ephemeral;
+      if (from < 0 || !voice) return setAutoplay(null);
+      setAutoplay(next.key);
+      list.current?.scrollToIndex(index, { align: "nearest", smooth: true });
     }
 
     function jumpTo(id: string) {
@@ -1203,9 +1247,10 @@ export const MessageList = forwardRef<
                 selecting={selecting}
                 selected={row.id !== null && selecting && selectedIds.includes(row.id)}
                 nameOf={nameOf}
-                onMenu={(at) => {
+                onMenu={(at, rect) => {
                   setMenuFor(row);
                   setMenuAt(at);
+                  setMenuRect(rect ?? null);
                 }}
                 onReply={() => row.message && setMode(chat.id, { kind: "reply", message: row.message })}
                 onQuote={jumpTo}
@@ -1221,13 +1266,21 @@ export const MessageList = forwardRef<
                 safe={chat.safeView}
                 frozen={frozen}
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
+                autoPlay={autoplay === row.key}
+                onVoiceStop={(finished) => (finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k)))}
               />
             )
           }
         </VList>
 
         {menuFor && (
-          <Sheet actions={actionsFor(menuFor)} at={menuAt} onClose={() => setMenuFor(null)}>
+          <MessageMenu
+            rect={menuRect}
+            mine={menuFor.mine}
+            actions={actionsFor(menuFor)}
+            at={menuAt}
+            onClose={() => setMenuFor(null)}
+          >
             {!frozen && canReact(menuFor) && (
               <div className="rounded-full bg-white px-1.5 py-1 shadow-xl ring-1 ring-black/5 dark:bg-stone-900 dark:ring-white/10">
                 <ReactionBar
@@ -1244,7 +1297,7 @@ export const MessageList = forwardRef<
                 />
               </div>
             )}
-          </Sheet>
+          </MessageMenu>
         )}
         {reactAt && (
           <ReactionPopover
