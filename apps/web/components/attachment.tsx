@@ -4,7 +4,7 @@ import { type AttachmentDTO, type EncryptedFile, NO_ZOOM, type ZoomView, zoomTo 
 import { AlertCircle, ChevronLeft, ChevronRight, Download, EyeOff, FileText, FileX, Loader2, Pause, Play, X } from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { decryptedUrl } from "@/lib/e2ee";
+import { decryptedUrl, streamUrl } from "@/lib/e2ee";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import type { PendingAttachment } from "@/lib/outbox";
@@ -515,7 +515,12 @@ export function AttachmentView({
     const ready = a.state === "ready" && (a.url || decrypted);
     const open = () => {
       if (!ready) return;
-      if (!a.url) setWanted(true);
+      const stream =
+        attachment.source === "server" && attachment.data.encrypted && a.kind === "video" && attachment.file
+          ? streamUrl(attachment.data, attachment.file)
+          : null;
+      if (stream) onOpen({ kind: "video", url: stream, poster: a.thumbUrl, name: a.name });
+      else if (!a.url) setWanted(true);
       else onOpen({ kind: a.kind as "image" | "video", url: a.url, poster: a.thumbUrl, name: a.name });
     };
     return (
@@ -530,6 +535,7 @@ export function AttachmentView({
         {a.thumbUrl && (
           <ProtectedImage
             src={a.thumbUrl}
+            fit={a.kind === "video" && !tile ? "contain" : "cover"}
             className={`size-full transition duration-300 ${hidden ? "scale-125 blur-2xl brightness-75" : ""}`}
           />
         )}
@@ -764,49 +770,46 @@ export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () =>
           </button>
         </div>
         <div
-          className="grid min-h-0 flex-1 place-items-center p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+          className="relative grid min-h-0 flex-1 place-items-center p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
-          {item.kind === "image" ? (
-            <ZoomImage src={item.url} />
-          ) : (
-            <video
-              src={item.url}
-              poster={item.poster ?? undefined}
-              controls
-              controlsList="nodownload noremoteplayback"
-              disablePictureInPicture
-              autoPlay
-              playsInline
-              {...noSave}
-              className="max-h-full max-w-full"
-            />
-          )}
+          {item.kind === "image" ? <ZoomImage src={item.url} /> : <FullVideo src={item.url} poster={item.poster} />}
         </div>
       </div>
     </Portal>
   );
 }
 
-function AlbumSlide({ attachment }: { attachment: ShownAttachment }) {
-  const decrypted = useDecrypted(attachment, true);
-  const a = view(attachment, decrypted);
-  if (!a.url) return <Loader2 className="size-8 animate-spin text-white/70" />;
-  return a.kind === "video" ? (
-    <video
-      src={a.url}
-      poster={a.thumbUrl ?? undefined}
-      controls
-      controlsList="nodownload noremoteplayback"
-      disablePictureInPicture
-      autoPlay
-      playsInline
-      {...noSave}
-      className="max-h-full max-w-full"
-    />
-  ) : (
-    <ZoomImage src={a.url} />
+/** Fills the viewer and letterboxes the video, so it is never cropped whatever its shape. */
+function FullVideo({ src, poster }: { src: string; poster: string | null }) {
+  return (
+    <div className="absolute inset-0 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <video
+        src={src}
+        poster={poster ?? undefined}
+        controls
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
+        autoPlay
+        playsInline
+        {...noSave}
+        className="size-full object-contain"
+      />
+    </div>
   );
+}
+
+function AlbumSlide({ attachment }: { attachment: ShownAttachment }) {
+  const [stream] = useState(() =>
+    attachment.source === "server" && attachment.data.encrypted && attachment.data.kind === "video" && attachment.file
+      ? streamUrl(attachment.data, attachment.file)
+      : null,
+  );
+  const decrypted = useDecrypted(attachment, !stream);
+  const a = view(attachment, decrypted);
+  const url = stream ?? a.url;
+  if (!url) return <Loader2 className="size-8 animate-spin text-white/70" />;
+  return a.kind === "video" ? <FullVideo src={url} poster={a.thumbUrl} /> : <ZoomImage src={url} />;
 }
 
 /** Shows an album's photos and videos one at a time: swipe, the arrow keys or the side buttons move between them. */

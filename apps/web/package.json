@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --webpack --port 3000",
-    "build": "next build --webpack",
+    "sw": "esbuild sw/sw.js --bundle --minify --format=iife --target=es2020 --outfile=public/sw.js",
+    "dev": "npm run sw && next dev --webpack --port 3000",
+    "build": "npm run sw && next build --webpack",
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit"
   },
@@ -29,6 +30,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
+    "esbuild": "^0.28.2",
     "tailwindcss": "^4.3.3"
   }
 }

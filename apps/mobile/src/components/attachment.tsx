@@ -513,7 +513,7 @@ export function AttachmentView({
           <Image
             source={{ uri: a.thumbUrl }}
             style={StyleSheet.absoluteFill}
-            contentFit="cover"
+            contentFit={a.kind === "video" && !tile ? "contain" : "cover"}
             blurRadius={hidden ? 40 : 0}
             transition={150}
           />

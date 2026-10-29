@@ -6,6 +6,7 @@ import {
   b64,
   backupKeyId,
   decryptMedia,
+  decryptMediaChunk,
   deriveBackupKey,
   encryptMedia,
   fromUtf8,
@@ -17,6 +18,7 @@ import {
   randomBytes as random,
   recoveryKeyFromWords,
   safetyNumber,
+  sealedChunkStart,
   sealBackup,
   unpad,
   unwrapBackupKey,
@@ -70,6 +72,18 @@ describe("media", () => {
     const { data, key } = encryptMedia(randomBytes(2 * MEDIA_CHUNK + 1));
     const cut = data.slice(0, 16 + MEDIA_CHUNK + 16);
     expect(code(() => decryptMedia(cut, key, sha256(cut)))).toBe("BAD_MEDIA");
+  });
+
+  it("decrypts any chunk on its own for streaming, but only at its own index and finality", () => {
+    const plain = randomBytes(3 * MEDIA_CHUNK + 5);
+    const { data, key } = encryptMedia(plain);
+    const prefix = data.subarray(0, 16);
+    const chunk = (i: number) => data.subarray(sealedChunkStart(i), sealedChunkStart(i + 1));
+
+    expect(decryptMediaChunk(key, prefix, 1, false, chunk(1))).toEqual(plain.subarray(MEDIA_CHUNK, 2 * MEDIA_CHUNK));
+    expect(decryptMediaChunk(key, prefix, 3, true, chunk(3))).toEqual(plain.subarray(3 * MEDIA_CHUNK));
+    expect(code(() => decryptMediaChunk(key, prefix, 2, false, chunk(1)))).toBe("BAD_MEDIA");
+    expect(code(() => decryptMediaChunk(key, prefix, 1, true, chunk(1)))).toBe("BAD_MEDIA");
   });
 });
 

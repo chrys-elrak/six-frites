@@ -32,6 +32,7 @@ function usePushLinks(signedIn: boolean) {
   const router = useRouter();
   useEffect(() => {
     if (!signedIn || !("serviceWorker" in navigator)) return;
+    void navigator.serviceWorker.register("/sw.js").catch(() => null);
     if (useNotifyPrefs.getState().push) void relinkPush().catch(() => null);
     const onMessage = (e: MessageEvent) => e.data?.type === "open" && router.push(e.data.url);
     navigator.serviceWorker.addEventListener("message", onMessage);

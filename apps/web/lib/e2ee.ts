@@ -178,6 +178,25 @@ export function decryptedUrl(a: Pick<AttachmentDTO, "id" | "url">, file: Encrypt
   return url;
 }
 
+const streams = new Map<string, { url: string; key: string; size: number; mime: string }>();
+
+if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    if (e.data?.type === "stream") e.ports[0]?.postMessage(streams.get(e.data.id) ?? null);
+  });
+  navigator.serviceWorker.startMessages();
+}
+
+/**
+ * A /stream/ URL for an encrypted video, which the service worker plays by downloading and decrypting only the
+ * parts being watched. Null when no service worker controls the page yet; use decryptedUrl then.
+ */
+export function streamUrl(a: Pick<AttachmentDTO, "id" | "url">, file: EncryptedFile) {
+  if (!a.url || !navigator.serviceWorker?.controller) return null;
+  streams.set(a.id, { url: a.url, key: file.key, size: file.size, mime: file.mime });
+  return `/stream/${encodeURIComponent(a.id)}`;
+}
+
 /** The file a message carries, decrypted when it needs to be. */
 export async function messageFile(m: Hydrated): Promise<File> {
   const a = m.attachment!;

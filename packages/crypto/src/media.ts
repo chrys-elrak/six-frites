@@ -11,6 +11,18 @@ const MORE = Uint8Array.of(0);
 
 const nonce = (prefix: Uint8Array, index: number) => concatBytes(prefix, u64(index));
 
+/** Where chunk `index` starts in an encrypted file, after the prefix. */
+export const sealedChunkStart = (index: number) => PREFIX + index * (MEDIA_CHUNK + TAG);
+
+/** Decrypts one chunk of an encrypted file on its own, so a player can stream it. `last` marks the final chunk. */
+export function decryptMediaChunk(key: Uint8Array, prefix: Uint8Array, index: number, last: boolean, sealed: Uint8Array) {
+  try {
+    return xchacha20poly1305(key, nonce(prefix, index), last ? FINAL : MORE).decrypt(sealed);
+  } catch {
+    throw new CryptoError("BAD_MEDIA", "The file could not be decrypted");
+  }
+}
+
 /**
  * Encrypts a file with a fresh random key, in fixed-size chunks so large files never need a second
  * copy in memory. Each chunk's nonce encodes its position and the last chunk is marked final, so
@@ -42,14 +54,9 @@ export function decryptMedia(data: Uint8Array, key: Uint8Array, digest: Uint8Arr
   const sealedChunk = MEDIA_CHUNK + TAG;
   const chunks = Math.ceil(body.length / sealedChunk);
   const out = new Uint8Array(body.length - chunks * TAG);
-  try {
-    for (let i = 0; i < chunks; i++) {
-      const part = body.subarray(i * sealedChunk, (i + 1) * sealedChunk);
-      const plain = xchacha20poly1305(key, nonce(prefix, i), i === chunks - 1 ? FINAL : MORE).decrypt(part);
-      out.set(plain, i * MEDIA_CHUNK);
-    }
-  } catch {
-    throw new CryptoError("BAD_MEDIA", "The file could not be decrypted");
+  for (let i = 0; i < chunks; i++) {
+    const part = body.subarray(i * sealedChunk, (i + 1) * sealedChunk);
+    out.set(decryptMediaChunk(key, prefix, i, i === chunks - 1, part), i * MEDIA_CHUNK);
   }
   return out;
 }

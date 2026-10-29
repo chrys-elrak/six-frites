@@ -9,3 +9,4 @@ next-env.d.ts
 .DS_Store
 
 apps/api/src/generated
+apps/web/public/sw.js
