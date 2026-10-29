@@ -21,6 +21,7 @@ const TONES = {
   marimba: [...mallet(0, 659.25), ...mallet(0.1, 987.77)],
   drop: [note(0, 420, 0.18, { to: 1400, sweep: 0.06, attack: 0.004 })],
   trio: [note(0, 1046.5, 0.22), note(0.09, 1318.5, 0.22), note(0.18, 1568, 0.4)],
+  blip: [note(0, 660, 0.12, { to: 990, sweep: 0.04, attack: 0.004 }), note(0.08, 990, 0.28, { to: 1320, sweep: 0.03, attack: 0.004 })],
 };
 
 /**

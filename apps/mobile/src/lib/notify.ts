@@ -55,6 +55,7 @@ const TONE_FILES: Record<Tone, number> = {
   marimba: require("../../assets/tones/marimba.wav"),
   drop: require("../../assets/tones/drop.wav"),
   trio: require("../../assets/tones/trio.wav"),
+  blip: require("../../assets/tones/blip.wav"),
 };
 
 const players = new Map<Tone, AudioPlayer>();
