@@ -13,7 +13,7 @@ export function BrandBar() {
       onPress={() => router.navigate("/")}
       accessibilityRole="header"
       accessibilityLabel="Six Frites"
-      style={[styles.bar, { paddingTop: Math.max(insets.top, 8), backgroundColor: t.bg, borderColor: t.border }]}
+      style={[styles.bar, { paddingTop: Math.max(insets.top, 8), backgroundColor: t.glass, borderColor: t.border }]}
     >
       <Logo size={28} />
       <Text style={[styles.name, { color: t.text }]}>Six Frites</Text>

@@ -264,6 +264,7 @@ model Message {
   entities     Json?
   spoiler      Boolean   @default(false)
   effect       String?
+  silent       Boolean   @default(false)
   maxViews     Int?
   ttlSeconds   Int?
   expiredAt    DateTime?
@@ -342,6 +343,7 @@ model ScheduledMessage {
   text         String?
   entities     Json?
   spoiler      Boolean  @default(false)
+  silent       Boolean  @default(false)
   maxViews     Int?
   ttlSeconds   Int?
   attachmentId String?  @unique

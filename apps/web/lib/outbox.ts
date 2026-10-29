@@ -36,6 +36,7 @@ export interface PendingMessage {
   replyTo: ReplyPreview | null;
   spoiler: boolean;
   effect?: MessageEffect;
+  silent?: boolean;
   ephemeral: EphemeralInput | null;
   attachment: PendingAttachment | null;
   gif: GifDTO | null;

@@ -1,9 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MessageEffect } from "@six/shared";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, type LayoutRectangle, Pressable, ScrollView, StyleSheet, View, type ViewStyle } from "react-native";
+import { Animated, Easing, type LayoutRectangle, Pressable, StyleSheet, View, type ViewStyle } from "react-native";
 import { create } from "zustand";
-import { useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { Text } from "./text";
@@ -156,55 +155,9 @@ export function EffectLayer({ effect, id, box, radius }: { effect: MessageEffect
   );
 }
 
-/** The composer's effects tray: the message as it would look with each effect; picking one sends it. */
-export function EffectTray({ text, onPick }: { text: string; onPick: (effect: MessageEffect) => void }) {
-  const t = useTheme();
-  const tr = useT();
-  const bubble = useBubbleColors();
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tray} keyboardShouldPersistTaps="always">
-      {MessageEffect.options.map((effect) => (
-        <Pressable
-          key={effect}
-          onPress={() => onPick(effect)}
-          accessibilityLabel={tr.messages.sendWithEffect(tr.messages.effectNames[effect])}
-          style={styles.option}
-        >
-          <View
-            style={[
-              styles.preview,
-              { backgroundColor: bubble.bg },
-              effect === "fire" && { borderWidth: 2, borderColor: "#f97316" },
-            ]}
-          >
-            <Text numberOfLines={1} style={{ color: bubble.ink, fontSize: 14, opacity: effect === "gift" ? 0 : 1 }}>
-              {text}
-            </Text>
-            {effect === "gift" && (
-              <View style={[StyleSheet.absoluteFill, styles.gift, { borderRadius: 16 }]}>
-                <View style={styles.ribbonV} />
-                <View style={styles.ribbonH} />
-                <Text style={{ fontSize: 14 }}>🎀</Text>
-              </View>
-            )}
-            {(effect === "hearts" || effect === "confetti") && (
-              <Text style={styles.corner}>{effect === "hearts" ? "❤️" : "🎉"}</Text>
-            )}
-          </View>
-          <Text style={{ color: t.muted, fontSize: 12 }}>{tr.messages.effectNames[effect]}</Text>
-        </Pressable>
-      ))}
-    </ScrollView>
-  );
-}
-
 const styles = StyleSheet.create({
   flames: { position: "absolute", left: 4, right: 4, top: -14, flexDirection: "row", justifyContent: "space-around" },
   gift: { backgroundColor: "#ec4899", alignItems: "center", justifyContent: "center", overflow: "hidden" },
   ribbonV: { position: "absolute", top: 0, bottom: 0, left: "50%", width: 10, marginLeft: -5, backgroundColor: "rgba(255,255,255,0.9)" },
   ribbonH: { position: "absolute", left: 0, right: 0, top: "50%", height: 10, marginTop: -5, backgroundColor: "rgba(255,255,255,0.9)" },
-  tray: { gap: 12, paddingHorizontal: 4, paddingTop: 12, paddingBottom: 4 },
-  option: { alignItems: "center", gap: 6 },
-  preview: { maxWidth: 140, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
-  corner: { position: "absolute", top: -8, right: -4, fontSize: 14 },
 });

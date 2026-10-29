@@ -3,6 +3,7 @@ import {
   type EntityType,
   type EphemeralInput,
   type GifDTO,
+  type MenuCommand,
   type MessageEffect,
   type TypingKind,
   albumIds,
@@ -11,6 +12,7 @@ import {
   emojifyTyped,
   maskSpoilers,
   parseCommand,
+  silentMessage,
   suggestEmoji,
 } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
@@ -45,7 +47,6 @@ import { randomUUID } from "expo-crypto";
 import { File, Paths } from "expo-file-system";
 import { Keyboard, Pressable, ScrollView, StyleSheet, View, findNodeHandle } from "react-native";
 import { Text, TextInput } from "./text";
-import { EffectTray } from "./message-effects";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { editMessage } from "@/lib/actions";
 import { useComposerMode } from "@/lib/composer";
@@ -163,7 +164,7 @@ export function Composer({
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
-  const [effectsOpen, setEffectsOpen] = useState(false);
+  const [messageEffect, setMessageEffect] = useState<MessageEffect | null>(null);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
   const [showScheduled, setShowScheduled] = useState(false);
@@ -260,7 +261,7 @@ export function Composer({
     return true;
   }
 
-  const query = parseCommand(text) ? null : emojiQuery(text, caret);
+  const query = parseCommand(text) && silentMessage(text) === null ? null : emojiQuery(text, caret);
   const suggestions = useMemo(() => (query ? suggestEmoji(allEmoji, query.query) : []), [query?.query]);
 
   function pickSuggestion(emoji: string) {
@@ -271,12 +272,20 @@ export function Composer({
     setCaret(at);
   }
 
-  const parsed = parseMarkup(emojifyEnd(text));
+  const silent = editing ? null : silentMessage(text);
+  const commanding = silent === null && parseCommand(text) !== null;
+  const parsed = parseMarkup(emojifyEnd(silent ?? text));
   const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
 
   function cancel() {
     setError(null);
     setMode(chatId, undefined);
+  }
+
+  function runCommand(name: MenuCommand) {
+    change("");
+    if (name === "game") setStartingGame(true);
+    else setScheduling("next");
   }
 
   function completeCommand(value: string) {
@@ -321,6 +330,7 @@ export function Composer({
     useDrafts.getState().set(chatId, "");
     setText("");
     setEphemeral(null);
+    setMessageEffect(null);
     if (mode) cancel();
     onSent();
   }
@@ -354,7 +364,7 @@ export function Composer({
     send();
   }
 
-  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral, at?: Date, messageEffect?: MessageEffect) {
+  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral, at?: Date) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
     queue({
@@ -364,9 +374,9 @@ export function Composer({
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral: chosen,
       file,
-      effect: messageEffect,
+      effect: file ? undefined : (messageEffect ?? undefined),
+      silent: silent !== null,
     });
-    setEffectsOpen(false);
     if (file) {
       setEphemeral(null);
       if (mode) cancel();
@@ -545,8 +555,16 @@ export function Composer({
             <NotebookPen size={16} color={t.muted} />
           </Pressable>
         )}
-        {effectsOpen && !editing && !!text.trim() && (
-          <EffectTray text={parsed.text} onPick={(chosen) => send(undefined, ephemeral, undefined, chosen)} />
+        {messageEffect && !editing && (
+          <View style={styles.ephemeralBar}>
+            <Sparkles size={16} color={brand} />
+            <Text style={{ flex: 1, color: brand, fontSize: 14 }}>
+              {tr.composer.withEffect(tr.messages.effectNames[messageEffect])}
+            </Text>
+            <Pressable onPress={() => setMessageEffect(null)} accessibilityLabel={tr.composer.noEffect} hitSlop={8} style={styles.round32}>
+              <X size={16} color={brand} />
+            </Pressable>
+          </View>
         )}
         {ephemeral && !editing && (
           <View style={styles.ephemeralBar}>
@@ -580,6 +598,19 @@ export function Composer({
             onComplete={completeCommand}
             onGif={sendGif}
             onSticker={(found) => void sendFoundSticker(found)}
+            onMenu={runCommand}
+            onDestruct={(value) => {
+              change("");
+              setEphemeral(value);
+            }}
+            onLocation={() => {
+              change("");
+              void sendLocation();
+            }}
+            onEffect={(chosen) => {
+              change("");
+              setMessageEffect(chosen);
+            }}
           />}
 
         {suggestions.length > 0 && (
@@ -660,17 +691,7 @@ export function Composer({
               accessibilityLabel={tr.common.message}
               style={[styles.input, { color: t.text }]}
             />
-            {!editing && !!text.trim() && (
-              <Pressable
-                onPress={() => setEffectsOpen((open) => !open)}
-                accessibilityLabel={tr.messages.effects}
-                accessibilityState={{ expanded: effectsOpen }}
-                style={styles.round40}
-              >
-                <Sparkles size={20} color={effectsOpen ? brand : t.faint} />
-              </Pressable>
-            )}
-            {!editing && !parked && !!text.trim() && (
+            {!editing && !parked && !!text.trim() && !commanding && (
               <Pressable onPress={swapDraft} accessibilityLabel={tr.composer.parkDraft} style={styles.round40}>
                 <NotebookPen size={20} color={t.faint} />
               </Pressable>

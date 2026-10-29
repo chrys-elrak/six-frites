@@ -5,6 +5,7 @@ import {
   type EntityType,
   type EphemeralInput,
   type GifDTO,
+  type MenuCommand,
   type MessageEffect,
   type TypingKind,
   MAX_UPLOAD_BYTES,
@@ -14,6 +15,7 @@ import {
   emojifyTyped,
   maskSpoilers,
   parseCommand,
+  silentMessage,
   suggestEmoji,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
@@ -55,8 +57,6 @@ import { VoicePlayer } from "./attachment";
 import { RecordButton, type RecordMode } from "./record-button";
 import { VideoNoteCapture, type VideoNoteHandle, VideoNotePreview } from "./video-note-capture";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
-import { EmojiButton } from "./emoji-picker";
-import { EffectTray } from "./message-effects";
 import { emojiList } from "@/lib/emoji";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration, sendAtLabel } from "@/lib/format";
@@ -115,13 +115,11 @@ export function Composer({
   nameOf,
   scheduledCount,
   onSent,
-  pickerSlot,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
   scheduledCount: number;
   onSent: () => void;
-  pickerSlot?: HTMLElement | null;
 }) {
   const tr = useT();
   const meId = useSession((s) => s.user?.id);
@@ -176,7 +174,7 @@ export function Composer({
     useComposerMode.getState().hand(chatId, undefined);
   }, [handed, chatId]);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
-  const [effectsOpen, setEffectsOpen] = useState(false);
+  const [messageEffect, setMessageEffect] = useState<MessageEffect | null>(null);
   const closeCamera = useCallback(() => setCamera(false), []);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
@@ -277,16 +275,8 @@ export function Composer({
     return true;
   }
 
-  function insert(emoji: string) {
-    const el = ref.current;
-    const start = el?.selectionStart ?? text.length;
-    const end = el?.selectionEnd ?? text.length;
-    change(text.slice(0, start) + emoji + text.slice(end));
-    requestAnimationFrame(() => el?.setSelectionRange(start + emoji.length, start + emoji.length));
-  }
-
   useEffect(() => {
-    const q = parseCommand(text) ? null : emojiQuery(text, caret);
+    const q = parseCommand(text) && silentMessage(text) === null ? null : emojiQuery(text, caret);
     if (!q) return setSuggested(null);
     let live = true;
     void emojiList().then((list) => {
@@ -312,6 +302,12 @@ export function Composer({
     change(value);
     setCaret(value.length);
     requestAnimationFrame(() => ref.current?.setSelectionRange(value.length, value.length));
+  }
+
+  function runCommand(name: MenuCommand) {
+    change("");
+    if (name === "game") setStartingGame(true);
+    else setScheduling("next");
   }
 
   function suggestionKey(e: React.KeyboardEvent) {
@@ -377,7 +373,9 @@ export function Composer({
     if (window.matchMedia("(pointer: fine)").matches) ref.current?.focus();
   }, [chatId]);
 
-  const parsed = parseMarkup(emojifyEnd(text));
+  const silent = editing ? null : silentMessage(text);
+  const commanding = silent === null && parseCommand(text) !== null;
+  const parsed = parseMarkup(emojifyEnd(silent ?? text));
   const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
   const sendPress = useLongPress(() => canSubmit && !editing && setScheduling("now"));
 
@@ -409,7 +407,7 @@ export function Composer({
     send();
   }
 
-  function send(file?: Draft["file"], at?: Date, messageEffect?: MessageEffect) {
+  function send(file?: Draft["file"], at?: Date) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
     queue({
@@ -419,10 +417,11 @@ export function Composer({
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral,
       file,
-      effect: messageEffect,
+      effect: file ? undefined : (messageEffect ?? undefined),
+      silent: silent !== null,
     });
     setEphemeral(null);
-    setEffectsOpen(false);
+    if (!file) setMessageEffect(null);
     useDrafts.getState().set(chatId, "");
     setText("");
     if (mode) cancel();
@@ -617,8 +616,19 @@ export function Composer({
             <NotebookPen className="size-4 shrink-0 text-stone-400" />
           </button>
         )}
-        {effectsOpen && !editing && !!text.trim() && (
-          <EffectTray text={parsed.text} onPick={(chosen) => send(undefined, undefined, chosen)} />
+        {messageEffect && !editing && (
+          <div className="flex items-center gap-2 px-1 text-sm text-brand">
+            <Sparkles className="size-4" />
+            <span className="flex-1">{tr.composer.withEffect(tr.messages.effectNames[messageEffect])}</span>
+            <button
+              type="button"
+              onClick={() => setMessageEffect(null)}
+              aria-label={tr.composer.noEffect}
+              className="grid size-7 place-items-center rounded-full hover:bg-stone-500/10"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         )}
         {ephemeral && !editing && (
           <div className="flex items-center gap-2 px-1 text-sm text-orange-600 dark:text-orange-400">
@@ -742,6 +752,19 @@ export function Composer({
                   sendGifOrSticker({ gif });
                 }}
                 onSticker={(found) => void sendFoundSticker(found)}
+                onMenu={runCommand}
+                onDestruct={(value) => {
+                  change("");
+                  setEphemeral(value);
+                }}
+                onLocation={() => {
+                  change("");
+                  void sendLocation();
+                }}
+                onEffect={(chosen) => {
+                  change("");
+                  setMessageEffect(chosen);
+                }}
               />
             )}
             {!!suggested?.items.length && (
@@ -769,11 +792,6 @@ export function Composer({
                 ))}
               </div>
             )}
-            <EmojiButton
-              slot={pickerSlot}
-              onPick={insert}
-              onGif={(gif) => sendGifOrSticker({ gif })}
-            />
             <textarea
               ref={ref}
               value={text}
@@ -812,24 +830,9 @@ export function Composer({
               maxLength={4000}
               placeholder={tr.common.message}
               aria-label={tr.common.message}
-              className="max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
+              className="max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 pl-4 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
             />
-            {!editing && !!text.trim() && (
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => setEffectsOpen((open) => !open)}
-                aria-label={tr.messages.effects}
-                aria-expanded={effectsOpen}
-                title={tr.messages.effects}
-                className={`grid size-10 shrink-0 place-items-center rounded-full ${
-                  effectsOpen ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
-                }`}
-              >
-                <Sparkles className="size-5" />
-              </button>
-            )}
-            {!editing && !parked && !!text.trim() && (
+            {!editing && !parked && !!text.trim() && !commanding && (
               <button
                 type="button"
                 {...keepSelection(swapDraft)}

@@ -102,6 +102,14 @@ describe("push notifications", () => {
     expect(await deliverPush(archived.id, guest.user.id)).toBe(0);
   });
 
+  it("skips a message sent silently", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await subscribe(guest);
+    const quiet = (await send(host, chatId, "no rush", { silent: true })).json();
+    expect(quiet.silent).toBe(true);
+    expect(await deliverPush(quiet.id, guest.user.id)).toBe(0);
+  });
+
   it("stops muting once a timed mute ends", async () => {
     const { host, guest, chatId } = await makeFriends();
     await subscribe(guest);

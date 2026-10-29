@@ -239,7 +239,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.glass }}>
       <ScreenHeader inset={false}>
         {archived && (
           <IconButton Icon={ChevronLeft} label={tr.common.backToChats} onPress={() => router.back()} size={26} />

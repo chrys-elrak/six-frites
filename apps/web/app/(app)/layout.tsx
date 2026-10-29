@@ -21,8 +21,13 @@ import { UpdatePrompt } from "@/components/update-prompt";
 import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
+import { Wallpaper } from "@/components/chat-background";
+import { chatTheme } from "@six/shared";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
+
+const glass = "bg-white/45 backdrop-blur-[2px] dark:bg-stone-950/55";
+const appWallpaper = chatTheme(null);
 
 const tabRoutes: Record<string, Tab> = {
   "/": "chats",
@@ -82,10 +87,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <RealtimeProvider>
-      <div inert={locked} className="fixed inset-x-0 top-0 flex h-[var(--app-height,100dvh)] flex-col overflow-hidden">
+      <div inert={locked} className="fixed inset-x-0 top-0 isolate flex h-[var(--app-height,100dvh)] flex-col overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <Wallpaper theme={appWallpaper} id="app" />
+        </div>
         <Link
           href="/"
-          className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-3 border-b border-stone-200 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:flex dark:border-stone-800`}
+          className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-3 border-b border-black/5 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:flex dark:border-white/10 ${glass}`}
         >
           <Logo className="size-9" />
           <span className="text-lg font-bold tracking-tight">Six Frites</span>
@@ -93,7 +101,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <MiniPlayer atTop={!topLevel} />
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-stone-200 md:flex md:flex-row ${wide ? "md:flex-1" : "md:w-100 md:shrink-0 md:border-r lg:w-116"} dark:border-stone-800`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex md:flex-row ${wide ? "md:flex-1" : "md:w-100 md:shrink-0 md:border-r lg:w-116"} dark:border-white/10 ${glass}`}
           >
             <div className="min-h-0 min-w-0 flex-1">
               {tab === "chats" && <ChatList archived={pathname === "/archived"} />}

@@ -249,6 +249,7 @@ export const MessageDTO = z.object({
   entities: z.array(MessageEntity),
   spoiler: z.boolean(),
   effect: MessageEffect.nullable(),
+  silent: z.boolean().describe("Sent with `/silent`: it arrives without a notification or sound"),
   attachment: AttachmentDTO.nullable(),
   sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
@@ -344,6 +345,7 @@ export const SendMessageInput = z
       .describe("The same id on photos and videos sent together, so they show as one album"),
     spoiler: z.boolean().optional(),
     effect: MessageEffect.optional().describe("Only with text"),
+    silent: z.boolean().optional().describe("Deliver it without a notification or sound"),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
     encrypted: EncryptedInput.optional(),
     sentAt: IsoDate.optional().describe(

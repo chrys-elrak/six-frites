@@ -73,6 +73,19 @@ function FontPicker() {
   );
 }
 
+/** When this web build was made, and its id, the same one /version reports. */
+function BuildVersion() {
+  const tr = useT();
+  const { locale } = useLocale();
+  const id = process.env.BUILD_ID!;
+  const built = new Date(parseInt(id, 36)).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+  return (
+    <p suppressHydrationWarning className="px-1 text-center text-xs text-stone-400 lg:[column-span:all]">
+      {tr.common.version(`${built} · ${id}`)}
+    </p>
+  );
+}
+
 export function SettingsPanel() {
   const tr = useT();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -107,6 +120,7 @@ export function SettingsPanel() {
           <BlockedPeople />
           <DeleteAccount />
           <AdminLink />
+          <BuildVersion />
           <p className="px-1 pb-2 text-center text-xs leading-relaxed text-stone-400 lg:[column-span:all]">
             {tr.settings.creditsFrom}{" "}
             <a

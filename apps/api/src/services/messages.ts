@@ -127,6 +127,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     entities: hideContent ? [] : entitiesOf(m),
     spoiler: m.spoiler,
     effect: hideContent ? null : (m.effect as MessageEffect | null),
+    silent: m.silent,
     attachment:
       hideContent || !m.attachment
         ? null
@@ -337,6 +338,7 @@ export async function createMessage(
       stickerId: content?.stickerId ?? null,
       spoiler: content?.spoiler ?? false,
       effect: content?.effect ?? null,
+      silent: content?.silent ?? false,
       maxViews: content?.ephemeral?.maxViews ?? null,
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,

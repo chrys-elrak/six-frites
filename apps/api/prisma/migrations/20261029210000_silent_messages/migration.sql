@@ -1,0 +1,3 @@
+ALTER TABLE "Message" ADD COLUMN "silent" BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE "ScheduledMessage" ADD COLUMN "silent" BOOLEAN NOT NULL DEFAULT false;

@@ -140,6 +140,7 @@ export async function scheduleMessage(
         text: input.text ?? null,
         entities: storedEntities(input.entities),
         spoiler: input.spoiler ?? false,
+        silent: input.silent ?? false,
         maxViews: input.ephemeral?.maxViews ?? null,
         ttlSeconds: input.ephemeral?.ttlSeconds ?? null,
         attachmentId: input.attachmentId ?? null,
@@ -222,6 +223,7 @@ async function deliverScheduled(id: string, ownerId?: string) {
         stickerId: s.stickerId ?? undefined,
         replyToId: s.replyToId ?? undefined,
         groupId: s.groupId ?? undefined,
+        silent: s.silent,
         ephemeral: ephemeral ? { maxViews: s.maxViews ?? undefined, ttlSeconds: s.ttlSeconds ?? undefined } : undefined,
         ...(encrypted
           ? { encrypted, type: (s.type as "location" | "checklist" | null) ?? undefined }

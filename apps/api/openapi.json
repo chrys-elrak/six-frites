@@ -5427,6 +5427,10 @@
                                 ],
                                 "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                               },
+                              "silent": {
+                                "type": "boolean",
+                                "description": "Sent with `/silent`: it arrives without a notification or sound"
+                              },
                               "attachment": {
                                 "nullable": true,
                                 "type": "object",
@@ -6646,6 +6650,7 @@
                               "entities",
                               "spoiler",
                               "effect",
+                              "silent",
                               "attachment",
                               "sticker",
                               "ephemeral",
@@ -6976,6 +6981,10 @@
                             "confetti"
                           ],
                           "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                        },
+                        "silent": {
+                          "type": "boolean",
+                          "description": "Sent with `/silent`: it arrives without a notification or sound"
                         },
                         "attachment": {
                           "nullable": true,
@@ -8196,6 +8205,7 @@
                         "entities",
                         "spoiler",
                         "effect",
+                        "silent",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -8558,6 +8568,10 @@
                           ],
                           "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                         },
+                        "silent": {
+                          "type": "boolean",
+                          "description": "Sent with `/silent`: it arrives without a notification or sound"
+                        },
                         "attachment": {
                           "nullable": true,
                           "type": "object",
@@ -9777,6 +9791,7 @@
                         "entities",
                         "spoiler",
                         "effect",
+                        "silent",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -10319,6 +10334,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -11538,6 +11557,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -11700,6 +11720,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -12919,6 +12943,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -13071,6 +13096,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -14290,6 +14319,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -14460,6 +14490,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -15679,6 +15713,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -15992,6 +16027,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -17211,6 +17250,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -17355,6 +17395,10 @@
                             "confetti"
                           ],
                           "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                        },
+                        "silent": {
+                          "type": "boolean",
+                          "description": "Sent with `/silent`: it arrives without a notification or sound"
                         },
                         "attachment": {
                           "nullable": true,
@@ -18575,6 +18619,7 @@
                         "entities",
                         "spoiler",
                         "effect",
+                        "silent",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -18730,6 +18775,10 @@
                         "confetti"
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
                     "attachment": {
                       "nullable": true,
@@ -19950,6 +19999,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -20116,6 +20166,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -21335,6 +21389,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -21601,6 +21656,10 @@
                               "confetti"
                             ],
                             "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                          },
+                          "silent": {
+                            "type": "boolean",
+                            "description": "Sent with `/silent`: it arrives without a notification or sound"
                           },
                           "attachment": {
                             "nullable": true,
@@ -22821,6 +22880,7 @@
                           "entities",
                           "spoiler",
                           "effect",
+                          "silent",
                           "attachment",
                           "sticker",
                           "ephemeral",
@@ -23367,6 +23427,10 @@
                       "confetti"
                     ]
                   },
+                  "silent": {
+                    "description": "Deliver it without a notification or sound",
+                    "type": "boolean"
+                  },
                   "ephemeral": {
                     "description": "Self-destruct after viewing, like Telegram's view-once and timers",
                     "type": "object",
@@ -23617,6 +23681,10 @@
                         "confetti"
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                    },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
                     "attachment": {
                       "nullable": true,
@@ -24837,6 +24905,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -25831,6 +25900,10 @@
                       "hearts",
                       "confetti"
                     ]
+                  },
+                  "silent": {
+                    "description": "Deliver it without a notification or sound",
+                    "type": "boolean"
                   },
                   "ephemeral": {
                     "description": "Self-destruct after viewing, like Telegram's view-once and timers",
@@ -27182,6 +27255,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -28401,6 +28478,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -29608,6 +29686,10 @@
                                     ],
                                     "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                                   },
+                                  "silent": {
+                                    "type": "boolean",
+                                    "description": "Sent with `/silent`: it arrives without a notification or sound"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -30827,6 +30909,7 @@
                                   "entities",
                                   "spoiler",
                                   "effect",
+                                  "silent",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -30959,6 +31042,10 @@
                                     ],
                                     "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                                   },
+                                  "silent": {
+                                    "type": "boolean",
+                                    "description": "Sent with `/silent`: it arrives without a notification or sound"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -32178,6 +32265,7 @@
                                   "entities",
                                   "spoiler",
                                   "effect",
+                                  "silent",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -32499,6 +32587,10 @@
                                           "confetti"
                                         ],
                                         "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                                      },
+                                      "silent": {
+                                        "type": "boolean",
+                                        "description": "Sent with `/silent`: it arrives without a notification or sound"
                                       },
                                       "attachment": {
                                         "nullable": true,
@@ -33719,6 +33811,7 @@
                                       "entities",
                                       "spoiler",
                                       "effect",
+                                      "silent",
                                       "attachment",
                                       "sticker",
                                       "ephemeral",
@@ -35563,6 +35656,10 @@
                       ],
                       "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
+                    "silent": {
+                      "type": "boolean",
+                      "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -36782,6 +36879,7 @@
                     "entities",
                     "spoiler",
                     "effect",
+                    "silent",
                     "attachment",
                     "sticker",
                     "ephemeral",

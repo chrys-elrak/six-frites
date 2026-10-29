@@ -41,6 +41,7 @@ export interface Draft {
   replyTo?: MessageDTO;
   spoiler?: boolean;
   effect?: MessageEffect;
+  silent?: boolean;
   ephemeral?: EphemeralInput | null;
   file?: LocalFile;
   gif?: GifDTO;
@@ -106,6 +107,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       replyToId: pending.replyTo?.id,
       ephemeral: pending.ephemeral ?? undefined,
       groupId: pending.groupId,
+      silent: pending.silent,
     };
     const type = pending.location
       ? ("location" as const)
@@ -181,6 +183,7 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
       : null,
     spoiler: draft.spoiler ?? false,
     effect: draft.effect,
+    silent: draft.silent,
     ephemeral: draft.ephemeral ?? null,
     attachment: file
       ? {

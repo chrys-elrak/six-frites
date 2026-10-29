@@ -83,12 +83,12 @@ async function sendToAll(targets: Awaited<ReturnType<typeof targetsFor>>, payloa
 }
 
 /**
- * Sends one recipient a notification for a message, unless the chat is muted or archived for them, they
- * already read it, or the device is in active use. Returns how many devices were notified.
+ * Sends one recipient a notification for a message, unless it was sent silently, the chat is muted or
+ * archived for them, they already read it, or the device is in active use. Returns how many devices were notified.
  */
 export async function deliverPush(messageId: string, userId: string) {
   const m = await prisma.message.findUnique({ where: { id: messageId }, include: { ...messageInclude, sender: true } });
-  if (!m || m.deletedAt || m.expiredAt || m.senderId === userId) return 0;
+  if (!m || m.silent || m.deletedAt || m.expiredAt || m.senderId === userId) return 0;
 
   const member = await prisma.chatMember.findUnique({ where: { chatId_userId: { chatId: m.chatId, userId } } });
   if (!member || memberMuted(member) || member.archived || member.hidden) return 0;

@@ -20,7 +20,7 @@ export function TabBar({ active }: { active: Tab }) {
   const unread = chats.data?.filter((c) => !isMuted(c) && c.unreadCount > 0).length ?? 0;
 
   return (
-    <nav className="grid shrink-0 grid-cols-3 border-t border-stone-200 bg-stone-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:bg-transparent md:py-3 md:backdrop-blur-none dark:border-stone-800 dark:bg-stone-950/95 dark:md:bg-transparent">
+    <nav className="grid shrink-0 grid-cols-3 border-t border-black/5 pb-[env(safe-area-inset-bottom)] md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:py-3 dark:border-white/10">
       {tabs.map(({ id, href, Icon }) => {
         const on = active === id;
         return (
@@ -34,7 +34,7 @@ export function TabBar({ active }: { active: Tab }) {
           >
             <span
               className={`relative grid place-items-center rounded-full transition md:h-8 md:w-14 ${
-                on ? "md:bg-brand/15" : "md:group-hover:bg-stone-200/70 dark:md:group-hover:bg-stone-800"
+                on ? "md:bg-brand/15" : "md:group-hover:bg-black/5 dark:md:group-hover:bg-white/10"
               }`}
             >
               <Icon className="size-6" strokeWidth={on ? 2.4 : 1.8} />

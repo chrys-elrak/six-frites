@@ -77,7 +77,6 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [editing, setEditing] = useState(false);
   const [shared, setShared] = useState<SharedTab | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [pickerSlot, setPickerSlot] = useState<HTMLDivElement | null>(null);
   const [head, headHeight] = useHeight();
   const [foot, footHeight] = useHeight();
   const typing = useTyping(chatId);
@@ -303,13 +302,11 @@ export function Conversation({ chatId }: { chatId: string }) {
                   nameOf={nameOf}
                   scheduledCount={c.scheduledCount}
                   onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
-                  pickerSlot={pickerSlot}
                 />
               </div>
             )}
           </div>
         </div>
-        <div ref={setPickerSlot} className="chat-colors contents" />
       </div>
 
       {menu && (

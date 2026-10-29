@@ -101,8 +101,8 @@ export function playTone(tone = useNotifyPrefs.getState().tone) {
 const FRESH_MS = 60_000;
 
 /**
- * Sounds and shows a new message from someone else, unless its chat is muted or archived, it is the
- * chat on screen, or it is an old message caught up after being offline.
+ * Sounds and shows a new message from someone else, unless it was sent silently, its chat is muted or
+ * archived, it is the chat on screen, or it is an old message caught up after being offline.
  */
 export function notifyIncoming(
   m: MessageDTO,
@@ -110,7 +110,7 @@ export function notifyIncoming(
   viewing: boolean,
   open: (chatId: string) => void,
 ) {
-  if (chat?.muted || chat?.archived || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
+  if (m.silent || chat?.muted || chat?.archived || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
   const sender = chat?.members.find((x) => x.user.id === m.senderId)?.user;
   const t = getT();
   alertUser(

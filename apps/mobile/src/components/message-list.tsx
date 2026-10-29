@@ -685,7 +685,9 @@ function Bubble({
       ? tr.messages.youDeleted(nameOf(row.message!.senderId))
       : deletedBy && deletedBy !== meId && row.mine
         ? tr.messages.deletedYours(nameOf(deletedBy))
-        : tr.messages.deleted;
+        : deletedBy && deletedBy !== meId
+          ? tr.messages.deletedBy(nameOf(deletedBy))
+          : tr.messages.deleted;
   const inlineVoice =
     !sealed &&
     !hasText &&

@@ -2706,6 +2706,8 @@ export interface paths {
                                      * @enum {string|null}
                                      */
                                     effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                    /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                    silent: boolean;
                                     attachment: {
                                         id: string;
                                         /**
@@ -3081,6 +3083,8 @@ export interface paths {
                                  * @enum {string|null}
                                  */
                                 effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -3497,6 +3501,8 @@ export interface paths {
                                  * @enum {string|null}
                                  */
                                 effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -3949,6 +3955,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -4275,6 +4283,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -4601,6 +4611,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -4930,6 +4942,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -5282,6 +5296,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -5607,6 +5623,8 @@ export interface paths {
                                  * @enum {string|null}
                                  */
                                 effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -5937,6 +5955,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -6270,6 +6290,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -6644,6 +6666,8 @@ export interface paths {
                                  * @enum {string|null}
                                  */
                                 effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -7037,6 +7061,8 @@ export interface paths {
                          * @enum {string}
                          */
                         effect?: "fire" | "gift" | "hearts" | "confetti";
+                        /** @description Deliver it without a notification or sound */
+                        silent?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
                         ephemeral?: {
                             /** @description Destroy after this many views by the recipient */
@@ -7108,6 +7134,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -7635,6 +7663,8 @@ export interface paths {
                          * @enum {string}
                          */
                         effect?: "fire" | "gift" | "hearts" | "confetti";
+                        /** @description Deliver it without a notification or sound */
+                        silent?: boolean;
                         /** @description Self-destruct after viewing, like Telegram's view-once and timers */
                         ephemeral?: {
                             /** @description Destroy after this many views by the recipient */
@@ -8041,6 +8071,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -8971,6 +9003,8 @@ export interface paths {
                                      * @enum {string|null}
                                      */
                                     effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                    /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                    silent: boolean;
                                     attachment: {
                                         id: string;
                                         /**
@@ -9260,6 +9294,8 @@ export interface paths {
                                      * @enum {string|null}
                                      */
                                     effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                    /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                    silent: boolean;
                                     attachment: {
                                         id: string;
                                         /**
@@ -9597,6 +9633,8 @@ export interface paths {
                                          * @enum {string|null}
                                          */
                                         effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                        /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                        silent: boolean;
                                         attachment: {
                                             id: string;
                                             /**
@@ -10761,6 +10799,8 @@ export interface paths {
                              * @enum {string|null}
                              */
                             effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
                             attachment: {
                                 id: string;
                                 /**

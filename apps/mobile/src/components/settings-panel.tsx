@@ -573,7 +573,7 @@ export function SettingsPanel() {
   const link = (url: string) => () => void Linking.openURL(url);
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.glass }}>
       <ScreenHeader inset={false}>
         <Text style={[styles.title, { color: t.text }]}>{tr.common.settings}</Text>
         <Pressable onPress={() => void logout()} style={styles.signOut} hitSlop={6}>
@@ -596,6 +596,9 @@ export function SettingsPanel() {
         <AppLockSettings />
         <BlockedPeople />
         <AccountCard />
+        <Text style={[styles.credits, { color: t.faint, paddingBottom: 0 }]}>
+          {tr.common.version(`${Constants.expoConfig?.version} (${Constants.expoConfig?.android?.versionCode})`)}
+        </Text>
         <Text style={[styles.credits, { color: t.faint }]}>
           {tr.settings.creditsFrom}{" "}
           <Text style={styles.link} onPress={link("https://googlefonts.github.io/noto-emoji-animation/")}>

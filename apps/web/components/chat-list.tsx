@@ -122,8 +122,8 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
       <Link
         href={`/chats/${chat.id}`}
         {...press}
-        className={`flex items-center gap-3 px-4 py-3 transition [-webkit-touch-callout:none] active:bg-stone-100 pointer-coarse:select-none dark:active:bg-stone-800 ${
-          active ? "bg-stone-100 dark:bg-stone-800" : "hover:bg-stone-50 dark:hover:bg-stone-900"
+        className={`flex items-center gap-3 px-4 py-3 transition [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
+          active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
         }`}
       >
         <Avatar user={peer} size="md" online={online} />
@@ -279,7 +279,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             </button>
           </>
         )}
-        <label className="flex w-full items-center gap-2 rounded-xl bg-stone-200/70 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-800">
+        <label className="flex w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10">
           <Search className="size-4 shrink-0" />
           <input
             value={query}
@@ -299,7 +299,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             <Link
               ref={archiveRow}
               href="/archived"
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-900"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-black/[0.03] dark:text-stone-300 dark:hover:bg-white/5"
             >
               <span className="grid size-14 place-items-center rounded-full bg-stone-200/70 text-stone-500 dark:bg-stone-800">
                 <Archive className="size-5" />

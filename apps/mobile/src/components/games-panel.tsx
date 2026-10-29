@@ -30,7 +30,7 @@ export function GamesPanel() {
   const playable = (chats.data ?? []).filter((c) => !isFrozen(c) && c.members.some((m) => m.user.id !== meId));
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.glass }}>
       <ScreenHeader inset={false}>
         <Text style={[styles.title, { color: t.text }]}>{tr.common.games}</Text>
       </ScreenHeader>
