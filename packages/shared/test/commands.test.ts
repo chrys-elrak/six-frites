@@ -5,10 +5,10 @@ describe("commands", () => {
   it("lists the commands a name could be", () => {
     expect(parseCommand("/")).toEqual({
       kind: "names",
-      names: ["giphy", "sticker", "silent", "effect", "emoji", "game", "location", "schedule", "destruct", "voice"],
+      names: ["giphy", "sticker", "silent", "effect", "emoji", "game", "location", "schedule", "destruct", "voice", "autodelete", "blur", "search"],
     });
     expect(parseCommand("/st")).toEqual({ kind: "names", names: ["sticker"] });
-    expect(parseCommand("/s")).toEqual({ kind: "names", names: ["sticker", "silent", "schedule"] });
+    expect(parseCommand("/s")).toEqual({ kind: "names", names: ["sticker", "silent", "schedule", "search"] });
     expect(parseCommand("/GI")).toEqual({ kind: "names", names: ["giphy"] });
     expect(parseCommand("/giphy")).toEqual({ kind: "names", names: ["giphy"] });
     expect(parseCommand("/x")).toBeNull();
@@ -20,6 +20,7 @@ describe("commands", () => {
     expect(parseCommand("/giphy ")).toEqual({ kind: "run", name: "giphy", args: "" });
     expect(parseCommand("/sticker wave")).toEqual({ kind: "run", name: "sticker", args: "wave" });
     expect(parseCommand("/voice ro")).toEqual({ kind: "run", name: "voice", args: "ro" });
+    expect(parseCommand("/search pizza place")).toEqual({ kind: "run", name: "search", args: "pizza place" });
   });
 
   it("offers a menu command only with nothing after it", () => {

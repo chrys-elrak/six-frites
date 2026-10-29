@@ -115,11 +115,13 @@ export function Composer({
   nameOf,
   scheduledCount,
   onSent,
+  onSearch,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
   scheduledCount: number;
   onSent: () => void;
+  onSearch: (q: string) => void;
 }) {
   const tr = useT();
   const meId = useSession((s) => s.user?.id);
@@ -745,6 +747,7 @@ export function Composer({
             {!editing && (
               <CommandBar
                 ref={commands}
+                chatId={chatId}
                 text={text}
                 onComplete={completeCommand}
                 onGif={(gif) => {
@@ -764,6 +767,10 @@ export function Composer({
                 onEffect={(chosen) => {
                   change("");
                   setMessageEffect(chosen);
+                }}
+                onSearch={(q) => {
+                  change("");
+                  onSearch(q);
                 }}
               />
             )}

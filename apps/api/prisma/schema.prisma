@@ -265,6 +265,7 @@ model Message {
   spoiler      Boolean   @default(false)
   effect       String?
   silent       Boolean   @default(false)
+  bump         Boolean   @default(false)
   maxViews     Int?
   ttlSeconds   Int?
   expiredAt    DateTime?

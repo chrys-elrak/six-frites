@@ -86,13 +86,23 @@ function ShowInChat({ onPress }: { onPress: () => void }) {
   return <IconButton Icon={MessageSquareText} label={tr.chat.showInChat} size={20} onPress={onPress} />;
 }
 
-function Search({ chat, range, onJump }: { chat: ChatDTO; range: Range; onJump: (id: string) => void }) {
+function Search({
+  chat,
+  range,
+  searchFor,
+  onJump,
+}: {
+  chat: ChatDTO;
+  range: Range;
+  searchFor: string;
+  onJump: (id: string) => void;
+}) {
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();
   const meId = useSession((s) => s.user!.id);
-  const [input, setInput] = useState("");
-  const [q, setQ] = useState("");
+  const [input, setInput] = useState(searchFor);
+  const [q, setQ] = useState(searchFor.trim());
   useEffect(() => {
     const timer = setTimeout(() => setQ(input.trim()), 250);
     return () => clearTimeout(timer);
@@ -346,11 +356,14 @@ function Links({ chatId, range, onJump }: { chatId: string; range: Range; onJump
 export function SharedMedia({
   chat,
   initial,
+  query = "",
   onJump,
   onClose,
 }: {
   chat: ChatDTO;
   initial: SharedTab;
+  /** What to search for when it opens on the search tab. */
+  query?: string;
   onJump: (messageId: string) => void;
   onClose: () => void;
 }) {
@@ -404,7 +417,7 @@ export function SharedMedia({
             <X size={14} color={brand} />
           </Pressable>
         )}
-        {tab === "search" && <Search chat={chat} range={range} onJump={onJump} />}
+        {tab === "search" && <Search chat={chat} range={range} searchFor={query} onJump={onJump} />}
         {tab === "media" && <Media chat={chat} range={range} onJump={onJump} />}
         {tab === "files" && <Files chatId={chat.id} range={range} onJump={onJump} />}
         {tab === "links" && <Links chatId={chat.id} range={range} onJump={onJump} />}

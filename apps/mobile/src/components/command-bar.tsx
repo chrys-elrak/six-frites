@@ -1,5 +1,6 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
+  AUTO_DELETE_PRESETS,
   COMMANDS,
   type CommandName,
   type EmojiEntry,
@@ -7,21 +8,24 @@ import {
   type GifDTO,
   MessageEffect,
   type MenuCommand,
+  durationLabel,
   isMenuCommand,
   parseCommand,
   silentMessage,
   suggestEmoji,
 } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "./text";
+import { updateChatSettings } from "@/lib/actions";
+import { useChat } from "@/lib/chats";
 import { EPHEMERAL_OPTIONS } from "@/lib/ephemeral";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
-import { useTheme } from "@/lib/theme";
+import { brand, useTheme } from "@/lib/theme";
 
 /** Android has no voice changer yet, so no `/voice`. */
 const ANDROID_COMMANDS = COMMANDS.filter((c) => c !== "voice");
@@ -32,6 +36,7 @@ interface Choice {
   label: string;
   title?: string;
   emoji?: boolean;
+  current?: boolean;
   pick: () => void;
 }
 
@@ -42,12 +47,13 @@ export interface CommandBarHandle {
 
 /**
  * Slash commands over the composer: `/` lists them, `/giphy love` shows GIFs and `/sticker wave` stickers
- * to send, `/effect`, `/emoji`, `/destruct` and `/location` offer their choices inline, narrowed by
- * what follows, and `/game` or `/schedule` opens that dialog. After `/silent` it steps aside for the
- * message to send without a notification.
+ * to send, `/effect`, `/emoji`, `/destruct`, `/location`, `/autodelete`, `/blur` and `/search` offer
+ * their choices inline, narrowed by what follows, and `/game` or `/schedule` opens that dialog. After
+ * `/silent` it steps aside for the message to send without a notification.
  */
 export function CommandBar({
   ref,
+  chatId,
   text,
   onComplete,
   onGif,
@@ -56,8 +62,10 @@ export function CommandBar({
   onDestruct,
   onLocation,
   onEffect,
+  onSearch,
 }: {
   ref: Ref<CommandBarHandle>;
+  chatId: string;
   text: string;
   onComplete: (text: string) => void;
   onGif: (gif: GifDTO) => void;
@@ -66,9 +74,12 @@ export function CommandBar({
   onDestruct: (value: EphemeralInput) => void;
   onLocation: () => void;
   onEffect: (effect: MessageEffect) => void;
+  onSearch: (q: string) => void;
 }) {
   const t = useTheme();
   const tr = useT();
+  const qc = useQueryClient();
+  const chat = useChat(qc, chatId).data;
   const command = silentMessage(text) === null ? parseCommand(text, ANDROID_COMMANDS) : null;
   const run = command?.kind === "run" ? command : null;
   const search = run?.name === "giphy" || run?.name === "sticker" ? run.args : null;
@@ -91,6 +102,11 @@ export function CommandBar({
   const names = command?.kind === "names" ? command.names : [];
   const items = search !== null ? (gifs.data?.items ?? []) : [];
   const choose = (name: CommandName) => (isMenuCommand(name) ? onMenu(name) : onComplete(`/${name} `));
+
+  function chatSetting(input: Parameters<typeof updateChatSettings>[2]) {
+    onComplete("");
+    void updateChatSettings(qc, chatId, input).catch(() => null);
+  }
 
   function choicesFor(name: CommandName, args: string): Choice[] | null {
     const q = args.toLowerCase();
@@ -116,6 +132,28 @@ export function CommandBar({
         );
       case "location":
         return [{ key: "here", label: tr.composer.sendLocation, pick: onLocation }].filter(match);
+      case "autodelete":
+        return [
+          ...AUTO_DELETE_PRESETS.map((secs) => ({
+            key: String(secs),
+            label: durationLabel(secs, tr),
+            current: chat?.autoDeleteSecs === secs,
+            pick: () => chatSetting({ autoDeleteSecs: secs }),
+          })),
+          ...(chat?.autoDeleteSecs
+            ? [{ key: "off", label: tr.chat.turnOff, pick: () => chatSetting({ autoDeleteSecs: null }) }]
+            : []),
+        ].filter(match);
+      case "blur":
+        return [
+          {
+            key: "blur",
+            label: chat?.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
+            pick: () => chatSetting({ safeView: !chat?.safeView }),
+          },
+        ].filter(match);
+      case "search":
+        return [{ key: "search", label: args ? tr.composer.searchFor(args) : tr.chat.search, pick: () => onSearch(args) }];
       default:
         return null;
     }
@@ -165,7 +203,15 @@ export function CommandBar({
             accessibilityLabel={c.title ?? c.label}
             style={[c.emoji ? styles.emoji : styles.choice, { backgroundColor: t.surface, borderColor: t.border }]}
           >
-            <Text style={c.emoji ? styles.emojiText : { color: t.text, fontSize: 14 }}>{c.label}</Text>
+            <Text
+              style={
+                c.emoji
+                  ? styles.emojiText
+                  : { color: c.current ? brand : t.text, fontSize: 14, fontWeight: c.current ? "700" : "400" }
+              }
+            >
+              {c.label}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>

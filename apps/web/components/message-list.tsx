@@ -24,6 +24,7 @@ import {
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowUp,
   Ban,
   Check,
   CheckCheck,
@@ -108,6 +109,7 @@ interface MsgRow {
   spoiler: boolean;
   effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
+  bump: boolean;
   createdAt: string;
   mine: boolean;
   deleted: boolean;
@@ -194,6 +196,7 @@ function buildRows(
         spoiler: m.spoiler,
         effect: m.effect ?? null,
         replyTo: m.replyTo,
+        bump: m.bump,
         createdAt: m.createdAt,
         mine: m.senderId === meId,
         deleted: m.deletedAt !== null,
@@ -227,6 +230,7 @@ function buildRows(
           spoiler: p.spoiler,
           effect: p.effect ?? null,
           replyTo: p.replyTo,
+          bump: p.bump ?? false,
           createdAt: p.createdAt,
           mine: true,
           deleted: false,
@@ -776,6 +780,12 @@ function Bubble({
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
               {fx && <EffectLayer effect={fx} id={row.key} />}
+              {row.bump && !row.deleted && (
+                <span className="mb-1 flex items-center gap-1 text-xs font-medium opacity-80">
+                  <ArrowUp className="size-3.5" />
+                  {tr.messages.bumped}
+                </span>
+              )}
               {row.replyTo && !row.deleted && (
                 <Quote
                   reply={row.replyTo}
@@ -1165,6 +1175,14 @@ export const MessageList = forwardRef<
       }
       return [
         ...(frozen ? [] : [{ label: tr.messages.reply, onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
+        ...(frozen || m.ephemeral || m.bump || m.undecryptable || m.type === "service" || !realtime
+          ? []
+          : [
+              {
+                label: tr.messages.bump,
+                onSelect: () => void queueMessage(qc, realtime, chat.id, { text: "", replyTo: m, bump: true }),
+              },
+            ]),
         { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]

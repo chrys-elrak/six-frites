@@ -250,6 +250,7 @@ export const MessageDTO = z.object({
   spoiler: z.boolean(),
   effect: MessageEffect.nullable(),
   silent: z.boolean().describe("Sent with `/silent`: it arrives without a notification or sound"),
+  bump: z.boolean().describe("A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"),
   attachment: AttachmentDTO.nullable(),
   sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
@@ -346,6 +347,7 @@ export const SendMessageInput = z
     spoiler: z.boolean().optional(),
     effect: MessageEffect.optional().describe("Only with text"),
     silent: z.boolean().optional().describe("Deliver it without a notification or sound"),
+    bump: z.boolean().optional().describe("Bump the message in `replyToId`: bring it back to the bottom of the chat, on its own"),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
     encrypted: EncryptedInput.optional(),
     sentAt: IsoDate.optional().describe(
@@ -361,8 +363,24 @@ export const SendMessageInput = z
       v.location ||
       v.checklist ||
       v.game ||
-      v.encrypted,
+      v.encrypted ||
+      v.bump,
     { message: "Send text, an attachment, a GIF, a sticker, a location, a checklist, a game or encrypted content", path: ["text"] },
+  )
+  .refine(
+    (v) =>
+      !v.bump ||
+      (v.replyToId !== undefined &&
+        v.text === undefined &&
+        !v.attachmentId &&
+        !v.gifId &&
+        !v.stickerId &&
+        !v.location &&
+        !v.checklist &&
+        !v.game &&
+        !v.ephemeral &&
+        !v.effect),
+    { message: "A bump needs `replyToId` and carries nothing else", path: ["bump"] },
   )
   .refine(
     (v) =>
@@ -617,7 +635,9 @@ export const SCHEDULE_LIMITS = { perChat: 100, maxAheadSeconds: 365 * 24 * 60 * 
 
 export const ScheduleMessageInput = SendMessageInput.safeExtend({
   sendAt: IsoDate.describe("When to send it, in the future and at most a year ahead"),
-}).refine((v) => !v.game && v.type !== "game", { message: "Games are played now, not scheduled", path: ["game"] });
+})
+  .refine((v) => !v.game && v.type !== "game", { message: "Games are played now, not scheduled", path: ["game"] })
+  .refine((v) => !v.bump, { message: "Bumps are sent now, not scheduled", path: ["bump"] });
 export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
 
 export const ScheduledMessageDTO = z.object({

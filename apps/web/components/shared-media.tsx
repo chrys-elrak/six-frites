@@ -94,11 +94,21 @@ function ShowInChat({ onClick }: { onClick: () => void }) {
   );
 }
 
-function Search({ chat, range, onJump }: { chat: ChatDTO; range: Range; onJump: (id: string) => void }) {
+function Search({
+  chat,
+  range,
+  searchFor,
+  onJump,
+}: {
+  chat: ChatDTO;
+  range: Range;
+  searchFor: string;
+  onJump: (id: string) => void;
+}) {
   const tr = useT();
   const meId = useSession((s) => s.user!.id);
-  const [input, setInput] = useState("");
-  const [q, setQ] = useState("");
+  const [input, setInput] = useState(searchFor);
+  const [q, setQ] = useState(searchFor.trim());
   useEffect(() => {
     const t = setTimeout(() => setQ(input.trim()), 250);
     return () => clearTimeout(t);
@@ -308,11 +318,14 @@ function Links({ chatId, range, onJump }: { chatId: string; range: Range; onJump
 export function SharedMedia({
   chat,
   initial,
+  query = "",
   onJump,
   onClose,
 }: {
   chat: ChatDTO;
   initial: SharedTab;
+  /** What to search for when it opens on the search tab. */
+  query?: string;
   onJump: (messageId: string) => void;
   onClose: () => void;
 }) {
@@ -382,7 +395,7 @@ export function SharedMedia({
             )}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
-            {tab === "search" && <Search chat={chat} range={range} onJump={onJump} />}
+            {tab === "search" && <Search chat={chat} range={range} searchFor={query} onJump={onJump} />}
             {tab === "media" && (
               <Media chat={chat} range={range} onView={(items, ids, start) => setViewer({ items, ids, start })} />
             )}

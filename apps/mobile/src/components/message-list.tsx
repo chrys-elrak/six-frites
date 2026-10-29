@@ -23,6 +23,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { GestureDetector, useLongPressGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
 import {
+  ArrowUp,
   Ban,
   Check,
   CheckCheck,
@@ -110,6 +111,7 @@ interface MsgRow {
   spoiler: boolean;
   effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
+  bump: boolean;
   createdAt: string;
   mine: boolean;
   deleted: boolean;
@@ -200,6 +202,7 @@ function buildRows(
         spoiler: m.spoiler,
         effect: m.effect ?? null,
         replyTo: m.replyTo,
+        bump: m.bump,
         createdAt: m.createdAt,
         mine: m.senderId === meId,
         deleted: m.deletedAt !== null,
@@ -232,6 +235,7 @@ function buildRows(
           spoiler: p.spoiler,
           effect: p.effect ?? null,
           replyTo: p.replyTo,
+          bump: p.bump ?? false,
           createdAt: p.createdAt,
           mine: true,
           deleted: false,
@@ -804,6 +808,12 @@ function Bubble({
             highlighted && { borderWidth: 3, borderColor: "rgba(56,189,248,0.6)" },
           ]}
         >
+          {row.bump && !row.deleted && (
+            <View style={styles.bumped}>
+              <ArrowUp size={14} color={fg} />
+              <Text style={{ color: fg, fontSize: 12, fontWeight: "600", opacity: 0.8 }}>{tr.messages.bumped}</Text>
+            </View>
+          )}
           {row.replyTo && !row.deleted && (
             <Quote reply={row.replyTo} mine={mine && !bare} name={nameOf(row.replyTo.senderId)} onPress={() => onQuote(row.replyTo!.id)} />
           )}
@@ -1170,6 +1180,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       }
       return [
         ...(frozen ? [] : [{ label: tr.messages.reply, onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
+        ...(frozen || m.ephemeral || m.bump || m.type === "service" || !realtime
+          ? []
+          : [
+              {
+                label: tr.messages.bump,
+                onSelect: () => void queueMessage(qc, realtime, chat.id, { text: "", replyTo: m, bump: true }),
+              },
+            ]),
         { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
         ...(m.ephemeral || frozen
           ? []
@@ -1400,6 +1418,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 );
 
 const styles = StyleSheet.create({
+  bumped: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   empty: { flex: 1, alignItems: "center", justifyContent: "flex-end", gap: 8, paddingBottom: 32 },
   day: { alignItems: "center", paddingVertical: 10 },

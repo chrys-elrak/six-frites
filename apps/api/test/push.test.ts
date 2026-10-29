@@ -102,6 +102,19 @@ describe("push notifications", () => {
     expect(await deliverPush(archived.id, guest.user.id)).toBe(0);
   });
 
+  it("tells what a bump brings back", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await subscribe(guest);
+    const asked = (await send(host, chatId, "are you coming?")).json();
+    const bump = (await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: "bump-1", bump: true, replyToId: asked.id })).json();
+    expect(bump).toMatchObject({ bump: true, text: null, replyTo: { id: asked.id } });
+    expect(await deliverPush(bump.id, guest.user.id)).toBe(1);
+    expect(sent[0]!.payload.body).toBe("Bumped: are you coming?");
+
+    const bad = await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: "bump-2", bump: true, replyToId: asked.id, text: "hi" });
+    expect(bad.statusCode).toBe(400);
+  });
+
   it("skips a message sent silently", async () => {
     const { host, guest, chatId } = await makeFriends();
     await subscribe(guest);

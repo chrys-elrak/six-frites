@@ -41,6 +41,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
   const [shared, setShared] = useState<SharedTab | null>(null);
+  const [searchFor, setSearchFor] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const typing = useTyping(chatId);
   const inCall = useCall((s) => s.call !== null);
@@ -218,6 +219,10 @@ export function Conversation({ chatId }: { chatId: string }) {
               nameOf={nameOf}
               scheduledCount={c.scheduledCount}
               onSent={() => list.current?.scrollToBottom()}
+              onSearch={(q) => {
+                setSearchFor(q);
+                setShared("search");
+              }}
             />
           ))}
       </KeyboardAvoidingView>
@@ -230,13 +235,17 @@ export function Conversation({ chatId }: { chatId: string }) {
           onClose={() => setMenu(false)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
-          onSharedMedia={setShared}
+          onSharedMedia={(tab) => {
+            setSearchFor("");
+            setShared(tab);
+          }}
         />
       )}
       {shared && (
         <SharedMedia
           chat={c}
           initial={shared}
+          query={searchFor}
           onJump={(id) => {
             setShared(null);
             list.current?.jumpTo(id);

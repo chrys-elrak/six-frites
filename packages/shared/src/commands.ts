@@ -10,6 +10,9 @@ export const COMMANDS = [
   "schedule",
   "destruct",
   "voice",
+  "autodelete",
+  "blur",
+  "search",
 ] as const;
 export type CommandName = (typeof COMMANDS)[number];
 /** Commands that open one of the composer's dialogs rather than taking what follows them. */

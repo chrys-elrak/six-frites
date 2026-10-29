@@ -5431,6 +5431,10 @@
                                 "type": "boolean",
                                 "description": "Sent with `/silent`: it arrives without a notification or sound"
                               },
+                              "bump": {
+                                "type": "boolean",
+                                "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                              },
                               "attachment": {
                                 "nullable": true,
                                 "type": "object",
@@ -6651,6 +6655,7 @@
                               "spoiler",
                               "effect",
                               "silent",
+                              "bump",
                               "attachment",
                               "sticker",
                               "ephemeral",
@@ -6985,6 +6990,10 @@
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
+                        },
+                        "bump": {
+                          "type": "boolean",
+                          "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                         },
                         "attachment": {
                           "nullable": true,
@@ -8206,6 +8215,7 @@
                         "spoiler",
                         "effect",
                         "silent",
+                        "bump",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -8572,6 +8582,10 @@
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
                         },
+                        "bump": {
+                          "type": "boolean",
+                          "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                        },
                         "attachment": {
                           "nullable": true,
                           "type": "object",
@@ -9792,6 +9806,7 @@
                         "spoiler",
                         "effect",
                         "silent",
+                        "bump",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -10338,6 +10353,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -11558,6 +11577,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -11724,6 +11744,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -12944,6 +12968,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -13100,6 +13125,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -14320,6 +14349,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -14494,6 +14524,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -15714,6 +15748,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -16031,6 +16066,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -17251,6 +17290,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -17399,6 +17439,10 @@
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
+                        },
+                        "bump": {
+                          "type": "boolean",
+                          "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                         },
                         "attachment": {
                           "nullable": true,
@@ -18620,6 +18664,7 @@
                         "spoiler",
                         "effect",
                         "silent",
+                        "bump",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -18779,6 +18824,10 @@
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
                     "attachment": {
                       "nullable": true,
@@ -20000,6 +20049,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -20170,6 +20220,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -21390,6 +21444,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -21660,6 +21715,10 @@
                           "silent": {
                             "type": "boolean",
                             "description": "Sent with `/silent`: it arrives without a notification or sound"
+                          },
+                          "bump": {
+                            "type": "boolean",
+                            "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                           },
                           "attachment": {
                             "nullable": true,
@@ -22881,6 +22940,7 @@
                           "spoiler",
                           "effect",
                           "silent",
+                          "bump",
                           "attachment",
                           "sticker",
                           "ephemeral",
@@ -23431,6 +23491,10 @@
                     "description": "Deliver it without a notification or sound",
                     "type": "boolean"
                   },
+                  "bump": {
+                    "description": "Bump the message in `replyToId`: bring it back to the bottom of the chat, on its own",
+                    "type": "boolean"
+                  },
                   "ephemeral": {
                     "description": "Self-destruct after viewing, like Telegram's view-once and timers",
                     "type": "object",
@@ -23685,6 +23749,10 @@
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
+                    },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
                     "attachment": {
                       "nullable": true,
@@ -24906,6 +24974,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -25903,6 +25972,10 @@
                   },
                   "silent": {
                     "description": "Deliver it without a notification or sound",
+                    "type": "boolean"
+                  },
+                  "bump": {
+                    "description": "Bump the message in `replyToId`: bring it back to the bottom of the chat, on its own",
                     "type": "boolean"
                   },
                   "ephemeral": {
@@ -27259,6 +27332,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -28479,6 +28556,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -29690,6 +29768,10 @@
                                     "type": "boolean",
                                     "description": "Sent with `/silent`: it arrives without a notification or sound"
                                   },
+                                  "bump": {
+                                    "type": "boolean",
+                                    "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -30910,6 +30992,7 @@
                                   "spoiler",
                                   "effect",
                                   "silent",
+                                  "bump",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -31046,6 +31129,10 @@
                                     "type": "boolean",
                                     "description": "Sent with `/silent`: it arrives without a notification or sound"
                                   },
+                                  "bump": {
+                                    "type": "boolean",
+                                    "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -32266,6 +32353,7 @@
                                   "spoiler",
                                   "effect",
                                   "silent",
+                                  "bump",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -32591,6 +32679,10 @@
                                       "silent": {
                                         "type": "boolean",
                                         "description": "Sent with `/silent`: it arrives without a notification or sound"
+                                      },
+                                      "bump": {
+                                        "type": "boolean",
+                                        "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                                       },
                                       "attachment": {
                                         "nullable": true,
@@ -33812,6 +33904,7 @@
                                       "spoiler",
                                       "effect",
                                       "silent",
+                                      "bump",
                                       "attachment",
                                       "sticker",
                                       "ephemeral",
@@ -35660,6 +35753,10 @@
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
                     },
+                    "bump": {
+                      "type": "boolean",
+                      "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -36880,6 +36977,7 @@
                     "spoiler",
                     "effect",
                     "silent",
+                    "bump",
                     "attachment",
                     "sticker",
                     "ephemeral",

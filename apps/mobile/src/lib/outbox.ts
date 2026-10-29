@@ -38,6 +38,7 @@ export interface PendingMessage {
   spoiler: boolean;
   effect?: MessageEffect;
   silent?: boolean;
+  bump?: boolean;
   ephemeral: EphemeralInput | null;
   attachment: PendingAttachment | null;
   gif?: GifDTO;

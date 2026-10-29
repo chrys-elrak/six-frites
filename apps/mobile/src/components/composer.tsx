@@ -111,11 +111,13 @@ export function Composer({
   nameOf,
   scheduledCount,
   onSent,
+  onSearch,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
   scheduledCount: number;
   onSent: () => void;
+  onSearch: (q: string) => void;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -594,6 +596,7 @@ export function Composer({
 
         {!editing && <CommandBar
             ref={commands}
+            chatId={chatId}
             text={text}
             onComplete={completeCommand}
             onGif={sendGif}
@@ -610,6 +613,10 @@ export function Composer({
             onEffect={(chosen) => {
               change("");
               setMessageEffect(chosen);
+            }}
+            onSearch={(q) => {
+              change("");
+              onSearch(q);
             }}
           />}
 
