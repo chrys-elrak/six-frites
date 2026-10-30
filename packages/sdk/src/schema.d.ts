@@ -11249,7 +11249,7 @@ export interface paths {
         put?: never;
         /**
          * Start an upload (max 1 GB; encrypted files max 100 MB)
-         * @description Returns a URL to PUT the file to directly, with the given headers. Then call POST /v1/uploads/{id}/complete.
+         * @description Returns a URL to PUT the file to directly (or one per part, with `multipart`), with the given headers. Then call POST /v1/uploads/{id}/complete.
          */
         post: {
             parameters: {
@@ -11271,6 +11271,8 @@ export interface paths {
                         size: number;
                         /** @description The file is encrypted end to end: send mime application/octet-stream and a neutral name. The server stores it as-is, with no thumbnail or processing */
                         encrypted?: boolean;
+                        /** @description The client can send a file bigger than one part as several parts at once: the result then has `parts` instead of `url` */
+                        multipart?: boolean;
                     };
                 };
             };
@@ -11315,8 +11317,11 @@ export interface paths {
                              * Format: uri
                              * @description PUT the file here within 15 minutes
                              */
-                            url: string;
-                            /** @description Send these headers with the PUT */
+                            url?: string;
+                            /** @description PUT bytes [i * partSize, (i + 1) * partSize) of the file to parts[i], several at once; each link works for a day */
+                            parts?: string[];
+                            partSize?: number;
+                            /** @description Send these headers with every PUT */
                             headers: {
                                 [key: string]: string;
                             };

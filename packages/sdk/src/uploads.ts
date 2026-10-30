@@ -29,16 +29,55 @@ function put(url: string, body: Blob, headers: Record<string, string>, opts: Upl
   });
 }
 
+const PARALLEL_PARTS = 4;
+
+/**
+ * Sends the parts a few at a time, which keeps a slow, distant line busy. A part that fails is tried
+ * twice more; if it still fails, the parts in flight are cancelled and the upload fails.
+ */
+async function putParts(urls: string[], partSize: number, body: Blob, headers: Record<string, string>, opts: UploadOptions) {
+  const stop = new AbortController();
+  opts.signal?.addEventListener("abort", () => stop.abort(), { once: true });
+  const sent = urls.map(() => 0);
+  let next = 0;
+  const worker = async () => {
+    while (next < urls.length && !stop.signal.aborted) {
+      const i = next++;
+      const part = body.slice(i * partSize, (i + 1) * partSize);
+      const onProgress = (fraction: number) => {
+        sent[i] = fraction * part.size;
+        opts.onProgress?.(sent.reduce((a, b) => a + b) / body.size);
+      };
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await put(urls[i]!, part, headers, { ...opts, signal: stop.signal, onProgress });
+          break;
+        } catch (err) {
+          if (attempt === 3 || stop.signal.aborted) throw err;
+        }
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: PARALLEL_PARTS }, worker)).catch((err) => {
+    stop.abort();
+    throw err;
+  });
+}
+
 /** Uploads a file straight to storage and confirms it, returning the attachment to send with a message. */
 export async function uploadFile(api: RestClient, body: Blob, opts: UploadOptions): Promise<AttachmentDTO> {
   const presigned = unwrap(
     await api.POST("/v1/uploads/presign", {
-      body: opts.encrypted
-        ? { kind: opts.kind, name: "encrypted", mime: ENCRYPTED_MIME, size: body.size, encrypted: true }
-        : { kind: opts.kind, name: opts.name, mime: opts.mime, size: body.size },
+      body: {
+        ...(opts.encrypted
+          ? { kind: opts.kind, name: "encrypted", mime: ENCRYPTED_MIME, size: body.size, encrypted: true }
+          : { kind: opts.kind, name: opts.name, mime: opts.mime, size: body.size }),
+        multipart: true,
+      },
     }),
   );
-  await put(presigned.url, body, presigned.headers, opts);
+  if (presigned.parts) await putParts(presigned.parts, presigned.partSize!, body, presigned.headers, opts);
+  else await put(presigned.url!, body, presigned.headers, opts);
   opts.onProgress?.(1);
   return unwrap(await api.POST("/v1/uploads/{id}/complete", { params: { path: { id: presigned.upload.id } } }));
 }

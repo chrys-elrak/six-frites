@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { downloadObject, headObject, putObject, uploadObject } from "../src/lib/storage.js";
 import { mediaQueue } from "../src/lib/queue.js";
+import { purgeUploads } from "../src/services/uploads.js";
 import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -76,6 +77,39 @@ describe("uploads", () => {
       name: "voice.webm",
     });
     expect(withCodec.statusCode).toBe(201);
+  });
+
+  it("takes a big file in parts sent at once, and joins them only when all have arrived", async () => {
+    const { host } = await makeFriends();
+    const small = await call(host, "POST", "/v1/uploads/presign", { kind: "file", mime: "text/plain", size: 5, name: "a", multipart: true });
+    expect(small.json()).toMatchObject({ url: expect.any(String) });
+    expect(small.json().parts).toBeUndefined();
+
+    const body = randomBytes(40 * 1024 * 1024 + 7);
+    const presign = await call(host, "POST", "/v1/uploads/presign", {
+      kind: "file",
+      mime: "application/zip",
+      size: body.length,
+      name: "big.zip",
+      multipart: true,
+    });
+    const { parts, partSize, headers, upload, url } = presign.json();
+    expect(url).toBeUndefined();
+    expect(parts).toHaveLength(3);
+    const putPart = (i: number) =>
+      fetch(parts[i], { method: "PUT", headers, body: new Uint8Array(body.subarray(i * partSize, (i + 1) * partSize)) });
+
+    expect((await Promise.all([putPart(2), putPart(0)])).map((r) => r.status)).toEqual([200, 200]);
+    const early = await call(host, "POST", `/v1/uploads/${upload.id}/complete`);
+    expect(early.json().error.code).toBe("UPLOAD_MISSING");
+
+    expect((await putPart(1)).status).toBe(200);
+    const done = await call(host, "POST", `/v1/uploads/${upload.id}/complete`);
+    expect(done.json()).toMatchObject({ status: "ready", size: body.length });
+    const { key } = (await prisma.upload.findUnique({ where: { id: upload.id } }))!;
+    expect(await headObject(key)).toEqual({ size: body.length, contentType: "application/zip" });
+    expect(Buffer.from(await (await fetch(done.json().url)).arrayBuffer()).equals(body)).toBe(true);
+    await purgeUploads([upload.id]);
   });
 
   it("queues media for processing and lets it be sent straight away", async () => {

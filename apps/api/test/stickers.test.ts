@@ -80,7 +80,7 @@ describe("sticker packs", () => {
   it("includes the built-in Noto packs for everyone", async () => {
     await ensureBuiltinStickers();
     const { host, chatId } = await makeFriends();
-    const [faces] = (await get(host, "/v1/sticker-packs")).items;
+    const faces = (await get(host, "/v1/sticker-packs")).items.find((p: { id: string }) => p.id === "noto-faces");
     expect(faces).toMatchObject({ id: "noto-faces", builtin: true, saved: true, mine: false });
     expect(faces.stickers[0]).toMatchObject({
       id: "noto-1f602",

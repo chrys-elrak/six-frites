@@ -10,7 +10,17 @@ import {
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { mediaQueue } from "../lib/queue.js";
-import { deleteObjects, headObject, presignGet, presignPut } from "../lib/storage.js";
+import {
+  PART_BYTES,
+  abortMultipart,
+  completeMultipart,
+  deleteObjects,
+  headObject,
+  presignGet,
+  presignParts,
+  presignPut,
+  startMultipart,
+} from "../lib/storage.js";
 
 /** `linkSeconds` makes the download links short-lived instead of the cacheable daily ones. */
 export function toAttachmentDTO(u: Upload, linkSeconds?: number): AttachmentDTO {
@@ -45,6 +55,7 @@ export const uploadKeys = (u: Pick<Upload, "key" | "mainKey" | "thumbKey">) =>
 export async function presignUpload(ownerId: string, input: PresignUploadInput) {
   const id = createId();
   const key = `u/${ownerId}/${id}/original`;
+  const multipartId = input.multipart && input.size > PART_BYTES ? await startMultipart(key, input.mime) : null;
   const upload = await prisma.upload.create({
     data: {
       id,
@@ -55,11 +66,14 @@ export async function presignUpload(ownerId: string, input: PresignUploadInput) 
       size: input.size,
       key,
       encrypted: input.encrypted ?? false,
+      multipartId,
     },
   });
   return {
     upload: toAttachmentDTO(upload),
-    url: await presignPut(key, input.mime, input.size),
+    ...(multipartId
+      ? { parts: await presignParts(key, multipartId, input.size), partSize: PART_BYTES }
+      : { url: await presignPut(key, input.mime, input.size) }),
     headers: { "Content-Type": input.mime },
   };
 }
@@ -79,6 +93,9 @@ export async function completeUpload(ownerId: string, id: string) {
   const upload = await ownUpload(ownerId, id);
   if (upload.status !== "pending") return toAttachmentDTO(upload);
 
+  if (upload.multipartId && !(await completeMultipart(upload.key, upload.multipartId, upload.size))) {
+    throw new AppError("UPLOAD_MISSING", "Some parts of the file have not been uploaded yet");
+  }
   const stored = await headObject(upload.key);
   if (!stored) throw new AppError("UPLOAD_MISSING", "The file has not been uploaded yet");
   if (stored.size !== upload.size || stored.size > MAX_UPLOAD_BYTES) {
@@ -133,6 +150,11 @@ export async function purgeUploads(ids: string[]) {
   if (!ids.length) return;
   const uploads = await prisma.upload.findMany({ where: { id: { in: ids } } });
   await deleteObjects(uploads.flatMap(uploadKeys)).catch(() => null);
+  await Promise.all(
+    uploads
+      .filter((u) => u.multipartId && u.status === "pending")
+      .map((u) => abortMultipart(u.key, u.multipartId!).catch(() => null)),
+  );
   await prisma.upload.deleteMany({ where: { id: { in: uploads.map((u) => u.id) } } });
 }
 

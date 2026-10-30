@@ -62,6 +62,10 @@ export const PresignUploadInput = z
       .describe(
         `The file is encrypted end to end: send mime ${ENCRYPTED_MIME} and a neutral name. The server stores it as-is, with no thumbnail or processing`,
       ),
+    multipart: z
+      .boolean()
+      .optional()
+      .describe("The client can send a file bigger than one part as several parts at once: the result then has `parts` instead of `url`"),
   })
   .refine((v) => !v.encrypted || v.mime === ENCRYPTED_MIME, {
     message: `Encrypted files use ${ENCRYPTED_MIME}`,
@@ -104,7 +108,12 @@ export type AttachmentDTO = z.infer<typeof AttachmentDTO>;
 
 export const PresignUploadResult = z.object({
   upload: AttachmentDTO,
-  url: z.string().url().describe("PUT the file here within 15 minutes"),
-  headers: z.record(z.string(), z.string()).describe("Send these headers with the PUT"),
+  url: z.string().url().optional().describe("PUT the file here within 15 minutes"),
+  parts: z
+    .array(z.string().url())
+    .optional()
+    .describe("PUT bytes [i * partSize, (i + 1) * partSize) of the file to parts[i], several at once; each link works for a day"),
+  partSize: z.number().int().optional(),
+  headers: z.record(z.string(), z.string()).describe("Send these headers with every PUT"),
 });
 export type PresignUploadResult = z.infer<typeof PresignUploadResult>;

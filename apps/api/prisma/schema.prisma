@@ -415,6 +415,7 @@ model Upload {
   durationMs  Int?
   waveform    Json?
   encrypted   Boolean  @default(false)
+  multipartId String?
   error       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

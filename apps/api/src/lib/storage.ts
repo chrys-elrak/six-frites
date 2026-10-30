@@ -1,11 +1,16 @@
 import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
   CreateBucketCommand,
+  CreateMultipartUploadCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
+  ListPartsCommand,
   PutObjectCommand,
   S3Client,
+  UploadPartCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createReadStream, createWriteStream } from "node:fs";
@@ -52,6 +57,52 @@ export function presignPut(key: string, contentType: string, contentLength: numb
   return getSignedUrl(signer, new PutObjectCommand({ Bucket, Key: key, ContentType: contentType, ContentLength: contentLength }), {
     expiresIn: 15 * 60,
   });
+}
+
+/** Parts stay under Cloudflare's 100 MB request limit, and a dropped one is cheap to send again. */
+export const PART_BYTES = 16 * 1024 * 1024;
+
+export async function startMultipart(key: string, contentType: string) {
+  const { UploadId } = await s3.send(new CreateMultipartUploadCommand({ Bucket, Key: key, ContentType: contentType }));
+  return UploadId!;
+}
+
+/** One link per part; each lasts a day because on a slow line the last parts start long after the first. */
+export function presignParts(key: string, uploadId: string, size: number) {
+  return Promise.all(
+    Array.from({ length: Math.ceil(size / PART_BYTES) }, (_, i) =>
+      getSignedUrl(
+        signer,
+        new UploadPartCommand({
+          Bucket,
+          Key: key,
+          UploadId: uploadId,
+          PartNumber: i + 1,
+          ContentLength: Math.min(PART_BYTES, size - i * PART_BYTES),
+        }),
+        { expiresIn: DAY },
+      ),
+    ),
+  );
+}
+
+/** Joins the parts into the object once they add up to `size`; false while some are still missing. */
+export async function completeMultipart(key: string, uploadId: string, size: number) {
+  const { Parts = [] } = await s3.send(new ListPartsCommand({ Bucket, Key: key, UploadId: uploadId }));
+  if (Parts.reduce((sum, p) => sum + (p.Size ?? 0), 0) !== size) return false;
+  await s3.send(
+    new CompleteMultipartUploadCommand({
+      Bucket,
+      Key: key,
+      UploadId: uploadId,
+      MultipartUpload: { Parts: Parts.map(({ PartNumber, ETag }) => ({ PartNumber, ETag })) },
+    }),
+  );
+  return true;
+}
+
+export async function abortMultipart(key: string, uploadId: string) {
+  await s3.send(new AbortMultipartUploadCommand({ Bucket, Key: key, UploadId: uploadId }));
 }
 
 /**

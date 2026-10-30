@@ -37418,7 +37418,7 @@
         "tags": [
           "uploads"
         ],
-        "description": "Returns a URL to PUT the file to directly, with the given headers. Then call POST /v1/uploads/{id}/complete.",
+        "description": "Returns a URL to PUT the file to directly (or one per part, with `multipart`), with the given headers. Then call POST /v1/uploads/{id}/complete.",
         "requestBody": {
           "required": true,
           "content": {
@@ -37455,6 +37455,10 @@
                   },
                   "encrypted": {
                     "description": "The file is encrypted end to end: send mime application/octet-stream and a neutral name. The server stores it as-is, with no thumbnail or processing",
+                    "type": "boolean"
+                  },
+                  "multipart": {
+                    "description": "The client can send a file bigger than one part as several parts at once: the result then has `parts` instead of `url`",
                     "type": "boolean"
                   }
                 },
@@ -37584,21 +37588,33 @@
                       "additionalProperties": false
                     },
                     "url": {
+                      "description": "PUT the file here within 15 minutes",
                       "type": "string",
-                      "format": "uri",
-                      "description": "PUT the file here within 15 minutes"
+                      "format": "uri"
+                    },
+                    "parts": {
+                      "description": "PUT bytes [i * partSize, (i + 1) * partSize) of the file to parts[i], several at once; each link works for a day",
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
+                    "partSize": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     },
                     "headers": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
                       },
-                      "description": "Send these headers with the PUT"
+                      "description": "Send these headers with every PUT"
                     }
                   },
                   "required": [
                     "upload",
-                    "url",
                     "headers"
                   ],
                   "additionalProperties": false
