@@ -12,7 +12,7 @@ comm -23 <(git log --no-renames --diff-filter=D --name-only --pretty=format: | g
 "${ssh[@]}" 'cd /root/six-frites && cp infra/traefik/six-frites.yml /root/traefik/config/dynamic/ && docker compose -f docker-compose.prod.yml up -d --build'
 
 for _ in $(seq 30); do
-  curl -fsS -o /dev/null https://six-frites.koera.mg/health && echo "Live" && exit 0
+  curl -fs -o /dev/null https://six-frites.koera.mg/health && echo "Live" && exit 0
   sleep 5
 done
 echo "The API isn't answering /health after 150s" >&2
