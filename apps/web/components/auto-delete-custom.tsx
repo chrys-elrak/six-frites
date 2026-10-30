@@ -50,7 +50,7 @@ export function AutoDeleteCustom({
       >
         <button aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         <form
-          className="relative w-full max-w-sm space-y-4 rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900"
+          className="relative w-full max-w-sm space-y-4 rounded-t-3xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900/70"
           onSubmit={(e) => {
             e.preventDefault();
             if (!valid) return;

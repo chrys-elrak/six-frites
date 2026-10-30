@@ -100,9 +100,9 @@ export function Sheet({
         />
         <div className="relative w-full max-w-sm space-y-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3">
           {children}
-          <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-xl dark:bg-stone-900">
+          <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white/70 shadow-xl backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/70">
             {title && (
-              <div className="border-b border-stone-200 px-4 py-3 text-center text-sm text-stone-500 dark:border-stone-800">
+              <div className="border-b border-black/5 px-4 py-3 text-center text-sm text-stone-500 dark:border-white/10">
                 {title}
               </div>
             )}
@@ -112,7 +112,7 @@ export function Sheet({
                 key={a.label}
                 autoFocus={i === 0}
                 onClick={() => select(a)}
-                className={`block w-full border-b border-stone-100 px-4 py-3.5 text-center text-[17px] last:border-0 hover:bg-stone-50 focus:bg-stone-50 focus:outline-none dark:border-stone-800 dark:hover:bg-stone-800 dark:focus:bg-stone-800 ${
+                className={`block w-full border-b border-black/5 px-4 py-3.5 text-center text-[17px] last:border-0 hover:bg-black/5 focus:bg-black/5 focus:outline-none dark:border-white/10 dark:hover:bg-white/10 dark:focus:bg-white/10 ${
                   a.destructive ? "text-red-600 dark:text-red-400" : "text-stone-900 dark:text-stone-100"
                 }`}
               >
@@ -123,7 +123,7 @@ export function Sheet({
           <button
             type="button"
             onClick={onClose}
-            className="block w-full rounded-2xl bg-white py-3.5 text-[17px] font-semibold shadow-xl hover:bg-stone-50 dark:bg-stone-900 dark:hover:bg-stone-800"
+            className="block w-full rounded-2xl bg-white/70 py-3.5 text-[17px] font-semibold shadow-xl backdrop-blur-xl backdrop-saturate-150 hover:bg-white/85 dark:bg-stone-900/70 dark:hover:bg-stone-900/85"
           >
             {tr.common.cancel}
           </button>

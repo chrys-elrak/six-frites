@@ -21,6 +21,7 @@ export * from "./chat-themes.js";
 export * from "./socket.js";
 export * from "./admin.js";
 export * from "./releases.js";
+export * from "./changelog.js";
 export * from "./links.js";
 export * from "./search.js";
 export * from "./media-edit.js";

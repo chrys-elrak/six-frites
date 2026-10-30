@@ -243,7 +243,7 @@ export function AttachDialog({
         aria-label={title}
       >
         <button aria-label={tr.common.cancel} onClick={onCancel} className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
-        <div className="relative flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-white shadow-xl md:rounded-3xl dark:bg-stone-900">
+        <div className="relative flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 shadow-xl md:rounded-3xl dark:bg-stone-900/70">
           <div className="flex items-center px-4 pt-4 pb-2">
             <h2 className="flex-1 text-lg font-semibold">{title}</h2>
             <button

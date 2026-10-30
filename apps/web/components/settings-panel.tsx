@@ -18,6 +18,7 @@ import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
 import { QuickReactionsSettings } from "./reactions";
+import { WhatsNew } from "./whats-new";
 import { Card, SectionTitle, Toggle } from "./ui";
 
 function LanguagePicker() {
@@ -107,6 +108,7 @@ export function SettingsPanel() {
         <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4 lg:block lg:max-w-7xl lg:columns-2 lg:gap-6 lg:p-6 2xl:columns-3 lg:[&>*]:mb-6 lg:[&>*]:break-inside-avoid">
           <ProfileCard />
           <AndroidDownload />
+          <WhatsNew />
           <LanguagePicker />
           <FontPicker />
           <QuickReactionsSettings />

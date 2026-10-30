@@ -30,7 +30,7 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
           components={{
             CategoryHeader: ({ category, ...props }) => (
               <div
-                className="bg-white px-3 pt-3 pb-1.5 text-xs font-medium text-stone-500 dark:bg-stone-900"
+                className="bg-white/70 px-3 pt-3 pb-1.5 text-xs font-medium text-stone-500 backdrop-blur-xl dark:bg-stone-900/70"
                 {...props}
               >
                 {category.label}

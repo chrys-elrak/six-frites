@@ -30,6 +30,35 @@ function RoundMask({ size, color }: { size: number; color: string }) {
   );
 }
 
+interface NoteOptionsProps {
+  muted: boolean;
+  spoiler: boolean;
+  onToggleMute: () => void;
+  onToggleSpoiler: () => void;
+}
+
+function NoteOptions({ muted, spoiler, onToggleMute, onToggleSpoiler }: NoteOptionsProps) {
+  const tr = useT();
+  return (
+    <View style={{ flexDirection: "row", gap: 8 }}>
+      <Pill
+        on={spoiler}
+        Icon={EyeOff}
+        title={spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
+        label={spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
+        onPress={onToggleSpoiler}
+      />
+      <Pill
+        on={muted}
+        Icon={muted ? VolumeX : Volume2}
+        title={muted ? tr.composer.unmute : tr.composer.mute}
+        label={muted ? tr.composer.muted : tr.composer.mute}
+        onPress={onToggleMute}
+      />
+    </View>
+  );
+}
+
 function Ring({ size, progress }: { size: number; progress: number }) {
   const r = 49;
   const c = 2 * Math.PI * r;
@@ -62,12 +91,13 @@ const BACKDROP = "#0c0a09";
 /**
  * Records a round video message over the chat, above the composer (`bottom` is its height). The
  * camera can be flipped mid-recording; on builds without the persistent-recording patch a flip ends
- * the clip, which then goes out like one that hit the time limit.
+ * the clip, which then goes out like one that hit the time limit. Spoiler and mute are only choices
+ * here; the composer applies them to the finished clip.
  */
 export const VideoNoteCapture = forwardRef<
   VideoNoteHandle,
-  { bottom: number; onTick: (ms: number) => void; onLimit: () => void; onStop: () => void }
->(function VideoNoteCapture({ bottom, onTick, onLimit, onStop }, ref) {
+  NoteOptionsProps & { bottom: number; onTick: (ms: number) => void; onLimit: () => void; onStop: () => void }
+>(function VideoNoteCapture({ bottom, onTick, onLimit, onStop, ...options }, ref) {
   const tr = useT();
   const { width } = useWindowDimensions();
   const size = Math.min(width * 0.72, 300);
@@ -163,6 +193,7 @@ export const VideoNoteCapture = forwardRef<
         <Ring size={size} progress={elapsed / MAX_MS} />
       </View>
       <Text style={styles.time}>{formatDuration(elapsed)} / 1:00</Text>
+      {allowed && <NoteOptions {...options} />}
       {allowed && (
         <View style={styles.controls}>
           <Pressable
@@ -186,17 +217,10 @@ export const VideoNoteCapture = forwardRef<
 export function VideoNotePreview({
   uri,
   bottom,
-  muted,
-  spoiler,
-  onToggleMute,
-  onToggleSpoiler,
-}: {
+  ...options
+}: NoteOptionsProps & {
   uri: string;
   bottom: number;
-  muted: boolean;
-  spoiler: boolean;
-  onToggleMute: () => void;
-  onToggleSpoiler: () => void;
 }) {
   const tr = useT();
   const { width } = useWindowDimensions();
@@ -206,8 +230,8 @@ export function VideoNotePreview({
     p.play();
   });
   useEffect(() => {
-    player.muted = muted;
-  }, [player, muted]);
+    player.muted = options.muted;
+  }, [player, options.muted]);
   return (
     <View style={[styles.overlay, { bottom }]}>
       <Pressable
@@ -219,22 +243,7 @@ export function VideoNotePreview({
         <RoundMask size={size} color={BACKDROP} />
         <Ring size={size} progress={1} />
       </Pressable>
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        <Pill
-          on={spoiler}
-          Icon={EyeOff}
-          title={spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
-          label={spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
-          onPress={onToggleSpoiler}
-        />
-        <Pill
-          on={muted}
-          Icon={muted ? VolumeX : Volume2}
-          title={muted ? tr.composer.unmute : tr.composer.mute}
-          label={muted ? tr.composer.muted : tr.composer.mute}
-          onPress={onToggleMute}
-        />
-      </View>
+      <NoteOptions {...options} />
     </View>
   );
 }

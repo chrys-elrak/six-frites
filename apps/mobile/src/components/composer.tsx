@@ -163,7 +163,7 @@ export function Composer({
   const [writingChecklist, setWritingChecklist] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
   const [recMode, setRecMode] = useState<RecordMode>("voice");
-  const [capture, setCapture] = useState<{ kind: RecordMode } | null>(null);
+  const [capture, setCapture] = useState<{ kind: RecordMode; muted?: boolean; spoiler?: boolean } | null>(null);
   const captureNow = useRef(capture);
   captureNow.current = capture;
   const [noteMs, setNoteMs] = useState(0);
@@ -533,7 +533,11 @@ export function Composer({
     const clip = c.kind === "video" ? note.current?.stop() : null;
     setCapture(null);
     const file = c.kind === "voice" ? voiceOn.current && (await stopRecording()) : await clip;
-    if (file) send(file);
+    if (!file) return;
+    const out = c.muted ? await muteVideo(file).catch(() => null) : file;
+    if (out) return send(out, ephemeral, undefined, !!c.spoiler);
+    setError(tr.composer.couldNotMute);
+    setPreview({ kind: c.kind, file, spoiler: c.spoiler });
   }
 
   async function previewCapture() {
@@ -541,7 +545,10 @@ export function Composer({
     if (!c) return;
     const file = c.kind === "voice" ? voiceOn.current && (await stopRecording()) : await note.current?.stop();
     setCapture(null);
-    if (file) setPreview({ kind: c.kind, file });
+    if (!file) return;
+    const muted = c.muted ? await muteVideo(file).catch(() => null) : null;
+    if (c.muted && !muted) setError(tr.composer.couldNotMute);
+    setPreview({ kind: c.kind, file, muted: muted ?? undefined, spoiler: c.spoiler });
   }
 
   function cancelCapture() {
@@ -576,6 +583,10 @@ export function Composer({
           onTick={setNoteMs}
           onLimit={() => void finishCapture()}
           onStop={() => void previewCapture()}
+          muted={!!capture.muted}
+          spoiler={!!capture.spoiler}
+          onToggleMute={() => setCapture((c) => c && { ...c, muted: !c.muted })}
+          onToggleSpoiler={() => setCapture((c) => c && { ...c, spoiler: !c.spoiler })}
         />
       )}
       {preview?.kind === "video" && (

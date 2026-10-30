@@ -22,7 +22,7 @@ export function Dialog({ onClose, children }: { onClose: () => void; children: R
           className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
         />
         <div className="relative w-full max-w-md p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3">
-          <div className="max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-xl dark:bg-stone-900">
+          <div className="max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain rounded-2xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 shadow-xl dark:bg-stone-900/70">
             {children}
           </div>
         </div>

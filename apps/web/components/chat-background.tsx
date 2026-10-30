@@ -168,7 +168,7 @@ export function CustomThemeDialog({
     <Portal>
       <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal aria-label={title}>
         <button type="button" aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-        <div className="relative w-full max-w-sm space-y-4 rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-4 dark:bg-stone-900">
+        <div className="relative w-full max-w-sm space-y-4 rounded-t-3xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-4 dark:bg-stone-900/70">
           <h2 className="text-center font-semibold">{title}</h2>
 
           <div className="relative h-36 overflow-hidden rounded-2xl ring-1 ring-stone-200 dark:ring-stone-800">

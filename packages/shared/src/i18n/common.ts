@@ -53,6 +53,7 @@ const en = {
   tapToUpdate: "Tap to download and install it.",
   update: "Update",
   newWebVersion: "A new version of Six Frites is available",
+  whatsNew: "What's new",
   version: (v: string) => `Version ${v}`,
   checkConnection: "Check your connection and try again.",
 };
@@ -112,6 +113,7 @@ const fr: typeof en = {
   tapToUpdate: "Touchez pour la télécharger et l'installer.",
   update: "Mettre à jour",
   newWebVersion: "Une nouvelle version de Six Frites est disponible",
+  whatsNew: "Nouveautés",
   version: (v) => `Version ${v}`,
   checkConnection: "Vérifiez votre connexion et réessayez.",
 };
@@ -171,6 +173,7 @@ const mg: typeof en = {
   tapToUpdate: "Tsindrio mba haka sy hametraka azy.",
   update: "Havaozy",
   newWebVersion: "Efa misy ny Six Frites vaovao",
+  whatsNew: "Inona no vaovao",
   version: (v) => `Dika ${v}`,
   checkConnection: "Hamarino ny fifandraisanao dia andramo indray.",
 };

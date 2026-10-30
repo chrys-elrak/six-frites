@@ -237,7 +237,7 @@ export function CommandBar({
 
   return (
     <div
-      className={`absolute bottom-full left-0 z-30 mb-2 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800 ${
+      className={`absolute bottom-full left-0 z-30 mb-2 overflow-hidden rounded-xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 shadow-lg ring-1 ring-stone-200 dark:bg-stone-900/70 dark:ring-stone-800 ${
         search === null ? "w-fit max-w-full" : "w-full"
       }`}
     >

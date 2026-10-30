@@ -118,7 +118,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
         aria-label={tr.contacts.editContact}
       >
         <button aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-        <div className="relative w-full max-w-sm rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900">
+        <div className="relative w-full max-w-sm rounded-t-3xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl md:pb-5 dark:bg-stone-900/70">
           <div className="mb-4 flex items-center">
             <h2 className="flex-1 text-lg font-semibold">{tr.contacts.editContact}</h2>
             <button

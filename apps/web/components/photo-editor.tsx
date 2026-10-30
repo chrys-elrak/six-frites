@@ -624,7 +624,7 @@ export function PhotoEditor({
         {picking && (
           <div className="absolute inset-0 z-10 flex flex-col justify-end">
             <button aria-label={tr.common.cancel} onClick={() => setPicking(false)} className="absolute inset-0 bg-black/50" />
-            <div className="relative flex h-[min(60dvh,420px)] flex-col overflow-hidden rounded-t-3xl bg-white text-stone-900 dark:bg-stone-900 dark:text-stone-100">
+            <div className="relative flex h-[min(60dvh,420px)] flex-col overflow-hidden rounded-t-3xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 text-stone-900 dark:bg-stone-900/70 dark:text-stone-100">
               <Emojis onPick={addEmoji} />
             </div>
           </div>

@@ -6,6 +6,7 @@ import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer, useMiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
 import { Toasts } from "@/components/toasts";
+import { WhatsNewPrompt } from "@/components/whats-new";
 import { useAppLock, useAutoLock } from "@/lib/app-lock";
 import { usePush } from "@/lib/push";
 import { RealtimeProvider } from "@/lib/realtime";
@@ -29,6 +30,7 @@ export default function AppLayout() {
         </SafeAreaInsetsContext.Provider>
         {!locked && <Toasts />}
         {!locked && <BackupPinPrompt />}
+        {!locked && <WhatsNewPrompt />}
         <CallScreen />
         {locked && <LockScreen />}
       </View>

@@ -1357,7 +1357,7 @@ export const MessageList = forwardRef<
             onClose={() => setMenuFor(null)}
           >
             {!frozen && canReact(menuFor) && (
-              <div className="rounded-full bg-white px-1.5 py-1 shadow-xl ring-1 ring-black/5 pointer-fine:hidden dark:bg-stone-900 dark:ring-white/10">
+              <div className="rounded-full bg-white/70 backdrop-blur-xl backdrop-saturate-150 px-1.5 py-1 shadow-xl ring-1 ring-black/5 pointer-fine:hidden dark:bg-stone-900/70 dark:ring-white/10">
                 <ReactionBar
                   message={menuFor.message!}
                   meId={meId}

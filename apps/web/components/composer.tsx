@@ -165,7 +165,7 @@ export function Composer({
   const [camera, setCamera] = useState(false);
   const recorder = useRecorder();
   const [recMode, setRecMode] = useState<RecordMode>("voice");
-  const [capture, setCapture] = useState<{ kind: RecordMode } | null>(null);
+  const [capture, setCapture] = useState<{ kind: RecordMode; muted?: boolean; spoiler?: boolean } | null>(null);
   const captureNow = useRef(capture);
   captureNow.current = capture;
   const [noteMs, setNoteMs] = useState(0);
@@ -566,7 +566,11 @@ export function Composer({
       return;
     }
     const file = await clip;
-    if (file) sendVideoNote(file, ephemeral);
+    if (!file) return;
+    const out = c.muted ? await withoutAudio(file) : file;
+    if (out) return sendVideoNote(out, ephemeral, c.spoiler);
+    setError(tr.composer.couldNotMute);
+    setPreview({ kind: "video", file, url: URL.createObjectURL(file), durationMs: noteMs, spoiler: !!c.spoiler });
   }
 
   async function previewCapture() {
@@ -586,7 +590,22 @@ export function Composer({
     const durationMs = noteMs;
     const file = await note.current?.stop();
     setCapture(null);
-    if (file) setPreview({ kind: "video", file, url: URL.createObjectURL(file), durationMs, spoiler: false });
+    if (!file) return;
+    const muted = c.muted ? await withoutAudio(file) : null;
+    if (c.muted && !muted) setError(tr.composer.couldNotMute);
+    setPreview({
+      kind: "video",
+      file,
+      url: URL.createObjectURL(file),
+      durationMs,
+      muted: muted ?? undefined,
+      spoiler: !!c.spoiler,
+    });
+  }
+
+  async function withoutAudio(file: File) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    return stripAudio(bytes) ? new File([bytes], file.name, { type: file.type }) : null;
   }
 
   async function toggleNoteMute() {
@@ -595,9 +614,8 @@ export function Composer({
     setError(null);
     let muted: File | undefined;
     if (!p.muted) {
-      const bytes = new Uint8Array(await p.file.arrayBuffer());
-      if (!stripAudio(bytes)) return setError(tr.composer.couldNotMute);
-      muted = new File([bytes], p.file.name, { type: p.file.type });
+      muted = (await withoutAudio(p.file)) ?? undefined;
+      if (!muted) return setError(tr.composer.couldNotMute);
     }
     setPreview((cur) => (cur?.kind === "video" && cur.file === p.file ? { ...cur, muted } : cur));
   }
@@ -853,7 +871,7 @@ export function Composer({
               <div
                 role="listbox"
                 aria-label={tr.composer.emojiSuggestions}
-                className="absolute bottom-full left-0 z-30 mb-2 flex max-w-full gap-0.5 overflow-x-auto rounded-xl bg-white p-1 shadow-lg ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"
+                className="absolute bottom-full left-0 z-30 mb-2 flex max-w-full gap-0.5 overflow-x-auto rounded-xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-1 shadow-lg ring-1 ring-stone-200 dark:bg-stone-900/70 dark:ring-stone-800"
               >
                 {suggested.items.map((x, i) => (
                   <button
@@ -1029,6 +1047,10 @@ export function Composer({
           onTick={setNoteMs}
           onLimit={() => void finishCapture()}
           onStop={() => void previewCapture()}
+          muted={!!capture.muted}
+          spoiler={!!capture.spoiler}
+          onToggleMute={() => setCapture((c) => c && { ...c, muted: !c.muted })}
+          onToggleSpoiler={() => setCapture((c) => c && { ...c, spoiler: !c.spoiler })}
         />
       )}
       {preview?.kind === "video" && (

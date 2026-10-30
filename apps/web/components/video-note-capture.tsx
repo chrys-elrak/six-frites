@@ -18,6 +18,41 @@ export interface VideoNoteHandle {
   cancel: () => void;
 }
 
+interface NoteOptionsProps {
+  muted: boolean;
+  spoiler: boolean;
+  onToggleMute: () => void;
+  onToggleSpoiler: () => void;
+}
+
+function NoteOptions({ muted, spoiler, onToggleMute, onToggleSpoiler }: NoteOptionsProps) {
+  const tr = useT();
+  return (
+    <div className="pointer-events-auto flex gap-2">
+      <button
+        type="button"
+        onClick={onToggleSpoiler}
+        aria-pressed={spoiler}
+        title={spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
+        className={pill(spoiler)}
+      >
+        <EyeOff className="size-3.5" />
+        {spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
+      </button>
+      <button
+        type="button"
+        onClick={onToggleMute}
+        aria-pressed={muted}
+        title={muted ? tr.composer.unmute : tr.composer.mute}
+        className={pill(muted)}
+      >
+        {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+        {muted ? tr.composer.muted : tr.composer.mute}
+      </button>
+    </div>
+  );
+}
+
 function Ring({ progress }: { progress: number }) {
   const r = 49;
   const c = 2 * Math.PI * r;
@@ -42,11 +77,12 @@ function Ring({ progress }: { progress: number }) {
 /**
  * Records a round video message above the composer. Frames go through a canvas, so switching between
  * the front and back camera mid-recording keeps the same recording. `bottom` keeps the composer uncovered.
+ * Spoiler and mute are only choices here; the composer applies them to the finished clip.
  */
 export const VideoNoteCapture = forwardRef<
   VideoNoteHandle,
-  { bottom: number; onTick: (ms: number) => void; onLimit: () => void; onStop: () => void }
->(function VideoNoteCapture({ bottom, onTick, onLimit, onStop }, ref) {
+  NoteOptionsProps & { bottom: number; onTick: (ms: number) => void; onLimit: () => void; onStop: () => void }
+>(function VideoNoteCapture({ bottom, onTick, onLimit, onStop, ...options }, ref) {
   const tr = useT();
   const cam = useCamera("user", { square: true });
   const [audio, setAudio] = useState<MediaStream | null>(null);
@@ -187,6 +223,7 @@ export const VideoNoteCapture = forwardRef<
         </div>
       </div>
       <p className="font-mono text-sm text-white tabular-nums">{formatDuration(elapsed)} / 1:00</p>
+      <NoteOptions {...options} />
       <div className="pointer-events-auto flex items-center gap-4">
         {cam.canSwitch && (
           <button
@@ -216,17 +253,10 @@ export const VideoNoteCapture = forwardRef<
 export function VideoNotePreview({
   url,
   bottom,
-  muted,
-  spoiler,
-  onToggleMute,
-  onToggleSpoiler,
-}: {
+  ...options
+}: NoteOptionsProps & {
   url: string;
   bottom: number;
-  muted: boolean;
-  spoiler: boolean;
-  onToggleMute: () => void;
-  onToggleSpoiler: () => void;
 }) {
   const tr = useT();
   const video = useRef<HTMLVideoElement>(null);
@@ -254,32 +284,13 @@ export function VideoNotePreview({
             autoPlay
             loop
             playsInline
-            muted={muted}
-            className={`size-full object-cover transition duration-300 ${spoiler ? "scale-110 blur-xl brightness-75" : ""}`}
+            muted={options.muted}
+            className={`size-full object-cover transition duration-300 ${options.spoiler ? "scale-110 blur-xl brightness-75" : ""}`}
           />
         </span>
       </button>
-      <div className="mt-4 flex gap-2">
-        <button
-          type="button"
-          onClick={onToggleSpoiler}
-          aria-pressed={spoiler}
-          title={spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
-          className={pill(spoiler)}
-        >
-          <EyeOff className="size-3.5" />
-          {spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
-        </button>
-        <button
-          type="button"
-          onClick={onToggleMute}
-          aria-pressed={muted}
-          title={muted ? tr.composer.unmute : tr.composer.mute}
-          className={pill(muted)}
-        >
-          {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
-          {muted ? tr.composer.muted : tr.composer.mute}
-        </button>
+      <div className="mt-4">
+        <NoteOptions {...options} />
       </div>
     </div>
   );

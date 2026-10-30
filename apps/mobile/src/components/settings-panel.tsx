@@ -35,6 +35,7 @@ import { QuickReactionsSettings } from "./reactions";
 import { Sheet } from "./sheet";
 import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
+import { WhatsNew } from "./whats-new";
 
 function ProfileCard() {
   const t = useTheme();
@@ -584,6 +585,7 @@ export function SettingsPanel() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <UpdateCard />
         <ProfileCard />
+        <WhatsNew />
         <LanguagePicker />
         <FontPicker />
         <QuickReactionsSettings />

@@ -11,8 +11,6 @@ import {
   Lock,
   MessageCircle,
   MoreHorizontal,
-  PanelLeftClose,
-  PanelLeftOpen,
   Pin,
   Search,
   Share2,
@@ -21,7 +19,6 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { create } from "zustand";
 import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
 import { useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
@@ -43,37 +40,11 @@ import { NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
 import { ServiceIcon, callLabel } from "./service-icon";
 
-const RAIL_KEY = "six:chat-rail";
-const WIDE = "(width >= 64rem)";
-
-const useRailState = create(() => {
-  try {
-    return { collapsed: localStorage.getItem(RAIL_KEY) === "1", peek: false };
-  } catch {
-    return { collapsed: false, peek: false };
-  }
-});
-
-/**
- * Whether the chat list beside a chat shrinks to a column of avatars. Wide screens keep the user's choice,
- * narrower ones always shrink it unless it was opened for a peek, which the next navigation closes.
- */
+/** Whether the chat list beside a chat shrinks to a column of avatars: on screens too narrow for both, not on phones. */
 export function useChatRail() {
   const split = useMedia("(width >= 48rem)");
-  const wide = useMedia(WIDE);
-  const { collapsed, peek } = useRailState();
-  return split && (wide ? collapsed : !peek);
-}
-
-export const closeRailPeek = () => useRailState.setState({ peek: false });
-
-function toggleRail() {
-  if (!matchMedia(WIDE).matches) return useRailState.setState((s) => ({ peek: !s.peek }));
-  const collapsed = !useRailState.getState().collapsed;
-  try {
-    localStorage.setItem(RAIL_KEY, collapsed ? "1" : "0");
-  } catch {}
-  useRailState.setState({ collapsed });
+  const wide = useMedia("(width >= 64rem)");
+  return split && !wide;
 }
 
 function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
@@ -287,7 +258,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   return (
     <div className="flex h-full min-h-0 flex-col">
       <header
-        className={`flex flex-wrap items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800 ${rail ? "justify-center" : ""}`}
+        className={`${rail ? "hidden" : "flex"} flex-wrap items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800`}
       >
         {archived && (
           <Link
@@ -321,16 +292,6 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
               <UserPlus className="size-5" />
             </button>
           </>
-        )}
-        {!archived && (
-          <button
-            onClick={toggleRail}
-            aria-label={rail ? tr.chats.expandList : tr.chats.collapseList}
-            title={rail ? tr.chats.expandList : tr.chats.collapseList}
-            className="hidden size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-200 md:grid dark:hover:bg-stone-800"
-          >
-            {rail ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
-          </button>
         )}
         <label
           className={`${rail ? "hidden" : "flex"} w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10`}

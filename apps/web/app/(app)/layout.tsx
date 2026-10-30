@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LockScreen } from "@/components/app-lock";
-import { ChatList, closeRailPeek, useChatRail } from "@/components/chat-list";
+import { ChatList, useChatRail } from "@/components/chat-list";
 import { GamesPanel } from "@/components/games-panel";
 import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
@@ -18,6 +18,7 @@ import { relinkPush } from "@/lib/push";
 import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
+import { WhatsNewPrompt } from "@/components/whats-new";
 import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
@@ -69,7 +70,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useAppHeight();
   useAutoLock();
   useEffect(primeAudio, []);
-  useEffect(closeRailPeek, [pathname]);
   const railable = useChatRail();
   usePushLinks(status === "authed" && !guest);
 
@@ -105,14 +105,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <MiniPlayer atTop={!topLevel} />
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex md:flex-row ${wide ? "md:flex-1" : `md:shrink-0 md:border-r ${rail ? "md:w-40" : "md:w-100 lg:w-116"}`} dark:border-white/10 ${glass}`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex md:flex-row ${wide ? "md:flex-1" : `md:shrink-0 ${rail ? "md:w-20" : "md:w-100 md:border-r lg:w-116"}`} dark:border-white/10 ${glass}`}
           >
-            <div className="min-h-0 min-w-0 flex-1">
-              {tab === "chats" && <ChatList archived={pathname === "/archived"} rail={rail} />}
-              {tab === "games" && <GamesPanel />}
-              {tab === "settings" && <SettingsPanel />}
-            </div>
-            <TabBar active={tab} />
+            {!rail && (
+              <div className="min-h-0 min-w-0 flex-1">
+                {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
+                {tab === "games" && <GamesPanel />}
+                {tab === "settings" && <SettingsPanel />}
+              </div>
+            )}
+            <TabBar active={tab}>{rail && <ChatList rail />}</TabBar>
           </aside>
           <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col ${wide ? "" : "md:flex"}`}>
             {children}
@@ -122,6 +124,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {!locked && <Toasts />}
       {!locked && <UpdatePrompt />}
       {!locked && <BackupPinPrompt />}
+      {!locked && <WhatsNewPrompt />}
       <CallScreen />
       <UnreadTitle />
       {locked && <LockScreen />}
