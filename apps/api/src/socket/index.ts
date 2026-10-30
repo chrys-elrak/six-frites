@@ -6,6 +6,10 @@ import {
   type AckResult,
   AppError,
   CallSignalInput,
+  CreateLiveInput,
+  LiveBotInput,
+  LiveMoveInput,
+  LiveRoomRef,
   MarkDeliveredInput,
   MarkReadInput,
   SendMessageInput,
@@ -20,6 +24,7 @@ import { redisConnection } from "../lib/queue.js";
 import { type IO, rooms, setIo, socketKey } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
 import { relaySignal } from "../services/calls.js";
+import { createRoom, joinRoom, leaveRoom, playMove, setBot, startRoom } from "../services/live.js";
 import { markDelivered, markRead } from "../services/chats.js";
 import { assertMember, sendMessage } from "../services/messages.js";
 
@@ -91,6 +96,25 @@ export function createSocketServer(http: HttpServer) {
     socket.on(
       "call:signal",
       handle((p) => relaySignal(userId, sessionId, CallSignalInput.parse(p))),
+    );
+
+    socket.on("live:create", handle((p) => createRoom(userId, CreateLiveInput.parse(p))));
+    socket.on("live:join", handle((p) => joinRoom(userId, LiveRoomRef.parse(p).roomId)));
+    socket.on("live:leave", handle(async (p) => leaveRoom(userId, LiveRoomRef.parse(p).roomId) ?? null));
+    socket.on(
+      "live:bot",
+      handle(async (p) => {
+        const { roomId, add } = LiveBotInput.parse(p);
+        return setBot(userId, roomId, add);
+      }),
+    );
+    socket.on("live:start", handle(async (p) => startRoom(userId, LiveRoomRef.parse(p).roomId)));
+    socket.on(
+      "live:move",
+      handle(async (p) => {
+        const { roomId, move } = LiveMoveInput.parse(p);
+        return playMove(userId, roomId, move);
+      }),
     );
 
     socket.on(

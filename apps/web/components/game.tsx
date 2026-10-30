@@ -53,6 +53,7 @@ import { Undo2, X } from "lucide-react";
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { Dialog } from "./dialog";
+import { HowToPlay } from "./how-to-play";
 
 const dieFace = "grid place-items-center rounded-xl bg-white font-bold text-stone-900 shadow tabular-nums";
 const randomSeed = () => Math.floor(Math.random() * 6);
@@ -946,8 +947,9 @@ export function GameView({
   const over = gameOver(game, senderId, moves, (sealed) => ("key" in game ? openGuess(game.key, sealed) : null));
   return (
     <div className="w-72 max-w-full py-1 text-center">
-      <p className="font-semibold">
+      <p className="flex items-center justify-center gap-1 font-semibold">
         {GAME_EMOJI[game.game]} {tr.calls[game.game]}
+        <HowToPlay game={game.game} className="-my-1 size-7" />
       </p>
       {game.game === "guess" ? (
         <GuessPlay secret={game.secret} {...props} />

@@ -7,6 +7,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { GameView } from "./game";
+import { HowToPlay } from "./how-to-play";
 import { Text } from "./text";
 import { IconButton } from "./ui";
 
@@ -66,6 +67,7 @@ export function BotGameSheet({ kind, onClose }: { kind: BotGame; onClose: () => 
             <Text style={[styles.title, { color: t.text }]}>
               {GAME_EMOJI[kind]} {tr.calls.bot}
             </Text>
+            <HowToPlay game={kind} />
             <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
           </View>
           <ScrollView contentContainerStyle={{ alignItems: "center", gap: 12, paddingBottom: 8 }}>

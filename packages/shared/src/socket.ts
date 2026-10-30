@@ -10,6 +10,7 @@ import type {
 } from "./chats.js";
 import type { CallSignalDTO, CallSignalInput } from "./calls.js";
 import type { ErrorBody } from "./errors.js";
+import type { CreateLiveInput, LiveInviteDTO, LiveRoomDTO } from "./live.js";
 import type { PresenceDTO } from "./presence.js";
 import type { ChangeEventDTO } from "./sync.js";
 
@@ -29,6 +30,12 @@ export interface ServerToClientEvents {
   "session:revoked": (e: SocketEnvelope<{ sessionId: string }>) => void;
   /** Call signalling for this device. */
   "call:signal": (e: CallSignalDTO) => void;
+  /** A live game room I'm in changed. */
+  "live:room": (room: LiveRoomDTO) => void;
+  /** A contact asks me to join their live game. */
+  "live:invite": (invite: LiveInviteDTO) => void;
+  /** The room was closed, or the server restarted and lost it. */
+  "live:closed": (e: { roomId: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -40,4 +47,13 @@ export interface ClientToServerEvents {
   /** Sent by open apps when they become visible or hidden, and every 30s while visible. */
   presence: (p: { active: boolean }) => void;
   "call:signal": (p: CallSignalInput, cb: Ack<{ delivered: number }>) => void;
+  "live:create": (p: CreateLiveInput, cb: Ack<LiveRoomDTO>) => void;
+  /** Takes an invited seat, or comes back to my own after a reconnect. */
+  "live:join": (p: { roomId: string }, cb: Ack<LiveRoomDTO>) => void;
+  "live:leave": (p: { roomId: string }, cb?: Ack<null>) => void;
+  /** The host adds or removes a Frite Bot seat in the lobby. */
+  "live:bot": (p: { roomId: string; add: boolean }, cb: Ack<LiveRoomDTO>) => void;
+  /** The host starts the game, or a rematch once it's over. */
+  "live:start": (p: { roomId: string }, cb: Ack<LiveRoomDTO>) => void;
+  "live:move": (p: { roomId: string; move: unknown }, cb: Ack<null>) => void;
 }

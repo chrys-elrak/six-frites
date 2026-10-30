@@ -1,5 +1,7 @@
 import {
   type Dict,
+  type LiveGame,
+  type PublicUser,
   type PushPayload,
   type PushProvider,
   type RegisterPushTokenInput,
@@ -139,6 +141,19 @@ export async function deliverReactionPush(
     chatId: m.chatId,
     messageId: m.id,
     url: `/chats/${m.chatId}`,
+  }));
+}
+
+/** Asks a contact to join a live game, on the devices they aren't using right now. */
+export async function deliverLiveInvitePush(userId: string, from: PublicUser, game: LiveGame, roomId: string) {
+  const targets = await targetsFor(userId);
+  return sendToAll(targets, (t) => ({
+    title: t.live.invites(from.displayName, t.live.games[game]),
+    body: t.live.tapToJoin,
+    icon: from.avatarUrl,
+    chatId: null,
+    messageId: null,
+    url: `/play/${roomId}`,
   }));
 }
 

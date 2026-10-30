@@ -19,6 +19,7 @@ import { useAppHeight } from "@/lib/viewport";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { WhatsNewPrompt } from "@/components/whats-new";
+import { LiveInvites } from "@/components/live-invites";
 import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
@@ -125,6 +126,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {!locked && <UpdatePrompt />}
       {!locked && <BackupPinPrompt />}
       {!locked && <WhatsNewPrompt />}
+      {!locked && <LiveInvites />}
       <CallScreen />
       <UnreadTitle />
       {locked && <LockScreen />}

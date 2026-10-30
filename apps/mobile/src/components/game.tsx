@@ -58,6 +58,7 @@ import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { IconButton, PrimaryButton } from "./ui";
+import { HowToPlay } from "./how-to-play";
 
 const randomSeed = () => Math.floor(Math.random() * 6);
 const randomSide = () => PENALTY_SIDES[Math.floor(Math.random() * PENALTY_SIDES.length)]!;
@@ -950,9 +951,12 @@ export function GameView({
   const over = gameOver(game, senderId, moves, (sealed) => ("key" in game ? openGuess(game.key, sealed) : null));
   return (
     <View style={styles.view}>
-      <Text style={{ color: c.fg, fontSize: 15, fontWeight: "700" }}>
-        {GAME_EMOJI[game.game]} {tr.calls[game.game]}
-      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+        <Text style={{ color: c.fg, fontSize: 15, fontWeight: "700" }}>
+          {GAME_EMOJI[game.game]} {tr.calls[game.game]}
+        </Text>
+        <HowToPlay game={game.game} color={c.fg} size={18} />
+      </View>
       {game.game === "guess" ? (
         <GuessPlay secret={game.secret} {...props} />
       ) : game.game === "hangman" ? (

@@ -19,6 +19,7 @@ export const CHANGELOG: Release[] = [
       en: [
         "A Games tab, and games to play with a friend right in a chat, from a penalty shootout and hangman to draw and guess.",
         "No one around? Play against Frite Bot from the Games tab.",
+        "Live games: Ludo, Crazy Eights and Word Hunt with up to 3 friends at the same time, with Frite Bot in the empty seats.",
         "Type / in the message box for quick commands like /vanish, /autodelete, /blur and /search, or to send a message without a notification.",
         "Vanish mode: seen messages disappear when the chat is closed.",
         "Forward a message to another chat.",
@@ -34,6 +35,7 @@ export const CHANGELOG: Release[] = [
       fr: [
         "Un onglet Jeux, et des jeux à faire avec un ami dans une discussion, du tir au but et du pendu au dessin à deviner.",
         "Personne pour jouer ? Affrontez Frite Bot depuis l'onglet Jeux.",
+        "Jeux en direct : petits chevaux, huit américain et chasse aux mots avec jusqu'à 3 amis en même temps, et Frite Bot aux places libres.",
         "Tapez / dans la zone de message pour des commandes rapides comme /vanish, /autodelete, /blur et /search, ou pour envoyer un message sans notification.",
         "Mode éphémère : les messages vus disparaissent à la fermeture de la discussion.",
         "Transférez un message vers une autre discussion.",
@@ -49,6 +51,7 @@ export const CHANGELOG: Release[] = [
       mg: [
         "Fizarana Lalao vaovao, sy lalao azonao atao miaraka amin'ny namana ao anatin'ny resaka.",
         "Tsy misy olona? Milalaova amin'i Frite Bot ao amin'ny fizarana Lalao.",
+        "Lalao mivantana: Ludo, Valo adala ary Fihazana teny miaraka amin'ny namana hatramin'ny 3 amin'ny fotoana iray, ary i Frite Bot amin'ny toerana banga.",
         "Soraty / ao amin'ny toerana fanoratana hafatra hampiasana baiko haingana toy ny /vanish, /autodelete, /blur ary /search, na handefasana hafatra tsy misy fampandrenesana.",
         "Fomba manjavona: manjavona ny hafatra efa hita rehefa mikatona ny resaka.",
         "Ampitao amin'ny resaka hafa ny hafatra iray.",

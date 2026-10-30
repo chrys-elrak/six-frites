@@ -7,6 +7,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { Dialog } from "./dialog";
 import { GameView } from "./game";
+import { HowToPlay } from "./how-to-play";
 
 /** The bot row at the top of the "Play with…" list. */
 export function BotRow({ onPick }: { onPick: () => void }) {
@@ -52,6 +53,7 @@ export function BotGameDialog({ kind, onClose }: { kind: BotGame; onClose: () =>
         <h2 className="flex-1 font-semibold">
           {GAME_EMOJI[kind]} {tr.calls.bot}
         </h2>
+        <HowToPlay game={kind} />
         <button
           type="button"
           onClick={onClose}
