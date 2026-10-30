@@ -48,7 +48,13 @@ body {
 
 body {
   overscroll-behavior: none;
+  user-select: none;
   @apply bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100;
+}
+
+input,
+textarea {
+  user-select: text;
 }
 
 @keyframes fx-glow {
