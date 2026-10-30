@@ -14,6 +14,17 @@ export function emojiOnly(text: string, max = 3): string[] | null {
   return graphemes.every((g) => EMOJI.test(g)) ? graphemes : null;
 }
 
+/** `text` cut around each emoji: plain text at even indexes, one emoji at each odd one. */
+export function splitEmoji(text: string): string[] {
+  if (!segmenter) return [text];
+  const parts = [""];
+  for (const { segment } of segmenter.segment(text)) {
+    if (EMOJI.test(segment)) parts.push(segment, "");
+    else parts[parts.length - 1] += segment;
+  }
+  return parts;
+}
+
 let animated: Promise<Set<string>> | null = null;
 
 function animatedSet() {

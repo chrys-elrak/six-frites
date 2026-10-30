@@ -14,9 +14,15 @@ function compile(source: string) {
 }
 
 const EMOJI = compile("^(?:\\p{Extended_Pictographic}|\\p{Regional_Indicator})");
-const CLUSTER = compile(
-  "\\p{Regional_Indicator}{2}|\\p{Extended_Pictographic}(?:\\p{Emoji_Modifier}|\\uFE0F)?(?:\\u200D\\p{Extended_Pictographic}(?:\\p{Emoji_Modifier}|\\uFE0F)?)*|\\S",
-);
+const SEQUENCE =
+  "\\p{Regional_Indicator}{2}|\\p{Extended_Pictographic}(?:\\p{Emoji_Modifier}|\\uFE0F)?(?:\\u200D\\p{Extended_Pictographic}(?:\\p{Emoji_Modifier}|\\uFE0F)?)*";
+const CLUSTER = compile(`${SEQUENCE}|\\S`);
+const SPLIT = compile(`(${SEQUENCE})`);
+
+/** `text` cut around each emoji: plain text at even indexes, one emoji at each odd one. */
+export function splitEmoji(text: string): string[] {
+  return SPLIT ? text.split(SPLIT) : [text];
+}
 
 function graphemes(text: string) {
   if (segmenter) return [...segmenter.segment(text)].map((s) => s.segment).filter((g) => g.trim());

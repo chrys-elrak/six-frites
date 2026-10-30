@@ -22,7 +22,7 @@ export function AnimatedEmoji({ emoji, size }: { emoji: string; size: number }) 
       role="img"
       aria-label={emoji}
       onClick={() => anim.current?.goToAndPlay(0, true)}
-      className="inline-grid cursor-pointer"
+      className="inline-grid cursor-pointer align-text-bottom"
     >
       <LottieView
         url={url}

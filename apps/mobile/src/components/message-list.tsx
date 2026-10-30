@@ -65,7 +65,7 @@ import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
 import { messageFile } from "@/lib/media";
-import { emojiOnly } from "@/lib/emoji";
+import { emojiOnly, splitEmoji } from "@/lib/emoji";
 import { EPHEMERAL_OPTIONS, canResend, shortRule } from "@/lib/ephemeral";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
@@ -463,7 +463,7 @@ function Linked({ text, selecting }: { text: string; selecting: boolean }) {
             {part.text}
           </Text>
         ) : (
-          part.text
+          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={20} /> : s))
         ),
       )}
     </>

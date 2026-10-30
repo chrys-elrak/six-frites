@@ -70,7 +70,7 @@ import { six } from "@/lib/six";
 import { loadUntil, useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
-import { emojiOnly } from "@/lib/emoji";
+import { emojiOnly, splitEmoji } from "@/lib/emoji";
 import { useT } from "@/lib/i18n";
 import { useLongPress } from "@/lib/long-press";
 import { segments } from "@/lib/markup";
@@ -470,7 +470,7 @@ function Linked({ text }: { text: string }) {
             {part.text}
           </a>
         ) : (
-          part.text
+          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={20} /> : s))
         ),
       )}
     </>
@@ -986,6 +986,7 @@ export const MessageList = forwardRef<
     const list = useRef<VListHandle>(null);
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
+    const viewportSize = useRef(0);
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
@@ -1126,6 +1127,13 @@ export const MessageList = forwardRef<
       atBottom.current = offset + h.viewportSize >= h.scrollSize - 80;
       if (atBottom.current && !wasAtBottom) onSeen();
       if (offset < 300 && messages.hasNextPage && !messages.isFetchingNextPage) void messages.fetchNextPage();
+    }
+
+    /** Keeps the last message in view when the list gets shorter, like when the on-screen keyboard opens. */
+    function onResize() {
+      const size = list.current?.viewportSize ?? 0;
+      if (size !== viewportSize.current && atBottom.current) scrollToBottom();
+      viewportSize.current = size;
     }
 
     function rowIndex(id: string) {
@@ -1273,6 +1281,7 @@ export const MessageList = forwardRef<
           data={rows}
           shift={shift}
           onScroll={onScroll}
+          onResize={onResize}
           className="overscroll-contain"
           style={{
             height: "auto",
