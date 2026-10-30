@@ -14,11 +14,13 @@ export function ChatPicker({
   empty,
   onPick,
   onClose,
+  top,
 }: {
   title: React.ReactNode;
   empty: string;
   onPick: (chat: ChatDTO) => void;
   onClose: () => void;
+  top?: React.ReactNode;
 }) {
   const tr = useT();
   const meId = useSession((s) => s.user!.id);
@@ -39,6 +41,7 @@ export function ChatPicker({
           <X className="size-4" />
         </button>
       </div>
+      {top}
       {chats.length ? (
         <ul className="max-h-[60dvh] overflow-y-auto py-1">
           {chats.map((c) => (

@@ -16,11 +16,13 @@ export function ChatPicker({
   empty,
   onPick,
   onClose,
+  top,
 }: {
   title: string;
   empty: string;
   onPick: (chat: ChatDTO) => void;
   onClose: () => void;
+  top?: React.ReactNode;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -37,6 +39,7 @@ export function ChatPicker({
             <Text style={[styles.title, { color: t.text }]}>{title}</Text>
             <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
           </View>
+          {top}
           {chats.length ? (
             <FlatList
               data={chats}

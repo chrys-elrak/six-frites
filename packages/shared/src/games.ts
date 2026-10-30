@@ -273,7 +273,7 @@ export function battleship(boats: number[][], senderId: string, moves: GameMoveD
 }
 
 /** The player with `line` in a row across, down or diagonally, and the cells of that row. */
-function lineOf(board: (0 | 1 | null)[], width: number, height: number, line: number) {
+export function lineOf(board: (0 | 1 | null)[], width: number, height: number, line: number) {
   for (let i = 0; i < board.length; i++) {
     const player = board[i];
     if (player == null) continue;

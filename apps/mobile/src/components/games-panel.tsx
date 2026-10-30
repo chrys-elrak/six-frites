@@ -1,4 +1,4 @@
-import { CHAT_GAMES, type ChatDTO, GAME_EMOJI, type GameKind } from "@six/shared";
+import { CHAT_GAMES, type ChatDTO, GAME_EMOJI, type GameKind, isBotGame } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -8,11 +8,12 @@ import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
 import { useTheme } from "@/lib/theme";
+import { BotGameSheet, BotRow } from "./bot-game";
 import { ChatPicker } from "./chat-picker";
 import { NewGame } from "./game";
 import { ScreenHeader } from "./ui";
 
-/** The Games tab: pick a game, then a friend, then your move; it's sent to your chat with them. */
+/** The Games tab: pick a game, then a friend and your move, sent to your chat with them, or the bot. */
 export function GamesPanel() {
   const t = useTheme();
   const tr = useT();
@@ -20,6 +21,7 @@ export function GamesPanel() {
   const { realtime } = useRealtime();
   const [game, setGame] = useState<GameKind | null>(null);
   const [chat, setChat] = useState<ChatDTO | null>(null);
+  const [bot, setBot] = useState(false);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
@@ -48,12 +50,22 @@ export function GamesPanel() {
           </Pressable>
         ))}
       </ScrollView>
-      {game && !chat && (
+      {game && !chat && !bot && (
         <ChatPicker
           title={`${GAME_EMOJI[game]} ${tr.calls.playWith}`}
           empty={tr.calls.noOneToPlay}
           onPick={setChat}
           onClose={() => setGame(null)}
+          top={isBotGame(game) && <BotRow onPick={() => setBot(true)} />}
+        />
+      )}
+      {game && bot && isBotGame(game) && (
+        <BotGameSheet
+          kind={game}
+          onClose={() => {
+            setGame(null);
+            setBot(false);
+          }}
         />
       )}
       {game && chat && (
