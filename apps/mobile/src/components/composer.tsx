@@ -696,7 +696,14 @@ export function Composer({
               <CalendarClock size={22} color={brand} />
             </Pressable>
           )}
-          <View style={[styles.field, { backgroundColor: t.surface, borderColor: t.border }, (capture || preview) && styles.gone]}>
+          <View
+            style={[
+              styles.field,
+              { backgroundColor: t.surface, borderColor: t.border },
+              chat?.vanish && styles.vanishField,
+              (capture || preview) && styles.gone,
+            ]}
+          >
             <TextInput
               ref={input}
               value={text}
@@ -865,6 +872,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   recordingField: { alignItems: "center", gap: 8, paddingHorizontal: 16 },
+  vanishField: { borderWidth: 1.5, borderStyle: "dashed", borderColor: brand },
   gone: { display: "none" },
   redDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#ef4444" },
   input: { flex: 1, fontSize: 16, lineHeight: 22, maxHeight: 160, paddingTop: 9, paddingBottom: 9, paddingLeft: 16 },

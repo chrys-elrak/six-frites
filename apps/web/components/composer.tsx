@@ -757,9 +757,11 @@ export function Composer({
             </>
           )}
           <div
-            className={`relative min-h-10 min-w-0 flex-1 items-end rounded-2xl bg-white ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:bg-stone-900 dark:ring-stone-800 ${
-              capture || preview ? "hidden" : "flex"
-            }`}
+            className={`relative min-h-10 min-w-0 flex-1 items-end rounded-2xl bg-white dark:bg-stone-900 ${
+              chat?.vanish
+                ? "outline-2 outline-dashed outline-brand"
+                : "ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:ring-stone-800"
+            } ${capture || preview ? "hidden" : "flex"}`}
           >
             {!editing && (
               <CommandBar
