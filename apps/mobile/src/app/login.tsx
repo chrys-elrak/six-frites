@@ -2,7 +2,7 @@ import { SixApiError } from "@six/sdk";
 import { useQuery } from "@tanstack/react-query";
 import { type Href, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { isErrorWithCode } from "react-native-nitro-google-signin";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,8 +13,8 @@ import { Notice } from "@/components/ui";
 import { unlock } from "@/lib/app-lock";
 import { useT } from "@/lib/i18n";
 import { deviceName, GOOGLE_WEB_CLIENT_ID, googleIdToken } from "@/lib/session";
-import { six } from "@/lib/six";
-import { useTheme } from "@/lib/theme";
+import { six, WEB_URL } from "@/lib/six";
+import { brand, useTheme } from "@/lib/theme";
 
 function GoogleMark() {
   return (
@@ -114,6 +114,9 @@ export default function Login() {
           <Notice tone="error">Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in apps/mobile/.env to enable sign-in.</Notice>
         )}
         {error && <Notice tone={error.queued ? "success" : "error"}>{error.text}</Notice>}
+        <Pressable onPress={() => void Linking.openURL(`${WEB_URL}/support`)} accessibilityRole="link" hitSlop={8}>
+          <Text style={styles.support}>{tr.support.chatWithSupport}</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -134,4 +137,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   googleText: { fontSize: 15, fontWeight: "600" },
+  support: { color: brand, fontSize: 14, fontWeight: "600", textAlign: "center" },
 });

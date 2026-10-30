@@ -1,33 +1,25 @@
 import { CHAT_GAMES, type ChatDTO, GAME_EMOJI, type GameKind } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { X } from "lucide-react-native";
 import { useState } from "react";
-import { FlatList, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "./text";
-import { isFrozen, useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
-import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme";
-import { Avatar } from "./avatar";
+import { ChatPicker } from "./chat-picker";
 import { NewGame } from "./game";
-import { IconButton, ScreenHeader } from "./ui";
+import { ScreenHeader } from "./ui";
 
 /** The Games tab: pick a game, then a friend, then your move; it's sent to your chat with them. */
 export function GamesPanel() {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
-  const insets = useSafeAreaInsets();
   const { realtime } = useRealtime();
-  const meId = useSession((s) => s.user!.id);
-  const chats = useChats();
   const [game, setGame] = useState<GameKind | null>(null);
   const [chat, setChat] = useState<ChatDTO | null>(null);
-  const playable = (chats.data ?? []).filter((c) => !isFrozen(c) && c.members.some((m) => m.user.id !== meId));
 
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
@@ -57,41 +49,12 @@ export function GamesPanel() {
         ))}
       </ScrollView>
       {game && !chat && (
-        <Modal transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={() => setGame(null)}>
-          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={() => setGame(null)} />
-          <View style={styles.wrap} pointerEvents="box-none">
-            <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
-              <View style={styles.head}>
-                <Text style={[styles.sheetTitle, { color: t.text }]}>
-                  {GAME_EMOJI[game]} {tr.calls.playWith}
-                </Text>
-                <IconButton Icon={X} label={tr.common.close} onPress={() => setGame(null)} />
-              </View>
-              {playable.length ? (
-                <FlatList
-                  data={playable}
-                  keyExtractor={(c) => c.id}
-                  style={{ maxHeight: 420 }}
-                  renderItem={({ item: c }) => (
-                    <Pressable
-                      onPress={() => setChat(c)}
-                      style={({ pressed }) => [styles.friend, pressed && { backgroundColor: t.pressed }]}
-                    >
-                      <Avatar user={c.members.find((m) => m.user.id !== meId)!.user} />
-                      <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 16, fontWeight: "500" }}>
-                        {c.title}
-                      </Text>
-                    </Pressable>
-                  )}
-                />
-              ) : (
-                <Text style={{ color: t.muted, fontSize: 14, textAlign: "center", paddingVertical: 24 }}>
-                  {tr.calls.noOneToPlay}
-                </Text>
-              )}
-            </View>
-          </View>
-        </Modal>
+        <ChatPicker
+          title={`${GAME_EMOJI[game]} ${tr.calls.playWith}`}
+          empty={tr.calls.noOneToPlay}
+          onPick={setChat}
+          onClose={() => setGame(null)}
+        />
       )}
       {game && chat && (
         <NewGame
@@ -123,9 +86,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(235,138,0,0.15)",
   },
-  wrap: { flex: 1, justifyContent: "flex-end" },
-  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, gap: 8 },
-  head: { flexDirection: "row", alignItems: "center", gap: 4 },
-  sheetTitle: { flex: 1, fontSize: 18, fontWeight: "700" },
-  friend: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 4, borderRadius: 12 },
 });

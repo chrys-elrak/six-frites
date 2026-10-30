@@ -27,6 +27,7 @@ import {
   publicIdentityToJSON,
   randomBytes,
   recoveryKeyFromWords,
+  safetyEmoji,
   safetyNumber,
   sameIdentity,
   sealBackup,
@@ -529,6 +530,23 @@ export class E2EE {
     return raw ? fromB64(raw) : null;
   }
 
+  /** A draft sealed with the backup key, for the user's other devices; null without the key. */
+  async sealDraft(chatId: string, text: string) {
+    const key = await this.backupKey();
+    return key ? sealBackup(key, utf8(text), utf8(`draft:${chatId}`)) : null;
+  }
+
+  /** A draft sealed by one of the user's devices; null without the backup key or when it won't open. */
+  async openDraft(chatId: string, sealed: string) {
+    const key = await this.backupKey();
+    if (!key) return null;
+    try {
+      return new TextDecoder().decode(openBackup(key, sealed, utf8(`draft:${chatId}`)));
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * Whether this device holds the account's backup key, or a key the account can adopt when it has
    * none. A key the account has since replaced is dropped, so this device stops sealing backups with it.
@@ -576,14 +594,14 @@ export class E2EE {
     await this.store.set("backupKey", b64(key));
   }
 
-  /** The number two people compare to check nobody is in between, covering all their devices. */
+  /** The 12 emoji two people compare to check nobody is in between, covering all their devices. */
   async safetyNumber(peerId: string) {
     const devices = await this.devicesOf([this.userId, peerId]);
     const of = (userId: string) => ({
       userId,
       identities: devices.filter((d) => d.userId === userId).map((d) => publicIdentityFromJSON(d.identity)),
     });
-    return safetyNumber(of(this.userId), of(peerId));
+    return safetyEmoji(safetyNumber(of(this.userId), of(peerId)));
   }
 
   /** Forgets every key and session, for signing out. */

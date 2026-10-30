@@ -23,7 +23,7 @@ export function e2eeFor(userId: string | undefined) {
   if (current?.userId !== userId) {
     const store = new DeviceSecretStore(userId);
     current = new E2EE(six.api, store, userId);
-    void openDrafts(store);
+    void openDrafts(store, current);
     current.onIdentityChange((id) =>
       useKeyChanges.setState((s) => (s.userIds.includes(id) ? s : { userIds: [...s.userIds, id] })),
     );

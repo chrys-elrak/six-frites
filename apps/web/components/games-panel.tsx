@@ -2,16 +2,12 @@
 
 import { CHAT_GAMES, type ChatDTO, GAME_EMOJI, type GameKind } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
-import { useSession } from "@/lib/session";
-import { Avatar } from "./avatar";
-import { Dialog } from "./dialog";
+import { ChatPicker } from "./chat-picker";
 import { GameDialog } from "./game";
 
 /** The Games tab: pick a game, then a friend, then your move; it's sent to your chat with them. */
@@ -20,13 +16,8 @@ export function GamesPanel() {
   const qc = useQueryClient();
   const router = useRouter();
   const { realtime } = useRealtime();
-  const meId = useSession((s) => s.user!.id);
-  const chats = useChats();
   const [game, setGame] = useState<GameKind | null>(null);
   const [chat, setChat] = useState<ChatDTO | null>(null);
-  const playable = (chats.data ?? []).filter(
-    (c) => !c.blockedByMe && !c.blockedByThem && !c.peerDeleted && c.members.some((m) => m.user.id !== meId),
-  );
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -54,39 +45,12 @@ export function GamesPanel() {
         </div>
       </div>
       {game && !chat && (
-        <Dialog onClose={() => setGame(null)}>
-          <div className="flex items-center border-b border-stone-200 px-4 py-3 dark:border-stone-800">
-            <h2 className="flex-1 font-semibold">
-              {GAME_EMOJI[game]} {tr.calls.playWith}
-            </h2>
-            <button
-              type="button"
-              onClick={() => setGame(null)}
-              aria-label={tr.common.close}
-              className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-          {playable.length ? (
-            <ul className="max-h-[60dvh] overflow-y-auto py-1">
-              {playable.map((c) => (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    onClick={() => setChat(c)}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-stone-100 dark:hover:bg-stone-800"
-                  >
-                    <Avatar user={c.members.find((m) => m.user.id !== meId)!.user} />
-                    <span className="min-w-0 flex-1 truncate font-medium">{c.title}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="p-6 text-center text-sm text-stone-500">{tr.calls.noOneToPlay}</p>
-          )}
-        </Dialog>
+        <ChatPicker
+          title={`${GAME_EMOJI[game]} ${tr.calls.playWith}`}
+          empty={tr.calls.noOneToPlay}
+          onPick={setChat}
+          onClose={() => setGame(null)}
+        />
       )}
       {game && chat && (
         <GameDialog

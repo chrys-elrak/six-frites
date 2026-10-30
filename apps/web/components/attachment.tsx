@@ -230,7 +230,7 @@ export function VoicePlayer({
   meta?: React.ReactNode;
   effects?: boolean;
   onStop?: (finished: boolean) => void;
-  track?: { chatId: string; title: string };
+  track?: { chatId: string; title: string; name?: string };
 }) {
   const tr = useT();
   const stopped = useRef(onStop);
@@ -250,6 +250,7 @@ export function VoicePlayer({
       url,
       chatId: track?.chatId ?? null,
       title: track?.title ?? "",
+      name: track?.name,
       effect,
       onStop: (finished) => stopped.current?.(finished),
     });
@@ -329,6 +330,9 @@ function VideoNote({
   durationMs,
   state,
   progress,
+  hidden,
+  hiddenLabel,
+  onReveal,
 }: {
   autoPlay?: boolean;
   url: string | null;
@@ -337,6 +341,9 @@ function VideoNote({
   durationMs: number | null;
   state: ReturnType<typeof view>["state"];
   progress: number;
+  hidden: boolean;
+  hiddenLabel: string;
+  onReveal?: () => void;
 }) {
   const tr = useT();
   const video = useRef<HTMLVideoElement>(null);
@@ -351,7 +358,7 @@ function VideoNote({
 
   const autoStarted = useRef(false);
   useEffect(() => {
-    if (!autoPlay || !url || autoStarted.current) return;
+    if (!autoPlay || !url || hidden || autoStarted.current) return;
     autoStarted.current = true;
     toggle();
   });
@@ -375,9 +382,9 @@ function VideoNote({
     <div className="flex flex-col items-center gap-1.5">
       <button
         type="button"
-        onClick={toggle}
-        disabled={!url}
-        aria-label={isPlaying ? tr.messages.pauseVideoNote : tr.messages.playVideoNote}
+        onClick={hidden ? onReveal : toggle}
+        disabled={!url && !hidden}
+        aria-label={hidden ? tr.messages.revealSpoiler : isPlaying ? tr.messages.pauseVideoNote : tr.messages.playVideoNote}
         className="relative block size-56 shrink-0 md:size-64"
       >
         <span className="absolute inset-0 overflow-hidden rounded-full bg-stone-300 dark:bg-stone-700">
@@ -397,8 +404,18 @@ function VideoNote({
               setPosition(0);
             }}
             onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
-            className="size-full object-cover"
+            className={`size-full object-cover transition duration-300 ${hidden ? "scale-125 blur-2xl brightness-75" : ""}`}
           />
+          {hidden && (
+            <>
+              <span className="spoiler absolute inset-0 rounded-none text-white/85" aria-hidden />
+              <span className="absolute inset-0 grid place-items-center">
+                <span className="flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                  <EyeOff className="size-3.5" /> {hiddenLabel}
+                </span>
+              </span>
+            </>
+          )}
         </span>
         {isPlaying && (
           <svg viewBox="0 0 100 100" className="pointer-events-none absolute -inset-1.5 -rotate-90" aria-hidden>
@@ -415,7 +432,7 @@ function VideoNote({
             />
           </svg>
         )}
-        {state === "ready" && !isPlaying && (
+        {state === "ready" && !isPlaying && !hidden && (
           <span className="absolute inset-0 grid place-items-center">
             <span className="grid size-12 place-items-center rounded-full bg-black/45 text-white">
               <Play className="ml-0.5 size-6 fill-current" />
@@ -610,6 +627,9 @@ export function AttachmentView({
         durationMs={a.durationMs}
         state={a.state}
         progress={a.progress}
+        hidden={hidden}
+        hiddenLabel={hiddenChip}
+        onReveal={onReveal}
       />
     );
   }
@@ -645,8 +665,27 @@ export function AttachmentView({
   if (audio && a.state === "ready") {
     return (
       <div className="w-64 max-w-full pt-1">
-        <p className="truncate text-sm font-medium">{a.name}</p>
-        <VoicePlayer url={a.url} durationMs={a.durationMs} waveform={null} mine={mine} label={tr.messages.playAudio} />
+        <div className="flex items-center gap-2">
+          <p className="min-w-0 flex-1 truncate text-sm font-medium">{a.name}</p>
+          {a.url && (
+            <a
+              href={a.url}
+              download={a.name}
+              aria-label={tr.common.download}
+              className="grid size-7 shrink-0 place-items-center rounded-full opacity-70 hover:opacity-100"
+            >
+              <Download className="size-4" />
+            </a>
+          )}
+        </div>
+        <VoicePlayer
+          url={a.url}
+          durationMs={a.durationMs}
+          waveform={null}
+          mine={mine}
+          label={tr.messages.playAudio}
+          track={track && { ...track, name: a.name }}
+        />
       </div>
     );
   }

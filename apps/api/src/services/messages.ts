@@ -129,6 +129,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     effect: hideContent ? null : (m.effect as MessageEffect | null),
     silent: m.silent,
     bump: m.bump,
+    vanish: m.vanish,
     attachment:
       hideContent || !m.attachment
         ? null
@@ -261,6 +262,14 @@ export function checkEncryption(
   }
 }
 
+const SUPPORT_FIELDS = new Set(["clientId", "text", "entities", "replyToId", "silent", "sentAt"]);
+
+/** A chat with a guest from the support page takes text and replies only, which is all that page shows. */
+function checkSupport(content: SendMessageInput) {
+  const extra = Object.entries(content).some(([k, v]) => v !== undefined && v !== false && !SUPPORT_FIELDS.has(k));
+  if (content.text === undefined || extra) throw new AppError("VALIDATION_FAILED", "Support chats only take text");
+}
+
 /** Keeps the envelopes of a scheduled message whose devices are still signed in. */
 async function liveEnvelopes(tx: Tx, chatId: string, envelopes: EncryptedInput["envelopes"]) {
   const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
@@ -302,6 +311,7 @@ export async function createMessage(
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
   if (content) checkEncryption(chat, content, upload);
+  if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content);
 
   const encrypted = content?.encrypted;
   let envelopes = encrypted?.envelopes ?? [];

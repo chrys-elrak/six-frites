@@ -37,9 +37,12 @@ export function MiniPlayer({ atTop }: { atTop: boolean }) {
       </button>
       <button type="button" onClick={() => router.push(`/chats/${chatId}`)} className="min-w-0 flex-1 text-left">
         <span className="block truncate text-sm font-semibold">{track.title}</span>
-        <span className="block text-xs text-stone-500 tabular-nums dark:text-stone-400">
-          {tr.summary.kinds.voice} · {formatDuration(position)}
-          {duration > 0 && ` / ${formatDuration(duration)}`}
+        <span className="flex gap-1 text-xs text-stone-500 tabular-nums dark:text-stone-400">
+          <span className="truncate">{track.name ?? tr.summary.kinds.voice}</span>
+          <span className="shrink-0">
+            · {formatDuration(position)}
+            {duration > 0 && ` / ${formatDuration(duration)}`}
+          </span>
         </span>
       </button>
       <SpeedButton className="bg-brand/15 text-brand" />

@@ -26,6 +26,7 @@ async function resolve(userId: string, q: string) {
         where: {
           deletedAt: null,
           queuedAt: null,
+          guest: false,
           OR: [{ contactCode: code }, { contactLinks: { some: { code, ...unexpired() } } }],
         },
       })

@@ -63,7 +63,7 @@ export function MessageMenu({
             {children}
           </div>
         )}
-        <div className="fixed inset-x-0 bottom-0 flex gap-1 overflow-x-auto bg-white px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl dark:bg-stone-900">
+        <div className="chat-colors fixed inset-x-0 bottom-0 flex gap-1 overflow-x-auto bg-(--bubble-their)/70 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl backdrop-saturate-150">
           {actions.map((a, i) => (
             <button
               key={a.label}
@@ -73,8 +73,8 @@ export function MessageMenu({
                 if (!a.keepOpen) onClose();
                 a.onSelect();
               }}
-              className={`shrink-0 rounded-xl px-4 py-3 text-sm font-medium whitespace-nowrap hover:bg-stone-100 focus:outline-none focus-visible:bg-stone-100 dark:hover:bg-stone-800 dark:focus-visible:bg-stone-800 ${
-                a.destructive ? "text-red-600 dark:text-red-400" : "text-stone-900 dark:text-stone-100"
+              className={`shrink-0 rounded-xl px-4 py-3 text-sm font-medium whitespace-nowrap hover:bg-black/5 focus:outline-none focus-visible:bg-black/5 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 ${
+                a.destructive ? "text-red-600 dark:text-red-400" : "text-(--bubble-their-ink)"
               }`}
             >
               {a.label}

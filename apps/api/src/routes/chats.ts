@@ -73,6 +73,7 @@ import {
   scheduleMessage,
   sendScheduledNow,
 } from "../services/scheduled.js";
+import { openSupportChat } from "../services/support.js";
 import { sync } from "../services/sync.js";
 
 const ChatParams = z.object({ id: Id });
@@ -81,6 +82,22 @@ const security = [{ bearer: [] }];
 
 const chatRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook("onRequest", app.requireAuth);
+
+  app.post(
+    "/support",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" }, guest: true },
+      schema: {
+        tags: ["chats"],
+        summary: "Open your chat with support",
+        description:
+          "Guests from the support page can only use this chat, and only in text. An admin answers here, and can send an invite link to join Six Frites.",
+        security,
+        response: { 200: ChatDTO },
+      },
+    },
+    (req) => openSupportChat(req.auth.userId),
+  );
 
   app.get(
     "/chats",
@@ -316,6 +333,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/chats/:id/messages",
     {
+      config: { guest: true },
       schema: {
         tags: ["messages"],
         summary: "Messages in a chat, newest first",
@@ -331,7 +349,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/chats/:id/messages",
     {
-      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" }, guest: true },
       schema: {
         tags: ["messages"],
         summary: "Send a message",
@@ -449,6 +467,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/chats/:id/read",
     {
+      config: { guest: true },
       schema: {
         tags: ["chats"],
         summary: "Mark messages as read up to `messageId` (or the latest)",
@@ -465,6 +484,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/chats/:id/delivered",
     {
+      config: { guest: true },
       schema: {
         tags: ["chats"],
         summary: "Acknowledge that this device received messages up to `messageId` (or the latest)",
@@ -667,6 +687,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/sync",
     {
+      config: { guest: true },
       schema: {
         tags: ["sync"],
         summary: "Changes since an event cursor",

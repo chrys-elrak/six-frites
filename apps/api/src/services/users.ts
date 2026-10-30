@@ -31,6 +31,7 @@ export function toUserDTO(u: User): UserDTO {
     hasAppLock: u.appLockHash !== null,
     ads: !u.adsDisabled,
     quickReactions: u.quickReactions,
+    guest: u.guest,
     createdAt: u.createdAt.toISOString(),
   };
 }

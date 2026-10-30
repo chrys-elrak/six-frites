@@ -28,6 +28,7 @@ model User {
   appLockHash    String?
   inviteLimit    Int       @default(10)
   queuedAt       DateTime?
+  guest          Boolean   @default(false)
   adsDisabled    Boolean   @default(false)
   quickReactions String[]  @default([])
 
@@ -247,6 +248,9 @@ model ChatMember {
   clearedAt              DateTime?
   showProfile            Boolean   @default(false)
   safeView               Boolean   @default(false)
+  draft                  String?
+  draftSealed            Boolean   @default(false)
+  draftAt                DateTime?
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

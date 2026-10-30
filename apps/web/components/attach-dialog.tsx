@@ -25,7 +25,7 @@ interface Item extends PickedFile {
 
 const visual = (kind: UploadKind) => kind === "image" || kind === "video";
 const editable = (item: Item) => item.kind === "image" && item.file.type !== "image/gif";
-const pill = (on: boolean) =>
+export const pill = (on: boolean) =>
   `flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium backdrop-blur ${
     on ? "bg-brand text-brand-ink" : "bg-black/45 text-white hover:bg-black/60"
   }`;

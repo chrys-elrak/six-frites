@@ -202,14 +202,89 @@ function sampleRanges(view: DataView, stbl: Box): [number, number][] | null {
   });
 }
 
+const EBML = 0x1a45dfa3;
+const SEGMENT = 0x18538067;
+const TRACKS = 0x1654ae6b;
+const CLUSTER = 0x1f43b675;
+const TRACK_ENTRY = 0xae;
+const TRACK_NUMBER = 0xd7;
+const TRACK_TYPE = 0x83;
+const SIMPLE_BLOCK = 0xa3;
+const BLOCK_GROUP = 0xa0;
+const BLOCK = 0xa1;
+const VOID = 0xec;
+
+/** An EBML variable-length number: ids keep their length marker, sizes drop it. */
+function vint(bytes: Uint8Array, at: number, id: boolean) {
+  const first = bytes[at]!;
+  const length = Math.clz32(first) - 23;
+  if (length > 8 || at + length > bytes.length) throw new Error("Bad EBML");
+  let value = id ? first : first & (0xff >> length);
+  for (let i = 1; i < length; i++) value = value * 256 + bytes[at + i]!;
+  return { length, value, unknown: !id && value === 2 ** (7 * length) - 1 };
+}
+
+/** The element at `at`; `end` is -1 when its size is unknown, as in live recordings. */
+function element(bytes: Uint8Array, at: number) {
+  const id = vint(bytes, at, true);
+  const size = vint(bytes, at + id.length, false);
+  const body = at + id.length + size.length;
+  return { id: id.value, body, end: size.unknown ? -1 : body + size.value };
+}
+
+function* elements(bytes: Uint8Array, from: number, to: number) {
+  for (let at = from; at < to; ) {
+    const e = element(bytes, at);
+    if (e.end < 0 || e.end > to) throw new Error("Bad EBML");
+    yield e;
+    at = e.end;
+  }
+}
+
+const uint = (bytes: Uint8Array, from: number, to: number) => bytes.subarray(from, to).reduce((n, b) => n * 256 + b, 0);
+
+/** stripAudio for WebM, as browsers record it: sound track entries and their blocks become zeroed Void elements. */
+function stripWebmAudio(bytes: Uint8Array): boolean {
+  const sound = new Set<number>();
+  let tracks = false;
+  const trackOf = (block: number) => vint(bytes, block, false).value;
+  for (let at = 0; at < bytes.length; ) {
+    const { id, body, end } = element(bytes, at);
+    if (id === SEGMENT || id === TRACKS || id === CLUSTER) {
+      tracks ||= id === TRACKS;
+      at = body;
+      continue;
+    }
+    if (end < 0 || end > bytes.length) return false;
+    let hide = false;
+    if (id === TRACK_ENTRY) {
+      const fields = [...elements(bytes, body, end)];
+      const field = (fid: number) => fields.find((f) => f.id === fid);
+      const type = field(TRACK_TYPE);
+      const number = field(TRACK_NUMBER);
+      hide = !!type && uint(bytes, type.body, type.end) === 2;
+      if (hide && number) sound.add(uint(bytes, number.body, number.end));
+    } else if (id === SIMPLE_BLOCK) hide = sound.has(trackOf(body));
+    else if (id === BLOCK_GROUP) hide = [...elements(bytes, body, end)].some((b) => b.id === BLOCK && sound.has(trackOf(b.body)));
+    if (hide) {
+      bytes[at] = VOID;
+      bytes.fill(0, body, end);
+    }
+    at = end;
+  }
+  return tracks;
+}
+
 /**
- * Takes the sound out of an MP4 or MOV in place, without re-encoding: each sound track becomes a `free` box of the
- * same size, so no offsets move, and its samples are zeroed so the audio can't be recovered from the file.
- * Returns false when it can't (not MP4/MOV, fragmented, unreadable); true means the file now has no sound.
+ * Takes the sound out of an MP4, MOV or WebM in place, without re-encoding: each sound track becomes a `free` box
+ * (a Void element in WebM) of the same size, so no offsets move, and its samples are zeroed so the audio can't be
+ * recovered from the file. Returns false when it can't (another format, fragmented MP4, unreadable); true means the
+ * file now has no sound.
  */
 export function stripAudio(bytes: Uint8Array): boolean {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   try {
+    if (view.getUint32(0) === EBML) return stripWebmAudio(bytes);
     const top = [...boxes(view, 0, bytes.length)];
     const moov = top.find((b) => b.type === "moov");
     if (!moov || top.some((b) => b.type === "moof") || child(view, moov, "mvex")) return false;

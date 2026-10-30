@@ -16,7 +16,8 @@ import {
   suggestEmoji,
 } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
-import { useQueryClient } from "@tanstack/react-query";
+import { unwrap } from "@six/sdk";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
@@ -40,6 +41,7 @@ import {
   Sparkles,
   Square,
   Strikethrough,
+  TicketPlus,
   Trash2,
   X,
 } from "lucide-react-native";
@@ -52,15 +54,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { editMessage, updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
-import { useDrafts } from "@/lib/drafts";
+import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { shortRule } from "@/lib/ephemeral";
-import { formatDuration, sendAtLabel } from "@/lib/format";
+import { formatDuration, inviteUrl, sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
-import { pickFiles, pickMedia, receivedImage, takePhoto } from "@/lib/media";
+import { muteVideo, pickFiles, pickMedia, receivedImage, takePhoto } from "@/lib/media";
 import { useRealtime } from "@/lib/realtime";
 import { type Draft, type LocalFile, queueMessage } from "@/lib/send";
 import { useSession } from "@/lib/session";
+import { six } from "@/lib/six";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { NewChecklist } from "./checklist";
@@ -114,15 +117,28 @@ export function Composer({
   scheduledCount,
   onSent,
   onSearch,
+  limited = false,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
   scheduledCount: number;
   onSent: () => void;
   onSearch: (q: string) => void;
+  /** A support chat: text only, plus a button for admins to send an invite link. */
+  limited?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
+  const admin = useQuery({
+    queryKey: ["admin", "me"],
+    queryFn: async () => {
+      const res = await six.api.GET("/v1/admin/me");
+      return res.response.ok ? unwrap(res).admin : false;
+    },
+    enabled: limited,
+    staleTime: Infinity,
+    retry: false,
+  }).data;
   const meId = useSession((s) => s.user?.id);
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
@@ -154,7 +170,9 @@ export function Composer({
   const [barHeight, setBarHeight] = useState(0);
   const note = useRef<VideoNoteHandle>(null);
   const voiceOn = useRef(false);
-  const [preview, setPreview] = useState<{ kind: RecordMode; file: LocalFile } | null>(null);
+  const [preview, setPreview] = useState<{ kind: RecordMode; file: LocalFile; muted?: LocalFile; spoiler?: boolean } | null>(
+    null,
+  );
   const [picked, setPicked] = useState<LocalFile[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
   const handed = useComposerMode((s) => s.handed[chatId]);
@@ -174,6 +192,16 @@ export function Composer({
   const [sendAt, setSendAt] = useState<Date | null>(null);
   const [showScheduled, setShowScheduled] = useState(false);
 
+  async function sendInvite() {
+    try {
+      const { code } = unwrap(await six.api.POST("/v1/invites", { body: {} }));
+      queue({ text: inviteUrl(code) });
+      onSent();
+    } catch {
+      setError(tr.support.inviteFailed);
+    }
+  }
+
   function queue(draft: Draft) {
     if (!realtime) return;
     if (draft.game) return queueMessage(qc, realtime, chatId, draft);
@@ -186,6 +214,15 @@ export function Composer({
   useEffect(() => {
     setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (useDrafts.getState().byChat[chatId] ?? ""));
   }, [editing, chatId, draftsReady]);
+
+  const stored = useDrafts((s) => s.byChat[chatId] ?? "");
+  useEffect(() => {
+    if (!editing && stored.trim() !== text.trim()) setText(stored);
+  }, [stored]);
+
+  useEffect(() => {
+    if (chat) void receiveDraft(chat);
+  }, [chat?.id, chat?.encrypted, chat?.draft?.at]);
 
   useEffect(() => {
     if (mode) input.current?.focus();
@@ -219,7 +256,7 @@ export function Composer({
 
   const onImage = useRef<(image: ReceivedImage) => void>(() => {});
   onImage.current = (image) => {
-    if (editing) return;
+    if (editing || limited) return;
     void pick(async () => {
       const file = await receivedImage(image);
       if (!image.fromKeyboard) return [file];
@@ -369,7 +406,7 @@ export function Composer({
     send();
   }
 
-  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral, at?: Date) {
+  function send(file?: LocalFile, chosen: EphemeralInput | null = ephemeral, at?: Date, spoiler = false) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
     queue({
@@ -378,6 +415,7 @@ export function Composer({
       entities: file ? [] : parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral: chosen,
+      spoiler,
       file,
       effect: file ? undefined : (messageEffect ?? undefined),
       silent: silent !== null,
@@ -513,12 +551,21 @@ export function Composer({
     else if (voiceOn.current) void stopRecording();
   }
 
+  async function toggleNoteMute() {
+    const p = preview;
+    if (!p) return;
+    setError(null);
+    const muted = p.muted ? undefined : await muteVideo(p.file).catch(() => null);
+    if (muted === null) return setError(tr.composer.couldNotMute);
+    setPreview((cur) => (cur?.file === p.file ? { ...cur, muted } : cur));
+  }
+
   function closePreview(keep: boolean) {
-    if (preview && keep) send(preview.file);
+    if (preview && keep) send(preview.muted ?? preview.file, ephemeral, undefined, preview.spoiler);
     setPreview(null);
   }
 
-  const showMic = (!editing && parsed.text.length === 0) || !!capture || !!preview;
+  const showMic = !limited && ((!editing && parsed.text.length === 0) || !!capture || !!preview);
 
   return (
     <>
@@ -531,7 +578,16 @@ export function Composer({
           onStop={() => void previewCapture()}
         />
       )}
-      {preview?.kind === "video" && <VideoNotePreview uri={preview.file.uri} bottom={barHeight} />}
+      {preview?.kind === "video" && (
+        <VideoNotePreview
+          uri={preview.file.uri}
+          bottom={barHeight}
+          muted={!!preview.muted}
+          spoiler={!!preview.spoiler}
+          onToggleMute={() => void toggleNoteMute()}
+          onToggleSpoiler={() => setPreview({ ...preview, spoiler: !preview.spoiler })}
+        />
+      )}
       <View
         onLayout={(e) => setBarHeight(e.nativeEvent.layout.height)}
         style={[
@@ -611,7 +667,7 @@ export function Composer({
         )}
         {error && <Text style={{ color: t.danger, fontSize: 14, paddingHorizontal: 4 }}>{error}</Text>}
 
-        {!editing && <CommandBar
+        {!editing && !limited && <CommandBar
             ref={commands}
             chatId={chatId}
             text={text}
@@ -682,6 +738,13 @@ export function Composer({
             >
               <Trash2 size={20} color={t.danger} />
             </Pressable>
+          ) : limited ? (
+            !editing &&
+            admin && (
+              <Pressable onPress={() => void sendInvite()} accessibilityLabel={tr.support.sendInvite} style={styles.round40}>
+                <TicketPlus size={22} color={t.muted} />
+              </Pressable>
+            )
           ) : !editing && (
             <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel={tr.composer.attach} style={styles.round40}>
               <Paperclip size={22} color={t.muted} />
@@ -727,7 +790,7 @@ export function Composer({
                 <NotebookPen size={20} color={t.faint} />
               </Pressable>
             )}
-            {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
+            {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
           </View>
           {capture && (
             <View style={[styles.field, styles.recordingField, { backgroundColor: t.surface, borderColor: t.border }]}>

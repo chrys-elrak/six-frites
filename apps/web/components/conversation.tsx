@@ -222,11 +222,12 @@ export function Conversation({ chatId }: { chatId: string }) {
                   {typing ? (
                     <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
                   ) : (
-                    (shownPresence || muted || c.archived || c.autoDeleteSecs) && (
+                    (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support) && (
                       <span className="line-clamp-2 text-xs text-stone-500">
                         {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
-                        {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs) && " · "}
+                        {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs || c.support) && " · "}
                         {[
+                          c.support && tr.support.title,
                           !shownPresence?.online && presenceLabel(shownPresence),
                           c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
                           muted && (c.mutedUntil ? tr.chat.mutedUntil(sendAtLabel(c.mutedUntil)) : tr.common.muted),
@@ -239,7 +240,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                   )}
                 </span>
               </button>
-              {!frozen && (
+              {!frozen && !c.support && (
                 <>
                   <button
                     onClick={() => void startCall(c, meId, false)}
@@ -304,6 +305,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                   chatId={chatId}
                   nameOf={nameOf}
                   scheduledCount={c.scheduledCount}
+                  limited={c.support}
                   onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
                   onSearch={(q) => {
                     setSearchFor(q);

@@ -1,4 +1,4 @@
-import { type Realtime, encryptFile, unwrap } from "@six/sdk";
+import { type Hydrated, type Realtime, encryptFile, unwrap } from "@six/sdk";
 import {
   type ChatGame,
   type Checklist,
@@ -19,6 +19,7 @@ import { randomUUID } from "expo-crypto";
 import { File, Paths } from "expo-file-system";
 import { chatFor, insertMessage, patchChat } from "./chats";
 import { e2eeFor, shouldEncrypt } from "./e2ee";
+import { messageFile } from "./media";
 import { type PendingMessage, useOutbox } from "./outbox";
 import { useSession } from "./session";
 import { six } from "./six";
@@ -227,4 +228,20 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
   };
   useOutbox.getState().add(pending);
   void deliver(qc, realtime, pending);
+}
+
+/** Sends copies of messages to a chat as if I wrote them there, with nothing saying where they came from. */
+export async function forwardMessages(qc: QueryClient, realtime: Realtime, chatId: string, messages: Hydrated[]) {
+  const groupId = messages.length > 1 ? randomUUID() : undefined;
+  for (const m of messages) {
+    queueMessage(qc, realtime, chatId, {
+      text: m.text ?? "",
+      entities: m.entities,
+      spoiler: m.spoiler,
+      location: m.location ?? undefined,
+      checklist: m.checklist ?? undefined,
+      groupId,
+      file: m.attachment ? await messageFile(m) : undefined,
+    });
+  }
 }

@@ -248,7 +248,7 @@ function RestoreKey({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** The 60-digit number two people compare in person to make sure nobody is in the middle. */
+/** The 12 emoji two people compare in person to make sure nobody is in the middle. */
 export function SafetyNumber({ userId }: { userId: string }) {
   const t = useTheme();
   const tr = useT();
@@ -285,5 +285,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 17, fontWeight: "700", textAlign: "center" },
   input: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, minHeight: 110, textAlignVertical: "top" },
   groups: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" },
-  group: { fontFamily: "monospace", fontSize: 17, letterSpacing: 1, width: "28%", textAlign: "center" },
+  group: { fontSize: 30, width: "21%", textAlign: "center" },
 });

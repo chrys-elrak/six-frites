@@ -26,7 +26,7 @@ export interface PickedFile {
 const visual = (kind: UploadKind) => kind === "image" || kind === "video";
 const editable = (file: LocalFile) => file.kind === "image" && file.mime !== "image/gif";
 
-function Pill({ on, label, Icon, title, onPress }: { on: boolean; label?: string; Icon: typeof Pencil; title: string; onPress: () => void }) {
+export function Pill({ on, label, Icon, title, onPress }: { on: boolean; label?: string; Icon: typeof Pencil; title: string; onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}

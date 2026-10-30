@@ -1,11 +1,12 @@
 "use client";
 
-import { RefreshCw, Square } from "lucide-react";
+import { EyeOff, RefreshCw, Square, Volume2, VolumeX } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useCamera } from "@/lib/camera";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { withVoiceEffect } from "@/lib/voice-fx";
+import { pill } from "./attach-dialog";
 
 const MAX_MS = 60_000;
 const SIZE = 480;
@@ -212,7 +213,21 @@ export const VideoNoteCapture = forwardRef<
 });
 
 /** Plays a recorded video message in its circle, on a loop, until it is sent or thrown away. Tap to pause. */
-export function VideoNotePreview({ url, bottom }: { url: string; bottom: number }) {
+export function VideoNotePreview({
+  url,
+  bottom,
+  muted,
+  spoiler,
+  onToggleMute,
+  onToggleSpoiler,
+}: {
+  url: string;
+  bottom: number;
+  muted: boolean;
+  spoiler: boolean;
+  onToggleMute: () => void;
+  onToggleSpoiler: () => void;
+}) {
   const tr = useT();
   const video = useRef<HTMLVideoElement>(null);
   return (
@@ -232,8 +247,40 @@ export function VideoNotePreview({ url, bottom }: { url: string; bottom: number 
         className="relative size-[min(70vw,300px)]"
       >
         <Ring progress={1} />
-        <video ref={video} src={url} autoPlay loop playsInline className="size-full rounded-full bg-stone-800 object-cover" />
+        <span className="block size-full overflow-hidden rounded-full bg-stone-800">
+          <video
+            ref={video}
+            src={url}
+            autoPlay
+            loop
+            playsInline
+            muted={muted}
+            className={`size-full object-cover transition duration-300 ${spoiler ? "scale-110 blur-xl brightness-75" : ""}`}
+          />
+        </span>
       </button>
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          onClick={onToggleSpoiler}
+          aria-pressed={spoiler}
+          title={spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
+          className={pill(spoiler)}
+        >
+          <EyeOff className="size-3.5" />
+          {spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
+        </button>
+        <button
+          type="button"
+          onClick={onToggleMute}
+          aria-pressed={muted}
+          title={muted ? tr.composer.unmute : tr.composer.mute}
+          className={pill(muted)}
+        >
+          {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+          {muted ? tr.composer.muted : tr.composer.mute}
+        </button>
+      </div>
     </div>
   );
 }

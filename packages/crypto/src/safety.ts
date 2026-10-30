@@ -38,3 +38,24 @@ export function safetyNumber(
   const parts = [fingerprint(mine.identities, mine.userId), fingerprint(theirs.identities, theirs.userId)].sort();
   return (parts[0]! + parts[1]!).match(/.{5}/g)!.join(" ");
 }
+
+const EMOJI = [
+  ..."🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🐔🐧🐤🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦂🐢🐍🦎🦖🐙🦑🦐🦀🐡🐠🐬🐳🦈🐊🦓🦍🐘🦏🐪🦒🐑🐐🦌🦃🦔🐉🦕🐾🦗🐚" +
+    "🍎🍐🍊🍋🍌🍉🍇🍓🍒🍑🍍🥥🥝🍅🥑🥦🥒🌽🥕🥔🥐🍞🥖🥨🧀🥚🍳🥓🍗🌭🍔🍟🍕🥪🌮🌯🍝🍜🍣🍙🍦🍩🍪🎂🥧🍫🍭🍯☕🍺🍷🍹🍿🥜" +
+    "🌵🌴🌳🌱🍀🍁🍄🌻🌹🌷🌸🌺💐🌞🌙⭐🔥🌈⛄💧🌊🌍🌋⚡☔🌀🌾🌿⛅" +
+    "🎈🎁🎉🎃🎄🎀🎨🎭🎪🎤🎧🎸🎹🎺🎻🥁🎷🎲🎯🎳🎮⚽🏀🏈⚾🎾🏐🏓🥊🎣🏆🥇🎿🛷" +
+    "👑🎩👓👟🧦👕👖👗🎒💍💎⌚📱💻⏰📷📺💡🔋💰🔑🔒🔨🔧🔬🔭💊🚪🛁🛒📚📦🔔🔮⚓⛺🗿🗽🏰🏠🎡🎢⛲💣" +
+    "💀👻👽🤖👀👍💪🧠🚗🚕🚌🚑🚒🚓🚜🚲🛴🛵🚂🚀🛸🚁🛶⛵🚤🚢🚦🚧🎠🚚🎵🎬",
+];
+
+/**
+ * The safety number as 12 emoji, one per group of 5 digits, easier to compare than 60 digits. Each
+ * person's half keeps 48 bits, so faking it still takes about 2^48 tries of the 5200-hash fingerprint.
+ * The 256 emoji all exist on Android 8. Never reorder them: both phones must show the same emoji.
+ */
+export function safetyEmoji(number: string) {
+  return number
+    .split(" ")
+    .map((group) => EMOJI[Number(group) % EMOJI.length]!)
+    .join(" ");
+}

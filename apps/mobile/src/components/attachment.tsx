@@ -175,7 +175,7 @@ export function VoicePlayer({
   compact?: boolean;
   meta?: ReactNode;
   onStop?: (finished: boolean) => void;
-  track?: { chatId: string; title: string };
+  track?: { chatId: string; title: string; name?: string };
 }) {
   const tr = useT();
   const [barsWidth, setBarsWidth] = useState(1);
@@ -193,6 +193,7 @@ export function VoicePlayer({
       url,
       chatId: track?.chatId ?? null,
       title: track?.title ?? "",
+      name: track?.name,
       onStop: (finished) => stopped.current?.(finished),
     });
 
@@ -335,6 +336,9 @@ function VideoNote({
   state,
   progress,
   autoPlay = false,
+  hidden,
+  hiddenLabel,
+  onReveal,
 }: {
   url: string | null;
   poster: string | null;
@@ -342,14 +346,27 @@ function VideoNote({
   state: State;
   progress: number;
   autoPlay?: boolean;
+  hidden: boolean;
+  hiddenLabel: string;
+  onReveal?: () => void;
 }) {
-  const [playing, setPlaying] = useState(autoPlay && !!url);
+  const [playing, setPlaying] = useState(autoPlay && !!url && !hidden);
   return (
     <View style={{ alignItems: "center", gap: 6 }}>
-      {playing && url ? (
+      {playing && url && !hidden ? (
         <VideoNotePlayer url={url} onDone={() => setPlaying(false)} />
       ) : (
-        <VideoNoteCover url={url} poster={poster} durationMs={durationMs} state={state} progress={progress} onPlay={() => setPlaying(true)} />
+        <VideoNoteCover
+          url={url}
+          poster={poster}
+          durationMs={durationMs}
+          state={state}
+          progress={progress}
+          onPlay={() => setPlaying(true)}
+          hidden={hidden}
+          hiddenLabel={hiddenLabel}
+          onReveal={onReveal}
+        />
       )}
       {state === "ready" && <SpeedButton tint="#fff" bg="rgba(0,0,0,0.45)" />}
     </View>
@@ -363,6 +380,9 @@ function VideoNoteCover({
   state,
   progress,
   onPlay,
+  hidden,
+  hiddenLabel,
+  onReveal,
 }: {
   url: string | null;
   poster: string | null;
@@ -370,20 +390,30 @@ function VideoNoteCover({
   state: State;
   progress: number;
   onPlay: () => void;
+  hidden: boolean;
+  hiddenLabel: string;
+  onReveal?: () => void;
 }) {
   const tr = useT();
   return (
     <Pressable
-      onPress={() => url && onPlay()}
-      disabled={!url}
-      accessibilityLabel={tr.messages.playVideoNote}
+      onPress={hidden ? onReveal : () => url && onPlay()}
+      disabled={!url && !hidden}
+      accessibilityLabel={hidden ? tr.messages.revealSpoiler : tr.messages.playVideoNote}
       style={styles.note}
     >
       <View style={[styles.noteClip, { backgroundColor: stone[700] }]}>
-        {poster && <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" />}
+        {poster && <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={hidden ? 40 : 0} />}
         <Overlay state={state} progress={progress} />
       </View>
-      {state === "ready" && (
+      {hidden ? (
+        <View style={[StyleSheet.absoluteFill, styles.center]}>
+          <View style={styles.chip}>
+            <EyeOff size={14} color="#fff" />
+            <Text style={styles.chipText}>{hiddenLabel}</Text>
+          </View>
+        </View>
+      ) : state === "ready" && (
         <View style={[StyleSheet.absoluteFill, styles.center]}>
           <View style={styles.play}>
             <Play size={24} color="#fff" fill="#fff" style={{ marginLeft: 2 }} />
@@ -539,6 +569,9 @@ export function AttachmentView({
         state={a.state}
         progress={a.progress}
         autoPlay={autoPlay}
+        hidden={hidden}
+        hiddenLabel={hiddenLabel ?? tr.summary.spoiler}
+        onReveal={onReveal}
       />
     );
   }
@@ -577,28 +610,39 @@ export function AttachmentView({
   }
 
   const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
+  const save = async () => {
+    setBusy(true);
+    await shareRemoteFile(a.url!, a.name, a.mime).catch(() => null);
+    setBusy(false);
+  };
   if (a.kind === "file" && a.mime.startsWith("audio/") && a.state === "ready") {
     return (
       <View style={{ width: 256, maxWidth: "100%", paddingTop: 4 }}>
-        <Text numberOfLines={1} style={{ color: fg, fontSize: 14, fontWeight: "600" }}>
-          {a.name}
-        </Text>
-        <VoicePlayer url={a.url} durationMs={a.durationMs} waveform={null} mine={mine} label={tr.messages.playAudio} />
+        <View style={styles.audioHead}>
+          <Text numberOfLines={1} style={{ flex: 1, color: fg, fontSize: 14, fontWeight: "600" }}>
+            {a.name}
+          </Text>
+          {a.url && (
+            <Pressable onPress={save} disabled={busy} hitSlop={8} accessibilityLabel={tr.common.download}>
+              {busy ? <ActivityIndicator size="small" color={fg} /> : <Download size={18} color={fg} />}
+            </Pressable>
+          )}
+        </View>
+        <VoicePlayer
+          url={a.url}
+          durationMs={a.durationMs}
+          waveform={null}
+          mine={mine}
+          label={tr.messages.playAudio}
+          track={track && { ...track, name: a.name }}
+        />
       </View>
     );
   }
 
   const ready = a.state === "ready" && attachment.source === "server" && a.url;
   return (
-    <Pressable
-      disabled={!ready || busy}
-      onPress={async () => {
-        setBusy(true);
-        await shareRemoteFile(a.url!, a.name, a.mime).catch(() => null);
-        setBusy(false);
-      }}
-      style={styles.file}
-    >
+    <Pressable disabled={!ready || busy} onPress={save} style={styles.file}>
       <View style={[styles.fileIcon, { backgroundColor: mine ? alpha(bubble.ink, 0.15) : "rgba(235,138,0,0.15)" }]}>
         {a.state === "uploading" || busy ? (
           <ActivityIndicator size="small" color={mine ? bubble.ink : brand} />
@@ -856,6 +900,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     backgroundColor: "rgba(0,0,0,0.5)",
   },
+  audioHead: { flexDirection: "row", alignItems: "center", gap: 8 },
   file: { flexDirection: "row", alignItems: "center", gap: 12, width: 256, maxWidth: "100%", paddingVertical: 4 },
   fileIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   lightbox: { flex: 1, backgroundColor: "#000" },

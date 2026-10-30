@@ -17,6 +17,7 @@ import {
   publicIdentity,
   randomBytes as random,
   recoveryKeyFromWords,
+  safetyEmoji,
   safetyNumber,
   sealedChunkStart,
   sealBackup,
@@ -148,5 +149,7 @@ describe("safety numbers", () => {
     expect(safetyNumber({ identities: [laptop, phone], userId: "alice" }, bob)).toBe(number);
     expect(safetyNumber(alice, { identities: [id()], userId: "bob" })).not.toBe(number);
     expect(safetyNumber({ identities: [phone], userId: "alice" }, bob)).not.toBe(number);
+    expect(safetyEmoji(number).split(" ")).toHaveLength(12);
+    expect(safetyEmoji("00000 00256 00001 99999 00000 00000 00000 00000 00000 00000 00000 00000")).toMatch(/^🐶 🐶 🐱 /);
   });
 });

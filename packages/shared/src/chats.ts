@@ -252,6 +252,7 @@ export const MessageDTO = z.object({
   effect: MessageEffect.nullable(),
   silent: z.boolean().describe("Sent with `/silent`: it arrives without a notification or sound"),
   bump: z.boolean().describe("A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"),
+  vanish: z.boolean().describe("Sent in vanish mode: it disappears once the other person has read it and left the chat"),
   attachment: AttachmentDTO.nullable(),
   sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
@@ -464,12 +465,23 @@ export const ChatDTO = z.object({
     .nullable()
     .describe("Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default"),
   scheduledCount: z.number().int().describe("Your scheduled messages waiting to be sent in this chat"),
+  draft: z
+    .object({
+      text: z.string().nullable().describe("Plain text; null when cleared, or when it is sealed"),
+      sealed: z.string().nullable().describe("Sealed with your backup key, so only your devices can read it"),
+      at: IsoDate,
+    })
+    .nullable()
+    .describe("Just yours: what you were typing here, saved by one of your devices for the others; null until one does"),
   blockedByMe: z.boolean().describe("You blocked the other person: nobody can send, react or edit until you unblock"),
   blockedByThem: z.boolean().describe("The other person blocked you"),
   peerDeleted: z.boolean().describe("The other person deleted their account"),
   encrypted: z
     .boolean()
     .describe("Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"),
+  support: z
+    .boolean()
+    .describe("A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"),
   lastActivityAt: IsoDate,
   createdAt: IsoDate,
 });
@@ -553,6 +565,11 @@ export const UpdateChatInput = z
     pinned: z.boolean().optional(),
     safeView: z.boolean().optional().describe("Just for you: blur the photos and videos the other person sends"),
     vanish: z.boolean().optional().describe("For both people: turn vanish mode on or off"),
+    draft: z
+      .union([z.object({ text: z.string().max(4000) }), z.object({ sealed: z.string().max(12000) })])
+      .nullable()
+      .optional()
+      .describe("Just for you: what you are typing, so your other devices show it too. null clears it."),
     autoDeleteSecs: z
       .number()
       .int()

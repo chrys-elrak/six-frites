@@ -153,10 +153,10 @@ const en = {
         : "Wrong PIN. Your backup is locked now: create a new PIN.",
     notSet: "There's no PIN backup anymore. Create a new PIN.",
   },
-  calculatingSafetyNumber: "Calculating safety number…",
-  safetyNumber: "Safety number",
+  calculatingSafetyNumber: "Calculating security code…",
+  safetyNumber: "Security code",
   safetyNumberHint:
-    "Compare these numbers with your contact, in person or on a call. If they match on both phones, your messages are private between you. They change when either of you uses a new phone.",
+    "Compare these emoji with your contact, in person or on a call. If they match on both phones, your messages are private between you. They change when either of you uses a new phone.",
 
   previewTheirs: "Fries tonight? 🍟",
   previewMine: "Always. Extra ketchup!",
@@ -352,10 +352,10 @@ const fr: typeof en = {
         : "Code PIN incorrect. Votre sauvegarde est verrouillée : créez un nouveau code PIN.",
     notSet: "Il n'y a plus de sauvegarde par code PIN. Créez un nouveau code PIN.",
   },
-  calculatingSafetyNumber: "Calcul du numéro de sécurité…",
-  safetyNumber: "Numéro de sécurité",
+  calculatingSafetyNumber: "Calcul du code de sécurité…",
+  safetyNumber: "Code de sécurité",
   safetyNumberHint:
-    "Comparez ces chiffres avec votre contact, en personne ou pendant un appel. S'ils sont identiques sur les deux téléphones, vos messages restent privés entre vous. Ils changent si l'un de vous utilise un nouveau téléphone.",
+    "Comparez ces emoji avec votre contact, en personne ou pendant un appel. S'ils sont identiques sur les deux téléphones, vos messages restent privés entre vous. Ils changent si l'un de vous utilise un nouveau téléphone.",
 
   previewTheirs: "Des frites ce soir ? 🍟",
   previewMine: "Toujours. Avec plein de ketchup !",
@@ -552,7 +552,7 @@ const mg: typeof en = {
   calculatingSafetyNumber: "Manisa ny laharana fiarovana…",
   safetyNumber: "Laharana fiarovana",
   safetyNumberHint:
-    "Ampitahao amin'ny mpifandray aminao ireo isa ireo, mifanatrika na amin'ny antso. Raha mitovy amin'ny finday roa izy ireo, dia anareo roa ihany no mahalala ny hafatrareo. Miova izy ireo raha misy aminareo mampiasa finday vaovao.",
+    "Ampitahao amin'ny mpifandray aminao ireo emoji ireo, mifanatrika na amin'ny antso. Raha mitovy amin'ny finday roa izy ireo, dia anareo roa ihany no mahalala ny hafatrareo. Miova izy ireo raha misy aminareo mampiasa finday vaovao.",
 
   previewTheirs: "Frites ve anio hariva? 🍟",
   previewMine: "Eny tokoa. Ketchup be dia be!",

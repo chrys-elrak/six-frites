@@ -1,0 +1,3 @@
+ALTER TABLE "ChatMember" ADD COLUMN "draft" TEXT,
+ADD COLUMN "draftSealed" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "draftAt" TIMESTAMP(3);

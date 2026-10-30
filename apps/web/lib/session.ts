@@ -18,7 +18,7 @@ let bootstrapped: Promise<void> | null = null;
 export const useSession = create<SessionState>((set) => {
   six.auth.onChange((auth) => {
     if (auth) {
-      startE2EE(auth.user.id);
+      if (!auth.user.guest) startE2EE(auth.user.id);
       set({ status: "authed", user: auth.user });
     }
     else set({ status: "anon", user: null });
@@ -32,7 +32,7 @@ export const useSession = create<SessionState>((set) => {
       bootstrapped ??= six.auth
         .resume()
         .then((user) => {
-          if (user) startE2EE(user.id);
+          if (user && !user.guest) startE2EE(user.id);
           set(user ? { status: "authed", user } : { status: "anon", user: null });
         })
         .catch(() => set({ status: "anon", user: null }));

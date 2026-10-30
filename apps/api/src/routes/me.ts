@@ -26,7 +26,10 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.get(
     "/me",
-    { schema: { tags: ["me"], summary: "Current user", security: [{ bearer: [] }], response: { 200: UserDTO } } },
+    {
+      config: { guest: true },
+      schema: { tags: ["me"], summary: "Current user", security: [{ bearer: [] }], response: { 200: UserDTO } },
+    },
     (req) => getMe(req.auth.userId),
   );
 

@@ -45,10 +45,14 @@ export function MiniPlayer() {
         <Text numberOfLines={1} style={{ color: t.text, fontWeight: "700", fontSize: 14 }}>
           {track.title}
         </Text>
-        <Text style={{ color: t.muted, fontSize: 12, fontVariant: ["tabular-nums"] }}>
-          {tr.summary.kinds.voice} · {formatDuration(position)}
-          {duration > 0 ? ` / ${formatDuration(duration)}` : ""}
-        </Text>
+        <View style={{ flexDirection: "row" }}>
+          <Text numberOfLines={1} style={[styles.sub, { color: t.muted, flexShrink: 1 }]}>
+            {track.name ?? tr.summary.kinds.voice}
+          </Text>
+          <Text style={[styles.sub, { color: t.muted }]}>
+            {` · ${formatDuration(position)}${duration > 0 ? ` / ${formatDuration(duration)}` : ""}`}
+          </Text>
+        </View>
       </Pressable>
       <SpeedButton tint={brand} bg="rgba(235,138,0,0.15)" />
       <Pressable onPress={stopVoice} accessibilityLabel={tr.common.close} hitSlop={8} style={styles.close}>
@@ -69,6 +73,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   play: { width: 36, height: 36, borderRadius: 18, backgroundColor: brand, alignItems: "center", justifyContent: "center" },
+  sub: { fontSize: 12, fontVariant: ["tabular-nums"] },
   close: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   progress: { position: "absolute", left: 0, bottom: 0, height: 2, backgroundColor: brand },
 });

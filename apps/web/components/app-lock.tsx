@@ -4,7 +4,7 @@ import { unwrap } from "@six/sdk";
 import { useMutation } from "@tanstack/react-query";
 import { Delete, Lock } from "lucide-react";
 import { useState } from "react";
-import { unlock } from "@/lib/app-lock";
+import { codeLength, setCodeLength, unlock } from "@/lib/app-lock";
 import { signOut } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -61,6 +61,7 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
   const save = useMutation({
     mutationFn: async () => unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } })),
     onSuccess: (u) => {
+      setCodeLength(code.length);
       unlock();
       setUser(u);
       onClose();
@@ -158,14 +159,26 @@ export function LockScreen({
 }) {
   const tr = useT();
   const [code, setCode] = useState("");
+  const [length, setLength] = useState(codeLength);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const hasKey = useHasRecoveryKey();
   const check = useMutation({
-    mutationFn: async () =>
-      verify ? verify(code) : unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } })),
-    onSuccess: () => onUnlock(),
-    onError: () => setCode(""),
+    mutationFn: async (value: string) =>
+      verify ? verify(value) : unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code: value } })),
+    onSuccess: (_, value) => {
+      setCodeLength(value.length);
+      onUnlock();
+    },
+    onError: () => {
+      setCode("");
+      setLength(0);
+    },
   });
+
+  const type = (v: string) => {
+    setCode(v);
+    if (v.length === length && !check.isPending) check.mutate(v);
+  };
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-stone-50 p-6 dark:bg-stone-950">
@@ -173,13 +186,13 @@ export function LockScreen({
         className="w-full max-w-xs space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (code.length >= 4) check.mutate();
+          if (code.length >= 4) check.mutate(code);
         }}
       >
         <Logo className="mx-auto size-14" />
         <h1 className="text-center text-xl font-semibold">{title ?? tr.settings.appLock.locked}</h1>
-        <CodeInput label={tr.settings.appLock.enterCode} value={code} onChange={setCode} autoFocus />
-        <Keypad value={code} onChange={setCode} />
+        <CodeInput label={tr.settings.appLock.enterCode} value={code} onChange={type} autoFocus />
+        <Keypad value={code} onChange={type} />
         {check.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">
             {codeError(check.error, tr, tr.settings.appLock.errors)}

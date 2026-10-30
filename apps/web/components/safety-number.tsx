@@ -41,9 +41,9 @@ export function SafetyNumber({ userId, name }: { userId: string; name: string })
             {tr.chat.compareNumbers(name)}
           </p>
           {number.data ? (
-            <p className="grid grid-cols-4 gap-x-3 gap-y-1 font-mono text-[15px] tracking-wider tabular-nums">
-              {number.data.match(/\d{5}/g)?.map((group, i) => (
-                <span key={i}>{group}</span>
+            <p className="grid grid-cols-4 gap-2 text-center text-3xl">
+              {number.data.split(" ").map((emoji, i) => (
+                <span key={i}>{emoji}</span>
               ))}
             </p>
           ) : (

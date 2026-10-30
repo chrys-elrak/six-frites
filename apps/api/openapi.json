@@ -37,6 +37,10 @@
                     "type": "string",
                     "minLength": 1
                   },
+                  "support": {
+                    "description": "Signing in from the support page: without an invite you get a guest account that can only write to support",
+                    "type": "boolean"
+                  },
                   "device": {
                     "type": "object",
                     "properties": {
@@ -133,6 +137,10 @@
                           },
                           "description": "The emojis offered first when you react, in order; empty means the defaults"
                         },
+                        "guest": {
+                          "type": "boolean",
+                          "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -150,6 +158,7 @@
                         "hasAppLock",
                         "ads",
                         "quickReactions",
+                        "guest",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -259,6 +268,10 @@
                           },
                           "description": "The emojis offered first when you react, in order; empty means the defaults"
                         },
+                        "guest": {
+                          "type": "boolean",
+                          "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -276,6 +289,7 @@
                         "hasAppLock",
                         "ads",
                         "quickReactions",
+                        "guest",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -3647,6 +3661,10 @@
                       },
                       "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3664,6 +3682,7 @@
                     "hasAppLock",
                     "ads",
                     "quickReactions",
+                    "guest",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3775,6 +3794,10 @@
                       },
                       "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3792,6 +3815,7 @@
                     "hasAppLock",
                     "ads",
                     "quickReactions",
+                    "guest",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -3917,6 +3941,10 @@
                       },
                       "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -3934,6 +3962,7 @@
                     "hasAppLock",
                     "ads",
                     "quickReactions",
+                    "guest",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4199,6 +4228,10 @@
                       },
                       "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4216,6 +4249,7 @@
                     "hasAppLock",
                     "ads",
                     "quickReactions",
+                    "guest",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4288,6 +4322,10 @@
                       },
                       "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4305,6 +4343,7 @@
                     "hasAppLock",
                     "ads",
                     "quickReactions",
+                    "guest",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -5206,6 +5245,1607 @@
         }
       }
     },
+    "/v1/support": {
+      "post": {
+        "summary": "Open your chat with support",
+        "tags": [
+          "chats"
+        ],
+        "description": "Guests from the support page can only use this chat, and only in text. An admin answers here, and can send an invite link to join Six Frites.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "direct"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
+                          },
+                          "lastDeliveredMessageId": {
+                            "nullable": true,
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "lastDeliveredAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "lastReadMessageId": {
+                            "nullable": true,
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "lastReadAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "lastDeliveredMessageId",
+                          "lastDeliveredAt",
+                          "lastReadMessageId",
+                          "lastReadAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "lastMessage": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "chatId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "senderId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "clientId": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker",
+                            "service",
+                            "location",
+                            "checklist",
+                            "game"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "bold",
+                                  "italic",
+                                  "strike",
+                                  "code",
+                                  "spoiler"
+                                ]
+                              },
+                              "offset": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "length": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "offset",
+                              "length"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "spoiler": {
+                          "type": "boolean"
+                        },
+                        "effect": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "fire",
+                            "gift",
+                            "hearts",
+                            "confetti"
+                          ],
+                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
+                        },
+                        "silent": {
+                          "type": "boolean",
+                          "description": "Sent with `/silent`: it arrives without a notification or sound"
+                        },
+                        "bump": {
+                          "type": "boolean",
+                          "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                        },
+                        "vanish": {
+                          "type": "boolean",
+                          "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                        },
+                        "attachment": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "image",
+                                "video",
+                                "video_note",
+                                "voice",
+                                "file",
+                                "gif",
+                                "sticker"
+                              ],
+                              "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "processing",
+                                "ready",
+                                "failed",
+                                "removed"
+                              ],
+                              "description": "`removed`: a large file a moderator deleted to free space"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "mime": {
+                              "type": "string"
+                            },
+                            "size": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "url": {
+                              "nullable": true,
+                              "description": "Signed link to the playable or viewable file, once ready",
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "thumbUrl": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "width": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "height": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "durationMs": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "waveform": {
+                              "nullable": true,
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 100
+                              }
+                            },
+                            "encrypted": {
+                              "type": "boolean",
+                              "description": "The file is encrypted; its key, name, type and preview are in the message content"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind",
+                            "status",
+                            "name",
+                            "mime",
+                            "size",
+                            "url",
+                            "thumbUrl",
+                            "width",
+                            "height",
+                            "durationMs",
+                            "waveform",
+                            "encrypted"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "sticker": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "packId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "emoji": {
+                              "type": "string"
+                            },
+                            "format": {
+                              "type": "string",
+                              "enum": [
+                                "lottie",
+                                "image"
+                              ],
+                              "description": "`lottie`: a Lottie JSON animation. `image`: a static WebP or PNG."
+                            },
+                            "url": {
+                              "nullable": true,
+                              "description": "Null while an uploaded sticker is still being processed",
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "width": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "height": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "packId",
+                            "emoji",
+                            "format",
+                            "url",
+                            "width",
+                            "height"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "ephemeral": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "maxViews": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "ttlSeconds": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "views": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "How many times the recipient opened it"
+                            },
+                            "firstViewedAt": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            "locked": {
+                              "type": "boolean",
+                              "description": "Content is withheld for you; open it with POST /v1/messages/{id}/view"
+                            },
+                            "expired": {
+                              "type": "boolean",
+                              "description": "Its views or timer ran out; the recipient can no longer open it"
+                            },
+                            "purged": {
+                              "type": "boolean",
+                              "description": "Content permanently deleted; it can no longer be resent"
+                            },
+                            "resent": {
+                              "type": "boolean",
+                              "description": "The sender re-armed it after it was opened"
+                            },
+                            "resendsLeft": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "How many more times the sender can re-arm it"
+                            },
+                            "resendUntil": {
+                              "nullable": true,
+                              "description": "Until when the sender can resend it, once it has been opened",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "maxViews",
+                            "ttlSeconds",
+                            "views",
+                            "firstViewedAt",
+                            "locked",
+                            "expired",
+                            "purged",
+                            "resent",
+                            "resendsLeft",
+                            "resendUntil"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "groupId": {
+                          "nullable": true,
+                          "description": "Photos and videos sent together share it and show as one album",
+                          "type": "string"
+                        },
+                        "replyTo": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "senderId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video",
+                                "video_note",
+                                "voice",
+                                "file",
+                                "gif",
+                                "sticker",
+                                "service",
+                                "location",
+                                "checklist",
+                                "game"
+                              ]
+                            },
+                            "text": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "spoiler": {
+                              "type": "boolean"
+                            },
+                            "ephemeral": {
+                              "type": "boolean"
+                            },
+                            "deleted": {
+                              "type": "boolean"
+                            },
+                            "encrypted": {
+                              "type": "boolean",
+                              "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "senderId",
+                            "type",
+                            "text",
+                            "spoiler",
+                            "ephemeral",
+                            "deleted",
+                            "encrypted"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "action": {
+                          "nullable": true,
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "auto_delete"
+                                  ]
+                                },
+                                "secs": {
+                                  "nullable": true,
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "secs"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "theme"
+                                  ]
+                                },
+                                "theme": {
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "theme"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "e2ee"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "vanish"
+                                  ]
+                                },
+                                "on": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "on"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "call"
+                                  ]
+                                },
+                                "video": {
+                                  "type": "boolean"
+                                },
+                                "secs": {
+                                  "nullable": true,
+                                  "description": "How long it lasted; null if it was missed or declined",
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "video",
+                                "secs"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ],
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                        },
+                        "location": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "minimum": -90,
+                              "maximum": 90
+                            },
+                            "lng": {
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "accuracy": {
+                              "description": "How far off it may be, in meters",
+                              "nullable": true,
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100000
+                            }
+                          },
+                          "required": [
+                            "lat",
+                            "lng"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checklist": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "items": {
+                              "minItems": 1,
+                              "maxItems": 30,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            }
+                          },
+                          "required": [
+                            "title",
+                            "items"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "checks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "item": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Index in the checklist's items"
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Who marked it done"
+                              },
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "item",
+                              "userId",
+                              "at"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "The checklist items marked done; either person can tick them"
+                        },
+                        "game": {
+                          "nullable": true,
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "rps"
+                                  ]
+                                },
+                                "hand": {
+                                  "type": "string",
+                                  "enum": [
+                                    "rock",
+                                    "paper",
+                                    "scissors"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "hand"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "dice"
+                                  ]
+                                },
+                                "pick": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 6
+                                },
+                                "seed": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 5
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "pick",
+                                "seed"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "guess"
+                                  ]
+                                },
+                                "secret": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 100
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "secret"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "penalty"
+                                  ]
+                                },
+                                "shots": {
+                                  "minItems": 5,
+                                  "maxItems": 5,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "enum": [
+                                      "left",
+                                      "middle",
+                                      "right"
+                                    ]
+                                  }
+                                },
+                                "dives": {
+                                  "minItems": 5,
+                                  "maxItems": 5,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "enum": [
+                                      "left",
+                                      "middle",
+                                      "right"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "shots",
+                                "dives"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "hangman"
+                                  ]
+                                },
+                                "word": {
+                                  "type": "string",
+                                  "pattern": "^[A-Z]{3,16}$"
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "word"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "lie"
+                                  ]
+                                },
+                                "statements": {
+                                  "minItems": 3,
+                                  "maxItems": 3,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 100
+                                  }
+                                },
+                                "lie": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 2
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "statements",
+                                "lie"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "rather"
+                                  ]
+                                },
+                                "options": {
+                                  "minItems": 2,
+                                  "maxItems": 2,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 100
+                                  }
+                                },
+                                "choice": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "options",
+                                "choice"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "riddle"
+                                  ]
+                                },
+                                "emojis": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 30
+                                },
+                                "answer": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 60
+                                },
+                                "key": {
+                                  "type": "string",
+                                  "pattern": "^[\\w-]{43}$",
+                                  "description": "A key the typed answers are sealed with, so only people who can read the game can read them"
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "emojis",
+                                "answer",
+                                "key"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ships"
+                                  ]
+                                },
+                                "boats": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 24
+                                    }
+                                  }
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "boats"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ttt"
+                                  ]
+                                },
+                                "cell": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 8
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "cell"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "four"
+                                  ]
+                                },
+                                "col": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 6
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "col"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "sketch"
+                                  ]
+                                },
+                                "strokes": {
+                                  "minItems": 1,
+                                  "maxItems": 100,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "color": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 7
+                                      },
+                                      "points": {
+                                        "minItems": 2,
+                                        "maxItems": 4000,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 1000
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "color",
+                                      "points"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "answer": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 60
+                                },
+                                "key": {
+                                  "type": "string",
+                                  "pattern": "^[\\w-]{43}$",
+                                  "description": "A key the typed answers are sealed with, so only people who can read the game can read them"
+                                }
+                              },
+                              "required": [
+                                "game",
+                                "strokes",
+                                "answer",
+                                "key"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        },
+                        "moves": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "move": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "hand": {
+                                        "type": "string",
+                                        "enum": [
+                                          "rock",
+                                          "paper",
+                                          "scissors"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "hand"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "pick": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 6
+                                      },
+                                      "seed": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 5
+                                      }
+                                    },
+                                    "required": [
+                                      "pick",
+                                      "seed"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "n": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 100
+                                      }
+                                    },
+                                    "required": [
+                                      "n"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "shots": {
+                                        "minItems": 5,
+                                        "maxItems": 5,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "enum": [
+                                            "left",
+                                            "middle",
+                                            "right"
+                                          ]
+                                        }
+                                      },
+                                      "dives": {
+                                        "minItems": 5,
+                                        "maxItems": 5,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string",
+                                          "enum": [
+                                            "left",
+                                            "middle",
+                                            "right"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "shots",
+                                      "dives"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "letter": {
+                                        "type": "string",
+                                        "pattern": "^[A-Z]$"
+                                      }
+                                    },
+                                    "required": [
+                                      "letter"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "choice": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 2
+                                      }
+                                    },
+                                    "required": [
+                                      "choice"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "sealed": {
+                                        "type": "string",
+                                        "maxLength": 512,
+                                        "pattern": "^[\\w-]+$"
+                                      }
+                                    },
+                                    "required": [
+                                      "sealed"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "shot": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 24
+                                      }
+                                    },
+                                    "required": [
+                                      "shot"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "cell": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 8
+                                      }
+                                    },
+                                    "required": [
+                                      "cell"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "col": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 6
+                                      }
+                                    },
+                                    "required": [
+                                      "col"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "userId",
+                              "move",
+                              "at"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "Answers to the game, oldest first; anyone but the sender can play"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "editedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "deletedAt": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "deletedBy": {
+                          "nullable": true,
+                          "description": "Who deleted it for everyone: the sender, or the other person in a direct chat",
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "expiresAt": {
+                          "nullable": true,
+                          "description": "When the chat's auto-delete timer removes it for everyone",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "reactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "emoji": {
+                                "type": "string"
+                              },
+                              "userIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "emoji",
+                              "userIds"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "One entry per emoji, oldest first; a person can add several different emoji"
+                        },
+                        "encryption": {
+                          "nullable": true,
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "type": "object",
+                          "properties": {
+                            "senderDeviceId": {
+                              "nullable": true,
+                              "description": "The device that encrypted it; open the envelope with your session with it",
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "envelopes": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "deviceId": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "envelope": {
+                                    "type": "object",
+                                    "properties": {
+                                      "v": {
+                                        "type": "number",
+                                        "enum": [
+                                          1
+                                        ]
+                                      },
+                                      "x3dh": {
+                                        "type": "object",
+                                        "properties": {
+                                          "identity": {
+                                            "type": "object",
+                                            "properties": {
+                                              "signPub": {
+                                                "type": "string",
+                                                "pattern": "^[\\w-]{43}$",
+                                                "description": "Ed25519 identity key"
+                                              },
+                                              "dhPub": {
+                                                "type": "string",
+                                                "pattern": "^[\\w-]{43}$",
+                                                "description": "X25519 identity key, signed by signPub"
+                                              },
+                                              "dhSig": {
+                                                "type": "string",
+                                                "pattern": "^[\\w-]{86}$",
+                                                "description": "A 64-byte Ed25519 signature, base64url without padding"
+                                              }
+                                            },
+                                            "required": [
+                                              "signPub",
+                                              "dhPub",
+                                              "dhSig"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          "ephemeral": {
+                                            "type": "string",
+                                            "pattern": "^[\\w-]{43}$",
+                                            "description": "A 32-byte public key, base64url without padding"
+                                          },
+                                          "signedPreKeyId": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 4294967295
+                                          },
+                                          "oneTimePreKeyId": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 4294967295
+                                          }
+                                        },
+                                        "required": [
+                                          "identity",
+                                          "ephemeral",
+                                          "signedPreKeyId",
+                                          "oneTimePreKeyId"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "header": {
+                                        "type": "string",
+                                        "maxLength": 128,
+                                        "pattern": "^[\\w-]+$"
+                                      },
+                                      "body": {
+                                        "type": "string",
+                                        "maxLength": 65536,
+                                        "pattern": "^[\\w-]+$"
+                                      }
+                                    },
+                                    "required": [
+                                      "v",
+                                      "header",
+                                      "body"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "required": [
+                                  "deviceId",
+                                  "envelope"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "description": "Only the envelopes for your own devices"
+                            },
+                            "backup": {
+                              "nullable": true,
+                              "description": "Your backup copy, if you stored one",
+                              "type": "string",
+                              "maxLength": 65536,
+                              "pattern": "^[\\w-]+$"
+                            }
+                          },
+                          "required": [
+                            "senderDeviceId",
+                            "envelopes",
+                            "backup"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "chatId",
+                        "senderId",
+                        "clientId",
+                        "type",
+                        "text",
+                        "entities",
+                        "spoiler",
+                        "effect",
+                        "silent",
+                        "bump",
+                        "vanish",
+                        "attachment",
+                        "sticker",
+                        "ephemeral",
+                        "groupId",
+                        "replyTo",
+                        "action",
+                        "location",
+                        "checklist",
+                        "checks",
+                        "game",
+                        "moves",
+                        "createdAt",
+                        "editedAt",
+                        "deletedAt",
+                        "deletedBy",
+                        "expiresAt",
+                        "reactions",
+                        "encryption"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "unreadCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "archived": {
+                      "type": "boolean"
+                    },
+                    "muted": {
+                      "type": "boolean"
+                    },
+                    "mutedUntil": {
+                      "nullable": true,
+                      "description": "When a timed mute ends; null while muted for good or not muted",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "safeView": {
+                      "type": "boolean",
+                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                    },
+                    "sharingProfile": {
+                      "type": "boolean",
+                      "description": "You show the other person your real name and photo; until then they only see your alias"
+                    },
+                    "autoDeleteSecs": {
+                      "nullable": true,
+                      "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat"
+                    },
+                    "theme": {
+                      "nullable": true,
+                      "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
+                      "type": "string"
+                    },
+                    "scheduledCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Your scheduled messages waiting to be sent in this chat"
+                    },
+                    "draft": {
+                      "nullable": true,
+                      "description": "Just yours: what you were typing here, saved by one of your devices for the others; null until one does",
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "nullable": true,
+                          "description": "Plain text; null when cleared, or when it is sealed",
+                          "type": "string"
+                        },
+                        "sealed": {
+                          "nullable": true,
+                          "description": "Sealed with your backup key, so only your devices can read it",
+                          "type": "string"
+                        },
+                        "at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "sealed",
+                        "at"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "blockedByMe": {
+                      "type": "boolean",
+                      "description": "You blocked the other person: nobody can send, react or edit until you unblock"
+                    },
+                    "blockedByThem": {
+                      "type": "boolean",
+                      "description": "The other person blocked you"
+                    },
+                    "peerDeleted": {
+                      "type": "boolean",
+                      "description": "The other person deleted their account"
+                    },
+                    "encrypted": {
+                      "type": "boolean",
+                      "description": "Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"
+                    },
+                    "support": {
+                      "type": "boolean",
+                      "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
+                    },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "title",
+                    "members",
+                    "lastMessage",
+                    "unreadCount",
+                    "archived",
+                    "muted",
+                    "mutedUntil",
+                    "pinned",
+                    "safeView",
+                    "sharingProfile",
+                    "autoDeleteSecs",
+                    "vanish",
+                    "theme",
+                    "scheduledCount",
+                    "draft",
+                    "blockedByMe",
+                    "blockedByThem",
+                    "peerDeleted",
+                    "encrypted",
+                    "support",
+                    "lastActivityAt",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/chats": {
       "get": {
         "summary": "List chats, most recent activity first",
@@ -5434,6 +7074,10 @@
                               "bump": {
                                 "type": "boolean",
                                 "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                              },
+                              "vanish": {
+                                "type": "boolean",
+                                "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
                               },
                               "attachment": {
                                 "nullable": true,
@@ -6675,6 +8319,7 @@
                               "effect",
                               "silent",
                               "bump",
+                              "vanish",
                               "attachment",
                               "sticker",
                               "ephemeral",
@@ -6747,6 +8392,34 @@
                             "maximum": 9007199254740991,
                             "description": "Your scheduled messages waiting to be sent in this chat"
                           },
+                          "draft": {
+                            "nullable": true,
+                            "description": "Just yours: what you were typing here, saved by one of your devices for the others; null until one does",
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "nullable": true,
+                                "description": "Plain text; null when cleared, or when it is sealed",
+                                "type": "string"
+                              },
+                              "sealed": {
+                                "nullable": true,
+                                "description": "Sealed with your backup key, so only your devices can read it",
+                                "type": "string"
+                              },
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "text",
+                              "sealed",
+                              "at"
+                            ],
+                            "additionalProperties": false
+                          },
                           "blockedByMe": {
                             "type": "boolean",
                             "description": "You blocked the other person: nobody can send, react or edit until you unblock"
@@ -6762,6 +8435,10 @@
                           "encrypted": {
                             "type": "boolean",
                             "description": "Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"
+                          },
+                          "support": {
+                            "type": "boolean",
+                            "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
                           },
                           "lastActivityAt": {
                             "type": "string",
@@ -6791,10 +8468,12 @@
                           "vanish",
                           "theme",
                           "scheduledCount",
+                          "draft",
                           "blockedByMe",
                           "blockedByThem",
                           "peerDeleted",
                           "encrypted",
+                          "support",
                           "lastActivityAt",
                           "createdAt"
                         ],
@@ -7019,6 +8698,10 @@
                           "type": "boolean",
                           "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                         },
+                        "vanish": {
+                          "type": "boolean",
+                          "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                        },
                         "attachment": {
                           "nullable": true,
                           "type": "object",
@@ -8259,6 +9942,7 @@
                         "effect",
                         "silent",
                         "bump",
+                        "vanish",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -8331,6 +10015,34 @@
                       "maximum": 9007199254740991,
                       "description": "Your scheduled messages waiting to be sent in this chat"
                     },
+                    "draft": {
+                      "nullable": true,
+                      "description": "Just yours: what you were typing here, saved by one of your devices for the others; null until one does",
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "nullable": true,
+                          "description": "Plain text; null when cleared, or when it is sealed",
+                          "type": "string"
+                        },
+                        "sealed": {
+                          "nullable": true,
+                          "description": "Sealed with your backup key, so only your devices can read it",
+                          "type": "string"
+                        },
+                        "at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "sealed",
+                        "at"
+                      ],
+                      "additionalProperties": false
+                    },
                     "blockedByMe": {
                       "type": "boolean",
                       "description": "You blocked the other person: nobody can send, react or edit until you unblock"
@@ -8346,6 +10058,10 @@
                     "encrypted": {
                       "type": "boolean",
                       "description": "Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"
+                    },
+                    "support": {
+                      "type": "boolean",
+                      "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
                     },
                     "lastActivityAt": {
                       "type": "string",
@@ -8375,10 +10091,12 @@
                     "vanish",
                     "theme",
                     "scheduledCount",
+                    "draft",
                     "blockedByMe",
                     "blockedByThem",
                     "peerDeleted",
                     "encrypted",
+                    "support",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -8425,6 +10143,36 @@
                   "vanish": {
                     "description": "For both people: turn vanish mode on or off",
                     "type": "boolean"
+                  },
+                  "draft": {
+                    "description": "Just for you: what you are typing, so your other devices show it too. null clears it.",
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "maxLength": 4000
+                          }
+                        },
+                        "required": [
+                          "text"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "sealed": {
+                            "type": "string",
+                            "maxLength": 12000
+                          }
+                        },
+                        "required": [
+                          "sealed"
+                        ]
+                      }
+                    ]
                   },
                   "autoDeleteSecs": {
                     "description": "For both people: delete messages sent from now on this many seconds after sending. null turns it off.",
@@ -8638,6 +10386,10 @@
                           "type": "boolean",
                           "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                         },
+                        "vanish": {
+                          "type": "boolean",
+                          "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                        },
                         "attachment": {
                           "nullable": true,
                           "type": "object",
@@ -9878,6 +11630,7 @@
                         "effect",
                         "silent",
                         "bump",
+                        "vanish",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -9950,6 +11703,34 @@
                       "maximum": 9007199254740991,
                       "description": "Your scheduled messages waiting to be sent in this chat"
                     },
+                    "draft": {
+                      "nullable": true,
+                      "description": "Just yours: what you were typing here, saved by one of your devices for the others; null until one does",
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "nullable": true,
+                          "description": "Plain text; null when cleared, or when it is sealed",
+                          "type": "string"
+                        },
+                        "sealed": {
+                          "nullable": true,
+                          "description": "Sealed with your backup key, so only your devices can read it",
+                          "type": "string"
+                        },
+                        "at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "sealed",
+                        "at"
+                      ],
+                      "additionalProperties": false
+                    },
                     "blockedByMe": {
                       "type": "boolean",
                       "description": "You blocked the other person: nobody can send, react or edit until you unblock"
@@ -9965,6 +11746,10 @@
                     "encrypted": {
                       "type": "boolean",
                       "description": "Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"
+                    },
+                    "support": {
+                      "type": "boolean",
+                      "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
                     },
                     "lastActivityAt": {
                       "type": "string",
@@ -9994,10 +11779,12 @@
                     "vanish",
                     "theme",
                     "scheduledCount",
+                    "draft",
                     "blockedByMe",
                     "blockedByThem",
                     "peerDeleted",
                     "encrypted",
+                    "support",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -10433,6 +12220,10 @@
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -11673,6 +13464,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -11843,6 +13635,10 @@
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -13083,6 +14879,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -13243,6 +15040,10 @@
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -14483,6 +16284,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -14661,6 +16463,10 @@
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -15901,6 +17707,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -16222,6 +18029,10 @@
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -17462,6 +19273,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -17614,6 +19426,10 @@
                         "bump": {
                           "type": "boolean",
                           "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                        },
+                        "vanish": {
+                          "type": "boolean",
+                          "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
                         },
                         "attachment": {
                           "nullable": true,
@@ -18855,6 +20671,7 @@
                         "effect",
                         "silent",
                         "bump",
+                        "vanish",
                         "attachment",
                         "sticker",
                         "ephemeral",
@@ -19018,6 +20835,10 @@
                     "bump": {
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
                     },
                     "attachment": {
                       "nullable": true,
@@ -20259,6 +22080,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -20433,6 +22255,10 @@
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -21673,6 +23499,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -21947,6 +23774,10 @@
                           "bump": {
                             "type": "boolean",
                             "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                          },
+                          "vanish": {
+                            "type": "boolean",
+                            "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
                           },
                           "attachment": {
                             "nullable": true,
@@ -23188,6 +25019,7 @@
                           "effect",
                           "silent",
                           "bump",
+                          "vanish",
                           "attachment",
                           "sticker",
                           "ephemeral",
@@ -24000,6 +25832,10 @@
                     "bump": {
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
                     },
                     "attachment": {
                       "nullable": true,
@@ -25241,6 +27077,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -27602,6 +29439,10 @@
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                    },
                     "attachment": {
                       "nullable": true,
                       "type": "object",
@@ -28842,6 +30683,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",
@@ -30098,6 +31940,10 @@
                                     "type": "boolean",
                                     "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                                   },
+                                  "vanish": {
+                                    "type": "boolean",
+                                    "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -31338,6 +33184,7 @@
                                   "effect",
                                   "silent",
                                   "bump",
+                                  "vanish",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -31478,6 +33325,10 @@
                                     "type": "boolean",
                                     "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
                                   },
+                                  "vanish": {
+                                    "type": "boolean",
+                                    "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
+                                  },
                                   "attachment": {
                                     "nullable": true,
                                     "type": "object",
@@ -32718,6 +34569,7 @@
                                   "effect",
                                   "silent",
                                   "bump",
+                                  "vanish",
                                   "attachment",
                                   "sticker",
                                   "ephemeral",
@@ -33047,6 +34899,10 @@
                                       "bump": {
                                         "type": "boolean",
                                         "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                                      },
+                                      "vanish": {
+                                        "type": "boolean",
+                                        "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
                                       },
                                       "attachment": {
                                         "nullable": true,
@@ -34288,6 +36144,7 @@
                                       "effect",
                                       "silent",
                                       "bump",
+                                      "vanish",
                                       "attachment",
                                       "sticker",
                                       "ephemeral",
@@ -34360,6 +36217,34 @@
                                     "maximum": 9007199254740991,
                                     "description": "Your scheduled messages waiting to be sent in this chat"
                                   },
+                                  "draft": {
+                                    "nullable": true,
+                                    "description": "Just yours: what you were typing here, saved by one of your devices for the others; null until one does",
+                                    "type": "object",
+                                    "properties": {
+                                      "text": {
+                                        "nullable": true,
+                                        "description": "Plain text; null when cleared, or when it is sealed",
+                                        "type": "string"
+                                      },
+                                      "sealed": {
+                                        "nullable": true,
+                                        "description": "Sealed with your backup key, so only your devices can read it",
+                                        "type": "string"
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "text",
+                                      "sealed",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  },
                                   "blockedByMe": {
                                     "type": "boolean",
                                     "description": "You blocked the other person: nobody can send, react or edit until you unblock"
@@ -34375,6 +36260,10 @@
                                   "encrypted": {
                                     "type": "boolean",
                                     "description": "Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"
+                                  },
+                                  "support": {
+                                    "type": "boolean",
+                                    "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
                                   },
                                   "lastActivityAt": {
                                     "type": "string",
@@ -34404,10 +36293,12 @@
                                   "vanish",
                                   "theme",
                                   "scheduledCount",
+                                  "draft",
                                   "blockedByMe",
                                   "blockedByThem",
                                   "peerDeleted",
                                   "encrypted",
+                                  "support",
                                   "lastActivityAt",
                                   "createdAt"
                                 ],
@@ -34673,6 +36564,10 @@
                                     },
                                     "description": "The emojis offered first when you react, in order; empty means the defaults"
                                   },
+                                  "guest": {
+                                    "type": "boolean",
+                                    "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -34690,6 +36585,7 @@
                                   "hasAppLock",
                                   "ads",
                                   "quickReactions",
+                                  "guest",
                                   "createdAt"
                                 ],
                                 "additionalProperties": false
@@ -35607,6 +37503,10 @@
                       },
                       "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -35624,6 +37524,7 @@
                     "hasAppLock",
                     "ads",
                     "quickReactions",
+                    "guest",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -35769,6 +37670,10 @@
                       },
                       "description": "The emojis offered first when you react, in order; empty means the defaults"
                     },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -35786,6 +37691,7 @@
                     "hasAppLock",
                     "ads",
                     "quickReactions",
+                    "guest",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -36144,6 +38050,10 @@
                     "bump": {
                       "type": "boolean",
                       "description": "A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"
+                    },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Sent in vanish mode: it disappears once the other person has read it and left the chat"
                     },
                     "attachment": {
                       "nullable": true,
@@ -37385,6 +39295,7 @@
                     "effect",
                     "silent",
                     "bump",
+                    "vanish",
                     "attachment",
                     "sticker",
                     "ephemeral",

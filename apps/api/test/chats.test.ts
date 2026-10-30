@@ -7,7 +7,7 @@ import { type Auth, bearer, chatHelpers, useApp } from "./helpers.js";
 
 const ctx = useApp();
 
-const { signUp, get, makeFriends } = chatHelpers(ctx);
+const { signUp, get, call, makeFriends } = chatHelpers(ctx);
 const send = (who: Auth, chatId: string, text: string, clientId = `c-${Math.random()}`) =>
   chatHelpers(ctx).send(who, chatId, text, { clientId });
 
@@ -88,6 +88,22 @@ describe("chats over REST", () => {
     expect(second.items).toHaveLength(1);
     expect(second.nextCursor).toBeNull();
     expect(new Set([...first.items, ...second.items].map((c: { id: string }) => c.id)).size).toBe(3);
+  });
+});
+
+describe("drafts", () => {
+  it("are shared with my other devices, not with the other person", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const saved = (await call(host, "PATCH", `/v1/chats/${chatId}`, { draft: { text: "half a thought" } })).json();
+    expect(saved.draft).toMatchObject({ text: "half a thought", sealed: null });
+    expect((await get(host, `/v1/chats/${chatId}`)).draft.text).toBe("half a thought");
+    expect((await get(guest, `/v1/chats/${chatId}`)).draft).toBeNull();
+
+    const sealed = (await call(host, "PATCH", `/v1/chats/${chatId}`, { draft: { sealed: "c2VhbGVk" } })).json();
+    expect(sealed.draft).toMatchObject({ text: null, sealed: "c2VhbGVk" });
+    const cleared = (await call(host, "PATCH", `/v1/chats/${chatId}`, { draft: null })).json();
+    expect(cleared.draft).toMatchObject({ text: null, sealed: null });
+    expect(Date.parse(cleared.draft.at)).toBeGreaterThanOrEqual(Date.parse(sealed.draft.at));
   });
 });
 

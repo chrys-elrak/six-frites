@@ -53,7 +53,10 @@ export async function revokeOtherSessions(userId: string, keepSessionId: string)
 }
 
 export async function assertSessionActive(sessionId: string) {
-  const session = await prisma.session.findUnique({ where: { id: sessionId } });
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { user: { select: { guest: true } } },
+  });
   if (!session || session.revokedAt || session.expiresAt < new Date()) {
     throw new AppError("SESSION_REVOKED");
   }

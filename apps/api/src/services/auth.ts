@@ -36,7 +36,10 @@ export async function loginWithGoogle(
   const signedIn = await withEvents(async (tx, emit) => {
     const existing = await tx.user.findUnique({ where: { googleSub: identity.sub } });
     if (existing?.bannedAt) throw new AppError("ACCOUNT_BANNED", "This account has been banned");
-    if (!existing && !input.inviteCode && env.INVITE_ONLY && !isAdminEmail(identity.email)) {
+    const guest = existing
+      ? existing.guest && !input.inviteCode
+      : !input.inviteCode && env.INVITE_ONLY && !isAdminEmail(identity.email);
+    if (guest && !input.support) {
       throw new AppError("INVITE_REQUIRED", "Sign up with an invite link from someone already on Six Frites");
     }
     let user =
@@ -47,10 +50,12 @@ export async function loginWithGoogle(
           email: identity.email,
           displayName: identity.name,
           avatarUrl: identity.picture,
+          guest,
         },
       }));
 
-    if (input.inviteCode && !existing) user = await applyInvite(tx, emit, user, input.inviteCode);
+    const joining = !existing || (existing.guest && !existing.queuedAt);
+    if (input.inviteCode && joining) user = await applyInvite(tx, emit, user, input.inviteCode);
     if (user.queuedAt) return null;
 
     const session = await createSession(tx, user.id, input.device);

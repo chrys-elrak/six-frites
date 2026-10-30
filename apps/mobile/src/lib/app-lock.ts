@@ -27,7 +27,24 @@ void AsyncStorage.getItem(BIOMETRIC_KEY)
   .then((saved) => saved && useBiometricUnlock.setState({ on: true }))
   .catch(() => null);
 
-export const canUseBiometrics = () => LocalAuthentication.isEnrolledAsync().catch(() => false);
+const LENGTH_KEY = "six:app-lock-length";
+
+/**
+ * Digits in the app lock code, remembered on this phone once it's typed right, so the lock screen checks it as
+ * soon as the last one is in. 0 until then, and the Unlock button does it.
+ */
+export const useCodeLength = create<{ length: number }>(() => ({ length: 0 }));
+
+export function setCodeLength(length: number) {
+  useCodeLength.setState({ length });
+  void AsyncStorage.setItem(LENGTH_KEY, String(length)).catch(() => null);
+}
+
+void AsyncStorage.getItem(LENGTH_KEY)
+  .then((saved) => useCodeLength.setState({ length: Number(saved) || 0 }))
+  .catch(() => null);
+
+export const canUseBiometrics =() => LocalAuthentication.isEnrolledAsync().catch(() => false);
 
 export async function checkBiometrics(promptMessage: string, cancelLabel: string) {
   const res = await LocalAuthentication.authenticateAsync({ promptMessage, cancelLabel, disableDeviceFallback: true }).catch(

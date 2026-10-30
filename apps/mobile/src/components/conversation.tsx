@@ -166,9 +166,10 @@ export function Conversation({ chatId }: { chatId: string }) {
               {typing ? (
                 <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
               ) : (
-                (presence || c.muted || c.archived || !!c.autoDeleteSecs) && (
+                (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support) && (
                   <Text numberOfLines={2} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>
                     {[
+                      c.support && tr.support.title,
                       presenceLabel(presence),
                       c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
                       c.muted && tr.common.muted,
@@ -220,6 +221,7 @@ export function Conversation({ chatId }: { chatId: string }) {
               chatId={chatId}
               nameOf={nameOf}
               scheduledCount={c.scheduledCount}
+              limited={c.support}
               onSent={() => list.current?.scrollToBottom()}
               onSearch={(q) => {
                 setSearchFor(q);

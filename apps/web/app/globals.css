@@ -6,6 +6,18 @@
   --font-sans: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
+:root {
+  --bubble-their: var(--color-white);
+  --bubble-their-ink: var(--color-stone-900);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bubble-their: var(--color-stone-900);
+    --bubble-their-ink: var(--color-stone-100);
+  }
+}
+
 @font-face {
   font-family: DMSerifDisplay;
   src: url("/fonts/DMSerifDisplay-Regular.ttf") format("truetype");

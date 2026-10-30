@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 export function useAppHeight() {
   useEffect(() => {
@@ -20,4 +20,16 @@ export function useAppHeight() {
       root.style.removeProperty("--app-height");
     };
   }, []);
+}
+
+export function useMedia(query: string) {
+  return useSyncExternalStore(
+    (onChange) => {
+      const m = matchMedia(query);
+      m.addEventListener("change", onChange);
+      return () => m.removeEventListener("change", onChange);
+    },
+    () => matchMedia(query).matches,
+    () => false,
+  );
 }

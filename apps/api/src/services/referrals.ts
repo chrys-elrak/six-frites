@@ -13,9 +13,9 @@ import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { isAdminEmail } from "../plugins/auth.js";
-import { ensureDirectChat } from "./chats.js";
+import { ensureDirectChat, getChat } from "./chats.js";
 import { profilesFor } from "./contacts.js";
-import { toPublicUser } from "./users.js";
+import { toPublicUser, toUserDTO } from "./users.js";
 
 export function normalizeCode(code: string) {
   return code.trim().toUpperCase();
@@ -134,7 +134,21 @@ export async function applyInvite(tx: Tx, emit: Emit, referee: User, code: strin
   await tx.referral.create({ data: { inviteId: invite.id, referrerId: invite.creatorId, refereeId: referee.id } });
   if (room <= 0) return tx.user.update({ where: { id: referee.id }, data: { queuedAt: new Date() } });
   await ensureDirectChat(tx, emit, invite.creatorId, referee.id);
-  return referee;
+  return referee.guest ? welcomeGuest(tx, emit, referee.id) : referee;
+}
+
+/** A guest from the support page joins: their support chats become ordinary chats, on every member's screen. */
+async function welcomeGuest(tx: Tx, emit: Emit, userId: string) {
+  const user = await tx.user.update({ where: { id: userId }, data: { guest: false } });
+  emit(userId, "me.updated", toUserDTO(user));
+  const chats = await tx.chatMember.findMany({
+    where: { userId },
+    select: { chat: { select: { id: true, members: { select: { userId: true } } } } },
+  });
+  for (const { chat } of chats) {
+    for (const m of chat.members) emit(m.userId, "chat.updated", await getChat(m.userId, chat.id, tx));
+  }
+  return user;
 }
 
 /** Lets in the people waiting on someone's links, first come first served, while they have room. */
@@ -148,13 +162,17 @@ export async function admitQueued(referrerId: string) {
       ...(Number.isFinite(room) && { take: room }),
     });
     for (const r of waiting) {
-      await tx.user.update({ where: { id: r.refereeId }, data: { queuedAt: null } });
+      const admitted = await tx.user.update({ where: { id: r.refereeId }, data: { queuedAt: null } });
       await ensureDirectChat(tx, emit, referrerId, r.refereeId);
+      if (admitted.guest) await welcomeGuest(tx, emit, r.refereeId);
     }
   });
 }
 
-/** Connects someone who already has an account with the link's owner. It doesn't take one of the link's places. */
+/**
+ * Connects someone who already has an account with the link's owner. It doesn't take one of the link's places,
+ * unless they are a guest from the support page, who joins with it as a new account would.
+ */
 export async function acceptInvite(userId: string, code: string) {
   const existing = await prisma.referral.findUnique({
     where: { refereeId: userId },
@@ -166,7 +184,9 @@ export async function acceptInvite(userId: string, code: string) {
 
   return withEvents(async (tx, emit) => {
     const invite = await usableInvite(tx, code, userId);
-    await ensureDirectChat(tx, emit, invite.creatorId, userId);
+    const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
+    if (user.guest && !user.queuedAt) await applyInvite(tx, emit, user, code);
+    else await ensureDirectChat(tx, emit, invite.creatorId, userId);
     return { referrer: (await profilesFor(tx, userId, [invite.creatorId]))(invite.creator) };
   });
 }

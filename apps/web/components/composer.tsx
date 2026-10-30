@@ -16,8 +16,10 @@ import {
   maskSpoilers,
   parseCommand,
   silentMessage,
+  stripAudio,
   suggestEmoji,
 } from "@six/shared";
+import { unwrap } from "@six/sdk";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bold,
@@ -35,6 +37,7 @@ import {
   Sparkles,
   Square,
   Strikethrough,
+  TicketPlus,
   Trash2,
   VenetianMask,
   X,
@@ -42,9 +45,10 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage, updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
+import { useIsAdmin } from "@/lib/admin";
 import { useLongPress } from "@/lib/long-press";
 import { useComposerMode } from "@/lib/composer";
-import { useDrafts } from "@/lib/drafts";
+import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { isTouch } from "@/lib/camera";
 import { shortRule } from "@/lib/ephemeral";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
@@ -61,12 +65,13 @@ import { VideoNoteCapture, type VideoNoteHandle, VideoNotePreview } from "./vide
 import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { emojiList } from "@/lib/emoji";
 import { useRealtime } from "@/lib/realtime";
-import { formatDuration, sendAtLabel } from "@/lib/format";
+import { formatDuration, inviteUrl, sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
 import { type Recording, useRecorder } from "@/lib/recorder";
 import { useSession } from "@/lib/session";
 import { type Draft, queueMessage } from "@/lib/send";
+import { six } from "@/lib/six";
 import { looksLikeSticker } from "@/lib/image";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 import { useVoiceEffect } from "@/lib/voice-fx";
@@ -118,14 +123,18 @@ export function Composer({
   scheduledCount,
   onSent,
   onSearch,
+  limited = false,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
   scheduledCount: number;
   onSent: () => void;
   onSearch: (q: string) => void;
+  /** A support chat: text only, plus a button for admins to send an invite link. */
+  limited?: boolean;
 }) {
   const tr = useT();
+  const admin = useIsAdmin().data;
   const meId = useSession((s) => s.user?.id);
   const qc = useQueryClient();
   const chat = useChat(qc, chatId).data;
@@ -165,7 +174,7 @@ export function Composer({
   const form = useRef<HTMLFormElement>(null);
   const [preview, setPreview] = useState<
     | { kind: "voice"; rec: Recording; url: string; waveform: number[] | null }
-    | { kind: "video"; file: File; url: string; durationMs: number }
+    | { kind: "video"; file: File; url: string; durationMs: number; muted?: File; spoiler: boolean }
     | null
   >(null);
   const [picked, setPicked] = useState<File[] | null>(null);
@@ -187,6 +196,16 @@ export function Composer({
   const closeScheduling = useCallback(() => setScheduling(null), []);
   const closeScheduled = useCallback(() => setShowScheduled(false), []);
 
+  async function sendInvite() {
+    try {
+      const { code } = unwrap(await six.api.POST("/v1/invites", { body: {} }));
+      queue({ text: inviteUrl(code) });
+      onSent();
+    } catch {
+      setError(tr.support.inviteFailed);
+    }
+  }
+
   function queue(draft: Draft) {
     if (!realtime) return;
     if (draft.game) return void queueMessage(qc, realtime, chatId, draft);
@@ -194,12 +213,13 @@ export function Composer({
     setSendAt(null);
   }
 
-  function sendVideoNote(file: File, chosen: EphemeralInput | null) {
+  function sendVideoNote(file: File, chosen: EphemeralInput | null, spoiler = false) {
     if (!realtime) return;
     queue({
       text: "",
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral: chosen,
+      spoiler,
       file: { blob: file, kind: "video_note", name: file.name, mime: file.type || "video/webm" },
     });
     setEphemeral(null);
@@ -242,6 +262,15 @@ export function Composer({
   useEffect(() => {
     setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (useDrafts.getState().byChat[chatId] ?? ""));
   }, [editing, chatId, draftsReady]);
+
+  const stored = useDrafts((s) => s.byChat[chatId] ?? "");
+  useEffect(() => {
+    if (!editing && stored.trim() !== text.trim()) setText(stored);
+  }, [stored]);
+
+  useEffect(() => {
+    if (chat) void receiveDraft(chat);
+  }, [chat?.id, chat?.encrypted, chat?.draft?.at]);
 
   useEffect(() => {
     if (mode) ref.current?.focus();
@@ -557,7 +586,20 @@ export function Composer({
     const durationMs = noteMs;
     const file = await note.current?.stop();
     setCapture(null);
-    if (file) setPreview({ kind: "video", file, url: URL.createObjectURL(file), durationMs });
+    if (file) setPreview({ kind: "video", file, url: URL.createObjectURL(file), durationMs, spoiler: false });
+  }
+
+  async function toggleNoteMute() {
+    const p = preview;
+    if (p?.kind !== "video") return;
+    setError(null);
+    let muted: File | undefined;
+    if (!p.muted) {
+      const bytes = new Uint8Array(await p.file.arrayBuffer());
+      if (!stripAudio(bytes)) return setError(tr.composer.couldNotMute);
+      muted = new File([bytes], p.file.name, { type: p.file.type });
+    }
+    setPreview((cur) => (cur?.kind === "video" && cur.file === p.file ? { ...cur, muted } : cur));
   }
 
   function closePreview(send: boolean) {
@@ -567,7 +609,7 @@ export function Composer({
     URL.revokeObjectURL(p.url);
     if (!send) return;
     if (p.kind === "voice") sendVoice(p.rec);
-    else sendVideoNote(p.file, ephemeral);
+    else sendVideoNote(p.muted ?? p.file, ephemeral, p.spoiler);
   }
 
   function cancelCapture() {
@@ -577,7 +619,7 @@ export function Composer({
     else note.current?.cancel();
   }
 
-  const showMic = (!editing && parsed.text.length === 0) || !!capture || !!preview;
+  const showMic = !limited && ((!editing && parsed.text.length === 0) || !!capture || !!preview);
   const overVideo = capture?.kind === "video" || preview?.kind === "video";
 
   return (
@@ -720,6 +762,20 @@ export function Composer({
             >
               <Trash2 className="size-5" />
             </button>
+          ) : limited ? (
+            !editing &&
+            admin && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => void sendInvite()}
+                aria-label={tr.support.sendInvite}
+                title={tr.support.sendInvite}
+                className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+              >
+                <TicketPlus className="size-5" />
+              </button>
+            )
           ) : !editing && (
             <>
               <button
@@ -763,7 +819,7 @@ export function Composer({
                 : "ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:ring-stone-800"
             } ${capture || preview ? "hidden" : "flex"}`}
           >
-            {!editing && (
+            {!editing && !limited && (
               <CommandBar
                 ref={commands}
                 chatId={chatId}
@@ -835,7 +891,7 @@ export function Composer({
               }}
               onPaste={(e) => {
                 const files = [...e.clipboardData.files];
-                if (!files.length || editing) return;
+                if (!files.length || editing || limited) return;
                 e.preventDefault();
                 void sendPasted(files);
               }}
@@ -869,7 +925,7 @@ export function Composer({
                 <NotebookPen className="size-5" />
               </button>
             )}
-            {!editing && !text.trim() && (
+            {!editing && !limited && !text.trim() && (
               <VoiceEffectSelect
                 className={`flex h-10 shrink-0 items-center gap-1 rounded-full px-2.5 text-sm font-medium ${
                   effect === "none" ? "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200" : "text-brand"
@@ -891,7 +947,7 @@ export function Composer({
                 <CalendarClock className="size-5" />
               </button>
             )}
-            {!editing && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
+            {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
           </div>
           {capture && (
             <div className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-white px-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
@@ -975,7 +1031,16 @@ export function Composer({
           onStop={() => void previewCapture()}
         />
       )}
-      {preview?.kind === "video" && <VideoNotePreview url={preview.url} bottom={noteBottom} />}
+      {preview?.kind === "video" && (
+        <VideoNotePreview
+          url={preview.url}
+          bottom={noteBottom}
+          muted={!!preview.muted}
+          spoiler={preview.spoiler}
+          onToggleMute={() => void toggleNoteMute()}
+          onToggleSpoiler={() => setPreview({ ...preview, spoiler: !preview.spoiler })}
+        />
+      )}
       {attachMenu && <Sheet title={tr.common.send} actions={attachActions} onClose={() => setAttachMenu(false)} />}
       {askLocation && (
         <Sheet

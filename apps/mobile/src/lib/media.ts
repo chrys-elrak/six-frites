@@ -1,8 +1,7 @@
-import { kindFor } from "@six/sdk";
+import { type Hydrated, kindFor } from "@six/sdk";
 import {
   ACCEPTED_TYPES,
   MAX_UPLOAD_BYTES,
-  type MessageDTO,
   type PhotoEdit,
   cropPixels,
   orientedSize,
@@ -86,14 +85,24 @@ export async function editedFromPng(file: LocalFile, base64: string) {
   return photo;
 }
 
-/** The photo a message carries as a file on this phone, downloading it first when it isn't here yet. */
-export async function messagePhoto(m: MessageDTO): Promise<LocalFile> {
+/** The file a message carries, on this phone, downloading it first when it isn't here yet. */
+export async function messageFile(m: Hydrated): Promise<LocalFile> {
   const a = m.attachment!;
-  if (!a.url) throw new Error("The photo is not ready");
+  if (!a.url) throw new Error("The file is not ready");
   const uri = a.url.startsWith("file:")
     ? a.url
-    : (await File.downloadFileAsync(a.url, new File(Paths.cache, `photo-${randomUUID()}-${a.name.replace(/[^\w.-]+/g, "_")}`))).uri;
-  return { uri, kind: "image", name: a.name, mime: a.mime, size: a.size, width: a.width, height: a.height };
+    : (await File.downloadFileAsync(a.url, new File(Paths.cache, `file-${randomUUID()}-${a.name.replace(/[^\w.-]+/g, "_")}`))).uri;
+  return {
+    uri,
+    kind: a.kind,
+    name: a.name,
+    mime: a.mime,
+    size: a.size,
+    width: a.width,
+    height: a.height,
+    durationMs: a.durationMs,
+    sticker: m.file?.sticker,
+  };
 }
 
 /** A copy of the video with its sound taken out, or null when it isn't an MP4 or MOV that can be edited. */

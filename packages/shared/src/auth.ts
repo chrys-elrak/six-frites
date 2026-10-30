@@ -11,6 +11,10 @@ export type DeviceInfo = z.infer<typeof DeviceInfo>;
 export const GoogleLoginInput = z.object({
   idToken: z.string().min(1),
   inviteCode: z.string().min(1).optional(),
+  support: z
+    .boolean()
+    .optional()
+    .describe("Signing in from the support page: without an invite you get a guest account that can only write to support"),
   device: DeviceInfo,
 });
 export type GoogleLoginInput = z.infer<typeof GoogleLoginInput>;

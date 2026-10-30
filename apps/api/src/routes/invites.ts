@@ -91,6 +91,7 @@ const inviteRoutes: FastifyPluginAsyncZod = async (app) => {
     authed.post(
       "/invites/:code/accept",
       {
+        config: { guest: true },
         schema: {
           tags: ["invites"],
           summary: "Accept an invite as an already signed-in user",

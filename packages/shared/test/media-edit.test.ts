@@ -55,7 +55,40 @@ function movie(moov: (mdatStart: number) => number[]) {
   return new Uint8Array([...ftyp, ...box("mdat", data), ...moov(start)]);
 }
 
+const el = (id: number[], ...parts: number[][]) => {
+  const body = parts.flat();
+  return [...id, 0x40 | (body.length >> 8), body.length & 255, ...body];
+};
+const UNKNOWN_SIZE = [1, 255, 255, 255, 255, 255, 255, 255];
+const entry = (number: number, type: number) => el([0xae], el([0xd7], [number]), el([0x83], [type]));
+const block = (track: number, data: string) => el([0xa3], [0x80 | track, 0, 0, 0x80], ascii(data));
+
+/** A WebM like a browser records: unknown segment and cluster sizes, video on track 1, sound on track 2. */
+const webm = () =>
+  new Uint8Array([
+    ...el([0x1a, 0x45, 0xdf, 0xa3], el([0x42, 0x82], ascii("webm"))),
+    ...[0x18, 0x53, 0x80, 0x67, ...UNKNOWN_SIZE],
+    ...el([0x16, 0x54, 0xae, 0x6b], entry(1, 1), entry(2, 2)),
+    ...[0x1f, 0x43, 0xb6, 0x75, ...UNKNOWN_SIZE],
+    ...el([0xe7], [0]),
+    ...block(1, "VVV"),
+    ...block(2, "AAA"),
+    ...el([0xa0], el([0xa1], [0x82, 0, 0, 0], ascii("AAA"))),
+    ...block(1, "VVV"),
+  ]);
+
 describe("stripAudio", () => {
+  it("does the same to a WebM, turning the sound track and its blocks into Void elements", () => {
+    const file = webm();
+    const before = file.length;
+    expect(stripAudio(file)).toBe(true);
+    const text = String.fromCharCode(...file);
+    expect(file.length).toBe(before);
+    expect(text).not.toContain("A");
+    expect(text.match(/V/g)).toHaveLength(6);
+    expect(file.filter((b) => b === 0xec)).toHaveLength(3);
+  });
+
   it("zeroes the sound samples and hides the sound track, leaving the video alone", () => {
     const file = movie((at) => box("moov", trak("vide", [at, at + 12]), trak("soun", [at + 6, at + 18])));
     const before = file.length;

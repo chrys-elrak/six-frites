@@ -70,6 +70,7 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
     "/logout",
     {
       onRequest: app.requireAuth,
+      config: { guest: true },
       schema: {
         tags: ["auth"],
         summary: "Revoke the current session",

@@ -20,6 +20,7 @@ import {
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
 import { Image } from "expo-image";
 import { GestureDetector, useLongPressGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
 import {
@@ -63,7 +64,7 @@ import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, p
 import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
-import { messagePhoto } from "@/lib/media";
+import { messageFile } from "@/lib/media";
 import { emojiOnly } from "@/lib/emoji";
 import { EPHEMERAL_OPTIONS, canResend, shortRule } from "@/lib/ephemeral";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
@@ -73,7 +74,7 @@ import { segments } from "@/lib/markup";
 import { six } from "@/lib/six";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
-import { deliver, queueMessage } from "@/lib/send";
+import { deliver, forwardMessages, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
@@ -87,6 +88,7 @@ import {
   type ShownAttachment,
   lightboxItem,
 } from "./attachment";
+import { ChatPicker } from "./chat-picker";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
@@ -113,6 +115,7 @@ interface MsgRow {
   effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
   bump: boolean;
+  vanish: boolean;
   createdAt: string;
   mine: boolean;
   deleted: boolean;
@@ -187,6 +190,7 @@ function buildRows(
   peerDeliveredAt: number,
   peerReadAt: number,
   unreadAfter: number | null,
+  vanish: boolean,
 ): Row[] {
   const sent = new Set(messages.filter((m) => m.senderId === meId).map((m) => m.clientId));
   const items: Item[] = [
@@ -204,6 +208,7 @@ function buildRows(
         effect: m.effect ?? null,
         replyTo: m.replyTo,
         bump: m.bump,
+        vanish: m.vanish,
         createdAt: m.createdAt,
         mine: m.senderId === meId,
         deleted: m.deletedAt !== null,
@@ -237,6 +242,7 @@ function buildRows(
           effect: p.effect ?? null,
           replyTo: p.replyTo,
           bump: p.bump ?? false,
+          vanish,
           createdAt: p.createdAt,
           mine: true,
           deleted: false,
@@ -803,6 +809,9 @@ function Bubble({
           style={[
             radius,
             tone,
+            row.vanish &&
+              !row.deleted &&
+              !bare && { borderWidth: 1.5, borderStyle: "dashed", borderColor: mine ? alpha(bubble.ink, 0.4) : alpha(theirInk, 0.3) },
             { maxWidth, overflow: "hidden" },
             !bare && (visual ? styles.padVisual : styles.padText),
             row.delivery === "failed" && { opacity: 0.6 },
@@ -837,7 +846,7 @@ function Bubble({
                 attachment={row.attachment}
                 mine={mine}
                 onOpen={onOpen}
-                hidden={["image", "video", "gif"].includes(row.attachment.data.kind) && blurred(row.key, row.spoiler)}
+                hidden={(["image", "video", "gif"].includes(row.attachment.data.kind) || (note && row.spoiler)) && blurred(row.key, row.spoiler)}
                 hiddenLabel={chip(row.spoiler)}
                 onReveal={() => revealMedia(row.key)}
                 maxWidth={maxWidth - 8}
@@ -989,6 +998,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [anchor, setAnchor] = useState<Anchor | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
+    const [forwarding, setForwarding] = useState<MessageDTO[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
     const [album, setAlbum] = useState<{ items: LightboxItem[]; start: number } | null>(null);
@@ -1066,8 +1076,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     ).current;
     const ordered = useMemo(() => shown.slice().reverse(), [shown]);
     const rows = useMemo(
-      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter).reverse(),
-      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter],
+      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish).reverse(),
+      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish],
     );
     const scrollToBottom = () => list.current?.scrollToOffset({ offset: 0, animated: true });
 
@@ -1189,6 +1199,17 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                 onSelect: () => void queueMessage(qc, realtime, chat.id, { text: "", replyTo: m, bump: true }),
               },
             ]),
+        ...(m.ephemeral ||
+        row.locked ||
+        ["service", "game", "gif", "sticker"].includes(m.type) ||
+        (m.attachment && m.attachment.status !== "ready")
+          ? []
+          : [
+              {
+                label: tr.messages.forward,
+                onSelect: () => setForwarding(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
+              },
+            ]),
         { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
         ...(m.ephemeral || frozen
           ? []
@@ -1208,7 +1229,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
               {
                 label: tr.messages.editAndResend,
                 onSelect: () =>
-                  void messagePhoto(m).then(
+                  void messageFile(m).then(
                     (file) => useComposerMode.getState().hand(chat.id, file),
                     () => null,
                   ),
@@ -1375,6 +1396,19 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
         {album && <AlbumViewer items={album.items} start={album.start} onClose={() => setAlbum(null)} />}
         {timingFor && <MessageTiming messageId={timingFor} onClose={() => setTimingFor(null)} />}
+        {forwarding && (
+          <ChatPicker
+            title={tr.messages.forwardTo}
+            empty={tr.chats.noChats}
+            onClose={() => setForwarding(null)}
+            onPick={(to) => {
+              setForwarding(null);
+              if (!realtime) return;
+              void forwardMessages(qc, realtime, to.id, forwarding).catch(() => null);
+              if (to.id !== chat.id) router.push(`/chats/${to.id}`);
+            }}
+          />
+        )}
         {destructFor && (
           <Sheet
             title={tr.messages.selfDestructTitle}

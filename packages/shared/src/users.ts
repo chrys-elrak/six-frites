@@ -17,6 +17,9 @@ export const UserDTO = z.object({
   hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
   ads: z.boolean().describe("Whether the apps show you ads; admins can turn them off for you"),
   quickReactions: z.array(z.string()).describe("The emojis offered first when you react, in order; empty means the defaults"),
+  guest: z
+    .boolean()
+    .describe("Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;

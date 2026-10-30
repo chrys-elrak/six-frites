@@ -13,7 +13,7 @@ const en = {
   options: "Chat options",
   securityCodeChanged: (name: string) =>
     `${name}'s security code changed, probably because they signed in on a new device.`,
-  safetyNumberChanged: (name: string) => `${name}'s safety number changed, probably a new phone. Tap to compare it.`,
+  safetyNumberChanged: (name: string) => `${name}'s security code changed, probably a new phone. Tap to compare it.`,
   verify: "Verify",
   deleteMessages: (n: number) => `Delete ${n} message${n === 1 ? "" : "s"}?`,
   deleteForMe: "Delete for me",
@@ -134,7 +134,7 @@ const en = {
 
   verifyEncryption: "Verify encryption",
   compareNumbers: (name: string) =>
-    `Compare these numbers with ${name}, in person or on a call. If they match on both phones, nobody is listening in between.`,
+    `Compare these emoji with ${name}, in person or on a call. If they match on both phones, nobody is listening in between.`,
   noEncryption: (name: string) => `${name} hasn't set up encryption yet.`,
 };
 
@@ -153,7 +153,7 @@ const fr: typeof en = {
   securityCodeChanged: (name) =>
     `Le code de sécurité de ${name} a changé, probablement parce que cette personne s'est connectée sur un nouvel appareil.`,
   safetyNumberChanged: (name) =>
-    `Le numéro de sécurité de ${name} a changé, probablement un nouveau téléphone. Touchez pour le comparer.`,
+    `Le code de sécurité de ${name} a changé, probablement un nouveau téléphone. Touchez pour le comparer.`,
   verify: "Vérifier",
   deleteMessages: (n) => `Supprimer ${n} message${n > 1 ? "s" : ""} ?`,
   deleteForMe: "Supprimer pour moi",
@@ -274,7 +274,7 @@ const fr: typeof en = {
 
   verifyEncryption: "Vérifier le chiffrement",
   compareNumbers: (name) =>
-    `Comparez ces numéros avec ${name}, en personne ou pendant un appel. S'ils sont identiques sur les deux téléphones, personne n'écoute entre vous.`,
+    `Comparez ces emoji avec ${name}, en personne ou pendant un appel. S'ils sont identiques sur les deux téléphones, personne n'écoute entre vous.`,
   noEncryption: (name) => `${name} n'a pas encore configuré le chiffrement.`,
 };
 
@@ -414,7 +414,7 @@ const mg: typeof en = {
 
   verifyEncryption: "Hamarino ny fiarovana",
   compareNumbers: (name) =>
-    `Ampitahao amin'i ${name} ireo isa ireo, mifanatrika na amin'ny antso. Raha mitovy amin'ny finday roa ireo, dia tsy misy olona mihaino eo anelanelanareo.`,
+    `Ampitahao amin'i ${name} ireo emoji ireo, mifanatrika na amin'ny antso. Raha mitovy amin'ny finday roa ireo, dia tsy misy olona mihaino eo anelanelanareo.`,
   noEncryption: (name) => `Mbola tsy nampandeha ny fiarovana i ${name}.`,
 };
 

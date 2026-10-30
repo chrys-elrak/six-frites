@@ -48,6 +48,7 @@ export interface VoiceTrack {
   url: string;
   chatId: string | null;
   title: string;
+  name?: string;
   onStop?: (finished: boolean) => void;
 }
 

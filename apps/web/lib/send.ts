@@ -18,7 +18,7 @@ import {
 } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { chatKeys, findCached, insertMessage, patchChat } from "./chats";
-import { e2ee, hydrate, shouldEncrypt } from "./e2ee";
+import { type Hydrated, e2ee, hydrate, messageFile, shouldEncrypt } from "./e2ee";
 import { mediaMeta } from "./media-meta";
 import { type PendingMessage, pendingFiles, sealedFiles, useOutbox } from "./outbox";
 import { six } from "./six";
@@ -245,4 +245,23 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
   };
   useOutbox.getState().add(pending);
   void deliver(qc, realtime, pending);
+}
+
+/** Sends copies of messages to a chat as if I wrote them there, with nothing saying where they came from. */
+export async function forwardMessages(qc: QueryClient, realtime: Realtime, chatId: string, messages: Hydrated[]) {
+  const groupId = messages.length > 1 ? crypto.randomUUID() : undefined;
+  for (const m of messages) {
+    const file = m.attachment ? await messageFile(m) : null;
+    await queueMessage(qc, realtime, chatId, {
+      text: m.text ?? "",
+      entities: m.entities,
+      spoiler: m.spoiler,
+      location: m.location ?? undefined,
+      checklist: m.checklist ?? undefined,
+      groupId,
+      file: file
+        ? { blob: file, kind: m.attachment!.kind, name: file.name, mime: file.type, sticker: m.file?.sticker, disguised: m.file?.disguised }
+        : undefined,
+    });
+  }
 }

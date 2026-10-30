@@ -100,7 +100,7 @@ export function startE2EE(userId: string) {
     const store = indexedStore(`six-e2ee-${userId}`);
     current = { client: new E2EE(six.api, store, userId), store };
     current.client.onIdentityChange(useIdentityChanges.getState().add);
-    void openDrafts(store);
+    void openDrafts(store, current.client);
   }
   void current.client.ready().catch((err) => console.error("could not set up encryption:", err));
   return current.client;

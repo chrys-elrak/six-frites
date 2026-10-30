@@ -98,6 +98,11 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     ...muteState(me),
     pinned: me.pinned,
     safeView: me.safeView,
+    draft: me.draftAt && {
+      text: me.draftSealed ? null : me.draft,
+      sealed: me.draftSealed ? me.draft : null,
+      at: me.draftAt.toISOString(),
+    },
     sharingProfile: me.showProfile,
     autoDeleteSecs: chat.autoDeleteSecs,
     vanish: chat.vanish,
@@ -107,6 +112,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     blockedByThem: blocks.byThem,
     peerDeleted: others.some((m) => m.user.deletedAt !== null),
     encrypted: chat.encryptedAt !== null,
+    support: chat.members.some((m) => m.user.guest),
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
   };
@@ -250,9 +256,17 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
 export async function updateChat(
   userId: string,
   chatId: string,
-  { autoDeleteSecs, vanish, theme, muted, mutedUntil, ...view }: UpdateChatInput,
+  { autoDeleteSecs, vanish, theme, muted, mutedUntil, draft, ...view }: UpdateChatInput,
 ) {
-  const mine = { ...view, ...muteData({ muted, mutedUntil }) };
+  const mine = {
+    ...view,
+    ...muteData({ muted, mutedUntil }),
+    ...(draft !== undefined && {
+      draft: draft && ("text" in draft ? draft.text || null : draft.sealed),
+      draftSealed: !!draft && "sealed" in draft,
+      draftAt: new Date(),
+    }),
+  };
   return withEvents(async (tx, emit) => {
     await assertMember(tx, chatId, userId);
     if (Object.values(mine).some((v) => v !== undefined)) {

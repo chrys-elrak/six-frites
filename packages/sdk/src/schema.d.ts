@@ -29,6 +29,8 @@ export interface paths {
                     "application/json": {
                         idToken: string;
                         inviteCode?: string;
+                        /** @description Signing in from the support page: without an invite you get a guest account that can only write to support */
+                        support?: boolean;
                         device: {
                             /** @enum {string} */
                             platform: "web" | "ios" | "android";
@@ -68,6 +70,8 @@ export interface paths {
                                 ads: boolean;
                                 /** @description The emojis offered first when you react, in order; empty means the defaults */
                                 quickReactions: string[];
+                                /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                                guest: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -140,6 +144,8 @@ export interface paths {
                                 ads: boolean;
                                 /** @description The emojis offered first when you react, in order; empty means the defaults */
                                 quickReactions: string[];
+                                /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                                guest: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -1688,6 +1694,8 @@ export interface paths {
                             ads: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
+                            /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                            guest: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1780,6 +1788,8 @@ export interface paths {
                             ads: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
+                            /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                            guest: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -1836,6 +1846,8 @@ export interface paths {
                             ads: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
+                            /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                            guest: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2027,6 +2039,8 @@ export interface paths {
                             ads: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
+                            /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                            guest: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2070,6 +2084,8 @@ export interface paths {
                             ads: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
+                            /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                            guest: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2638,6 +2654,403 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/support": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open your chat with support
+         * @description Guests from the support page can only use this chat, and only in text. An admin answers here, and can send an invite link to join Six Frites.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            type: "direct";
+                            title: string;
+                            members: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                };
+                                lastDeliveredMessageId: string | null;
+                                /** Format: date-time */
+                                lastDeliveredAt: string | null;
+                                lastReadMessageId: string | null;
+                                /** Format: date-time */
+                                lastReadAt: string | null;
+                            }[];
+                            lastMessage: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                                text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
+                                spoiler: boolean;
+                                /**
+                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                                 * @enum {string|null}
+                                 */
+                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
+                                /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
+                                bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
+                                attachment: {
+                                    id: string;
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
+                                    expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
+                                } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                                    text: string | null;
+                                    spoiler: boolean;
+                                    ephemeral: boolean;
+                                    deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
+                                action: ({
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
+                                }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                game: ({
+                                    /** @enum {string} */
+                                    game: "rps";
+                                    /** @enum {string} */
+                                    hand: "rock" | "paper" | "scissors";
+                                } | {
+                                    /** @enum {string} */
+                                    game: "dice";
+                                    pick: number;
+                                    seed: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "guess";
+                                    secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                }) | null;
+                                /** @description Answers to the game, oldest first; anyone but the sender can play */
+                                moves: {
+                                    userId: string;
+                                    move: {
+                                        /** @enum {string} */
+                                        hand: "rock" | "paper" | "scissors";
+                                    } | {
+                                        pick: number;
+                                        seed: number;
+                                    } | {
+                                        n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
+                                    };
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
+                                /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                                reactions: {
+                                    emoji: string;
+                                    userIds: string[];
+                                }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                } | null;
+                            } | null;
+                            unreadCount: number;
+                            archived: boolean;
+                            muted: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When a timed mute ends; null while muted for good or not muted
+                             */
+                            mutedUntil: string | null;
+                            pinned: boolean;
+                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            safeView: boolean;
+                            /** @description You show the other person your real name and photo; until then they only see your alias */
+                            sharingProfile: boolean;
+                            /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
+                            autoDeleteSecs: number | null;
+                            /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
+                            vanish: boolean;
+                            /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
+                            theme: string | null;
+                            /** @description Your scheduled messages waiting to be sent in this chat */
+                            scheduledCount: number;
+                            /** @description Just yours: what you were typing here, saved by one of your devices for the others; null until one does */
+                            draft: {
+                                /** @description Plain text; null when cleared, or when it is sealed */
+                                text: string | null;
+                                /** @description Sealed with your backup key, so only your devices can read it */
+                                sealed: string | null;
+                                /** Format: date-time */
+                                at: string;
+                            } | null;
+                            /** @description You blocked the other person: nobody can send, react or edit until you unblock */
+                            blockedByMe: boolean;
+                            /** @description The other person blocked you */
+                            blockedByThem: boolean;
+                            /** @description The other person deleted their account */
+                            peerDeleted: boolean;
+                            /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
+                            encrypted: boolean;
+                            /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                            support: boolean;
+                            /** Format: date-time */
+                            lastActivityAt: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/chats": {
         parameters: {
             query?: never;
@@ -2710,6 +3123,8 @@ export interface paths {
                                     silent: boolean;
                                     /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                     bump: boolean;
+                                    /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                    vanish: boolean;
                                     attachment: {
                                         id: string;
                                         /**
@@ -2999,6 +3414,15 @@ export interface paths {
                                 theme: string | null;
                                 /** @description Your scheduled messages waiting to be sent in this chat */
                                 scheduledCount: number;
+                                /** @description Just yours: what you were typing here, saved by one of your devices for the others; null until one does */
+                                draft: {
+                                    /** @description Plain text; null when cleared, or when it is sealed */
+                                    text: string | null;
+                                    /** @description Sealed with your backup key, so only your devices can read it */
+                                    sealed: string | null;
+                                    /** Format: date-time */
+                                    at: string;
+                                } | null;
                                 /** @description You blocked the other person: nobody can send, react or edit until you unblock */
                                 blockedByMe: boolean;
                                 /** @description The other person blocked you */
@@ -3007,6 +3431,8 @@ export interface paths {
                                 peerDeleted: boolean;
                                 /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                                 encrypted: boolean;
+                                /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                                support: boolean;
                                 /** Format: date-time */
                                 lastActivityAt: string;
                                 /** Format: date-time */
@@ -3095,6 +3521,8 @@ export interface paths {
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                 bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -3384,6 +3812,15 @@ export interface paths {
                             theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
                             scheduledCount: number;
+                            /** @description Just yours: what you were typing here, saved by one of your devices for the others; null until one does */
+                            draft: {
+                                /** @description Plain text; null when cleared, or when it is sealed */
+                                text: string | null;
+                                /** @description Sealed with your backup key, so only your devices can read it */
+                                sealed: string | null;
+                                /** Format: date-time */
+                                at: string;
+                            } | null;
                             /** @description You blocked the other person: nobody can send, react or edit until you unblock */
                             blockedByMe: boolean;
                             /** @description The other person blocked you */
@@ -3392,6 +3829,8 @@ export interface paths {
                             peerDeleted: boolean;
                             /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                             encrypted: boolean;
+                            /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                            support: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -3465,6 +3904,12 @@ export interface paths {
                         safeView?: boolean;
                         /** @description For both people: turn vanish mode on or off */
                         vanish?: boolean;
+                        /** @description Just for you: what you are typing, so your other devices show it too. null clears it. */
+                        draft?: ({
+                            text: string;
+                        } | {
+                            sealed: string;
+                        }) | null;
                         /** @description For both people: delete messages sent from now on this many seconds after sending. null turns it off. */
                         autoDeleteSecs?: number | null;
                         /** @description For both people: the chat background, a theme id or custom:#rrggbb. null goes back to each person's default. */
@@ -3523,6 +3968,8 @@ export interface paths {
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                 bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -3812,6 +4259,15 @@ export interface paths {
                             theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
                             scheduledCount: number;
+                            /** @description Just yours: what you were typing here, saved by one of your devices for the others; null until one does */
+                            draft: {
+                                /** @description Plain text; null when cleared, or when it is sealed */
+                                text: string | null;
+                                /** @description Sealed with your backup key, so only your devices can read it */
+                                sealed: string | null;
+                                /** Format: date-time */
+                                at: string;
+                            } | null;
                             /** @description You blocked the other person: nobody can send, react or edit until you unblock */
                             blockedByMe: boolean;
                             /** @description The other person blocked you */
@@ -3820,6 +4276,8 @@ export interface paths {
                             peerDeleted: boolean;
                             /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                             encrypted: boolean;
+                            /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                            support: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -3985,6 +4443,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -4319,6 +4779,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -4653,6 +5115,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -4990,6 +5454,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -5350,6 +5816,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -5683,6 +6151,8 @@ export interface paths {
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                 bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -6021,6 +6491,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -6362,6 +6834,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -6744,6 +7218,8 @@ export interface paths {
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                 bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
                                 attachment: {
                                     id: string;
                                     /**
@@ -7220,6 +7696,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -8165,6 +8643,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**
@@ -9144,6 +9624,8 @@ export interface paths {
                                     silent: boolean;
                                     /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                     bump: boolean;
+                                    /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                    vanish: boolean;
                                     attachment: {
                                         id: string;
                                         /**
@@ -9441,6 +9923,8 @@ export interface paths {
                                     silent: boolean;
                                     /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                     bump: boolean;
+                                    /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                    vanish: boolean;
                                     attachment: {
                                         id: string;
                                         /**
@@ -9786,6 +10270,8 @@ export interface paths {
                                         silent: boolean;
                                         /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                                         bump: boolean;
+                                        /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                        vanish: boolean;
                                         attachment: {
                                             id: string;
                                             /**
@@ -10075,6 +10561,15 @@ export interface paths {
                                     theme: string | null;
                                     /** @description Your scheduled messages waiting to be sent in this chat */
                                     scheduledCount: number;
+                                    /** @description Just yours: what you were typing here, saved by one of your devices for the others; null until one does */
+                                    draft: {
+                                        /** @description Plain text; null when cleared, or when it is sealed */
+                                        text: string | null;
+                                        /** @description Sealed with your backup key, so only your devices can read it */
+                                        sealed: string | null;
+                                        /** Format: date-time */
+                                        at: string;
+                                    } | null;
                                     /** @description You blocked the other person: nobody can send, react or edit until you unblock */
                                     blockedByMe: boolean;
                                     /** @description The other person blocked you */
@@ -10083,6 +10578,8 @@ export interface paths {
                                     peerDeleted: boolean;
                                     /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                                     encrypted: boolean;
+                                    /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                                    support: boolean;
                                     /** Format: date-time */
                                     lastActivityAt: string;
                                     /** Format: date-time */
@@ -10154,6 +10651,8 @@ export interface paths {
                                     ads: boolean;
                                     /** @description The emojis offered first when you react, in order; empty means the defaults */
                                     quickReactions: string[];
+                                    /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                                    guest: boolean;
                                     /** Format: date-time */
                                     createdAt: string;
                                 };
@@ -10623,6 +11122,8 @@ export interface paths {
                             ads: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
+                            /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                            guest: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -10736,6 +11237,8 @@ export interface paths {
                             ads: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
+                            /** @description Signed in from the support page without an invite: can only write to support, in text, until joining with an invite */
+                            guest: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -10960,6 +11463,8 @@ export interface paths {
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
                             bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
                             attachment: {
                                 id: string;
                                 /**

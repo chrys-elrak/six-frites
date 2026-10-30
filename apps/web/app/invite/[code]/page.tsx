@@ -34,6 +34,7 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
 
   const accept = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
+    onSuccess: () => user?.guest && window.location.replace("/"),
   });
 
   useEffect(() => {

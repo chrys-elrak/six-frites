@@ -5,7 +5,15 @@ import { Modal, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { canUseBiometrics, checkBiometrics, setBiometricUnlock, unlock, useBiometricUnlock } from "@/lib/app-lock";
+import {
+  canUseBiometrics,
+  checkBiometrics,
+  setBiometricUnlock,
+  setCodeLength,
+  unlock,
+  useBiometricUnlock,
+  useCodeLength,
+} from "@/lib/app-lock";
 import { useT } from "@/lib/i18n";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -93,6 +101,7 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       const user = unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } }));
+      setCodeLength(code.length);
       unlock();
       setUser(user);
       onClose();
@@ -148,6 +157,8 @@ export function LockScreen({
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [auto, setAuto] = useState(true);
+  const length = useCodeLength((s) => s.length);
   const biometric = useBiometricUnlock((s) => s.on) && !verify;
 
   function askFingerprint() {
@@ -158,20 +169,27 @@ export function LockScreen({
     if (biometric) askFingerprint();
   }, [biometric]);
 
-  async function check() {
-    if (code.length < 4 || busy) return;
+  async function check(value = code) {
+    if (value.length < 4 || busy) return;
     setBusy(true);
     setError(null);
     try {
-      if (verify) await verify(code);
-      else unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code } }));
+      if (verify) await verify(value);
+      else unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code: value } }));
+      setCodeLength(value.length);
       onUnlock();
     } catch (err) {
       setCode("");
+      setAuto(false);
       setError(codeError(err, tr, tr.settings.appLock.errors));
     } finally {
       setBusy(false);
     }
+  }
+
+  function type(value: string) {
+    setCode(value);
+    if (auto && value.length === length) void check(value);
   }
 
   return (
@@ -188,7 +206,7 @@ export function LockScreen({
           <CodeInput
             label={tr.settings.appLock.enterCode}
             value={code}
-            onChange={setCode}
+            onChange={type}
             autoFocus={!biometric}
             onSubmit={() => void check()}
           />

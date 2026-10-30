@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { RefreshCw, Square } from "lucide-react-native";
+import { EyeOff, RefreshCw, Square, Volume2, VolumeX } from "lucide-react-native";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "./text";
@@ -9,6 +9,7 @@ import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import type { LocalFile } from "@/lib/send";
 import { brand } from "@/lib/theme";
+import { Pill } from "./attach-dialog";
 
 const MAX_MS = 60_000;
 
@@ -182,7 +183,21 @@ export const VideoNoteCapture = forwardRef<
 });
 
 /** Plays a recorded video message in its circle, on a loop, until it is sent or thrown away. Tap to pause. */
-export function VideoNotePreview({ uri, bottom }: { uri: string; bottom: number }) {
+export function VideoNotePreview({
+  uri,
+  bottom,
+  muted,
+  spoiler,
+  onToggleMute,
+  onToggleSpoiler,
+}: {
+  uri: string;
+  bottom: number;
+  muted: boolean;
+  spoiler: boolean;
+  onToggleMute: () => void;
+  onToggleSpoiler: () => void;
+}) {
   const tr = useT();
   const { width } = useWindowDimensions();
   const size = Math.min(width * 0.72, 300);
@@ -190,6 +205,9 @@ export function VideoNotePreview({ uri, bottom }: { uri: string; bottom: number 
     p.loop = true;
     p.play();
   });
+  useEffect(() => {
+    player.muted = muted;
+  }, [player, muted]);
   return (
     <View style={[styles.overlay, { bottom }]}>
       <Pressable
@@ -201,6 +219,22 @@ export function VideoNotePreview({ uri, bottom }: { uri: string; bottom: number 
         <RoundMask size={size} color={BACKDROP} />
         <Ring size={size} progress={1} />
       </Pressable>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <Pill
+          on={spoiler}
+          Icon={EyeOff}
+          title={spoiler ? tr.composer.showNormally : tr.composer.hideWithSpoiler}
+          label={spoiler ? tr.composer.spoilerOn : tr.summary.spoiler}
+          onPress={onToggleSpoiler}
+        />
+        <Pill
+          on={muted}
+          Icon={muted ? VolumeX : Volume2}
+          title={muted ? tr.composer.unmute : tr.composer.mute}
+          label={muted ? tr.composer.muted : tr.composer.mute}
+          onPress={onToggleMute}
+        />
+      </View>
     </View>
   );
 }

@@ -27,7 +27,8 @@ Never change `BACKUP_PIN_SECRET` once set: message backups protected by a PIN ca
 `FCM_SERVICE_ACCOUNT` is the Firebase service account key for Android push (Firebase console, Project settings >
 Service accounts > Generate new private key), the whole JSON on one line in single quotes.
 
-In Google Cloud, add `https://six-frites.koera.mg` to the web client's Authorized JavaScript origins.
+In Google Cloud, add `https://six-frites.koera.mg` to the web client's Authorized JavaScript origins, and
+`https://six-frites.koera.mg/auth/google` to its Authorized redirect URIs (iOS signs in through a redirect).
 
 ## Deploy and update
 

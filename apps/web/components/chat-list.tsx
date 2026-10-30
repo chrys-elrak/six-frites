@@ -11,6 +11,8 @@ import {
   Lock,
   MessageCircle,
   MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pin,
   Search,
   Share2,
@@ -19,6 +21,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { create } from "zustand";
 import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
 import { useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
@@ -29,15 +32,49 @@ import { useLongPress } from "@/lib/long-press";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
+import { useMedia } from "@/lib/viewport";
 import { AdBanner } from "./ad-banner";
 import { LockScreen } from "./app-lock";
-import { useDrafts } from "@/lib/drafts";
+import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
 import { ServiceIcon, callLabel } from "./service-icon";
+
+const RAIL_KEY = "six:chat-rail";
+const WIDE = "(width >= 64rem)";
+
+const useRailState = create(() => {
+  try {
+    return { collapsed: localStorage.getItem(RAIL_KEY) === "1", peek: false };
+  } catch {
+    return { collapsed: false, peek: false };
+  }
+});
+
+/**
+ * Whether the chat list beside a chat shrinks to a column of avatars. Wide screens keep the user's choice,
+ * narrower ones always shrink it unless it was opened for a peek, which the next navigation closes.
+ */
+export function useChatRail() {
+  const split = useMedia("(width >= 48rem)");
+  const wide = useMedia(WIDE);
+  const { collapsed, peek } = useRailState();
+  return split && (wide ? collapsed : !peek);
+}
+
+export const closeRailPeek = () => useRailState.setState({ peek: false });
+
+function toggleRail() {
+  if (!matchMedia(WIDE).matches) return useRailState.setState((s) => ({ peek: !s.peek }));
+  const collapsed = !useRailState.getState().collapsed;
+  try {
+    localStorage.setItem(RAIL_KEY, collapsed ? "1" : "0");
+  } catch {}
+  useRailState.setState({ collapsed });
+}
 
 function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const tr = useT();
@@ -105,29 +142,43 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   );
 }
 
-function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: boolean }) {
+function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; active: boolean; rail: boolean }) {
   const tr = useT();
   const router = useRouter();
   const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
   const press = useLongPress((at) => setMenu({ at }));
   const typing = useTyping(chat.id);
   const draft = useDrafts((s) => (active ? undefined : s.byChat[chat.id]));
+  useEffect(() => void receiveDraft(chat), [chat.id, chat.encrypted, chat.draft?.at]);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
   const online = usePresence(peer.id === meId || frozen ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
+  const badge = unread && (
+    <span
+      className={`grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold ${
+        isMuted(chat) ? "bg-stone-300 text-stone-700 dark:bg-stone-700 dark:text-stone-200" : "bg-brand text-brand-ink"
+      }`}
+    >
+      {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+    </span>
+  );
 
   return (
     <div className="group relative">
       <Link
         href={`/chats/${chat.id}`}
         {...press}
-        className={`flex items-center gap-3 px-4 py-3 transition [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
+        title={rail ? chat.title : undefined}
+        className={`flex items-center gap-3 py-3 transition ${rail ? "justify-center" : "px-4"} [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
           active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
         }`}
       >
-        <Avatar user={peer} size="md" online={online} />
-        <div className="min-w-0 flex-1">
+        <span className="relative shrink-0">
+          <Avatar user={peer} size="md" online={online} />
+          {rail && badge && <span className="absolute -top-1 -right-1">{badge}</span>}
+        </span>
+        <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
           <div className="flex items-center gap-1.5">
             <p className="min-w-0 flex-1 truncate font-semibold">{chat.title}</p>
             {isMuted(chat) && <BellOff aria-label={tr.common.muted} className="size-3.5 shrink-0 text-stone-400" />}
@@ -158,17 +209,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
             {chat.pinned && !unread && (
               <Pin aria-label={tr.chats.pinned} className="size-3.5 shrink-0 rotate-45 text-stone-400" />
             )}
-            {unread && (
-              <span
-                className={`grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold ${
-                  isMuted(chat)
-                    ? "bg-stone-300 text-stone-700 dark:bg-stone-700 dark:text-stone-200"
-                    : "bg-brand text-brand-ink"
-                }`}
-              >
-                {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-              </span>
-            )}
+            {badge}
           </div>
         </div>
       </Link>
@@ -178,7 +219,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
           setMenu({ at: { x: r.left, y: r.bottom } });
         }}
         aria-label={tr.chats.optionsFor(chat.title)}
-        className="absolute top-1/2 right-2 hidden size-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-stone-500 opacity-0 shadow-sm transition group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:bg-stone-800/90"
+        className={`absolute top-1/2 right-2 hidden size-8 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-stone-500 opacity-0 shadow-sm transition group-hover:opacity-100 focus:opacity-100 ${rail ? "" : "pointer-fine:grid"} dark:bg-stone-800/90`}
       >
         <MoreHorizontal className="size-4" />
       </button>
@@ -199,7 +240,7 @@ function ChatRow({ chat, meId, active }: { chat: ChatDTO; meId: string; active: 
  * The chat list, or with `archived` the archived chats behind the app lock code. The archived row sits
  * just above the top of the list, so it only shows when the list is pulled down.
  */
-export function ChatList({ archived = false }: { archived?: boolean }) {
+export function ChatList({ archived = false, rail = false }: { archived?: boolean; rail?: boolean }) {
   const tr = useT();
   const router = useRouter();
   const meId = useSession((s) => s.user!.id);
@@ -218,11 +259,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
 
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
-  const needle = query.trim().toLowerCase();
+  const needle = rail ? "" : query.trim().toLowerCase();
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
-  const showArchive = !archived && !needle && archivedCount > 0;
+  const showArchive = !archived && !rail && !needle && archivedCount > 0;
   const scroller = useRef<HTMLDivElement>(null);
   const archiveRow = useRef<HTMLAnchorElement>(null);
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
@@ -245,7 +286,9 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-wrap items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800">
+      <header
+        className={`flex flex-wrap items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800 ${rail ? "justify-center" : ""}`}
+      >
         {archived && (
           <Link
             href="/"
@@ -255,11 +298,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             <ChevronLeft className="size-6" />
           </Link>
         )}
-        <div className="min-w-0 flex-1">
+        <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
           <h1 className="text-xl font-semibold tracking-tight">{archived ? tr.common.archived : tr.common.chats}</h1>
           {statusText && <p className="text-xs text-stone-500">{statusText}</p>}
         </div>
-        {!archived && (
+        {!archived && !rail && (
           <>
             <button
               onClick={() => setDialog("invite")}
@@ -279,7 +322,19 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             </button>
           </>
         )}
-        <label className="flex w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10">
+        {!archived && (
+          <button
+            onClick={toggleRail}
+            aria-label={rail ? tr.chats.expandList : tr.chats.collapseList}
+            title={rail ? tr.chats.expandList : tr.chats.collapseList}
+            className="hidden size-9 place-items-center rounded-full text-stone-500 hover:bg-stone-200 md:grid dark:hover:bg-stone-800"
+          >
+            {rail ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
+          </button>
+        )}
+        <label
+          className={`${rail ? "hidden" : "flex"} w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10`}
+        >
           <Search className="size-4 shrink-0" />
           <input
             value={query}
@@ -317,7 +372,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           {chats.isSuccess && needle && visible.length === 0 && (
             <p className="p-8 text-center text-sm text-stone-500">{tr.contacts.noMatch(query.trim())}</p>
           )}
-          {chats.isSuccess && !needle && visible.length === 0 && (
+          {chats.isSuccess && !rail && !needle && visible.length === 0 && (
             <div className="flex flex-col items-center gap-3 p-8 text-center">
               <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
                 {archived ? (
@@ -341,11 +396,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             </div>
           )}
           {visible.map((c) => (
-            <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} />
+            <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} rail={rail} />
           ))}
         </div>
       </div>
-      <AdBanner />
+      {!rail && <AdBanner />}
     </div>
   );
 }

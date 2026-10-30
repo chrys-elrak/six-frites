@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LockScreen } from "@/components/app-lock";
-import { ChatList } from "@/components/chat-list";
+import { ChatList, closeRailPeek, useChatRail } from "@/components/chat-list";
 import { GamesPanel } from "@/components/games-panel";
 import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
@@ -62,28 +62,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const qc = useQueryClient();
   const status = useSession((s) => s.status);
+  const guest = useSession((s) => !!s.user?.guest);
   const hasAppLock = useSession((s) => !!s.user?.hasAppLock);
   const locked = useAppLock((s) => s.locked) && hasAppLock;
   const tr = useT();
   useAppHeight();
   useAutoLock();
   useEffect(primeAudio, []);
-  usePushLinks(status === "authed");
+  useEffect(closeRailPeek, [pathname]);
+  const railable = useChatRail();
+  usePushLinks(status === "authed" && !guest);
 
   useEffect(() => {
     if (status === "anon") {
       qc.clear();
       router.replace(pathname === "/" ? "/login" : `/login?next=${encodeURIComponent(pathname)}`);
-    }
-  }, [status, router, qc, pathname]);
+    } else if (guest) router.replace("/support");
+  }, [status, guest, router, qc, pathname]);
 
-  if (status !== "authed") {
+  if (status !== "authed" || guest) {
     return <main className="grid h-dvh place-items-center text-sm text-stone-500">{tr.common.loading}</main>;
   }
 
   const topLevel = tabRoutes[pathname];
   const tab = topLevel ?? "chats";
   const wide = tab === "settings" || tab === "games";
+  const rail = railable && tab === "chats" && pathname !== "/archived";
 
   return (
     <RealtimeProvider>
@@ -101,10 +105,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <MiniPlayer atTop={!topLevel} />
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex md:flex-row ${wide ? "md:flex-1" : "md:w-100 md:shrink-0 md:border-r lg:w-116"} dark:border-white/10 ${glass}`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex md:flex-row ${wide ? "md:flex-1" : `md:shrink-0 md:border-r ${rail ? "md:w-40" : "md:w-100 lg:w-116"}`} dark:border-white/10 ${glass}`}
           >
             <div className="min-h-0 min-w-0 flex-1">
-              {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
+              {tab === "chats" && <ChatList archived={pathname === "/archived"} rail={rail} />}
               {tab === "games" && <GamesPanel />}
               {tab === "settings" && <SettingsPanel />}
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { SixApiError } from "@six/sdk";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -93,6 +94,9 @@ function LoginForm() {
             {error.text}
           </p>
         )}
+        <Link href="/support" className="block text-center text-sm font-medium text-brand hover:underline">
+          {tr.support.chatWithSupport}
+        </Link>
       </div>
 
       <AndroidDownload compact />

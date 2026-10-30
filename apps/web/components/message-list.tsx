@@ -61,6 +61,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import { VList, type VListHandle } from "virtua";
 import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, play, react, selfDestruct } from "@/lib/actions";
 import { type Hydrated, hydrate, messageFile } from "@/lib/e2ee";
@@ -75,12 +76,13 @@ import { useLongPress } from "@/lib/long-press";
 import { segments } from "@/lib/markup";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
-import { deliver, queueMessage } from "@/lib/send";
+import { deliver, forwardMessages, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AlbumViewer, AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
+import { ChatPicker } from "./chat-picker";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
@@ -110,6 +112,7 @@ interface MsgRow {
   effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
   bump: boolean;
+  vanish: boolean;
   createdAt: string;
   mine: boolean;
   deleted: boolean;
@@ -180,6 +183,7 @@ function buildRows(
   peerDeliveredAt: number,
   peerReadAt: number,
   unreadAfter: number | null,
+  vanish: boolean,
 ): Row[] {
   const sent = new Set(messages.filter((m) => m.senderId === meId).map((m) => m.clientId));
   const items: Item[] = [
@@ -197,6 +201,7 @@ function buildRows(
         effect: m.effect ?? null,
         replyTo: m.replyTo,
         bump: m.bump,
+        vanish: m.vanish,
         createdAt: m.createdAt,
         mine: m.senderId === meId,
         deleted: m.deletedAt !== null,
@@ -231,6 +236,7 @@ function buildRows(
           effect: p.effect ?? null,
           replyTo: p.replyTo,
           bump: p.bump ?? false,
+          vanish,
           createdAt: p.createdAt,
           mine: true,
           deleted: false,
@@ -733,6 +739,10 @@ function Bubble({
         : mine
           ? "bg-brand text-brand-ink"
           : "bg-(--bubble-their) text-(--bubble-their-ink) ring-1 ring-inset ring-stone-200 dark:ring-stone-700";
+  const dashes =
+    row.vanish && !row.deleted && !(jumbo || note || sticker || loose)
+      ? `outline-2 outline-dashed -outline-offset-2 ${mine ? "outline-brand-ink/40" : "outline-(--bubble-their-ink)/30"}`
+      : "";
 
   return (
     <div
@@ -775,7 +785,7 @@ function Bubble({
               {...press}
               onClick={onTap}
               onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
-              className={`${fx ? "relative " : ""}${radius} ${tone} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${fx ? "relative " : ""}${radius} ${tone} ${dashes} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -812,7 +822,7 @@ function Bubble({
                     attachment={row.attachment}
                     mine={mine}
                     onOpen={onOpen}
-                    hidden={visual ? blurred(row.key, row.spoiler) : false}
+                    hidden={visual || (note && row.spoiler) ? blurred(row.key, row.spoiler) : false}
                     hiddenLabel={chip(row.spoiler)}
                     onReveal={() => revealMedia(row.key)}
                     autoPlay={autoPlay}
@@ -965,6 +975,7 @@ export const MessageList = forwardRef<
     const tr = useT();
     const qc = useQueryClient();
     const { realtime } = useRealtime();
+    const router = useRouter();
     const messages = useMessages(chat.id);
     const pending = usePending(chat.id);
     const setMode = useComposerMode((s) => s.set);
@@ -982,6 +993,7 @@ export const MessageList = forwardRef<
     const [reporting, setReporting] = useState<MessageDTO | null>(null);
     const [timingFor, setTimingFor] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
+    const [forwarding, setForwarding] = useState<Hydrated[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
     const [album, setAlbum] = useState<{ items: ShownAttachment[]; start: number } | null>(null);
@@ -1054,8 +1066,8 @@ export const MessageList = forwardRef<
       [messages.data],
     );
     const rows = useMemo(
-      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter),
-      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter],
+      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish),
+      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish],
     );
     const firstKey = useRef<string | undefined>(undefined);
     const lastKey = useRef<string | undefined>(undefined);
@@ -1181,6 +1193,17 @@ export const MessageList = forwardRef<
               {
                 label: tr.messages.bump,
                 onSelect: () => void queueMessage(qc, realtime, chat.id, { text: "", replyTo: m, bump: true }),
+              },
+            ]),
+        ...(m.ephemeral ||
+        m.undecryptable ||
+        ["service", "game", "gif", "sticker"].includes(m.type) ||
+        (m.attachment && m.attachment.status !== "ready")
+          ? []
+          : [
+              {
+                label: tr.messages.forward,
+                onSelect: () => setForwarding(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
               },
             ]),
         { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
@@ -1403,6 +1426,19 @@ export const MessageList = forwardRef<
         )}
         {packFor && <PackDialog packId={packFor} onClose={() => setPackFor(null)} />}
         {timingFor && <MessageTiming messageId={timingFor} onClose={() => setTimingFor(null)} />}
+        {forwarding && (
+          <ChatPicker
+            title={tr.messages.forwardTo}
+            empty={tr.chats.noChats}
+            onClose={() => setForwarding(null)}
+            onPick={(to) => {
+              setForwarding(null);
+              if (!realtime) return;
+              void forwardMessages(qc, realtime, to.id, forwarding).catch(() => null);
+              if (to.id !== chat.id) router.push(`/chats/${to.id}`);
+            }}
+          />
+        )}
         {confirmDelete && (
           <Sheet
             title={tr.messages.deleteTitle}
