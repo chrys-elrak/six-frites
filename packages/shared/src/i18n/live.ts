@@ -1,8 +1,18 @@
 const en = {
   title: "Live",
   hint: "Play together at the same time, up to 4",
-  games: { ludo: "Ludo", eights: "Crazy Eights", words: "Word Hunt" },
+  games: {
+    fanorona: "Fanorona",
+    ludo: "Ludo",
+    eights: "Crazy Eights",
+    words: "Word Hunt",
+    dots: "Dots and Boxes",
+    memory: "Memory",
+  },
   about: {
+    fanorona: "Madagascar's board game: take stones by moving toward them or away.",
+    dots: "Draw lines. Close a box to score and play again.",
+    memory: "Turn two cards over. Find a pair to keep it and play again.",
     ludo: "Race your four tokens home. Roll a 6 to get out.",
     eights: "Match the suit or the number. 8s are wild.",
     words: "Find as many words as you can in 2 minutes.",
@@ -45,13 +55,32 @@ const en = {
   alreadyFound: "Already found",
   timeUp: "Time's up!",
   missed: "Words nobody found",
+  boxes: (n: number) => `${n} box${n === 1 ? "" : "es"}`,
+  pairs: (n: number) => `${n} pair${n === 1 ? "" : "s"}`,
+  stones: (n: number) => `${n} stone${n === 1 ? "" : "s"}`,
+  pickStone: "Pick a stone, then where it goes",
+  mustTake: "You must take if you can",
+  takeFront: "Take the ones in front",
+  takeBehind: "Take the ones behind",
+  keepTaking: "Keep taking with the same stone, or stop",
+  stop: "Stop",
 };
 
 const fr: typeof en = {
   title: "En direct",
   hint: "Jouez ensemble en même temps, jusqu'à 4",
-  games: { ludo: "Petits chevaux", eights: "Huit américain", words: "Chasse aux mots" },
+  games: {
+    fanorona: "Fanorona",
+    ludo: "Petits chevaux",
+    eights: "Huit américain",
+    words: "Chasse aux mots",
+    dots: "Pipopipette",
+    memory: "Memory",
+  },
   about: {
+    fanorona: "Le jeu de Madagascar : prends des pions en t'en approchant ou en t'en éloignant.",
+    dots: "Trace des traits. Ferme un carré pour marquer et rejouer.",
+    memory: "Retourne deux cartes. Trouve une paire pour la garder et rejouer.",
     ludo: "Ramène tes quatre pions à la maison. Fais un 6 pour sortir.",
     eights: "Pose la même couleur ou le même chiffre. Les 8 changent la couleur.",
     words: "Trouve un maximum de mots en 2 minutes.",
@@ -94,13 +123,32 @@ const fr: typeof en = {
   alreadyFound: "Déjà trouvé",
   timeUp: "Temps écoulé !",
   missed: "Mots que personne n'a trouvés",
+  boxes: (n) => `${n} carré${n === 1 ? "" : "s"}`,
+  pairs: (n) => `${n} paire${n === 1 ? "" : "s"}`,
+  stones: (n) => `${n} pion${n === 1 ? "" : "s"}`,
+  pickStone: "Choisis un pion, puis où il va",
+  mustTake: "Tu dois prendre si tu peux",
+  takeFront: "Prendre ceux de devant",
+  takeBehind: "Prendre ceux de derrière",
+  keepTaking: "Continue de prendre avec le même pion, ou arrête",
+  stop: "Arrêter",
 };
 
 const mg: typeof en = {
   title: "Mivantana",
   hint: "Milalao miaraka amin'ny fotoana iray, hatramin'ny 4",
-  games: { ludo: "Ludo", eights: "Valo adala", words: "Fihazana teny" },
+  games: {
+    fanorona: "Fanorona",
+    ludo: "Ludo",
+    eights: "Valo adala",
+    words: "Fihazana teny",
+    dots: "Teboka sy efamira",
+    memory: "Tadidy",
+  },
   about: {
+    fanorona: "Ilay lalao malagasy: maka vato amin'ny fanatonana na fanalavirana.",
+    dots: "Manaova tsipika. Ny manidy efamira dia mahazo isa sy milalao indray.",
+    memory: "Avadiho karatra roa. Raha mitovy ny sary dia anao izy ary milalao indray ianao.",
     ludo: "Ampodio any an-trano ny vatonao efatra. Mila 6 vao afaka mivoaka.",
     eights: "Apetraho ny loko na ny isa mitovy. Manova loko ny 8.",
     words: "Mitadiava teny betsaka araka izay azonao ao anatin'ny 2 minitra.",
@@ -143,6 +191,15 @@ const mg: typeof en = {
   alreadyFound: "Efa hita",
   timeUp: "Tapitra ny fotoana!",
   missed: "Teny tsy hitan'iza na iza",
+  boxes: (n) => `Efamira ${n}`,
+  pairs: (n) => `Mpivady ${n}`,
+  stones: (n) => `Vato ${n}`,
+  pickStone: "Fidio ny vato iray, dia ny alehany",
+  mustTake: "Tsy maintsy maka ianao raha afaka",
+  takeFront: "Alaivo izay eo aloha",
+  takeBehind: "Alaivo izay ao aoriana",
+  keepTaking: "Mbola maka amin'io vato io ihany, na mijanòna",
+  stop: "Hijanona",
 };
 
 export default { en, fr, mg };

@@ -41,7 +41,7 @@ export interface EightsView extends Omit<EightsState, "hands" | "draw"> {
   drawCount: number;
 }
 
-function shuffle<T>(items: T[], rng: () => number) {
+export function shuffle<T>(items: T[], rng: () => number) {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));

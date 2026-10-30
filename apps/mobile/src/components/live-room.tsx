@@ -1,4 +1,4 @@
-import { LIVE_EMOJI, LIVE_SEATS, type LiveRoomDTO } from "@six/shared";
+import { LIVE_EMOJI, LIVE_SEATS, type LiveRoomDTO, SEAT_COLORS, dotsScores, fanoronaCounts, memoryScores } from "@six/shared";
 import { type Href, router } from "expo-router";
 import { ArrowLeft, Gamepad2, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -8,10 +8,13 @@ import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { DotsBoard } from "./dots-board";
 import { EightsTable } from "./eights-table";
+import { FanoronaBoard, STONES } from "./fanorona-board";
 import { HowToPlay } from "./how-to-play";
 import { type Play, useSecondsLeft } from "./live";
-import { LUDO_COLORS, LudoBoard } from "./ludo-board";
+import { LudoBoard } from "./ludo-board";
+import { MemoryBoard } from "./memory-board";
 import { Text } from "./text";
 import { Card, EmptyState, IconButton, Loading, PrimaryButton, ScreenHeader, TextButton } from "./ui";
 import { WordHunt } from "./word-hunt";
@@ -37,16 +40,32 @@ function Seats({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) => 
     <View style={styles.seats}>
       {room.seats.map((seat, i) => {
         const sub =
-          view?.game === "ludo" ? null : view?.game === "eights" ? tr.live.cards(view.state.counts[i] ?? 0) : view ? tr.live.points(view.state.scores[i] ?? 0) : null;
+          view?.game === "eights"
+            ? tr.live.cards(view.state.counts[i] ?? 0)
+            : view?.game === "words"
+              ? tr.live.points(view.state.scores[i] ?? 0)
+              : view?.game === "dots"
+                ? tr.live.boxes(dotsScores(view.state)[i] ?? 0)
+                : view?.game === "fanorona"
+                  ? tr.live.stones(fanoronaCounts(view.state)[i] ?? 0)
+                  : view?.game === "memory"
+                    ? tr.live.pairs(memoryScores(view.state)[i] ?? 0)
+                    : null;
+        const color =
+          view?.game === "ludo"
+            ? SEAT_COLORS[view.state.colors[i]!]
+            : view?.game === "dots" || view?.game === "memory"
+              ? SEAT_COLORS[i]
+              : view?.game === "fanorona"
+                ? STONES[i]
+                : undefined;
         return (
           <View
             key={i}
             style={[styles.seat, { borderColor: turn === i ? brand : t.border, backgroundColor: t.surface }, seat.left && { opacity: 0.5 }]}
           >
             {seat.user ? <Avatar user={seat.user} /> : <BotFace />}
-            {view?.game === "ludo" && (
-              <View style={[styles.dot, { backgroundColor: LUDO_COLORS[view.state.colors[i]!], borderColor: t.surface }]} />
-            )}
+            {color && <View style={[styles.dot, { backgroundColor: color, borderColor: t.surface }]} />}
             <Text numberOfLines={1} style={{ color: t.text, fontSize: 12, fontWeight: "600", maxWidth: 76 }}>
               {i === room.mySeat ? tr.common.you : nameOf(i)}
             </Text>
@@ -205,6 +224,17 @@ export function LiveRoom({ id }: { id: string }) {
               {view?.game === "ludo" && <LudoBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
               {view?.game === "eights" && <EightsTable room={room} state={view.state} nameOf={nameOf} play={play} />}
               {view?.game === "words" && <WordHunt room={room} state={view.state} nameOf={nameOf} play={play} />}
+              {view?.game === "fanorona" && (
+                <FanoronaBoard
+                  key={`${view.state.turn}-${view.state.last?.from}-${view.state.last?.to}`}
+                  room={room}
+                  state={view.state}
+                  nameOf={nameOf}
+                  play={play}
+                />
+              )}
+              {view?.game === "dots" && <DotsBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
+              {view?.game === "memory" && <MemoryBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
             </>
           )}
         </ScrollView>
@@ -215,7 +245,7 @@ export function LiveRoom({ id }: { id: string }) {
 
 const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 18, fontWeight: "700", paddingHorizontal: 4 },
-  body: { padding: 16, gap: 16 },
+  body: { flexGrow: 1, justifyContent: "center", padding: 16, gap: 16 },
   seats: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 },
   seat: { alignItems: "center", gap: 2, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 16, borderWidth: 2, minWidth: 80 },
   dot: { position: "absolute", top: 34, left: "50%", marginLeft: 6, width: 14, height: 14, borderRadius: 7, borderWidth: 2 },

@@ -8,11 +8,12 @@ import {
   LUDO_TRACK,
   type LudoMove,
   type LudoState,
+  SEAT_COLORS,
   ludoMovable,
 } from "@six/shared";
 import { useT } from "@/lib/i18n";
 
-export const LUDO_COLORS = ["#e53935", "#43a047", "#fdd835", "#1e88e5"];
+const LUDO_COLORS = SEAT_COLORS;
 const CORNERS: [number, number][] = [
   [0, 0],
   [9, 0],

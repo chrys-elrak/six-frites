@@ -2,8 +2,12 @@ import { randomBytes } from "node:crypto";
 import {
   AppError,
   type CreateLiveInput,
+  DotsMove,
+  type DotsState,
   EightsMove,
   type EightsState,
+  FanoronaMove,
+  type FanoronaState,
   LIVE_SEATS,
   LIVE_TURN_SECONDS,
   type LiveGame,
@@ -12,6 +16,8 @@ import {
   type Locale,
   LudoMove,
   type LudoState,
+  MemoryMove,
+  type MemoryState,
   type PublicUser,
   WORDS_SECONDS,
   WordsMove,
@@ -28,6 +34,16 @@ import {
   wordsStart,
   wordsView,
   wordsWinners,
+  dotsAuto,
+  dotsPlay,
+  dotsStart,
+  fanoronaAuto,
+  fanoronaPlay,
+  fanoronaStart,
+  memoryAuto,
+  memoryPlay,
+  memoryStart,
+  memoryView,
 } from "@six/shared";
 import type { User } from "../generated/prisma/client.js";
 import { lexicon } from "../lib/lexicon.js";
@@ -37,7 +53,13 @@ import { blockedWith } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
 import { deliverLiveInvitePush } from "./push.js";
 
-type GameState = { game: "ludo"; s: LudoState } | { game: "eights"; s: EightsState } | { game: "words"; s: WordsState };
+type GameState =
+  | { game: "ludo"; s: LudoState }
+  | { game: "eights"; s: EightsState }
+  | { game: "words"; s: WordsState }
+  | { game: "fanorona"; s: FanoronaState }
+  | { game: "dots"; s: DotsState }
+  | { game: "memory"; s: MemoryState };
 
 interface Seat {
   /** null for Frite Bot. */
@@ -72,7 +94,7 @@ interface Room {
  */
 const live = new Map<string, Room>();
 
-const BOT_MS = { ludo: 900, eights: 1300 };
+const BOT_MS = { ludo: 900, eights: 1300, fanorona: 1200, dots: 800, memory: 1100, words: 0 };
 const IDLE_MS = 30 * 60 * 1000;
 
 setInterval(() => {
@@ -86,6 +108,9 @@ function startState(room: Room): GameState {
   const n = room.seats.length;
   if (room.game === "ludo") return { game: "ludo", s: ludoStart(n) };
   if (room.game === "eights") return { game: "eights", s: eightsStart(n, Math.random) };
+  if (room.game === "fanorona") return { game: "fanorona", s: fanoronaStart() };
+  if (room.game === "dots") return { game: "dots", s: dotsStart(n) };
+  if (room.game === "memory") return { game: "memory", s: memoryStart(n, Math.random) };
   return { game: "words", s: wordsStart(n, lexicon(room.locale), Math.random) };
 }
 
@@ -100,6 +125,21 @@ function apply(state: GameState, seat: number, move: unknown): GameState | null 
     const s = m.success && eightsPlay(state.s, seat, m.data, Math.random);
     return s ? { game: "eights", s } : null;
   }
+  if (state.game === "fanorona") {
+    const m = FanoronaMove.safeParse(move);
+    const s = m.success && fanoronaPlay(state.s, seat, m.data);
+    return s ? { game: "fanorona", s } : null;
+  }
+  if (state.game === "dots") {
+    const m = DotsMove.safeParse(move);
+    const s = m.success && dotsPlay(state.s, seat, m.data);
+    return s ? { game: "dots", s } : null;
+  }
+  if (state.game === "memory") {
+    const m = MemoryMove.safeParse(move);
+    const s = m.success && memoryPlay(state.s, seat, m.data);
+    return s ? { game: "memory", s } : null;
+  }
   const m = WordsMove.safeParse(move);
   const s = m.success && wordsPlay(state.s, seat, m.data);
   return s ? { game: "words", s } : null;
@@ -108,6 +148,9 @@ function apply(state: GameState, seat: number, move: unknown): GameState | null 
 function autoMove(state: GameState, seat: number) {
   if (state.game === "ludo") return ludoAuto(state.s, seat);
   if (state.game === "eights") return eightsAuto(state.s, seat);
+  if (state.game === "fanorona") return fanoronaAuto(state.s, seat);
+  if (state.game === "dots") return dotsAuto(state.s, seat);
+  if (state.game === "memory") return memoryAuto(state.s, seat, Math.random);
   return wordsAuto(state.s, seat, Math.random);
 }
 
@@ -115,13 +158,16 @@ const turnOf = (state: GameState) => (state.game === "words" ? null : state.s.tu
 
 function winnersOf(state: GameState) {
   if (state.game === "words") return state.s.over ? wordsWinners(state.s) : null;
+  if (state.game === "fanorona" || state.game === "dots" || state.game === "memory") return state.s.winners;
   return state.s.winner === null ? null : [state.s.winner];
 }
 
 function viewOf(state: GameState, seat: number | null): LiveView {
   if (state.game === "ludo") return { game: "ludo", state: state.s };
   if (state.game === "eights") return { game: "eights", state: eightsView(state.s, seat) };
-  return { game: "words", state: wordsView(state.s, seat) };
+  if (state.game === "words") return { game: "words", state: wordsView(state.s, seat) };
+  if (state.game === "memory") return { game: "memory", state: memoryView(state.s) };
+  return state.game === "fanorona" ? { game: "fanorona", state: state.s } : { game: "dots", state: state.s };
 }
 
 function toDTO(room: Room, viewerId: string): LiveRoomDTO {
@@ -189,7 +235,7 @@ function schedule(room: Room) {
   const turn = turnOf(state);
   if (turn === null) return broadcast(room);
   const seat = room.seats[turn]!;
-  const wait = playsItself(seat) ? BOT_MS[room.game as keyof typeof BOT_MS] : LIVE_TURN_SECONDS * 1000;
+  const wait = playsItself(seat) ? BOT_MS[room.game] : LIVE_TURN_SECONDS * 1000;
   room.deadline = playsItself(seat) ? null : Date.now() + wait;
   room.turnTimer = setTimeout(() => {
     seat.away ||= !!seat.userId;
@@ -245,6 +291,7 @@ function hostRoom(userId: string, roomId: string) {
 /** Opens a room with me in the first seat and asks my contacts to join, in the app or with a notification. */
 export async function createRoom(userId: string, input: CreateLiveInput) {
   const invite = [...new Set(input.invite)].filter((id) => id !== userId);
+  if (invite.length >= LIVE_SEATS[input.game].max) throw new AppError("ROOM_FULL", "Too many people for this game");
   const blocked = await blockedWith(prisma, userId);
   const chats = await prisma.chat.findMany({
     where: { directKey: { in: invite.map((id) => [userId, id].sort().join(":")) } },

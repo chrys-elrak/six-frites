@@ -1,6 +1,6 @@
 "use client";
 
-import { LIVE_EMOJI, type LiveGame, type LiveInviteDTO } from "@six/shared";
+import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO } from "@six/shared";
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,9 +12,7 @@ import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
 import { Portal } from "./portal";
 
-const MAX_INVITES = 3;
-
-/** Picks up to three contacts to ask into a new live room, then opens it. */
+/** Picks the contacts to ask into a new live room, as many as it has seats left, then opens it. */
 export function NewLiveRoom({ game, onClose }: { game: LiveGame; onClose: () => void }) {
   const tr = useT();
   const router = useRouter();
@@ -64,7 +62,7 @@ export function NewLiveRoom({ game, onClose }: { game: LiveGame; onClose: () => 
             <li key={f.id}>
               <button
                 type="button"
-                disabled={!on && picked.length >= MAX_INVITES}
+                disabled={!on && picked.length >= LIVE_SEATS[game].max - 1}
                 onClick={() => setPicked((p) => (on ? p.filter((id) => id !== f.id) : [...p, f.id]))}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-stone-100 disabled:opacity-40 dark:hover:bg-stone-800"
               >

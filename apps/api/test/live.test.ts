@@ -1,5 +1,5 @@
 import type { AddressInfo } from "node:net";
-import { type LiveInviteDTO, type LiveRoomDTO, ludoMovable } from "@six/shared";
+import { type LiveInviteDTO, type LiveRoomDTO, fanoronaOptions, ludoMovable } from "@six/shared";
 import { type Socket, io as connect } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSocketServer } from "../src/socket/index.js";
@@ -102,6 +102,29 @@ describe("live rooms", () => {
     await until(() => p.rooms.some((r) => r.view?.game === "ludo" && r.view.state.rolledBy === 1));
     await p.ask("live:leave", { roomId });
     expect((await p.ask("live:move", { roomId, move: { roll: true } })).error!.code).toBe("ROOM_NOT_FOUND");
+  });
+
+  it("plays Fanorona, Dots and Boxes and Memory against Frite Bot, two at most for Fanorona", async () => {
+    const { host, guest } = await makeFriends();
+    const p = await player(host);
+    const tooMany = await p.ask("live:create", { game: "fanorona", invite: [guest.user.id, host.user.id, "x"], locale: "en" });
+    expect(tooMany.ok).toBe(false);
+    for (const game of ["fanorona", "dots", "memory"] as const) {
+      const { data } = await p.ask<LiveRoomDTO>("live:create", { game, invite: [], locale: "en" });
+      await p.ask("live:bot", { roomId: data!.id, add: true });
+      if (game === "fanorona") expect((await p.ask("live:bot", { roomId: data!.id, add: true })).error!.code).toBe("ROOM_FULL");
+      const started = await p.ask<LiveRoomDTO>("live:start", { roomId: data!.id });
+      expect(started.data!.view!.game).toBe(game);
+      const view = started.data!.view!;
+      const move =
+        view.game === "fanorona"
+          ? (({ from, to, approach }) => ({ from, to, take: approach.length ? "approach" : "withdraw" }))(fanoronaOptions(view.state, 0)[0]!)
+          : game === "dots"
+            ? { line: 0 }
+            : { card: 0 };
+      expect((await p.ask("live:move", { roomId: data!.id, move })).ok).toBe(true);
+      await p.ask("live:leave", { roomId: data!.id });
+    }
   });
 
   it("checks word hunt words against the grid and the dictionary", async () => {

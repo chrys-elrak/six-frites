@@ -1,4 +1,4 @@
-import { LIVE_EMOJI, type LiveGame, type LiveInviteDTO } from "@six/shared";
+import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO } from "@six/shared";
 import { type Href, router } from "expo-router";
 import { Check, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -29,9 +29,7 @@ export function useSecondsLeft(deadline: string | null) {
   return deadline ? Math.max(0, Math.ceil((Date.parse(deadline) - now) / 1000)) : null;
 }
 
-const MAX_INVITES = 3;
-
-/** Picks up to three contacts for a live game, then opens its room; nobody picked means playing with Frite Bot. */
+/** Picks contacts for the game's free seats, then opens its room; nobody picked means playing with Frite Bot. */
 export function LiveInviteSheet({ game, onClose }: { game: LiveGame; onClose: () => void }) {
   const t = useTheme();
   const tr = useT();
@@ -90,7 +88,7 @@ export function LiveInviteSheet({ game, onClose }: { game: LiveGame; onClose: ()
             style={{ maxHeight: 360 }}
             renderItem={({ item: u }) => {
               const on = picked.includes(u.id);
-              const full = !on && picked.length >= MAX_INVITES;
+              const full = !on && picked.length >= LIVE_SEATS[game].max - 1;
               return (
                 <Pressable
                   onPress={() => setPicked((p) => (on ? p.filter((id) => id !== u.id) : full ? p : [...p, u.id]))}

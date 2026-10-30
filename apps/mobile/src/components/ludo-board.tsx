@@ -5,6 +5,7 @@ import {
   LUDO_STARTS,
   LUDO_TRACK,
   type LiveRoomDTO,
+  SEAT_COLORS,
   type LudoState,
   ludoMovable,
 } from "@six/shared";
@@ -15,8 +16,6 @@ import { useTheme } from "@/lib/theme";
 import type { Play } from "./live";
 import { Text } from "./text";
 import { PrimaryButton } from "./ui";
-
-export const LUDO_COLORS = ["#e53935", "#43a047", "#fdd835", "#1e88e5"];
 
 const YARDS = [
   [0, 0],
@@ -68,10 +67,10 @@ function Board() {
       <Rect width={15} height={15} rx={0.3} fill="#fafaf9" />
       {YARDS.map(([x, y], c) => (
         <G key={c}>
-          <Rect x={x} y={y} width={6} height={6} fill={LUDO_COLORS[c]} />
+          <Rect x={x} y={y} width={6} height={6} fill={SEAT_COLORS[c]} />
           <Rect x={x! + 1} y={y! + 1} width={4} height={4} rx={0.4} fill="#fff" />
           {SPOTS.map(([sx, sy], i) => (
-            <Circle key={i} cx={x! + sx! + 0.5} cy={y! + sy! + 0.5} r={0.38} fill={LUDO_COLORS[c]} opacity={0.3} />
+            <Circle key={i} cx={x! + sx! + 0.5} cy={y! + sy! + 0.5} r={0.38} fill={SEAT_COLORS[c]} opacity={0.3} />
           ))}
         </G>
       ))}
@@ -79,7 +78,7 @@ function Board() {
         const start = LUDO_STARTS.indexOf(i);
         return (
           <G key={i}>
-            <Rect x={x} y={y} width={1} height={1} fill={start >= 0 ? LUDO_COLORS[start] : "#fff"} stroke="#d6d3d1" strokeWidth={0.04} />
+            <Rect x={x} y={y} width={1} height={1} fill={start >= 0 ? SEAT_COLORS[start] : "#fff"} stroke="#d6d3d1" strokeWidth={0.04} />
             {LUDO_SAFE.has(i) && start < 0 && (
               <SvgText x={x + 0.5} y={y + 0.74} fontSize={0.65} textAnchor="middle" fill="#a8a29e">
                 ★
@@ -90,13 +89,13 @@ function Board() {
       })}
       {LUDO_HOME_COLUMNS.map((column, c) =>
         column.map(([x, y], i) => (
-          <Rect key={`${c}-${i}`} x={x} y={y} width={1} height={1} fill={LUDO_COLORS[c]} stroke="#fff" strokeWidth={0.04} />
+          <Rect key={`${c}-${i}`} x={x} y={y} width={1} height={1} fill={SEAT_COLORS[c]} stroke="#fff" strokeWidth={0.04} />
         )),
       )}
-      <Polygon points="6,6 7.5,7.5 6,9" fill={LUDO_COLORS[0]} />
-      <Polygon points="6,6 9,6 7.5,7.5" fill={LUDO_COLORS[1]} />
-      <Polygon points="9,6 9,9 7.5,7.5" fill={LUDO_COLORS[2]} />
-      <Polygon points="6,9 9,9 7.5,7.5" fill={LUDO_COLORS[3]} />
+      <Polygon points="6,6 7.5,7.5 6,9" fill={SEAT_COLORS[0]} />
+      <Polygon points="6,6 9,6 7.5,7.5" fill={SEAT_COLORS[1]} />
+      <Polygon points="9,6 9,9 7.5,7.5" fill={SEAT_COLORS[2]} />
+      <Polygon points="6,9 9,9 7.5,7.5" fill={SEAT_COLORS[3]} />
     </Svg>
   );
 }
@@ -152,7 +151,7 @@ export function LudoBoard({
               accessibilityState={{ disabled: !can }}
               style={[
                 styles.token,
-                { left, top, width: d, height: d, borderRadius: d / 2, backgroundColor: LUDO_COLORS[color] },
+                { left, top, width: d, height: d, borderRadius: d / 2, backgroundColor: SEAT_COLORS[color] },
                 can && styles.movable,
               ]}
             />

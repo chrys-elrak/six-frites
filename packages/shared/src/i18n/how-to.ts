@@ -74,6 +74,25 @@ const en = {
       "Can't play? Draw a card, then play or pass.",
       "First to get rid of all their cards wins.",
     ],
+    fanorona: [
+      "Each player has 22 stones. White moves first, one stone at a time along a line to the next empty point.",
+      "Take by approach: move toward an enemy stone so you land right next to it, and it's taken with the ones behind it on that line.",
+      "Take by withdrawal: move straight away from an enemy stone next to you, and it's taken with the ones behind it.",
+      "If you can take, you must. After a take, the same stone may keep taking, but never onto a point it already visited, or twice in a row in the same direction. You can stop whenever you like.",
+      "Take all the other player's stones to win. If no stone is taken for 30 turns, whoever has more left wins.",
+    ],
+    dots: [
+      "Take turns drawing one line between two dots next to each other.",
+      "Close the fourth side of a box to win it, and draw again.",
+      "Careful: drawing a box's third side lets the next player close it.",
+      "When every box is closed, whoever has the most wins.",
+    ],
+    memory: [
+      "All the cards start face down, and each picture is on two of them.",
+      "On your turn, turn two cards over. Everyone sees them.",
+      "Same picture? The pair is yours and you play again. Different? They turn back over and it's the next player's turn.",
+      "Remember where each card is. When every pair is found, whoever has the most wins.",
+    ],
     words: [
       "Everyone gets the same 16 letters for 2 minutes.",
       "Make words of 3 letters or more by sliding across touching letters, sideways, up, down or diagonally, each letter once.",
@@ -159,6 +178,25 @@ const fr: typeof en = {
       "Tu ne peux pas jouer ? Pioche une carte, puis joue ou passe.",
       "Le premier qui n'a plus de cartes gagne.",
     ],
+    fanorona: [
+      "Chacun a 22 pions. Les blancs commencent, un pion à la fois le long d'une ligne vers le point libre suivant.",
+      "Prise par approche : avance vers un pion adverse pour arriver juste à côté ; il est pris avec ceux qui le suivent sur cette ligne.",
+      "Prise par éloignement : recule en ligne droite d'un pion adverse collé au tien ; il est pris avec ceux qui le suivent.",
+      "Si tu peux prendre, tu dois. Après une prise, le même pion peut continuer, sans revenir sur un point déjà visité ni aller deux fois de suite dans la même direction. Tu peux t'arrêter quand tu veux.",
+      "Prends tous les pions de l'autre pour gagner. Si aucun pion n'est pris pendant 30 tours, celui qui en a le plus gagne.",
+    ],
+    dots: [
+      "Chacun son tour, trace un trait entre deux points voisins.",
+      "Ferme le quatrième côté d'un carré pour le gagner, et rejoue.",
+      "Attention : tracer le troisième côté d'un carré laisse le suivant le fermer.",
+      "Quand tous les carrés sont fermés, celui qui en a le plus gagne.",
+    ],
+    memory: [
+      "Toutes les cartes sont face cachée, et chaque image est sur deux d'entre elles.",
+      "À ton tour, retourne deux cartes. Tout le monde les voit.",
+      "Même image ? La paire est à toi et tu rejoues. Différentes ? Elles se retournent et c'est au suivant.",
+      "Retiens où est chaque carte. Quand toutes les paires sont trouvées, celui qui en a le plus gagne.",
+    ],
     words: [
       "Tout le monde a les mêmes 16 lettres pendant 2 minutes.",
       "Forme des mots de 3 lettres ou plus en glissant sur des lettres voisines, sur les côtés, en haut, en bas ou en diagonale, chaque lettre une seule fois.",
@@ -243,6 +281,25 @@ const mg: typeof en = {
       "Ny 2 dia mampaka karatra roa ny manaraka ary mandalo ny anjarany, ny valety mampandalo azy, ny As mamadika ny lalana.",
       "Tsy afaka milalao? Makà karatra iray, dia milalao na mandalo.",
       "Izay voalohany lany karatra no mandresy.",
+    ],
+    fanorona: [
+      "Samy manana vato 22. Ny fotsy no manomboka, vato iray isaky ny mandeha, manaraka tsipika mankany amin'ny teboka malalaka manaraka.",
+      "Fakana amin'ny fanatonana: manatona vaton'ny mpifanandrina ka tonga eo akaikiny; azonao izy sy izay manaraka azy eo amin'io tsipika io.",
+      "Fakana amin'ny fanalavirana: mihemora mahitsy miala amin'ny vaton'ny mpifanandrina mifanila aminao; azonao izy sy izay manaraka azy.",
+      "Raha afaka maka ianao dia tsy maintsy maka. Rehefa avy naka, mbola afaka maka io vato io ihany, nefa tsy miverina amin'ny teboka efa nalehany ary tsy mandeha indroa misesy amin'ny lalana iray. Afaka mijanona ianao amin'izay tianao.",
+      "Alaivo avokoa ny vaton'ny iray hafa mba handresena. Raha tsy misy vato azo mandritra ny anjara 30, izay manana vato betsaka kokoa no mandresy.",
+    ],
+    dots: [
+      "Mifandimby manao tsipika iray eo anelanelan'ny teboka roa mifanila.",
+      "Hidio ny lafiny fahefatry ny efamira iray dia anao izy, ary milalao indray ianao.",
+      "Tandremo: ny manao ny lafiny fahatelon'ny efamira iray dia mamela ny manaraka hanidy azy.",
+      "Rehefa mihidy avokoa ny efamira rehetra, izay manana betsaka indrindra no mandresy.",
+    ],
+    memory: [
+      "Mitodika avokoa ny karatra rehetra amin'ny voalohany, ary eo amin'ny karatra roa ny sary tsirairay.",
+      "Rehefa anjaranao, avadiho karatra roa. Hitan'ny rehetra izy ireo.",
+      "Mitovy sary? Anao ilay mpivady ary milalao indray ianao. Tsy mitovy? Miverina mitodika izy ireo ary anjaran'ny manaraka.",
+      "Tadidio ny toeran'ny karatra tsirairay. Rehefa hita avokoa ny mpivady rehetra, izay manana betsaka indrindra no mandresy.",
     ],
     words: [
       "Samy mahazo litera 16 mitovy avokoa mandritra ny 2 minitra.",

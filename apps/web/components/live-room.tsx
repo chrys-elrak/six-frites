@@ -1,6 +1,14 @@
 "use client";
 
-import { LIVE_EMOJI, LIVE_SEATS, type LiveRoomDTO } from "@six/shared";
+import {
+  LIVE_EMOJI,
+  LIVE_SEATS,
+  type LiveRoomDTO,
+  SEAT_COLORS,
+  dotsScores,
+  fanoronaCounts,
+  memoryScores,
+} from "@six/shared";
 import { Bot, ChevronLeft, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,9 +16,12 @@ import { useT } from "@/lib/i18n";
 import { useCountdown, useLiveRoom } from "@/lib/live";
 import { useSession } from "@/lib/session";
 import { Avatar } from "./avatar";
+import { DotsBoard } from "./dots-board";
 import { EightsTable } from "./eights-table";
+import { FanoronaBoard } from "./fanorona-board";
 import { HowToPlay } from "./how-to-play";
-import { LUDO_COLORS, LudoBoard } from "./ludo-board";
+import { LudoBoard } from "./ludo-board";
+import { MemoryBoard } from "./memory-board";
 import { WordHunt } from "./word-hunt";
 
 const iconButton =
@@ -42,7 +53,13 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
               ? tr.live.cards(view.state.counts[i]!)
               : view?.game === "words"
                 ? tr.live.points(view.state.scores[i]!)
-                : null;
+                : view?.game === "dots"
+                  ? tr.live.boxes(dotsScores(view.state)[i]!)
+                  : view?.game === "fanorona"
+                    ? tr.live.stones(fanoronaCounts(view.state)[i]!)
+                    : view?.game === "memory"
+                      ? tr.live.pairs(memoryScores(view.state)[i]!)
+                      : null;
         return (
           <div
             key={i}
@@ -52,10 +69,10 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
           >
             <span className="relative">
               <Face room={room} seat={i} />
-              {view?.game === "ludo" && (
+              {(view?.game === "ludo" || view?.game === "dots" || view?.game === "memory") && (
                 <span
                   className="absolute -right-0.5 -bottom-0.5 size-3.5 rounded-full ring-2 ring-white"
-                  style={{ background: LUDO_COLORS[view.state.colors[i]!] }}
+                  style={{ background: SEAT_COLORS[view.game === "ludo" ? view.state.colors[i]! : i] }}
                 />
               )}
             </span>
@@ -134,7 +151,17 @@ function Lobby({ room, nameOf, ask }: { room: LiveRoomDTO; nameOf: (seat: number
   );
 }
 
-function Result({ room, nameOf, ask, leave }: { room: LiveRoomDTO; nameOf: (seat: number) => string; ask: Ask; leave: () => void }) {
+function Result({
+  room,
+  nameOf,
+  ask,
+  leave,
+}: {
+  room: LiveRoomDTO;
+  nameOf: (seat: number) => string;
+  ask: Ask;
+  leave: () => void;
+}) {
   const tr = useT();
   const meId = useSession((s) => s.user!.id);
   const [winner] = room.winners;
@@ -151,7 +178,11 @@ function Result({ room, nameOf, ask, leave }: { room: LiveRoomDTO; nameOf: (seat
       <p className="reaction-pop text-2xl font-black">{text}</p>
       <div className="flex gap-2">
         {room.hostId === meId && (
-          <button type="button" onClick={() => void ask("live:start", {})} className={`${pill} bg-brand text-brand-ink`}>
+          <button
+            type="button"
+            onClick={() => void ask("live:start", {})}
+            className={`${pill} bg-brand text-brand-ink`}
+          >
             {tr.live.rematch}
           </button>
         )}
@@ -163,7 +194,10 @@ function Result({ room, nameOf, ask, leave }: { room: LiveRoomDTO; nameOf: (seat
   );
 }
 
-type Ask = (event: "live:bot" | "live:start" | "live:move", extra: { add?: boolean; move?: unknown }) => Promise<boolean>;
+type Ask = (
+  event: "live:bot" | "live:start" | "live:move",
+  extra: { add?: boolean; move?: unknown },
+) => Promise<boolean>;
 
 /** A live game room: the lobby, then the game, then who won and a rematch. */
 export function LiveRoom({ roomId }: { roomId: string }) {
@@ -173,7 +207,8 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   const { room, gone, socket } = useLiveRoom(roomId);
 
   const ask: Ask = async (event, extra) => {
-    const timed = socket?.timeout(10_000) as { emitWithAck: (e: string, p: object) => Promise<{ ok: boolean }> } | undefined;
+    const timed = socket?.timeout(10_000) as
+      { emitWithAck: (e: string, p: object) => Promise<{ ok: boolean }> } | undefined;
     const res = await timed?.emitWithAck(event, { roomId, ...extra }).catch(() => null);
     return !!res?.ok;
   };
@@ -205,7 +240,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
         )}
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-5 px-4 py-5">
+        <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col items-center justify-center gap-5 px-4 py-5">
           {gone ? (
             <>
               <p className="pt-10 text-center text-stone-500">{tr.live.closed}</p>
@@ -222,9 +257,40 @@ export function LiveRoom({ roomId }: { roomId: string }) {
               <Players room={room} nameOf={nameOf} />
               {room.status === "over" && <Result room={room} nameOf={nameOf} ask={ask} leave={leave} />}
               {room.view?.game === "ludo" ? (
-                <LudoBoard state={room.view.state} mySeat={room.mySeat} nameOf={nameOf} play={(move) => void ask("live:move", { move })} />
+                <LudoBoard
+                  state={room.view.state}
+                  mySeat={room.mySeat}
+                  nameOf={nameOf}
+                  play={(move) => void ask("live:move", { move })}
+                />
               ) : room.view?.game === "eights" ? (
-                <EightsTable state={room.view.state} mySeat={room.mySeat} nameOf={nameOf} play={(move) => void ask("live:move", { move })} />
+                <EightsTable
+                  state={room.view.state}
+                  mySeat={room.mySeat}
+                  nameOf={nameOf}
+                  play={(move) => void ask("live:move", { move })}
+                />
+              ) : room.view?.game === "fanorona" ? (
+                <FanoronaBoard
+                  state={room.view.state}
+                  mySeat={room.mySeat}
+                  nameOf={nameOf}
+                  play={(move) => void ask("live:move", { move })}
+                />
+              ) : room.view?.game === "dots" ? (
+                <DotsBoard
+                  state={room.view.state}
+                  mySeat={room.mySeat}
+                  nameOf={nameOf}
+                  play={(move) => void ask("live:move", { move })}
+                />
+              ) : room.view?.game === "memory" ? (
+                <MemoryBoard
+                  state={room.view.state}
+                  mySeat={room.mySeat}
+                  nameOf={nameOf}
+                  play={(move) => void ask("live:move", { move })}
+                />
               ) : room.view?.game === "words" ? (
                 <WordHunt
                   state={room.view.state}
