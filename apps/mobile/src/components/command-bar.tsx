@@ -174,7 +174,11 @@ export function CommandBar({
   if (!command || choices?.length === 0) return null;
   if (names.length) {
     return (
-      <View accessibilityLabel={tr.composer.commands} style={[styles.box, { backgroundColor: t.surface, borderColor: t.border }]}>
+      <ScrollView
+        keyboardShouldPersistTaps="always"
+        accessibilityLabel={tr.composer.commands}
+        style={[styles.box, { backgroundColor: t.surface, borderColor: t.border }]}
+      >
         {names.map((name) => (
           <Pressable key={name} onPress={() => choose(name)} style={styles.command}>
             <Text style={{ color: t.text, fontWeight: "600" }}>/{name}</Text>
@@ -183,7 +187,7 @@ export function CommandBar({
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
     );
   }
 
@@ -263,7 +267,7 @@ export function CommandBar({
 }
 
 const styles = StyleSheet.create({
-  box: { borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, paddingVertical: 4 },
+  box: { maxHeight: 220, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, paddingVertical: 4 },
   command: { flexDirection: "row", alignItems: "baseline", gap: 8, paddingHorizontal: 12, paddingVertical: 10 },
   notice: { fontSize: 14, textAlign: "center", paddingVertical: 12 },
   gifs: { gap: 6 },

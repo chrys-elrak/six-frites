@@ -234,12 +234,13 @@ export function CommandBar({
       }`}
     >
       {names.length ? (
-        <div role="listbox" aria-label={tr.composer.commands} className="p-1">
+        <div role="listbox" aria-label={tr.composer.commands} className="max-h-52 overflow-y-auto overscroll-contain p-1">
           {names.map((name, i) => (
             <button
               key={name}
               type="button"
               {...option(i)}
+              ref={i === active ? (el) => el?.scrollIntoView({ block: "nearest" }) : undefined}
               className={`flex w-full items-baseline gap-2 rounded-lg px-3 py-2 text-left text-sm ${
                 i === active ? "bg-stone-100 dark:bg-stone-800" : ""
               }`}
