@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, ShieldAlert, Tr
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { deleteMessages } from "@/lib/actions";
+import { closeChat, deleteMessages } from "@/lib/actions";
 import { startCall, useCall } from "@/lib/call";
 import { useIdentityChanges } from "@/lib/e2ee";
 import { useChat, useMessages } from "@/lib/chats";
@@ -87,8 +87,10 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   useEffect(() => {
     setActiveChat(chatId);
+    closeChat(chatId);
     return () => {
       setActiveChat(null);
+      closeChat(chatId);
       useSelection.getState().clear();
     };
   }, [chatId]);

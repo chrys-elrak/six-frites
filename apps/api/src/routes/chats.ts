@@ -40,7 +40,7 @@ import {
   ViewMessageResult,
   page,
 } from "@six/shared";
-import { deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
+import { closeChat, deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
 import {
   findContact,
   listContacts,
@@ -425,6 +425,25 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => sendScheduledNow(req.auth.userId, req.params.id),
+  );
+
+  app.post(
+    "/chats/:id/close",
+    {
+      schema: {
+        tags: ["chats"],
+        summary: "Leave the chat",
+        description:
+          "Vanish-mode messages you have read from the other person are deleted for both of you. Call it when the chat is closed, and again when it opens in case the app quit without closing it.",
+        security,
+        params: ChatParams,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await closeChat(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
   );
 
   app.post(

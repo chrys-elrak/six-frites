@@ -42,9 +42,9 @@ export interface CommandBarHandle {
 
 /**
  * Slash commands over the composer: `/` lists them, `/giphy love` shows GIFs and `/sticker wave` stickers
- * to send, `/effect`, `/emoji`, `/voice`, `/destruct`, `/location`, `/autodelete`, `/blur` and `/search`
- * offer their choices inline, narrowed by what follows, and `/game` or `/schedule` opens that dialog.
- * After `/silent` it steps aside for the message to send without a notification.
+ * to send, `/effect`, `/emoji`, `/voice`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and
+ * `/search` offer their choices inline, narrowed by what follows, and `/game` or `/schedule` opens that
+ * dialog. After `/silent` it steps aside for the message to send without a notification.
  */
 export function CommandBar({
   ref,
@@ -151,6 +151,14 @@ export function CommandBar({
             key: "blur",
             label: chat?.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
             pick: () => chatSetting({ safeView: !chat?.safeView }),
+          },
+        ].filter(match);
+      case "vanish":
+        return [
+          {
+            key: "vanish",
+            label: chat?.vanish ? tr.composer.turnOffVanish : tr.composer.turnOnVanish,
+            pick: () => chatSetting({ vanish: !chat?.vanish }),
           },
         ].filter(match);
       case "search":

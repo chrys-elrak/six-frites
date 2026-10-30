@@ -31,6 +31,7 @@ import {
   Code,
   EyeOff,
   Flame,
+  Ghost,
   Italic,
   type LucideIcon,
   NotebookPen,
@@ -48,7 +49,8 @@ import { File, Paths } from "expo-file-system";
 import { Keyboard, Pressable, ScrollView, StyleSheet, View, findNodeHandle } from "react-native";
 import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { editMessage } from "@/lib/actions";
+import { editMessage, updateChatSettings } from "@/lib/actions";
+import { useChat } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { useDrafts } from "@/lib/drafts";
 import { shortRule } from "@/lib/ephemeral";
@@ -124,6 +126,7 @@ export function Composer({
   const meId = useSession((s) => s.user?.id);
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const chat = useChat(qc, chatId).data;
   const { realtime } = useRealtime();
   const mode = useComposerMode((s) => s.byChat[chatId]);
   const setMode = useComposerMode((s) => s.set);
@@ -564,6 +567,20 @@ export function Composer({
               {tr.composer.withEffect(tr.messages.effectNames[messageEffect])}
             </Text>
             <Pressable onPress={() => setMessageEffect(null)} accessibilityLabel={tr.composer.noEffect} hitSlop={8} style={styles.round32}>
+              <X size={16} color={brand} />
+            </Pressable>
+          </View>
+        )}
+        {chat?.vanish && !editing && (
+          <View style={styles.ephemeralBar}>
+            <Ghost size={16} color={brand} />
+            <Text style={{ flex: 1, color: brand, fontSize: 14 }}>{tr.composer.vanishBanner}</Text>
+            <Pressable
+              onPress={() => void updateChatSettings(qc, chatId, { vanish: false }).catch(() => null)}
+              accessibilityLabel={tr.composer.turnOffVanish}
+              hitSlop={8}
+              style={styles.round32}
+            >
               <X size={16} color={brand} />
             </Pressable>
           </View>

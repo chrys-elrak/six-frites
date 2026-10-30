@@ -18,6 +18,7 @@ import { prisma } from "../lib/prisma.js";
 import {
   assertMember,
   createMessage,
+  deleteExpiredMessages,
   messageInclude,
   scrubMessageEvents,
   toMessageDTO,
@@ -99,6 +100,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     safeView: me.safeView,
     sharingProfile: me.showProfile,
     autoDeleteSecs: chat.autoDeleteSecs,
+    vanish: chat.vanish,
     theme: chat.theme,
     scheduledCount,
     blockedByMe: blocks.byMe,
@@ -242,13 +244,13 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
 }
 
 /**
- * Archive, mute and pin only change this member's view. The auto-delete timer and the background are
- * shared: changing either posts a service message and updates the chat for everyone.
+ * Archive, mute and pin only change this member's view. The auto-delete timer, vanish mode and the
+ * background are shared: changing one posts a service message and updates the chat for everyone.
  */
 export async function updateChat(
   userId: string,
   chatId: string,
-  { autoDeleteSecs, theme, muted, mutedUntil, ...view }: UpdateChatInput,
+  { autoDeleteSecs, vanish, theme, muted, mutedUntil, ...view }: UpdateChatInput,
 ) {
   const mine = { ...view, ...muteData({ muted, mutedUntil }) };
   return withEvents(async (tx, emit) => {
@@ -262,6 +264,7 @@ export async function updateChat(
     if (autoDeleteSecs !== undefined && autoDeleteSecs !== chat.autoDeleteSecs) {
       actions.push({ type: "auto_delete", secs: autoDeleteSecs });
     }
+    if (vanish !== undefined && vanish !== chat.vanish) actions.push({ type: "vanish", on: vanish });
     if (theme !== undefined && theme !== chat.theme) actions.push({ type: "theme", theme });
     if (!actions.length) {
       const dto = await getChat(userId, chatId, tx);
@@ -271,16 +274,34 @@ export async function updateChat(
 
     await tx.chat.update({
       where: { id: chatId },
-      data: { ...(autoDeleteSecs !== undefined && { autoDeleteSecs }), ...(theme !== undefined && { theme }) },
+      data: {
+        ...(autoDeleteSecs !== undefined && { autoDeleteSecs }),
+        ...(vanish !== undefined && { vanish }),
+        ...(theme !== undefined && { theme }),
+      },
     });
     for (const action of actions) {
-      const clientId = `${action.type === "theme" ? "theme" : "auto-delete"}-${createId()}`;
+      const clientId = `${action.type.replace("_", "-")}-${createId()}`;
       await createMessage(tx, emit, userId, chatId, { clientId, action });
     }
     const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
     for (const m of members) emit(m.userId, "chat.updated", await getChat(m.userId, chatId, tx));
     return getChat(userId, chatId, tx);
   });
+}
+
+/**
+ * Someone left the chat: the vanish-mode messages they have read from the other person are deleted for
+ * both of them. Apps call it on leaving and again on opening, in case they were closed without leaving.
+ */
+export async function closeChat(userId: string, chatId: string) {
+  const me = await assertMember(prisma, chatId, userId);
+  if (!me.lastReadAt) return;
+  const seen = await prisma.message.updateMany({
+    where: { chatId, vanish: true, senderId: { not: userId }, createdAt: { lte: me.lastReadAt } },
+    data: { expiresAt: new Date() },
+  });
+  if (seen.count) await deleteExpiredMessages();
 }
 
 /**

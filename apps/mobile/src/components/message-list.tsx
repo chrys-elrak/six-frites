@@ -32,6 +32,7 @@ import {
   Clock,
   EyeOff,
   Flame,
+  Ghost,
   Lock,
   Palette,
   Phone,
@@ -1285,6 +1286,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                       <Palette size={14} color="#fff" />
                     ) : row.message.action?.type === "e2ee" ? (
                       <Lock size={14} color="#fff" />
+                    ) : row.message.action?.type === "vanish" ? (
+                      <Ghost size={14} color="#fff" />
                     ) : row.message.action?.type === "call" ? (
                       row.message.action.secs === null ? (
                         <PhoneMissed size={14} color="#fff" />

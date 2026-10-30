@@ -26,6 +26,7 @@ import {
   Code,
   EyeOff,
   Flame,
+  Ghost,
   Italic,
   type LucideIcon,
   NotebookPen,
@@ -39,7 +40,8 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { editMessage } from "@/lib/actions";
+import { editMessage, updateChatSettings } from "@/lib/actions";
+import { useChat } from "@/lib/chats";
 import { useLongPress } from "@/lib/long-press";
 import { useComposerMode } from "@/lib/composer";
 import { useDrafts } from "@/lib/drafts";
@@ -126,6 +128,7 @@ export function Composer({
   const tr = useT();
   const meId = useSession((s) => s.user?.id);
   const qc = useQueryClient();
+  const chat = useChat(qc, chatId).data;
   const { realtime } = useRealtime();
   const mode = useComposerMode((s) => s.byChat[chatId]);
   const setMode = useComposerMode((s) => s.set);
@@ -626,6 +629,20 @@ export function Composer({
               type="button"
               onClick={() => setMessageEffect(null)}
               aria-label={tr.composer.noEffect}
+              className="grid size-7 place-items-center rounded-full hover:bg-stone-500/10"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+        {chat?.vanish && !editing && (
+          <div className="flex items-center gap-2 px-1 text-sm text-brand">
+            <Ghost className="size-4" />
+            <span className="flex-1">{tr.composer.vanishBanner}</span>
+            <button
+              type="button"
+              onClick={() => void updateChatSettings(qc, chatId, { vanish: false }).catch(() => null)}
+              aria-label={tr.composer.turnOffVanish}
               className="grid size-7 place-items-center rounded-full hover:bg-stone-500/10"
             >
               <X className="size-4" />

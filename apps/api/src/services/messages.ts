@@ -341,6 +341,7 @@ export async function createMessage(
       effect: content?.effect ?? null,
       silent: content?.silent ?? false,
       bump: content?.bump ?? false,
+      vanish: !!content && chat.vanish,
       maxViews: content?.ephemeral?.maxViews ?? null,
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,

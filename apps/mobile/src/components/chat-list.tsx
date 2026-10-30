@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   EyeOff,
   Flame,
+  Ghost,
   Lock,
   MessageCircle,
   Palette,
@@ -64,6 +65,8 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         <Palette size={14} color={color} />
       ) : m.action?.type === "e2ee" ? (
         <Lock size={14} color={color} />
+      ) : m.action?.type === "vanish" ? (
+        <Ghost size={14} color={color} />
       ) : m.action?.type === "call" ? (
         m.action.secs === null ? (
           <PhoneMissed size={14} color={color} />

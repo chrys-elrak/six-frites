@@ -2793,7 +2793,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -2805,6 +2805,10 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "e2ee";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "vanish";
+                                        on: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "call";
@@ -2989,6 +2993,8 @@ export interface paths {
                                 sharingProfile: boolean;
                                 /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                 autoDeleteSecs: number | null;
+                                /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
+                                vanish: boolean;
                                 /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
                                 theme: string | null;
                                 /** @description Your scheduled messages waiting to be sent in this chat */
@@ -3172,7 +3178,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -3184,6 +3190,10 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "call";
@@ -3368,6 +3378,8 @@ export interface paths {
                             sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
+                            /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
+                            vanish: boolean;
                             /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
                             theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
@@ -3451,6 +3463,8 @@ export interface paths {
                         pinned?: boolean;
                         /** @description Just for you: blur the photos and videos the other person sends */
                         safeView?: boolean;
+                        /** @description For both people: turn vanish mode on or off */
+                        vanish?: boolean;
                         /** @description For both people: delete messages sent from now on this many seconds after sending. null turns it off. */
                         autoDeleteSecs?: number | null;
                         /** @description For both people: the chat background, a theme id or custom:#rrggbb. null goes back to each person's default. */
@@ -3592,7 +3606,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -3604,6 +3618,10 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "call";
@@ -3788,6 +3806,8 @@ export interface paths {
                             sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
+                            /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
+                            vanish: boolean;
                             /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
                             theme: string | null;
                             /** @description Your scheduled messages waiting to be sent in this chat */
@@ -4048,7 +4068,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -4060,6 +4080,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -4378,7 +4402,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -4390,6 +4414,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -4708,7 +4736,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -4720,6 +4748,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -5041,7 +5073,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -5053,6 +5085,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -5397,7 +5433,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -5409,6 +5445,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -5726,7 +5766,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -5738,6 +5778,10 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "call";
@@ -6060,7 +6104,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -6072,6 +6116,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -6397,7 +6445,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -6409,6 +6457,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -6775,7 +6827,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -6787,6 +6839,10 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "call";
@@ -7247,7 +7303,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -7259,6 +7315,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -8188,7 +8248,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -8200,6 +8260,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";
@@ -8369,6 +8433,47 @@ export interface paths {
                                 backup: string | null;
                             } | null;
                         };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chats/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leave the chat
+         * @description Vanish-mode messages you have read from the other person are deleted for both of you. Call it when the chat is closed, and again when it opens in case the app quit without closing it.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
                     };
                 };
             };
@@ -9122,7 +9227,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -9134,6 +9239,10 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "e2ee";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "vanish";
+                                        on: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "call";
@@ -9415,7 +9524,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -9427,6 +9536,10 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "e2ee";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "vanish";
+                                        on: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "call";
@@ -9756,7 +9869,7 @@ export interface paths {
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                                         action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
@@ -9768,6 +9881,10 @@ export interface paths {
                                         } | {
                                             /** @enum {string} */
                                             type: "e2ee";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "vanish";
+                                            on: boolean;
                                         } | {
                                             /** @enum {string} */
                                             type: "call";
@@ -9952,6 +10069,8 @@ export interface paths {
                                     sharingProfile: boolean;
                                     /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                     autoDeleteSecs: number | null;
+                                    /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
+                                    vanish: boolean;
                                     /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
                                     theme: string | null;
                                     /** @description Your scheduled messages waiting to be sent in this chat */
@@ -10924,7 +11043,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -10936,6 +11055,10 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "call";

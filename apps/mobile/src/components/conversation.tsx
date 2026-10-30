@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { deleteMessages } from "@/lib/actions";
+import { closeChat, deleteMessages } from "@/lib/actions";
 import { isFrozen, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
@@ -63,8 +63,10 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   useEffect(() => {
     setActiveChat(chatId);
+    closeChat(chatId);
     return () => {
       setActiveChat(null);
+      closeChat(chatId);
       useSelection.getState().clear();
     };
   }, [chatId]);

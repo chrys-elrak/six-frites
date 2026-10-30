@@ -68,6 +68,26 @@ describe("chat auto-delete", () => {
   });
 });
 
+describe("vanish mode", () => {
+  it("is announced, and takes read messages away for both once the reader leaves the chat", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const before = (await send(host, chatId, "before")).json();
+    expect((await call(guest, "PATCH", `/v1/chats/${chatId}`, { vanish: true })).json()).toMatchObject({ vanish: true });
+    const [notice] = (await get(host, `/v1/chats/${chatId}/messages`)).items;
+    expect(notice).toMatchObject({ type: "service", action: { type: "vanish", on: true } });
+
+    const seen = (await send(host, chatId, "poof")).json();
+    await call(guest, "POST", `/v1/chats/${chatId}/read`, {});
+    const mine = (await send(guest, chatId, "mine")).json();
+    const unseen = (await send(host, chatId, "still here")).json();
+
+    await call(guest, "POST", `/v1/chats/${chatId}/close`);
+    const left = ids(await get(host, `/v1/chats/${chatId}/messages`));
+    expect(left).not.toContain(seen.id);
+    expect(left).toEqual(expect.arrayContaining([before.id, notice.id, unseen.id, mine.id]));
+  });
+});
+
 describe("scheduled messages", () => {
   it("stays private until sent, then arrives as a normal message", async () => {
     const { host, guest, chatId } = await makeFriends();

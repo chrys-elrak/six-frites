@@ -223,6 +223,7 @@ model Chat {
   lastMessageAt  DateTime @default(now())
   autoDeleteSecs Int?
   theme          String?
+  vanish         Boolean  @default(false)
   encryptedAt    DateTime?
 
   members   ChatMember[]
@@ -266,6 +267,7 @@ model Message {
   effect       String?
   silent       Boolean   @default(false)
   bump         Boolean   @default(false)
+  vanish       Boolean   @default(false)
   maxViews     Int?
   ttlSeconds   Int?
   expiredAt    DateTime?

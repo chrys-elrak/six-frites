@@ -5793,6 +5793,25 @@
                                       "type": {
                                         "type": "string",
                                         "enum": [
+                                          "vanish"
+                                        ]
+                                      },
+                                      "on": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "on"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
                                           "call"
                                         ]
                                       },
@@ -5815,7 +5834,7 @@
                                     "additionalProperties": false
                                   }
                                 ],
-                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                               },
                               "location": {
                                 "nullable": true,
@@ -6713,6 +6732,10 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "vanish": {
+                            "type": "boolean",
+                            "description": "Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat"
+                          },
                           "theme": {
                             "nullable": true,
                             "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
@@ -6765,6 +6788,7 @@
                           "safeView",
                           "sharingProfile",
                           "autoDeleteSecs",
+                          "vanish",
                           "theme",
                           "scheduledCount",
                           "blockedByMe",
@@ -7353,6 +7377,25 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "vanish"
+                                  ]
+                                },
+                                "on": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "on"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "call"
                                   ]
                                 },
@@ -7375,7 +7418,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                         },
                         "location": {
                           "nullable": true,
@@ -8273,6 +8316,10 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat"
+                    },
                     "theme": {
                       "nullable": true,
                       "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
@@ -8325,6 +8372,7 @@
                     "safeView",
                     "sharingProfile",
                     "autoDeleteSecs",
+                    "vanish",
                     "theme",
                     "scheduledCount",
                     "blockedByMe",
@@ -8372,6 +8420,10 @@
                   },
                   "safeView": {
                     "description": "Just for you: blur the photos and videos the other person sends",
+                    "type": "boolean"
+                  },
+                  "vanish": {
+                    "description": "For both people: turn vanish mode on or off",
                     "type": "boolean"
                   },
                   "autoDeleteSecs": {
@@ -8944,6 +8996,25 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "vanish"
+                                  ]
+                                },
+                                "on": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "on"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "call"
                                   ]
                                 },
@@ -8966,7 +9037,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                         },
                         "location": {
                           "nullable": true,
@@ -9864,6 +9935,10 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "vanish": {
+                      "type": "boolean",
+                      "description": "Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat"
+                    },
                     "theme": {
                       "nullable": true,
                       "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
@@ -9916,6 +9991,7 @@
                     "safeView",
                     "sharingProfile",
                     "autoDeleteSecs",
+                    "vanish",
                     "theme",
                     "scheduledCount",
                     "blockedByMe",
@@ -10715,6 +10791,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -10737,7 +10832,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -12106,6 +12201,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -12128,7 +12242,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -13487,6 +13601,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -13509,7 +13642,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -14886,6 +15019,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -14908,7 +15060,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -16428,6 +16580,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -16450,7 +16621,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -17802,6 +17973,25 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "vanish"
+                                  ]
+                                },
+                                "on": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "on"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "call"
                                   ]
                                 },
@@ -17824,7 +18014,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                         },
                         "location": {
                           "nullable": true,
@@ -19187,6 +19377,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -19209,7 +19418,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -20582,6 +20791,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -20604,7 +20832,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -22078,6 +22306,25 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "vanish"
+                                    ]
+                                  },
+                                  "on": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "on"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "call"
                                     ]
                                   },
@@ -22100,7 +22347,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                           },
                           "location": {
                             "nullable": true,
@@ -24112,6 +24359,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -24134,7 +24400,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -27694,6 +27960,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -27716,7 +28001,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,
@@ -28577,6 +28862,47 @@
                     "encryption"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chats/{id}/close": {
+      "post": {
+        "summary": "Leave the chat",
+        "tags": [
+          "chats"
+        ],
+        "description": "Vanish-mode messages you have read from the other person are deleted for both of you. Call it when the chat is closed, and again when it opens in case the app quit without closing it.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -30130,6 +30456,25 @@
                                           "type": {
                                             "type": "string",
                                             "enum": [
+                                              "vanish"
+                                            ]
+                                          },
+                                          "on": {
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "on"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
                                               "call"
                                             ]
                                           },
@@ -30152,7 +30497,7 @@
                                         "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -31491,6 +31836,25 @@
                                           "type": {
                                             "type": "string",
                                             "enum": [
+                                              "vanish"
+                                            ]
+                                          },
+                                          "on": {
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "on"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
                                               "call"
                                             ]
                                           },
@@ -31513,7 +31877,7 @@
                                         "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -33042,6 +33406,25 @@
                                               "type": {
                                                 "type": "string",
                                                 "enum": [
+                                                  "vanish"
+                                                ]
+                                              },
+                                              "on": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "on"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
                                                   "call"
                                                 ]
                                               },
@@ -33064,7 +33447,7 @@
                                             "additionalProperties": false
                                           }
                                         ],
-                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                                       },
                                       "location": {
                                         "nullable": true,
@@ -33962,6 +34345,10 @@
                                     "minimum": -9007199254740991,
                                     "maximum": 9007199254740991
                                   },
+                                  "vanish": {
+                                    "type": "boolean",
+                                    "description": "Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat"
+                                  },
                                   "theme": {
                                     "nullable": true,
                                     "description": "Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default",
@@ -34014,6 +34401,7 @@
                                   "safeView",
                                   "sharingProfile",
                                   "autoDeleteSecs",
+                                  "vanish",
                                   "theme",
                                   "scheduledCount",
                                   "blockedByMe",
@@ -36115,6 +36503,25 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "vanish"
+                              ]
+                            },
+                            "on": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "on"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "call"
                               ]
                             },
@@ -36137,7 +36544,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
                     },
                     "location": {
                       "nullable": true,

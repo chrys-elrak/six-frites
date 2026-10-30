@@ -1,5 +1,5 @@
 import type { Dict, MessageDTO } from "@six/shared";
-import { Lock, Palette, Phone, PhoneMissed, Timer, Video } from "lucide-react";
+import { Ghost, Lock, Palette, Phone, PhoneMissed, Timer, Video } from "lucide-react";
 import { getT } from "@/lib/i18n";
 
 export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
@@ -8,13 +8,15 @@ export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
       ? Palette
       : action?.type === "e2ee"
         ? Lock
-        : action?.type === "call"
-          ? action.secs === null
-            ? PhoneMissed
-            : action.video
-              ? Video
-              : Phone
-          : Timer;
+        : action?.type === "vanish"
+          ? Ghost
+          : action?.type === "call"
+            ? action.secs === null
+              ? PhoneMissed
+              : action.video
+                ? Video
+                : Phone
+            : Timer;
   return <Icon className="size-3.5 shrink-0" />;
 }
 

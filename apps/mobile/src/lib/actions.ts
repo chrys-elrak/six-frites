@@ -201,7 +201,7 @@ export async function removeContact(qc: QueryClient, chatId: string, userId: str
 export async function updateChatSettings(
   qc: QueryClient,
   chatId: string,
-  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned" | "safeView" | "autoDeleteSecs" | "theme">>,
+  input: Partial<Pick<ChatDTO, "archived" | "muted" | "pinned" | "safeView" | "autoDeleteSecs" | "vanish" | "theme">>,
 ) {
   const chat = unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input }));
   upsertChat(qc, chat);
@@ -220,6 +220,11 @@ export async function deleteChat(
 }
 
 /** Blocks or unblocks the other person in a chat; the server's chat.updated refreshes the chat. */
+/** Tells the server I left the chat, so the vanish-mode messages I've read go for both of us. */
+export function closeChat(chatId: string) {
+  void six.api.POST("/v1/chats/{id}/close", { params: { path: { id: chatId } } }).catch(() => null);
+}
+
 export async function setBlocked(qc: QueryClient, chat: ChatDTO, userId: string, blocked: boolean) {
   const params = { params: { path: { id: userId } } };
   unwrap(blocked ? await six.api.POST("/v1/users/{id}/block", params) : await six.api.DELETE("/v1/users/{id}/block", params));

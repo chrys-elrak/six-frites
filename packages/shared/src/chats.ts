@@ -166,6 +166,7 @@ export const ServiceAction = z
     z.object({ type: z.literal("auto_delete"), secs: z.number().int().nullable() }),
     z.object({ type: z.literal("theme"), theme: z.string().nullable() }),
     z.object({ type: z.literal("e2ee") }),
+    z.object({ type: z.literal("vanish"), on: z.boolean() }),
     z.object({
       type: z.literal("call"),
       video: z.boolean(),
@@ -173,7 +174,7 @@ export const ServiceAction = z
     }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `call` logs a call the sender made",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 
@@ -453,6 +454,11 @@ export const ChatDTO = z.object({
     .int()
     .nullable()
     .describe("Shared by both people: new messages are deleted for everyone this long after they are sent"),
+  vanish: z
+    .boolean()
+    .describe(
+      "Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat",
+    ),
   theme: z
     .string()
     .nullable()
@@ -546,6 +552,7 @@ export const UpdateChatInput = z
       .describe("With `muted: true`, unmute on its own at this time. Leave out or null to stay muted."),
     pinned: z.boolean().optional(),
     safeView: z.boolean().optional().describe("Just for you: blur the photos and videos the other person sends"),
+    vanish: z.boolean().optional().describe("For both people: turn vanish mode on or off"),
     autoDeleteSecs: z
       .number()
       .int()

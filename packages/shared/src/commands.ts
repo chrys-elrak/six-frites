@@ -12,6 +12,7 @@ export const COMMANDS = [
   "voice",
   "autodelete",
   "blur",
+  "vanish",
   "search",
 ] as const;
 export type CommandName = (typeof COMMANDS)[number];
