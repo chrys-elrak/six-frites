@@ -162,7 +162,7 @@ export async function deliverAnonPush(userId: string, text: string) {
   const targets = await targetsFor(userId);
   return sendToAll(targets, (t) => ({
     title: t.ask.newMessage,
-    body: text,
+    body: text || `📷 ${t.summary.kinds.image}`,
     icon: null,
     chatId: null,
     messageId: null,

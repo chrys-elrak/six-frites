@@ -4,6 +4,7 @@ import {
   type MessageDTO,
   type MessageReactedDTO,
   type Tone,
+  maskSpoilers,
   previewText,
   reactionText,
 } from "@six/shared";
@@ -160,7 +161,17 @@ export function notifyReaction(
 /** Sounds and shows an anonymous message that just came in, unless the inbox is on screen. */
 export function notifyAnon(m: AnonMessageDTO, viewing: boolean, open: (href: string) => void) {
   if (viewing) return;
-  alertUser({ id: m.id, href: "/inbox", title: getT().ask.newMessage, body: m.text }, "/icon.svg", open);
+  const t = getT();
+  alertUser(
+    {
+      id: m.id,
+      href: "/inbox",
+      title: t.ask.newMessage,
+      body: maskSpoilers(m.text, m.entities) || `📷 ${t.summary.kinds.image}`,
+    },
+    "/icon.svg",
+    open,
+  );
 }
 
 function alertUser(

@@ -65,6 +65,23 @@ export const ReportedMessageDTO = z.object({
 });
 export type ReportedMessageDTO = z.infer<typeof ReportedMessageDTO>;
 
+export const AdminAnonDTO = z.object({
+  id: Id,
+  text: z.string(),
+  photoUrl: z.string().url().nullable().describe("Links last 5 minutes"),
+  sender: AdminUserRef,
+  recipient: AdminUserRef,
+  createdAt: IsoDate,
+  senderDeletedAt: IsoDate.nullable(),
+  recipientDeletedAt: IsoDate.nullable().describe("Also set when the recipient had blocked the sender"),
+});
+export type AdminAnonDTO = z.infer<typeof AdminAnonDTO>;
+
+export const AdminAnonQuery = PageQuery.extend({
+  q: z.string().trim().max(100).optional().describe("Part of the sender's or recipient's name or email"),
+});
+export type AdminAnonQuery = z.infer<typeof AdminAnonQuery>;
+
 export const ReportStatus = z.enum(["open", "dismissed", "actioned"]);
 export type ReportStatus = z.infer<typeof ReportStatus>;
 

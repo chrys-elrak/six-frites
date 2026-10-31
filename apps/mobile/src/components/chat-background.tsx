@@ -20,6 +20,31 @@ function Doodle({ nodes }: { nodes: DoodleNode[] }) {
   );
 }
 
+/** The wallpaper's tiled doodles as a pattern to fill with, `size` px a tile. */
+export function DoodlePattern({ id, ink, opacity, size = WALLPAPER_TILE }: { id: string; ink: string; opacity: number; size?: number }) {
+  return (
+    <Pattern id={id} width={size} height={size} patternUnits="userSpaceOnUse">
+      <G
+        fill="none"
+        stroke={ink}
+        strokeOpacity={opacity}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform={`scale(${size / WALLPAPER_TILE})`}
+      >
+        {WALLPAPER_LAYOUT.map(([name, x, y, scale, rotate], i) =>
+          DOODLES[name] ? (
+            <G key={i} transform={`translate(${x} ${y}) rotate(${rotate} 12 12) scale(${scale})`}>
+              <Doodle nodes={DOODLES[name]} />
+            </G>
+          ) : null,
+        )}
+      </G>
+    </Pattern>
+  );
+}
+
 /** The chat wallpaper: a soft gradient with a tiled pattern of snack-bar doodles. */
 export const Wallpaper = memo(function Wallpaper({ theme, dark, id }: { theme: ChatTheme; dark: boolean; id: string }) {
   const w = dark ? theme.dark : theme.light;
@@ -31,19 +56,7 @@ export const Wallpaper = memo(function Wallpaper({ theme, dark, id }: { theme: C
           <Stop offset="0.5" stopColor={w.colors[1]} />
           <Stop offset="1" stopColor={w.colors[2]} />
         </LinearGradient>
-        {w.inkOpacity > 0 && (
-          <Pattern id={`${id}-doodles`} width={WALLPAPER_TILE} height={WALLPAPER_TILE} patternUnits="userSpaceOnUse">
-            <G fill="none" stroke={w.ink} strokeOpacity={w.inkOpacity} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
-              {WALLPAPER_LAYOUT.map(([name, x, y, scale, rotate], i) =>
-                DOODLES[name] ? (
-                  <G key={i} transform={`translate(${x} ${y}) rotate(${rotate} 12 12) scale(${scale})`}>
-                    <Doodle nodes={DOODLES[name]} />
-                  </G>
-                ) : null,
-              )}
-            </G>
-          </Pattern>
-        )}
+        {w.inkOpacity > 0 && <DoodlePattern id={`${id}-doodles`} ink={w.ink} opacity={w.inkOpacity} />}
       </Defs>
       <Rect width="100%" height="100%" fill={`url(#${id}-bg)`} />
       {w.inkOpacity > 0 && <Rect width="100%" height="100%" fill={`url(#${id}-doodles)`} />}

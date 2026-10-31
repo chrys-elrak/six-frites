@@ -9,8 +9,8 @@ export const adminKeys = {
   stats: ["admin", "stats"] as const,
   users: (q: string, banned: boolean) => ["admin", "users", q, banned] as const,
   reports: (status: "open" | "resolved") => ["admin", "reports", status] as const,
-  packs: (official: boolean) => ["admin", "packs", official] as const,
   largeFiles: ["admin", "large-files"] as const,
+  anon: (q: string) => ["admin", "anon", q] as const,
 };
 
 export const REPORT_REASONS: { value: ReportReason; label: string }[] = [

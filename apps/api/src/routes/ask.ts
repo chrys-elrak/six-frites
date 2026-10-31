@@ -1,11 +1,22 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { AnonMessageDTO, AskProfileDTO, PageQuery, SendAnonInput, UpdateAskProfileInput, UserDTO, page } from "@six/shared";
+import {
+  AnonMessageDTO,
+  AskProfileDTO,
+  PageQuery,
+  SendAnonInput,
+  SentAnonDTO,
+  UpdateAskProfileInput,
+  UserDTO,
+  page,
+} from "@six/shared";
 import { z } from "zod";
 import {
   askProfile,
   blockAnonSender,
   deleteAnon,
+  deleteSent,
   listAnon,
+  listSent,
   resetAskCode,
   sendAnon,
   updateAskProfile,
@@ -36,6 +47,7 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
     "/ask/:code",
     {
       onRequest: app.requireAuth,
+      bodyLimit: 800 * 1024,
       config: { guest: true, rateLimit: { max: 10, timeWindow: "1 minute" } },
       schema: {
         tags,
@@ -48,7 +60,7 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req, reply) => {
-      await sendAnon(req.auth.userId, req.params.code, req.body.text);
+      await sendAnon(req.auth.userId, req.params.code, req.body);
       return reply.status(204).send(null);
     },
   );
@@ -67,6 +79,43 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => listAnon(req.auth.userId, req.query),
+  );
+
+  app.get(
+    "/ask/sent",
+    {
+      onRequest: app.requireAuth,
+      config: { guest: true },
+      schema: {
+        tags,
+        summary: "The anonymous messages you sent, newest first",
+        description: "Only you see this list. It never says whether the recipient deleted a message or blocked you.",
+        security,
+        querystring: PageQuery,
+        response: { 200: page(SentAnonDTO) },
+      },
+    },
+    (req) => listSent(req.auth.userId, req.query),
+  );
+
+  app.delete(
+    "/ask/sent/:id",
+    {
+      onRequest: app.requireAuth,
+      config: { guest: true },
+      schema: {
+        tags,
+        summary: "Remove a message from your sent list",
+        description: "The recipient keeps it, and the moderators still see it.",
+        security,
+        params: id,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await deleteSent(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
   );
 
   app.patch(
@@ -107,7 +156,14 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       onRequest: app.requireAuth,
       config: { guest: true },
-      schema: { tags, summary: "Delete an anonymous message you got", security, params: id, response: { 204: z.null() } },
+      schema: {
+        tags,
+        summary: "Delete an anonymous message you got",
+        description: "It leaves your inbox; the moderators still see it.",
+        security,
+        params: id,
+        response: { 204: z.null() },
+      },
     },
     async (req, reply) => {
       await deleteAnon(req.auth.userId, req.params.id);

@@ -5,6 +5,7 @@ import {
   type MessageDTO,
   type MessageReactedDTO,
   type Tone,
+  maskSpoilers,
   previewText,
   reactionText,
 } from "@six/shared";
@@ -96,7 +97,8 @@ export function notifyIncoming(m: MessageDTO, chat: ChatDTO | undefined, viewing
 
 /** Sounds and shows an anonymous message that just came in, unless the inbox is on screen. */
 export function notifyAnon(m: AnonMessageDTO, viewing: boolean) {
-  if (!viewing) alert(m.id, "/inbox", getT().ask.newMessage, m.text, null);
+  const t = getT();
+  if (!viewing) alert(m.id, "/inbox", t.ask.newMessage, maskSpoilers(m.text, m.entities) || `📷 ${t.summary.kinds.image}`, null);
 }
 
 function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null) {

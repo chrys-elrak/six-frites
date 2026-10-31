@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  type EmojiEntry,
   type EntityType,
   type EphemeralInput,
   type GifDTO,
@@ -10,33 +9,25 @@ import {
   type TypingKind,
   MAX_UPLOAD_BYTES,
   albumIds,
-  emojiQuery,
   emojifyEnd,
   emojifyTyped,
   maskSpoilers,
   parseCommand,
   silentMessage,
   stripAudio,
-  suggestEmoji,
 } from "@six/shared";
 import { unwrap } from "@six/sdk";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Bold,
   CalendarClock,
   Check,
-  Code,
-  EyeOff,
   Flame,
   Ghost,
-  Italic,
-  type LucideIcon,
   NotebookPen,
   Paperclip,
   SendHorizontal,
   Sparkles,
   Square,
-  Strikethrough,
   TicketPlus,
   Trash2,
   VenetianMask,
@@ -55,7 +46,9 @@ import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { ChecklistDialog } from "./checklist";
 import { GameDialog } from "./game";
 import { currentPosition } from "./location-card";
+import { EmojiSuggestions, useEmojiSuggestions } from "./emoji-suggestions";
 import { EphemeralPicker } from "./ephemeral-picker";
+import { FormatBar, formatShortcut, keepSelection } from "./format-bar";
 import { CameraDialog } from "./camera-dialog";
 import { ScheduleDialog, ScheduledPanel } from "./scheduled";
 import { Sheet } from "./sheet";
@@ -63,7 +56,6 @@ import { VoicePlayer } from "./attachment";
 import { RecordButton, type RecordMode } from "./record-button";
 import { VideoNoteCapture, type VideoNoteHandle, VideoNotePreview } from "./video-note-capture";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
-import { emojiList } from "@/lib/emoji";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration, inviteUrl, sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -76,26 +68,6 @@ import { looksLikeSticker } from "@/lib/image";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 import { useVoiceEffect } from "@/lib/voice-fx";
 import { VoiceEffectSelect } from "./voice-effect-select";
-
-const formats: { type: EntityType; keys: string; Icon: LucideIcon }[] = [
-  { type: "bold", keys: "B", Icon: Bold },
-  { type: "italic", keys: "I", Icon: Italic },
-  { type: "strike", keys: "Shift+X", Icon: Strikethrough },
-  { type: "code", keys: "E", Icon: Code },
-  { type: "spoiler", keys: "Shift+P", Icon: EyeOff },
-];
-
-const modifierKey = () => (/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl+");
-
-const keepSelection = (onPress: () => void) => ({
-  onMouseDown: (e: React.MouseEvent) => e.preventDefault(),
-  onTouchStart: (e: React.TouchEvent) => e.preventDefault(),
-  onTouchEnd: (e: React.TouchEvent) => {
-    e.preventDefault();
-    onPress();
-  },
-  onClick: onPress,
-});
 
 function ModeBar({ label, text, onCancel }: { label: string; text: string; onCancel: () => void }) {
   const tr = useT();
@@ -150,8 +122,6 @@ export function Composer({
   const [error, setError] = useState<string | null>(null);
   const [hasSelection, setHasSelection] = useState(false);
   const [caret, setCaret] = useState(0);
-  const [suggested, setSuggested] = useState<{ start: number; end: number; items: EmojiEntry[] } | null>(null);
-  const [active, setActive] = useState(0);
   const ref = useRef<HTMLTextAreaElement>(null);
   const commands = useRef<CommandBarHandle>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -309,28 +279,16 @@ export function Composer({
     return true;
   }
 
-  useEffect(() => {
-    const q = parseCommand(text) && silentMessage(text) === null ? null : emojiQuery(text, caret);
-    if (!q) return setSuggested(null);
-    let live = true;
-    void emojiList().then((list) => {
-      if (!live) return;
-      setSuggested({ start: q.start, end: caret, items: suggestEmoji(list, q.query) });
-      setActive(0);
-    });
-    return () => {
-      live = false;
-    };
-  }, [text, caret]);
-
-  function pickSuggestion(emoji: string) {
-    if (!suggested) return;
-    const at = suggested.start + emoji.length;
-    change(text.slice(0, suggested.start) + emoji + text.slice(suggested.end));
-    setSuggested(null);
-    setCaret(at);
-    requestAnimationFrame(() => ref.current?.setSelectionRange(at, at));
-  }
+  const emoji = useEmojiSuggestions(
+    text,
+    caret,
+    (value, at) => {
+      change(value);
+      setCaret(at);
+      requestAnimationFrame(() => ref.current?.setSelectionRange(at, at));
+    },
+    !(parseCommand(text) && silentMessage(text) === null),
+  );
 
   function completeCommand(value: string) {
     change(value);
@@ -344,26 +302,8 @@ export function Composer({
     else setScheduling("next");
   }
 
-  function suggestionKey(e: React.KeyboardEvent) {
-    const items = suggested?.items;
-    if (!items?.length || e.nativeEvent.isComposing) return false;
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      setActive((i) => (i + (e.key === "ArrowRight" ? 1 : items.length - 1)) % items.length);
-    } else if (e.key === "Enter" || e.key === "Tab") {
-      pickSuggestion(items[active]!.e);
-    } else if (e.key === "Escape") {
-      setSuggested(null);
-    } else return false;
-    e.preventDefault();
-    return true;
-  }
-
   function shortcut(e: React.KeyboardEvent) {
-    if (!(e.metaKey || e.ctrlKey)) return false;
-    const key = e.key.toLowerCase();
-    const type: EntityType | undefined = e.shiftKey
-      ? ({ x: "strike", p: "spoiler" } as const)[key as "x" | "p"]
-      : ({ b: "bold", i: "italic", e: "code" } as const)[key as "b" | "i" | "e"];
+    const type = formatShortcut(e);
     if (!type) return false;
     e.preventDefault();
     wrap(type);
@@ -747,22 +687,7 @@ export function Composer({
           </p>
         )}
 
-        {hasSelection && (
-          <div role="toolbar" aria-label={tr.composer.formatting} className="flex gap-1">
-            {formats.map(({ type, keys, Icon }) => (
-              <button
-                key={type}
-                type="button"
-                {...keepSelection(() => wrap(type))}
-                aria-label={tr.composer.formats[type]}
-                title={`${tr.composer.formats[type]} (${modifierKey()}${keys})`}
-                className="grid size-9 place-items-center rounded-lg bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-100 dark:bg-stone-900 dark:text-stone-200 dark:ring-stone-800 dark:hover:bg-stone-800"
-              >
-                <Icon className="size-4" />
-              </button>
-            ))}
-          </div>
-        )}
+        {hasSelection && <FormatBar onFormat={wrap} />}
 
         {recorder.error && (
           <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
@@ -867,31 +792,7 @@ export function Composer({
                 }}
               />
             )}
-            {!!suggested?.items.length && (
-              <div
-                role="listbox"
-                aria-label={tr.composer.emojiSuggestions}
-                className="absolute bottom-full left-0 z-30 mb-2 flex max-w-full gap-0.5 overflow-x-auto rounded-xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-1 shadow-lg ring-1 ring-stone-200 dark:bg-stone-900/70 dark:ring-stone-800"
-              >
-                {suggested.items.map((x, i) => (
-                  <button
-                    key={x.e}
-                    type="button"
-                    role="option"
-                    aria-selected={i === active}
-                    title={`:${x.n.replace(/ /g, "_")}:`}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onMouseEnter={() => setActive(i)}
-                    onClick={() => pickSuggestion(x.e)}
-                    className={`grid size-10 shrink-0 place-items-center rounded-lg text-2xl ${
-                      i === active ? "bg-stone-100 dark:bg-stone-800" : ""
-                    }`}
-                  >
-                    {x.e}
-                  </button>
-                ))}
-              </div>
-            )}
+            <EmojiSuggestions {...emoji} className="absolute bottom-full left-0 z-30 mb-2" />
             <textarea
               ref={ref}
               value={text}
@@ -905,7 +806,7 @@ export function Composer({
               }}
               onBlur={() => {
                 setHasSelection(false);
-                setSuggested(null);
+                emoji.close();
               }}
               onPaste={(e) => {
                 const files = [...e.clipboardData.files];
@@ -914,7 +815,7 @@ export function Composer({
                 void sendPasted(files);
               }}
               onKeyDown={(e) => {
-                if (commands.current?.key(e) || suggestionKey(e) || shortcut(e)) return;
+                if (commands.current?.key(e) || emoji.onKey(e) || shortcut(e)) return;
                 if (e.key === "Escape" && mode) {
                   e.preventDefault();
                   cancel();

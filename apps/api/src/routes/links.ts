@@ -8,7 +8,7 @@ const linkRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/link-preview",
     {
-      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      config: { guest: true, rateLimit: { max: 120, timeWindow: "1 minute" } },
       schema: {
         tags: ["chats"],
         summary: "The preview card for a link in a message",

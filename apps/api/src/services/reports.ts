@@ -1,4 +1,5 @@
 import {
+  type AttachmentDTO,
   type AdminReportQuery,
   type AdminUserRef,
   AppError,
@@ -17,6 +18,7 @@ import { banUser } from "./admin.js";
 import { EPHEMERAL_LINK_SECONDS, deleteMessages, visibleTo } from "./messages.js";
 import { toStickerDTO } from "./stickers.js";
 import { toAttachmentDTO } from "./uploads.js";
+import { deleteObjects, presignGet } from "../lib/storage.js";
 import { avatarOf } from "./users.js";
 
 /** How many messages before and after a reported one are copied for context. */
@@ -32,6 +34,8 @@ interface SnapshotMessage {
   stickerId: string | null;
   createdAt: string;
   reported: boolean;
+  /** An anonymous message's photo, which isn't an upload. */
+  photoKey?: string | null;
 }
 
 const snapshotOf = (m: Message, reported: boolean): SnapshotMessage => ({
@@ -87,7 +91,9 @@ export async function createReport(reporterId: string, input: CreateReportInput)
     targetId = m.senderId;
     messageId = m.id;
   } else if (input.anonMessageId) {
-    const m = await prisma.anonMessage.findFirst({ where: { id: input.anonMessageId, recipientId: reporterId } });
+    const m = await prisma.anonMessage.findFirst({
+      where: { id: input.anonMessageId, recipientId: reporterId, recipientDeletedAt: null },
+    });
     if (!m) throw new AppError("MESSAGE_NOT_FOUND");
     if (m.senderId === reporterId) throw new AppError("VALIDATION_FAILED", "You can't report your own message");
     snapshot = [
@@ -101,6 +107,7 @@ export async function createReport(reporterId: string, input: CreateReportInput)
         stickerId: null,
         createdAt: m.createdAt.toISOString(),
         reported: true,
+        photoKey: m.photoKey,
       },
     ];
     targetId = m.senderId;
@@ -159,7 +166,11 @@ async function toReportDTOs(rows: ReportRow[]): Promise<ReportDTO[]> {
         type: s.type as MessageType,
         text: s.text,
         entities: s.entities,
-        attachment: upload ? toAttachmentDTO(upload, EPHEMERAL_LINK_SECONDS) : null,
+        attachment: upload
+          ? toAttachmentDTO(upload, EPHEMERAL_LINK_SECONDS)
+          : s.photoKey
+            ? anonPhoto(s.id, s.photoKey)
+            : null,
         sticker: sticker ? toStickerDTO(sticker) : null,
         createdAt: s.createdAt,
         reported: s.reported,
@@ -170,6 +181,22 @@ async function toReportDTOs(rows: ReportRow[]): Promise<ReportDTO[]> {
     resolution: r.resolution,
   }));
 }
+
+const anonPhoto = (id: string, key: string): AttachmentDTO => ({
+  id,
+  kind: "image",
+  status: "ready",
+  name: "photo",
+  mime: "image/jpeg",
+  size: 0,
+  url: presignGet(key, undefined, EPHEMERAL_LINK_SECONDS),
+  thumbUrl: null,
+  width: null,
+  height: null,
+  durationMs: null,
+  waveform: null,
+  encrypted: false,
+});
 
 export async function listReports(q: AdminReportQuery) {
   const rows = await prisma.report.findMany({
@@ -196,6 +223,9 @@ export async function resolveReport(adminId: string, reportId: string, input: Re
       done.push("Message deleted");
     }
   }
+  const photoKey = (report.snapshot as unknown as SnapshotMessage[]).find((s) => s.reported)?.photoKey;
+  const kept = photoKey && (await prisma.anonMessage.count({ where: { id: report.messageId! } }));
+  if (photoKey && !kept) await deleteObjects([photoKey]).catch(() => null);
   if (input.banUser) {
     await banUser(adminId, report.targetId, input.note || `Reported for ${report.reason}`);
     done.push("User banned");

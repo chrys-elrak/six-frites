@@ -1,5 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { AppError, type AnonMessageDTO, type AskProfileDTO, type PageQuery, type UpdateAskProfileInput } from "@six/shared";
+import {
+  type AdminAnonQuery,
+  AppError,
+  type AnonMessageDTO,
+  type AskProfileDTO,
+  type PageQuery,
+  type SendAnonInput,
+  type SentAnonDTO,
+  type UpdateAskProfileInput,
+  maskSpoilers,
+} from "@six/shared";
 import type { AnonMessage, User } from "../generated/prisma/client.js";
 import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
@@ -7,10 +17,18 @@ import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { parsePhoto } from "./contacts.js";
+import { EPHEMERAL_LINK_SECONDS, entitiesOf, storedEntities } from "./messages.js";
 import { deliverAnonPush } from "./push.js";
+import { toUserRef } from "./reports.js";
 import { toUserDTO } from "./users.js";
 
-const toAnonDTO = (m: AnonMessage): AnonMessageDTO => ({ id: m.id, text: m.text, createdAt: m.createdAt.toISOString() });
+const toAnonDTO = (m: AnonMessage): AnonMessageDTO => ({
+  id: m.id,
+  text: m.text,
+  entities: entitiesOf(m),
+  photoUrl: m.photoKey ? presignGet(m.photoKey) : null,
+  createdAt: m.createdAt.toISOString(),
+});
 
 async function askerByCode(code: string) {
   const user = await prisma.user.findFirst({ where: { askCode: code.toUpperCase(), deletedAt: null, bannedAt: null } });
@@ -61,16 +79,14 @@ const HOUR = 60 * 60 * 1000;
 /** How many anonymous messages one person can send in an hour: to the same link, and to anyone. */
 export const SEND_LIMITS = { perRecipient: 5, total: 30 };
 
-/**
- * Turns away a sender who has hit the hourly limits or already sent this text to this person today.
- * ponytail: counts the messages still stored, so ones the recipient deleted don't count; keep deleted rows if that's abused.
- */
+/** Turns away a sender who has hit the hourly limits or already sent this text to this person today. */
 async function assertNotSpam(senderId: string, recipientId: string, text: string) {
   const since = new Date(Date.now() - HOUR);
   const [toThem, total, repeat] = await Promise.all([
     prisma.anonMessage.count({ where: { senderId, recipientId, createdAt: { gte: since } } }),
     prisma.anonMessage.count({ where: { senderId, createdAt: { gte: since } } }),
-    prisma.anonMessage.findFirst({
+    text &&
+      prisma.anonMessage.findFirst({
       where: {
         senderId,
         recipientId,
@@ -86,31 +102,72 @@ async function assertNotSpam(senderId: string, recipientId: string, text: string
   if (repeat) throw new AppError("CONFLICT", "You already sent this message");
 }
 
-/** Sends an anonymous message. Someone the recipient blocked is told it went through, so blocking stays quiet. */
-export async function sendAnon(senderId: string, code: string, text: string) {
+/**
+ * Sends an anonymous message. A message from someone the recipient blocked is kept, hidden from the recipient,
+ * so it still shows in the sender's sent list and blocking stays quiet. A photo is stored under the recipient,
+ * so its address says nothing about who sent it.
+ */
+export async function sendAnon(senderId: string, code: string, { text, entities, photo }: SendAnonInput) {
   const recipient = await askerByCode(code);
+  await assertNotSpam(senderId, recipient.id, text);
   const blocked = await prisma.anonBlock.findUnique({
     where: { blockerId_blockedId: { blockerId: recipient.id, blockedId: senderId } },
   });
+  let photoKey: string | null = null;
+  if (photo) {
+    const p = parsePhoto(photo);
+    photoKey = `x/${recipient.id}/${randomUUID()}.${p.ext}`;
+    await putObject(photoKey, p.bytes, p.mime);
+  }
+  const m = await prisma.anonMessage.create({
+    data: {
+      recipientId: recipient.id,
+      senderId,
+      text,
+      entities: storedEntities(entities),
+      photoKey,
+      recipientDeletedAt: blocked ? new Date() : null,
+    },
+  });
   if (blocked) return;
-  await assertNotSpam(senderId, recipient.id, text);
-  const m = await prisma.anonMessage.create({ data: { recipientId: recipient.id, senderId, text } });
   broadcaster().to(rooms.user(recipient.id)).emit("ask:new", toAnonDTO(m));
-  void deliverAnonPush(recipient.id, text).catch(() => null);
+  void deliverAnonPush(recipient.id, maskSpoilers(text, entities)).catch(() => null);
 }
 
 export async function listAnon(userId: string, q: PageQuery) {
-  const rows = await prisma.anonMessage.findMany({ where: { recipientId: userId }, ...pageArgs(q) });
+  const rows = await prisma.anonMessage.findMany({ where: { recipientId: userId, recipientDeletedAt: null }, ...pageArgs(q) });
   return toPage(rows, q, toAnonDTO);
 }
 
-export async function deleteAnon(userId: string, id: string) {
-  await prisma.anonMessage.deleteMany({ where: { id, recipientId: userId } });
+/** What you sent, newest first, with whom you sent it to. Nothing says whether they deleted it or blocked you. */
+export async function listSent(userId: string, q: PageQuery) {
+  const rows = await prisma.anonMessage.findMany({
+    where: { senderId: userId, senderDeletedAt: null },
+    include: { recipient: true },
+    ...pageArgs(q),
+  });
+  return toPage(rows, q, (m): SentAnonDTO => ({ ...toAnonDTO(m), to: toAskProfile(m.recipient) }));
 }
 
-/** Stops whoever sent this message from sending you more, and deletes it, without telling you who it was. */
+/** Hides a message from your inbox; it stays for the moderators. */
+export async function deleteAnon(userId: string, id: string) {
+  await prisma.anonMessage.updateMany({
+    where: { id, recipientId: userId, recipientDeletedAt: null },
+    data: { recipientDeletedAt: new Date() },
+  });
+}
+
+/** Hides a message from your sent list; the recipient keeps it, and so do the moderators. */
+export async function deleteSent(userId: string, id: string) {
+  await prisma.anonMessage.updateMany({
+    where: { id, senderId: userId, senderDeletedAt: null },
+    data: { senderDeletedAt: new Date() },
+  });
+}
+
+/** Hides whatever this message's sender sends you from now on, and this message, without telling you who it was. */
 export async function blockAnonSender(userId: string, id: string) {
-  const m = await prisma.anonMessage.findFirst({ where: { id, recipientId: userId } });
+  const m = await prisma.anonMessage.findFirst({ where: { id, recipientId: userId, recipientDeletedAt: null } });
   if (!m) throw new AppError("MESSAGE_NOT_FOUND");
   await prisma.$transaction([
     prisma.anonBlock.upsert({
@@ -118,6 +175,27 @@ export async function blockAnonSender(userId: string, id: string) {
       create: { blockerId: userId, blockedId: m.senderId },
       update: {},
     }),
-    prisma.anonMessage.delete({ where: { id } }),
+    prisma.anonMessage.update({ where: { id }, data: { recipientDeletedAt: new Date() } }),
   ]);
+}
+
+/** Every anonymous message, deleted ones too, with who sent it to whom: for the moderators. */
+export async function listAnonForAdmin(q: AdminAnonQuery) {
+  const match = { contains: q.q ?? "", mode: "insensitive" as const };
+  const who = { OR: [{ email: match }, { displayName: match }] };
+  const rows = await prisma.anonMessage.findMany({
+    where: q.q ? { OR: [{ sender: who }, { recipient: who }] } : {},
+    include: { sender: true, recipient: true },
+    ...pageArgs(q),
+  });
+  return toPage(rows, q, (m) => ({
+    id: m.id,
+    text: m.text,
+    photoUrl: m.photoKey ? presignGet(m.photoKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
+    sender: toUserRef(m.sender),
+    recipient: toUserRef(m.recipient),
+    createdAt: m.createdAt.toISOString(),
+    senderDeletedAt: m.senderDeletedAt?.toISOString() ?? null,
+    recipientDeletedAt: m.recipientDeletedAt?.toISOString() ?? null,
+  }));
 }

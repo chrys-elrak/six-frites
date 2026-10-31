@@ -358,3 +358,20 @@ export function chatTheme(id: string | null | undefined): ChatTheme {
   if (custom) return customTheme(custom.mine, custom.theirs);
   return CHAT_THEMES.find((t) => t.id === id) ?? CHAT_THEMES.find((t) => t.id === DEFAULT_CHAT_THEME)!;
 }
+
+/** One wallpaper tile of doodles as SVG markup, `size` px square, for drawing it from a string: CSS or canvas. */
+export function doodleTileSvg(ink: string, opacity: number, size = WALLPAPER_TILE) {
+  const node = (n: DoodleNode) =>
+    n[0] === "path"
+      ? `<path d="${n[1].d}"/>`
+      : n[0] === "circle"
+        ? `<circle cx="${n[1].cx}" cy="${n[1].cy}" r="${n[1].r}"/>`
+        : `<rect x="${n[1].x}" y="${n[1].y}" width="${n[1].width}" height="${n[1].height}" rx="${n[1].rx ?? 0}"/>`;
+  const doodles = WALLPAPER_LAYOUT.filter(([name]) => DOODLES[name])
+    .map(
+      ([name, x, y, scale, rotate]) =>
+        `<g transform="translate(${x} ${y}) rotate(${rotate} 12 12) scale(${scale})">${DOODLES[name]!.map(node).join("")}</g>`,
+    )
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${WALLPAPER_TILE} ${WALLPAPER_TILE}"><g fill="none" stroke="${ink}" stroke-opacity="${opacity}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${doodles}</g></svg>`;
+}

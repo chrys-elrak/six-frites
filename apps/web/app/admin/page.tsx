@@ -6,16 +6,16 @@ import { ChevronLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AnonMessages } from "@/components/admin/anon";
 import { LargeFiles } from "@/components/admin/large-files";
 import { Overview } from "@/components/admin/overview";
-import { Packs } from "@/components/admin/packs";
 import { Reports } from "@/components/admin/reports";
 import { Users } from "@/components/admin/users";
 import { adminKeys, useIsAdmin } from "@/lib/admin";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
-type Tab = "overview" | "reports" | "users" | "stickers" | "files";
+type Tab = "overview" | "reports" | "anon" | "users" | "files";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -52,8 +52,8 @@ export default function AdminPage() {
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "reports", label: open ? `Reports (${open})` : "Reports" },
+    { id: "anon", label: "Anonymous" },
     { id: "users", label: "People" },
-    { id: "stickers", label: "Sticker packs" },
     { id: "files", label: "Large files" },
   ];
 
@@ -89,8 +89,8 @@ export default function AdminPage() {
       </nav>
       {tab === "overview" && <Overview />}
       {tab === "reports" && <Reports />}
+      {tab === "anon" && <AnonMessages />}
       {tab === "users" && <Users />}
-      {tab === "stickers" && <Packs />}
       {tab === "files" && <LargeFiles />}
     </main>
   );

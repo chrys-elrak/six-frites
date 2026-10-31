@@ -41,6 +41,34 @@ export async function urlToAvatarDataUrl(src: string): Promise<string> {
   return squareJpeg(img, img.naturalWidth || SIZE, img.naturalHeight || SIZE);
 }
 
+/**
+ * Re-encodes a photo as a JPEG data URL of at most `maxBytes`, 1600 px on its long side at most. Drawing it
+ * anew drops its metadata, such as where it was taken and with which phone.
+ */
+export async function toPhotoDataUrl(file: File, maxBytes: number): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  try {
+    for (let side = 1600; side >= 400; side = Math.round(side * 0.75)) {
+      const scale = Math.min(1, side / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) break;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      for (const quality of [0.85, 0.7]) {
+        const url = canvas.toDataURL("image/jpeg", quality);
+        if (bytesOf(url) <= maxBytes) return url;
+      }
+    }
+  } finally {
+    bitmap.close();
+  }
+  throw new Error(getT().contacts.photoTooDetailed);
+}
+
 /** Keyboards send stickers as PNG or WebP with see-through corners, which photos and screenshots don't have. */
 export async function looksLikeSticker(file: Blob) {
   if (file.type !== "image/png" && file.type !== "image/webp") return false;

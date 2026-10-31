@@ -141,10 +141,20 @@ async function getContact(userId: string, contactId: string) {
   return row;
 }
 
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const looksLike: Record<string, (b: Buffer) => boolean> = {
+  "image/jpeg": (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  "image/png": (b) => b.subarray(0, 8).equals(PNG),
+  "image/webp": (b) => b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP",
+};
+
+/** Decodes a photo data URL, refusing one whose bytes aren't the image type it claims to be. */
 export function parsePhoto(dataUrl: string) {
   const [meta, data] = dataUrl.split(",", 2) as [string, string];
   const mime = meta.slice(5, meta.indexOf(";"));
-  return { mime, bytes: Buffer.from(data, "base64"), ext: mime.split("/")[1] === "jpeg" ? "jpg" : mime.split("/")[1]! };
+  const bytes = Buffer.from(data, "base64");
+  if (!looksLike[mime]?.(bytes)) throw new AppError("VALIDATION_FAILED", "That file isn't a JPEG, PNG or WebP image");
+  return { mime, bytes, ext: mime.split("/")[1] === "jpeg" ? "jpg" : mime.split("/")[1]! };
 }
 
 /** Sets or clears the name and photo only `ownerId` sees for this contact. */

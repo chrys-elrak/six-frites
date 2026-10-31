@@ -83,7 +83,7 @@ export const MessageEntity = z.object({
 });
 export type MessageEntity = z.infer<typeof MessageEntity>;
 
-const Entities = z
+export const Entities = z
   .array(MessageEntity)
   .max(100)
   .describe(

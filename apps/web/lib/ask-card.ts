@@ -1,5 +1,6 @@
-import type { AskColors } from "@six/shared";
+import { type AnonMessageDTO, type AskColors, type EntityType, doodleTileSvg } from "@six/shared";
 import { getT } from "./i18n";
+import { type Segment, segments } from "./markup";
 
 const W = 1080;
 const H = 1920;
@@ -9,37 +10,97 @@ const HEADER_H = 180;
 const MAX_TEXT_H = 900;
 const MARGIN = 48;
 const LOGO = 72;
+const PHOTO_H = 600;
 const FONT = 'ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji", "Apple Color Emoji"';
 
 export interface CardStyle {
   colors: AskColors;
   /** Just the card on a transparent background, to lay over a photo, instead of a whole story. */
   transparent: boolean;
+  /** The chat wallpaper's doodles over the story's background. */
+  doodles: boolean;
 }
 
-function wrap(ctx: CanvasRenderingContext2D, text: string, width: number) {
-  const lines: string[] = [];
-  for (const para of text.split("\n")) {
-    let line = "";
-    for (const word of para.split(" ")) {
-      const next = line ? `${line} ${word}` : word;
-      if (ctx.measureText(next).width <= width) {
-        line = next;
+const fontFor = (styles: Set<EntityType>, size: number) =>
+  styles.has("code")
+    ? `600 ${Math.round(size * 0.85)}px ui-monospace, SFMono-Regular, Menlo, monospace`
+    : `${styles.has("italic") ? "italic " : ""}${styles.has("bold") ? 900 : 700} ${size}px ${FONT}`;
+
+const measure = (ctx: CanvasRenderingContext2D, run: Segment, size: number) => {
+  ctx.font = fontFor(run.styles, size);
+  return ctx.measureText(run.text).width;
+};
+
+const sameStyles = (a: Set<EntityType>, b: Set<EntityType>) => a.size === b.size && [...a].every((s) => b.has(s));
+
+/**
+ * Lays styled text out in lines no wider than `width`, each a list of runs in one style. Lines break between
+ * words, and inside a word only when it is too long for a line of its own.
+ */
+function wrap(ctx: CanvasRenderingContext2D, segs: Segment[], size: number, width: number) {
+  const lines: Segment[][] = [[]];
+  let used = 0;
+  const add = (run: Segment, w: number) => {
+    const line = lines[lines.length - 1]!;
+    const last = line[line.length - 1];
+    if (last && sameStyles(last.styles, run.styles)) last.text += run.text;
+    else line.push({ ...run });
+    used += w;
+  };
+  const newLine = () => {
+    lines.push([]);
+    used = 0;
+  };
+  for (const seg of segs) {
+    for (const piece of seg.text.split(/(\n|[^\S\n]+)/)) {
+      if (!piece) continue;
+      if (piece === "\n") {
+        newLine();
         continue;
       }
-      if (line) lines.push(line);
-      line = "";
-      for (const ch of Array.from(word)) {
-        if (line && ctx.measureText(line + ch).width > width) {
-          lines.push(line);
-          line = "";
+      const run = { text: piece, styles: seg.styles };
+      const w = measure(ctx, run, size);
+      if (!piece.trim()) {
+        if (used) add(run, w);
+      } else if (used + w <= width) {
+        add(run, w);
+      } else if (w <= width) {
+        newLine();
+        add(run, w);
+      } else {
+        for (const ch of Array.from(piece)) {
+          const c = { text: ch, styles: seg.styles };
+          const cw = measure(ctx, c, size);
+          if (used && used + cw > width) newLine();
+          add(c, cw);
         }
-        line += ch;
       }
     }
-    lines.push(line);
+  }
+  for (const line of lines) {
+    const last = line[line.length - 1];
+    if (last) last.text = last.text.trimEnd();
+    if (last && !last.text) line.pop();
   }
   return lines;
+}
+
+/** Covers a spoiler with dots, as the app shows one before it's tapped; its text is never drawn, so the image can't give it away. */
+function drawSpoiler(ctx: CanvasRenderingContext2D, x: number, top: number, w: number, h: number, ink: string) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(x, top, w, h, h * 0.2);
+  ctx.clip();
+  ctx.fillStyle = ink;
+  ctx.globalAlpha = 0.12;
+  ctx.fillRect(x, top, w, h);
+  ctx.globalAlpha = 0.75;
+  for (let n = Math.ceil((w * h) / 50); n > 0; n--) {
+    ctx.beginPath();
+    ctx.arc(x + Math.random() * w, top + Math.random() * h, 1 + Math.random() * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 let logo: Promise<HTMLImageElement | null> | undefined;
@@ -58,6 +119,15 @@ function loadLogo() {
   return logo;
 }
 
+/** A tile of the chat wallpaper's doodles to fill with; null if the browser can't load it. */
+const loadDoodles = (ink: string, opacity: number, size: number) =>
+  new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = `data:image/svg+xml,${encodeURIComponent(doodleTileSvg(ink, opacity, size))}`;
+  });
+
 const gradient = (ctx: CanvasRenderingContext2D, [from, to]: AskColors, x: number, y: number, w: number, h: number) => {
   const g = ctx.createLinearGradient(x, y, x + w, y + h);
   g.addColorStop(0, from);
@@ -65,26 +135,43 @@ const gradient = (ctx: CanvasRenderingContext2D, [from, to]: AskColors, x: numbe
   return g;
 };
 
+/** Fetches the message's photo as a bitmap; fetched rather than drawn from an <img> so the canvas can still be saved. */
+const loadPhoto = async (url: string) => createImageBitmap(await (await fetch(url)).blob());
+
 /**
- * Draws an anonymous message as a PNG: the question on a card with a colored header, either alone on a
- * transparent background or on a story-sized page with the link to send more under it.
+ * Draws an anonymous message as a PNG: the question, and its photo if any, on a card with a doodled header,
+ * light or dark as the system is, either alone on a transparent background or on a story-sized page with the
+ * link to send more under it.
  */
-export async function askCardPng(text: string, link: string, { colors, transparent }: CardStyle) {
-  const [icon] = await Promise.all([loadLogo(), document.fonts.ready]);
+export async function askCardPng(
+  { text, entities, photoUrl }: Pick<AnonMessageDTO, "text" | "entities" | "photoUrl">,
+  link: string,
+  { colors, transparent, doodles }: CardStyle,
+) {
+  const [icon, photo, headDoodles, pageDoodles] = await Promise.all([
+    loadLogo(),
+    photoUrl ? loadPhoto(photoUrl) : null,
+    loadDoodles("#ffffff", 0.3, 400),
+    !transparent && doodles ? loadDoodles(colors[1], 0.22, 720) : null,
+    document.fonts.ready,
+  ]);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d")!;
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const photoH = photo ? PHOTO_H : 0;
+  const textRoom = MAX_TEXT_H - photoH;
 
+  const segs = segments(text, entities);
   let size = 84;
-  let lines: string[];
+  let lines: Segment[][] = [];
   do {
     size -= 4;
-    ctx.font = `700 ${size}px ${FONT}`;
-    lines = wrap(ctx, text, CARD_W - PAD * 2);
-  } while (lines.length * size * 1.25 > MAX_TEXT_H && size > 32);
+    lines = text ? wrap(ctx, segs, size, CARD_W - PAD * 2) : [];
+  } while (lines.length * size * 1.25 > textRoom && size > 32);
   const lineH = size * 1.25;
-  lines = lines.slice(0, Math.floor(MAX_TEXT_H / lineH));
+  lines = lines.slice(0, Math.floor(textRoom / lineH));
 
-  const cardH = HEADER_H + PAD * 2 + lines.length * lineH;
+  const cardH = HEADER_H + photoH + (lines.length ? PAD * 2 + lines.length * lineH : 0);
   canvas.width = transparent ? CARD_W + MARGIN * 2 : W;
   canvas.height = transparent ? cardH + MARGIN * 2 : H;
   const x = transparent ? MARGIN : (W - CARD_W) / 2;
@@ -97,6 +184,10 @@ export async function askCardPng(text: string, link: string, { colors, transpare
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "rgba(255,255,255,0.78)";
     ctx.fillRect(0, 0, W, H);
+    if (pageDoodles) {
+      ctx.fillStyle = ctx.createPattern(pageDoodles, "repeat")!;
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 
   ctx.save();
@@ -105,7 +196,7 @@ export async function askCardPng(text: string, link: string, { colors, transpare
   ctx.shadowOffsetY = 12;
   ctx.beginPath();
   ctx.roundRect(x, y, CARD_W, cardH, 48);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = dark ? "#1c1917" : "#ffffff";
   ctx.fill();
   ctx.restore();
 
@@ -115,6 +206,16 @@ export async function askCardPng(text: string, link: string, { colors, transpare
   ctx.clip();
   ctx.fillStyle = gradient(ctx, colors, x, y, CARD_W, HEADER_H);
   ctx.fillRect(x, y, CARD_W, HEADER_H);
+  if (headDoodles) {
+    ctx.fillStyle = ctx.createPattern(headDoodles, "repeat")!;
+    ctx.fillRect(x, y, CARD_W, HEADER_H);
+  }
+  if (photo) {
+    const scale = Math.max(CARD_W / photo.width, PHOTO_H / photo.height);
+    const [sw, sh] = [CARD_W / scale, PHOTO_H / scale];
+    ctx.drawImage(photo, (photo.width - sw) / 2, (photo.height - sh) / 2, sw, sh, x, y + HEADER_H, CARD_W, PHOTO_H);
+    photo.close();
+  }
   ctx.restore();
 
   const mid = x + CARD_W / 2;
@@ -130,9 +231,32 @@ export async function askCardPng(text: string, link: string, { colors, transpare
   ctx.fillText(prompt, start + (icon ? LOGO + 20 : 0), headMid, room);
   ctx.textAlign = "center";
 
-  ctx.fillStyle = "#1c1917";
-  ctx.font = `700 ${size}px ${FONT}`;
-  lines.forEach((line, i) => ctx.fillText(line, mid, y + HEADER_H + PAD + lineH * (i + 0.5)));
+  const ink = dark ? "#fafaf9" : "#1c1917";
+  ctx.textAlign = "left";
+  lines.forEach((line, i) => {
+    const widths = line.map((run) => measure(ctx, run, size));
+    let left = mid - widths.reduce((a, b) => a + b, 0) / 2;
+    const cy = y + HEADER_H + photoH + PAD + lineH * (i + 0.5);
+    line.forEach((run, k) => {
+      const w = widths[k]!;
+      if (run.styles.has("spoiler")) {
+        drawSpoiler(ctx, left, cy - size * 0.55, w, size * 1.1, ink);
+      } else {
+        if (run.styles.has("code")) {
+          ctx.fillStyle = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
+          ctx.beginPath();
+          ctx.roundRect(left, cy - size * 0.6, w, size * 1.2, size * 0.2);
+          ctx.fill();
+        }
+        ctx.font = fontFor(run.styles, size);
+        ctx.fillStyle = ink;
+        ctx.fillText(run.text, left, cy);
+        if (run.styles.has("strike")) ctx.fillRect(left, cy - size * 0.04, w, Math.max(2, size / 14));
+      }
+      left += w;
+    });
+  });
+  ctx.textAlign = "center";
 
   if (!transparent) {
     ctx.fillStyle = "#1c1917";

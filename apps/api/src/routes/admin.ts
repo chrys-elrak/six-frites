@@ -2,6 +2,8 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   AddStickerInput,
+  AdminAnonDTO,
+  AdminAnonQuery,
   AdminPackQuery,
   AdminReportQuery,
   AdminStatsDTO,
@@ -38,6 +40,7 @@ import {
   signOutEverywhere,
   unbanUser,
 } from "../services/admin.js";
+import { listAnonForAdmin } from "../services/ask.js";
 import { createReport, listReports, resolveReport } from "../services/reports.js";
 
 const Params = z.object({ id: Id });
@@ -181,6 +184,21 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       await signOutEverywhere(req.params.id);
       return getUser(req.params.id);
     },
+  );
+
+  app.get(
+    "/admin/anon",
+    {
+      schema: {
+        tags,
+        summary: "Anonymous messages, newest first, deleted ones included",
+        description: "Shows who sent each one; senders are told moderators can see this.",
+        security,
+        querystring: AdminAnonQuery,
+        response: { 200: page(AdminAnonDTO) },
+      },
+    },
+    (req) => listAnonForAdmin(req.query),
   );
 
   app.get(

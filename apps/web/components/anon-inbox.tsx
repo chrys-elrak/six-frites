@@ -1,9 +1,18 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import { ASK_COLORS, type AnonMessageDTO, type UpdateAskProfileInput, askUrl } from "@six/shared";
+import {
+  ASK_COLORS,
+  type AnonMessageDTO,
+  type SentAnonDTO,
+  type UpdateAskProfileInput,
+  askUrl,
+  doodleTileSvg,
+  hasLink,
+  splitLinks,
+} from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Ellipsis, LogOut, Share, VenetianMask, X } from "lucide-react";
+import { Camera, Ellipsis, LogOut, Share, ShieldAlert, Trash2, VenetianMask, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type CardStyle, askCardPng, saveAskCard, shareAskCard } from "@/lib/ask-card";
@@ -11,6 +20,7 @@ import { shareAsk, timeAgo } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { receiveAnon } from "@/lib/realtime";
 import { toAvatarDataUrl } from "@/lib/image";
+import { segments } from "@/lib/markup";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
@@ -18,22 +28,177 @@ import { Dialog } from "./dialog";
 import { LanguageSelect } from "./language-select";
 import { Logo } from "./logo";
 import { ReportDialog } from "./report-dialog";
+import { Styled } from "./rich-text";
 import { Sheet } from "./sheet";
 import { Card, PrimaryButton, Toggle } from "./ui";
 
 type Confirm = { m: AnonMessageDTO; action: "delete" | "block" };
 
+const DOODLES_BG = `url("data:image/svg+xml,${encodeURIComponent(doodleTileSvg("#ffffff", 0.3, 150))}")`;
+
 const textSize = (text: string) => (text.length < 80 ? "text-2xl" : text.length < 200 ? "text-xl" : "text-base");
+
+/** A link's preview, fetched by our server so whoever is behind the link doesn't learn who opened it. */
+function LinkPreview({ url, onOpen }: { url: string; onOpen: () => void }) {
+  const { data } = useQuery({
+    queryKey: ["link-preview", url],
+    queryFn: async () => unwrap(await six.api.GET("/v1/link-preview", { params: { query: { url } } })),
+    staleTime: Infinity,
+    retry: false,
+  });
+  if (!data) return null;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="mx-5 mb-3 block w-[calc(100%-2.5rem)] overflow-hidden rounded-2xl text-left ring-1 ring-stone-200 transition hover:bg-stone-50 dark:ring-white/10 dark:hover:bg-white/5"
+    >
+      {data.image && <img src={data.image} alt="" className="aspect-[1.91] w-full object-cover" />}
+      <span className="block px-3 py-2 text-sm">
+        <span className="block truncate text-xs text-stone-500 dark:text-stone-400">{data.siteName}</span>
+        <span className="line-clamp-2 font-semibold">{data.title}</span>
+      </span>
+    </button>
+  );
+}
+
+/** A message's text as it was written, styled; links ask before opening, and spoilers stay hidden until tapped. */
+function AnonText({ m, onLink }: { m: Pick<AnonMessageDTO, "text" | "entities">; onLink?: (href: string) => void }) {
+  const tr = useT();
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <>
+      {segments(m.text, m.entities).map((seg, i) => {
+        const hidden = seg.styles.has("spoiler") && !revealed;
+        const styled = (
+          <Styled styles={seg.styles}>
+            {hidden || seg.styles.has("code") || !onLink
+              ? seg.text
+              : splitLinks(seg.text).map((part, j) =>
+                  part.href ? (
+                    <button
+                      key={j}
+                      type="button"
+                      onClick={() => onLink(part.href!)}
+                      className="break-all text-sky-700 underline underline-offset-2 dark:text-sky-400"
+                    >
+                      {part.text}
+                    </button>
+                  ) : (
+                    part.text
+                  ),
+                )}
+          </Styled>
+        );
+        if (!hidden) return <span key={i}>{styled}</span>;
+        return (
+          <span
+            key={i}
+            role="button"
+            tabIndex={0}
+            aria-label={tr.messages.revealSpoiler}
+            onClick={() => setRevealed(true)}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setRevealed(true)}
+            className="spoiler cursor-pointer"
+          >
+            {styled}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+/** The anonymous messages you sent. Only you see them; removing one leaves the recipient's copy alone. */
+function SentList() {
+  const tr = useT();
+  const qc = useQueryClient();
+  const [removing, setRemoving] = useState<SentAnonDTO | null>(null);
+  const sent = useInfiniteQuery({
+    queryKey: ["ask-sent"],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) =>
+      unwrap(await six.api.GET("/v1/ask/sent", { params: { query: { limit: 30, cursor: pageParam } } })),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    refetchOnMount: "always",
+  });
+  const items = sent.data?.pages.flatMap((p) => p.items) ?? [];
+
+  return (
+    <>
+      {sent.isSuccess && !items.length && (
+        <p className="mx-auto max-w-xs py-10 text-center text-sm text-stone-500">{tr.ask.sentEmpty}</p>
+      )}
+      <div className="grid items-start gap-3 lg:grid-cols-2">
+        {items.map((m) => (
+          <Card key={m.id} className="space-y-2.5 p-4">
+            <div className="flex items-center gap-2.5">
+              <Avatar user={m.to} />
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold">{tr.ask.sentTo(m.to.displayName)}</span>
+              <span className="shrink-0 text-xs text-stone-400">{timeAgo(m.createdAt)}</span>
+              <button
+                type="button"
+                onClick={() => setRemoving(m)}
+                aria-label={tr.common.remove}
+                className="grid size-8 shrink-0 place-items-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+            {m.photoUrl && (
+              <img
+                src={m.photoUrl}
+                alt={tr.summary.kinds.image}
+                className="max-h-60 w-full rounded-xl bg-stone-100 object-contain dark:bg-stone-800"
+              />
+            )}
+            {m.text && (
+              <p className="break-words whitespace-pre-wrap select-text">
+                <AnonText m={m} />
+              </p>
+            )}
+          </Card>
+        ))}
+      </div>
+      {sent.hasNextPage && (
+        <button
+          type="button"
+          onClick={() => void sent.fetchNextPage()}
+          disabled={sent.isFetchingNextPage}
+          className="w-full rounded-xl p-3 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+        >
+          {tr.common.loadMore}
+        </button>
+      )}
+      {removing && (
+        <Sheet
+          title={tr.ask.deleteSentConfirm(removing.to.displayName)}
+          onClose={() => setRemoving(null)}
+          actions={[
+            {
+              label: tr.common.remove,
+              destructive: true,
+              onSelect: () =>
+                void six.api
+                  .DELETE("/v1/ask/sent/{id}", { params: { path: { id: removing.id } } })
+                  .finally(() => qc.invalidateQueries({ queryKey: ["ask-sent"] })),
+            },
+          ]}
+        />
+      )}
+    </>
+  );
+}
 
 /** Previews a message as an image in the color and background you pick, then shares or saves it. */
 function CardExport({
-  text,
+  m,
   link,
   style,
   onStyle: setStyle,
   onClose,
 }: {
-  text: string;
+  m: AnonMessageDTO;
   link: string;
   style: CardStyle;
   onStyle: (style: CardStyle) => void;
@@ -44,12 +209,12 @@ function CardExport({
 
   useEffect(() => {
     let live = true;
-    askCardPng(text, link, style).then(
+    askCardPng(m, link, style).then(
       (blob) => live && setPng({ blob, url: URL.createObjectURL(blob) }),
       () => null,
     );
     return () => void (live = false);
-  }, [text, link, style]);
+  }, [m, link, style]);
   useEffect(
     () => () => {
       if (png) URL.revokeObjectURL(png.url);
@@ -95,6 +260,14 @@ function CardExport({
           checked={style.transparent}
           onChange={(transparent) => setStyle({ ...style, transparent })}
         />
+        {!style.transparent && (
+          <Toggle
+            label={tr.ask.doodles}
+            hint={tr.ask.doodlesHint}
+            checked={style.doodles}
+            onChange={(doodles) => setStyle({ ...style, doodles })}
+          />
+        )}
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -225,10 +398,13 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
   const [menu, setMenu] = useState<AnonMessageDTO | null>(null);
+  const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
+  const [opening, setOpening] = useState<string | null>(null);
+  const [view, setView] = useState<"received" | "sent">("received");
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [reporting, setReporting] = useState<AnonMessageDTO | null>(null);
   const [exporting, setExporting] = useState<AnonMessageDTO | null>(null);
-  const [cardStyle, setCardStyle] = useState<CardStyle>({ colors: ASK_COLORS[0], transparent: false });
+  const [cardStyle, setCardStyle] = useState<CardStyle>({ colors: ASK_COLORS[0], transparent: false, doodles: true });
   const link = askUrl(window.location.origin, code);
 
   const messages = useInfiniteQuery({
@@ -316,68 +492,116 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
               </Link>
             </p>
           )}
-          {messages.isSuccess && !items.length && (
-            <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
-                <VenetianMask className="size-8" strokeWidth={1.6} />
-              </span>
-              <p className="max-w-xs text-sm text-stone-500">{tr.ask.empty}</p>
-            </div>
-          )}
-          <div className="grid items-start gap-4 lg:grid-cols-2">
-            {items.map((m) => (
-              <article
-                key={m.id}
-                className="overflow-hidden rounded-3xl bg-white text-stone-900 shadow-lg shadow-stone-900/10 ring-1 ring-black/5 dark:shadow-black/40"
+          <div role="tablist" className="flex rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
+            {(["received", "sent"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={`flex-1 rounded-full py-1.5 text-sm font-semibold transition ${
+                  view === v ? "bg-white shadow-sm dark:bg-stone-950" : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
+                }`}
               >
-                <p
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white"
-                  style={{ backgroundImage: `linear-gradient(135deg, ${cardStyle.colors[0]}, ${cardStyle.colors[1]})` }}
-                >
-                  <Logo className="size-5 shrink-0" />
-                  {tr.ask.prompt}
-                </p>
-                <p
-                  className={`px-5 pt-6 pb-5 text-center leading-snug font-bold break-words whitespace-pre-wrap select-text ${textSize(m.text)}`}
-                >
-                  {m.text}
-                </p>
-                <div className="flex items-center gap-2 border-t border-stone-100 py-2.5 pr-2.5 pl-5">
-                  <span className="flex-1 text-xs text-stone-400">{timeAgo(m.createdAt)}</span>
-                  <button
-                    type="button"
-                    onClick={() => setExporting(m)}
-                    className="flex items-center gap-1.5 rounded-full bg-stone-900 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:bg-stone-700 active:scale-95"
-                  >
-                    <Share className="size-4" />
-                    {tr.common.share}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMenu(m)}
-                    aria-label={tr.ask.options}
-                    className="grid size-8 place-items-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600"
-                  >
-                    <Ellipsis className="size-5" />
-                  </button>
-                </div>
-              </article>
+                {v === "received" ? tr.ask.received : tr.ask.sentTab}
+              </button>
             ))}
           </div>
-          {messages.hasNextPage && (
-            <button
-              type="button"
-              onClick={() => void messages.fetchNextPage()}
-              disabled={messages.isFetchingNextPage}
-              className="w-full rounded-xl p-3 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-            >
-              {tr.common.loadMore}
-            </button>
+          {view === "sent" ? (
+            <SentList />
+          ) : (
+            <>
+              {messages.isSuccess && !items.length && (
+                <div className="flex flex-col items-center gap-3 py-10 text-center">
+                  <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
+                    <VenetianMask className="size-8" strokeWidth={1.6} />
+                  </span>
+                  <p className="max-w-xs text-sm text-stone-500">{tr.ask.empty}</p>
+                </div>
+              )}
+              <div className="grid items-start gap-4 lg:grid-cols-2">
+                {items.map((m) => (
+                  <article
+                    key={m.id}
+                    className="overflow-hidden rounded-3xl bg-white text-stone-900 shadow-lg shadow-stone-900/10 ring-1 ring-black/5 dark:bg-stone-900 dark:text-stone-50 dark:shadow-black/40 dark:ring-white/10"
+                  >
+                    <p
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white"
+                      style={{
+                        backgroundImage: `${DOODLES_BG}, linear-gradient(135deg, ${cardStyle.colors[0]}, ${cardStyle.colors[1]})`,
+                      }}
+                    >
+                      <Logo className="size-5 shrink-0" />
+                      {tr.ask.prompt}
+                    </p>
+                    {m.photoUrl && (
+                      <a href={m.photoUrl} target="_blank" rel="noreferrer" className="block bg-stone-100 dark:bg-stone-950">
+                        <img src={m.photoUrl} alt={tr.summary.kinds.image} className="max-h-96 w-full object-contain" />
+                      </a>
+                    )}
+                    {m.text && (
+                      <p
+                        className={`px-5 pt-6 pb-5 text-center leading-snug font-bold break-words whitespace-pre-wrap select-text [&_strong]:font-black ${textSize(m.text)}`}
+                      >
+                        <AnonText m={m} onLink={setOpening} />
+                      </p>
+                    )}
+                    {splitLinks(m.text)
+                      .filter((p) => p.href)
+                      .slice(0, 1)
+                      .map((p) => (
+                        <LinkPreview key={p.href} url={p.href!} onOpen={() => setOpening(p.href)} />
+                      ))}
+                    {hasLink(m.text) && (
+                      <p className="mx-5 mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900 dark:bg-amber-400/15 dark:text-amber-200">
+                        <ShieldAlert className="mt-px size-4 shrink-0" />
+                        {tr.ask.linkWarning}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 border-t border-stone-100 py-2.5 dark:border-white/10 pr-2.5 pl-5">
+                      <span className="flex-1 text-xs text-stone-400">{timeAgo(m.createdAt)}</span>
+                      <button
+                        type="button"
+                        onClick={() => setExporting(m)}
+                        className="flex items-center gap-1.5 rounded-full bg-stone-900 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:bg-stone-700 active:scale-95 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+                      >
+                        <Share className="size-4" />
+                        {tr.common.share}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setMenuAt(matchMedia("(pointer: fine)").matches ? { x: r.left, y: r.bottom } : undefined);
+                          setMenu(m);
+                        }}
+                        aria-label={tr.ask.options}
+                        className="grid size-8 place-items-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-white/10 dark:hover:text-stone-200"
+                      >
+                        <Ellipsis className="size-5" />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {messages.hasNextPage && (
+                <button
+                  type="button"
+                  onClick={() => void messages.fetchNextPage()}
+                  disabled={messages.isFetchingNextPage}
+                  className="w-full rounded-xl p-3 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                >
+                  {tr.common.loadMore}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
       {menu && (
         <Sheet
+          at={menuAt}
           onClose={() => setMenu(null)}
           actions={[
             { label: tr.common.report, onSelect: () => setReporting(menu) },
@@ -408,11 +632,23 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
       )}
       {exporting && (
         <CardExport
-          text={exporting.text}
+          m={exporting}
           link={link}
           style={cardStyle}
           onStyle={setCardStyle}
           onClose={() => setExporting(null)}
+        />
+      )}
+      {opening && (
+        <Sheet
+          title={
+            <span className="block space-y-1">
+              <span className="block">{tr.ask.openLinkConfirm}</span>
+              <span className="block font-mono text-xs break-all text-stone-500">{opening}</span>
+            </span>
+          }
+          onClose={() => setOpening(null)}
+          actions={[{ label: tr.ask.openLink, onSelect: () => window.open(opening, "_blank", "noopener,noreferrer") }]}
         />
       )}
       {reporting && (

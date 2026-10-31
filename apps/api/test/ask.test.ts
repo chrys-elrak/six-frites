@@ -12,7 +12,7 @@ const { get, call, signUp } = chatHelpers(ctx);
 const walkIn = async (name: string): Promise<Auth & { user: { askCode: string } }> =>
   (await loginAs(ctx.app, uniqueSub(name), "web", { guest: true })).json();
 const ask = (who: Auth, code: string, text: string) => call(who, "POST", `/v1/ask/${code}`, { text });
-const inbox = async (who: Auth) => (await get(who, "/v1/ask")).items as { id: string; text: string }[];
+const inbox = async (who: Auth) => (await get(who, "/v1/ask")).items as { id: string; text: string; photoUrl: string | null }[];
 
 beforeAll(() => void (env.INVITE_ONLY = true));
 afterAll(() => void (env.INVITE_ONLY = false));
@@ -31,7 +31,13 @@ describe("anonymous messages", () => {
     expect((await ask(fan, code, "  Who's your crush? 👀  ")).statusCode).toBe(204);
     expect((await ask(fan, code, " ")).statusCode).toBe(400);
     const [got] = await inbox(owner);
-    expect(got).toEqual({ id: expect.any(String), text: "Who's your crush? 👀", createdAt: expect.any(String) });
+    expect(got).toEqual({
+      id: expect.any(String),
+      text: "Who's your crush? 👀",
+      entities: [],
+      photoUrl: null,
+      createdAt: expect.any(String),
+    });
     expect(JSON.stringify(got)).not.toContain(fan.user.id);
     expect(await inbox(fan)).toEqual([]);
   });
@@ -58,6 +64,7 @@ describe("anonymous messages", () => {
     expect((await ask(troll, code, "you can't stop me")).statusCode).toBe(204);
     expect((await ask(stranger, code, "hello")).statusCode).toBe(204);
     expect((await inbox(owner)).map((m) => m.text)).toEqual(["hello"]);
+    expect((await get(troll, "/v1/ask/sent")).items[0].text).toBe("you can't stop me");
 
     const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
     const reports = (await get(boss, "/v1/admin/reports?status=open")).items;
@@ -91,23 +98,92 @@ describe("anonymous messages", () => {
     expect((await ask(fan, renewed.askCode, "found you")).statusCode).toBe(204);
   });
 
-  it("turns away links, empty-looking text, repeats and floods", async () => {
+  it("turns away empty-looking text, links in names, repeats and floods", async () => {
     const owner = await walkIn("owner");
     const spammer = await walkIn("spammer");
     const code = owner.user.askCode;
-    const code400 = async (text: string) => (await ask(spammer, code, text)).statusCode;
+    const status = async (text: string) => (await ask(spammer, code, text)).statusCode;
 
-    for (const text of ["win at https://scam.example", "go to www.scam.example", "bit.ly/free", "\u200b\u200b\u200b", "..."]) {
-      expect(await code400(text)).toBe(400);
-    }
+    for (const text of ["", "\u200b\u200b\u200b", "..."]) expect(await status(text)).toBe(400);
     expect((await call(owner, "PATCH", "/v1/ask/profile", { name: "Mango fan 🥭" })).statusCode).toBe(200);
     expect((await call(owner, "PATCH", "/v1/ask/profile", { name: "Promo bit.ly/x" })).statusCode).toBe(400);
 
-    expect(await code400("Do you like mangoes? 🥭")).toBe(204);
+    expect(await status("Do you like mangoes? 🥭")).toBe(204);
     expect((await ask(spammer, code, "do you like MANGOES? 🥭")).json().error.code).toBe("CONFLICT");
-    for (let i = 1; i < SEND_LIMITS.perRecipient; i++) expect(await code400(`question ${i}`)).toBe(204);
+    for (let i = 1; i < SEND_LIMITS.perRecipient; i++) expect(await status(`question ${i}`)).toBe(204);
     expect((await ask(spammer, code, "one more")).json().error.code).toBe("RATE_LIMITED");
     expect((await inbox(owner)).length).toBe(SEND_LIMITS.perRecipient);
+  });
+
+  it("keeps the formatting, and turns away ranges outside the text", async () => {
+    const owner = await walkIn("owner");
+    const fan = await walkIn("fan");
+    const send = (body: object) => call(fan, "POST", `/v1/ask/${owner.user.askCode}`, body);
+    const entities = [
+      { type: "bold", offset: 0, length: 3 },
+      { type: "spoiler", offset: 7, length: 8 },
+    ];
+
+    expect((await send({ text: "Who is my crush", entities })).statusCode).toBe(204);
+    expect((await send({ text: "hey", entities: [{ type: "bold", offset: 1, length: 5 }] })).statusCode).toBe(400);
+    expect(await inbox(owner)).toMatchObject([{ text: "Who is my crush", entities }]);
+  });
+
+  it("takes links and real photos, and shows a reported photo to the moderators", async () => {
+    const owner = await walkIn("owner");
+    const fan = await walkIn("fan");
+    const code = owner.user.askCode;
+    const pixel = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    const send = (body: object) => call(fan, "POST", `/v1/ask/${code}`, body);
+
+    expect((await send({ text: "look at https://example.com" })).statusCode).toBe(204);
+    expect((await send({ photo: "data:image/png;base64,PGh0bWw+PC9odG1sPg==" })).statusCode).toBe(400);
+    expect((await send({ photo: pixel })).statusCode).toBe(204);
+    const [photo, link] = await inbox(owner);
+    expect(photo).toMatchObject({ text: "", photoUrl: expect.any(String) });
+    expect(link).toMatchObject({ text: "look at https://example.com", photoUrl: null });
+
+    expect((await call(owner, "POST", "/v1/reports", { anonMessageId: photo!.id, reason: "sexual" })).statusCode).toBe(204);
+    await call(owner, "DELETE", `/v1/ask/messages/${photo!.id}`);
+    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const reports = (await get(boss, "/v1/admin/reports?status=open")).items;
+    const report = reports.find((r: { messages: { id: string }[] }) => r.messages[0]?.id === photo!.id);
+    expect(report.messages[0].attachment).toMatchObject({ kind: "image", url: expect.any(String) });
+  });
+
+  it("lists what you sent, lets each side hide a message, and keeps everything for the moderators", async () => {
+    const owner = await walkIn("owner");
+    const fan = await walkIn("fan");
+    await call(owner, "PATCH", "/v1/ask/profile", { name: "Secret Fry" });
+    await ask(fan, owner.user.askCode, "hi there");
+    const sent = async () => (await get(fan, "/v1/ask/sent")).items;
+
+    const [mine] = await sent();
+    expect(mine).toMatchObject({ text: "hi there", to: { displayName: "Secret Fry" } });
+    expect(JSON.stringify(mine)).not.toContain(owner.user.id);
+    expect((await get(owner, "/v1/ask/sent")).items).toEqual([]);
+
+    await call(owner, "DELETE", `/v1/ask/messages/${mine.id}`);
+    expect(await inbox(owner)).toEqual([]);
+    expect(await sent()).toHaveLength(1);
+    expect((await call(owner, "DELETE", `/v1/ask/sent/${mine.id}`)).statusCode).toBe(204);
+    expect(await sent()).toHaveLength(1);
+    await call(fan, "DELETE", `/v1/ask/sent/${mine.id}`);
+    expect(await sent()).toEqual([]);
+
+    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const { email } = await get(fan, "/v1/me");
+    expect((await call(fan, "POST", "/v1/reports", { anonMessageId: mine.id, reason: "spam" })).statusCode).toBe(404);
+    expect((await get(owner, `/v1/admin/anon?q=${email}`)).error.code).toBe("FORBIDDEN");
+    const [seen] = (await get(boss, `/v1/admin/anon?q=${encodeURIComponent(email)}`)).items;
+    expect(seen).toMatchObject({
+      id: mine.id,
+      text: "hi there",
+      sender: { id: fan.user.id },
+      recipient: { id: owner.user.id },
+      senderDeletedAt: expect.any(String),
+      recipientDeletedAt: expect.any(String),
+    });
   });
 
   it("tells the recipient's open apps right away", async () => {
@@ -122,7 +198,7 @@ describe("anonymous messages", () => {
       const arrived = new Promise((resolve) => socket.once("ask:new", resolve));
       await ask(fan, owner.user.askCode, "live?");
       const m = await arrived;
-      expect(m).toEqual({ id: expect.any(String), text: "live?", createdAt: expect.any(String) });
+      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, createdAt: expect.any(String) });
     } finally {
       socket.disconnect();
     }

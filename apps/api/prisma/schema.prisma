@@ -527,7 +527,14 @@ model AnonMessage {
   recipientId String
   senderId    String
   text        String
+  /// Formatting ranges of `text`, as on chat messages; null when it has none.
+  entities    Json?
+  photoKey    String?
   createdAt   DateTime @default(now())
+  /// Hidden from the sender's sent list; the message stays, for the recipient and the moderators.
+  senderDeletedAt    DateTime?
+  /// Hidden from the recipient's inbox, by them or because they blocked the sender; moderators still see it.
+  recipientDeletedAt DateTime?
 
   recipient User @relation("anonRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
   sender    User @relation("anonSender", fields: [senderId], references: [id], onDelete: Cascade)

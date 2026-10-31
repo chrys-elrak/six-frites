@@ -841,6 +841,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/anon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Anonymous messages, newest first, deleted ones included
+         * @description Shows who sent each one; senders are told moderators can see this.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                    /** @description Part of the sender's or recipient's name or email */
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                text: string;
+                                /**
+                                 * Format: uri
+                                 * @description Links last 5 minutes
+                                 */
+                                photoUrl: string | null;
+                                sender: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                };
+                                recipient: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                senderDeletedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Also set when the recipient had blocked the sender
+                                 */
+                                recipientDeletedAt: string | null;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/reports": {
         parameters: {
             query?: never;
@@ -12671,7 +12753,17 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        text: string;
+                        /** @default  */
+                        text?: string;
+                        /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
+                        entities?: {
+                            /** @enum {string} */
+                            type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                            offset: number;
+                            length: number;
+                        }[];
+                        /** @description A photo, re-encoded by the app so it carries no place or camera details */
+                        photo?: string;
                     };
                 };
             };
@@ -12722,7 +12814,17 @@ export interface paths {
                         "application/json": {
                             items: {
                                 id: string;
+                                /** @description Empty when only a photo was sent */
                                 text: string;
+                                /** @description Bold, italic, strike, code and spoiler ranges of the text */
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
+                                /** Format: uri */
+                                photoUrl: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
                             }[];
@@ -12735,6 +12837,113 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ask/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The anonymous messages you sent, newest first
+         * @description Only you see this list. It never says whether the recipient deleted a message or blocked you.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                /** @description Empty when only a photo was sent */
+                                text: string;
+                                /** @description Bold, italic, strike, code and spoiler ranges of the text */
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                    offset: number;
+                                    length: number;
+                                }[];
+                                /** Format: uri */
+                                photoUrl: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** @description Who you sent it to, as their link shows them */
+                                to: {
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                };
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ask/sent/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a message from your sent list
+         * @description The recipient keeps it, and the moderators still see it.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -12866,7 +13075,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete an anonymous message you got */
+        /**
+         * Delete an anonymous message you got
+         * @description It leaves your inbox; the moderators still see it.
+         */
         delete: {
             parameters: {
                 query?: never;

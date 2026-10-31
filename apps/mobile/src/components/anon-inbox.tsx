@@ -5,27 +5,32 @@ import {
   LOCALE_NAMES,
   type AnonMessageDTO,
   type AskColors,
+  type SentAnonDTO,
   ReportReason,
   type UpdateAskProfileInput,
   askUrl,
+  hasLink,
+  splitLinks,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
 import * as Sharing from "expo-sharing";
-import { Camera, Ellipsis, Globe, LogOut, Share2, VenetianMask } from "lucide-react-native";
+import { Camera, Ellipsis, Globe, LogOut, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { captureRef } from "react-native-view-shot";
 import { shareAsk, timeAgo } from "@/lib/format";
+import { segments } from "@/lib/markup";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { pickAvatar } from "@/lib/media";
 import { receiveAnon } from "@/lib/realtime";
 import { logout, useSession } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
-import { brand, useTheme } from "@/lib/theme";
+import { brand, stone, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { DoodlePattern } from "./chat-background";
 import { Logo } from "./logo";
 import { Sheet } from "./sheet";
 import { Text, TextInput } from "./text";
@@ -36,7 +41,11 @@ type Note = { tone: "error" | "success"; text: string };
 interface CardStyle {
   colors: AskColors;
   transparent: boolean;
+  doodles: boolean;
 }
+type Doodles = { ink: string; opacity: number; size: number };
+
+const HEAD_DOODLES: Doodles = { ink: "#ffffff", opacity: 0.3, size: 150 };
 
 // ponytail: font size picked from length, not measured; fine up to ASK_MAX, measure with onTextLayout if it overflows
 const cardFont = (text: string) => (text.length < 60 ? 28 : text.length < 160 ? 22 : 16);
@@ -110,7 +119,7 @@ function PublicProfile({ code }: { code: string }) {
   );
 }
 
-function Gradient({ id, colors, wash }: { id: string; colors: AskColors; wash?: boolean }) {
+function Gradient({ id, colors, wash, doodles }: { id: string; colors: AskColors; wash?: boolean; doodles?: Doodles }) {
   return (
     <Svg style={StyleSheet.absoluteFill}>
       <Defs>
@@ -118,9 +127,11 @@ function Gradient({ id, colors, wash }: { id: string; colors: AskColors; wash?: 
           <Stop offset="0" stopColor={colors[0]} />
           <Stop offset="1" stopColor={colors[1]} />
         </LinearGradient>
+        {doodles && <DoodlePattern id={`${id}-doodles`} {...doodles} />}
       </Defs>
       <Rect width="100%" height="100%" fill={`url(#${id})`} />
       {wash && <Rect width="100%" height="100%" fill="#ffffff" opacity={0.78} />}
+      {doodles && <Rect width="100%" height="100%" fill={`url(#${id}-doodles)`} />}
     </Svg>
   );
 }
@@ -129,29 +140,178 @@ function Gradient({ id, colors, wash }: { id: string; colors: AskColors; wash?: 
  * The message as an image, drawn off screen 360 wide: the card alone on a transparent background, or a
  * 9:16 story (captured at 1080×1920) with the link to send more under it.
  */
-function CardArt({ text, link, style: { colors, transparent } }: { text: string; link: string; style: CardStyle }) {
+function CardArt({
+  m: { text, entities, photoUrl },
+  link,
+  style: { colors, transparent, doodles },
+  onPhotoLoad,
+}: {
+  m: AnonMessageDTO;
+  link: string;
+  style: CardStyle;
+  onPhotoLoad: () => void;
+}) {
   const tr = useT();
+  const t = useTheme();
   const size = cardFont(text);
   const card = (
-    <View style={styles.storyCard}>
+    <View style={[styles.storyCard, { backgroundColor: t.surface }]}>
       <View style={styles.cardHead}>
-        <Gradient id="card-head" colors={colors} />
+        <Gradient id="card-head" colors={colors} doodles={HEAD_DOODLES} />
         <Logo size={24} />
         <Text style={styles.storyPrompt} numberOfLines={1} adjustsFontSizeToFit>
           {tr.ask.prompt}
         </Text>
       </View>
-      <Text style={[styles.storyText, { fontSize: size, lineHeight: size * 1.25 }]}>{text}</Text>
+      {photoUrl && (
+        <Image
+          source={{ uri: photoUrl }}
+          style={styles.storyPhoto}
+          resizeMode="cover"
+          onLoad={onPhotoLoad}
+          onError={onPhotoLoad}
+        />
+      )}
+      {!!text && (
+        <Text style={[styles.storyText, { color: t.text, fontSize: size, lineHeight: size * 1.25 }]}>
+          <AnonText m={{ text, entities }} sealed />
+        </Text>
+      )}
     </View>
   );
   if (transparent) return <View style={styles.cardOnly}>{card}</View>;
   return (
     <View style={styles.story}>
-      <Gradient id="story-bg" colors={colors} wash />
+      <Gradient
+        id="story-bg"
+        colors={colors}
+        wash
+        doodles={doodles ? { ink: colors[1], opacity: 0.22, size: 240 } : undefined}
+      />
       {card}
       <Text style={styles.storyBrand}>Six Frites</Text>
       <Text style={styles.storyLink}>{link.replace(/^https?:\/\//, "")}</Text>
     </View>
+  );
+}
+
+/**
+ * A message's text as it was written, styled. Links ask before opening, and spoilers stay hidden until tapped,
+ * or for good when `sealed`, as on the story image.
+ */
+function AnonText({
+  m,
+  onLink,
+  sealed,
+}: {
+  m: Pick<AnonMessageDTO, "text" | "entities">;
+  onLink?: (href: string) => void;
+  sealed?: boolean;
+}) {
+  const t = useTheme();
+  const tr = useT();
+  const [revealed, setRevealed] = useState(false);
+  const spoilerInk = t.dark ? stone[600] : stone[300];
+  return (
+    <>
+      {segments(m.text, m.entities).map((seg, i) => {
+        const hidden = seg.styles.has("spoiler") && (sealed || !revealed);
+        const style = {
+          ...(seg.styles.has("bold") && { fontWeight: "900" as const }),
+          ...(seg.styles.has("italic") && { fontStyle: "italic" as const }),
+          ...(seg.styles.has("strike") && { textDecorationLine: "line-through" as const }),
+          ...(seg.styles.has("code") && {
+            fontFamily: "monospace",
+            backgroundColor: t.dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
+          }),
+          ...(hidden && { color: spoilerInk, backgroundColor: spoilerInk }),
+        };
+        if (hidden) {
+          return (
+            <Text
+              key={i}
+              style={style}
+              accessibilityLabel={sealed ? undefined : tr.messages.revealSpoiler}
+              onPress={sealed ? undefined : () => setRevealed(true)}
+            >
+              {seg.text}
+            </Text>
+          );
+        }
+        return (
+          <Text key={i} style={style}>
+            {seg.styles.has("code") || !onLink
+              ? seg.text
+              : splitLinks(seg.text).map((part, j) =>
+                  part.href ? (
+                    <Text key={j} style={[styles.inlineLink, { color: t.read }]} onPress={() => onLink(part.href!)}>
+                      {part.text}
+                    </Text>
+                  ) : (
+                    part.text
+                  ),
+                )}
+          </Text>
+        );
+      })}
+    </>
+  );
+}
+
+/** One message you sent, with who you sent it to. */
+function SentRow({ m, onRemove }: { m: SentAnonDTO; onRemove: () => void }) {
+  const t = useTheme();
+  const tr = useT();
+  return (
+    <Card style={{ padding: 14, gap: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Avatar user={m.to} />
+        <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 14, fontWeight: "600" }}>
+          {tr.ask.sentTo(m.to.displayName)}
+        </Text>
+        <Text style={{ color: t.muted, fontSize: 12 }}>{timeAgo(m.createdAt)}</Text>
+        <Pressable onPress={onRemove} hitSlop={8} accessibilityLabel={tr.common.remove}>
+          <Trash2 size={18} color={t.muted} />
+        </Pressable>
+      </View>
+      {m.photoUrl && (
+        <Image
+          source={{ uri: m.photoUrl }}
+          style={{ width: "100%", height: 200, borderRadius: 12, backgroundColor: t.surfaceAlt }}
+          resizeMode="contain"
+        />
+      )}
+      {!!m.text && (
+        <Text style={{ color: t.text, fontSize: 15 }} selectable>
+          <AnonText m={m} />
+        </Text>
+      )}
+    </Card>
+  );
+}
+
+/** A link's preview, fetched by our server so whoever is behind the link doesn't learn who opened it. */
+function LinkPreview({ url, onOpen }: { url: string; onOpen: () => void }) {
+  const { data } = useQuery({
+    queryKey: ["link-preview", url],
+    queryFn: async () => unwrap(await six.api.GET("/v1/link-preview", { params: { query: { url } } })),
+    staleTime: Infinity,
+    retry: false,
+  });
+  const t = useTheme();
+  if (!data) return null;
+  return (
+    <Pressable onPress={onOpen} style={({ pressed }) => [styles.linkCard, { borderColor: t.border }, pressed && { opacity: 0.8 }]}>
+      {data.image && <Image source={{ uri: data.image }} style={{ width: "100%", aspectRatio: 1.91 }} resizeMode="cover" />}
+      <View style={{ padding: 10 }}>
+        <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12 }}>
+          {data.siteName}
+        </Text>
+        <Text numberOfLines={2} style={{ color: t.text, fontSize: 14, fontWeight: "700" }}>
+          {data.title}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -173,9 +333,12 @@ function CardExport({
   const tr = useT();
   const insets = useSafeAreaInsets();
   const [uri, setUri] = useState<string | null>(null);
+  const [loadedIn, setLoadedIn] = useState<boolean | null>(null);
   const shot = useRef<ComponentRef<typeof View>>(null);
+  const ready = !m.photoUrl || loadedIn === style.transparent;
 
   useEffect(() => {
+    if (!ready) return;
     let live = true;
     requestAnimationFrame(() =>
       requestAnimationFrame(() =>
@@ -188,7 +351,7 @@ function CardExport({
       ),
     );
     return () => void (live = false);
-  }, [style, m.id]);
+  }, [style, m.id, ready]);
 
   async function share() {
     if (uri) await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: tr.ask.shareStory }).catch(() => null);
@@ -209,7 +372,7 @@ function CardExport({
     <Modal transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={() => onClose()}>
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={() => onClose()} />
       <View ref={shot} collapsable={false} style={styles.offscreen}>
-        <CardArt text={m.text} link={link} style={style} />
+        <CardArt m={m} link={link} style={style} onPhotoLoad={() => setLoadedIn(style.transparent)} />
       </View>
       <View style={[styles.exportWrap, { paddingBottom: Math.max(insets.bottom, 12) }]} pointerEvents="box-none">
         <View style={[styles.exportPanel, { backgroundColor: t.surface }]}>
@@ -244,6 +407,14 @@ function CardExport({
             value={style.transparent}
             onChange={(transparent) => onStyle({ ...style, transparent })}
           />
+          {!style.transparent && (
+            <Toggle
+              label={tr.ask.doodles}
+              hint={tr.ask.doodlesHint}
+              value={style.doodles}
+              onChange={(doodles) => onStyle({ ...style, doodles })}
+            />
+          )}
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Pressable
               onPress={() => void save()}
@@ -272,8 +443,9 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const [languages, setLanguages] = useState(false);
   const locale = useLocale((s) => s.locale);
   const [pending, setPending] = useState<Pending | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
   const [exporting, setExporting] = useState<AnonMessageDTO | null>(null);
-  const [cardStyle, setCardStyle] = useState<CardStyle>({ colors: ASK_COLORS[0], transparent: false });
+  const [cardStyle, setCardStyle] = useState<CardStyle>({ colors: ASK_COLORS[0], transparent: false, doodles: true });
   const [notice, setNotice] = useState<Note | null>(null);
 
   const messages = useInfiniteQuery({
@@ -285,6 +457,19 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
     refetchOnMount: "always",
   });
   const items = messages.data?.pages.flatMap((p) => p.items) ?? [];
+  const [view, setView] = useState<"received" | "sent">("received");
+  const [removing, setRemoving] = useState<SentAnonDTO | null>(null);
+  const sent = useInfiniteQuery({
+    queryKey: ["ask-sent"],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) =>
+      unwrap(await six.api.GET("/v1/ask/sent", { params: { query: { limit: 30, cursor: pageParam } } })),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    enabled: view === "sent",
+    refetchOnMount: "always",
+  });
+  const sentItems = sent.data?.pages.flatMap((p) => p.items) ?? [];
+  const list = view === "sent" ? sent : messages;
 
   useEffect(() => {
     if (!guest) return;
@@ -383,12 +568,12 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         )}
       </ScreenHeader>
       <FlatList
-        data={items}
+        data={view === "sent" ? sentItems : items}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.content}
-        onEndReached={() => messages.hasNextPage && !messages.isFetchingNextPage && void messages.fetchNextPage()}
-        refreshing={messages.isRefetching && !messages.isFetchingNextPage}
-        onRefresh={() => void messages.refetch()}
+        onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
+        refreshing={list.isRefetching && !list.isFetchingNextPage}
+        onRefresh={() => void list.refetch()}
         ListHeaderComponent={
           <View style={{ gap: 12 }}>
             {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
@@ -412,39 +597,92 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                 </Text>
               </Text>
             )}
-            {messages.isSuccess && !items.length && (
+            <View style={[styles.tabs, { backgroundColor: t.chip }]}>
+              {(["received", "sent"] as const).map((v) => (
+                <Pressable
+                  key={v}
+                  onPress={() => setView(v)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: view === v }}
+                  style={[styles.tab, view === v && { backgroundColor: t.surface }]}
+                >
+                  <Text style={{ color: view === v ? t.text : t.muted, fontSize: 14, fontWeight: "600" }}>
+                    {v === "received" ? tr.ask.received : tr.ask.sentTab}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            {view === "received" && messages.isSuccess && !items.length && (
               <EmptyState Icon={VenetianMask}>{tr.ask.empty}</EmptyState>
+            )}
+            {view === "sent" && sent.isSuccess && !sentItems.length && (
+              <Text style={{ color: t.muted, fontSize: 14, textAlign: "center", paddingVertical: 32 }}>{tr.ask.sentEmpty}</Text>
             )}
           </View>
         }
-        renderItem={({ item: m }) => (
-          <View style={styles.item}>
-            <View style={styles.itemHead}>
-              <Gradient id="item-head" colors={cardStyle.colors} />
-              <Logo size={18} />
-              <Text style={styles.itemPrompt} numberOfLines={1}>
-                {tr.ask.prompt}
-              </Text>
+        renderItem={({ item: m }) =>
+          view === "sent" ? (
+            <SentRow m={m as SentAnonDTO} onRemove={() => setRemoving(m as SentAnonDTO)} />
+          ) : (
+            <View style={[styles.item, { backgroundColor: t.surface }]}>
+              <View style={styles.itemHead}>
+                <Gradient id="item-head" colors={cardStyle.colors} doodles={HEAD_DOODLES} />
+                <Logo size={18} />
+                <Text style={styles.itemPrompt} numberOfLines={1}>
+                  {tr.ask.prompt}
+                </Text>
+              </View>
+              {m.photoUrl && <Image source={{ uri: m.photoUrl }} style={[styles.itemPhoto, { backgroundColor: t.surfaceAlt }]} resizeMode="contain" />}
+              {!!m.text && (
+                <Text style={[styles.itemText, { color: t.text, fontSize: cardFont(m.text), lineHeight: cardFont(m.text) * 1.3 }]} selectable>
+                  <AnonText m={m} onLink={setOpening} />
+                </Text>
+              )}
+              {splitLinks(m.text)
+                .filter((p) => p.href)
+                .slice(0, 1)
+                .map((p) => (
+                  <LinkPreview key={p.href} url={p.href!} onOpen={() => setOpening(p.href)} />
+                ))}
+              {hasLink(m.text) && (
+                <View style={[styles.warning, { backgroundColor: t.dark ? "rgba(251,191,36,0.15)" : "#fffbeb" }]}>
+                  <ShieldAlert size={16} color={t.dark ? "#fcd34d" : "#92400e"} />
+                  <Text style={{ flex: 1, color: t.dark ? "#fde68a" : "#78350f", fontSize: 12, fontWeight: "500" }}>{tr.ask.linkWarning}</Text>
+                </View>
+              )}
+              <View style={[styles.row, { borderColor: t.border }]}>
+                <Text style={{ flex: 1, color: "#a8a29e", fontSize: 12 }}>{timeAgo(m.createdAt)}</Text>
+                <Pressable
+                  onPress={() => setExporting(m)}
+                  style={({ pressed }) => [styles.share, { backgroundColor: t.inverse }, pressed && { opacity: 0.8 }]}
+                >
+                  <Share2 size={15} color={t.onInverse} />
+                  <Text style={{ color: t.onInverse, fontWeight: "700", fontSize: 14 }}>{tr.common.share}</Text>
+                </Pressable>
+                <Pressable onPress={() => setPending({ m, action: "menu" })} hitSlop={8} accessibilityLabel={tr.ask.options}>
+                  <Ellipsis size={20} color="#a8a29e" />
+                </Pressable>
+              </View>
             </View>
-            <Text style={[styles.itemText, { fontSize: cardFont(m.text), lineHeight: cardFont(m.text) * 1.3 }]} selectable>
-              {m.text}
-            </Text>
-            <View style={styles.row}>
-              <Text style={{ flex: 1, color: "#a8a29e", fontSize: 12 }}>{timeAgo(m.createdAt)}</Text>
-              <Pressable
-                onPress={() => setExporting(m)}
-                style={({ pressed }) => [styles.share, pressed && { opacity: 0.8 }]}
-              >
-                <Share2 size={15} color="#ffffff" />
-                <Text style={{ color: "#ffffff", fontWeight: "700", fontSize: 14 }}>{tr.common.share}</Text>
-              </Pressable>
-              <Pressable onPress={() => setPending({ m, action: "menu" })} hitSlop={8} accessibilityLabel={tr.ask.options}>
-                <Ellipsis size={20} color="#a8a29e" />
-              </Pressable>
-            </View>
-          </View>
-        )}
+          )
+        }
       />
+      {removing && (
+        <Sheet
+          title={tr.ask.deleteSentConfirm(removing.to.displayName)}
+          onClose={() => setRemoving(null)}
+          actions={[
+            {
+              label: tr.common.remove,
+              destructive: true,
+              onSelect: () =>
+                void six.api
+                  .DELETE("/v1/ask/sent/{id}", { params: { path: { id: removing.id } } })
+                  .finally(() => qc.invalidateQueries({ queryKey: ["ask-sent"] })),
+            },
+          ]}
+        />
+      )}
       {exporting && (
         <CardExport
           m={exporting}
@@ -463,6 +701,18 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           title={tr.common.language}
           onClose={() => setLanguages(false)}
           actions={LOCALES.map((l) => ({ label: LOCALE_NAMES[l], onSelect: () => setLocale(l) }))}
+        />
+      )}
+      {opening && (
+        <Sheet
+          header={
+            <View style={{ gap: 4 }}>
+              <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>{tr.ask.openLinkConfirm}</Text>
+              <Text style={{ color: t.text, fontSize: 12, fontFamily: "monospace", textAlign: "center" }}>{opening}</Text>
+            </View>
+          }
+          onClose={() => setOpening(null)}
+          actions={[{ label: tr.ask.openLink, onSelect: () => void Linking.openURL(opening) }]}
         />
       )}
       {renewing && (
@@ -495,7 +745,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
   },
   nameInput: { flex: 1, fontSize: 18, fontWeight: "500", paddingVertical: 2 },
-  item: { backgroundColor: "#ffffff", borderRadius: 24, overflow: "hidden", elevation: 4 },
+  item: { borderRadius: 24, overflow: "hidden", elevation: 4 },
   itemHead: {
     flexDirection: "row",
     alignItems: "center",
@@ -505,7 +755,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   itemPrompt: { flexShrink: 1, color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  itemText: { color: "#1c1917", fontWeight: "700", textAlign: "center", paddingHorizontal: 20, paddingTop: 22, paddingBottom: 18 },
+  tabs: { flexDirection: "row", borderRadius: 999, padding: 4 },
+  tab: { flex: 1, alignItems: "center", paddingVertical: 7, borderRadius: 999 },
+  itemPhoto: { width: "100%", height: 260 },
+  inlineLink: { textDecorationLine: "underline" },
+  linkCard: { marginHorizontal: 20, marginBottom: 12, borderRadius: 16, overflow: "hidden", borderWidth: 1 },
+  warning: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 14,
+    padding: 10,
+    borderRadius: 12,
+  },
+  storyPhoto: { width: "100%", height: 200 },
+  itemText: { fontWeight: "700", textAlign: "center", paddingHorizontal: 20, paddingTop: 22, paddingBottom: 18 },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -514,13 +779,11 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     paddingLeft: 20,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: "#e7e5e4",
   },
   share: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#1c1917",
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 7,
@@ -528,7 +791,7 @@ const styles = StyleSheet.create({
   offscreen: { position: "absolute", left: -1000, top: 0, width: 360 },
   story: { width: 360, height: 640, alignItems: "center", justifyContent: "center", padding: 30 },
   cardOnly: { width: 360, padding: 15 },
-  storyCard: { width: "100%", backgroundColor: "#ffffff", borderRadius: 16, overflow: "hidden" },
+  storyCard: { width: "100%", borderRadius: 16, overflow: "hidden" },
   cardHead: {
     flexDirection: "row",
     alignItems: "center",
@@ -538,7 +801,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   storyPrompt: { flexShrink: 1, color: "#ffffff", fontSize: 15, fontWeight: "700" },
-  storyText: { color: "#1c1917", fontWeight: "700", textAlign: "center", padding: 21 },
+  storyText: { fontWeight: "700", textAlign: "center", padding: 21 },
   storyBrand: { color: "#1c1917", fontSize: 16, fontWeight: "800", marginTop: 24 },
   storyLink: { color: "#57534e", fontSize: 11, marginTop: 4 },
   exportWrap: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 12 },
