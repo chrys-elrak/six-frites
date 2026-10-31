@@ -1,7 +1,7 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import { ASK_COLORS, ASK_MAX } from "@six/shared";
+import { ASK_COLORS, ASK_MAX, SendAnonInput, hasLink } from "@six/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { SearchX } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +28,13 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     queryFn: async () => unwrap(await six.api.GET("/v1/ask/{code}", { params: { path: { code } } })),
     retry: false,
   });
+
+  const valid = SendAnonInput.safeParse({ text }).success;
+  const linked = hasLink(text);
+  const sendError: Record<string, string | undefined> = {
+    RATE_LIMITED: tr.ask.slowDown,
+    CONFLICT: tr.ask.duplicate,
+  };
 
   const send = useMutation({
     mutationFn: async () =>
@@ -84,7 +91,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (text.trim()) send.mutate();
+            if (valid) send.mutate();
           }}
           className="space-y-3"
         >
@@ -110,14 +117,17 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
               {text.length}/{ASK_MAX}
             </p>
           </div>
-          {send.isError && (
+          {(linked || send.isError) && (
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-              {tr.common.somethingWrongRetry}
+              {linked
+                ? tr.ask.noLinks
+                : ((send.error instanceof SixApiError && sendError[send.error.code]) ?? tr.common.somethingWrongRetry)}
             </p>
           )}
-          <PrimaryButton type="submit" disabled={!text.trim() || send.isPending} className="w-full">
+          <PrimaryButton type="submit" disabled={!valid || send.isPending} className="w-full">
             {send.isPending ? tr.ask.sending : tr.common.send}
           </PrimaryButton>
+          <p className="text-center text-xs text-stone-500 dark:text-stone-400">{tr.ask.modNote}</p>
         </form>
       ) : status === "anon" ? (
         <div className="space-y-3">

@@ -533,6 +533,7 @@ model AnonMessage {
   sender    User @relation("anonSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt])
+  @@index([senderId, createdAt])
 }
 
 /// Someone who can no longer send `blockerId` anonymous messages, kept apart from Block so blocking never reveals who it was.

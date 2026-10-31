@@ -56,6 +56,36 @@ export async function resetAskCode(userId: string) {
   throw new AppError("CONFLICT", "Could not generate a unique link");
 }
 
+const HOUR = 60 * 60 * 1000;
+
+/** How many anonymous messages one person can send in an hour: to the same link, and to anyone. */
+export const SEND_LIMITS = { perRecipient: 5, total: 30 };
+
+/**
+ * Turns away a sender who has hit the hourly limits or already sent this text to this person today.
+ * ponytail: counts the messages still stored, so ones the recipient deleted don't count; keep deleted rows if that's abused.
+ */
+async function assertNotSpam(senderId: string, recipientId: string, text: string) {
+  const since = new Date(Date.now() - HOUR);
+  const [toThem, total, repeat] = await Promise.all([
+    prisma.anonMessage.count({ where: { senderId, recipientId, createdAt: { gte: since } } }),
+    prisma.anonMessage.count({ where: { senderId, createdAt: { gte: since } } }),
+    prisma.anonMessage.findFirst({
+      where: {
+        senderId,
+        recipientId,
+        text: { equals: text, mode: "insensitive" },
+        createdAt: { gte: new Date(Date.now() - 24 * HOUR) },
+      },
+      select: { id: true },
+    }),
+  ]);
+  if (toThem >= SEND_LIMITS.perRecipient || total >= SEND_LIMITS.total) {
+    throw new AppError("RATE_LIMITED", "Too many anonymous messages; try again later");
+  }
+  if (repeat) throw new AppError("CONFLICT", "You already sent this message");
+}
+
 /** Sends an anonymous message. Someone the recipient blocked is told it went through, so blocking stays quiet. */
 export async function sendAnon(senderId: string, code: string, text: string) {
   const recipient = await askerByCode(code);
@@ -63,6 +93,7 @@ export async function sendAnon(senderId: string, code: string, text: string) {
     where: { blockerId_blockedId: { blockerId: recipient.id, blockedId: senderId } },
   });
   if (blocked) return;
+  await assertNotSpam(senderId, recipient.id, text);
   const m = await prisma.anonMessage.create({ data: { recipientId: recipient.id, senderId, text } });
   broadcaster().to(rooms.user(recipient.id)).emit("ask:new", toAnonDTO(m));
   void deliverAnonPush(recipient.id, text).catch(() => null);

@@ -2,6 +2,7 @@ import type { AddressInfo } from "node:net";
 import { io as connect } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
+import { SEND_LIMITS } from "../src/services/ask.js";
 import { createSocketServer } from "../src/socket/index.js";
 import { type Auth, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
 
@@ -88,6 +89,25 @@ describe("anonymous messages", () => {
     expect((await ctx.app.inject({ url: `/v1/ask/${owner.user.askCode}` })).statusCode).toBe(404);
     expect((await ask(fan, owner.user.askCode, "still there?")).statusCode).toBe(404);
     expect((await ask(fan, renewed.askCode, "found you")).statusCode).toBe(204);
+  });
+
+  it("turns away links, empty-looking text, repeats and floods", async () => {
+    const owner = await walkIn("owner");
+    const spammer = await walkIn("spammer");
+    const code = owner.user.askCode;
+    const code400 = async (text: string) => (await ask(spammer, code, text)).statusCode;
+
+    for (const text of ["win at https://scam.example", "go to www.scam.example", "bit.ly/free", "\u200b\u200b\u200b", "..."]) {
+      expect(await code400(text)).toBe(400);
+    }
+    expect((await call(owner, "PATCH", "/v1/ask/profile", { name: "Mango fan 🥭" })).statusCode).toBe(200);
+    expect((await call(owner, "PATCH", "/v1/ask/profile", { name: "Promo bit.ly/x" })).statusCode).toBe(400);
+
+    expect(await code400("Do you like mangoes? 🥭")).toBe(204);
+    expect((await ask(spammer, code, "do you like MANGOES? 🥭")).json().error.code).toBe("CONFLICT");
+    for (let i = 1; i < SEND_LIMITS.perRecipient; i++) expect(await code400(`question ${i}`)).toBe(204);
+    expect((await ask(spammer, code, "one more")).json().error.code).toBe("RATE_LIMITED");
+    expect((await inbox(owner)).length).toBe(SEND_LIMITS.perRecipient);
   });
 
   it("tells the recipient's open apps right away", async () => {
