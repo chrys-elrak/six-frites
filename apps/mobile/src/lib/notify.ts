@@ -1,5 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { type ChatDTO, type MessageDTO, type MessageReactedDTO, type Tone, previewText, reactionText } from "@six/shared";
+import {
+  type AnonMessageDTO,
+  type ChatDTO,
+  type MessageDTO,
+  type MessageReactedDTO,
+  type Tone,
+  previewText,
+  reactionText,
+} from "@six/shared";
 import { type AudioPlayer, createAudioPlayer } from "expo-audio";
 import { AppState } from "react-native";
 import { create } from "zustand";
@@ -31,7 +39,7 @@ void AsyncStorage.getItem(PREFS_KEY)
 
 export interface Toast {
   id: string;
-  chatId: string;
+  href: string;
   title: string;
   body: string;
   avatar: { displayName: string; avatarUrl: string | null };
@@ -41,7 +49,7 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
   (set, get) => ({
     toasts: [],
     push(t) {
-      set((s) => ({ toasts: [...s.toasts.filter((x) => x.chatId !== t.chatId), t].slice(-3) }));
+      set((s) => ({ toasts: [...s.toasts.filter((x) => x.href !== t.href), t].slice(-3) }));
       setTimeout(() => get().dismiss(t.id), 5000);
     },
     dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
@@ -83,14 +91,19 @@ export function notifyIncoming(m: MessageDTO, chat: ChatDTO | undefined, viewing
   const sender = chat?.members.find((x) => x.user.id === m.senderId)?.user;
   const t = getT();
   const title = sender?.displayName ?? chat?.title ?? t.summary.newMessage;
-  alert(m.id, m.chatId, title, previewText(m, t) || t.summary.newMessage, sender?.avatarUrl ?? null);
+  alert(m.id, `/chats/${m.chatId}`, title, previewText(m, t) || t.summary.newMessage, sender?.avatarUrl ?? null);
 }
 
-function alert(id: string, chatId: string, title: string, body: string, avatarUrl: string | null) {
+/** Sounds and shows an anonymous message that just came in, unless the inbox is on screen. */
+export function notifyAnon(m: AnonMessageDTO, viewing: boolean) {
+  if (!viewing) alert(m.id, "/inbox", getT().ask.newMessage, m.text, null);
+}
+
+function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null) {
   if (AppState.currentState !== "active") return;
   const prefs = useNotifyPrefs.getState();
   if (prefs.sound) playTone(prefs.tone);
-  if (prefs.popups) useToasts.getState().push({ id, chatId, title, body, avatar: { displayName: title, avatarUrl } });
+  if (prefs.popups) useToasts.getState().push({ id, href, title, body, avatar: { displayName: title, avatarUrl } });
 }
 
 /** Tells you someone reacted to your message, with the same rules as for new messages. */
@@ -106,5 +119,5 @@ export function notifyReaction(
   const t = getT();
   const title = reactor?.displayName ?? chat?.title ?? t.common.someone;
   const body = message ? reactionText(e.emoji, message, t) : t.summary.reactedToYours(e.emoji);
-  alert(`${e.messageId}:${e.userId}:${e.emoji}`, e.chatId, title, body, reactor?.avatarUrl ?? null);
+  alert(`${e.messageId}:${e.userId}:${e.emoji}`, `/chats/${e.chatId}`, title, body, reactor?.avatarUrl ?? null);
 }

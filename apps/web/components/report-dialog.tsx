@@ -15,7 +15,7 @@ export function ReportDialog({
   title,
   onClose,
 }: {
-  target: { messageId: string } | { userId: string };
+  target: { messageId: string } | { userId: string } | { anonMessageId: string };
   title: string;
   onClose: () => void;
 }) {
@@ -94,7 +94,9 @@ export function ReportDialog({
           <p className="text-xs text-stone-500">
             {"messageId" in target
               ? tr.chat.reportMessageHint
-              : tr.chat.reportUserHint}
+              : "anonMessageId" in target
+                ? tr.ask.reportHint
+                : tr.chat.reportUserHint}
           </p>
           {state === "failed" && (
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">

@@ -7,7 +7,7 @@ const { get, call, send } = chatHelpers(ctx);
 
 const admin = async (): Promise<Auth> => (await loginAs(ctx.app, "the-admin")).json();
 const walkIn = async (name: string, extra: Record<string, unknown> = {}): Promise<Auth & { user: { guest: boolean } }> =>
-  (await loginAs(ctx.app, uniqueSub(name), "web", { support: true, ...extra })).json();
+  (await loginAs(ctx.app, uniqueSub(name), "web", { guest: true, ...extra })).json();
 const openSupport = async (who: Auth) => (await call(who, "POST", "/v1/support")).json();
 
 beforeAll(() => void (env.INVITE_ONLY = true));
@@ -59,7 +59,7 @@ describe("support chat", () => {
   it("lets a guest join by signing in again with an invite", async () => {
     const boss = await admin();
     const sub = uniqueSub("returning");
-    const guest: Auth & { user: { guest: boolean } } = (await loginAs(ctx.app, sub, "web", { support: true })).json();
+    const guest: Auth & { user: { guest: boolean } } = (await loginAs(ctx.app, sub, "web", { guest: true })).json();
     expect(guest.user.guest).toBe(true);
     expect((await loginAs(ctx.app, sub)).json().error.code).toBe("INVITE_REQUIRED");
 

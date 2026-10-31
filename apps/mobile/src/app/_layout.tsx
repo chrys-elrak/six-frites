@@ -46,6 +46,7 @@ export default function RootLayout() {
   const status = useSession((s) => s.status);
   const bootstrap = useSession((s) => s.bootstrap);
   const authed = status === "authed";
+  const guest = useSession((s) => !!s.user?.guest);
   const localeReady = useLocale((s) => s.ready);
 
   useEffect(() => {
@@ -76,8 +77,11 @@ export default function RootLayout() {
                 <Unreachable />
               ) : (
                 <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }}>
-                  <Stack.Protected guard={authed}>
+                  <Stack.Protected guard={authed && !guest}>
                     <Stack.Screen name="(app)" />
+                  </Stack.Protected>
+                  <Stack.Protected guard={authed && guest}>
+                    <Stack.Screen name="guest" />
                   </Stack.Protected>
                   <Stack.Protected guard={!authed}>
                     <Stack.Screen name="login" />

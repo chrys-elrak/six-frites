@@ -28,6 +28,7 @@ import appRoutes from "./routes/releases.js";
 import pushRoutes from "./routes/push.js";
 import stickerRoutes from "./routes/stickers.js";
 import uploadRoutes from "./routes/uploads.js";
+import askRoutes from "./routes/ask.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -82,6 +83,7 @@ export async function buildApp() {
       await v1.register(presenceRoutes);
       await v1.register(stickerRoutes);
       await v1.register(linkRoutes);
+      await v1.register(askRoutes);
     },
     { prefix: "/v1" },
   );

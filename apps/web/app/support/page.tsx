@@ -2,7 +2,7 @@
 
 import { type Realtime, SixApiError, unwrap } from "@six/sdk";
 import { type ChatDTO, type MessageDTO, splitLinks } from "@six/shared";
-import { LogOut, SendHorizontal } from "lucide-react";
+import { ArrowLeft, LogOut, SendHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -14,6 +14,20 @@ import { useT } from "@/lib/i18n";
 import { deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
+function Back() {
+  const tr = useT();
+  return (
+    <Link
+      href="/"
+      aria-label={tr.common.back}
+      title={tr.common.back}
+      className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+    >
+      <ArrowLeft className="size-5" />
+    </Link>
+  );
+}
+
 function SignIn() {
   const tr = useT();
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +38,7 @@ function SignIn() {
     setError(null);
     try {
       unlock();
-      await six.auth.loginWithGoogle(idToken, { support: true, deviceName: deviceName() });
+      await six.auth.loginWithGoogle(idToken, { guest: true, deviceName: deviceName() });
     } catch (err) {
       setError(
         err instanceof SixApiError
@@ -37,7 +51,10 @@ function SignIn() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-8 px-4 pb-[env(safe-area-inset-bottom)]">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-8 px-4 pb-[env(safe-area-inset-bottom)]">
+      <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] left-2">
+        <Back />
+      </div>
       <div className="space-y-3 text-center">
         <Logo className="mx-auto size-20 drop-shadow-sm" />
         <h1 className="text-2xl font-semibold tracking-tight">{tr.support.title}</h1>
@@ -156,7 +173,8 @@ function SupportChat({ meId }: { meId: string }) {
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-2xl flex-col">
-      <header className="flex items-center gap-3 border-b border-black/5 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:border-white/10">
+      <header className="flex items-center gap-3 border-b border-black/5 px-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:border-white/10">
+        <Back />
         <Logo className="size-9" />
         <span className="min-w-0 flex-1">
           <span className="block font-semibold">{tr.support.team}</span>

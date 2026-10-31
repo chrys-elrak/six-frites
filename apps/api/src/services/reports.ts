@@ -86,6 +86,25 @@ export async function createReport(reporterId: string, input: CreateReportInput)
     snapshot = [...before.reverse(), m, ...after].map((x) => snapshotOf(x, x.id === m.id));
     targetId = m.senderId;
     messageId = m.id;
+  } else if (input.anonMessageId) {
+    const m = await prisma.anonMessage.findFirst({ where: { id: input.anonMessageId, recipientId: reporterId } });
+    if (!m) throw new AppError("MESSAGE_NOT_FOUND");
+    if (m.senderId === reporterId) throw new AppError("VALIDATION_FAILED", "You can't report your own message");
+    snapshot = [
+      {
+        id: m.id,
+        senderId: m.senderId,
+        type: "text",
+        text: m.text,
+        entities: [],
+        uploadId: null,
+        stickerId: null,
+        createdAt: m.createdAt.toISOString(),
+        reported: true,
+      },
+    ];
+    targetId = m.senderId;
+    messageId = m.id;
   } else {
     targetId = input.userId!;
     const shared = await prisma.chat.findFirst({
@@ -172,6 +191,8 @@ export async function resolveReport(adminId: string, reportId: string, input: Re
     const m = await prisma.message.findUnique({ where: { id: report.messageId } });
     if (m && !m.deletedAt) {
       await deleteMessages(m.senderId, { ids: [m.id], scope: "all" });
+      done.push("Message deleted");
+    } else if ((await prisma.anonMessage.deleteMany({ where: { id: report.messageId } })).count) {
       done.push("Message deleted");
     }
   }

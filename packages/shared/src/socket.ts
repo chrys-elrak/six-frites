@@ -8,6 +8,7 @@ import type {
   TypingDTO,
   TypingInput,
 } from "./chats.js";
+import type { AnonMessageDTO } from "./ask.js";
 import type { CallSignalDTO, CallSignalInput } from "./calls.js";
 import type { ErrorBody } from "./errors.js";
 import type { CreateLiveInput, LiveInviteDTO, LiveRoomDTO } from "./live.js";
@@ -36,6 +37,8 @@ export interface ServerToClientEvents {
   "live:invite": (invite: LiveInviteDTO) => void;
   /** The room was closed, or the server restarted and lost it. */
   "live:closed": (e: { roomId: string }) => void;
+  /** Someone sent me an anonymous message; not replayed by sync, so refetch the inbox after reconnecting. */
+  "ask:new": (m: AnonMessageDTO) => void;
 }
 
 export interface ClientToServerEvents {

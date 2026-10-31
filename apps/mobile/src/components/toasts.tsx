@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import { MessageCircle, X } from "lucide-react-native";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -29,7 +29,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       <Pressable
         onPress={() => {
           onDismiss();
-          router.push(`/chats/${toast.chatId}`);
+          router.push(toast.href as Href);
         }}
         style={({ pressed }) => [styles.body, pressed && { opacity: 0.7 }]}
       >

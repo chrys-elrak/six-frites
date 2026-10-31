@@ -51,7 +51,7 @@ export const reportRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/reports",
     {
-      config: { rateLimit: { max: 20, timeWindow: "1 hour" } },
+      config: { guest: true, rateLimit: { max: 20, timeWindow: "1 hour" } },
       schema: {
         tags: ["reports"],
         summary: "Report a message or a person to the moderators",

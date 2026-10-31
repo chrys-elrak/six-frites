@@ -26,6 +26,7 @@ export function toUserDTO(u: User): UserDTO {
     displayName: u.displayName,
     avatarUrl: avatarOf(u),
     contactCode: u.contactCode,
+    askCode: u.askCode,
     backupKeyId: u.backupKeyId,
     hasBackupPin: u.backupPinHash !== null,
     hasAppLock: u.appLockHash !== null,
@@ -136,6 +137,9 @@ export async function deleteAccount(userId: string) {
         avatarUrl: null,
         avatarKey: null,
         contactCode: generateCode(),
+        askCode: generateCode(),
+        askName: null,
+        askAvatarKey: null,
         lastSeenAt: null,
         backupKeyId: null,
         backupPinHash: null,
@@ -148,7 +152,7 @@ export async function deleteAccount(userId: string) {
     const sessions = await tx.session.findMany({ where: { userId, revokedAt: null }, select: { id: true } });
     return {
       sessionIds: sessions.map((s) => s.id),
-      photoKeys: [user.avatarKey, ...overrides.map((o) => o.photoKey)].filter((k): k is string => !!k),
+      photoKeys: [user.avatarKey, user.askAvatarKey, ...overrides.map((o) => o.photoKey)].filter((k): k is string => !!k),
     };
   });
 

@@ -58,7 +58,7 @@ export default function Login() {
         return;
       }
       unlock();
-      await six.auth.loginWithGoogle(idToken, { inviteCode, deviceName: deviceName() });
+      await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName() });
       if (inviteCode) {
         await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
       }

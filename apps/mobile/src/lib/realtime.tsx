@@ -1,13 +1,14 @@
 import type { Realtime } from "@six/sdk";
-import type { ChangeEventDTO, ChatDTO, MessageDTO } from "@six/shared";
+import type { AnonMessageDTO, ChangeEventDTO, ChatDTO, MessageDTO } from "@six/shared";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
+import { usePathname } from "expo-router";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
 import { attachCalls, onCallSignal } from "./calls";
 import { hydrateNow, startE2EE } from "./e2ee";
-import { notifyIncoming, notifyReaction } from "./notify";
+import { notifyAnon, notifyIncoming, notifyReaction } from "./notify";
 import { usePresenceStore } from "./presence";
 import { useOutbox } from "./outbox";
 import { useSession } from "./session";
@@ -36,6 +37,12 @@ function cachedChat(qc: QueryClient, chatId: string) {
     qc.getQueryData<ChatDTO[]>(chatKeys.list(true))?.find((c) => c.id === chatId) ??
     qc.getQueryData<ChatDTO>(chatKeys.chat(chatId))
   );
+}
+
+/** Refreshes the inbox for an anonymous message that just came in, and tells the user unless `onInbox` and looking. */
+export function receiveAnon(qc: QueryClient, m: AnonMessageDTO, onInbox: boolean) {
+  void qc.invalidateQueries({ queryKey: ["ask"] });
+  notifyAnon(m, onInbox && AppState.currentState === "active");
 }
 
 function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
@@ -141,6 +148,11 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const [realtime, setRealtime] = useState<Realtime | null>(null);
   const me = useRef(meId);
   me.current = meId;
+  const pathname = usePathname();
+  const path = useRef(pathname);
+  useEffect(() => {
+    path.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     if (!meId) return;
@@ -152,6 +164,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       onResyncRequired: () => void qc.invalidateQueries(),
     });
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
+    rt.socket.on("ask:new", (m) => receiveAnon(qc, m, path.current === "/inbox"));
+    rt.socket.on("connect", () => void qc.invalidateQueries({ queryKey: ["ask"] }));
     rt.socket.on("call:signal", (dto) => void onCallSignal(dto, (chatId) => cachedChat(qc, chatId)).catch(() => null));
     attachCalls(meId, rt);
     rt.start();

@@ -17,12 +17,15 @@ export default function InviteScreen() {
   const t = useTheme();
   const tr = useT();
   const { code } = useLocalSearchParams<{ code: string }>();
-  const { status, user } = useSession();
+  const { status, user, setUser } = useSession();
 
   const preview = useQuery(invitePreviewQuery(code));
 
   const accept = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
+    onSuccess: async () => {
+      if (user?.guest) setUser(unwrap(await six.api.GET("/v1/me")));
+    },
   });
 
   const home = <TextButton title={tr.auth.goHome} onPress={() => router.replace("/")} />;

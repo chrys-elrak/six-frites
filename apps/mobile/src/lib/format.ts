@@ -1,3 +1,4 @@
+import { askUrl } from "@six/shared";
 import { Share } from "react-native";
 import { getLocale, getT } from "./i18n";
 import { WEB_URL } from "./six";
@@ -55,6 +56,10 @@ export const formatCode = (code: string) => `${code.slice(0, 4)}-${code.slice(4)
 
 export async function shareContact(code: string) {
   await Share.share({ message: `${getT().common.addMe}: ${contactUrl(code)}` }).catch(() => null);
+}
+
+export async function shareAsk(code: string) {
+  await Share.share({ message: `${getT().ask.prompt} ${askUrl(WEB_URL, code)}` }).catch(() => null);
 }
 
 export function formatDuration(ms: number | null | undefined) {

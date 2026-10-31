@@ -1,4 +1,12 @@
-import { type ChatDTO, type MessageDTO, type MessageReactedDTO, type Tone, previewText, reactionText } from "@six/shared";
+import {
+  type AnonMessageDTO,
+  type ChatDTO,
+  type MessageDTO,
+  type MessageReactedDTO,
+  type Tone,
+  previewText,
+  reactionText,
+} from "@six/shared";
 import { create } from "zustand";
 import { getT } from "./i18n";
 
@@ -36,7 +44,7 @@ export const useNotifyPrefs = create<NotifyPrefs & { set: (patch: Partial<Notify
 
 export interface Toast {
   id: string;
-  chatId: string;
+  href: string;
   title: string;
   body: string;
   avatar: { displayName: string; avatarUrl: string | null };
@@ -46,7 +54,7 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
   (set, get) => ({
     toasts: [],
     push(t) {
-      set((s) => ({ toasts: [...s.toasts.filter((x) => x.chatId !== t.chatId), t].slice(-3) }));
+      set((s) => ({ toasts: [...s.toasts.filter((x) => x.href !== t.href), t].slice(-3) }));
       setTimeout(() => get().dismiss(t.id), 5000);
     },
     dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
@@ -108,7 +116,7 @@ export function notifyIncoming(
   m: MessageDTO,
   chat: ChatDTO | undefined,
   viewing: boolean,
-  open: (chatId: string) => void,
+  open: (href: string) => void,
 ) {
   if (m.silent || chat?.muted || chat?.archived || viewing || Date.now() - Date.parse(m.createdAt) > FRESH_MS) return;
   const sender = chat?.members.find((x) => x.user.id === m.senderId)?.user;
@@ -116,7 +124,7 @@ export function notifyIncoming(
   alertUser(
     {
       id: m.id,
-      chatId: m.chatId,
+      href: `/chats/${m.chatId}`,
       title: sender?.displayName ?? chat?.title ?? t.summary.newMessage,
       body: previewText(m, t) || t.summary.newMessage,
     },
@@ -132,7 +140,7 @@ export function notifyReaction(
   message: MessageDTO | undefined,
   chat: ChatDTO | undefined,
   viewing: boolean,
-  open: (chatId: string) => void,
+  open: (href: string) => void,
 ) {
   if (chat?.muted || chat?.archived || viewing || Date.now() - Date.parse(at) > FRESH_MS) return;
   const reactor = chat?.members.find((x) => x.user.id === r.userId)?.user;
@@ -140,7 +148,7 @@ export function notifyReaction(
   alertUser(
     {
       id: `${r.messageId}:${r.userId}:${r.emoji}`,
-      chatId: r.chatId,
+      href: `/chats/${r.chatId}`,
       title: reactor?.displayName ?? chat?.title ?? t.summary.newReaction,
       body: message ? reactionText(r.emoji, message, t) : t.summary.reactedToYours(r.emoji),
     },
@@ -149,10 +157,16 @@ export function notifyReaction(
   );
 }
 
+/** Sounds and shows an anonymous message that just came in, unless the inbox is on screen. */
+export function notifyAnon(m: AnonMessageDTO, viewing: boolean, open: (href: string) => void) {
+  if (viewing) return;
+  alertUser({ id: m.id, href: "/inbox", title: getT().ask.newMessage, body: m.text }, "/icon.svg", open);
+}
+
 function alertUser(
-  n: { id: string; chatId: string; title: string; body: string },
+  n: { id: string; href: string; title: string; body: string },
   avatarUrl: string | null,
-  open: (chatId: string) => void,
+  open: (href: string) => void,
 ) {
   const prefs = useNotifyPrefs.getState();
   const hidden = document.visibilityState !== "visible";
@@ -160,10 +174,10 @@ function alertUser(
   if (prefs.sound) playTone(prefs.tone);
   if (hidden && prefs.push) return;
   if (hidden && prefs.system && "Notification" in window && Notification.permission === "granted") {
-    const notification = new Notification(n.title, { body: n.body, icon: avatarUrl ?? "/icon.svg", tag: n.chatId });
+    const notification = new Notification(n.title, { body: n.body, icon: avatarUrl ?? "/icon.svg", tag: n.href });
     notification.onclick = () => {
       window.focus();
-      open(n.chatId);
+      open(n.href);
       notification.close();
     };
   } else if (!hidden && prefs.popups) {

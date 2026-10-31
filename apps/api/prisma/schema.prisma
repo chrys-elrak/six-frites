@@ -15,6 +15,9 @@ model User {
   avatarUrl   String?
   avatarKey   String?
   contactCode String    @unique @default(dbgenerated("random_code()"))
+  askCode     String    @unique @default(dbgenerated("random_code()"))
+  askName     String?
+  askAvatarKey String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   bannedAt    DateTime?
@@ -56,6 +59,10 @@ model User {
   messageBackups MessageBackup[]
   checklistMarks ChecklistMark[]
   gameMoves      GameMove[]
+  anonReceived   AnonMessage[]      @relation("anonRecipient")
+  anonSent       AnonMessage[]      @relation("anonSender")
+  anonBlocking   AnonBlock[]        @relation("anonBlocker")
+  anonBlockedBy  AnonBlock[]        @relation("anonBlocked")
 }
 
 model Report {
@@ -513,3 +520,29 @@ model Block {
   @@index([blockedId])
 }
 
+
+/// A message sent through someone's ask link. The recipient never learns who sent it; moderators can.
+model AnonMessage {
+  id          String   @id @default(cuid())
+  recipientId String
+  senderId    String
+  text        String
+  createdAt   DateTime @default(now())
+
+  recipient User @relation("anonRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender    User @relation("anonSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, createdAt])
+}
+
+/// Someone who can no longer send `blockerId` anonymous messages, kept apart from Block so blocking never reveals who it was.
+model AnonBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("anonBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("anonBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+}

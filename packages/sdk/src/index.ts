@@ -50,7 +50,7 @@ export function createSixClient(opts: SixClientOptions) {
           body: {
             idToken,
             inviteCode: extra.inviteCode,
-            support: extra.support,
+            guest: extra.guest,
             device: { platform: opts.platform, name: extra.deviceName },
           },
         }),

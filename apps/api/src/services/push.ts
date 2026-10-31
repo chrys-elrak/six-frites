@@ -157,6 +157,19 @@ export async function deliverLiveInvitePush(userId: string, from: PublicUser, ga
   }));
 }
 
+/** Shows someone an anonymous message they just got, on the devices they aren't using right now. */
+export async function deliverAnonPush(userId: string, text: string) {
+  const targets = await targetsFor(userId);
+  return sendToAll(targets, (t) => ({
+    title: t.ask.newMessage,
+    body: text,
+    icon: null,
+    chatId: null,
+    messageId: null,
+    url: "/inbox",
+  }));
+}
+
 /** Tells every signed-in Android phone that a new version of the app is out. */
 export async function deliverReleasePush(version: string, downloadUrl: string) {
   const targets = await prisma.pushToken.findMany({

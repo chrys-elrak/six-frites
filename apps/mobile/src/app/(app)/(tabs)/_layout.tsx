@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { chatTheme } from "@six/shared";
 import { BrandBar } from "@/components/brand-bar";
 import { Wallpaper } from "@/components/chat-background";
-import { Gamepad2, MessageCircle, Settings } from "lucide-react-native";
+import { Gamepad2, MessageCircle, Settings, VenetianMask } from "lucide-react-native";
 import { useChats } from "@/lib/chats";
 import { usePlainFont } from "@/lib/font";
 import { useT } from "@/lib/i18n";
@@ -45,6 +45,13 @@ export default function TabsLayout() {
           options={{
             title: tr.common.games,
             tabBarIcon: ({ color, focused }) => <Gamepad2 color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />,
+          }}
+        />
+        <Tabs.Screen
+          name="inbox"
+          options={{
+            title: tr.ask.tab,
+            tabBarIcon: ({ color, focused }) => <VenetianMask color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />,
           }}
         />
         <Tabs.Screen

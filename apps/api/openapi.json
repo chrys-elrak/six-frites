@@ -37,8 +37,8 @@
                     "type": "string",
                     "minLength": 1
                   },
-                  "support": {
-                    "description": "Signing in from the support page: without an invite you get a guest account that can only write to support",
+                  "guest": {
+                    "description": "Without an invite, give me a guest account (anonymous messages and support only) instead of INVITE_REQUIRED",
                     "type": "boolean"
                   },
                   "device": {
@@ -113,6 +113,10 @@
                           "type": "string",
                           "description": "Share it (or its QR code) so people can find you"
                         },
+                        "askCode": {
+                          "type": "string",
+                          "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                        },
                         "backupKeyId": {
                           "nullable": true,
                           "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -139,7 +143,7 @@
                         },
                         "guest": {
                           "type": "boolean",
-                          "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                          "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                         },
                         "createdAt": {
                           "type": "string",
@@ -153,6 +157,7 @@
                         "displayName",
                         "avatarUrl",
                         "contactCode",
+                        "askCode",
                         "backupKeyId",
                         "hasBackupPin",
                         "hasAppLock",
@@ -244,6 +249,10 @@
                           "type": "string",
                           "description": "Share it (or its QR code) so people can find you"
                         },
+                        "askCode": {
+                          "type": "string",
+                          "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                        },
                         "backupKeyId": {
                           "nullable": true,
                           "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -270,7 +279,7 @@
                         },
                         "guest": {
                           "type": "boolean",
-                          "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                          "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                         },
                         "createdAt": {
                           "type": "string",
@@ -284,6 +293,7 @@
                         "displayName",
                         "avatarUrl",
                         "contactCode",
+                        "askCode",
                         "backupKeyId",
                         "hasBackupPin",
                         "hasAppLock",
@@ -3485,6 +3495,11 @@
                     "type": "string",
                     "minLength": 1
                   },
+                  "anonMessageId": {
+                    "description": "Report this anonymous message you got, and whoever sent it",
+                    "type": "string",
+                    "minLength": 1
+                  },
                   "reason": {
                     "type": "string",
                     "enum": [
@@ -3637,6 +3652,10 @@
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
                     "backupKeyId": {
                       "nullable": true,
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -3663,7 +3682,7 @@
                     },
                     "guest": {
                       "type": "boolean",
-                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3677,6 +3696,7 @@
                     "displayName",
                     "avatarUrl",
                     "contactCode",
+                    "askCode",
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
@@ -3770,6 +3790,10 @@
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
                     "backupKeyId": {
                       "nullable": true,
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -3796,7 +3820,7 @@
                     },
                     "guest": {
                       "type": "boolean",
-                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3810,6 +3834,7 @@
                     "displayName",
                     "avatarUrl",
                     "contactCode",
+                    "askCode",
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
@@ -3917,6 +3942,10 @@
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
                     "backupKeyId": {
                       "nullable": true,
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -3943,7 +3972,7 @@
                     },
                     "guest": {
                       "type": "boolean",
-                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
                     "createdAt": {
                       "type": "string",
@@ -3957,6 +3986,7 @@
                     "displayName",
                     "avatarUrl",
                     "contactCode",
+                    "askCode",
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
@@ -4204,6 +4234,10 @@
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
                     "backupKeyId": {
                       "nullable": true,
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -4230,7 +4264,7 @@
                     },
                     "guest": {
                       "type": "boolean",
-                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
                     "createdAt": {
                       "type": "string",
@@ -4244,6 +4278,7 @@
                     "displayName",
                     "avatarUrl",
                     "contactCode",
+                    "askCode",
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
@@ -4298,6 +4333,10 @@
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
                     "backupKeyId": {
                       "nullable": true,
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -4324,7 +4363,7 @@
                     },
                     "guest": {
                       "type": "boolean",
-                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
                     "createdAt": {
                       "type": "string",
@@ -4338,6 +4377,7 @@
                     "displayName",
                     "avatarUrl",
                     "contactCode",
+                    "askCode",
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
@@ -36540,6 +36580,10 @@
                                     "type": "string",
                                     "description": "Share it (or its QR code) so people can find you"
                                   },
+                                  "askCode": {
+                                    "type": "string",
+                                    "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                                  },
                                   "backupKeyId": {
                                     "nullable": true,
                                     "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -36566,7 +36610,7 @@
                                   },
                                   "guest": {
                                     "type": "boolean",
-                                    "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                                    "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                                   },
                                   "createdAt": {
                                     "type": "string",
@@ -36580,6 +36624,7 @@
                                   "displayName",
                                   "avatarUrl",
                                   "contactCode",
+                                  "askCode",
                                   "backupKeyId",
                                   "hasBackupPin",
                                   "hasAppLock",
@@ -37479,6 +37524,10 @@
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
                     "backupKeyId": {
                       "nullable": true,
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -37505,7 +37554,7 @@
                     },
                     "guest": {
                       "type": "boolean",
-                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
                     "createdAt": {
                       "type": "string",
@@ -37519,6 +37568,7 @@
                     "displayName",
                     "avatarUrl",
                     "contactCode",
+                    "askCode",
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
@@ -37646,6 +37696,10 @@
                       "type": "string",
                       "description": "Share it (or its QR code) so people can find you"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
                     "backupKeyId": {
                       "nullable": true,
                       "description": "Identifies the key from your recovery key; null until you set up a recovery key",
@@ -37672,7 +37726,7 @@
                     },
                     "guest": {
                       "type": "boolean",
-                      "description": "Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
                     "createdAt": {
                       "type": "string",
@@ -37686,6 +37740,7 @@
                     "displayName",
                     "avatarUrl",
                     "contactCode",
+                    "askCode",
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
@@ -40802,6 +40857,444 @@
                     "image"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/{code}": {
+      "get": {
+        "summary": "Whose anonymous messages link this is",
+        "tags": [
+          "ask"
+        ],
+        "description": "Open to anyone, so the page can show who you're writing to before you sign in.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "displayName",
+                    "avatarUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Send someone an anonymous message",
+        "tags": [
+          "ask"
+        ],
+        "description": "They never see who sent it; moderators can, if they report it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask": {
+      "get": {
+        "summary": "The anonymous messages you got, newest first",
+        "tags": [
+          "ask"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 30,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "text",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/profile": {
+      "patch": {
+        "summary": "Change the name and photo shown on your link",
+        "tags": [
+          "ask"
+        ],
+        "description": "Your account keeps its own name and photo.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "description": "Shown on your link; empty goes back to your account name",
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "photo": {
+                    "description": "A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes it",
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "displayName",
+                    "avatarUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/code": {
+      "post": {
+        "summary": "Get a new link for anonymous messages",
+        "tags": [
+          "ask"
+        ],
+        "description": "The old link stops working. Messages you already got stay.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "contactCode": {
+                      "type": "string",
+                      "description": "Share it (or its QR code) so people can find you"
+                    },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
+                    "backupKeyId": {
+                      "nullable": true,
+                      "description": "Identifies the key from your recovery key; null until you set up a recovery key",
+                      "type": "string"
+                    },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
+                    "hasAppLock": {
+                      "type": "boolean",
+                      "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "avatarUrl",
+                    "contactCode",
+                    "askCode",
+                    "backupKeyId",
+                    "hasBackupPin",
+                    "hasAppLock",
+                    "ads",
+                    "quickReactions",
+                    "guest",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/messages/{id}": {
+      "delete": {
+        "summary": "Delete an anonymous message you got",
+        "tags": [
+          "ask"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/messages/{id}/block": {
+      "post": {
+        "summary": "Stop whoever sent this anonymous message from sending you more",
+        "tags": [
+          "ask"
+        ],
+        "description": "Deletes the message too. You still never learn who it was.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }

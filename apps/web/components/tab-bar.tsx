@@ -1,20 +1,21 @@
 "use client";
 
-import { Gamepad2, MessageCircle, Settings } from "lucide-react";
+import { Gamepad2, MessageCircle, Settings, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { isMuted } from "@six/shared";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
-export type Tab = "chats" | "games" | "settings";
+export type Tab = "chats" | "games" | "inbox" | "settings";
 
 const tabs = [
   { id: "chats", href: "/", Icon: MessageCircle },
   { id: "games", href: "/games", Icon: Gamepad2 },
+  { id: "inbox", href: "/inbox", Icon: VenetianMask },
   { id: "settings", href: "/settings", Icon: Settings },
 ] as const;
 
-/** The app's tabs. On wide screens `children`, the chat list as avatars, sits under Games with Settings below it. */
+/** The app's tabs. On wide screens `children`, the chat list as avatars, sits under Anonymous with Settings below it. */
 export function TabBar({ active, children }: { active: Tab; children?: React.ReactNode }) {
   const tr = useT();
   const chats = useChats();
@@ -43,16 +44,16 @@ export function TabBar({ active, children }: { active: Tab; children?: React.Rea
             </span>
           )}
         </span>
-        {tr.common[id]}
+        {id === "inbox" ? tr.ask.tab : tr.common[id]}
       </Link>
     );
   };
 
   return (
-    <nav className="grid shrink-0 grid-cols-3 border-t border-black/5 pb-[env(safe-area-inset-bottom)] md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:py-3 dark:border-white/10">
-      {tabs.slice(0, 2).map(link)}
+    <nav className="grid shrink-0 grid-cols-4 border-t border-black/5 pb-[env(safe-area-inset-bottom)] md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:py-3 dark:border-white/10">
+      {tabs.slice(0, 3).map(link)}
       {children && <div className="hidden min-h-0 flex-1 flex-col md:flex">{children}</div>}
-      {link(tabs[2])}
+      {link(tabs[3])}
     </nav>
   );
 }

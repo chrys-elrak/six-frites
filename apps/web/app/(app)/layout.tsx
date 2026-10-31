@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { AnonInbox } from "@/components/anon-inbox";
 import { LockScreen } from "@/components/app-lock";
 import { ChatList, useChatRail } from "@/components/chat-list";
 import { GamesPanel } from "@/components/games-panel";
@@ -35,6 +36,7 @@ const tabRoutes: Record<string, Tab> = {
   "/": "chats",
   "/archived": "chats",
   "/games": "games",
+  "/inbox": "inbox",
   "/settings": "settings",
 };
 
@@ -78,16 +80,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (status === "anon") {
       qc.clear();
       router.replace(pathname === "/" ? "/login" : `/login?next=${encodeURIComponent(pathname)}`);
-    } else if (guest) router.replace("/support");
-  }, [status, guest, router, qc, pathname]);
+    }
+  }, [status, router, qc, pathname]);
 
-  if (status !== "authed" || guest) {
+  if (status === "authed" && guest) {
+    return (
+      <main className="mx-auto h-dvh w-full max-w-2xl">
+        <AnonInbox guest />
+      </main>
+    );
+  }
+  if (status !== "authed") {
     return <main className="grid h-dvh place-items-center text-sm text-stone-500">{tr.common.loading}</main>;
   }
 
   const topLevel = tabRoutes[pathname];
   const tab = topLevel ?? "chats";
-  const wide = tab === "settings" || tab === "games";
+  const wide = tab === "settings" || tab === "games" || tab === "inbox";
   const rail = railable && tab === "chats" && pathname !== "/archived";
 
   return (
@@ -112,6 +121,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="min-h-0 min-w-0 flex-1">
                 {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
                 {tab === "games" && <GamesPanel />}
+                {tab === "inbox" && <AnonInbox />}
                 {tab === "settings" && <SettingsPanel />}
               </div>
             )}

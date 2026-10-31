@@ -9,6 +9,7 @@ export const UserDTO = z.object({
   displayName: z.string(),
   avatarUrl: z.string().url().nullable(),
   contactCode: z.string().describe("Share it (or its QR code) so people can find you"),
+  askCode: z.string().describe("Your link for anonymous messages is /ask/{askCode} on the web app"),
   backupKeyId: z
     .string()
     .nullable()
@@ -19,7 +20,7 @@ export const UserDTO = z.object({
   quickReactions: z.array(z.string()).describe("The emojis offered first when you react, in order; empty means the defaults"),
   guest: z
     .boolean()
-    .describe("Signed in from the support page without an invite: can only write to support, in text, until joining with an invite"),
+    .describe("Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;

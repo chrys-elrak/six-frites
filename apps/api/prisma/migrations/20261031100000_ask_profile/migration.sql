@@ -1,0 +1,2 @@
+ALTER TABLE "User" ADD COLUMN "askName" TEXT,
+ADD COLUMN "askAvatarKey" TEXT;

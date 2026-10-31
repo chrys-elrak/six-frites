@@ -11,10 +11,14 @@ export const CreateReportInput = z
   .object({
     messageId: Id.optional().describe("Report this message (and its sender)"),
     userId: Id.optional().describe("Report this person, someone you share a chat with"),
+    anonMessageId: Id.optional().describe("Report this anonymous message you got, and whoever sent it"),
     reason: ReportReason,
     note: z.string().trim().max(500).optional(),
   })
-  .refine((v) => (v.messageId === undefined) !== (v.userId === undefined), "Report either a message or a person");
+  .refine(
+    (v) => [v.messageId, v.userId, v.anonMessageId].filter((x) => x !== undefined).length === 1,
+    "Report either a message or a person",
+  );
 export type CreateReportInput = z.infer<typeof CreateReportInput>;
 
 export const AdminUserRef = z.object({

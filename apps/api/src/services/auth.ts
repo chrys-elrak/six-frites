@@ -39,7 +39,7 @@ export async function loginWithGoogle(
     const guest = existing
       ? existing.guest && !input.inviteCode
       : !input.inviteCode && env.INVITE_ONLY && !isAdminEmail(identity.email);
-    if (guest && !input.support) {
+    if (guest && !input.guest) {
       throw new AppError("INVITE_REQUIRED", "Sign up with an invite link from someone already on Six Frites");
     }
     let user =

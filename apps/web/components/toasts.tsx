@@ -28,7 +28,7 @@ export function Toasts() {
               type="button"
               onClick={() => {
                 dismiss(t.id);
-                router.push(`/chats/${t.chatId}`);
+                router.push(t.href);
               }}
               className="flex w-full items-start gap-3 p-3.5 pr-11 text-left transition hover:bg-stone-900/[0.03] dark:hover:bg-white/[0.04]"
             >

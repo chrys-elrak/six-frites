@@ -1,7 +1,7 @@
 "use client";
 
 import type { Realtime } from "@six/sdk";
-import type { ChangeEventDTO, ChatDTO } from "@six/shared";
+import type { AnonMessageDTO, ChangeEventDTO, ChatDTO } from "@six/shared";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
@@ -10,7 +10,7 @@ import { receiveSignal, setCallRealtime } from "./call";
 import { chatKeys, findMessage, insertMessage, patchChat, upsertChat } from "./chats";
 import { hydrate, hydrateChat } from "./e2ee";
 import { useOutbox } from "./outbox";
-import { notifyIncoming, notifyReaction } from "./notify";
+import { notifyAnon, notifyIncoming, notifyReaction } from "./notify";
 import { usePresenceStore } from "./presence";
 import { useTypingStore } from "./typing";
 import { useSession } from "./session";
@@ -52,7 +52,13 @@ async function hydrateEvent(e: ChangeEventDTO): Promise<ChangeEventDTO> {
   }
 }
 
-function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (chatId: string) => void) {
+/** Refreshes the inbox for an anonymous message that just came in, and tells the user unless `onInbox` and looking. */
+export function receiveAnon(qc: QueryClient, m: AnonMessageDTO, onInbox: boolean, open: (href: string) => void) {
+  void qc.invalidateQueries({ queryKey: ["ask"] });
+  notifyAnon(m, onInbox && document.visibilityState === "visible", open);
+}
+
+function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (href: string) => void) {
   switch (e.type) {
     case "message.new": {
       const m = e.data;
@@ -152,7 +158,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       onEvent: (e) => {
         queue = queue
           .then(() => hydrateEvent(e))
-          .then((h) => me.current && applyEvent(qc, me.current, h, (chatId) => router.push(`/chats/${chatId}`)))
+          .then((h) => me.current && applyEvent(qc, me.current, h, (href) => router.push(href)))
           .catch((err) => console.error("could not apply event:", err));
       },
       onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing ? (e.kind ?? "text") : null),
@@ -160,6 +166,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       onResyncRequired: () => void qc.invalidateQueries(),
     });
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
+    rt.socket.on("ask:new", (m) => receiveAnon(qc, m, location.pathname === "/inbox", (href) => router.push(href)));
+    rt.socket.on("connect", () => void qc.invalidateQueries({ queryKey: ["ask"] }));
     rt.socket.on("call:signal", (dto) => me.current && receiveSignal(dto, me.current, (id) => cachedChat(qc, id)));
     rt.start();
     setRealtime(rt);

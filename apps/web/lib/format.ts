@@ -1,3 +1,4 @@
+import { askUrl } from "@six/shared";
 import { getLocale, getT } from "./i18n";
 
 export function timeAgo(iso: string) {
@@ -69,6 +70,8 @@ export const formatCode = (code: string) => `${code.slice(0, 4)}-${code.slice(4)
 export const shareInvite = (code: string) => shareLink(getT().common.joinMe, inviteUrl(code));
 
 export const shareContact = (code: string) => shareLink(getT().common.addMe, contactUrl(code));
+
+export const shareAsk = (code: string) => shareLink(getT().ask.prompt, askUrl(window.location.origin, code));
 
 async function shareLink(title: string, url: string): Promise<"shared" | "copied"> {
   if (navigator.share) {
