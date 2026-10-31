@@ -23,6 +23,7 @@ import { toAvatarDataUrl } from "@/lib/image";
 import { segments } from "@/lib/markup";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
+import { useMedia } from "@/lib/viewport";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
 import { LanguageSelect } from "./language-select";
@@ -109,6 +110,24 @@ function AnonText({ m, onLink }: { m: Pick<AnonMessageDTO, "text" | "entities">;
   );
 }
 
+/**
+ * Cards in two columns on wide screens, dealt left and right in turn so the newest stay on top, without the
+ * gaps a grid leaves under a short card next to a tall one.
+ */
+function Columns({ children, gap }: { children: React.ReactNode[]; gap: string }) {
+  const wide = useMedia("(min-width: 64rem)");
+  const columns = wide ? [children.filter((_, i) => i % 2 === 0), children.filter((_, i) => i % 2 === 1)] : [children];
+  return (
+    <div className={`flex items-start ${gap}`}>
+      {columns.map((cards, i) => (
+        <div key={i} className={`flex min-w-0 flex-1 flex-col ${gap}`}>
+          {cards}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** The anonymous messages you sent. Only you see them; removing one leaves the recipient's copy alone. */
 function SentList() {
   const tr = useT();
@@ -129,7 +148,7 @@ function SentList() {
       {sent.isSuccess && !items.length && (
         <p className="mx-auto max-w-xs py-10 text-center text-sm text-stone-500">{tr.ask.sentEmpty}</p>
       )}
-      <div className="grid items-start gap-3 lg:grid-cols-2">
+      <Columns gap="gap-3">
         {items.map((m) => (
           <Card key={m.id} className="space-y-2.5 p-4">
             <div className="flex items-center gap-2.5">
@@ -159,7 +178,7 @@ function SentList() {
             )}
           </Card>
         ))}
-      </div>
+      </Columns>
       {sent.hasNextPage && (
         <button
           type="button"
@@ -520,7 +539,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   <p className="max-w-xs text-sm text-stone-500">{tr.ask.empty}</p>
                 </div>
               )}
-              <div className="grid items-start gap-4 lg:grid-cols-2">
+              <Columns gap="gap-4">
                 {items.map((m) => (
                   <article
                     key={m.id}
@@ -584,7 +603,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                     </div>
                   </article>
                 ))}
-              </div>
+              </Columns>
               {messages.hasNextPage && (
                 <button
                   type="button"
