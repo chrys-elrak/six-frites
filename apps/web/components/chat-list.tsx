@@ -36,6 +36,7 @@ import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
+import { BackupPinBanner } from "./encryption-settings";
 import { NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
 import { ServiceIcon, callLabel } from "./service-icon";
@@ -308,6 +309,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
       </header>
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
+      {!archived && !rail && <BackupPinBanner />}
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className={showArchive ? "min-h-[calc(100%+5rem)]" : undefined}>

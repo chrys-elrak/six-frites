@@ -147,6 +147,7 @@ const en = {
       "A new PIN on this device starts a new backup: messages saved in the old one can't be read anymore.",
     restore: "Restore",
     later: "Later",
+    warning: "Your messages aren't backed up yet.",
     wrong: (left: number) =>
       left
         ? `Wrong PIN. ${left} ${left === 1 ? "try" : "tries"} left.`
@@ -346,6 +347,7 @@ const fr: typeof en = {
       "Un nouveau code PIN sur cet appareil démarre une nouvelle sauvegarde : les messages de l'ancienne ne pourront plus être lus.",
     restore: "Restaurer",
     later: "Plus tard",
+    warning: "Vos messages ne sont pas encore sauvegardés.",
     wrong: (left) =>
       left
         ? `Code PIN incorrect. Encore ${left} essai${left > 1 ? "s" : ""}.`
@@ -545,6 +547,7 @@ const mg: typeof en = {
       "Manomboka tahiry vaovao ny kaody PIN vaovao amin'ity fitaovana ity: tsy ho voavaky intsony ireo hafatra tao amin'ny taloha.",
     restore: "Avereno",
     later: "Aoka aloha",
+    warning: "Mbola tsy voatahiry ny hafatrao.",
     wrong: (left) =>
       left ? `Diso ny kaody PIN. Andrana ${left} sisa.` : "Diso ny kaody PIN. Voahidy ny tahirinao: mamorona kaody PIN vaovao.",
     notSet: "Tsy misy tahiry amin'ny kaody PIN intsony. Mamorona kaody PIN vaovao.",

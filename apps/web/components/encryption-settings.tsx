@@ -3,7 +3,7 @@
 import { SixApiError } from "@six/sdk";
 import type { Dict } from "@six/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { KeyRound, ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
 import { e2ee } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
@@ -95,20 +95,56 @@ export function EncryptionSettings() {
   );
 }
 
-/**
- * Shows the PIN dialog once per visit when this device can't read past messages but a PIN would
- * fix it, or when there is no backup yet. Never offers a new PIN on a device without the key while
- * the account has one, since that would start over and lose the old backup.
- */
+/** Shows the PIN dialog once per visit when this device can't read past messages but the account's PIN would fix it. */
 export function BackupPinPrompt() {
   const user = useSession((s) => s.user)!;
   const hasKey = useHasRecoveryKey();
   const [dismissed, setDismissed] = useState(false);
-  if (dismissed || hasKey.isPending || hasKey.isError) return null;
-  const restoring = !hasKey.data && user.hasBackupPin;
+  if (dismissed || hasKey.isPending || hasKey.isError || hasKey.data || !user.hasBackupPin) return null;
+  return <PinDialog restoring prompted onClose={() => setDismissed(true)} />;
+}
+
+let snoozed = false;
+
+/**
+ * Warns above the chat list while there's no backup PIN yet, until it's closed for the rest of the visit. Never
+ * offers a new PIN on a device without the key while the account has one, since that would lose the old backup.
+ */
+export function BackupPinBanner() {
+  const tr = useT();
+  const bp = tr.settings.backupPin;
+  const user = useSession((s) => s.user)!;
+  const hasKey = useHasRecoveryKey();
+  const [hidden, setHidden] = useState(snoozed);
+  const [open, setOpen] = useState(false);
   const creating = !user.hasBackupPin && (hasKey.data || !user.backupKeyId);
-  if (!restoring && !creating) return null;
-  return <PinDialog restoring={restoring} prompted onClose={() => setDismissed(true)} />;
+  if (hidden || hasKey.isPending || hasKey.isError || !creating) return null;
+
+  return (
+    <div role="status" className="mx-3 mt-3 flex items-center gap-3 rounded-2xl bg-black/5 p-3 dark:bg-white/10">
+      <ShieldAlert className="size-5 shrink-0 text-brand" />
+      <span className="min-w-0 flex-1 text-sm font-medium">{bp.warning}</span>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="shrink-0 rounded-full bg-brand px-3 py-1.5 text-sm font-semibold text-brand-ink"
+      >
+        {bp.create}
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          snoozed = true;
+          setHidden(true);
+        }}
+        aria-label={tr.common.dismiss}
+        className="grid size-7 shrink-0 place-items-center rounded-full text-stone-400 hover:bg-black/5 dark:hover:bg-white/10"
+      >
+        <X className="size-4" />
+      </button>
+      {open && <PinDialog restoring={false} onClose={() => setOpen(false)} />}
+    </div>
+  );
 }
 
 function pinError(err: unknown, tr: Dict) {

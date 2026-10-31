@@ -37,6 +37,7 @@ import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
+import { BackupPinBanner } from "./encryption-settings";
 import { NewInvite } from "./invites";
 import { MediaIcon, type MediaType, mediaLabel } from "./media-label";
 import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
@@ -223,6 +224,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const header = archived ? undefined : (
     <>
       <UpdateBanner />
+      <BackupPinBanner />
       {pulled && !needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}

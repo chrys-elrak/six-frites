@@ -1,7 +1,7 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import type { Dict } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { KeyRound, ShieldCheck } from "lucide-react-native";
+import { KeyRound, ShieldAlert, ShieldCheck, X } from "lucide-react-native";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
@@ -11,8 +11,8 @@ import { e2eeFor, retryUndecryptable } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
-import { brand, useTheme } from "@/lib/theme";
-import { Card, CodeInput, Notice, PrimaryButton, SectionTitle, TextButton } from "./ui";
+import { brand, brandInk, useTheme } from "@/lib/theme";
+import { Card, CodeInput, IconButton, Notice, PrimaryButton, SectionTitle, TextButton } from "./ui";
 
 async function refreshMe() {
   useSession.getState().setUser(unwrap(await six.api.GET("/v1/me")));
@@ -82,20 +82,50 @@ export function EncryptionSettings() {
   );
 }
 
-/**
- * Shows the PIN dialog once per launch when this phone can't read past messages but a PIN would
- * fix it, or when there is no backup yet. Never offers a new PIN on a phone without the key while
- * the account has one, since that would start over and lose the old backup.
- */
+/** Shows the PIN dialog once per launch when this phone can't read past messages but the account's PIN would fix it. */
 export function BackupPinPrompt() {
   const user = useSession((s) => s.user);
   const local = useHasRecoveryKey();
   const [dismissed, setDismissed] = useState(false);
-  if (!user || dismissed || local.data === undefined) return null;
-  const restoring = !local.data && user.hasBackupPin;
-  const creating = !user.hasBackupPin && (local.data || !user.backupKeyId);
-  if (!restoring && !creating) return null;
-  return <PinDialog restoring={restoring} prompted onClose={() => setDismissed(true)} />;
+  if (!user || dismissed || local.data !== false || !user.hasBackupPin) return null;
+  return <PinDialog restoring prompted onClose={() => setDismissed(true)} />;
+}
+
+let snoozed = false;
+
+/**
+ * Warns on the chat list while there's no backup PIN yet, until it's closed for the rest of the launch. Never
+ * offers a new PIN on a phone without the key while the account has one, since that would lose the old backup.
+ */
+export function BackupPinBanner() {
+  const t = useTheme();
+  const tr = useT();
+  const user = useSession((s) => s.user);
+  const local = useHasRecoveryKey();
+  const [hidden, setHidden] = useState(snoozed);
+  const [open, setOpen] = useState(false);
+  if (!user || hidden || local.data === undefined) return null;
+  if (user.hasBackupPin || (!local.data && user.backupKeyId)) return null;
+
+  return (
+    <View style={[styles.banner, { backgroundColor: t.chip }]}>
+      <ShieldAlert size={20} color={brand} />
+      <Text style={[styles.bannerText, { color: t.text }]}>{tr.settings.backupPin.warning}</Text>
+      <Pressable onPress={() => setOpen(true)} style={styles.bannerButton} hitSlop={6}>
+        <Text style={{ color: brandInk, fontWeight: "700" }}>{tr.settings.backupPin.create}</Text>
+      </Pressable>
+      <IconButton
+        Icon={X}
+        label={tr.common.dismiss}
+        size={18}
+        onPress={() => {
+          snoozed = true;
+          setHidden(true);
+        }}
+      />
+      {open && <PinDialog restoring={false} onClose={() => setOpen(false)} />}
+    </View>
+  );
 }
 
 function pinError(err: unknown, tr: Dict) {
@@ -286,4 +316,7 @@ const styles = StyleSheet.create({
   input: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, minHeight: 110, textAlignVertical: "top" },
   groups: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" },
   group: { fontSize: 30, width: "21%", textAlign: "center" },
+  banner: { flexDirection: "row", alignItems: "center", gap: 10, margin: 12, marginBottom: 4, padding: 12, borderRadius: 14 },
+  bannerText: { flex: 1, fontSize: 14, fontWeight: "500" },
+  bannerButton: { backgroundColor: brand, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 },
 });
