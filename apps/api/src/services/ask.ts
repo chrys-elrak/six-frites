@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
+  ANON_VOICE_MS,
   type AdminAnonQuery,
   AppError,
   type AnonMessageDTO,
@@ -15,6 +19,7 @@ import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
+import { ffmpeg, probe, waveform } from "../media/ffmpeg.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { parsePhoto } from "./contacts.js";
 import { sharedGif } from "./gifs.js";
@@ -29,6 +34,7 @@ const toAnonDTO = (m: AnonMessage, renewedAt?: Date | null): AnonMessageDTO => (
   entities: entitiesOf(m),
   photoUrl: m.photoKey ? presignGet(m.photoKey) : null,
   gif: m.gifKey ? { url: presignGet(m.gifKey), width: m.gifWidth, height: m.gifHeight } : null,
+  voice: m.voiceKey ? { url: presignGet(m.voiceKey), durationMs: m.voiceMs ?? 0, waveform: m.voiceWaveform } : null,
   createdAt: m.createdAt.toISOString(),
   oldLink: !!renewedAt && m.createdAt < renewedAt,
 });
@@ -106,11 +112,37 @@ async function assertNotSpam(senderId: string, recipientId: string, text: string
 }
 
 /**
+ * Re-encodes a voice message to AAC, keeping its first minute and none of its metadata, and stores it under
+ * the recipient like a photo.
+ */
+async function storeVoice(recipientId: string, dataUrl: string) {
+  const dir = await mkdtemp(join(tmpdir(), "anon-voice-"));
+  try {
+    const input = join(dir, "input");
+    const out = join(dir, "voice.m4a");
+    await writeFile(input, Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1), "base64"));
+    await ffmpeg([
+      ...["-i", input, "-t", String(ANON_VOICE_MS / 1000), "-vn", "-map_metadata", "-1"],
+      ...["-c:a", "aac", "-b:a", "48k", "-ac", "1", "-movflags", "+faststart", out],
+    ]);
+    const info = await probe(out);
+    if (!info.hasAudio || !info.durationMs) throw new Error("no sound");
+    const key = `x/${recipientId}/${randomUUID()}.m4a`;
+    await putObject(key, await readFile(out), "audio/mp4");
+    return { key, durationMs: Math.min(info.durationMs, ANON_VOICE_MS), waveform: await waveform(out) };
+  } catch {
+    throw new AppError("VALIDATION_FAILED", "Couldn't read that voice message");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+/**
  * Sends an anonymous message. A message from someone the recipient blocked is kept, hidden from the recipient,
  * so it still shows in the sender's sent list and blocking stays quiet. A photo is stored under the recipient,
  * so its address says nothing about who sent it.
  */
-export async function sendAnon(senderId: string, code: string, { text, entities, photo, gifId }: SendAnonInput) {
+export async function sendAnon(senderId: string, code: string, { text, entities, photo, gifId, voice }: SendAnonInput) {
   const recipient = await askerByCode(code);
   await assertNotSpam(senderId, recipient.id, text);
   const blocked = await prisma.anonBlock.findUnique({
@@ -123,6 +155,7 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
     await putObject(photoKey, p.bytes, p.mime);
   }
   const gif = gifId ? await sharedGif(gifId) : null;
+  const sound = voice ? await storeVoice(recipient.id, voice) : null;
   const m = await prisma.anonMessage.create({
     data: {
       recipientId: recipient.id,
@@ -133,12 +166,15 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
       gifKey: gif?.key,
       gifWidth: gif?.width,
       gifHeight: gif?.height,
+      voiceKey: sound?.key,
+      voiceMs: sound?.durationMs,
+      voiceWaveform: sound?.waveform,
       recipientDeletedAt: blocked ? new Date() : null,
     },
   });
   if (blocked) return;
   broadcaster().to(rooms.user(recipient.id)).emit("ask:new", toAnonDTO(m));
-  void deliverAnonPush(recipient.id, maskSpoilers(text, entities), !!gif).catch(() => null);
+  void deliverAnonPush(recipient.id, maskSpoilers(text, entities), sound ? "voice" : gif ? "gif" : "image").catch(() => null);
 }
 
 export async function listAnon(userId: string, q: PageQuery) {
@@ -203,6 +239,7 @@ export async function listAnonForAdmin(q: AdminAnonQuery) {
     text: m.text,
     photoUrl: m.photoKey ? presignGet(m.photoKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
     gifUrl: m.gifKey ? presignGet(m.gifKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
+    voiceUrl: m.voiceKey ? presignGet(m.voiceKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
     sender: toUserRef(m.sender),
     recipient: toUserRef(m.recipient),
     createdAt: m.createdAt.toISOString(),

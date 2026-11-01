@@ -71,6 +71,7 @@ export function AnonMessages() {
             </a>
           )}
           {m.gifUrl && <video src={m.gifUrl} autoPlay loop muted playsInline aria-label="GIF" className="max-h-48 rounded-lg" />}
+          {m.voiceUrl && <audio src={m.voiceUrl} controls preload="none" className="w-full max-w-sm" />}
           {m.text && <p className="text-sm break-words whitespace-pre-wrap">{m.text}</p>}
           {(m.senderDeletedAt || m.recipientDeletedAt) && (
             <p className="flex flex-wrap gap-1.5 text-xs">

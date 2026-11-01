@@ -24,6 +24,7 @@ import { segments } from "@/lib/markup";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { useMedia } from "@/lib/viewport";
+import { VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
 import { LanguageSelect } from "./language-select";
@@ -115,6 +116,14 @@ function AnonText({ m, onLink }: { m: Pick<AnonMessageDTO, "text" | "entities">;
  * Cards in two columns on wide screens, dealt left and right in turn so the newest stay on top, without the
  * gaps a grid leaves under a short card next to a tall one.
  */
+function AnonVoice({ voice }: { voice: NonNullable<AnonMessageDTO["voice"]> }) {
+  return (
+    <div className="flex min-h-11 items-center rounded-2xl bg-stone-100 px-3 dark:bg-stone-800">
+      <VoicePlayer url={voice.url} durationMs={voice.durationMs} waveform={voice.waveform} mine={false} compact />
+    </div>
+  );
+}
+
 function Columns({ children, gap }: { children: React.ReactNode[]; gap: string }) {
   const wide = useMedia("(min-width: 64rem)");
   const columns = wide ? [children.filter((_, i) => i % 2 === 0), children.filter((_, i) => i % 2 === 1)] : [children];
@@ -183,6 +192,7 @@ function SentList() {
                 className="max-h-60 w-full rounded-xl bg-stone-100 object-contain dark:bg-stone-800"
               />
             )}
+            {m.voice && <AnonVoice voice={m.voice} />}
             {m.text && (
               <p className="break-words whitespace-pre-wrap select-text">
                 <AnonText m={m} />
@@ -582,6 +592,11 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                         aria-label="GIF"
                         className="max-h-96 w-full bg-stone-100 object-contain dark:bg-stone-950"
                       />
+                    )}
+                    {m.voice && (
+                      <div className={`px-5 ${m.text ? "pt-5" : "py-5"}`}>
+                        <AnonVoice voice={m.voice} />
+                      </div>
                     )}
                     {m.text && (
                       <p

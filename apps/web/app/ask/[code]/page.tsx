@@ -3,6 +3,8 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
   ANON_PHOTO_BYTES,
+  ANON_VOICE_BYTES,
+  ANON_VOICE_MS,
   ASK_COLORS,
   ASK_MAX,
   type EntityType,
@@ -13,9 +15,10 @@ import {
   signInMessage,
 } from "@six/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Camera, ImagePlus, Pencil, SearchX, X } from "lucide-react";
+import { Camera, ImagePlus, Mic, Pencil, SearchX, Square, VenetianMask, X } from "lucide-react";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
+import { VoicePlayer } from "@/components/attachment";
 import { Avatar } from "@/components/avatar";
 import { CameraDialog } from "@/components/camera-dialog";
 import { EmojiSuggestions, useEmojiSuggestions } from "@/components/emoji-suggestions";
@@ -27,13 +30,18 @@ import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
 import { PhotoEditor } from "@/components/photo-editor";
 import { PrimaryButton } from "@/components/ui";
+import { VoiceEffectSelect } from "@/components/voice-effect-select";
 import { unlock } from "@/lib/app-lock";
 import { isTouch } from "@/lib/camera";
+import { formatDuration } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
 import { toPhotoDataUrl } from "@/lib/image";
 import { MARKERS, parseMarkup } from "@/lib/markup";
+import { mediaMeta } from "@/lib/media-meta";
+import { type Recording, useRecorder } from "@/lib/recorder";
 import { deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
+import { useVoiceEffect } from "@/lib/voice-fx";
 
 export default function AskPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
@@ -52,6 +60,11 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   const [editing, setEditing] = useState(false);
   const [gif, setGif] = useState<GifDTO | null>(null);
   const [gifSearch, setGifSearch] = useState(false);
+  const [voice, setVoice] = useState<{ url: string; data: string; durationMs: number; waveform: number[] | null } | null>(
+    null,
+  );
+  const recorder = useRecorder({ maxMs: ANON_VOICE_MS, bitsPerSecond: 32_000, onLimit: (rec) => void keepVoice(rec) });
+  const effect = useVoiceEffect((s) => s.effect);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -64,7 +77,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     retry: false,
   });
 
-  const body = { ...parseMarkup(emojifyEnd(text)), photo: photo?.url, gifId: gif?.id };
+  const body = { ...parseMarkup(emojifyEnd(text)), photo: photo?.url, gifId: gif?.id, voice: voice?.data };
   const valid = SendAnonInput.safeParse(body).success;
   const sendError: Record<string, string | undefined> = {
     RATE_LIMITED: tr.ask.slowDown,
@@ -78,6 +91,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
       setText("");
       setPhoto(null);
       setGif(null);
+      setVoice(null);
     },
   });
 
@@ -107,9 +121,26 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     try {
       setPhoto({ url: await toPhotoDataUrl(f, ANON_PHOTO_BYTES), file: f });
       setGif(null);
+      setVoice(null);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
     }
+  }
+
+  async function keepVoice(rec: Recording | null) {
+    if (!rec || rec.durationMs < 500) return;
+    if (rec.blob.size > ANON_VOICE_BYTES) return setPhotoError(tr.ask.voiceTooBig);
+    const data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(rec.blob);
+    });
+    const { waveform } = await mediaMeta(rec.blob, "voice");
+    const durationMs = Math.min(rec.durationMs, ANON_VOICE_MS);
+    setVoice({ url: URL.createObjectURL(rec.blob), data, durationMs, waveform: waveform ?? null });
+    setPhoto(null);
+    setGif(null);
   }
 
   async function onCredential(idToken: string) {
@@ -211,6 +242,30 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                 </button>
               </div>
             )}
+            {voice && (
+              <div className="flex items-center gap-2 px-3 pt-3">
+                <div className="flex min-h-11 min-w-0 flex-1 items-center rounded-2xl bg-stone-100 px-3 dark:bg-stone-800">
+                  <VoicePlayer
+                    key={voice.url}
+                    url={voice.url}
+                    durationMs={voice.durationMs}
+                    waveform={voice.waveform}
+                    mine={false}
+                    label={tr.composer.playPreview}
+                    compact
+                    effects={false}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVoice(null)}
+                  aria-label={tr.common.remove}
+                  className="grid size-8 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            )}
             <textarea
               ref={box}
               value={text}
@@ -233,7 +288,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                 e.preventDefault();
                 wrap(format);
               }}
-              rows={photo || gif ? 2 : 5}
+              rows={photo || gif || voice ? 2 : 5}
               autoFocus
               placeholder={tr.ask.placeholder}
               aria-label={tr.ask.placeholder}
@@ -244,12 +299,39 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                 onPick={(g) => {
                   setGif(g);
                   setPhoto(null);
+                  setVoice(null);
                   setGifSearch(false);
                 }}
               />
             )}
             <div className="flex items-center gap-2 px-2 pb-2">
-              {emoji.items.length ? (
+              {recorder.recording ? (
+                <>
+                  <span className="ml-2 size-2.5 shrink-0 animate-pulse rounded-full bg-red-500" aria-hidden />
+                  <span className="font-mono text-sm tabular-nums">
+                    {formatDuration(recorder.elapsed)} / {formatDuration(ANON_VOICE_MS)}
+                  </span>
+                  <span className="min-w-0 truncate text-sm text-stone-500">{tr.composer.recording}</span>
+                  <button
+                    type="button"
+                    onClick={() => recorder.cancel()}
+                    aria-label={tr.common.cancel}
+                    title={tr.common.cancel}
+                    className="ml-auto grid size-8 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  >
+                    <X className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void recorder.stop().then(keepVoice)}
+                    aria-label={tr.composer.stopRecording}
+                    title={tr.composer.stopRecording}
+                    className="grid size-8 shrink-0 place-items-center rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                  >
+                    <Square className="size-4 fill-current" />
+                  </button>
+                </>
+              ) : emoji.items.length ? (
                 <EmojiSuggestions {...emoji} className="min-w-0" />
               ) : hasSelection ? (
                 <FormatBar onFormat={wrap} />
@@ -258,10 +340,11 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                   <button
                     type="button"
                     onClick={() => file.current?.click()}
-                    className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                    aria-label={tr.ask.addPhoto}
+                    title={tr.ask.addPhoto}
+                    className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
                   >
                     <ImagePlus className="size-5" />
-                    {tr.ask.addPhoto}
                   </button>
                   <button
                     type="button"
@@ -284,6 +367,25 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                   >
                     <span className="rounded-[5px] border-2 border-current px-0.5 text-[10px] leading-3 font-bold">GIF</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhotoError(null);
+                      void recorder.start();
+                    }}
+                    aria-label={tr.composer.recordVoice}
+                    title={tr.composer.recordVoice}
+                    className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  >
+                    <Mic className="size-5" />
+                  </button>
+                  <VoiceEffectSelect
+                    className={`grid size-8 place-items-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                      effect === "none" ? "text-stone-500" : "text-brand"
+                    }`}
+                  >
+                    <VenetianMask className="size-5" />
+                  </VoiceEffectSelect>
                 </>
               )}
               <input
@@ -307,18 +409,21 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                   e.target.value = "";
                 }}
               />
-              <span className={`ml-auto pr-2 text-xs ${body.text.length > ASK_MAX ? "text-red-600" : "text-stone-400"}`}>
-                {body.text.length}/{ASK_MAX}
-              </span>
+              {!recorder.recording && (
+                <span className={`ml-auto pr-2 text-xs ${body.text.length > ASK_MAX ? "text-red-600" : "text-stone-400"}`}>
+                  {body.text.length}/{ASK_MAX}
+                </span>
+              )}
             </div>
           </div>
-          {(photoError || send.isError) && (
+          {(photoError || recorder.error || send.isError) && (
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {photoError ??
+                recorder.error ??
                 ((send.error instanceof SixApiError && sendError[send.error.code]) || tr.common.somethingWrongRetry)}
             </p>
           )}
-          <PrimaryButton type="submit" disabled={!valid || send.isPending} className="w-full">
+          <PrimaryButton type="submit" disabled={!valid || send.isPending || recorder.recording} className="w-full">
             {send.isPending ? tr.ask.sending : tr.common.send}
           </PrimaryButton>
         </form>

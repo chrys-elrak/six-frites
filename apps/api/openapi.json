@@ -2014,6 +2014,11 @@
                             "type": "string",
                             "format": "uri"
                           },
+                          "voiceUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
                           "sender": {
                             "type": "object",
                             "properties": {
@@ -2122,6 +2127,7 @@
                           "text",
                           "photoUrl",
                           "gifUrl",
+                          "voiceUrl",
                           "sender",
                           "recipient",
                           "createdAt",
@@ -41355,6 +41361,11 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 100
+                  },
+                  "voice": {
+                    "description": "A voice message, recorded with or without a voice effect; the server keeps its first minute",
+                    "type": "string",
+                    "pattern": "^data:audio\\/[\\w.+-]+;base64,[A-Za-z0-9+/]+=*$"
                   }
                 }
               }
@@ -41447,7 +41458,7 @@
                           },
                           "text": {
                             "type": "string",
-                            "description": "Empty when only a photo or a GIF was sent"
+                            "description": "Empty when only a photo, a GIF or a voice message was sent"
                           },
                           "entities": {
                             "type": "array",
@@ -41518,6 +41529,36 @@
                             ],
                             "additionalProperties": false
                           },
+                          "voice": {
+                            "nullable": true,
+                            "description": "A voice message, as AAC in MP4",
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "waveform": {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                }
+                              }
+                            },
+                            "required": [
+                              "url",
+                              "durationMs",
+                              "waveform"
+                            ],
+                            "additionalProperties": false
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -41534,6 +41575,7 @@
                           "entities",
                           "photoUrl",
                           "gif",
+                          "voice",
                           "createdAt",
                           "oldLink"
                         ],
@@ -41609,7 +41651,7 @@
                           },
                           "text": {
                             "type": "string",
-                            "description": "Empty when only a photo or a GIF was sent"
+                            "description": "Empty when only a photo, a GIF or a voice message was sent"
                           },
                           "entities": {
                             "type": "array",
@@ -41680,6 +41722,36 @@
                             ],
                             "additionalProperties": false
                           },
+                          "voice": {
+                            "nullable": true,
+                            "description": "A voice message, as AAC in MP4",
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "waveform": {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                }
+                              }
+                            },
+                            "required": [
+                              "url",
+                              "durationMs",
+                              "waveform"
+                            ],
+                            "additionalProperties": false
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -41715,6 +41787,7 @@
                           "entities",
                           "photoUrl",
                           "gif",
+                          "voice",
                           "createdAt",
                           "oldLink",
                           "to"

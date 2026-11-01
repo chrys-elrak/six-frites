@@ -538,6 +538,10 @@ model AnonMessage {
   gifKey      String?
   gifWidth    Int?
   gifHeight   Int?
+  /// A voice message, re-encoded to AAC, stored under the recipient like the photo.
+  voiceKey      String?
+  voiceMs       Int?
+  voiceWaveform Int[]   @default([])
   createdAt   DateTime @default(now())
   /// Hidden from the sender's sent list; the message stays, for the recipient and the moderators.
   senderDeletedAt    DateTime?

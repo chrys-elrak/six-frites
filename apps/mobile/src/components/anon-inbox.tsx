@@ -15,13 +15,13 @@ import {
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
 import * as Sharing from "expo-sharing";
-import { Camera, Ellipsis, Globe, LogOut, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
+import { Camera, Ellipsis, Globe, LogOut, Play, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { captureRef } from "react-native-view-shot";
-import { shareAsk, timeAgo } from "@/lib/format";
+import { formatDuration, shareAsk, timeAgo } from "@/lib/format";
 import { segments } from "@/lib/markup";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { pickAvatar } from "@/lib/media";
@@ -29,7 +29,7 @@ import { receiveAnon } from "@/lib/realtime";
 import { logout, useSession } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
 import { brand, stone, useTheme } from "@/lib/theme";
-import { GifLoop } from "./attachment";
+import { GifLoop, VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
 import { DoodlePattern } from "./chat-background";
 import { Logo } from "./logo";
@@ -137,12 +137,21 @@ function Gradient({ id, colors, wash, doodles }: { id: string; colors: AskColors
   );
 }
 
+function AnonVoice({ voice }: { voice: NonNullable<AnonMessageDTO["voice"]> }) {
+  const t = useTheme();
+  return (
+    <View style={[styles.voice, { backgroundColor: t.surfaceAlt }]}>
+      <VoicePlayer url={voice.url} durationMs={voice.durationMs} waveform={voice.waveform} mine={false} compact />
+    </View>
+  );
+}
+
 /**
  * The message as an image, drawn off screen 360 wide: the card alone on a transparent background, or a
  * 9:16 story (captured at 1080×1920) with the link to send more under it.
  */
 function CardArt({
-  m: { text, entities, photoUrl, gif },
+  m: { text, entities, photoUrl, gif, voice },
   link,
   style: { colors, transparent, doodles },
   onPhotoLoad,
@@ -176,6 +185,19 @@ function CardArt({
       {gif && (
         <View style={styles.storyPhoto}>
           <GifLoop url={gif.url} onReady={onPhotoLoad} />
+        </View>
+      )}
+      {voice && (
+        <View style={[styles.storyVoice, { backgroundColor: t.surfaceAlt }, !text && { marginBottom: 18 }]}>
+          <View style={[styles.storyPlay, { backgroundColor: colors[0] }]}>
+            <Play size={14} color="#fff" fill="#fff" />
+          </View>
+          <View style={styles.storyBars}>
+            {(voice.waveform.length ? voice.waveform : Array<number>(48).fill(30)).map((v, i) => (
+              <View key={i} style={{ flex: 1, height: Math.max(3, v * 0.22), borderRadius: 2, backgroundColor: t.muted }} />
+            ))}
+          </View>
+          <Text style={{ color: t.muted, fontSize: 12, fontWeight: "600" }}>{formatDuration(voice.durationMs)}</Text>
         </View>
       )}
       {!!text && (
@@ -292,6 +314,7 @@ function SentRow({ m, onRemove }: { m: SentAnonDTO; onRemove: () => void }) {
           <GifLoop url={m.gif.url} fit="contain" />
         </View>
       )}
+      {m.voice && <AnonVoice voice={m.voice} />}
       {!!m.text && (
         <Text style={{ color: t.text, fontSize: 15 }} selectable>
           <AnonText m={m} />
@@ -649,6 +672,11 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   <GifLoop url={m.gif.url} fit="contain" />
                 </View>
               )}
+              {m.voice && (
+                <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: m.text ? 0 : 20 }}>
+                  <AnonVoice voice={m.voice} />
+                </View>
+              )}
               {!!m.text && (
                 <Text style={[styles.itemText, { color: t.text, fontSize: cardFont(m.text), lineHeight: cardFont(m.text) * 1.3 }]} selectable>
                   <AnonText m={m} onLink={setOpening} />
@@ -789,6 +817,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   storyPhoto: { width: "100%", height: 200 },
+  storyVoice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    height: 44,
+    borderRadius: 22,
+    paddingLeft: 6,
+    paddingRight: 14,
+    marginHorizontal: 18,
+    marginTop: 18,
+  },
+  storyPlay: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  storyBars: { flex: 1, flexDirection: "row", alignItems: "center", gap: 1.5, height: 24 },
+  voice: { minHeight: 44, borderRadius: 22, paddingHorizontal: 12, justifyContent: "center" },
   itemText: { fontWeight: "700", textAlign: "center", paddingHorizontal: 20, paddingTop: 22, paddingBottom: 18 },
   row: {
     flexDirection: "row",

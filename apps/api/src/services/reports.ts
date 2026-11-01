@@ -37,6 +37,7 @@ interface SnapshotMessage {
   /** An anonymous message's photo or GIF, which aren't uploads. */
   photoKey?: string | null;
   gifKey?: string | null;
+  voiceKey?: string | null;
 }
 
 const snapshotOf = (m: Message, reported: boolean): SnapshotMessage => ({
@@ -111,6 +112,7 @@ export async function createReport(reporterId: string, input: CreateReportInput)
         reported: true,
         photoKey: m.photoKey,
         gifKey: m.gifKey,
+        voiceKey: m.voiceKey,
       },
     ];
     targetId = m.senderId;
@@ -175,7 +177,9 @@ async function toReportDTOs(rows: ReportRow[]): Promise<ReportDTO[]> {
             ? anonFile(s.id, s.photoKey, "image")
             : s.gifKey
               ? anonFile(s.id, s.gifKey, "gif")
-              : null,
+              : s.voiceKey
+                ? anonFile(s.id, s.voiceKey, "voice")
+                : null,
         sticker: sticker ? toStickerDTO(sticker) : null,
         createdAt: s.createdAt,
         reported: s.reported,
@@ -187,12 +191,17 @@ async function toReportDTOs(rows: ReportRow[]): Promise<ReportDTO[]> {
   }));
 }
 
-const anonFile = (id: string, key: string, kind: "image" | "gif"): AttachmentDTO => ({
+const ANON_FILES = {
+  image: { name: "photo", mime: "image/jpeg" },
+  gif: { name: "GIF", mime: "video/mp4" },
+  voice: { name: "voice", mime: "audio/mp4" },
+};
+
+const anonFile = (id: string, key: string, kind: keyof typeof ANON_FILES): AttachmentDTO => ({
   id,
   kind,
   status: "ready",
-  name: kind === "gif" ? "GIF" : "photo",
-  mime: kind === "gif" ? "video/mp4" : "image/jpeg",
+  ...ANON_FILES[kind],
   size: 0,
   url: presignGet(key, undefined, EPHEMERAL_LINK_SECONDS),
   thumbUrl: null,
@@ -228,9 +237,10 @@ export async function resolveReport(adminId: string, reportId: string, input: Re
       done.push("Message deleted");
     }
   }
-  const photoKey = (report.snapshot as unknown as SnapshotMessage[]).find((s) => s.reported)?.photoKey;
-  const kept = photoKey && (await prisma.anonMessage.count({ where: { id: report.messageId! } }));
-  if (photoKey && !kept) await deleteObjects([photoKey]).catch(() => null);
+  const reported = (report.snapshot as unknown as SnapshotMessage[]).find((s) => s.reported);
+  const files = [reported?.photoKey, reported?.voiceKey].filter((k): k is string => !!k);
+  const kept = files.length && (await prisma.anonMessage.count({ where: { id: report.messageId! } }));
+  if (files.length && !kept) await deleteObjects(files).catch(() => null);
   if (input.banUser) {
     await banUser(adminId, report.targetId, input.note || `Reported for ${report.reason}`, input.banHours);
     done.push("User banned");

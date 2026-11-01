@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import type { AddressInfo } from "node:net";
 import { io as connect } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -37,6 +38,7 @@ describe("anonymous messages", () => {
       entities: [],
       photoUrl: null,
       gif: null,
+      voice: null,
       createdAt: expect.any(String),
       oldLink: false,
     });
@@ -205,7 +207,7 @@ describe("anonymous messages", () => {
       const arrived = new Promise((resolve) => socket.once("ask:new", resolve));
       await ask(fan, owner.user.askCode, "live?");
       const m = await arrived;
-      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, gif: null, createdAt: expect.any(String), oldLink: false });
+      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, gif: null, voice: null, createdAt: expect.any(String), oldLink: false });
     } finally {
       socket.disconnect();
     }
@@ -218,5 +220,38 @@ describe("anonymous messages", () => {
     const me = await get(member, "/v1/me");
     expect(me.guest).toBe(false);
     expect((await ctx.app.inject({ url: `/v1/ask/${me.askCode}` })).statusCode).toBe(200);
+  });
+});
+
+const hasFfmpeg = (() => {
+  try {
+    execFileSync("ffprobe", ["-version"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
+describe.skipIf(!hasFfmpeg)("anonymous voice messages", () => {
+  it("keeps the first minute as AAC, under the recipient, with a waveform", async () => {
+    const owner = await walkIn("owner");
+    const fan = await walkIn("fan");
+    const clip = execFileSync("ffmpeg", [
+      ...["-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=70"],
+      ...["-c:a", "libopus", "-b:a", "16k", "-metadata", "title=Secret Name", "-f", "webm", "pipe:1"],
+    ]);
+    const voice = `data:audio/webm;base64,${clip.toString("base64")}`;
+    const send = (body: object) => call(fan, "POST", `/v1/ask/${owner.user.askCode}`, body);
+    expect((await send({ voice: "data:audio/webm;base64,AAAA" })).statusCode).toBe(400);
+    expect((await send({ voice, gifId: "cat1" })).statusCode).toBe(400);
+    expect((await send({ voice })).statusCode).toBe(204);
+
+    const [m] = (await get(owner, "/v1/ask")).items;
+    expect(m.voice.durationMs).toBeGreaterThan(59_000);
+    expect(m.voice.durationMs).toBeLessThanOrEqual(60_000);
+    expect(m.voice.waveform).toHaveLength(64);
+    expect(m.voice.url).toContain(owner.user.id);
+    const file = Buffer.from(await (await fetch(m.voice.url)).arrayBuffer());
+    expect(file.toString("latin1")).not.toContain("Secret Name");
   });
 });

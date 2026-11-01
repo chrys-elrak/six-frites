@@ -47,7 +47,7 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
     "/ask/:code",
     {
       onRequest: app.requireAuth,
-      bodyLimit: 800 * 1024,
+      bodyLimit: 900 * 1024,
       config: { guest: true, rateLimit: { max: 10, timeWindow: "1 minute" } },
       schema: {
         tags,

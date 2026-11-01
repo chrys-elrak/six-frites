@@ -953,6 +953,8 @@ export interface paths {
                                  * @description An MP4 to play like a GIF
                                  */
                                 gifUrl: string | null;
+                                /** Format: uri */
+                                voiceUrl: string | null;
                                 sender: {
                                     id: string;
                                     displayName: string;
@@ -12885,6 +12887,8 @@ export interface paths {
                         photo?: string;
                         /** @description A GIF from GET /v1/gifs, sent instead of a photo */
                         gifId?: string;
+                        /** @description A voice message, recorded with or without a voice effect; the server keeps its first minute */
+                        voice?: string;
                     };
                 };
             };
@@ -12935,7 +12939,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 id: string;
-                                /** @description Empty when only a photo or a GIF was sent */
+                                /** @description Empty when only a photo, a GIF or a voice message was sent */
                                 text: string;
                                 /** @description Bold, italic, strike, code and spoiler ranges of the text */
                                 entities: {
@@ -12952,6 +12956,13 @@ export interface paths {
                                     url: string;
                                     width: number | null;
                                     height: number | null;
+                                } | null;
+                                /** @description A voice message, as AAC in MP4 */
+                                voice: {
+                                    /** Format: uri */
+                                    url: string;
+                                    durationMs: number;
+                                    waveform: number[];
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -13004,7 +13015,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 id: string;
-                                /** @description Empty when only a photo or a GIF was sent */
+                                /** @description Empty when only a photo, a GIF or a voice message was sent */
                                 text: string;
                                 /** @description Bold, italic, strike, code and spoiler ranges of the text */
                                 entities: {
@@ -13021,6 +13032,13 @@ export interface paths {
                                     url: string;
                                     width: number | null;
                                     height: number | null;
+                                } | null;
+                                /** @description A voice message, as AAC in MP4 */
+                                voice: {
+                                    /** Format: uri */
+                                    url: string;
+                                    durationMs: number;
+                                    waveform: number[];
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;

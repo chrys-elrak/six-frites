@@ -14,8 +14,15 @@ export interface Recording {
   disguised: boolean;
 }
 
-/** Records a voice note with MediaRecorder, picking a format the browser supports. */
-export function useRecorder() {
+/**
+ * Records a voice note with MediaRecorder, picking a format the browser supports. At `maxMs` it stops on its own
+ * and hands the recording to `onLimit`.
+ */
+export function useRecorder({
+  maxMs = MAX_MS,
+  bitsPerSecond,
+  onLimit,
+}: { maxMs?: number; bitsPerSecond?: number; onLimit?: (r: Recording | null) => void } = {}) {
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -24,16 +31,18 @@ export function useRecorder() {
   const startedAt = useRef(0);
   const finish = useRef<((r: Recording | null) => void) | null>(null);
   const release = useRef<(() => void) | null>(null);
+  const limit = useRef(onLimit);
+  limit.current = onLimit;
 
   useEffect(() => {
     if (!recording) return;
     const t = setInterval(() => {
       const ms = Date.now() - startedAt.current;
       setElapsed(ms);
-      if (ms >= MAX_MS) recorder.current?.stop();
+      if (ms >= maxMs) void stop().then((r) => r && limit.current?.(r));
     }, 200);
     return () => clearInterval(t);
-  }, [recording]);
+  }, [recording, maxMs]);
 
   useEffect(() => () => release.current?.(), []);
 
@@ -44,7 +53,7 @@ export function useRecorder() {
       const fx = await withVoiceEffect(await navigator.mediaDevices.getUserMedia({ audio: true }));
       release.current = fx.stop;
       const mimeType = TYPES.find((t) => MediaRecorder.isTypeSupported(t));
-      const rec = new MediaRecorder(fx.stream, mimeType ? { mimeType } : undefined);
+      const rec = new MediaRecorder(fx.stream, { mimeType, audioBitsPerSecond: bitsPerSecond });
       chunks.current = [];
       rec.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
       rec.onstop = () => {

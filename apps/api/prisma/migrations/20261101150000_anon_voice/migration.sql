@@ -1,0 +1,3 @@
+ALTER TABLE "AnonMessage" ADD COLUMN "voiceKey" TEXT,
+ADD COLUMN "voiceMs" INTEGER,
+ADD COLUMN "voiceWaveform" INTEGER[] DEFAULT ARRAY[]::INTEGER[];

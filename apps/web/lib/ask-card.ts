@@ -1,4 +1,5 @@
 import { type AnonMessageDTO, type AskColors, type EntityType, doodleTileSvg } from "@six/shared";
+import { formatDuration } from "./format";
 import { getT } from "./i18n";
 import { type Segment, segments } from "./markup";
 
@@ -10,6 +11,7 @@ const HEADER_H = 180;
 const MAX_TEXT_H = 900;
 const LOGO = 72;
 const PHOTO_H = 600;
+const VOICE_H = 120;
 const FONT = 'ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji", "Apple Color Emoji"';
 
 export interface CardStyle {
@@ -102,6 +104,55 @@ function drawSpoiler(ctx: CanvasRenderingContext2D, x: number, top: number, w: n
   ctx.restore();
 }
 
+/** A voice message as the app shows one, with a play button, its waveform and how long it lasts. */
+function drawVoice(
+  ctx: CanvasRenderingContext2D,
+  { durationMs, waveform }: NonNullable<AnonMessageDTO["voice"]>,
+  left: number,
+  top: number,
+  w: number,
+  colors: AskColors,
+  dark: boolean,
+) {
+  const h = VOICE_H;
+  const mid = top + h / 2;
+  ctx.fillStyle = dark ? "#292524" : "#f5f5f4";
+  ctx.beginPath();
+  ctx.roundRect(left, top, w, h, h / 2);
+  ctx.fill();
+
+  const r = h * 0.34;
+  const cx = left + h / 2;
+  ctx.fillStyle = gradient(ctx, colors, cx - r, mid - r, r * 2, r * 2);
+  ctx.beginPath();
+  ctx.arc(cx, mid, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.3, mid - r * 0.45);
+  ctx.lineTo(cx + r * 0.5, mid);
+  ctx.lineTo(cx - r * 0.3, mid + r * 0.45);
+  ctx.closePath();
+  ctx.fill();
+
+  const label = formatDuration(durationMs);
+  ctx.font = `600 36px ${FONT}`;
+  ctx.textAlign = "right";
+  ctx.fillStyle = dark ? "#a8a29e" : "#78716c";
+  ctx.fillText(label, left + w - h * 0.4, mid);
+  const barsLeft = left + h;
+  const barsRight = left + w - h * 0.4 - ctx.measureText(label).width - 32;
+  const bars = waveform.length ? waveform : Array<number>(48).fill(30);
+  const step = (barsRight - barsLeft) / bars.length;
+  ctx.fillStyle = dark ? "rgba(250,250,249,0.55)" : "rgba(28,25,23,0.45)";
+  bars.forEach((v, i) => {
+    const bh = Math.max(8, (v / 100) * h * 0.56);
+    ctx.beginPath();
+    ctx.roundRect(barsLeft + i * step + step * 0.2, mid - bh / 2, step * 0.6, bh, step * 0.3);
+    ctx.fill();
+  });
+}
+
 let logo: Promise<HTMLImageElement | null> | undefined;
 
 /** The app icon, loaded once; null if it can't be fetched, so the card is drawn without it. */
@@ -163,7 +214,7 @@ async function loadFrame(url: string) {
  * on a story-sized page with the link to send more under it.
  */
 export async function askCardPng(
-  { text, entities, photoUrl, gif }: Pick<AnonMessageDTO, "text" | "entities" | "photoUrl" | "gif">,
+  { text, entities, photoUrl, gif, voice }: Pick<AnonMessageDTO, "text" | "entities" | "photoUrl" | "gif" | "voice">,
   link: string,
   { colors, transparent, doodles }: CardStyle,
 ) {
@@ -178,7 +229,8 @@ export async function askCardPng(
   const ctx = canvas.getContext("2d")!;
   const dark = matchMedia("(prefers-color-scheme: dark)").matches;
   const photoH = photo ? PHOTO_H : 0;
-  const textRoom = MAX_TEXT_H - photoH;
+  const voiceH = voice ? PAD + VOICE_H : 0;
+  const textRoom = MAX_TEXT_H - photoH - voiceH;
 
   const segs = segments(text, entities);
   let size = 84;
@@ -190,7 +242,7 @@ export async function askCardPng(
   const lineH = size * 1.25;
   lines = lines.slice(0, Math.floor(textRoom / lineH));
 
-  const cardH = HEADER_H + photoH + (lines.length ? PAD * 2 + lines.length * lineH : 0);
+  const cardH = HEADER_H + photoH + voiceH + (lines.length ? PAD * 2 + lines.length * lineH : voice ? PAD : 0);
   canvas.width = transparent ? CARD_W : W;
   canvas.height = transparent ? cardH : H;
   const x = transparent ? 0 : (W - CARD_W) / 2;
@@ -253,11 +305,12 @@ export async function askCardPng(
   ctx.textAlign = "center";
 
   const ink = dark ? "#fafaf9" : "#1c1917";
+  if (voice) drawVoice(ctx, voice, x + PAD, y + HEADER_H + photoH + PAD, CARD_W - PAD * 2, colors, dark);
   ctx.textAlign = "left";
   lines.forEach((line, i) => {
     const widths = line.map((run) => measure(ctx, run, size));
     let left = mid - widths.reduce((a, b) => a + b, 0) / 2;
-    const cy = y + HEADER_H + photoH + PAD + lineH * (i + 0.5);
+    const cy = y + HEADER_H + photoH + voiceH + PAD + lineH * (i + 0.5);
     line.forEach((run, k) => {
       const w = widths[k]!;
       if (run.styles.has("spoiler")) {
