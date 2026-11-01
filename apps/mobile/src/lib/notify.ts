@@ -26,7 +26,7 @@ export interface NotifyPrefs {
 export const useNotifyPrefs = create<NotifyPrefs & { set: (patch: Partial<NotifyPrefs>) => void }>((set, get) => ({
   sound: true,
   popups: true,
-  tone: "chime",
+  tone: "frites",
   set(patch) {
     set(patch);
     const { sound, popups, tone } = get();
@@ -58,6 +58,7 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
 );
 
 const TONE_FILES: Record<Tone, number> = {
+  frites: require("../../assets/tones/frites.wav"),
   chime: require("../../assets/tones/chime.wav"),
   pop: require("../../assets/tones/pop.wav"),
   ding: require("../../assets/tones/ding.wav"),
@@ -67,17 +68,24 @@ const TONE_FILES: Record<Tone, number> = {
   blip: require("../../assets/tones/blip.wav"),
 };
 
-const players = new Map<Tone, AudioPlayer>();
+/** From Pixabay; see assets/sounds/Pixabay.txt. */
+const ANON_SOUND: number = require("../../assets/sounds/anonymous.mp3");
 
-/** Plays the chosen notification tone, or `tone` to try one out. */
-export function playTone(tone = useNotifyPrefs.getState().tone) {
-  let player = players.get(tone);
+const players = new Map<number, AudioPlayer>();
+
+function play(asset: number) {
+  let player = players.get(asset);
   if (!player) {
-    player = createAudioPlayer(TONE_FILES[tone]);
-    players.set(tone, player);
+    player = createAudioPlayer(asset);
+    players.set(asset, player);
   }
   const ready = player;
   void ready.seekTo(0).then(() => ready.play());
+}
+
+/** Plays the chosen notification tone, or `tone` to try one out. */
+export function playTone(tone = useNotifyPrefs.getState().tone) {
+  play(TONE_FILES[tone]);
 }
 
 const FRESH_MS = 60_000;
@@ -100,13 +108,13 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean) {
   const t = getT();
   if (viewing) return;
   const media = m.voice ? `🎤 ${t.summary.kinds.voice}` : m.gif ? t.summary.kinds.gif : `📷 ${t.summary.kinds.image}`;
-  alert(m.id, "/inbox", t.ask.newMessage, maskSpoilers(m.text, m.entities) || media, null);
+  alert(m.id, "/inbox", t.ask.newMessage, maskSpoilers(m.text, m.entities) || media, null, ANON_SOUND);
 }
 
-function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null) {
+function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null, sound?: number) {
   if (AppState.currentState !== "active") return;
   const prefs = useNotifyPrefs.getState();
-  if (prefs.sound) playTone(prefs.tone);
+  if (prefs.sound) play(sound ?? TONE_FILES[prefs.tone]);
   if (prefs.popups) useToasts.getState().push({ id, href, title, body, avatar: { displayName: title, avatarUrl } });
 }
 

@@ -1,0 +1,6 @@
+These sounds come from Pixabay (https://pixabay.com) and are used under the Pixabay Content License
+(https://pixabay.com/service/license-summary/):
+
+- tones/frites.wav: the "Six Frites" message tone
+- sounds/anonymous.mp3: a new anonymous message
+- sounds/call.mp3: an incoming call (web)

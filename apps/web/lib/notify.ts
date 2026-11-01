@@ -21,7 +21,7 @@ export interface NotifyPrefs {
   tone: Tone;
 }
 
-const DEFAULTS: NotifyPrefs = { sound: true, popups: true, system: false, push: false, tone: "chime" };
+const DEFAULTS: NotifyPrefs = { sound: true, popups: true, system: false, push: false, tone: "frites" };
 
 function loadPrefs(): NotifyPrefs {
   try {
@@ -67,7 +67,7 @@ let audio: AudioContext | null = null;
 /** Creates or resumes the audio context and starts loading the chosen tone; must run inside a user gesture the first time. */
 export function unlockAudio() {
   audio ??= new AudioContext();
-  void decode(audio, useNotifyPrefs.getState().tone).catch(() => null);
+  void decode(audio, toneUrl(useNotifyPrefs.getState().tone)).catch(() => null);
   return audio.resume();
 }
 
@@ -78,33 +78,50 @@ export function primeAudio() {
   window.addEventListener("keydown", unlock, { once: true });
 }
 
-const decoded = new Map<Tone, Promise<AudioBuffer>>();
+const decoded = new Map<string, Promise<AudioBuffer>>();
+const toneUrl = (tone: Tone) => `/tones/${tone}.wav`;
+/** Sounds from Pixabay; see public/sounds/Pixabay.txt. */
+export const ANON_SOUND = "/sounds/anonymous.mp3";
+export const RINGTONE = "/sounds/call.mp3";
 
-function decode(ctx: AudioContext, tone: Tone) {
-  let buffer = decoded.get(tone);
+function decode(ctx: AudioContext, url: string) {
+  let buffer = decoded.get(url);
   if (!buffer) {
-    buffer = fetch(`/tones/${tone}.wav`)
+    buffer = fetch(url)
       .then((r) => r.arrayBuffer())
       .then((b) => ctx.decodeAudioData(b));
-    buffer.catch(() => decoded.delete(tone));
-    decoded.set(tone, buffer);
+    buffer.catch(() => decoded.delete(url));
+    decoded.set(url, buffer);
   }
   return buffer;
 }
 
+/** Plays a sound once audio is unlocked; with `loop` it repeats until the returned function stops it. */
+export function playSound(url: string, loop = false) {
+  const ctx = audio;
+  let source: AudioBufferSourceNode | null = null;
+  let stopped = false;
+  if (ctx) {
+    void Promise.all([decode(ctx, url), ctx.resume()])
+      .then(([buffer]) => {
+        if (stopped || ctx.state !== "running") return;
+        source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = loop;
+        source.connect(ctx.destination);
+        source.start();
+      })
+      .catch(() => null);
+  }
+  return () => {
+    stopped = true;
+    source?.stop();
+  };
+}
+
 /** Plays the chosen notification tone, or `tone` to try one out. */
 export function playTone(tone = useNotifyPrefs.getState().tone) {
-  const ctx = audio;
-  if (!ctx) return;
-  void Promise.all([decode(ctx, tone), ctx.resume()])
-    .then(([buffer]) => {
-      if (ctx.state !== "running") return;
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start();
-    })
-    .catch(() => null);
+  playSound(toneUrl(tone));
 }
 
 const FRESH_MS = 60_000;
@@ -173,6 +190,7 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean, open: (href: str
     },
     "/icon.svg",
     open,
+    ANON_SOUND,
   );
 }
 
@@ -180,11 +198,12 @@ function alertUser(
   n: { id: string; href: string; title: string; body: string },
   avatarUrl: string | null,
   open: (href: string) => void,
+  sound?: string,
 ) {
   const prefs = useNotifyPrefs.getState();
   const hidden = document.visibilityState !== "visible";
 
-  if (prefs.sound) playTone(prefs.tone);
+  if (prefs.sound) playSound(sound ?? toneUrl(prefs.tone));
   if (hidden && prefs.push) return;
   if (hidden && prefs.system && "Notification" in window && Notification.permission === "granted") {
     const notification = new Notification(n.title, { body: n.body, icon: avatarUrl ?? "/icon.svg", tag: n.href });

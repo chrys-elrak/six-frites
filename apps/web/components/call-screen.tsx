@@ -59,6 +59,7 @@ import {
 import { useChat } from "@/lib/chats";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
+import { RINGTONE, playSound } from "@/lib/notify";
 import { useSession } from "@/lib/session";
 import { useVoiceEffect } from "@/lib/voice-fx";
 import { Avatar } from "./avatar";
@@ -137,34 +138,7 @@ function Elapsed({ since }: { since: number }) {
 
 /** A soft two-tone ring while a call is ringing, made with Web Audio so there's no file to load. */
 function useRingtone(on: boolean) {
-  useEffect(() => {
-    if (!on) return;
-    let ctx: AudioContext;
-    try {
-      ctx = new AudioContext();
-    } catch {
-      return;
-    }
-    const ring = () => {
-      for (const [i, freq] of [440, 480].entries()) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.05 + i * 0.4);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35 + i * 0.4);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(ctx.currentTime + i * 0.4);
-        osc.stop(ctx.currentTime + 0.4 + i * 0.4);
-      }
-    };
-    ring();
-    const t = setInterval(ring, 2500);
-    return () => {
-      clearInterval(t);
-      void ctx.close();
-    };
-  }, [on]);
+  useEffect(() => (on ? playSound(RINGTONE, true) : undefined), [on]);
 }
 
 function FloatingReactions({ reactions }: { reactions: Call["reactions"] }) {

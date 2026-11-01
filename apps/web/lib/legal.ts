@@ -38,6 +38,10 @@ export const about: Record<Locale, LegalDoc> = {
         body: ["Six Frites is designed and built in Madagascar."],
       },
       {
+        heading: "Credits",
+        body: ["The message, anonymous message and call sounds come from Pixabay (pixabay.com)."],
+      },
+      {
         heading: "Contact",
         body: ["Questions, ideas or problems? Chat with our support from the app or at six-frites.koera.mg/support."],
       },
@@ -70,6 +74,10 @@ export const about: Record<Locale, LegalDoc> = {
       {
         heading: "Fait à Madagascar",
         body: ["Six Frites est conçu et développé à Madagascar."],
+      },
+      {
+        heading: "Crédits",
+        body: ["Les sons des messages, des messages anonymes et des appels viennent de Pixabay (pixabay.com)."],
       },
       {
         heading: "Contact",
@@ -106,6 +114,10 @@ export const about: Record<Locale, LegalDoc> = {
       {
         heading: "Vita teto Madagasikara",
         body: ["Noforonina sy namboarina teto Madagasikara ny Six Frites."],
+      },
+      {
+        heading: "Fankasitrahana",
+        body: ["Avy amin'ny Pixabay (pixabay.com) ny feon'ny hafatra, ny hafatra miafina ary ny antso."],
       },
       {
         heading: "Fifandraisana",
