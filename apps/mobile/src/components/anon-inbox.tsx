@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
   },
   offscreen: { position: "absolute", left: -1000, top: 0, width: 360 },
   story: { width: 360, height: 640, alignItems: "center", justifyContent: "center", padding: 30 },
-  cardOnly: { width: 360, padding: 15 },
+  cardOnly: { width: 360 },
   storyCard: { width: "100%", borderRadius: 16, overflow: "hidden" },
   cardHead: {
     flexDirection: "row",

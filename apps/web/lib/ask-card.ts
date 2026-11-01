@@ -8,7 +8,6 @@ const CARD_W = 900;
 const PAD = 64;
 const HEADER_H = 180;
 const MAX_TEXT_H = 900;
-const MARGIN = 48;
 const LOGO = 72;
 const PHOTO_H = 600;
 const FONT = 'ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji", "Apple Color Emoji"';
@@ -172,10 +171,10 @@ export async function askCardPng(
   lines = lines.slice(0, Math.floor(textRoom / lineH));
 
   const cardH = HEADER_H + photoH + (lines.length ? PAD * 2 + lines.length * lineH : 0);
-  canvas.width = transparent ? CARD_W + MARGIN * 2 : W;
-  canvas.height = transparent ? cardH + MARGIN * 2 : H;
-  const x = transparent ? MARGIN : (W - CARD_W) / 2;
-  const y = transparent ? MARGIN : (H - cardH) / 2 - 80;
+  canvas.width = transparent ? CARD_W : W;
+  canvas.height = transparent ? cardH : H;
+  const x = transparent ? 0 : (W - CARD_W) / 2;
+  const y = transparent ? 0 : (H - cardH) / 2 - 80;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
@@ -191,9 +190,11 @@ export async function askCardPng(
   }
 
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.22)";
-  ctx.shadowBlur = 40;
-  ctx.shadowOffsetY = 12;
+  if (!transparent) {
+    ctx.shadowColor = "rgba(0,0,0,0.22)";
+    ctx.shadowBlur = 40;
+    ctx.shadowOffsetY = 12;
+  }
   ctx.beginPath();
   ctx.roundRect(x, y, CARD_W, cardH, 48);
   ctx.fillStyle = dark ? "#1c1917" : "#ffffff";
