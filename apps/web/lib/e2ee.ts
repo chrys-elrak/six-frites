@@ -1,4 +1,4 @@
-import { E2EE, type Hydrated, type SecretStore, decryptFile } from "@six/sdk";
+import { E2EE, type Hydrated, type SecretStore, SixApiError, decryptFile } from "@six/sdk";
 import type {
   AttachmentDTO,
   ChatDTO,
@@ -117,13 +117,24 @@ export async function forgetE2EE() {
 
 export type { Hydrated };
 
+const unreachable = (err: unknown) =>
+  err instanceof TypeError || (err instanceof SixApiError && (err.status >= 500 || err.status === 429));
+
+/**
+ * Decrypts a message for the UI. A message that really can't be read comes back marked; a thrown error means the
+ * API couldn't be reached, as while it restarts for a deploy, so that one waits for it instead of locking the message.
+ */
 export async function hydrate<T extends MessageDTO>(m: T): Promise<Hydrated<T>> {
   const client = e2ee();
   if (!m.encryption || !client) return m;
-  try {
-    return await client.hydrate(m);
-  } catch {
-    return { ...m, undecryptable: true };
+  // ponytail: gives up after two minutes; re-hydrate on reconnect if outages ever run longer
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await client.hydrate(m);
+    } catch (err) {
+      if (!unreachable(err) || attempt >= 60) return { ...m, undecryptable: true };
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
   }
 }
 
