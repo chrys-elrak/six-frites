@@ -158,11 +158,11 @@ export async function deliverLiveInvitePush(userId: string, from: PublicUser, ga
 }
 
 /** Shows someone an anonymous message they just got, on the devices they aren't using right now. */
-export async function deliverAnonPush(userId: string, text: string) {
+export async function deliverAnonPush(userId: string, text: string, gif = false) {
   const targets = await targetsFor(userId);
   return sendToAll(targets, (t) => ({
     title: t.ask.newMessage,
-    body: text || `📷 ${t.summary.kinds.image}`,
+    body: text || (gif ? t.summary.kinds.gif : `📷 ${t.summary.kinds.image}`),
     icon: null,
     chatId: null,
     messageId: null,

@@ -58,16 +58,22 @@ export const SendAnonInput = z
       .refine((s) => Math.floor(((s.length - s.indexOf(",") - 1) * 3) / 4) <= ANON_PHOTO_BYTES, "Photo is larger than 512 KB")
       .optional()
       .describe("A photo, re-encoded by the app so it carries no place or camera details"),
+    gifId: z.string().min(1).max(100).optional().describe("A GIF from GET /v1/gifs, sent instead of a photo"),
   })
-  .refine((v) => v.text || v.photo, "Write something or add a photo")
+  .refine((v) => v.text || v.photo || v.gifId, "Write something, or add a photo or a GIF")
+  .refine((v) => !(v.photo && v.gifId), { message: "Send a photo or a GIF, not both", path: ["gifId"] })
   .refine((v) => entitiesFit(v.text, v.entities), { message: "Entities fall outside the text", path: ["entities"] });
 export type SendAnonInput = z.infer<typeof SendAnonInput>;
 
 export const AnonMessageDTO = z.object({
   id: Id,
-  text: z.string().describe("Empty when only a photo was sent"),
+  text: z.string().describe("Empty when only a photo or a GIF was sent"),
   entities: z.array(MessageEntity).describe("Bold, italic, strike, code and spoiler ranges of the text"),
   photoUrl: z.string().url().nullable(),
+  gif: z
+    .object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() })
+    .nullable()
+    .describe("A GIF, as an MP4 to play muted on a loop"),
   createdAt: IsoDate,
   oldLink: z.boolean().describe("Came through a link the recipient has since replaced; always false on sent messages"),
 });

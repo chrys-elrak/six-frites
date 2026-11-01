@@ -948,6 +948,11 @@ export interface paths {
                                  * @description Links last 5 minutes
                                  */
                                 photoUrl: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description An MP4 to play like a GIF
+                                 */
+                                gifUrl: string | null;
                                 sender: {
                                     id: string;
                                     displayName: string;
@@ -12878,6 +12883,8 @@ export interface paths {
                         }[];
                         /** @description A photo, re-encoded by the app so it carries no place or camera details */
                         photo?: string;
+                        /** @description A GIF from GET /v1/gifs, sent instead of a photo */
+                        gifId?: string;
                     };
                 };
             };
@@ -12928,7 +12935,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 id: string;
-                                /** @description Empty when only a photo was sent */
+                                /** @description Empty when only a photo or a GIF was sent */
                                 text: string;
                                 /** @description Bold, italic, strike, code and spoiler ranges of the text */
                                 entities: {
@@ -12939,6 +12946,13 @@ export interface paths {
                                 }[];
                                 /** Format: uri */
                                 photoUrl: string | null;
+                                /** @description A GIF, as an MP4 to play muted on a loop */
+                                gif: {
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** @description Came through a link the recipient has since replaced; always false on sent messages */
@@ -12990,7 +13004,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 id: string;
-                                /** @description Empty when only a photo was sent */
+                                /** @description Empty when only a photo or a GIF was sent */
                                 text: string;
                                 /** @description Bold, italic, strike, code and spoiler ranges of the text */
                                 entities: {
@@ -13001,6 +13015,13 @@ export interface paths {
                                 }[];
                                 /** Format: uri */
                                 photoUrl: string | null;
+                                /** @description A GIF, as an MP4 to play muted on a loop */
+                                gif: {
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** @description Came through a link the recipient has since replaced; always false on sent messages */

@@ -172,6 +172,17 @@ function SentList() {
                 className="max-h-60 w-full rounded-xl bg-stone-100 object-contain dark:bg-stone-800"
               />
             )}
+            {m.gif && (
+              <video
+                src={m.gif.url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                aria-label="GIF"
+                className="max-h-60 w-full rounded-xl bg-stone-100 object-contain dark:bg-stone-800"
+              />
+            )}
             {m.text && (
               <p className="break-words whitespace-pre-wrap select-text">
                 <AnonText m={m} />
@@ -560,6 +571,17 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                       <a href={m.photoUrl} target="_blank" rel="noreferrer" className="block bg-stone-100 dark:bg-stone-950">
                         <img src={m.photoUrl} alt={tr.summary.kinds.image} className="max-h-96 w-full object-contain" />
                       </a>
+                    )}
+                    {m.gif && (
+                      <video
+                        src={m.gif.url}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        aria-label="GIF"
+                        className="max-h-96 w-full bg-stone-100 object-contain dark:bg-stone-950"
+                      />
                     )}
                     {m.text && (
                       <p

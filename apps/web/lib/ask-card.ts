@@ -137,19 +137,39 @@ const gradient = (ctx: CanvasRenderingContext2D, [from, to]: AskColors, x: numbe
 /** Fetches the message's photo as a bitmap; fetched rather than drawn from an <img> so the canvas can still be saved. */
 const loadPhoto = async (url: string) => createImageBitmap(await (await fetch(url)).blob());
 
+/** The first frame of a GIF's MP4, from a fetched copy for the same reason; null if the browser can't decode it. */
+async function loadFrame(url: string) {
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+  video.src = URL.createObjectURL(await (await fetch(url)).blob());
+  try {
+    await new Promise((resolve, reject) => {
+      video.onloadeddata = resolve;
+      video.onerror = reject;
+    });
+    return await createImageBitmap(video);
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(video.src);
+  }
+}
+
 /**
- * Draws an anonymous message as a PNG: the question, and its photo if any, on a card with a doodled header,
- * light or dark as the system is, either alone on a transparent background or on a story-sized page with the
- * link to send more under it.
+ * Draws an anonymous message as a PNG: the question, and its photo or its GIF's first frame if any, on a
+ * card with a doodled header, light or dark as the system is, either alone on a transparent background or
+ * on a story-sized page with the link to send more under it.
  */
 export async function askCardPng(
-  { text, entities, photoUrl }: Pick<AnonMessageDTO, "text" | "entities" | "photoUrl">,
+  { text, entities, photoUrl, gif }: Pick<AnonMessageDTO, "text" | "entities" | "photoUrl" | "gif">,
   link: string,
   { colors, transparent, doodles }: CardStyle,
 ) {
   const [icon, photo, headDoodles, pageDoodles] = await Promise.all([
     loadLogo(),
-    photoUrl ? loadPhoto(photoUrl) : null,
+    photoUrl ? loadPhoto(photoUrl) : gif ? loadFrame(gif.url) : null,
     loadDoodles("#ffffff", 0.3, 400),
     !transparent && doodles ? loadDoodles(colors[1], 0.22, 720) : null,
     document.fonts.ready,

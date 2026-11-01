@@ -167,7 +167,7 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean, open: (href: str
       id: m.id,
       href: "/inbox",
       title: t.ask.newMessage,
-      body: maskSpoilers(m.text, m.entities) || `📷 ${t.summary.kinds.image}`,
+      body: maskSpoilers(m.text, m.entities) || (m.gif ? t.summary.kinds.gif : `📷 ${t.summary.kinds.image}`),
     },
     "/icon.svg",
     open,

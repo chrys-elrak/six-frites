@@ -2008,6 +2008,12 @@
                             "type": "string",
                             "format": "uri"
                           },
+                          "gifUrl": {
+                            "nullable": true,
+                            "description": "An MP4 to play like a GIF",
+                            "type": "string",
+                            "format": "uri"
+                          },
                           "sender": {
                             "type": "object",
                             "properties": {
@@ -2115,6 +2121,7 @@
                           "id",
                           "text",
                           "photoUrl",
+                          "gifUrl",
                           "sender",
                           "recipient",
                           "createdAt",
@@ -41342,6 +41349,12 @@
                     "description": "A photo, re-encoded by the app so it carries no place or camera details",
                     "type": "string",
                     "pattern": "^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$"
+                  },
+                  "gifId": {
+                    "description": "A GIF from GET /v1/gifs, sent instead of a photo",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
                   }
                 }
               }
@@ -41434,7 +41447,7 @@
                           },
                           "text": {
                             "type": "string",
-                            "description": "Empty when only a photo was sent"
+                            "description": "Empty when only a photo or a GIF was sent"
                           },
                           "entities": {
                             "type": "array",
@@ -41476,6 +41489,35 @@
                             "type": "string",
                             "format": "uri"
                           },
+                          "gif": {
+                            "nullable": true,
+                            "description": "A GIF, as an MP4 to play muted on a loop",
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "width": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "height": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "url",
+                              "width",
+                              "height"
+                            ],
+                            "additionalProperties": false
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -41491,6 +41533,7 @@
                           "text",
                           "entities",
                           "photoUrl",
+                          "gif",
                           "createdAt",
                           "oldLink"
                         ],
@@ -41566,7 +41609,7 @@
                           },
                           "text": {
                             "type": "string",
-                            "description": "Empty when only a photo was sent"
+                            "description": "Empty when only a photo or a GIF was sent"
                           },
                           "entities": {
                             "type": "array",
@@ -41608,6 +41651,35 @@
                             "type": "string",
                             "format": "uri"
                           },
+                          "gif": {
+                            "nullable": true,
+                            "description": "A GIF, as an MP4 to play muted on a loop",
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "width": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "height": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "url",
+                              "width",
+                              "height"
+                            ],
+                            "additionalProperties": false
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -41642,6 +41714,7 @@
                           "text",
                           "entities",
                           "photoUrl",
+                          "gif",
                           "createdAt",
                           "oldLink",
                           "to"

@@ -70,6 +70,7 @@ export function AnonMessages() {
               <img src={m.photoUrl} alt="" className="max-h-48 rounded-lg" />
             </a>
           )}
+          {m.gifUrl && <video src={m.gifUrl} autoPlay loop muted playsInline aria-label="GIF" className="max-h-48 rounded-lg" />}
           {m.text && <p className="text-sm break-words whitespace-pre-wrap">{m.text}</p>}
           {(m.senderDeletedAt || m.recipientDeletedAt) && (
             <p className="flex flex-wrap gap-1.5 text-xs">

@@ -534,6 +534,10 @@ model AnonMessage {
   /// Formatting ranges of `text`, as on chat messages; null when it has none.
   entities    Json?
   photoKey    String?
+  /// A GIF: the MP4 in shared storage that chat GIFs use too, so it is never deleted with the message.
+  gifKey      String?
+  gifWidth    Int?
+  gifHeight   Int?
   createdAt   DateTime @default(now())
   /// Hidden from the sender's sent list; the message stays, for the recipient and the moderators.
   senderDeletedAt    DateTime?

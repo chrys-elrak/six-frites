@@ -1,0 +1,3 @@
+ALTER TABLE "AnonMessage" ADD COLUMN "gifKey" TEXT,
+ADD COLUMN "gifWidth" INTEGER,
+ADD COLUMN "gifHeight" INTEGER;

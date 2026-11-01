@@ -17,6 +17,7 @@ import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { parsePhoto } from "./contacts.js";
+import { sharedGif } from "./gifs.js";
 import { EPHEMERAL_LINK_SECONDS, entitiesOf, storedEntities } from "./messages.js";
 import { deliverAnonPush } from "./push.js";
 import { toUserRef } from "./reports.js";
@@ -27,6 +28,7 @@ const toAnonDTO = (m: AnonMessage, renewedAt?: Date | null): AnonMessageDTO => (
   text: m.text,
   entities: entitiesOf(m),
   photoUrl: m.photoKey ? presignGet(m.photoKey) : null,
+  gif: m.gifKey ? { url: presignGet(m.gifKey), width: m.gifWidth, height: m.gifHeight } : null,
   createdAt: m.createdAt.toISOString(),
   oldLink: !!renewedAt && m.createdAt < renewedAt,
 });
@@ -108,7 +110,7 @@ async function assertNotSpam(senderId: string, recipientId: string, text: string
  * so it still shows in the sender's sent list and blocking stays quiet. A photo is stored under the recipient,
  * so its address says nothing about who sent it.
  */
-export async function sendAnon(senderId: string, code: string, { text, entities, photo }: SendAnonInput) {
+export async function sendAnon(senderId: string, code: string, { text, entities, photo, gifId }: SendAnonInput) {
   const recipient = await askerByCode(code);
   await assertNotSpam(senderId, recipient.id, text);
   const blocked = await prisma.anonBlock.findUnique({
@@ -120,6 +122,7 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
     photoKey = `x/${recipient.id}/${randomUUID()}.${p.ext}`;
     await putObject(photoKey, p.bytes, p.mime);
   }
+  const gif = gifId ? await sharedGif(gifId) : null;
   const m = await prisma.anonMessage.create({
     data: {
       recipientId: recipient.id,
@@ -127,12 +130,15 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
       text,
       entities: storedEntities(entities),
       photoKey,
+      gifKey: gif?.key,
+      gifWidth: gif?.width,
+      gifHeight: gif?.height,
       recipientDeletedAt: blocked ? new Date() : null,
     },
   });
   if (blocked) return;
   broadcaster().to(rooms.user(recipient.id)).emit("ask:new", toAnonDTO(m));
-  void deliverAnonPush(recipient.id, maskSpoilers(text, entities)).catch(() => null);
+  void deliverAnonPush(recipient.id, maskSpoilers(text, entities), !!gif).catch(() => null);
 }
 
 export async function listAnon(userId: string, q: PageQuery) {
@@ -196,6 +202,7 @@ export async function listAnonForAdmin(q: AdminAnonQuery) {
     id: m.id,
     text: m.text,
     photoUrl: m.photoKey ? presignGet(m.photoKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
+    gifUrl: m.gifKey ? presignGet(m.gifKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
     sender: toUserRef(m.sender),
     recipient: toUserRef(m.recipient),
     createdAt: m.createdAt.toISOString(),

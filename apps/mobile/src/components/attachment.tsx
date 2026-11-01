@@ -262,14 +262,29 @@ export function VoicePlayer({
 
 const NOTE = 224;
 
-function GifLoop({ url }: { url: string }) {
+/** A GIF's MP4, muted on a loop; `onReady` fires once its first frame shows, or when it can't load. */
+export function GifLoop({ url, fit = "cover", onReady }: { url: string; fit?: "cover" | "contain"; onReady?: () => void }) {
   const player = useVideoPlayer(url, (p) => {
     p.loop = true;
     p.muted = true;
     p.audioMixingMode = "mixWithOthers";
     p.play();
   });
-  return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} surfaceType="textureView" />;
+  useEffect(() => {
+    if (!onReady) return;
+    const sub = player.addListener("statusChange", ({ status }) => status === "error" && onReady());
+    return () => sub.remove();
+  }, [player, onReady]);
+  return (
+    <VideoView
+      player={player}
+      style={StyleSheet.absoluteFill}
+      contentFit={fit}
+      nativeControls={false}
+      surfaceType="textureView"
+      onFirstFrameRender={onReady}
+    />
+  );
 }
 
 function VideoNotePlayer({ url, onDone }: { url: string; onDone: () => void }) {

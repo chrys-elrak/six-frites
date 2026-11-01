@@ -133,7 +133,7 @@ const stickerRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/gifs",
     {
-      config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+      config: { guest: true, rateLimit: { max: 60, timeWindow: "1 minute" } },
       schema: {
         tags: ["gifs"],
         summary: "Search GIFs or stickers, or list trending ones",

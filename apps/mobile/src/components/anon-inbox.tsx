@@ -29,6 +29,7 @@ import { receiveAnon } from "@/lib/realtime";
 import { logout, useSession } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
 import { brand, stone, useTheme } from "@/lib/theme";
+import { GifLoop } from "./attachment";
 import { Avatar } from "./avatar";
 import { DoodlePattern } from "./chat-background";
 import { Logo } from "./logo";
@@ -141,7 +142,7 @@ function Gradient({ id, colors, wash, doodles }: { id: string; colors: AskColors
  * 9:16 story (captured at 1080×1920) with the link to send more under it.
  */
 function CardArt({
-  m: { text, entities, photoUrl },
+  m: { text, entities, photoUrl, gif },
   link,
   style: { colors, transparent, doodles },
   onPhotoLoad,
@@ -171,6 +172,11 @@ function CardArt({
           onLoad={onPhotoLoad}
           onError={onPhotoLoad}
         />
+      )}
+      {gif && (
+        <View style={styles.storyPhoto}>
+          <GifLoop url={gif.url} onReady={onPhotoLoad} />
+        </View>
       )}
       {!!text && (
         <Text style={[styles.storyText, { color: t.text, fontSize: size, lineHeight: size * 1.25 }]}>
@@ -281,6 +287,11 @@ function SentRow({ m, onRemove }: { m: SentAnonDTO; onRemove: () => void }) {
           resizeMode="contain"
         />
       )}
+      {m.gif && (
+        <View style={{ width: "100%", height: 200, borderRadius: 12, overflow: "hidden", backgroundColor: t.surfaceAlt }}>
+          <GifLoop url={m.gif.url} fit="contain" />
+        </View>
+      )}
       {!!m.text && (
         <Text style={{ color: t.text, fontSize: 15 }} selectable>
           <AnonText m={m} />
@@ -335,7 +346,7 @@ function CardExport({
   const [uri, setUri] = useState<string | null>(null);
   const [loadedIn, setLoadedIn] = useState<boolean | null>(null);
   const shot = useRef<ComponentRef<typeof View>>(null);
-  const ready = !m.photoUrl || loadedIn === style.transparent;
+  const ready = !(m.photoUrl || m.gif) || loadedIn === style.transparent;
 
   useEffect(() => {
     if (!ready) return;
@@ -633,6 +644,11 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                 </Text>
               </View>
               {m.photoUrl && <Image source={{ uri: m.photoUrl }} style={[styles.itemPhoto, { backgroundColor: t.surfaceAlt }]} resizeMode="contain" />}
+              {m.gif && (
+                <View style={[styles.itemPhoto, { backgroundColor: t.surfaceAlt }]}>
+                  <GifLoop url={m.gif.url} fit="contain" />
+                </View>
+              )}
               {!!m.text && (
                 <Text style={[styles.itemText, { color: t.text, fontSize: cardFont(m.text), lineHeight: cardFont(m.text) * 1.3 }]} selectable>
                   <AnonText m={m} onLink={setOpening} />

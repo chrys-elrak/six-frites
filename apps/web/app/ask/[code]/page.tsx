@@ -6,6 +6,7 @@ import {
   ASK_COLORS,
   ASK_MAX,
   type EntityType,
+  type GifDTO,
   SendAnonInput,
   emojifyEnd,
   emojifyTyped,
@@ -19,6 +20,7 @@ import { Avatar } from "@/components/avatar";
 import { CameraDialog } from "@/components/camera-dialog";
 import { EmojiSuggestions, useEmojiSuggestions } from "@/components/emoji-suggestions";
 import { FormatBar, formatShortcut } from "@/components/format-bar";
+import { GifSearch } from "@/components/gif-picker";
 import { GoogleButton } from "@/components/google-button";
 import { LanguageSelect } from "@/components/language-select";
 import { LegalLinks } from "@/components/legal-page";
@@ -48,6 +50,8 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   });
   const [photo, setPhoto] = useState<{ url: string; file: File } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [gif, setGif] = useState<GifDTO | null>(null);
+  const [gifSearch, setGifSearch] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -60,7 +64,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     retry: false,
   });
 
-  const body = { ...parseMarkup(emojifyEnd(text)), photo: photo?.url };
+  const body = { ...parseMarkup(emojifyEnd(text)), photo: photo?.url, gifId: gif?.id };
   const valid = SendAnonInput.safeParse(body).success;
   const sendError: Record<string, string | undefined> = {
     RATE_LIMITED: tr.ask.slowDown,
@@ -73,6 +77,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     onSuccess: () => {
       setText("");
       setPhoto(null);
+      setGif(null);
     },
   });
 
@@ -101,6 +106,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     setPhotoError(null);
     try {
       setPhoto({ url: await toPhotoDataUrl(f, ANON_PHOTO_BYTES), file: f });
+      setGif(null);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
     }
@@ -192,6 +198,19 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                 </button>
               </div>
             )}
+            {gif && (
+              <div className="relative">
+                <img src={gif.previewUrl} alt={gif.title} className="max-h-72 w-full bg-stone-100 object-contain dark:bg-stone-950" />
+                <button
+                  type="button"
+                  onClick={() => setGif(null)}
+                  aria-label={tr.common.remove}
+                  className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-black/60 text-white"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            )}
             <textarea
               ref={box}
               value={text}
@@ -214,12 +233,21 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                 e.preventDefault();
                 wrap(format);
               }}
-              rows={photo ? 2 : 5}
+              rows={photo || gif ? 2 : 5}
               autoFocus
               placeholder={tr.ask.placeholder}
               aria-label={tr.ask.placeholder}
               className="block w-full resize-none bg-transparent px-4 pt-3 text-[17px] font-medium text-stone-900 outline-none placeholder:text-stone-400 dark:text-stone-100"
             />
+            {gifSearch && (
+              <GifSearch
+                onPick={(g) => {
+                  setGif(g);
+                  setPhoto(null);
+                  setGifSearch(false);
+                }}
+              />
+            )}
             <div className="flex items-center gap-2 px-2 pb-2">
               {emoji.items.length ? (
                 <EmojiSuggestions {...emoji} className="min-w-0" />
@@ -243,6 +271,18 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                     className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
                   >
                     <Camera className="size-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGifSearch((on) => !on)}
+                    aria-label={tr.ask.addGif}
+                    aria-pressed={gifSearch}
+                    title={tr.ask.addGif}
+                    className={`grid size-8 place-items-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                      gifSearch ? "text-brand" : "text-stone-500"
+                    }`}
+                  >
+                    <span className="rounded-[5px] border-2 border-current px-0.5 text-[10px] leading-3 font-bold">GIF</span>
                   </button>
                 </>
               )}

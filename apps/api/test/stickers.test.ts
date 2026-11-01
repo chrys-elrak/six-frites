@@ -3,7 +3,8 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { redisConnection } from "../src/lib/queue.js";
 import { processUpload } from "../src/media/process.js";
 import { ensureBuiltinStickers } from "../src/services/stickers.js";
-import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
+import { env } from "../src/env.js";
+import { type Auth, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, send, makeFriends } = chatHelpers(ctx);
@@ -162,6 +163,28 @@ describe("GIFs", () => {
       return realFetch(input, init);
     });
   }
+
+  it("lets guests find a GIF and send it anonymously from the same stored copy", async () => {
+    const spy = mockGiphy();
+    try {
+      const { host } = await makeFriends();
+      const { askCode } = await get(host, "/v1/me");
+      env.INVITE_ONLY = true;
+      const walkIn: Auth = (await loginAs(ctx.app, uniqueSub("walk-in"), "web", { guest: true })).json();
+      expect(walkIn.user).toMatchObject({ guest: true });
+      expect((await get(walkIn, "/v1/gifs?q=Cats")).items.map((g: { id: string }) => g.id)).toContain("cat1");
+      const ask = (body: object) => call(walkIn, "POST", `/v1/ask/${askCode}`, body);
+      expect((await ask({ gifId: "cat1", photo: "data:image/png;base64,AAAA" })).statusCode).toBe(400);
+      expect((await ask({ gifId: "cat1" })).statusCode).toBe(204);
+      const [m] = (await get(host, "/v1/ask")).items;
+      expect(m).toMatchObject({ text: "", photoUrl: null, gif: { width: 480, height: 360 } });
+      expect(m.gif.url).not.toContain("giphy");
+      expect(Buffer.from(await (await fetch(m.gif.url)).arrayBuffer()).equals(clip)).toBe(true);
+    } finally {
+      env.INVITE_ONLY = false;
+      spy.mockRestore();
+    }
+  });
 
   it("searches through the server and sends a stored copy", async () => {
     const spy = mockGiphy();

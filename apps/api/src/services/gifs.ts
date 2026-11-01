@@ -212,19 +212,24 @@ async function storeGif(gifId: string, key: string) {
   };
 }
 
+/** The shared copy of a GIPHY or KLIPY GIF, downloading it the first time anyone sends it. */
+export async function sharedGif(gifId: string) {
+  const key = `${SHARED_PREFIX}${gifId}.mp4`;
+  const meta =
+    (await prisma.upload.findFirst({
+      where: { kind: "gif", mainKey: key },
+      select: { name: true, size: true, width: true, height: true },
+    })) ?? (await storeGif(gifId, key));
+  return { key, ...meta };
+}
+
 // ponytail: shared GIF files are never deleted; garbage-collect gifs/ objects no upload points to if storage matters
 /**
  * Makes an upload for a GIPHY or KLIPY GIF, so the chat never depends on them to show it. Each GIF
  * is downloaded once and shared by every message that sends it; later sends cost no call to them.
  */
 export async function saveGif(ownerId: string, gifId: string) {
-  const mainKey = `${SHARED_PREFIX}${gifId}.mp4`;
-  const meta =
-    (await prisma.upload.findFirst({
-      where: { kind: "gif", mainKey },
-      select: { name: true, size: true, width: true, height: true },
-    })) ?? (await storeGif(gifId, mainKey));
-
+  const { key: mainKey, ...meta } = await sharedGif(gifId);
   const id = createId();
   return prisma.upload.create({
     data: {

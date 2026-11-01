@@ -34,8 +34,9 @@ interface SnapshotMessage {
   stickerId: string | null;
   createdAt: string;
   reported: boolean;
-  /** An anonymous message's photo, which isn't an upload. */
+  /** An anonymous message's photo or GIF, which aren't uploads. */
   photoKey?: string | null;
+  gifKey?: string | null;
 }
 
 const snapshotOf = (m: Message, reported: boolean): SnapshotMessage => ({
@@ -109,6 +110,7 @@ export async function createReport(reporterId: string, input: CreateReportInput)
         createdAt: m.createdAt.toISOString(),
         reported: true,
         photoKey: m.photoKey,
+        gifKey: m.gifKey,
       },
     ];
     targetId = m.senderId;
@@ -170,8 +172,10 @@ async function toReportDTOs(rows: ReportRow[]): Promise<ReportDTO[]> {
         attachment: upload
           ? toAttachmentDTO(upload, EPHEMERAL_LINK_SECONDS)
           : s.photoKey
-            ? anonPhoto(s.id, s.photoKey)
-            : null,
+            ? anonFile(s.id, s.photoKey, "image")
+            : s.gifKey
+              ? anonFile(s.id, s.gifKey, "gif")
+              : null,
         sticker: sticker ? toStickerDTO(sticker) : null,
         createdAt: s.createdAt,
         reported: s.reported,
@@ -183,12 +187,12 @@ async function toReportDTOs(rows: ReportRow[]): Promise<ReportDTO[]> {
   }));
 }
 
-const anonPhoto = (id: string, key: string): AttachmentDTO => ({
+const anonFile = (id: string, key: string, kind: "image" | "gif"): AttachmentDTO => ({
   id,
-  kind: "image",
+  kind,
   status: "ready",
-  name: "photo",
-  mime: "image/jpeg",
+  name: kind === "gif" ? "GIF" : "photo",
+  mime: kind === "gif" ? "video/mp4" : "image/jpeg",
   size: 0,
   url: presignGet(key, undefined, EPHEMERAL_LINK_SECONDS),
   thumbUrl: null,

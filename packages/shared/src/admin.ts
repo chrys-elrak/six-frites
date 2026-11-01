@@ -81,6 +81,7 @@ export const AdminAnonDTO = z.object({
   id: Id,
   text: z.string(),
   photoUrl: z.string().url().nullable().describe("Links last 5 minutes"),
+  gifUrl: z.string().url().nullable().describe("An MP4 to play like a GIF"),
   sender: AdminUserRef,
   recipient: AdminUserRef,
   createdAt: IsoDate,

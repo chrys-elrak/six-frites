@@ -36,6 +36,7 @@ describe("anonymous messages", () => {
       text: "Who's your crush? 👀",
       entities: [],
       photoUrl: null,
+      gif: null,
       createdAt: expect.any(String),
       oldLink: false,
     });
@@ -204,7 +205,7 @@ describe("anonymous messages", () => {
       const arrived = new Promise((resolve) => socket.once("ask:new", resolve));
       await ask(fan, owner.user.askCode, "live?");
       const m = await arrived;
-      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, createdAt: expect.any(String), oldLink: false });
+      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, gif: null, createdAt: expect.any(String), oldLink: false });
     } finally {
       socket.disconnect();
     }
