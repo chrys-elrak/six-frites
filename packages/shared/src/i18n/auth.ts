@@ -18,7 +18,9 @@ const en = {
     DEVELOPER_ERROR:
       "Google sign-in isn't set up for this build yet. Its package name and SHA-1 must be registered in Google Cloud.",
     PLAY_SERVICES_NOT_AVAILABLE: "Google Play services are missing or out of date.",
+    ACCOUNT_BANNED: "This account has been banned.",
   },
+  bannedUntil: (when: string) => `This account is banned until ${when}.`,
   goHome: "Go to Six Frites",
   inviteNotFound: "This invite doesn't exist",
   inviteNotFoundHint: "Check the link, or ask your friend for a new one.",
@@ -67,7 +69,9 @@ const fr: typeof en = {
     DEVELOPER_ERROR:
       "La connexion Google n'est pas encore configurée pour cette version de l'app. Son nom de package et son SHA-1 doivent être enregistrés dans Google Cloud.",
     PLAY_SERVICES_NOT_AVAILABLE: "Les services Google Play sont absents ou obsolètes.",
+    ACCOUNT_BANNED: "Ce compte a été banni.",
   },
+  bannedUntil: (when) => `Ce compte est banni jusqu'au ${when}.`,
   goHome: "Aller sur Six Frites",
   inviteNotFound: "Cette invitation n'existe pas",
   inviteNotFoundHint: "Vérifiez le lien ou demandez-en un nouveau à votre ami(e).",
@@ -114,7 +118,9 @@ const mg: typeof en = {
     DEVELOPER_ERROR:
       "Mbola tsy voalamina ho an'ity kinova ity ny fidirana amin'ny Google. Tsy maintsy soratana ao amin'ny Google Cloud ny anaran'ny package sy ny SHA-1-ny.",
     PLAY_SERVICES_NOT_AVAILABLE: "Tsy misy na efa tranainy ny Google Play services.",
+    ACCOUNT_BANNED: "Voarara ity kaonty ity.",
   },
+  bannedUntil: (when) => `Voarara mandra-pahatongan'ny ${when} ity kaonty ity.`,
   goHome: "Mankany amin'ny Six Frites",
   inviteNotFound: "Tsy misy io fanasana io",
   inviteNotFoundHint: "Hamarino ny rohy, na angataho rohy vaovao amin'ny namanao.",

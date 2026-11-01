@@ -1,7 +1,7 @@
 "use client";
 
 import { type Realtime, SixApiError, unwrap } from "@six/sdk";
-import { type ChatDTO, type MessageDTO, splitLinks } from "@six/shared";
+import { type ChatDTO, type MessageDTO, signInMessage, splitLinks } from "@six/shared";
 import { ArrowLeft, LogOut, SendHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ import { GoogleButton } from "@/components/google-button";
 import { Logo } from "@/components/logo";
 import { unlock } from "@/lib/app-lock";
 import { clockTime } from "@/lib/format";
-import { useT } from "@/lib/i18n";
+import { getLocale, useT } from "@/lib/i18n";
 import { deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
@@ -42,7 +42,7 @@ function SignIn() {
     } catch (err) {
       setError(
         err instanceof SixApiError
-          ? ((tr.auth.errors as Record<string, string | undefined>)[err.code] ?? err.message)
+          ? (signInMessage(getLocale(), err.code, err.details) ?? err.message)
           : tr.common.somethingWrong,
       );
     } finally {

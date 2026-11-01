@@ -1,4 +1,5 @@
 import { SixApiError } from "@six/sdk";
+import { signInMessage } from "@six/shared";
 import { useQuery } from "@tanstack/react-query";
 import { type Href, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -12,7 +13,7 @@ import { LegalLinks } from "@/components/settings-panel";
 import { Logo } from "@/components/logo";
 import { Notice } from "@/components/ui";
 import { unlock } from "@/lib/app-lock";
-import { useT } from "@/lib/i18n";
+import { getLocale, useT } from "@/lib/i18n";
 import { deviceName, GOOGLE_WEB_CLIENT_ID, googleIdToken } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
@@ -66,9 +67,9 @@ export default function Login() {
       if (next?.startsWith("/")) router.replace(next as Href);
     } catch (err) {
       const code = err instanceof SixApiError || isErrorWithCode(err) ? err.code : null;
-      const errors: Record<string, string | undefined> = tr.auth.errors;
+      const known = code && signInMessage(getLocale(), code, err instanceof SixApiError ? err.details : undefined);
       setError({
-        text: (code && errors[code]) ?? (err instanceof Error ? err.message : tr.common.somethingWrong),
+        text: known || (err instanceof Error ? err.message : tr.common.somethingWrong),
         queued: code === "ACCOUNT_QUEUED",
       });
     } finally {

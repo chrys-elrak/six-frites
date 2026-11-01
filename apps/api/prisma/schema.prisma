@@ -18,10 +18,14 @@ model User {
   askCode     String    @unique @default(dbgenerated("random_code()"))
   askName     String?
   askAvatarKey String?
+  /// When the user last replaced their anonymous link; what they got before came through an old one.
+  askRenewedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   bannedAt    DateTime?
   banReason   String?
+  /// When a timed ban is lifted on its own; null while `bannedAt` is set means it lasts until an admin lifts it.
+  bannedUntil DateTime?
   lastSeenAt  DateTime?
   deletedAt   DateTime?
   backupKeyId String?

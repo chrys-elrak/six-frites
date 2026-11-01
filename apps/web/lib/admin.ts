@@ -1,5 +1,5 @@
 import { unwrap } from "@six/sdk";
-import type { ReportReason } from "@six/shared";
+import { BAN_HOURS, type ReportReason } from "@six/shared";
 import { type QueryClient, useQuery } from "@tanstack/react-query";
 import { useSession } from "./session";
 import { six } from "./six";
@@ -23,6 +23,14 @@ export const REPORT_REASONS: { value: ReportReason; label: string }[] = [
 ];
 
 export const reasonLabel = (r: ReportReason) => REPORT_REASONS.find((x) => x.value === r)?.label ?? r;
+
+/** The ban lengths to pick from; no hours means until an admin lifts it. */
+export const BAN_LENGTHS: { hours?: number; label: string }[] = [
+  ...BAN_HOURS.map((hours) => ({ hours, label: hours < 48 ? `${hours} hour${hours === 1 ? "" : "s"}` : `${hours / 24} days` })),
+  { label: "For good" },
+];
+
+export const banEnd = (until: string) => new Date(until).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 
 /** Refetches every admin list and the stats after a moderation action. */
 export function refreshAdmin(qc: QueryClient) {

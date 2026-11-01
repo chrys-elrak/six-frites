@@ -123,18 +123,28 @@ export async function signOutEverywhere(userId: string) {
   await Promise.all(sessions.map((s) => revokeSession(s.id)));
 }
 
-/** Blocks someone from signing in and signs them out of every device. Their messages stay. */
-export async function banUser(adminId: string, userId: string, reason: string) {
+/** Blocks someone from signing in, for `hours` or until lifted, and signs them out of every device. Their messages stay. */
+export async function banUser(adminId: string, userId: string, reason: string, hours?: number) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new AppError("USER_NOT_FOUND");
   if (userId === adminId || isAdminEmail(user.email)) throw new AppError("FORBIDDEN", "Admins can't be banned");
-  await prisma.user.update({ where: { id: userId }, data: { bannedAt: new Date(), banReason: reason } });
+  const bannedUntil = hours ? new Date(Date.now() + hours * 3_600_000) : null;
+  await prisma.user.update({ where: { id: userId }, data: { bannedAt: new Date(), banReason: reason, bannedUntil } });
   await signOutEverywhere(userId);
   return getUser(userId);
 }
 
+/** Lifts the timed bans that have run out; the timers sweep calls it. */
+export async function liftExpiredBans() {
+  const { count } = await prisma.user.updateMany({
+    where: { bannedUntil: { lte: new Date() } },
+    data: { bannedAt: null, banReason: null, bannedUntil: null },
+  });
+  return count;
+}
+
 export async function unbanUser(userId: string) {
-  await prisma.user.update({ where: { id: userId }, data: { bannedAt: null, banReason: null } }).catch(() => {
+  await prisma.user.update({ where: { id: userId }, data: { bannedAt: null, banReason: null, bannedUntil: null } }).catch(() => {
     throw new AppError("USER_NOT_FOUND");
   });
   return getUser(userId);

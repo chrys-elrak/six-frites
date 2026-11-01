@@ -45,3 +45,11 @@ const build = (l: Locale) =>
   Object.fromEntries(Object.entries(namespaces).map(([k, ns]) => [k, ns[l]])) as Dict;
 
 export const dict: Record<Locale, Dict> = { en: build("en"), fr: build("fr"), mg: build("mg") };
+
+/** What to tell someone whose sign-in failed with `code`, or null if there's no text for it; a timed ban says until when. */
+export function signInMessage(locale: Locale, code: string, details?: unknown) {
+  const t = dict[locale].auth;
+  const until = code === "ACCOUNT_BANNED" && (details as { until?: string | null } | undefined)?.until;
+  if (until) return t.bannedUntil(new Date(until).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }));
+  return (t.errors as Record<string, string | undefined>)[code] ?? null;
+}

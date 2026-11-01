@@ -651,7 +651,10 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                 </View>
               )}
               <View style={[styles.row, { borderColor: t.border }]}>
-                <Text style={{ flex: 1, color: "#a8a29e", fontSize: 12 }}>{timeAgo(m.createdAt)}</Text>
+                <Text style={{ flex: 1, color: "#a8a29e", fontSize: 12 }}>
+                  {timeAgo(m.createdAt)}
+                  {m.oldLink && ` · ${tr.ask.oldLink}`}
+                </Text>
                 <Pressable
                   onPress={() => setExporting(m)}
                   style={({ pressed }) => [styles.share, { backgroundColor: t.inverse }, pressed && { opacity: 0.8 }]}

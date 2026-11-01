@@ -284,6 +284,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 };
                                 bytes: number;
                             }[];
@@ -343,6 +348,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                                 banReason: string | null;
                                 admin: boolean;
                                 /** Format: date-time */
@@ -374,6 +384,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 }[];
                             }[];
                             nextCursor: string | null;
@@ -423,6 +438,11 @@ export interface paths {
                             avatarUrl: string | null;
                             /** Format: date-time */
                             bannedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                             */
+                            bannedUntil: string | null;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -454,6 +474,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             }[];
                         };
                     };
@@ -479,7 +504,7 @@ export interface paths {
         put?: never;
         /**
          * Ban a user
-         * @description Signs them out of every device and blocks signing in again. Their messages stay.
+         * @description Signs them out of every device and blocks signing in again, for `hours` or until lifted. Their messages stay.
          */
         post: {
             parameters: {
@@ -494,6 +519,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         reason: string;
+                        /** @description How many hours the ban lasts; until an admin lifts it when left out */
+                        hours?: number;
                     };
                 };
             };
@@ -512,6 +539,11 @@ export interface paths {
                             avatarUrl: string | null;
                             /** Format: date-time */
                             bannedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                             */
+                            bannedUntil: string | null;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -543,6 +575,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             }[];
                         };
                     };
@@ -590,6 +627,11 @@ export interface paths {
                             avatarUrl: string | null;
                             /** Format: date-time */
                             bannedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                             */
+                            bannedUntil: string | null;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -621,6 +663,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             }[];
                         };
                     };
@@ -677,6 +724,11 @@ export interface paths {
                             avatarUrl: string | null;
                             /** Format: date-time */
                             bannedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                             */
+                            bannedUntil: string | null;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -708,6 +760,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             }[];
                         };
                     };
@@ -798,6 +855,11 @@ export interface paths {
                             avatarUrl: string | null;
                             /** Format: date-time */
                             bannedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                             */
+                            bannedUntil: string | null;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -829,6 +891,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             }[];
                         };
                     };
@@ -889,6 +956,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 };
                                 recipient: {
                                     id: string;
@@ -898,6 +970,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 };
                                 /** Format: date-time */
                                 createdAt: string;
@@ -966,6 +1043,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 };
                                 target: {
                                     id: string;
@@ -975,6 +1057,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 };
                                 /** @description Copied when the report was made, so later edits or deletes don't hide it */
                                 messages: {
@@ -1090,6 +1177,8 @@ export interface paths {
                         deleteMessage?: boolean;
                         /** @description Ban the reported person */
                         banUser?: boolean;
+                        /** @description How many hours the ban lasts; until an admin lifts it when left out */
+                        banHours?: number;
                         note?: string;
                     };
                 };
@@ -1116,6 +1205,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             };
                             target: {
                                 id: string;
@@ -1125,6 +1219,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             };
                             /** @description Copied when the report was made, so later edits or deletes don't hide it */
                             messages: {
@@ -1249,6 +1348,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1317,6 +1421,11 @@ export interface paths {
                                 avatarUrl: string | null;
                                 /** Format: date-time */
                                 bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
                             } | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1504,6 +1613,11 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** Format: date-time */
                                     bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
                                 };
                                 /** Format: date-time */
                                 createdAt: string;
@@ -12827,6 +12941,8 @@ export interface paths {
                                 photoUrl: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
+                                /** @description Came through a link the recipient has since replaced; always false on sent messages */
+                                oldLink: boolean;
                             }[];
                             nextCursor: string | null;
                         };
@@ -12887,6 +13003,8 @@ export interface paths {
                                 photoUrl: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
+                                /** @description Came through a link the recipient has since replaced; always false on sent messages */
+                                oldLink: boolean;
                                 /** @description Who you sent it to, as their link shows them */
                                 to: {
                                     displayName: string;

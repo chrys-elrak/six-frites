@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { AppError, type AuthResult, type DeviceInfo, type GoogleLoginInput } from "@six/shared";
 import { env } from "../env.js";
+import type { User } from "../generated/prisma/client.js";
 import { type Tx, withEvents } from "../lib/events.js";
 import { type GoogleVerifier, verifyGoogleIdToken } from "../lib/google.js";
 import { prisma } from "../lib/prisma.js";
@@ -27,6 +28,12 @@ async function issueAccess(userId: string, sessionId: string) {
   return { accessToken: access.token, accessTokenExpiresAt: access.expiresAt.toISOString() };
 }
 
+/** Refuses a banned user, saying until when; a timed ban that just ran out no longer counts, before the sweep lifts it. */
+function checkBan({ bannedAt, bannedUntil }: Pick<User, "bannedAt" | "bannedUntil">) {
+  if (!bannedAt || (bannedUntil && bannedUntil <= new Date())) return;
+  throw new AppError("ACCOUNT_BANNED", "This account has been banned", { until: bannedUntil?.toISOString() ?? null });
+}
+
 export async function loginWithGoogle(
   input: GoogleLoginInput,
   verify: GoogleVerifier = verifyGoogleIdToken,
@@ -35,7 +42,7 @@ export async function loginWithGoogle(
 
   const signedIn = await withEvents(async (tx, emit) => {
     const existing = await tx.user.findUnique({ where: { googleSub: identity.sub } });
-    if (existing?.bannedAt) throw new AppError("ACCOUNT_BANNED", "This account has been banned");
+    if (existing) checkBan(existing);
     const guest = existing
       ? existing.guest && !input.inviteCode
       : !input.inviteCode && env.INVITE_ONLY && !isAdminEmail(identity.email);
@@ -101,9 +108,11 @@ export async function refreshSession(refreshToken: string): Promise<IssuedAuth> 
   const session = await prisma.session.findUnique({ where: { id: sessionId }, include: { user: true } });
   if (!session) throw new AppError("INVALID_REFRESH_TOKEN");
   if (session.revokedAt || session.expiresAt < new Date()) throw new AppError("SESSION_REVOKED");
-  if (session.user.bannedAt) {
+  try {
+    checkBan(session.user);
+  } catch (err) {
     await revokeSession(session.id);
-    throw new AppError("ACCOUNT_BANNED", "This account has been banned");
+    throw err;
   }
 
   if (session.refreshTokenHash !== hash) {

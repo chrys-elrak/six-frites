@@ -69,6 +69,7 @@ export const AnonMessageDTO = z.object({
   entities: z.array(MessageEntity).describe("Bold, italic, strike, code and spoiler ranges of the text"),
   photoUrl: z.string().url().nullable(),
   createdAt: IsoDate,
+  oldLink: z.boolean().describe("Came through a link the recipient has since replaced; always false on sent messages"),
 });
 export type AnonMessageDTO = z.infer<typeof AnonMessageDTO>;
 

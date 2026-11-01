@@ -4,7 +4,7 @@ import { unwrap } from "@six/sdk";
 import type { AttachmentDTO, ReportDTO, ReportedMessageDTO, ResolveReportInput } from "@six/shared";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { adminKeys, reasonLabel, refreshAdmin } from "@/lib/admin";
+import { BAN_LENGTHS, adminKeys, reasonLabel, refreshAdmin } from "@/lib/admin";
 import { clockTime, timeAgo } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Avatar } from "../avatar";
@@ -151,10 +151,13 @@ function ReportCard({ report }: { report: ReportDTO }) {
           <button
             type="button"
             onClick={() =>
-              ask(`Ban ${report.target.displayName}${hasMessage ? " and delete the message" : ""}`, {
-                banUser: true,
-                deleteMessage: hasMessage,
-              })
+              setConfirm(
+                BAN_LENGTHS.map((l) => ({
+                  label: `Ban ${l.hours ? `for ${l.label}` : "for good"}${hasMessage ? " and delete the message" : ""}`,
+                  destructive: true,
+                  onSelect: () => void resolve({ banUser: true, banHours: l.hours, deleteMessage: hasMessage }),
+                })),
+              )
             }
             className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
           >

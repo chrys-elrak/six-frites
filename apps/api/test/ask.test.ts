@@ -12,7 +12,7 @@ const { get, call, signUp } = chatHelpers(ctx);
 const walkIn = async (name: string): Promise<Auth & { user: { askCode: string } }> =>
   (await loginAs(ctx.app, uniqueSub(name), "web", { guest: true })).json();
 const ask = (who: Auth, code: string, text: string) => call(who, "POST", `/v1/ask/${code}`, { text });
-const inbox = async (who: Auth) => (await get(who, "/v1/ask")).items as { id: string; text: string; photoUrl: string | null }[];
+const inbox = async (who: Auth) => (await get(who, "/v1/ask")).items as { id: string; text: string; photoUrl: string | null; oldLink: boolean }[];
 
 beforeAll(() => void (env.INVITE_ONLY = true));
 afterAll(() => void (env.INVITE_ONLY = false));
@@ -37,6 +37,7 @@ describe("anonymous messages", () => {
       entities: [],
       photoUrl: null,
       createdAt: expect.any(String),
+      oldLink: false,
     });
     expect(JSON.stringify(got)).not.toContain(fan.user.id);
     expect(await inbox(fan)).toEqual([]);
@@ -91,11 +92,16 @@ describe("anonymous messages", () => {
       avatarUrl: null,
     });
 
+    expect((await ask(fan, owner.user.askCode, "before the change")).statusCode).toBe(204);
     const renewed = (await call(owner, "POST", "/v1/ask/code")).json();
     expect(renewed.askCode).not.toBe(owner.user.askCode);
     expect((await ctx.app.inject({ url: `/v1/ask/${owner.user.askCode}` })).statusCode).toBe(404);
     expect((await ask(fan, owner.user.askCode, "still there?")).statusCode).toBe(404);
     expect((await ask(fan, renewed.askCode, "found you")).statusCode).toBe(204);
+    expect((await inbox(owner)).map((m) => [m.text, m.oldLink])).toEqual([
+      ["found you", false],
+      ["before the change", true],
+    ]);
   });
 
   it("turns away empty-looking text, links in names, repeats and floods", async () => {
@@ -198,7 +204,7 @@ describe("anonymous messages", () => {
       const arrived = new Promise((resolve) => socket.once("ask:new", resolve));
       await ask(fan, owner.user.askCode, "live?");
       const m = await arrived;
-      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, createdAt: expect.any(String) });
+      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, createdAt: expect.any(String), oldLink: false });
     } finally {
       socket.disconnect();
     }

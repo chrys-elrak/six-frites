@@ -120,14 +120,14 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags,
         summary: "Ban a user",
-        description: "Signs them out of every device and blocks signing in again. Their messages stay.",
+        description: "Signs them out of every device and blocks signing in again, for `hours` or until lifted. Their messages stay.",
         security,
         params: Params,
         body: BanUserInput,
         response: { 200: AdminUserDTO },
       },
     },
-    (req) => banUser(req.auth.userId, req.params.id, req.body.reason),
+    (req) => banUser(req.auth.userId, req.params.id, req.body.reason, req.body.hours),
   );
 
   app.post(

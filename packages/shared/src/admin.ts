@@ -21,12 +21,24 @@ export const CreateReportInput = z
   );
 export type CreateReportInput = z.infer<typeof CreateReportInput>;
 
+/** The ban lengths admins pick from, in hours. */
+export const BAN_HOURS = [1, 6, 24, 24 * 7, 24 * 30] as const;
+
+const BanHours = z
+  .number()
+  .int()
+  .min(1)
+  .max(24 * 365)
+  .optional()
+  .describe("How many hours the ban lasts; until an admin lifts it when left out");
+
 export const AdminUserRef = z.object({
   id: Id,
   displayName: z.string(),
   email: z.string(),
   avatarUrl: z.string().url().nullable(),
   bannedAt: IsoDate.nullable(),
+  bannedUntil: IsoDate.nullable().describe("When the ban is lifted on its own; null when it lasts until an admin lifts it"),
 });
 export type AdminUserRef = z.infer<typeof AdminUserRef>;
 
@@ -107,6 +119,7 @@ export type AdminReportQuery = z.infer<typeof AdminReportQuery>;
 export const ResolveReportInput = z.object({
   deleteMessage: z.boolean().optional().describe("Delete the reported message for everyone"),
   banUser: z.boolean().optional().describe("Ban the reported person"),
+  banHours: BanHours,
   note: z.string().trim().max(500).optional(),
 });
 export type ResolveReportInput = z.infer<typeof ResolveReportInput>;
@@ -126,7 +139,7 @@ export type InviteLimitInput = z.infer<typeof InviteLimitInput>;
 export const SetAdsInput = z.object({ userIds: z.array(Id).min(1).max(100), ads: z.boolean() });
 export type SetAdsInput = z.infer<typeof SetAdsInput>;
 
-export const BanUserInput = z.object({ reason: z.string().trim().min(1).max(500) });
+export const BanUserInput = z.object({ reason: z.string().trim().min(1).max(500), hours: BanHours });
 export type BanUserInput = z.infer<typeof BanUserInput>;
 
 export const AdminStickerPackDTO = z.object({

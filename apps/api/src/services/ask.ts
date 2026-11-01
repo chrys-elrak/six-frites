@@ -22,12 +22,13 @@ import { deliverAnonPush } from "./push.js";
 import { toUserRef } from "./reports.js";
 import { toUserDTO } from "./users.js";
 
-const toAnonDTO = (m: AnonMessage): AnonMessageDTO => ({
+const toAnonDTO = (m: AnonMessage, renewedAt?: Date | null): AnonMessageDTO => ({
   id: m.id,
   text: m.text,
   entities: entitiesOf(m),
   photoUrl: m.photoKey ? presignGet(m.photoKey) : null,
   createdAt: m.createdAt.toISOString(),
+  oldLink: !!renewedAt && m.createdAt < renewedAt,
 });
 
 async function askerByCode(code: string) {
@@ -66,7 +67,7 @@ export async function updateAskProfile(userId: string, input: UpdateAskProfileIn
 export async function resetAskCode(userId: string) {
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { askCode: generateCode() } }));
+      return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { askCode: generateCode(), askRenewedAt: new Date() } }));
     } catch (err) {
       if (!isUniqueViolation(err)) throw err;
     }
@@ -135,8 +136,11 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
 }
 
 export async function listAnon(userId: string, q: PageQuery) {
-  const rows = await prisma.anonMessage.findMany({ where: { recipientId: userId, recipientDeletedAt: null }, ...pageArgs(q) });
-  return toPage(rows, q, toAnonDTO);
+  const [rows, { askRenewedAt }] = await Promise.all([
+    prisma.anonMessage.findMany({ where: { recipientId: userId, recipientDeletedAt: null }, ...pageArgs(q) }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { askRenewedAt: true } }),
+  ]);
+  return toPage(rows, q, (m) => toAnonDTO(m, askRenewedAt));
 }
 
 /** What you sent, newest first, with whom you sent it to. Nothing says whether they deleted it or blocked you. */

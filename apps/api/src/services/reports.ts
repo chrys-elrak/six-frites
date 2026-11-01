@@ -56,6 +56,7 @@ export const toUserRef = (u: User): AdminUserRef => ({
   email: u.email,
   avatarUrl: avatarOf(u),
   bannedAt: u.bannedAt?.toISOString() ?? null,
+  bannedUntil: u.bannedUntil?.toISOString() ?? null,
 });
 
 /**
@@ -227,7 +228,7 @@ export async function resolveReport(adminId: string, reportId: string, input: Re
   const kept = photoKey && (await prisma.anonMessage.count({ where: { id: report.messageId! } }));
   if (photoKey && !kept) await deleteObjects([photoKey]).catch(() => null);
   if (input.banUser) {
-    await banUser(adminId, report.targetId, input.note || `Reported for ${report.reason}`);
+    await banUser(adminId, report.targetId, input.note || `Reported for ${report.reason}`, input.banHours);
     done.push("User banned");
   }
 

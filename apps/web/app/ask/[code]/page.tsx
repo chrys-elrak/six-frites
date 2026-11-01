@@ -9,9 +9,10 @@ import {
   SendAnonInput,
   emojifyEnd,
   emojifyTyped,
+  signInMessage,
 } from "@six/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Camera, ImagePlus, SearchX, X } from "lucide-react";
+import { Camera, ImagePlus, Pencil, SearchX, X } from "lucide-react";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
 import { Avatar } from "@/components/avatar";
@@ -22,10 +23,11 @@ import { GoogleButton } from "@/components/google-button";
 import { LanguageSelect } from "@/components/language-select";
 import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
+import { PhotoEditor } from "@/components/photo-editor";
 import { PrimaryButton } from "@/components/ui";
 import { unlock } from "@/lib/app-lock";
 import { isTouch } from "@/lib/camera";
-import { useT } from "@/lib/i18n";
+import { getLocale, useT } from "@/lib/i18n";
 import { toPhotoDataUrl } from "@/lib/image";
 import { MARKERS, parseMarkup } from "@/lib/markup";
 import { deviceName, useSession } from "@/lib/session";
@@ -44,7 +46,8 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     setCaret(at);
     requestAnimationFrame(() => box.current?.setSelectionRange(at, at));
   });
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<{ url: string; file: File } | null>(null);
+  const [editing, setEditing] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -57,7 +60,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     retry: false,
   });
 
-  const body = { ...parseMarkup(emojifyEnd(text)), photo: photo ?? undefined };
+  const body = { ...parseMarkup(emojifyEnd(text)), photo: photo?.url };
   const valid = SendAnonInput.safeParse(body).success;
   const sendError: Record<string, string | undefined> = {
     RATE_LIMITED: tr.ask.slowDown,
@@ -97,7 +100,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     if (!f) return;
     setPhotoError(null);
     try {
-      setPhoto(await toPhotoDataUrl(f, ANON_PHOTO_BYTES));
+      setPhoto({ url: await toPhotoDataUrl(f, ANON_PHOTO_BYTES), file: f });
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
     }
@@ -111,7 +114,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     } catch (err) {
       setSignInError(
         err instanceof SixApiError
-          ? ((tr.auth.errors as Record<string, string | undefined>)[err.code] ?? err.message)
+          ? (signInMessage(getLocale(), err.code, err.details) ?? err.message)
           : tr.common.somethingWrong,
       );
     }
@@ -169,7 +172,16 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
             </p>
             {photo && (
               <div className="relative">
-                <img src={photo} alt="" className="max-h-72 w-full bg-stone-100 object-contain dark:bg-stone-950" />
+                <img src={photo.url} alt="" className="max-h-72 w-full bg-stone-100 object-contain dark:bg-stone-950" />
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  title={tr.composer.editPhoto}
+                  className="absolute top-2 left-2 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-sm font-medium text-white"
+                >
+                  <Pencil className="size-4" />
+                  {tr.composer.edit}
+                </button>
                 <button
                   type="button"
                   onClick={() => setPhoto(null)}
@@ -288,6 +300,16 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
         {tr.ask.getYours}
       </Link>
       <LegalLinks />
+      {editing && photo && (
+        <PhotoEditor
+          file={photo.file}
+          onCancel={() => setEditing(false)}
+          onDone={(f) => {
+            setEditing(false);
+            void pick(f);
+          }}
+        />
+      )}
       {camera && (
         <CameraDialog
           onClose={() => setCamera(false)}

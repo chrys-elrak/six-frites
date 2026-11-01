@@ -5,7 +5,7 @@ import type { AdminUserDTO } from "@six/shared";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { adminKeys, refreshAdmin } from "@/lib/admin";
+import { BAN_LENGTHS, adminKeys, banEnd, refreshAdmin } from "@/lib/admin";
 import { formatBytes, timeAgo } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Avatar } from "../avatar";
@@ -81,6 +81,7 @@ function LimitDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => voi
 function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void }) {
   const qc = useQueryClient();
   const [reason, setReason] = useState("");
+  const [hours, setHours] = useState<number | undefined>(24);
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -92,7 +93,7 @@ function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void 
             unwrap(
               await six.api.POST("/v1/admin/users/{id}/ban", {
                 params: { path: { id: user.id } },
-                body: { reason: reason.trim() },
+                body: { reason: reason.trim(), hours },
               }),
             );
             refreshAdmin(qc);
@@ -105,8 +106,22 @@ function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void 
       >
         <h2 className="font-semibold">Ban {user.displayName}?</h2>
         <p className="text-sm text-stone-500">
-          They are signed out everywhere and can't sign in again until you lift the ban. Their messages stay.
+          They are signed out everywhere and can't sign in again until the ban ends or you lift it. Their messages stay.
         </p>
+        <label className="flex items-center gap-3 text-sm">
+          <span className="font-medium">How long</span>
+          <select
+            value={hours ?? ""}
+            onChange={(e) => setHours(e.target.value ? Number(e.target.value) : undefined)}
+            className="flex-1 rounded-xl bg-stone-100 px-3 py-2.5 dark:bg-stone-800"
+          >
+            {BAN_LENGTHS.map((l) => (
+              <option key={l.label} value={l.hours ?? ""}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -169,7 +184,11 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
         <p className="truncate text-sm font-medium">
           {u.displayName}
           {u.admin && <span className="ml-1.5 text-xs text-brand">Admin</span>}
-          {u.bannedAt && <span className="ml-1.5 text-xs text-red-600 dark:text-red-400">Banned</span>}
+          {u.bannedAt && (
+            <span className="ml-1.5 text-xs text-red-600 dark:text-red-400">
+              {u.bannedUntil ? `Banned until ${banEnd(u.bannedUntil)}` : "Banned"}
+            </span>
+          )}
           {u.queued && <span className="ml-1.5 text-xs text-amber-600 dark:text-amber-400">Waiting</span>}
           {!u.ads && <span className="ml-1.5 text-xs text-emerald-600 dark:text-emerald-400">No ads</span>}
         </p>

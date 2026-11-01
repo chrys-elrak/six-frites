@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { headObject, putObject } from "../src/lib/storage.js";
+import { liftExpiredBans } from "../src/services/admin.js";
 import { pairAlias } from "../src/services/users.js";
 import { type Auth, chatHelpers, loginAs, prisma, useApp } from "./helpers.js";
 
@@ -108,6 +109,22 @@ describe("user moderation", () => {
     expect(
       (await call(boss, "POST", `/v1/admin/users/${boss.user.id}/ban`, { reason: "oops" })).json().error.code,
     ).toBe("FORBIDDEN");
+  });
+
+  it("lifts a timed ban once it runs out", async () => {
+    const boss = await admin();
+    const target = await signUp("Trent");
+    const banned = (await call(boss, "POST", `/v1/admin/users/${target.user.id}/ban`, { reason: "cool off", hours: 6 })).json();
+    expect(Date.parse(banned.bannedUntil) - Date.now()).toBeGreaterThan(5.9 * 3_600_000);
+
+    const { googleSub } = await prisma.user.findUniqueOrThrow({ where: { id: target.user.id } });
+    const refused = (await loginAs(ctx.app, googleSub)).json().error;
+    expect(refused).toMatchObject({ code: "ACCOUNT_BANNED", details: { until: banned.bannedUntil } });
+
+    await prisma.user.update({ where: { id: target.user.id }, data: { bannedUntil: new Date(Date.now() - 1000) } });
+    expect(await liftExpiredBans()).toBe(1);
+    expect(await prisma.user.findUniqueOrThrow({ where: { id: target.user.id } })).toMatchObject({ bannedAt: null, banReason: null });
+    expect((await loginAs(ctx.app, googleSub)).statusCode).toBe(200);
   });
 });
 

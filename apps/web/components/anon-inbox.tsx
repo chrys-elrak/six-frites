@@ -581,7 +581,10 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                       </p>
                     )}
                     <div className="flex items-center gap-2 border-t border-stone-100 py-2.5 dark:border-white/10 pr-2.5 pl-5">
-                      <span className="flex-1 text-xs text-stone-400">{timeAgo(m.createdAt)}</span>
+                      <span className="flex-1 text-xs text-stone-400">
+                        {timeAgo(m.createdAt)}
+                        {m.oldLink && ` · ${tr.ask.oldLink}`}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setExporting(m)}

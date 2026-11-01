@@ -1,6 +1,7 @@
 "use client";
 
 import { SixApiError } from "@six/sdk";
+import { signInMessage } from "@six/shared";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { Logo } from "@/components/logo";
 import { unlock } from "@/lib/app-lock";
 import { deviceName, useSession } from "@/lib/session";
 import { AndroidDownload } from "@/components/android-download";
-import { useT } from "@/lib/i18n";
+import { getLocale, useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 
 function LoginForm() {
@@ -50,7 +51,7 @@ function LoginForm() {
       setError({
         text:
           err instanceof SixApiError
-            ? ((tr.auth.errors as Record<string, string | undefined>)[err.code] ?? err.message)
+            ? (signInMessage(getLocale(), err.code, err.details) ?? err.message)
             : tr.common.somethingWrong,
         queued: err instanceof SixApiError && err.code === "ACCOUNT_QUEUED",
       });
