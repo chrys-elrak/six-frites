@@ -2,7 +2,7 @@
 
 import { type Realtime, SixApiError, unwrap } from "@six/sdk";
 import { type ChatDTO, type MessageDTO, signInMessage, splitLinks } from "@six/shared";
-import { ArrowLeft, LogOut, SendHorizontal } from "lucide-react";
+import { ArrowLeft, ImagePlus, LogOut, SendHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -75,9 +75,24 @@ function SignIn() {
 
 const inviteCode = (text: string) => text.match(/\/invite\/([A-Za-z0-9]+)/)?.[1];
 
+const GUEST_PHOTO_BYTES = 100 * 1024 * 1024;
+
+function Photo({ m }: { m: MessageDTO }) {
+  const tr = useT();
+  const a = m.attachment!;
+  if (!a.url) {
+    return <p className="grid h-32 w-48 place-items-center rounded-xl bg-black/10 text-sm opacity-70">{tr.summary.kinds.image}…</p>;
+  }
+  return (
+    <a href={a.url} target="_blank" rel="noreferrer" className="block">
+      <img src={a.thumbUrl ?? a.url} alt={tr.summary.kinds.image} className="max-h-72 rounded-xl" />
+    </a>
+  );
+}
+
 function Bubble({ m, mine }: { m: MessageDTO; mine: boolean }) {
   const tr = useT();
-  const code = inviteCode(m.text!);
+  const code = m.text && inviteCode(m.text);
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
       <div
@@ -85,8 +100,9 @@ function Bubble({ m, mine }: { m: MessageDTO; mine: boolean }) {
           mine ? "bg-brand text-brand-ink" : "bg-white ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"
         }`}
       >
+        {m.attachment?.kind === "image" && <Photo m={m} />}
         <p>
-          {splitLinks(m.text!).map((part, i) =>
+          {splitLinks(m.text ?? "").map((part, i) =>
             part.href ? (
               <a key={i} href={part.href} className="underline underline-offset-2">
                 {part.text}
@@ -116,6 +132,8 @@ function SupportChat({ meId }: { meId: string }) {
   const [messages, setMessages] = useState<MessageDTO[]>([]);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const file = useRef<HTMLInputElement>(null);
   const realtime = useRef<Realtime | null>(null);
 
   const upsert = (incoming: MessageDTO[]) =>
@@ -150,12 +168,29 @@ function SupportChat({ meId }: { meId: string }) {
     };
   }, [tr]);
 
-  const shown = messages.filter((m) => m.chatId === chat?.id && m.type === "text" && m.text && !m.deletedAt);
+  const shown = messages.filter(
+    (m) => m.chatId === chat?.id && ((m.type === "text" && m.text) || m.type === "image") && !m.deletedAt,
+  );
   const newest = shown[0];
 
   useEffect(() => {
     if (chat && newest && newest.senderId !== meId) void realtime.current?.markRead(chat.id).catch(() => null);
   }, [chat, newest, meId]);
+
+  async function sendPhoto(file: File | undefined) {
+    if (!file || !chat || !realtime.current) return;
+    setError(null);
+    if (file.size > GUEST_PHOTO_BYTES) return setError(tr.support.photoTooBig);
+    setUploading(true);
+    try {
+      const upload = await six.upload(file, { kind: "image", name: file.name || "photo.jpg", mime: file.type || "image/jpeg" });
+      upsert([await realtime.current.sendMessage(chat.id, { clientId: crypto.randomUUID(), attachmentId: upload.id })]);
+    } catch {
+      setError(tr.common.somethingWrongRetry);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -205,6 +240,26 @@ function SupportChat({ meId }: { meId: string }) {
         onSubmit={send}
         className="flex items-end gap-1.5 border-t border-black/5 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] dark:border-white/10"
       >
+        <button
+          type="button"
+          onClick={() => file.current?.click()}
+          disabled={!chat || uploading}
+          aria-label={tr.ask.addPhoto}
+          title={tr.ask.addPhoto}
+          className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 disabled:opacity-40 dark:hover:bg-stone-800"
+        >
+          <ImagePlus className={`size-5 ${uploading ? "animate-pulse" : ""}`} />
+        </button>
+        <input
+          ref={file}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            void sendPhoto(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}

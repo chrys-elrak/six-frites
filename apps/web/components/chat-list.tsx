@@ -1,6 +1,15 @@
 "use client";
 
-import { type ChatDTO, isMuted, maskSpoilers, serviceText, shownType } from "@six/shared";
+import {
+  CHAT_FILTERS,
+  type ChatDTO,
+  type ChatFilter,
+  inChatFilter,
+  isMuted,
+  maskSpoilers,
+  serviceText,
+  shownType,
+} from "@six/shared";
 import {
   Archive,
   Ban,
@@ -13,11 +22,13 @@ import {
   MoreHorizontal,
   Pin,
   Search,
+  LifeBuoy,
   Share2,
   UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { six } from "@/lib/six";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
 import { useChats } from "@/lib/chats";
@@ -152,7 +163,11 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
         </span>
         <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
           <div className="flex items-center gap-1.5">
-            <p className="min-w-0 flex-1 truncate font-semibold">{chat.title}</p>
+            <p className="min-w-0 truncate font-semibold">{chat.title}</p>
+            {chat.supportDesk && (
+              <span className="shrink-0 rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide text-brand uppercase">{tr.support.title}</span>
+            )}
+            <span className="flex-1" />
             {isMuted(chat) && <BellOff aria-label={tr.common.muted} className="size-3.5 shrink-0 text-stone-400" />}
             <span className={`shrink-0 text-xs ${unread ? "font-semibold text-brand" : "text-stone-500"}`}>
               {listTime(chat.lastActivityAt)}
@@ -215,6 +230,10 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
 export function ChatList({ archived = false, rail = false }: { archived?: boolean; rail?: boolean }) {
   const tr = useT();
   const router = useRouter();
+  const openSupport = async () => {
+    const res = await six.api.POST("/v1/support");
+    if (res.data) router.push(`/chats/${res.data.id}`);
+  };
   const meId = useSession((s) => s.user!.id);
   const hasAppLock = useSession((s) => s.user!.hasAppLock);
   const archiveOpen = useAppLock((s) => s.archiveOpen);
@@ -233,6 +252,18 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
   const needle = rail ? "" : query.trim().toLowerCase();
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
+  const [picked, setPicked] = useState<ChatFilter>("all");
+  const filtering = !archived && !rail;
+  const desk = filtering && visible.some((c) => c.supportDesk);
+  const filter = !filtering || (picked === "support" && !desk) ? "all" : picked;
+  const shown = visible.filter((c) => inChatFilter(c, filter));
+  const sections =
+    desk && filter === "all"
+      ? [
+          { title: tr.support.title, items: shown.filter((c) => c.supportDesk) },
+          { title: tr.common.chats, items: shown.filter((c) => !c.supportDesk) },
+        ].filter((s) => s.items.length)
+      : [{ title: null, items: shown }];
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
   const showArchive = !archived && !rail && !needle && archivedCount > 0;
@@ -277,6 +308,14 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
         {!archived && !rail && (
           <>
             <button
+              onClick={() => void openSupport()}
+              aria-label={tr.support.contact}
+              title={tr.support.contact}
+              className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+            >
+              <LifeBuoy className="size-5" />
+            </button>
+            <button
               onClick={() => setDialog("invite")}
               aria-label={tr.contacts.inviteFriend}
               title={tr.contacts.inviteFriend}
@@ -306,6 +345,26 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
             className="min-w-0 flex-1 bg-transparent text-[16px] text-stone-900 outline-none placeholder:text-stone-500 md:text-sm dark:text-stone-100"
           />
         </label>
+        {filtering && (
+          <div role="tablist" className="flex w-full gap-1.5 overflow-x-auto">
+            {CHAT_FILTERS.filter((f) => f !== "support" || desk).map((f) => (
+              <button
+                key={f}
+                type="button"
+                role="tab"
+                aria-selected={filter === f}
+                onClick={() => setPicked(f)}
+                className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium transition ${
+                  filter === f
+                    ? "bg-brand text-brand-ink"
+                    : "bg-black/5 text-stone-600 hover:bg-black/10 dark:bg-white/10 dark:text-stone-300 dark:hover:bg-white/15"
+                }`}
+              >
+                {f === "support" ? tr.support.title : tr.chats.filters[f]}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
@@ -358,8 +417,18 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
               )}
             </div>
           )}
-          {visible.map((c) => (
-            <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} rail={rail} />
+          {chats.isSuccess && visible.length > 0 && shown.length === 0 && (
+            <p className="p-8 text-center text-sm text-stone-500">{tr.chats.filterEmpty}</p>
+          )}
+          {sections.map((s) => (
+            <section key={s.title ?? "all"}>
+              {s.title && (
+                <h2 className="px-4 pt-3 pb-1 text-xs font-semibold tracking-wide text-stone-500 uppercase">{s.title}</h2>
+              )}
+              {s.items.map((c) => (
+                <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} rail={rail} />
+              ))}
+            </section>
           ))}
         </div>
       </div>

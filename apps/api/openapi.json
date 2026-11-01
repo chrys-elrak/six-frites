@@ -7354,7 +7354,15 @@
                     },
                     "support": {
                       "type": "boolean",
-                      "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
+                      "description": "A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call"
+                    },
+                    "supportDesk": {
+                      "type": "boolean",
+                      "description": "You answer this chat for support; the person you're helping sees you as Six Frites"
+                    },
+                    "withSupport": {
+                      "type": "boolean",
+                      "description": "Your chat with Six Frites support: no calls, no presence, and text and photos only"
                     },
                     "lastActivityAt": {
                       "type": "string",
@@ -7390,6 +7398,8 @@
                     "peerDeleted",
                     "encrypted",
                     "support",
+                    "supportDesk",
+                    "withSupport",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -8993,7 +9003,15 @@
                           },
                           "support": {
                             "type": "boolean",
-                            "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
+                            "description": "A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call"
+                          },
+                          "supportDesk": {
+                            "type": "boolean",
+                            "description": "You answer this chat for support; the person you're helping sees you as Six Frites"
+                          },
+                          "withSupport": {
+                            "type": "boolean",
+                            "description": "Your chat with Six Frites support: no calls, no presence, and text and photos only"
                           },
                           "lastActivityAt": {
                             "type": "string",
@@ -9029,6 +9047,8 @@
                           "peerDeleted",
                           "encrypted",
                           "support",
+                          "supportDesk",
+                          "withSupport",
                           "lastActivityAt",
                           "createdAt"
                         ],
@@ -10616,7 +10636,15 @@
                     },
                     "support": {
                       "type": "boolean",
-                      "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
+                      "description": "A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call"
+                    },
+                    "supportDesk": {
+                      "type": "boolean",
+                      "description": "You answer this chat for support; the person you're helping sees you as Six Frites"
+                    },
+                    "withSupport": {
+                      "type": "boolean",
+                      "description": "Your chat with Six Frites support: no calls, no presence, and text and photos only"
                     },
                     "lastActivityAt": {
                       "type": "string",
@@ -10652,6 +10680,8 @@
                     "peerDeleted",
                     "encrypted",
                     "support",
+                    "supportDesk",
+                    "withSupport",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -12304,7 +12334,15 @@
                     },
                     "support": {
                       "type": "boolean",
-                      "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
+                      "description": "A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call"
+                    },
+                    "supportDesk": {
+                      "type": "boolean",
+                      "description": "You answer this chat for support; the person you're helping sees you as Six Frites"
+                    },
+                    "withSupport": {
+                      "type": "boolean",
+                      "description": "Your chat with Six Frites support: no calls, no presence, and text and photos only"
                     },
                     "lastActivityAt": {
                       "type": "string",
@@ -12340,6 +12378,8 @@
                     "peerDeleted",
                     "encrypted",
                     "support",
+                    "supportDesk",
+                    "withSupport",
                     "lastActivityAt",
                     "createdAt"
                   ],
@@ -36818,7 +36858,15 @@
                                   },
                                   "support": {
                                     "type": "boolean",
-                                    "description": "A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"
+                                    "description": "A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call"
+                                  },
+                                  "supportDesk": {
+                                    "type": "boolean",
+                                    "description": "You answer this chat for support; the person you're helping sees you as Six Frites"
+                                  },
+                                  "withSupport": {
+                                    "type": "boolean",
+                                    "description": "Your chat with Six Frites support: no calls, no presence, and text and photos only"
                                   },
                                   "lastActivityAt": {
                                     "type": "string",
@@ -36854,6 +36902,8 @@
                                   "peerDeleted",
                                   "encrypted",
                                   "support",
+                                  "supportDesk",
+                                  "withSupport",
                                   "lastActivityAt",
                                   "createdAt"
                                 ],
@@ -39895,7 +39945,7 @@
     },
     "/v1/uploads/presign": {
       "post": {
-        "summary": "Start an upload (max 1 GB; encrypted files max 100 MB)",
+        "summary": "Start an upload (max 1 GB; encrypted files max 100 MB; guests: photos up to 100 MB)",
         "tags": [
           "uploads"
         ],

@@ -4,8 +4,9 @@ import { prisma } from "../lib/prisma.js";
 import { getChat } from "./chats.js";
 
 /**
- * Your chat with support, answered by the first admin in ADMIN_EMAILS who has an account. A new one stays out
- * of the admin's chat list until you write, so signing in to the support page alone doesn't fill it up.
+ * Your chat with support, answered by the first admin in ADMIN_EMAILS who has an account. It's a chat of its own,
+ * apart from any personal chat with that admin, and shows them to you as Six Frites. A new one stays out of the
+ * admin's chat list until you write, so signing in to the support page alone doesn't fill it up.
  */
 export async function openSupportChat(userId: string) {
   const admins = await prisma.user.findMany({
@@ -19,10 +20,10 @@ export async function openSupportChat(userId: string) {
   const agent = env.ADMIN_EMAILS.map((e) => admins.find((a) => a.email.toLowerCase() === e)).find(Boolean);
   if (!agent) throw new AppError("NOT_FOUND", "Support isn't available right now");
   if (agent.id === userId) throw new AppError("VALIDATION_FAILED", "You are support");
-  const directKey = [agent.id, userId].sort().join(":");
+  const directKey = `support:${userId}`;
   const chat = await prisma.chat.upsert({
     where: { directKey },
-    create: { directKey, members: { create: [{ userId: agent.id, hidden: true }, { userId }] } },
+    create: { directKey, supportUserId: userId, members: { create: [{ userId: agent.id, hidden: true }, { userId }] } },
     update: {},
   });
   return getChat(userId, chat.id);

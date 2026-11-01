@@ -262,12 +262,15 @@ export function checkEncryption(
   }
 }
 
-const SUPPORT_FIELDS = new Set(["clientId", "text", "entities", "replyToId", "silent", "sentAt"]);
+const SUPPORT_FIELDS = new Set(["clientId", "text", "entities", "replyToId", "silent", "sentAt", "attachmentId"]);
 
-/** A chat with a guest from the support page takes text and replies only, which is all that page shows. */
-function checkSupport(content: SendMessageInput) {
+/** A chat with a guest from the support page takes text, photos (screenshots of a bug, say) and replies: what that page shows. */
+function checkSupport(content: SendMessageInput, upload: { kind: string } | null) {
   const extra = Object.entries(content).some(([k, v]) => v !== undefined && v !== false && !SUPPORT_FIELDS.has(k));
-  if (content.text === undefined || extra) throw new AppError("VALIDATION_FAILED", "Support chats only take text");
+  const photo = upload?.kind === "image";
+  if ((content.text === undefined && !photo) || (upload && !photo) || extra) {
+    throw new AppError("VALIDATION_FAILED", "Support chats only take text and photos");
+  }
 }
 
 /** Keeps the envelopes of a scheduled message whose devices are still signed in. */
@@ -311,7 +314,7 @@ export async function createMessage(
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
   if (content) checkEncryption(chat, content, upload);
-  if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content);
+  if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content, upload);
 
   const encrypted = content?.encrypted;
   let envelopes = encrypted?.envelopes ?? [];

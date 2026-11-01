@@ -159,9 +159,9 @@ function checkSizes(files: LocalFile[]) {
   return files;
 }
 
-export async function pickMedia(): Promise<LocalFile[]> {
+export async function pickMedia(mediaTypes: ImagePicker.MediaType[] = ["images", "videos"]): Promise<LocalFile[]> {
   const res = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ["images", "videos"],
+    mediaTypes,
     allowsMultipleSelection: true,
     selectionLimit: 10,
     quality: 1,

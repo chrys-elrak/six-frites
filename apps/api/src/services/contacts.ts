@@ -97,7 +97,7 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
              o."displayName" AS "customName", o."photoKey", me."showProfile" AS "sharingProfile",
              COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END) AS name
       FROM "ChatMember" cm
-      JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct'
+      JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct' AND c."supportUserId" IS NULL
       JOIN "ChatMember" me ON me."chatId" = cm."chatId" AND me."userId" = ${userId}
       JOIN "User" u ON u.id = cm."userId" AND u."deletedAt" IS NULL
       LEFT JOIN "ContactOverride" o ON o."ownerId" = ${userId} AND o."contactId" = u.id

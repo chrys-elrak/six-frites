@@ -17,7 +17,7 @@ export function Avatar({
   const tr = useT();
   if (!online) return <Picture user={user} size={size} />;
   return (
-    <span className="relative shrink-0">
+    <span className="relative flex shrink-0">
       <Picture user={user} size={size} />
       <span
         aria-label={tr.time.online}

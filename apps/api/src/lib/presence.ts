@@ -29,10 +29,16 @@ export async function activeSessions(sessionIds: string[]) {
   return new Set(sessionIds.filter((_, i) => values[i] !== null));
 }
 
-/** Everyone who shares a chat with this user, who should hear when they come online or leave. */
+/**
+ * Everyone who shares a chat with this user, who should hear when they come online or leave. Whoever answers
+ * support stays out of sight of the people they help, who only see Six Frites.
+ */
 async function audience(userId: string) {
   const rows = await prisma.chatMember.findMany({
-    where: { userId: { not: userId }, chat: { members: { some: { userId } } } },
+    where: {
+      userId: { not: userId },
+      chat: { members: { some: { userId } }, OR: [{ supportUserId: null }, { supportUserId: userId }] },
+    },
     select: { userId: true },
     distinct: ["userId"],
   });

@@ -49,8 +49,9 @@ export function Conversation({ chatId }: { chatId: string }) {
   const dismissKeyChange = useKeyChanges((s) => s.dismiss);
   const peerId = chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
   const frozen = !!chat.data && isFrozen(chat.data);
-  useWatchPresence(peerId && !frozen ? [peerId] : []);
-  const presence = usePresence(frozen ? undefined : peerId);
+  const hidePresence = frozen || !!chat.data?.withSupport;
+  useWatchPresence(peerId && !hidePresence ? [peerId] : []);
+  const presence = usePresence(hidePresence ? undefined : peerId);
   const theme = chatTheme(chat.data?.theme);
   const colors = t.dark ? theme.dark : theme.light;
   const bubble = useMemo(
@@ -154,22 +155,27 @@ export function Conversation({ chatId }: { chatId: string }) {
         <ScreenHeader background={t.bar}>
           <IconButton Icon={ChevronLeft} label={tr.common.backToChats} size={26} onPress={goBack} />
           <Pressable
-            onPress={() => setEditing(true)}
-            accessibilityLabel={tr.chat.editContact(c.title)}
+            onPress={() => !c.withSupport && setEditing(true)}
+            disabled={c.withSupport}
+            accessibilityLabel={c.withSupport ? c.title : tr.chat.editContact(c.title)}
             style={({ pressed }) => [styles.peer, pressed && { backgroundColor: t.pressed }]}
           >
             <Avatar user={peer} online={!!presence?.online} />
             <View style={{ flex: 1 }}>
-              <Text numberOfLines={1} style={[styles.title, { color: t.text }]}>
-                {c.title}
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text numberOfLines={1} style={[styles.title, { color: t.text, flexShrink: 1 }]}>
+                  {c.title}
+                </Text>
+                {c.supportDesk && <Text style={styles.supportTag}>{tr.support.title}</Text>}
+              </View>
               {typing ? (
                 <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
               ) : (
-                (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support) && (
+                (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support || c.withSupport) && (
                   <Text numberOfLines={2} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>
                     {[
                       c.support && tr.support.title,
+                      c.withSupport && tr.support.team,
                       presenceLabel(presence),
                       c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
                       c.muted && tr.common.muted,
@@ -182,7 +188,7 @@ export function Conversation({ chatId }: { chatId: string }) {
               )}
             </View>
           </Pressable>
-          {c.encrypted && !frozen && (
+          {c.encrypted && !frozen && !c.withSupport && (
             <>
               <IconButton Icon={Phone} label={tr.chat.voiceCall} disabled={inCall} onPress={() => void startCall(c, false)} />
               <IconButton Icon={Video} label={tr.chat.videoCall} disabled={inCall} onPress={() => void startCall(c, true)} />
@@ -192,7 +198,7 @@ export function Conversation({ chatId }: { chatId: string }) {
         </ScreenHeader>
       )}
 
-      {keyChanges.includes(peer.id) && !selecting && (
+      {keyChanges.includes(peer.id) && !selecting && !c.withSupport && (
         <Pressable
           onPress={() => {
             dismissKeyChange(peer.id);
@@ -221,7 +227,7 @@ export function Conversation({ chatId }: { chatId: string }) {
               chatId={chatId}
               nameOf={nameOf}
               scheduledCount={c.scheduledCount}
-              limited={c.support}
+              limited={c.support || c.withSupport}
               onSent={() => list.current?.scrollToBottom()}
               onSearch={(q) => {
                 setSearchFor(q);
@@ -275,6 +281,18 @@ export function Conversation({ chatId }: { chatId: string }) {
 }
 
 const styles = StyleSheet.create({
+  supportTag: {
+    color: brand,
+    backgroundColor: "rgba(235,138,0,0.15)",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
   title: { flex: 1, fontSize: 16, fontWeight: "700" },
   keyChange: {

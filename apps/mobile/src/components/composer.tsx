@@ -42,6 +42,7 @@ import {
   Square,
   Strikethrough,
   TicketPlus,
+  ImagePlus,
   Trash2,
   X,
 } from "lucide-react-native";
@@ -256,7 +257,7 @@ export function Composer({
 
   const onImage = useRef<(image: ReceivedImage) => void>(() => {});
   onImage.current = (image) => {
-    if (editing || limited) return;
+    if (editing) return;
     void pick(async () => {
       const file = await receivedImage(image);
       if (!image.fromKeyboard) return [file];
@@ -750,11 +751,21 @@ export function Composer({
               <Trash2 size={20} color={t.danger} />
             </Pressable>
           ) : limited ? (
-            !editing &&
-            admin && (
-              <Pressable onPress={() => void sendInvite()} accessibilityLabel={tr.support.sendInvite} style={styles.round40}>
-                <TicketPlus size={22} color={t.muted} />
-              </Pressable>
+            !editing && (
+              <>
+                <Pressable
+                  onPress={() => void pick(() => pickMedia(["images"]))}
+                  accessibilityLabel={tr.ask.addPhoto}
+                  style={styles.round40}
+                >
+                  <ImagePlus size={22} color={t.muted} />
+                </Pressable>
+                {admin && (
+                  <Pressable onPress={() => void sendInvite()} accessibilityLabel={tr.support.sendInvite} style={styles.round40}>
+                    <TicketPlus size={22} color={t.muted} />
+                  </Pressable>
+                )}
+              </>
             )
           ) : !editing && (
             <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel={tr.composer.attach} style={styles.round40}>

@@ -3358,8 +3358,12 @@ export interface paths {
                             peerDeleted: boolean;
                             /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                             encrypted: boolean;
-                            /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                            /** @description A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call */
                             support: boolean;
+                            /** @description You answer this chat for support; the person you're helping sees you as Six Frites */
+                            supportDesk: boolean;
+                            /** @description Your chat with Six Frites support: no calls, no presence, and text and photos only */
+                            withSupport: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -3755,8 +3759,12 @@ export interface paths {
                                 peerDeleted: boolean;
                                 /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                                 encrypted: boolean;
-                                /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                                /** @description A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call */
                                 support: boolean;
+                                /** @description You answer this chat for support; the person you're helping sees you as Six Frites */
+                                supportDesk: boolean;
+                                /** @description Your chat with Six Frites support: no calls, no presence, and text and photos only */
+                                withSupport: boolean;
                                 /** Format: date-time */
                                 lastActivityAt: string;
                                 /** Format: date-time */
@@ -4153,8 +4161,12 @@ export interface paths {
                             peerDeleted: boolean;
                             /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                             encrypted: boolean;
-                            /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                            /** @description A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call */
                             support: boolean;
+                            /** @description You answer this chat for support; the person you're helping sees you as Six Frites */
+                            supportDesk: boolean;
+                            /** @description Your chat with Six Frites support: no calls, no presence, and text and photos only */
+                            withSupport: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -4600,8 +4612,12 @@ export interface paths {
                             peerDeleted: boolean;
                             /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                             encrypted: boolean;
-                            /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                            /** @description A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call */
                             support: boolean;
+                            /** @description You answer this chat for support; the person you're helping sees you as Six Frites */
+                            supportDesk: boolean;
+                            /** @description Your chat with Six Frites support: no calls, no presence, and text and photos only */
+                            withSupport: boolean;
                             /** Format: date-time */
                             lastActivityAt: string;
                             /** Format: date-time */
@@ -10902,8 +10918,12 @@ export interface paths {
                                     peerDeleted: boolean;
                                     /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
                                     encrypted: boolean;
-                                    /** @description A support chat with a guest from the support page: only text and replies can be sent, and nobody can call */
+                                    /** @description A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call */
                                     support: boolean;
+                                    /** @description You answer this chat for support; the person you're helping sees you as Six Frites */
+                                    supportDesk: boolean;
+                                    /** @description Your chat with Six Frites support: no calls, no presence, and text and photos only */
+                                    withSupport: boolean;
                                     /** Format: date-time */
                                     lastActivityAt: string;
                                     /** Format: date-time */
@@ -12083,7 +12103,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Start an upload (max 1 GB; encrypted files max 100 MB)
+         * Start an upload (max 1 GB; encrypted files max 100 MB; guests: photos up to 100 MB)
          * @description Returns a URL to PUT the file to directly (or one per part, with `multipart`), with the given headers. Then call POST /v1/uploads/{id}/complete.
          */
         post: {

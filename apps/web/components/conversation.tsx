@@ -148,7 +148,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
   const muted = isMuted(c);
   const frozen = c.blockedByMe || c.blockedByThem || c.peerDeleted;
-  const shownPresence = frozen ? undefined : presence;
+  const shownPresence = frozen || c.withSupport ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
 
   const selectable = () =>
@@ -209,25 +209,29 @@ export function Conversation({ chatId }: { chatId: string }) {
                 <ChevronLeft className="size-6" />
               </Link>
               <button
-                onClick={() => setEditing(true)}
-                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-0.5 pr-2 text-left"
-                aria-label={tr.chat.editContact(c.title)}
+                onClick={() => !c.withSupport && setEditing(true)}
+                className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${c.withSupport ? "cursor-default" : "cursor-pointer"}`}
+                aria-label={c.withSupport ? c.title : tr.chat.editContact(c.title)}
               >
                 <Avatar user={peer} online={shownPresence?.online} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1 font-semibold">
                     <span className="truncate">{c.title}</span>
+                    {c.supportDesk && (
+                      <span className="shrink-0 rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide text-brand uppercase">{tr.support.title}</span>
+                    )}
                     {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
                   </span>
                   {typing ? (
                     <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
                   ) : (
-                    (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support) && (
+                    (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport) && (
                       <span className="line-clamp-2 text-xs text-stone-500">
                         {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
                         {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs || c.support) && " · "}
                         {[
                           c.support && tr.support.title,
+                          c.withSupport && tr.support.team,
                           !shownPresence?.online && presenceLabel(shownPresence),
                           c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
                           muted && (c.mutedUntil ? tr.chat.mutedUntil(sendAtLabel(c.mutedUntil)) : tr.common.muted),
@@ -240,7 +244,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                   )}
                 </span>
               </button>
-              {!frozen && !c.support && (
+              {!frozen && !c.support && !c.withSupport && (
                 <>
                   <button
                     onClick={() => void startCall(c, meId, false)}
@@ -280,7 +284,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           </div>
           <div ref={foot} className="absolute inset-x-0 bottom-0 z-20">
             {!selecting && <AdBanner />}
-            {!selecting && keysChanged && (
+            {!selecting && keysChanged && !c.withSupport && (
               <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
                 <ShieldAlert className="size-4 shrink-0" />
                 <p className="min-w-0 flex-1">
@@ -305,7 +309,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                   chatId={chatId}
                   nameOf={nameOf}
                   scheduledCount={c.scheduledCount}
-                  limited={c.support}
+                  limited={c.support || c.withSupport}
                   onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
                   onSearch={(q) => {
                     setSearchFor(q);

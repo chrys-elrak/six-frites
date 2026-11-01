@@ -8,6 +8,9 @@ const en = {
   sendInvite: "Send an invite link",
   inviteFailed: "Couldn't create the invite. Try again.",
   unavailable: "Support isn't available right now. Try again later.",
+  photoTooBig: "Photos can be up to 100 MB.",
+  contact: "Contact support",
+  welcome: "Tell us what's going on. Screenshots help us fix bugs faster.",
 };
 
 const fr: typeof en = {
@@ -20,6 +23,9 @@ const fr: typeof en = {
   sendInvite: "Envoyer un lien d'invitation",
   inviteFailed: "Impossible de créer l'invitation. Réessayez.",
   unavailable: "L'assistance n'est pas disponible pour le moment. Réessayez plus tard.",
+  photoTooBig: "Les photos peuvent faire 100 Mo au maximum.",
+  contact: "Contacter l'assistance",
+  welcome: "Dites-nous ce qui se passe. Des captures d'écran nous aident à corriger les bugs plus vite.",
 };
 
 const mg: typeof en = {
@@ -32,6 +38,9 @@ const mg: typeof en = {
   sendInvite: "Handefa rohy fanasana",
   inviteFailed: "Tsy vita ny fanasana. Andramo indray.",
   unavailable: "Tsy misy ny fanampiana amin'izao fotoana izao. Andramo indray any aoriana.",
+  photoTooBig: "100 Mo farafahabetsany ny sary.",
+  contact: "Hifandray amin'ny fanampiana",
+  welcome: "Lazao anay izay mitranga. Manampy anay hanamboatra haingana kokoa ny sary amin'ny efijery.",
 };
 
 export default { en, fr, mg };

@@ -52,7 +52,14 @@ export const uploadKeys = (u: Pick<Upload, "key" | "mainKey" | "thumbKey">) =>
     .concat(u.key)
     .filter((k) => !k.startsWith(SHARED_PREFIX));
 
+/** The biggest photo a guest can send to support, the only kind of file they can upload. */
+export const GUEST_UPLOAD_BYTES = 100 * 1024 * 1024;
+
 export async function presignUpload(ownerId: string, input: PresignUploadInput) {
+  const owner = await prisma.user.findUniqueOrThrow({ where: { id: ownerId }, select: { guest: true } });
+  if (owner.guest && (input.kind !== "image" || input.encrypted || input.size > GUEST_UPLOAD_BYTES)) {
+    throw new AppError("FORBIDDEN", "Guests can only send photos up to 100 MB");
+  }
   const id = createId();
   const key = `u/${ownerId}/${id}/original`;
   const multipartId = input.multipart && input.size > PART_BYTES ? await startMultipart(key, input.mime) : null;

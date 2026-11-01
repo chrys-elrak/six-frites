@@ -1,4 +1,12 @@
-import { type ChatDTO, maskSpoilers, serviceText, shownType } from "@six/shared";
+import {
+  CHAT_FILTERS,
+  type ChatDTO,
+  type ChatFilter,
+  inChatFilter,
+  maskSpoilers,
+  serviceText,
+  shownType,
+} from "@six/shared";
 import * as Haptics from "expo-haptics";
 import { router, useFocusEffect } from "expo-router";
 import {
@@ -16,13 +24,14 @@ import {
   PhoneMissed,
   Pin,
   Search,
+  LifeBuoy,
   Share2,
   Timer,
   UserPlus,
   Video,
 } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, SectionList, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
 import { isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
@@ -34,6 +43,7 @@ import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { usePresence, useWatchPresence } from "@/lib/presence";
 import { useTyping } from "@/lib/typing";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
+import { six } from "@/lib/six";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
@@ -155,6 +165,8 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
             <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
               {chat.title}
             </Text>
+            {chat.supportDesk && <Text style={styles.supportTag}>{tr.support.title}</Text>}
+            <View style={{ flex: 1 }} />
             {chat.muted && <BellOff size={14} color={t.faint} accessibilityLabel={tr.common.muted} />}
             <Text style={[styles.time, unread ? { color: brand, fontWeight: "600" } : { color: t.muted }]}>
               {listTime(chat.lastActivityAt)}
@@ -200,6 +212,10 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
 export function ChatList({ archived = false }: { archived?: boolean }) {
   const t = useTheme();
   const tr = useT();
+  const openSupport = async () => {
+    const res = await six.api.POST("/v1/support");
+    if (res.data) router.push(`/chats/${res.data.id}`);
+  };
   const meId = useSession((s) => s.user!.id);
   const chats = useChats(archived);
   const archivedChats = useChats(true);
@@ -217,6 +233,18 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   useFocusEffect(useCallback(() => () => setPulled(false), []));
   const needle = query.trim().toLowerCase();
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
+  const [picked, setPicked] = useState<ChatFilter>("all");
+  const desk = !archived && visible.some((c) => c.supportDesk);
+  const filter = archived || (picked === "support" && !desk) ? "all" : picked;
+  const shown = visible.filter((c) => inChatFilter(c, filter));
+  const sections = (
+    desk && filter === "all"
+      ? [
+          { key: "support", title: tr.support.title, data: shown.filter((c) => c.supportDesk) },
+          { key: "chats", title: tr.common.chats, data: shown.filter((c) => !c.supportDesk) },
+        ]
+      : [{ key: "all", title: null, data: shown }]
+  ).filter((s) => s.data.length);
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
@@ -258,6 +286,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             </View>
             {!archived && (
               <>
+                <IconButton Icon={LifeBuoy} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
                 <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
                 <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
               </>
@@ -274,14 +303,35 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
               style={[styles.searchInput, { color: t.text }]}
             />
           </View>
+          {!archived && (
+            <View style={styles.filters}>
+              {CHAT_FILTERS.filter((f) => f !== "support" || desk).map((f) => (
+                <Pressable
+                  key={f}
+                  onPress={() => setPicked(f)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: filter === f }}
+                  style={[styles.filter, { backgroundColor: filter === f ? brand : t.chip }]}
+                >
+                  <Text style={{ color: filter === f ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>
+                    {f === "support" ? tr.support.title : tr.chats.filters[f]}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
         </View>
       </ScreenHeader>
 
-      <FlatList
-        data={visible}
+      <SectionList
+        sections={sections}
         keyExtractor={(c) => c.id}
         keyboardShouldPersistTaps="handled"
+        stickySectionHeadersEnabled={false}
         renderItem={({ item }) => <ChatRow chat={item} meId={meId} />}
+        renderSectionHeader={({ section }) =>
+          section.title ? <Text style={[styles.sectionTitle, { color: t.muted }]}>{section.title}</Text> : null
+        }
         ListHeaderComponent={header}
         refreshControl={
           <RefreshControl
@@ -301,6 +351,8 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             <Text style={[styles.note, { color: t.danger }]}>{tr.chats.couldNotLoad}</Text>
           ) : needle ? (
             <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.contacts.noMatch(query.trim())}</Text>
+          ) : visible.length ? (
+            <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.chats.filterEmpty}</Text>
           ) : (
             <EmptyState
               Icon={archived ? Archive : MessageCircle}
@@ -329,7 +381,30 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
   rowBody: { flex: 1, minWidth: 0, gap: 2 },
   rowLine: { flexDirection: "row", alignItems: "center", gap: 6 },
-  name: { flex: 1, fontSize: 16, fontWeight: "600" },
+  name: { flexShrink: 1, fontSize: 16, fontWeight: "600" },
+  filters: { flexDirection: "row", gap: 6 },
+  filter: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  supportTag: {
+    color: brand,
+    backgroundColor: "rgba(235,138,0,0.15)",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
   time: { fontSize: 12 },
   previewRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   preview: { fontSize: 14, flexShrink: 1 },

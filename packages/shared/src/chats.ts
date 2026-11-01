@@ -481,11 +481,24 @@ export const ChatDTO = z.object({
     .describe("Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED)"),
   support: z
     .boolean()
-    .describe("A support chat with a guest from the support page: only text and replies can be sent, and nobody can call"),
+    .describe("A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call"),
+  supportDesk: z
+    .boolean()
+    .describe("You answer this chat for support; the person you're helping sees you as Six Frites"),
+  withSupport: z
+    .boolean()
+    .describe("Your chat with Six Frites support: no calls, no presence, and text and photos only"),
   lastActivityAt: IsoDate,
   createdAt: IsoDate,
 });
 export type ChatDTO = z.infer<typeof ChatDTO>;
+
+export const CHAT_FILTERS = ["all", "unread", "read", "support"] as const;
+export type ChatFilter = (typeof CHAT_FILTERS)[number];
+
+/** Whether a chat shows under one of the chat list's filters; "support" is for whoever answers support. */
+export const inChatFilter = (c: ChatDTO, filter: ChatFilter) =>
+  filter === "unread" ? c.unreadCount > 0 : filter === "read" ? c.unreadCount === 0 : filter === "support" ? c.supportDesk : true;
 
 export const ChatListQuery = z.object({
   archived: z

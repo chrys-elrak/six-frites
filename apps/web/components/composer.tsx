@@ -23,6 +23,7 @@ import {
   Check,
   Flame,
   Ghost,
+  ImagePlus,
   NotebookPen,
   Paperclip,
   SendHorizontal,
@@ -102,7 +103,7 @@ export function Composer({
   scheduledCount: number;
   onSent: () => void;
   onSearch: (q: string) => void;
-  /** A support chat: text only, plus a button for admins to send an invite link. */
+  /** A support chat: text and photos only, plus a button for admins to send an invite link. */
   limited?: boolean;
 }) {
   const tr = useT();
@@ -706,18 +707,42 @@ export function Composer({
               <Trash2 className="size-5" />
             </button>
           ) : limited ? (
-            !editing &&
-            admin && (
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => void sendInvite()}
-                aria-label={tr.support.sendInvite}
-                title={tr.support.sendInvite}
-                className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
-              >
-                <TicketPlus className="size-5" />
-              </button>
+            !editing && (
+              <>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => mediaInput.current?.click()}
+                  aria-label={tr.ask.addPhoto}
+                  title={tr.ask.addPhoto}
+                  className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+                >
+                  <ImagePlus className="size-5" />
+                </button>
+                <input
+                  ref={mediaInput}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.length) sendFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+                {admin && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => void sendInvite()}
+                    aria-label={tr.support.sendInvite}
+                    title={tr.support.sendInvite}
+                    className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
+                  >
+                    <TicketPlus className="size-5" />
+                  </button>
+                )}
+              </>
             )
           ) : !editing && (
             <>
@@ -809,8 +834,8 @@ export function Composer({
                 emoji.close();
               }}
               onPaste={(e) => {
-                const files = [...e.clipboardData.files];
-                if (!files.length || editing || limited) return;
+                const files = [...e.clipboardData.files].filter((f) => !limited || f.type.startsWith("image/"));
+                if (!files.length || editing) return;
                 e.preventDefault();
                 void sendPasted(files);
               }}

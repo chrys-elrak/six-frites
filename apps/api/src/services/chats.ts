@@ -13,6 +13,7 @@ import {
   type ServiceAction,
   type UpdateChatInput,
 } from "@six/shared";
+import { env } from "../env.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import {
@@ -57,11 +58,22 @@ function muteData({ muted, mutedUntil }: Pick<UpdateChatInput, "muted" | "mutedU
   return { muted, mutedUntil: until };
 }
 
+/** Whoever answers support, as the person being helped sees them: the app itself. */
+export const supportProfile = (id: string) => ({
+  id,
+  displayName: "Six Frites",
+  avatarUrl: `${env.WEB_ORIGIN.split(",")[0]}/icon-192.png`,
+});
+
 async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Promise<ChatDTO> {
   const me = chat.members.find((m) => m.userId === viewerId);
   if (!me) throw new AppError("CHAT_NOT_FOUND");
   const shown = await profilesFor(db, viewerId, chat.members.map((m) => m.userId));
-  const members = chat.members.map((m) => ({ ...m, shown: shown(m.user) }));
+  const helped = chat.supportUserId === viewerId;
+  const members = chat.members.map((m) => ({
+    ...m,
+    shown: helped && m.userId !== viewerId ? supportProfile(m.userId) : shown(m.user),
+  }));
   const others = members.filter((m) => m.userId !== viewerId);
   const peer = others[0];
   const blocks = peer ? await blockState(db, viewerId, peer.userId) : { byMe: false, byThem: false };
@@ -113,6 +125,8 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     peerDeleted: others.some((m) => m.user.deletedAt !== null),
     encrypted: chat.encryptedAt !== null,
     support: chat.members.some((m) => m.user.guest),
+    supportDesk: chat.supportUserId !== null && !helped,
+    withSupport: helped,
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
   };

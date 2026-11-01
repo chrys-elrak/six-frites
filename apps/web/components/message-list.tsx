@@ -1265,7 +1265,7 @@ export const MessageList = forwardRef<
         {rows.length === 0 && (
           <div className="flex flex-col items-center pb-8 text-center text-sm">
             <span className="rounded-full bg-black/25 px-4 py-1.5 text-white backdrop-blur-sm">
-              {tr.messages.empty}
+              {chat.withSupport ? tr.support.welcome : tr.messages.empty}
             </span>
           </div>
         )}

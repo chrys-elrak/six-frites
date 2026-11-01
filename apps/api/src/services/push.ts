@@ -17,7 +17,7 @@ import { pushQueue } from "../lib/queue.js";
 import { pushProviders } from "../push/providers.js";
 import { profilesFor } from "./contacts.js";
 import { messageInclude, toMessageDTO } from "./messages.js";
-import { memberMuted } from "./chats.js";
+import { memberMuted, supportProfile } from "./chats.js";
 
 /** Delay before pushing, so a message read straight away in an open app doesn't also buzz a phone. */
 export const PUSH_DELAY_MS = 3000;
@@ -62,6 +62,12 @@ export async function queueReactionPush(messageId: string, authorId: string, rea
   );
 }
 
+/** Whether `userId` is the person being helped in this chat with support, who sees the other side as Six Frites. */
+async function helpedBySupport(chatId: string, userId: string) {
+  const chat = await prisma.chat.findUnique({ where: { id: chatId }, select: { supportUserId: true } });
+  return chat?.supportUserId === userId;
+}
+
 async function targetsFor(userId: string) {
   const sessions = await prisma.session.findMany({
     where: { userId, revokedAt: null, expiresAt: { gt: new Date() }, pushTokens: { some: {} } },
@@ -99,7 +105,9 @@ export async function deliverPush(messageId: string, userId: string) {
   const targets = await targetsFor(userId);
   if (!targets.length) return 0;
 
-  const sender = (await profilesFor(prisma, userId, [m.senderId]))(m.sender);
+  const sender = (await helpedBySupport(m.chatId, userId))
+    ? supportProfile(m.senderId)
+    : (await profilesFor(prisma, userId, [m.senderId]))(m.sender);
   const dto = toMessageDTO(m, userId);
   return sendToAll(targets, (t) => ({
     title: sender.displayName,
@@ -132,7 +140,9 @@ export async function deliverReactionPush(
 
   const reactor = await prisma.user.findUnique({ where: { id: reactorId } });
   if (!reactor) return 0;
-  const who = (await profilesFor(prisma, userId, [reactorId]))(reactor);
+  const who = (await helpedBySupport(m.chatId, userId))
+    ? supportProfile(reactorId)
+    : (await profilesFor(prisma, userId, [reactorId]))(reactor);
   const dto = toMessageDTO(m, userId);
   return sendToAll(targets, (t) => ({
     title: who.displayName,

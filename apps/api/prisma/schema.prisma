@@ -246,6 +246,8 @@ model Chat {
   theme          String?
   vanish         Boolean  @default(false)
   encryptedAt    DateTime?
+  /// Set on a chat with support: the person being helped, who sees the other side as Six Frites.
+  supportUserId  String?
 
   members   ChatMember[]
   messages  Message[]

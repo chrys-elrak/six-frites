@@ -56,6 +56,58 @@ describe("support chat", () => {
     expect(chats.find((c: { id: string }) => c.id === chat.id).support).toBe(false);
   });
 
+  it("shows support as Six Frites to the person helped, labels it for the admin, and keeps it apart from personal chats", async () => {
+    const boss = await admin();
+    const guest = await walkIn("asker");
+    const chat = await openSupport(guest);
+    expect(chat).toMatchObject({ title: "Six Frites", supportDesk: false });
+    const agent = chat.members.find((m: { user: { id: string } }) => m.user.id !== guest.user.id).user;
+    expect(agent).toMatchObject({ id: boss.user.id, displayName: "Six Frites", avatarUrl: expect.stringMatching(/icon-192\.png$/) });
+
+    await send(guest, chat.id, "Hello?");
+    const desk = await get(boss, `/v1/chats/${chat.id}`);
+    expect(desk.supportDesk).toBe(true);
+    expect(desk.title).not.toBe("Six Frites");
+
+    const { code } = (await call(boss, "POST", "/v1/invites", {})).json();
+    const friend: Auth = (await loginAs(ctx.app, uniqueSub("friend"), "web", { inviteCode: code })).json();
+    const personal = (await get(friend, "/v1/chats")).items as { id: string; title: string }[];
+    const help = await openSupport(friend);
+    expect(personal.map((c) => c.id)).not.toContain(help.id);
+    expect(help).toMatchObject({ title: "Six Frites", withSupport: true });
+
+    const friendsInvite = (await call(friend, "POST", "/v1/invites", {})).json().code;
+    const stranger: Auth = (await loginAs(ctx.app, uniqueSub("stranger"), "web", { inviteCode: friendsInvite })).json();
+    await openSupport(stranger);
+    const presence = async (who: Auth, id: string) =>
+      (await get(who, `/v1/presence?ids=${id}`)).items.map((p: { userId: string }) => p.userId);
+    expect(await presence(stranger, boss.user.id)).toEqual([]);
+    expect(await presence(boss, stranger.user.id)).toEqual([stranger.user.id]);
+    expect((await get(friend, "/v1/contacts")).items.map((c: { chatId: string }) => c.chatId)).not.toContain(help.id);
+  });
+
+  it("lets a guest send support a photo, but no other file", async () => {
+    const guest = await walkIn("screenshot");
+    const chat = await openSupport(guest);
+    const png = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    );
+    const presign = (body: object) => call(guest, "POST", "/v1/uploads/presign", body);
+
+    expect((await presign({ kind: "file", mime: "application/pdf", size: 5, name: "a.pdf" })).statusCode).toBe(403);
+    expect((await presign({ kind: "image", mime: "image/png", size: 101 * 1024 * 1024, name: "big.png" })).statusCode).toBe(403);
+    const started = await presign({ kind: "image", mime: "image/png", size: png.length, name: "bug.png" });
+    expect(started.statusCode, started.body).toBe(201);
+    const { url, headers, upload } = started.json();
+    expect((await fetch(url, { method: "PUT", body: new Uint8Array(png), headers })).ok).toBe(true);
+    expect((await call(guest, "POST", `/v1/uploads/${upload.id}/complete`)).statusCode).toBe(200);
+
+    const sent = await send(guest, chat.id, undefined as unknown as string, { attachmentId: upload.id });
+    expect(sent.statusCode, sent.body).toBe(201);
+    expect(sent.json().attachment.kind).toBe("image");
+  });
+
   it("lets a guest join by signing in again with an invite", async () => {
     const boss = await admin();
     const sub = uniqueSub("returning");

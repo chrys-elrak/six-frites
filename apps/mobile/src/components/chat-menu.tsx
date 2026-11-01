@@ -231,40 +231,49 @@ export function ChatMenu({
           label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
           onSelect: () => settings({ archived: !chat.archived }),
         },
-        {
-          label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
-          onSelect: () => settings({ safeView: !chat.safeView }),
-        },
-        ...(isFrozen(chat)
+        ...(chat.withSupport
           ? []
           : [
               {
-                label: tr.chat.autoDelete(chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs, tr) : null),
-                keepOpen: true,
-                onSelect: () => setView("autoDelete"),
+                label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
+                onSelect: () => settings({ safeView: !chat.safeView }),
               },
-              {
-                label: tr.summary.background(chat.theme ? themeName(chat.theme, tr) : tr.chat.defaultBackground),
-                keepOpen: true,
-                onSelect: () => setView("theme"),
-              },
+              ...(isFrozen(chat)
+                ? []
+                : [
+                    {
+                      label: tr.chat.autoDelete(chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs, tr) : null),
+                      keepOpen: true,
+                      onSelect: () => setView("autoDelete"),
+                    },
+                    {
+                      label: tr.summary.background(chat.theme ? themeName(chat.theme, tr) : tr.chat.defaultBackground),
+                      keepOpen: true,
+                      onSelect: () => setView("theme"),
+                    },
+                  ]),
+              ...(chat.type !== "direct" || chat.peerDeleted
+                ? []
+                : chat.blockedByMe
+                  ? [
+                      {
+                        label: tr.chat.unblockName(peerName),
+                        onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null),
+                      },
+                    ]
+                  : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+              ...(chat.type !== "direct" || chat.peerDeleted
+                ? []
+                : [
+                    {
+                      label: tr.chat.removeContact(peerName),
+                      destructive: true,
+                      keepOpen: true,
+                      onSelect: () => setView("removeContact"),
+                    },
+                  ]),
+              { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
             ]),
-        ...(chat.type !== "direct" || chat.peerDeleted
-          ? []
-          : chat.blockedByMe
-            ? [{ label: tr.chat.unblockName(peerName), onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
-            : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
-        ...(chat.type !== "direct" || chat.peerDeleted
-          ? []
-          : [
-              {
-                label: tr.chat.removeContact(peerName),
-                destructive: true,
-                keepOpen: true,
-                onSelect: () => setView("removeContact"),
-              },
-            ]),
-        { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
       ]}
     />
   );

@@ -21,7 +21,13 @@ const presenceRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req) => {
       const known = await prisma.chatMember.findMany({
-        where: { userId: { in: req.query.ids }, chat: { members: { some: { userId: req.auth.userId } } } },
+        where: {
+          userId: { in: req.query.ids },
+          chat: {
+            members: { some: { userId: req.auth.userId } },
+            OR: [{ supportUserId: null }, { supportUserId: { not: req.auth.userId } }],
+          },
+        },
         select: { userId: true },
         distinct: ["userId"],
       });

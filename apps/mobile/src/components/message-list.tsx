@@ -1265,7 +1265,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       <View style={{ flex: 1 }}>
         {rows.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={[styles.onWallpaper, styles.emptyChip]}>{tr.messages.empty}</Text>
+            <Text style={[styles.onWallpaper, styles.emptyChip]}>
+              {chat.withSupport ? tr.support.welcome : tr.messages.empty}
+            </Text>
           </View>
         ) : (
           <FlatList
