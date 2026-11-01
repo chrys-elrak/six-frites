@@ -217,6 +217,7 @@ export function VoicePlayer({
   compact = false,
   meta,
   effects = true,
+  effect: chosen,
   onStop,
   track,
 }: {
@@ -229,6 +230,8 @@ export function VoicePlayer({
   compact?: boolean;
   meta?: React.ReactNode;
   effects?: boolean;
+  /** A voice effect picked outside the player, which playback follows. */
+  effect?: VoiceEffect;
   onStop?: (finished: boolean) => void;
   track?: { chatId: string; title: string; name?: string };
 }) {
@@ -240,7 +243,7 @@ export function VoicePlayer({
   const loadedMs = useVoice((s) => (url && s.track?.url === url ? s.duration : 0));
   const playingEffect = useVoice((s) => (url && s.track?.url === url ? s.track.effect : null));
   const [picked, setPicked] = useState<VoiceEffect>("none");
-  const effect = playingEffect ?? picked;
+  const effect = playingEffect ?? chosen ?? picked;
   const bars = waveform ? fitWaveform(waveform) : Array.from({ length: 48 }, () => 18);
   const total = durationMs || loadedMs;
   const active = () => !!url && useVoice.getState().track?.url === url;
@@ -260,6 +263,10 @@ export function VoicePlayer({
   useEffect(() => {
     if (autoPlay && url) start();
   }, [autoPlay, url]);
+
+  useEffect(() => {
+    if (chosen && active()) setVoiceEffect(chosen);
+  }, [chosen]);
 
   function pickEffect(next: VoiceEffect) {
     setPicked(next);

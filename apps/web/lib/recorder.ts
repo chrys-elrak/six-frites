@@ -15,14 +15,15 @@ export interface Recording {
 }
 
 /**
- * Records a voice note with MediaRecorder, picking a format the browser supports. At `maxMs` it stops on its own
- * and hands the recording to `onLimit`.
+ * Records a voice note with MediaRecorder, picking a format the browser supports, through the chosen voice effect
+ * unless `raw`. At `maxMs` it stops on its own and hands the recording to `onLimit`.
  */
 export function useRecorder({
   maxMs = MAX_MS,
   bitsPerSecond,
+  raw = false,
   onLimit,
-}: { maxMs?: number; bitsPerSecond?: number; onLimit?: (r: Recording | null) => void } = {}) {
+}: { maxMs?: number; bitsPerSecond?: number; raw?: boolean; onLimit?: (r: Recording | null) => void } = {}) {
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,10 @@ export function useRecorder({
   async function start() {
     setError(null);
     try {
-      const fx = await withVoiceEffect(await navigator.mediaDevices.getUserMedia({ audio: true }));
+      const input = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const fx = raw
+        ? { stream: input, stop: () => input.getTracks().forEach((t) => t.stop()), disguised: false }
+        : await withVoiceEffect(input);
       release.current = fx.stop;
       const mimeType = TYPES.find((t) => MediaRecorder.isTypeSupported(t));
       const rec = new MediaRecorder(fx.stream, { mimeType, audioBitsPerSecond: bitsPerSecond });

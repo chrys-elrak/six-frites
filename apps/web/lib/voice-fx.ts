@@ -76,7 +76,7 @@ export const useVoiceEffect = create<{ effect: VoiceEffect; set: (effect: VoiceE
   },
 }));
 
-async function effectNode(ctx: AudioContext) {
+async function effectNode(ctx: BaseAudioContext) {
   moduleUrl ??= URL.createObjectURL(new Blob([WORKLET], { type: "text/javascript" }));
   await ctx.audioWorklet.addModule(moduleUrl);
   const node = new AudioWorkletNode(ctx, "voice-fx", { outputChannelCount: [1] });
@@ -138,4 +138,56 @@ export async function withVoiceEffect(input: MediaStream): Promise<VoiceFx> {
     void ctx?.close().catch(() => null);
     return { stream: input, stop: stopInput, disguised: false };
   }
+}
+
+/** G.711 µ-law: a 16-bit sample in 8 bits, losing little a voice needs. */
+function muLaw(x: number) {
+  let s = Math.round(Math.max(-1, Math.min(1, x)) * 32767);
+  const sign = s < 0 ? 0x80 : 0;
+  s = Math.min(Math.abs(s), 32635) + 0x84;
+  let exponent = 7;
+  for (let mask = 0x4000; !(s & mask) && exponent > 0; mask >>= 1) exponent--;
+  return ~(sign | (exponent << 4) | ((s >> (exponent + 3)) & 0x0f)) & 0xff;
+}
+
+/**
+ * Renders a recording through a voice effect, with the same processor as playback so it sounds as previewed,
+ * and returns it as a mono 16 kHz µ-law WAV: about 1 MB a minute, which the server re-encodes.
+ */
+export async function disguiseVoice(blob: Blob, effect: VoiceEffect) {
+  const RATE = 48_000;
+  const OUT = 16_000;
+  const source = await new OfflineAudioContext(1, 1, RATE).decodeAudioData(await blob.arrayBuffer());
+  const render = async (rate: number, input: AudioBuffer, fx?: VoiceEffect) => {
+    const ctx = new OfflineAudioContext(1, Math.ceil(input.duration * rate), rate);
+    const node = ctx.createBufferSource();
+    node.buffer = input;
+    if (fx) {
+      const { node: effectOf, apply } = await effectNode(ctx);
+      apply(fx);
+      node.connect(effectOf).connect(ctx.destination);
+    } else {
+      node.connect(ctx.destination);
+    }
+    node.start();
+    return ctx.startRendering();
+  };
+  const samples = (await render(OUT, await render(RATE, source, effect))).getChannelData(0);
+
+  const wav = new DataView(new ArrayBuffer(44 + samples.length));
+  const ascii = (at: number, text: string) => [...text].forEach((c, i) => wav.setUint8(at + i, c.charCodeAt(0)));
+  ascii(0, "RIFF");
+  wav.setUint32(4, 36 + samples.length, true);
+  ascii(8, "WAVEfmt ");
+  wav.setUint32(16, 16, true);
+  wav.setUint16(20, 7, true);
+  wav.setUint16(22, 1, true);
+  wav.setUint32(24, OUT, true);
+  wav.setUint32(28, OUT, true);
+  wav.setUint16(32, 1, true);
+  wav.setUint16(34, 8, true);
+  ascii(36, "data");
+  wav.setUint32(40, samples.length, true);
+  samples.forEach((v, i) => wav.setUint8(44 + i, muLaw(v)));
+  return new Blob([wav], { type: "audio/wav" });
 }

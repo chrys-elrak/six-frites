@@ -41,7 +41,15 @@ import { mediaMeta } from "@/lib/media-meta";
 import { type Recording, useRecorder } from "@/lib/recorder";
 import { deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
-import { useVoiceEffect } from "@/lib/voice-fx";
+import { type VoiceEffect, disguiseVoice } from "@/lib/voice-fx";
+
+const dataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 
 export default function AskPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
@@ -60,11 +68,20 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   const [editing, setEditing] = useState(false);
   const [gif, setGif] = useState<GifDTO | null>(null);
   const [gifSearch, setGifSearch] = useState(false);
-  const [voice, setVoice] = useState<{ url: string; data: string; durationMs: number; waveform: number[] | null } | null>(
-    null,
-  );
-  const recorder = useRecorder({ maxMs: ANON_VOICE_MS, bitsPerSecond: 32_000, onLimit: (rec) => void keepVoice(rec) });
-  const effect = useVoiceEffect((s) => s.effect);
+  const [voice, setVoice] = useState<{
+    blob: Blob;
+    url: string;
+    data: string;
+    durationMs: number;
+    waveform: number[] | null;
+  } | null>(null);
+  const [voiceFx, setVoiceFx] = useState<VoiceEffect>("none");
+  const recorder = useRecorder({
+    maxMs: ANON_VOICE_MS,
+    bitsPerSecond: 32_000,
+    raw: true,
+    onLimit: (rec) => void keepVoice(rec),
+  });
   const [photoError, setPhotoError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -85,8 +102,11 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   };
 
   const send = useMutation({
-    mutationFn: async () =>
-      unwrap(await six.api.POST("/v1/ask/{code}", { params: { path: { code } }, body })),
+    mutationFn: async () => {
+      const sent =
+        voice && voiceFx !== "none" ? { ...body, voice: await dataUrl(await disguiseVoice(voice.blob, voiceFx)) } : body;
+      return unwrap(await six.api.POST("/v1/ask/{code}", { params: { path: { code } }, body: sent }));
+    },
     onSuccess: () => {
       setText("");
       setPhoto(null);
@@ -130,15 +150,15 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   async function keepVoice(rec: Recording | null) {
     if (!rec || rec.durationMs < 500) return;
     if (rec.blob.size > ANON_VOICE_BYTES) return setPhotoError(tr.ask.voiceTooBig);
-    const data = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(rec.blob);
-    });
     const { waveform } = await mediaMeta(rec.blob, "voice");
     const durationMs = Math.min(rec.durationMs, ANON_VOICE_MS);
-    setVoice({ url: URL.createObjectURL(rec.blob), data, durationMs, waveform: waveform ?? null });
+    setVoice({
+      blob: rec.blob,
+      url: URL.createObjectURL(rec.blob),
+      data: await dataUrl(rec.blob),
+      durationMs,
+      waveform: waveform ?? null,
+    });
     setPhoto(null);
     setGif(null);
   }
@@ -254,7 +274,20 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                     label={tr.composer.playPreview}
                     compact
                     effects={false}
+                    effect={voiceFx}
                   />
+                  <VoiceEffectSelect
+                    value={voiceFx}
+                    onChange={setVoiceFx}
+                    className={`ml-2 flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
+                      voiceFx === "none"
+                        ? "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
+                        : "bg-brand/15 text-brand"
+                    }`}
+                  >
+                    <VenetianMask className="size-4" />
+                    {voiceFx !== "none" && tr.composer.voiceEffects[voiceFx]}
+                  </VoiceEffectSelect>
                 </div>
                 <button
                   type="button"
@@ -379,13 +412,6 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                   >
                     <Mic className="size-5" />
                   </button>
-                  <VoiceEffectSelect
-                    className={`grid size-8 place-items-center rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 ${
-                      effect === "none" ? "text-stone-500" : "text-brand"
-                    }`}
-                  >
-                    <VenetianMask className="size-5" />
-                  </VoiceEffectSelect>
                 </>
               )}
               <input

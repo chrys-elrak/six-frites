@@ -8,7 +8,7 @@ export const ASK_MAX = 500;
 export const ANON_PHOTO_BYTES = 512 * 1024;
 /** Voice messages last a minute at most; the server cuts anything longer. */
 export const ANON_VOICE_MS = 60_000;
-export const ANON_VOICE_BYTES = 640 * 1024;
+export const ANON_VOICE_BYTES = 1024 * 1024;
 
 const VISIBLE = /[\p{L}\p{N}\p{Extended_Pictographic}]/u;
 
@@ -65,7 +65,7 @@ export const SendAnonInput = z
     voice: z
       .string()
       .regex(/^data:audio\/[\w.+-]+;base64,[A-Za-z0-9+/]+=*$/, "Expected a base64 audio data URL")
-      .refine((s) => Math.floor(((s.length - s.indexOf(",") - 1) * 3) / 4) <= ANON_VOICE_BYTES, "Voice message is larger than 640 KB")
+      .refine((s) => Math.floor(((s.length - s.indexOf(",") - 1) * 3) / 4) <= ANON_VOICE_BYTES, "Voice message is larger than 1 MB")
       .optional()
       .describe("A voice message, recorded with or without a voice effect; the server keeps its first minute"),
   })
