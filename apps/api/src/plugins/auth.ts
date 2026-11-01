@@ -4,7 +4,7 @@ import { AppError } from "@six/shared";
 import { env } from "../env.js";
 import { prisma } from "../lib/prisma.js";
 import { type AccessClaims, verifyAccessToken } from "../lib/tokens.js";
-import { assertSessionActive } from "../services/sessions.js";
+import { assertSessionActive, chatBanned } from "../services/sessions.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -28,7 +28,7 @@ export async function authenticateBearer(header: string | undefined) {
   if (!token) throw new AppError("UNAUTHENTICATED", "Missing bearer token");
   const claims = await verifyAccessToken(token);
   const session = await assertSessionActive(claims.sessionId);
-  return { ...claims, guest: session.user.guest };
+  return { ...claims, guest: session.user.guest || chatBanned(session.user) };
 }
 
 /** How long an authenticator code keeps moderation open on a session. */

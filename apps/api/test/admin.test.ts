@@ -3,7 +3,7 @@ import { headObject, putObject } from "../src/lib/storage.js";
 import { liftExpiredBans } from "../src/services/admin.js";
 import { pairAlias } from "../src/services/users.js";
 import { totp, totpStep } from "../src/lib/totp.js";
-import { ADMIN_SECRET, type Auth, asAdmin, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
+import { ADMIN_SECRET, type Auth, asAdmin, bearer, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { signUp, get, call, send, makeFriends } = chatHelpers(ctx);
@@ -159,6 +159,31 @@ describe("user moderation", () => {
     expect(await liftExpiredBans()).toBe(1);
     expect(await prisma.user.findUniqueOrThrow({ where: { id: target.user.id } })).toMatchObject({ bannedAt: null, banReason: null });
     expect((await loginAs(ctx.app, googleSub)).statusCode).toBe(200);
+  });
+
+  it("can ban from chats only, leaving anonymous messages, without following the phone", async () => {
+    const boss = await admin();
+    const phone = { device: { platform: "android", name: "Phone", id: `phone-${uniqueSub("chatban")}` } };
+    const target: Auth = (await loginAs(ctx.app, uniqueSub("chatty"), "android", phone)).json();
+    const fan = await signUp("fan");
+    const status = async (who: Auth, url: string) => (await ctx.app.inject({ url, headers: bearer(who.accessToken) })).statusCode;
+    const { askCode } = await get(target, "/v1/me");
+
+    const banned = (await call(boss, "POST", `/v1/admin/users/${target.user.id}/ban`, { reason: "rude", hours: 24, scope: "chat" })).json();
+    expect(banned).toMatchObject({ banScope: "chat", bannedAt: expect.any(String) });
+    expect(await status(target, "/v1/chats")).toBe(403);
+    expect((await get(target, "/v1/me")).chatBan).toEqual({ until: banned.bannedUntil });
+    expect((await call(fan, "POST", `/v1/ask/${askCode}`, { text: "still around?" })).statusCode).toBe(204);
+    expect((await get(target, "/v1/ask")).items.map((m: { text: string }) => m.text)).toEqual(["still around?"]);
+    expect((await call(target, "POST", `/v1/ask/${(await get(fan, "/v1/me")).askCode}`, { text: "yes" })).statusCode).toBe(204);
+
+    const { googleSub } = await prisma.user.findUniqueOrThrow({ where: { id: target.user.id } });
+    expect((await loginAs(ctx.app, googleSub, "android", phone)).statusCode).toBe(200);
+    expect((await loginAs(ctx.app, uniqueSub("sibling"), "android", phone)).statusCode).toBe(200);
+
+    await call(boss, "POST", `/v1/admin/users/${target.user.id}/unban`);
+    expect((await get(target, "/v1/me")).chatBan).toBeNull();
+    expect(await status(target, "/v1/chats")).toBe(200);
   });
 
   it("follows a banned person to new accounts on the same browser or phone", async () => {

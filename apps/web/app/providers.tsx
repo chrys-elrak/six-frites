@@ -3,6 +3,7 @@
 import type { Locale } from "@six/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { TermsGate } from "@/components/terms-gate";
 import { LocaleProvider } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 
@@ -18,7 +19,10 @@ export function Providers({ locale, children }: { locale: Locale; children: Reac
 
   return (
     <LocaleProvider initial={locale}>
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>
+        {children}
+        <TermsGate />
+      </QueryClientProvider>
     </LocaleProvider>
   );
 }

@@ -1,5 +1,5 @@
 import { unwrap } from "@six/sdk";
-import { BAN_HOURS, type ReportReason } from "@six/shared";
+import { BAN_HOURS, type BanScope, type ReportReason } from "@six/shared";
 import { type QueryClient, useQuery } from "@tanstack/react-query";
 import { useSession } from "./session";
 import { six } from "./six";
@@ -28,6 +28,12 @@ export const reasonLabel = (r: ReportReason) => REPORT_REASONS.find((x) => x.val
 export const BAN_LENGTHS: { hours?: number; label: string }[] = [
   ...BAN_HOURS.map((hours) => ({ hours, label: hours < 48 ? `${hours} hour${hours === 1 ? "" : "s"}` : `${hours / 24} days` })),
   { label: "For good" },
+];
+
+/** What a ban can take away: everything, or chats only, keeping anonymous messages and support. */
+export const BAN_SCOPES: { scope: BanScope; label: string; short: string }[] = [
+  { scope: "full", label: "Ban from everything (can't sign in)", short: "from everything" },
+  { scope: "chat", label: "Ban from chats only (keeps anonymous messages)", short: "from chats" },
 ];
 
 export const banEnd = (until: string) => new Date(until).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });

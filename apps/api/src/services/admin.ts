@@ -7,6 +7,7 @@ import {
   type AdminStickerPackDTO,
   type AdminUserDTO,
   type AdminUserQuery,
+  type BanScope,
   AppError,
   type CreateStickerPackInput,
   ENCRYPT_MAX_BYTES,
@@ -81,6 +82,7 @@ function toAdminUser(u: UserRow, storageBytes: number, invites: { invited: numbe
     openReports: u._count.reportsAgainst,
     storageBytes,
     queued: u.queuedAt !== null,
+    guest: u.guest,
     inviteLimit: u.inviteLimit,
     ...invites,
     ads: !u.adsDisabled,
@@ -153,29 +155,41 @@ export async function signOutEverywhere(userId: string) {
   await Promise.all(sessions.map((s) => revokeSession(s.id)));
 }
 
-/** Blocks someone from signing in, for `hours` or until lifted, and signs them out of every device. Their messages stay. */
-export async function banUser(adminId: string, userId: string, reason: string, hours?: number) {
+const UNBANNED = { bannedAt: null, banReason: null, bannedUntil: null, banScope: "full" };
+
+/**
+ * Bans someone for `hours` or until lifted. A full ban keeps them from signing in and signs them out everywhere; a
+ * chat ban leaves them their anonymous messages and support, and their open apps switch over at once. Their
+ * messages stay.
+ */
+export async function banUser(adminId: string, userId: string, reason: string, hours?: number, scope: BanScope = "full") {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new AppError("USER_NOT_FOUND");
   if (userId === adminId || isAdminEmail(user.email)) throw new AppError("FORBIDDEN", "Admins can't be banned");
   const bannedUntil = hours ? new Date(Date.now() + hours * 3_600_000) : null;
-  await prisma.user.update({ where: { id: userId }, data: { bannedAt: new Date(), banReason: reason, bannedUntil } });
-  await signOutEverywhere(userId);
+  await withEvents(async (tx, emit) => {
+    const banned = await tx.user.update({
+      where: { id: userId },
+      data: { bannedAt: new Date(), banReason: reason, bannedUntil, banScope: scope },
+    });
+    emit(userId, "me.updated", toUserDTO(banned));
+  });
+  if (scope === "full") await signOutEverywhere(userId);
   return getUser(userId);
 }
 
 /** Lifts the timed bans that have run out; the timers sweep calls it. */
 export async function liftExpiredBans() {
-  const { count } = await prisma.user.updateMany({
-    where: { bannedUntil: { lte: new Date() } },
-    data: { bannedAt: null, banReason: null, bannedUntil: null },
-  });
+  const { count } = await prisma.user.updateMany({ where: { bannedUntil: { lte: new Date() } }, data: UNBANNED });
   return count;
 }
 
 export async function unbanUser(userId: string) {
-  await prisma.user.update({ where: { id: userId }, data: { bannedAt: null, banReason: null, bannedUntil: null } }).catch(() => {
-    throw new AppError("USER_NOT_FOUND");
+  await withEvents(async (tx, emit) => {
+    const user = await tx.user.update({ where: { id: userId }, data: UNBANNED }).catch(() => {
+      throw new AppError("USER_NOT_FOUND");
+    });
+    emit(userId, "me.updated", toUserDTO(user));
   });
   return getUser(userId);
 }

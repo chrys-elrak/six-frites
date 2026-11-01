@@ -28,9 +28,12 @@ async function issueAccess(userId: string, sessionId: string) {
   return { accessToken: access.token, accessTokenExpiresAt: access.expiresAt.toISOString() };
 }
 
-/** Refuses a banned user, saying until when; a timed ban that just ran out no longer counts, before the sweep lifts it. */
-function checkBan({ bannedAt, bannedUntil }: Pick<User, "bannedAt" | "bannedUntil">) {
-  if (!bannedAt || (bannedUntil && bannedUntil <= new Date())) return;
+/**
+ * Refuses a fully banned user, saying until when; a timed ban that just ran out no longer counts, before the sweep
+ * lifts it. A chat ban lets them in, to their anonymous messages only.
+ */
+function checkBan({ bannedAt, bannedUntil, banScope }: Pick<User, "bannedAt" | "bannedUntil" | "banScope">) {
+  if (!bannedAt || banScope === "chat" || (bannedUntil && bannedUntil <= new Date())) return;
   throw new AppError("ACCOUNT_BANNED", "This account has been banned", { until: bannedUntil?.toISOString() ?? null });
 }
 
@@ -40,10 +43,11 @@ async function checkDeviceBan(db: Tx, deviceId: string | null | undefined, email
   const banned = await db.user.findFirst({
     where: {
       bannedAt: { not: null },
+      banScope: "full",
       OR: [{ bannedUntil: null }, { bannedUntil: { gt: new Date() } }],
       sessions: { some: { deviceId } },
     },
-    select: { bannedAt: true, bannedUntil: true },
+    select: { bannedAt: true, bannedUntil: true, banScope: true },
   });
   if (banned) checkBan(banned);
 }

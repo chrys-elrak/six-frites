@@ -21,9 +21,17 @@ export const UserDTO = z.object({
   guest: z
     .boolean()
     .describe("Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"),
+  chatBan: z
+    .object({ until: IsoDate.nullable() })
+    .nullable()
+    .describe("Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good"),
+  termsAccepted: z.boolean().describe("Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;
+
+/** Guests and people banned from chats only get anonymous messages and support. */
+export const isLimited = (u: Pick<UserDTO, "guest" | "chatBan">) => u.guest || u.chatBan !== null;
 
 export const DeleteAccountInput = z.object({
   confirm: z.literal("DELETE").describe('Type "DELETE" to confirm'),

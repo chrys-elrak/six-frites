@@ -54,6 +54,10 @@ const BanHours = z
   .optional()
   .describe("How many hours the ban lasts; until an admin lifts it when left out");
 
+/** A full ban shuts the account; a chat ban leaves only anonymous messages and support, as for a guest. */
+export const BanScope = z.enum(["full", "chat"]);
+export type BanScope = z.infer<typeof BanScope>;
+
 export const AdminUserRef = z.object({
   id: Id,
   displayName: z.string(),
@@ -61,6 +65,7 @@ export const AdminUserRef = z.object({
   avatarUrl: z.string().url().nullable(),
   bannedAt: IsoDate.nullable(),
   bannedUntil: IsoDate.nullable().describe("When the ban is lifted on its own; null when it lasts until an admin lifts it"),
+  banScope: BanScope.describe("What the ban takes away, while bannedAt is set"),
 });
 export type AdminUserRef = z.infer<typeof AdminUserRef>;
 
@@ -75,6 +80,7 @@ export const AdminUserDTO = AdminUserRef.extend({
   openReports: z.number().int().describe("Open reports against this person"),
   storageBytes: z.number().int().describe("Space their uploads take, processed copies included; GIFs not counted"),
   queued: z.boolean().describe("Signed up after their inviter hit the limit and can't sign in yet"),
+  guest: z.boolean().describe("Joined without an invite: anonymous messages and support only"),
   inviteLimit: z.number().int(),
   invited: z.number().int().describe("People who joined with their links"),
   waiting: z.number().int().describe("People waiting for them to get a higher limit"),
@@ -144,6 +150,7 @@ export const ResolveReportInput = z.object({
   deleteMessage: z.boolean().optional().describe("Delete the reported message for everyone"),
   banUser: z.boolean().optional().describe("Ban the reported person"),
   banHours: BanHours,
+  banScope: BanScope.default("full"),
   note: z.string().trim().max(500).optional(),
 });
 export type ResolveReportInput = z.infer<typeof ResolveReportInput>;
@@ -163,7 +170,11 @@ export type InviteLimitInput = z.infer<typeof InviteLimitInput>;
 export const SetAdsInput = z.object({ userIds: z.array(Id).min(1).max(100), ads: z.boolean() });
 export type SetAdsInput = z.infer<typeof SetAdsInput>;
 
-export const BanUserInput = z.object({ reason: z.string().trim().min(1).max(500), hours: BanHours });
+export const BanUserInput = z.object({
+  reason: z.string().trim().min(1).max(500),
+  hours: BanHours,
+  scope: BanScope.default("full"),
+});
 export type BanUserInput = z.infer<typeof BanUserInput>;
 
 export const AdminStickerPackDTO = z.object({

@@ -12,6 +12,7 @@ import { z } from "zod";
 import { listBlocked } from "../services/blocks.js";
 import { createContactLink, deleteContactLink, listContactLinks } from "../services/discovery.js";
 import {
+  acceptTerms,
   deleteAccount,
   getMe,
   removeAppLock,
@@ -45,6 +46,21 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => updateMe(req.auth.userId, req.body),
+  );
+
+  app.post(
+    "/me/terms",
+    {
+      config: { guest: true },
+      schema: {
+        tags: ["me"],
+        summary: "Accept the Terms of Service and Privacy Policy",
+        description: "The apps ask once, the first time someone joins.",
+        security: [{ bearer: [] }],
+        response: { 200: UserDTO },
+      },
+    },
+    (req) => acceptTerms(req.auth.userId),
   );
 
   app.post(

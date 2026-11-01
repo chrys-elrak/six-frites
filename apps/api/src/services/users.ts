@@ -13,7 +13,7 @@ import { prisma } from "../lib/prisma.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
 import { parsePhoto } from "./contacts.js";
-import { revokeSession } from "./sessions.js";
+import { chatBanned, revokeSession } from "./sessions.js";
 
 /** The photo the user uploaded, else the one their Google account came with. */
 export const avatarOf = (u: Pick<User, "avatarUrl" | "avatarKey">) =>
@@ -33,6 +33,8 @@ export function toUserDTO(u: User): UserDTO {
     ads: !u.adsDisabled,
     quickReactions: u.quickReactions,
     guest: u.guest,
+    chatBan: chatBanned(u) ? { until: u.bannedUntil?.toISOString() ?? null } : null,
+    termsAccepted: u.termsAcceptedAt !== null,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -63,6 +65,10 @@ async function announceProfile(tx: Tx, emit: Emit, userId: string) {
     const others = await tx.chatMember.findMany({ where: { chatId, userId: { not: userId } }, select: { userId: true } });
     for (const o of others) emit(o.userId, "chat.updated", await getChat(o.userId, chatId, tx));
   }
+}
+
+export async function acceptTerms(userId: string) {
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { termsAcceptedAt: new Date() } }));
 }
 
 export async function getMe(userId: string) {

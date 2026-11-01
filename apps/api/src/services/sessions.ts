@@ -1,4 +1,4 @@
-import type { Session } from "../generated/prisma/client.js";
+import type { Session, User } from "../generated/prisma/client.js";
 import { AppError, type Platform, type SessionDTO } from "@six/shared";
 import { prisma } from "../lib/prisma.js";
 import { getIo, rooms } from "../lib/realtime.js";
@@ -52,10 +52,14 @@ export async function revokeOtherSessions(userId: string, keepSessionId: string)
   return others.length;
 }
 
+/** Whether a moderator's chat ban is in force: only anonymous messages and support work, as for a guest. */
+export const chatBanned = (u: Pick<User, "bannedAt" | "bannedUntil" | "banScope">) =>
+  !!u.bannedAt && u.banScope === "chat" && (!u.bannedUntil || u.bannedUntil > new Date());
+
 export async function assertSessionActive(sessionId: string) {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
-    include: { user: { select: { guest: true } } },
+    include: { user: { select: { guest: true, bannedAt: true, bannedUntil: true, banScope: true } } },
   });
   if (!session || session.revokedAt || session.expiresAt < new Date()) {
     throw new AppError("SESSION_REVOKED");

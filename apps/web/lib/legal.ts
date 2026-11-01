@@ -176,7 +176,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Safety and moderation",
         body: [
           "You can block anyone and report messages or people. Our moderators review reports and may remove content, limit an account or close it when these terms are broken.",
-          "A ban, or a block on anonymous messages, also covers other accounts used on the same phone or browser.",
+          "Moderators can ban someone from the whole app, or from chats only, leaving them their anonymous messages. A full ban, or a block on anonymous messages, also covers other accounts used on the same phone or browser.",
           "We can't read end-to-end encrypted messages. When you report one, a copy of it and a few messages around it, as you see them, goes to our moderators.",
         ],
       },
@@ -261,7 +261,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Sécurité et modération",
         body: [
           "Vous pouvez bloquer n'importe qui et signaler des messages ou des personnes. Nos modérateurs examinent les signalements et peuvent retirer un contenu, limiter un compte ou le fermer quand ces conditions ne sont pas respectées.",
-          "Un bannissement, ou un blocage des messages anonymes, s'applique aussi aux autres comptes utilisés sur le même téléphone ou navigateur.",
+          "Les modérateurs peuvent bannir quelqu'un de toute l'application, ou seulement des discussions en lui laissant ses messages anonymes. Un bannissement complet, ou un blocage des messages anonymes, s'applique aussi aux autres comptes utilisés sur le même téléphone ou navigateur.",
           "Nous ne pouvons pas lire les messages chiffrés de bout en bout. Quand vous en signalez un, une copie de ce message et de quelques messages autour, tels que vous les voyez, est transmise à nos modérateurs.",
         ],
       },
@@ -346,7 +346,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Fiarovana sy fanaraha-maso",
         body: [
           "Afaka manakana na iza na iza ianao ary mitatitra hafatra na olona. Dinihin'ny mpandrindra anay ny tatitra ary mety hesorin'izy ireo ny votoaty, hoferana na hakatona ny kaonty rehefa tsy voahaja ireto fepetra ireto.",
-          "Mihatra amin'ireo kaonty hafa ampiasaina amin'io finday na navigateur io ihany koa ny fandraràna, na ny fanakanana hafatra tsy fantatra mpandefa.",
+          "Afaka mandrara olona amin'ny fampiharana manontolo ny mpandrindra, na amin'ny resaka ihany ka avelany ho azy ny hafatra miafina. Mihatra amin'ireo kaonty hafa ampiasaina amin'io finday na navigateur io ihany koa ny fandraràna tanteraka, na ny fanakanana hafatra tsy fantatra mpandefa.",
           "Tsy vakianay ny hafatra voaaro tanteraka. Rehefa mitatitra iray amin'izy ireo ianao dia mandeha any amin'ny mpandrindra anay ny dika mitovin'io hafatra io sy hafatra vitsivitsy manodidina azy, araka ny ahitanao azy.",
         ],
       },

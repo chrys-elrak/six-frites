@@ -25,7 +25,7 @@ import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
 import { Wallpaper } from "@/components/chat-background";
-import { chatTheme } from "@six/shared";
+import { chatTheme, isLimited } from "@six/shared";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
@@ -66,7 +66,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const qc = useQueryClient();
   const status = useSession((s) => s.status);
-  const guest = useSession((s) => !!s.user?.guest);
+  const guest = useSession((s) => !!s.user && isLimited(s.user));
   const hasAppLock = useSession((s) => !!s.user?.hasAppLock);
   const locked = useAppLock((s) => s.locked) && hasAppLock;
   const tr = useT();

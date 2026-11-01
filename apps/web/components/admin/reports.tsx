@@ -4,7 +4,7 @@ import { unwrap } from "@six/sdk";
 import type { AttachmentDTO, ReportDTO, ReportedMessageDTO, ResolveReportInput } from "@six/shared";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { BAN_LENGTHS, adminKeys, reasonLabel, refreshAdmin } from "@/lib/admin";
+import { BAN_LENGTHS, BAN_SCOPES, adminKeys, reasonLabel, refreshAdmin } from "@/lib/admin";
 import { clockTime, timeAgo } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Avatar } from "../avatar";
@@ -84,7 +84,7 @@ function ReportCard({ report }: { report: ReportDTO }) {
   ]);
   const hasMessage = report.messages.some((m) => m.reported);
 
-  async function resolve(input: ResolveReportInput) {
+  async function resolve(input: Partial<ResolveReportInput>) {
     setError(null);
     try {
       unwrap(
@@ -96,7 +96,7 @@ function ReportCard({ report }: { report: ReportDTO }) {
     }
   }
 
-  const ask = (label: string, input: ResolveReportInput) =>
+  const ask = (label: string, input: Partial<ResolveReportInput>) =>
     setConfirm([{ label, destructive: true, onSelect: () => void resolve(input) }]);
 
   return (
@@ -152,10 +152,18 @@ function ReportCard({ report }: { report: ReportDTO }) {
             type="button"
             onClick={() =>
               setConfirm(
-                BAN_LENGTHS.map((l) => ({
-                  label: `Ban ${l.hours ? `for ${l.label}` : "for good"}${hasMessage ? " and delete the message" : ""}`,
-                  destructive: true,
-                  onSelect: () => void resolve({ banUser: true, banHours: l.hours, deleteMessage: hasMessage }),
+                BAN_SCOPES.map((s) => ({
+                  label: s.label,
+                  keepOpen: true,
+                  onSelect: () =>
+                    setConfirm(
+                      BAN_LENGTHS.map((l) => ({
+                        label: `Ban ${s.short} ${l.hours ? `for ${l.label}` : "for good"}${hasMessage ? " and delete the message" : ""}`,
+                        destructive: true,
+                        onSelect: () =>
+                          void resolve({ banUser: true, banHours: l.hours, banScope: s.scope, deleteMessage: hasMessage }),
+                      })),
+                    ),
                 })),
               )
             }

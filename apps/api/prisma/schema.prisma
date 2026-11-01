@@ -24,10 +24,14 @@ model User {
   updatedAt   DateTime  @updatedAt
   bannedAt    DateTime?
   banReason   String?
+  /// When they accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else.
+  termsAcceptedAt DateTime?
   /// When a timed ban is lifted on its own; null while `bannedAt` is set means it lasts until an admin lifts it.
   bannedUntil DateTime?
   /// An admin's authenticator secret, in base32; moderation stays shut until it is set.
   totpSecret  String?
+  /// What a ban takes away: "full" shuts the account, "chat" leaves only anonymous messages and support, like a guest.
+  banScope    String    @default("full")
   /// The time step of the last authenticator code accepted, so no code works twice.
   totpStep    Int?
   lastSeenAt  DateTime?

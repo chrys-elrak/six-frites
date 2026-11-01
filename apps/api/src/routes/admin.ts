@@ -169,7 +169,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: AdminUserDTO },
       },
     },
-    (req) => banUser(req.auth.userId, req.params.id, req.body.reason, req.body.hours),
+    (req) => banUser(req.auth.userId, req.params.id, req.body.reason, req.body.hours, req.body.scope),
   );
 
   app.post(

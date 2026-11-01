@@ -1,7 +1,7 @@
 "use client";
 
 import { type Realtime, SixApiError, unwrap } from "@six/sdk";
-import { type ChatDTO, type MessageDTO, signInMessage, splitLinks } from "@six/shared";
+import { type ChatDTO, type MessageDTO, isLimited, signInMessage, splitLinks } from "@six/shared";
 import { ArrowLeft, ImagePlus, LogOut, SendHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -294,7 +294,7 @@ export default function SupportPage() {
   const tr = useT();
   const router = useRouter();
   const { status, user } = useSession();
-  const member = status === "authed" && !user!.guest;
+  const member = status === "authed" && !isLimited(user!);
 
   useEffect(() => {
     if (!member) return;
@@ -305,6 +305,6 @@ export default function SupportPage() {
   }, [member, router]);
 
   if (status === "anon") return <SignIn />;
-  if (status === "authed" && user!.guest) return <SupportChat meId={user!.id} />;
+  if (status === "authed" && isLimited(user!)) return <SupportChat meId={user!.id} />;
   return <main className="grid h-dvh place-items-center text-sm text-stone-500">{tr.common.loading}</main>;
 }

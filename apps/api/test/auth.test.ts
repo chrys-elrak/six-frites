@@ -75,6 +75,14 @@ describe("auth", () => {
     const me = await ctx.app.inject({ url: "/v1/me", headers: bearer(accessToken) });
     expect(me.statusCode).toBe(401);
   });
+
+  it("asks a newcomer to accept the terms once, guests too", async () => {
+    const { accessToken, user } = (await login(`newcomer-${Date.now()}`, "web", { guest: true })).json();
+    expect(user.termsAccepted).toBe(false);
+    const accepted = await ctx.app.inject({ method: "POST", url: "/v1/me/terms", headers: bearer(accessToken) });
+    expect(accepted.json().termsAccepted).toBe(true);
+    expect((await ctx.app.inject({ url: "/v1/me", headers: bearer(accessToken) })).json().termsAccepted).toBe(true);
+  });
 });
 
 describe("sessions", () => {

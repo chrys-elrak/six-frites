@@ -1,4 +1,5 @@
 import "@/lib/polyfills";
+import { isLimited } from "@six/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from "expo-router";
 import { usePreventScreenCapture } from "expo-screen-capture";
@@ -9,6 +10,7 @@ import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { TermsGate } from "@/components/terms-gate";
 import { EmptyState, PrimaryButton } from "@/components/ui";
 import { useLocale, useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -46,7 +48,7 @@ export default function RootLayout() {
   const status = useSession((s) => s.status);
   const bootstrap = useSession((s) => s.bootstrap);
   const authed = status === "authed";
-  const guest = useSession((s) => !!s.user?.guest);
+  const guest = useSession((s) => !!s.user && isLimited(s.user));
   const localeReady = useLocale((s) => s.ready);
 
   useEffect(() => {
@@ -90,6 +92,7 @@ export default function RootLayout() {
                   <Stack.Screen name="add/[code]" />
                 </Stack>
               )}
+              <TermsGate />
             </ThemeProvider>
           </QueryClientProvider>
         </KeyboardProvider>

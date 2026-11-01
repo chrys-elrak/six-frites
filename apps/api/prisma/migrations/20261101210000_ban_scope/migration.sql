@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "banScope" TEXT NOT NULL DEFAULT 'full';

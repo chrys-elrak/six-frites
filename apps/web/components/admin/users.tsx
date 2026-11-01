@@ -1,11 +1,11 @@
 "use client";
 
 import { unwrap } from "@six/sdk";
-import type { AdminUserDTO } from "@six/shared";
+import type { AdminUserDTO, BanScope } from "@six/shared";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { BAN_LENGTHS, adminKeys, banEnd, refreshAdmin } from "@/lib/admin";
+import { BAN_LENGTHS, BAN_SCOPES, adminKeys, banEnd, refreshAdmin } from "@/lib/admin";
 import { formatBytes, timeAgo } from "@/lib/format";
 import { six } from "@/lib/six";
 import { Avatar } from "../avatar";
@@ -82,6 +82,7 @@ function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void 
   const qc = useQueryClient();
   const [reason, setReason] = useState("");
   const [hours, setHours] = useState<number | undefined>(24);
+  const [scope, setScope] = useState<BanScope>("full");
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -93,7 +94,7 @@ function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void 
             unwrap(
               await six.api.POST("/v1/admin/users/{id}/ban", {
                 params: { path: { id: user.id } },
-                body: { reason: reason.trim(), hours },
+                body: { reason: reason.trim(), hours, scope },
               }),
             );
             refreshAdmin(qc);
@@ -106,8 +107,25 @@ function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void 
       >
         <h2 className="font-semibold">Ban {user.displayName}?</h2>
         <p className="text-sm text-stone-500">
-          They are signed out everywhere and can't sign in again until the ban ends or you lift it. Their messages stay.
+          {scope === "full"
+            ? "They are signed out everywhere and can't sign in again until the ban ends or you lift it, on this account or another on the same phone or browser."
+            : "They can still sign in, but only to their anonymous messages and support, like a guest, until the ban ends or you lift it."}{" "}
+          Their messages stay.
         </p>
+        <label className="flex items-center gap-3 text-sm">
+          <span className="font-medium">What</span>
+          <select
+            value={scope}
+            onChange={(e) => setScope(e.target.value as BanScope)}
+            className="flex-1 rounded-xl bg-stone-100 px-3 py-2.5 dark:bg-stone-800"
+          >
+            {BAN_SCOPES.map((s) => (
+              <option key={s.scope} value={s.scope}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="flex items-center gap-3 text-sm">
           <span className="font-medium">How long</span>
           <select
@@ -181,16 +199,27 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
       />
       <Avatar user={u} />
       <div className="min-w-40 flex-1">
-        <p className="truncate text-sm font-medium">
-          {u.displayName}
-          {u.admin && <span className="ml-1.5 text-xs text-brand">Admin</span>}
-          {u.bannedAt && (
-            <span className="ml-1.5 text-xs text-red-600 dark:text-red-400">
-              {u.bannedUntil ? `Banned until ${banEnd(u.bannedUntil)}` : "Banned"}
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm font-medium">
+          <span className="min-w-0 truncate">{u.displayName}</span>
+          {u.admin ? (
+            <span className="shrink-0 text-xs text-brand">Admin</span>
+          ) : u.guest || (u.bannedAt && u.banScope === "chat") ? (
+            <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-px text-[11px] font-medium text-amber-800 dark:bg-amber-400/15 dark:text-amber-300">
+              Anonymous only
+            </span>
+          ) : (
+            <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-px text-[11px] font-medium text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300">
+              Full access
             </span>
           )}
-          {u.queued && <span className="ml-1.5 text-xs text-amber-600 dark:text-amber-400">Waiting</span>}
-          {!u.ads && <span className="ml-1.5 text-xs text-emerald-600 dark:text-emerald-400">No ads</span>}
+          {u.bannedAt && (
+            <span className="shrink-0 text-xs text-red-600 dark:text-red-400">
+              {u.banScope === "chat" ? "Banned from chats" : "Banned"}
+              {u.bannedUntil && ` until ${banEnd(u.bannedUntil)}`}
+            </span>
+          )}
+          {u.queued && <span className="shrink-0 text-xs text-amber-600 dark:text-amber-400">Waiting</span>}
+          {!u.ads && <span className="shrink-0 text-xs text-emerald-600 dark:text-emerald-400">No ads</span>}
         </p>
         <p className="truncate text-xs text-stone-500">{u.email}</p>
         <p className="text-xs text-stone-500">

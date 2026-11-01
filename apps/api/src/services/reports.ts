@@ -2,6 +2,7 @@ import {
   type AttachmentDTO,
   type AdminReportQuery,
   type AdminUserRef,
+  type BanScope,
   AppError,
   type CreateReportInput,
   type MessageEntity,
@@ -59,6 +60,7 @@ export const toUserRef = (u: User): AdminUserRef => ({
   avatarUrl: avatarOf(u),
   bannedAt: u.bannedAt?.toISOString() ?? null,
   bannedUntil: u.bannedUntil?.toISOString() ?? null,
+  banScope: u.banScope as BanScope,
 });
 
 /**
@@ -242,7 +244,7 @@ export async function resolveReport(adminId: string, reportId: string, input: Re
   const kept = files.length && (await prisma.anonMessage.count({ where: { id: report.messageId! } }));
   if (files.length && !kept) await deleteObjects(files).catch(() => null);
   if (input.banUser) {
-    await banUser(adminId, report.targetId, input.note || `Reported for ${report.reason}`, input.banHours);
+    await banUser(adminId, report.targetId, input.note || `Reported for ${report.reason}`, input.banHours, input.banScope);
     done.push("User banned");
   }
 
