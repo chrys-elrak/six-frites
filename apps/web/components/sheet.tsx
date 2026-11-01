@@ -51,6 +51,7 @@ export function Sheet({
     return (
       <Portal>
         <div
+          key="menu"
           className="fixed inset-0 z-[80]"
           onContextMenu={(e) => {
             e.preventDefault();
@@ -91,7 +92,7 @@ export function Sheet({
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal>
+      <div key="sheet" className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal>
         <button
           type="button"
           aria-label={tr.common.close}
