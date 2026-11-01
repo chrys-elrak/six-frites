@@ -2,22 +2,56 @@ import { describe, expect, it } from "vitest";
 import { headObject, putObject } from "../src/lib/storage.js";
 import { liftExpiredBans } from "../src/services/admin.js";
 import { pairAlias } from "../src/services/users.js";
-import { type Auth, chatHelpers, loginAs, prisma, useApp } from "./helpers.js";
+import { totp, totpStep } from "../src/lib/totp.js";
+import { ADMIN_SECRET, type Auth, asAdmin, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { signUp, get, call, send, makeFriends } = chatHelpers(ctx);
 
-const admin = async (): Promise<Auth> => (await loginAs(ctx.app, "the-admin")).json();
+const admin = () => asAdmin(ctx.app);
 
 describe("admin access", () => {
   it("is only for the emails in ADMIN_EMAILS", async () => {
     const someone = await signUp("someone");
     expect((await get(someone, "/v1/admin/stats")).error.code).toBe("FORBIDDEN");
+    expect((await get(someone, "/v1/admin/me")).error.code).toBe("FORBIDDEN");
+    expect((await call(someone, "POST", "/v1/admin/2fa/secret")).statusCode).toBe(403);
     const boss = await admin();
-    expect(await get(boss, "/v1/admin/me")).toEqual({ admin: true });
+    expect(await get(boss, "/v1/admin/me")).toEqual({ admin: true, twoFactor: "ok" });
     const stats = await get(boss, "/v1/admin/stats");
     expect(stats.users).toBeGreaterThan(0);
     expect(stats.signups).toHaveLength(30);
+  });
+
+  it("stays shut until an authenticator code is entered, and asks again after 12 hours", async () => {
+    await prisma.user.updateMany({ where: { email: "the-admin@example.com" }, data: { totpSecret: null, totpStep: null } });
+    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const code = (secret: string, step = totpStep()) => ({ code: totp(secret, step), secret });
+
+    expect(await get(boss, "/v1/admin/me")).toEqual({ admin: true, twoFactor: "setup" });
+    expect((await get(boss, "/v1/admin/stats")).error.code).toBe("ADMIN_2FA_REQUIRED");
+    const { secret, uri } = (await call(boss, "POST", "/v1/admin/2fa/secret")).json();
+    expect(uri).toContain(`secret=${secret}`);
+    expect((await call(boss, "POST", "/v1/admin/2fa", code(secret, totpStep() + 5))).json().error.code).toBe("WRONG_2FA_CODE");
+    expect(await get(boss, "/v1/admin/me")).toEqual({ admin: true, twoFactor: "setup" });
+
+    const first = code(ADMIN_SECRET);
+    expect((await call(boss, "POST", "/v1/admin/2fa", first)).json()).toEqual({ admin: true, twoFactor: "ok" });
+    expect((await get(boss, "/v1/admin/stats")).users).toBeGreaterThan(0);
+    expect((await call(boss, "POST", "/v1/admin/2fa/secret")).json().error.code).toBe("CONFLICT");
+
+    const laptop: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    expect(await get(laptop, "/v1/admin/me")).toEqual({ admin: true, twoFactor: "required" });
+    expect((await call(laptop, "POST", "/v1/admin/2fa", first)).json().error.code).toBe("WRONG_2FA_CODE");
+    expect((await call(laptop, "POST", "/v1/admin/2fa", { code: totp(secret, totpStep()) })).json().error.code).toBe(
+      "WRONG_2FA_CODE",
+    );
+
+    await prisma.session.updateMany({
+      where: { userId: boss.user.id, adminVerifiedAt: { not: null } },
+      data: { adminVerifiedAt: new Date(Date.now() - 13 * 3_600_000) },
+    });
+    expect((await get(boss, "/v1/admin/stats")).error.code).toBe("ADMIN_2FA_REQUIRED");
   });
 });
 
@@ -125,6 +159,22 @@ describe("user moderation", () => {
     expect(await liftExpiredBans()).toBe(1);
     expect(await prisma.user.findUniqueOrThrow({ where: { id: target.user.id } })).toMatchObject({ bannedAt: null, banReason: null });
     expect((await loginAs(ctx.app, googleSub)).statusCode).toBe(200);
+  });
+
+  it("follows a banned person to new accounts on the same browser or phone", async () => {
+    const boss = await admin();
+    const device = (id: string) => ({ device: { platform: "android", name: "Phone", id } });
+    const phone = `phone-${uniqueSub("ban")}`;
+    const troll: Auth = (await loginAs(ctx.app, uniqueSub("troll"), "android", device(phone))).json();
+    const sibling = await loginAs(ctx.app, uniqueSub("sibling"), "android", device(phone));
+    await call(boss, "POST", `/v1/admin/users/${troll.user.id}/ban`, { reason: "harassment", hours: 24 });
+
+    const fresh = await loginAs(ctx.app, uniqueSub("troll-again"), "android", device(phone));
+    expect(fresh.json().error).toMatchObject({ code: "ACCOUNT_BANNED", details: { until: expect.any(String) } });
+    const refresh = await ctx.app.inject({ method: "POST", url: "/v1/auth/refresh", payload: { refreshToken: sibling.json().refreshToken } });
+    expect(refresh.json().error.code).toBe("ACCOUNT_BANNED");
+    expect((await loginAs(ctx.app, uniqueSub("elsewhere"), "android", device(`other-${phone}`))).statusCode).toBe(200);
+    expect((await loginAs(ctx.app, "the-admin", "android", device(phone))).statusCode).toBe(200);
   });
 });
 

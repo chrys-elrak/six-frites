@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll } from "vitest";
 import { buildApp } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
+import { totp, totpStep } from "../src/lib/totp.js";
 
 export { prisma };
 
@@ -35,6 +36,30 @@ export interface Auth {
   accessToken: string;
   user: { id: string };
 }
+
+/** The test admin's authenticator secret: the first sign-in sets it up, later ones reuse it. */
+export const ADMIN_SECRET = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
+
+/**
+ * Signs in as the admin with moderation open. Codes work once and tests sign in faster than one per 30 seconds,
+ * so the last spent step is forgotten first.
+ */
+export async function asAdmin(app: FastifyInstance): Promise<Auth> {
+  const boss: Auth = (await loginAs(app, "the-admin")).json();
+  await prisma.user.update({ where: { id: boss.user.id }, data: { totpStep: null } });
+  const res = await app.inject({
+    method: "POST",
+    url: "/v1/admin/2fa",
+    headers: bearer(boss.accessToken),
+    payload: { code: totp(ADMIN_SECRET, totpStep()), secret: ADMIN_SECRET },
+  });
+  if (res.statusCode !== 200) throw new Error(`Admin code refused: ${res.body}`);
+  return boss;
+}
+
+/** Backdates an account past the day new accounts wait before sending anonymous messages. */
+export const ageAccount = (who: Auth) =>
+  prisma.user.update({ where: { id: who.user.id }, data: { createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) } });
 
 export function chatHelpers(ctx: { app: FastifyInstance }) {
   const signUp = async (name: string, extra: Record<string, unknown> = {}): Promise<Auth> =>

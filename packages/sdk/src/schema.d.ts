@@ -35,6 +35,8 @@ export interface paths {
                             /** @enum {string} */
                             platform: "web" | "ios" | "android";
                             name?: string;
+                            /** @description A random ID the app keeps for this browser or phone; bans and anonymous blocks also cover other accounts used on it */
+                            id?: string;
                         };
                     };
                 };
@@ -207,7 +209,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Whether you are an admin (403 otherwise) */
+        /** Whether you are an admin (403 otherwise), and whether moderation still wants an authenticator code */
         get: {
             parameters: {
                 query?: never;
@@ -226,6 +228,11 @@ export interface paths {
                         "application/json": {
                             /** @enum {boolean} */
                             admin: true;
+                            /**
+                             * @description setup: no authenticator yet; required: enter a code on this session; ok: moderation is open
+                             * @enum {string}
+                             */
+                            twoFactor: "setup" | "required" | "ok";
                         };
                     };
                 };
@@ -233,6 +240,104 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/2fa/secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A new authenticator secret, for an admin who has none yet
+         * @description Nothing is saved until a code made from it is sent to POST /v1/admin/2fa.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            secret: string;
+                            /** @description An otpauth:// link to show as a QR code */
+                            uri: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/2fa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enter an authenticator code to open moderation on this session for 12 hours
+         * @description The first time, also send the secret the code was made from. Each code works once.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                        /** @description Only the first time: the secret from POST /v1/admin/2fa/secret that the code was made with */
+                        secret?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            admin: true;
+                            /**
+                             * @description setup: no authenticator yet; required: enter a code on this session; ok: moderation is open
+                             * @enum {string}
+                             */
+                            twoFactor: "setup" | "required" | "ok";
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -12829,7 +12934,7 @@ export interface paths {
         };
         /**
          * Whose anonymous messages link this is
-         * @description Open to anyone, so the page can show who you're writing to before you sign in.
+         * @description Open to anyone, so the page can show who you're writing to before you sign in. Signed in, it also says whether this person blocked you.
          */
         get: {
             parameters: {
@@ -12852,6 +12957,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
+                            /** @description The signed-in viewer was blocked by this person and can't write to them; false when signed out */
+                            blocked: boolean;
                         };
                     };
                 };
@@ -12860,7 +12967,7 @@ export interface paths {
         put?: never;
         /**
          * Send someone an anonymous message
-         * @description They never see who sent it; moderators can, if they report it.
+         * @description They never see who sent it; moderators can see the sender of every anonymous message. Accounts under a day old get ACCOUNT_TOO_NEW, and someone the recipient blocked gets ANON_BLOCKED.
          */
         post: {
             parameters: {
@@ -12992,7 +13099,7 @@ export interface paths {
         };
         /**
          * The anonymous messages you sent, newest first
-         * @description Only you see this list. It never says whether the recipient deleted a message or blocked you.
+         * @description Only you see this list. It never says whether the recipient deleted a message.
          */
         get: {
             parameters: {
@@ -13274,7 +13381,7 @@ export interface paths {
         put?: never;
         /**
          * Stop whoever sent this anonymous message from sending you more
-         * @description Deletes the message too. You still never learn who it was.
+         * @description Covers other accounts used on the sender's devices too, and deletes the message. They're told they can't write to you anymore; you still never learn who it was.
          */
         post: {
             parameters: {

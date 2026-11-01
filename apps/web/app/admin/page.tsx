@@ -10,6 +10,7 @@ import { AnonMessages } from "@/components/admin/anon";
 import { LargeFiles } from "@/components/admin/large-files";
 import { Overview } from "@/components/admin/overview";
 import { Reports } from "@/components/admin/reports";
+import { TwoFactor } from "@/components/admin/two-factor";
 import { Users } from "@/components/admin/users";
 import { adminKeys, useIsAdmin } from "@/lib/admin";
 import { useSession } from "@/lib/session";
@@ -25,7 +26,7 @@ export default function AdminPage() {
   const stats = useQuery({
     queryKey: adminKeys.stats,
     queryFn: async () => unwrap(await six.api.GET("/v1/admin/stats")),
-    enabled: !!admin.data,
+    enabled: admin.data?.twoFactor === "ok",
   });
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function AdminPage() {
       </main>
     );
   }
+  if (admin.data.twoFactor !== "ok") return <TwoFactor setup={admin.data.twoFactor === "setup"} />;
 
   const open = stats.data?.openReports ?? 0;
   const tabs: { id: Tab; label: string }[] = [

@@ -38,6 +38,11 @@ export const AskProfileDTO = z.object({
 });
 export type AskProfileDTO = z.infer<typeof AskProfileDTO>;
 
+export const AskLinkDTO = AskProfileDTO.extend({
+  blocked: z.boolean().describe("The signed-in viewer was blocked by this person and can't write to them; false when signed out"),
+});
+export type AskLinkDTO = z.infer<typeof AskLinkDTO>;
+
 export const UpdateAskProfileInput = z.object({
   name: z
     .string()

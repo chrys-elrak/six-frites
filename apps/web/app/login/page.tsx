@@ -11,7 +11,7 @@ import { InviteCard, invitePreviewQuery } from "@/components/invite-card";
 import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
 import { unlock } from "@/lib/app-lock";
-import { deviceName, useSession } from "@/lib/session";
+import { deviceId, deviceName, useSession } from "@/lib/session";
 import { AndroidDownload } from "@/components/android-download";
 import { getLocale, useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
@@ -41,7 +41,7 @@ function LoginForm() {
     setError(null);
     try {
       unlock();
-      await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName() });
+      await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName(), deviceId: deviceId() });
       if (inviteCode) {
         await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
       }

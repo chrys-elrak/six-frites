@@ -4,7 +4,10 @@ import {
   AddStickerInput,
   AdminAnonDTO,
   AdminAnonQuery,
+  AdminCodeInput,
+  AdminMeDTO,
   AdminPackQuery,
+  AdminSecretDTO,
   AdminReportQuery,
   AdminStatsDTO,
   AdminStickerPackDTO,
@@ -35,11 +38,14 @@ import {
   listLargeFiles,
   listStickerPacks,
   listUsers,
+  newAdminSecret,
   setAds,
   setInviteLimit,
   signOutEverywhere,
   unbanUser,
+  verifyAdminCode,
 } from "../services/admin.js";
+import { adminTwoFactor } from "../plugins/auth.js";
 import { listAnonForAdmin } from "../services/ask.js";
 import { createReport, listReports, resolveReport } from "../services/reports.js";
 
@@ -72,21 +78,57 @@ export const reportRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 };
 
-const adminRoutes: FastifyPluginAsyncZod = async (app) => {
-  app.addHook("onRequest", app.requireAdmin);
+/** What an admin can reach before entering an authenticator code: who they are, and the code itself. */
+export const adminSignInRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.addHook("onRequest", app.requireAdminSignIn);
 
   app.get(
     "/admin/me",
     {
       schema: {
         tags,
-        summary: "Whether you are an admin (403 otherwise)",
+        summary: "Whether you are an admin (403 otherwise), and whether moderation still wants an authenticator code",
         security,
-        response: { 200: z.object({ admin: z.literal(true) }) },
+        response: { 200: AdminMeDTO },
       },
     },
-    () => ({ admin: true as const }),
+    async (req) => ({ admin: true as const, twoFactor: await adminTwoFactor(req.auth.sessionId) }),
   );
+
+  app.post(
+    "/admin/2fa/secret",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        tags,
+        summary: "A new authenticator secret, for an admin who has none yet",
+        description: "Nothing is saved until a code made from it is sent to POST /v1/admin/2fa.",
+        security,
+        response: { 200: AdminSecretDTO },
+      },
+    },
+    (req) => newAdminSecret(req.auth.userId),
+  );
+
+  app.post(
+    "/admin/2fa",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags,
+        summary: "Enter an authenticator code to open moderation on this session for 12 hours",
+        description: "The first time, also send the secret the code was made from. Each code works once.",
+        security,
+        body: AdminCodeInput,
+        response: { 200: AdminMeDTO },
+      },
+    },
+    (req) => verifyAdminCode(req.auth.userId, req.auth.sessionId, req.body),
+  );
+};
+
+const adminRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.addHook("onRequest", app.requireAdmin);
 
   app.get(
     "/admin/stats",

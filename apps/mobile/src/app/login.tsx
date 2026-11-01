@@ -14,7 +14,7 @@ import { Logo } from "@/components/logo";
 import { Notice } from "@/components/ui";
 import { unlock } from "@/lib/app-lock";
 import { getLocale, useT } from "@/lib/i18n";
-import { deviceName, GOOGLE_WEB_CLIENT_ID, googleIdToken } from "@/lib/session";
+import { deviceId, deviceName, GOOGLE_WEB_CLIENT_ID, googleIdToken } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 
@@ -60,7 +60,7 @@ export default function Login() {
         return;
       }
       unlock();
-      await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName() });
+      await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName(), deviceId: await deviceId() });
       if (inviteCode) {
         await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
       }

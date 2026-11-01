@@ -13,6 +13,7 @@ declare module "fastify" {
   interface FastifyInstance {
     requireAuth: (req: FastifyRequest) => Promise<void>;
     requireAdmin: (req: FastifyRequest) => Promise<void>;
+    requireAdminSignIn: (req: FastifyRequest) => Promise<void>;
   }
   interface FastifyContextConfig {
     /** Lets guests from the support page in too; every other route turns them away. */
@@ -30,6 +31,27 @@ export async function authenticateBearer(header: string | undefined) {
   return { ...claims, guest: session.user.guest };
 }
 
+/** How long an authenticator code keeps moderation open on a session. */
+const ADMIN_2FA_MS = 12 * 60 * 60 * 1000;
+
+/** Where an admin's session stands with their authenticator: none set up yet, a code due, or open. */
+export async function adminTwoFactor(sessionId: string) {
+  const session = await prisma.session.findUniqueOrThrow({
+    where: { id: sessionId },
+    select: { adminVerifiedAt: true, user: { select: { totpSecret: true } } },
+  });
+  if (!session.user.totpSecret) return "setup" as const;
+  const fresh = session.adminVerifiedAt && session.adminVerifiedAt.getTime() > Date.now() - ADMIN_2FA_MS;
+  return fresh ? ("ok" as const) : ("required" as const);
+}
+
+async function authenticateAdmin(req: FastifyRequest) {
+  const { guest, ...claims } = await authenticateBearer(req.headers.authorization);
+  req.auth = claims;
+  const user = await prisma.user.findUnique({ where: { id: req.auth.userId }, select: { email: true } });
+  if (guest || !user || !isAdminEmail(user.email)) throw new AppError("FORBIDDEN", "Admins only");
+}
+
 export default fp(async (app) => {
   app.decorateRequest("auth", null as unknown as AccessClaims);
   app.decorate("requireAuth", async (req: FastifyRequest) => {
@@ -37,10 +59,11 @@ export default fp(async (app) => {
     if (guest && !req.routeOptions.config.guest) throw new AppError("FORBIDDEN", "Guests can only write to support");
     req.auth = claims;
   });
+  app.decorate("requireAdminSignIn", authenticateAdmin);
   app.decorate("requireAdmin", async (req: FastifyRequest) => {
-    const { guest, ...claims } = await authenticateBearer(req.headers.authorization);
-    req.auth = claims;
-    const user = await prisma.user.findUnique({ where: { id: req.auth.userId }, select: { email: true } });
-    if (guest || !user || !isAdminEmail(user.email)) throw new AppError("FORBIDDEN", "Admins only");
+    await authenticateAdmin(req);
+    if ((await adminTwoFactor(req.auth.sessionId)) !== "ok") {
+      throw new AppError("ADMIN_2FA_REQUIRED", "Enter a code from your authenticator app first");
+    }
   });
 });

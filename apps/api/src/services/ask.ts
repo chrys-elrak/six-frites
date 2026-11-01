@@ -7,6 +7,7 @@ import {
   type AdminAnonQuery,
   AppError,
   type AnonMessageDTO,
+  type AskLinkDTO,
   type AskProfileDTO,
   type PageQuery,
   type SendAnonInput,
@@ -51,8 +52,30 @@ const toAskProfile = (u: User): AskProfileDTO => ({
   avatarUrl: u.askAvatarKey ? presignGet(u.askAvatarKey) : null,
 });
 
-export async function askProfile(code: string) {
-  return toAskProfile(await askerByCode(code));
+/** Whether `recipientId` blocked this sender, or another account that signed in on one of the sender's devices. */
+async function isAnonBlocked(recipientId: string, senderId: string) {
+  const devices = await prisma.session.findMany({
+    where: { userId: senderId, deviceId: { not: null } },
+    select: { deviceId: true },
+    distinct: ["deviceId"],
+  });
+  const block = await prisma.anonBlock.findFirst({
+    where: {
+      blockerId: recipientId,
+      OR: [
+        { blockedId: senderId },
+        { blocked: { sessions: { some: { deviceId: { in: devices.map((d) => d.deviceId!) } } } } },
+      ],
+    },
+    select: { blockerId: true },
+  });
+  return !!block;
+}
+
+/** The link's public face, and whether the signed-in viewer, if any, was blocked from it. */
+export async function askLink(code: string, viewerId?: string): Promise<AskLinkDTO> {
+  const user = await askerByCode(code);
+  return { ...toAskProfile(user), blocked: !!viewerId && (await isAnonBlocked(user.id, viewerId)) };
 }
 
 export async function updateAskProfile(userId: string, input: UpdateAskProfileInput) {
@@ -87,6 +110,19 @@ const HOUR = 60 * 60 * 1000;
 
 /** How many anonymous messages one person can send in an hour: to the same link, and to anyone. */
 export const SEND_LIMITS = { perRecipient: 5, total: 30 };
+
+/** How old an account must be to send anonymous messages, so a banned or blocked sender can't just make another. */
+export const NEW_ACCOUNT_WAIT_MS = 24 * HOUR;
+
+async function assertOldEnough(senderId: string) {
+  const { createdAt } = await prisma.user.findUniqueOrThrow({ where: { id: senderId }, select: { createdAt: true } });
+  const from = new Date(createdAt.getTime() + NEW_ACCOUNT_WAIT_MS);
+  if (from > new Date()) {
+    throw new AppError("ACCOUNT_TOO_NEW", "New accounts wait a day before sending anonymous messages", {
+      until: from.toISOString(),
+    });
+  }
+}
 
 /** Turns away a sender who has hit the hourly limits or already sent this text to this person today. */
 async function assertNotSpam(senderId: string, recipientId: string, text: string) {
@@ -138,16 +174,15 @@ async function storeVoice(recipientId: string, dataUrl: string) {
 }
 
 /**
- * Sends an anonymous message. A message from someone the recipient blocked is kept, hidden from the recipient,
- * so it still shows in the sender's sent list and blocking stays quiet. A photo is stored under the recipient,
- * so its address says nothing about who sent it.
+ * Sends an anonymous message. Someone the recipient blocked is told so: a quiet block would let the recipient
+ * unmask a suspect by asking them for a test message and watching it never arrive. A photo is stored under the
+ * recipient, so its address says nothing about who sent it.
  */
 export async function sendAnon(senderId: string, code: string, { text, entities, photo, gifId, voice }: SendAnonInput) {
   const recipient = await askerByCode(code);
+  await assertOldEnough(senderId);
+  if (await isAnonBlocked(recipient.id, senderId)) throw new AppError("ANON_BLOCKED", "This person isn't taking your messages");
   await assertNotSpam(senderId, recipient.id, text);
-  const blocked = await prisma.anonBlock.findUnique({
-    where: { blockerId_blockedId: { blockerId: recipient.id, blockedId: senderId } },
-  });
   let photoKey: string | null = null;
   if (photo) {
     const p = parsePhoto(photo);
@@ -169,10 +204,8 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
       voiceKey: sound?.key,
       voiceMs: sound?.durationMs,
       voiceWaveform: sound?.waveform,
-      recipientDeletedAt: blocked ? new Date() : null,
     },
   });
-  if (blocked) return;
   broadcaster().to(rooms.user(recipient.id)).emit("ask:new", toAnonDTO(m));
   void deliverAnonPush(recipient.id, maskSpoilers(text, entities), sound ? "voice" : gif ? "gif" : "image").catch(() => null);
 }
@@ -185,7 +218,7 @@ export async function listAnon(userId: string, q: PageQuery) {
   return toPage(rows, q, (m) => toAnonDTO(m, askRenewedAt));
 }
 
-/** What you sent, newest first, with whom you sent it to. Nothing says whether they deleted it or blocked you. */
+/** What you sent, newest first, with whom you sent it to. Nothing says whether they deleted it. */
 export async function listSent(userId: string, q: PageQuery) {
   const rows = await prisma.anonMessage.findMany({
     where: { senderId: userId, senderDeletedAt: null },
@@ -211,7 +244,7 @@ export async function deleteSent(userId: string, id: string) {
   });
 }
 
-/** Hides whatever this message's sender sends you from now on, and this message, without telling you who it was. */
+/** Stops this message's sender, and other accounts on their devices, from writing to you; hides the message; never says who. */
 export async function blockAnonSender(userId: string, id: string) {
   const m = await prisma.anonMessage.findFirst({ where: { id, recipientId: userId, recipientDeletedAt: null } });
   if (!m) throw new AppError("MESSAGE_NOT_FOUND");

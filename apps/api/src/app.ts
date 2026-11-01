@@ -14,7 +14,7 @@ import { z } from "zod";
 import { env } from "./env.js";
 import authPlugin from "./plugins/auth.js";
 import errorsPlugin from "./plugins/errors.js";
-import adminRoutes, { reportRoutes } from "./routes/admin.js";
+import adminRoutes, { adminSignInRoutes, reportRoutes } from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
 import callRoutes from "./routes/calls.js";
 import chatRoutes from "./routes/chats.js";
@@ -69,6 +69,7 @@ export async function buildApp() {
   await app.register(
     async (v1) => {
       await v1.register(authRoutes, { prefix: "/auth" });
+      await v1.register(adminSignInRoutes);
       await v1.register(adminRoutes);
       await v1.register(reportRoutes);
       await v1.register(appRoutes);

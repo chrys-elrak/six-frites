@@ -1,5 +1,6 @@
 import {
   type AddStickerInput,
+  type AdminCodeInput,
   type AdminLargeFileDTO,
   type AdminPackQuery,
   type AdminStatsDTO,
@@ -18,7 +19,8 @@ import { withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects } from "../lib/storage.js";
-import { isAdminEmail } from "../plugins/auth.js";
+import { matchTotp, newTotpSecret, totpUri } from "../lib/totp.js";
+import { adminTwoFactor, isAdminEmail } from "../plugins/auth.js";
 import { admitQueued, invitesOf } from "./referrals.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
@@ -27,6 +29,34 @@ import { finishUpload, uploadKeys } from "./uploads.js";
 import { toUserDTO } from "./users.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** A secret for an admin who has no authenticator yet; nothing is saved until a code made from it is entered. */
+export async function newAdminSecret(userId: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true, totpSecret: true } });
+  if (user.totpSecret) throw new AppError("CONFLICT", "An authenticator is already set up");
+  const secret = newTotpSecret();
+  return { secret, uri: totpUri(secret, user.email) };
+}
+
+/**
+ * Opens moderation on this session for a valid authenticator code. The first code also saves the secret it was
+ * made from. A code is spent once used, so one seen over a shoulder can't open another session.
+ */
+export async function verifyAdminCode(userId: string, sessionId: string, { code, secret }: AdminCodeInput) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { totpSecret: true, totpStep: true } });
+  const key = user.totpSecret ?? secret;
+  if (!key) throw new AppError("VALIDATION_FAILED", "Set up an authenticator first");
+  const step = matchTotp(key, code);
+  const wrong = new AppError("WRONG_2FA_CODE", "That code didn't work");
+  if (step === null || (user.totpStep !== null && step <= user.totpStep)) throw wrong;
+  const spent = await prisma.user.updateMany({
+    where: { id: userId, totpSecret: user.totpSecret, totpStep: user.totpStep },
+    data: { totpSecret: key, totpStep: step },
+  });
+  if (!spent.count) throw wrong;
+  await prisma.session.update({ where: { id: sessionId }, data: { adminVerifiedAt: new Date() } });
+  return { admin: true as const, twoFactor: await adminTwoFactor(sessionId) };
+}
 
 const activeSessions = () => ({ revokedAt: null, expiresAt: { gt: new Date() } });
 

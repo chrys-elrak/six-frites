@@ -26,6 +26,10 @@ model User {
   banReason   String?
   /// When a timed ban is lifted on its own; null while `bannedAt` is set means it lasts until an admin lifts it.
   bannedUntil DateTime?
+  /// An admin's authenticator secret, in base32; moderation stays shut until it is set.
+  totpSecret  String?
+  /// The time step of the last authenticator code accepted, so no code works twice.
+  totpStep    Int?
   lastSeenAt  DateTime?
   deletedAt   DateTime?
   backupKeyId String?
@@ -136,17 +140,22 @@ model Session {
   userId           String
   platform         String
   deviceName       String?
+  /// A random ID the app keeps for the browser or phone, so a ban or an anonymous block reaches other accounts on it.
+  deviceId         String?
   refreshTokenHash String    @unique
   createdAt        DateTime  @default(now())
   lastUsedAt       DateTime  @default(now())
   expiresAt        DateTime
   revokedAt        DateTime?
+  /// When an admin last entered an authenticator code on this session.
+  adminVerifiedAt  DateTime?
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   pushTokens PushToken[]
   device     Device?
 
   @@index([userId])
+  @@index([deviceId])
 }
 
 model Device {

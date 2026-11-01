@@ -5,13 +5,16 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
 import { SEND_LIMITS } from "../src/services/ask.js";
 import { createSocketServer } from "../src/socket/index.js";
-import { type Auth, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
+import { type Auth, ageAccount, asAdmin, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, signUp } = chatHelpers(ctx);
 
-const walkIn = async (name: string): Promise<Auth & { user: { askCode: string } }> =>
-  (await loginAs(ctx.app, uniqueSub(name), "web", { guest: true })).json();
+const walkIn = async (name: string, extra: Record<string, unknown> = {}): Promise<Auth & { user: { askCode: string } }> => {
+  const who = (await loginAs(ctx.app, uniqueSub(name), "web", { guest: true, ...extra })).json();
+  await ageAccount(who);
+  return who;
+};
 const ask = (who: Auth, code: string, text: string) => call(who, "POST", `/v1/ask/${code}`, { text });
 const inbox = async (who: Auth) => (await get(who, "/v1/ask")).items as { id: string; text: string; photoUrl: string | null; oldLink: boolean }[];
 
@@ -46,11 +49,14 @@ describe("anonymous messages", () => {
     expect(await inbox(fan)).toEqual([]);
   });
 
-  it("only lets the recipient delete, block or report, and quietly drops what a blocked sender writes", async () => {
+  it("only lets the recipient delete, block or report, and tells a blocked sender, on every account on their devices", async () => {
     const owner = await walkIn("owner");
-    const troll = await walkIn("troll");
+    const browser = { device: { platform: "web", name: "Chrome", id: `browser-${uniqueSub("block")}` } };
+    const troll = await walkIn("troll", browser);
+    const trollAgain = await walkIn("troll-again", browser);
     const stranger = await walkIn("stranger");
     const code = owner.user.askCode;
+    const link = async (who: Auth) => (await get(who, `/v1/ask/${code}`)).blocked;
     await ask(troll, code, "first");
     await ask(troll, code, "second");
     const [second, first] = await inbox(owner);
@@ -62,15 +68,18 @@ describe("anonymous messages", () => {
 
     expect((await call(owner, "POST", "/v1/reports", { anonMessageId: first!.id, reason: "harassment" })).statusCode).toBe(204);
     expect((await call(owner, "DELETE", `/v1/ask/messages/${second!.id}`)).statusCode).toBe(204);
+    expect(await link(troll)).toBe(false);
     expect((await call(owner, "POST", `/v1/ask/messages/${first!.id}/block`)).statusCode).toBe(204);
     expect(await inbox(owner)).toEqual([]);
 
-    expect((await ask(troll, code, "you can't stop me")).statusCode).toBe(204);
+    expect((await ask(troll, code, "you can't stop me")).json().error.code).toBe("ANON_BLOCKED");
+    expect((await ask(trollAgain, code, "new account, who dis")).json().error.code).toBe("ANON_BLOCKED");
+    expect([await link(troll), await link(trollAgain), await link(stranger)]).toEqual([true, true, false]);
+    expect((await ctx.app.inject({ url: `/v1/ask/${code}` })).json().blocked).toBe(false);
     expect((await ask(stranger, code, "hello")).statusCode).toBe(204);
     expect((await inbox(owner)).map((m) => m.text)).toEqual(["hello"]);
-    expect((await get(troll, "/v1/ask/sent")).items[0].text).toBe("you can't stop me");
 
-    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const boss = await asAdmin(ctx.app);
     const reports = (await get(boss, "/v1/admin/reports?status=open")).items;
     const report = reports.find((r: { messages: { id: string }[] }) => r.messages[0]?.id === first!.id);
     expect(report.target.id).toBe(troll.user.id);
@@ -83,7 +92,7 @@ describe("anonymous messages", () => {
     const profile = async (code: string) => (await ctx.app.inject({ url: `/v1/ask/${code}` })).json();
     const account = await get(owner, "/v1/me");
 
-    expect(await profile(owner.user.askCode)).toEqual({ displayName: account.displayName, avatarUrl: null });
+    expect(await profile(owner.user.askCode)).toEqual({ displayName: account.displayName, avatarUrl: null, blocked: false });
 
     const pixel = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
     const updated = (await call(owner, "PATCH", "/v1/ask/profile", { name: "  Mystery Fry ", photo: pixel })).json();
@@ -154,7 +163,7 @@ describe("anonymous messages", () => {
 
     expect((await call(owner, "POST", "/v1/reports", { anonMessageId: photo!.id, reason: "sexual" })).statusCode).toBe(204);
     await call(owner, "DELETE", `/v1/ask/messages/${photo!.id}`);
-    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const boss = await asAdmin(ctx.app);
     const reports = (await get(boss, "/v1/admin/reports?status=open")).items;
     const report = reports.find((r: { messages: { id: string }[] }) => r.messages[0]?.id === photo!.id);
     expect(report.messages[0].attachment).toMatchObject({ kind: "image", url: expect.any(String) });
@@ -180,7 +189,7 @@ describe("anonymous messages", () => {
     await call(fan, "DELETE", `/v1/ask/sent/${mine.id}`);
     expect(await sent()).toEqual([]);
 
-    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const boss = await asAdmin(ctx.app);
     const { email } = await get(fan, "/v1/me");
     expect((await call(fan, "POST", "/v1/reports", { anonMessageId: mine.id, reason: "spam" })).statusCode).toBe(404);
     expect((await get(owner, `/v1/admin/anon?q=${email}`)).error.code).toBe("FORBIDDEN");
@@ -220,6 +229,16 @@ describe("anonymous messages", () => {
     const me = await get(member, "/v1/me");
     expect(me.guest).toBe(false);
     expect((await ctx.app.inject({ url: `/v1/ask/${me.askCode}` })).statusCode).toBe(200);
+  });
+
+  it("makes a new account wait a day before writing, saying until when", async () => {
+    const owner = await walkIn("owner");
+    const newcomer: Auth = (await loginAs(ctx.app, uniqueSub("newcomer"), "web", { guest: true })).json();
+    const refused = (await ask(newcomer, owner.user.askCode, "hi!")).json().error;
+    expect(refused.code).toBe("ACCOUNT_TOO_NEW");
+    expect(Date.parse(refused.details.until) - Date.now()).toBeGreaterThan(23.9 * 3_600_000);
+    await ageAccount(newcomer);
+    expect((await ask(newcomer, owner.user.askCode, "hi!")).statusCode).toBe(204);
   });
 });
 

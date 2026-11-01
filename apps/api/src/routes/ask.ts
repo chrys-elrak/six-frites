@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import {
   AnonMessageDTO,
+  AskLinkDTO,
   AskProfileDTO,
   PageQuery,
   SendAnonInput,
@@ -10,8 +11,9 @@ import {
   page,
 } from "@six/shared";
 import { z } from "zod";
+import { authenticateBearer } from "../plugins/auth.js";
 import {
-  askProfile,
+  askLink,
   blockAnonSender,
   deleteAnon,
   deleteSent,
@@ -35,12 +37,16 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags,
         summary: "Whose anonymous messages link this is",
-        description: "Open to anyone, so the page can show who you're writing to before you sign in.",
+        description:
+          "Open to anyone, so the page can show who you're writing to before you sign in. Signed in, it also says whether this person blocked you.",
         params: code,
-        response: { 200: AskProfileDTO },
+        response: { 200: AskLinkDTO },
       },
     },
-    (req) => askProfile(req.params.code),
+    async (req) => {
+      const viewer = req.headers.authorization ? await authenticateBearer(req.headers.authorization).catch(() => null) : null;
+      return askLink(req.params.code, viewer?.userId);
+    },
   );
 
   app.post(
@@ -52,7 +58,8 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags,
         summary: "Send someone an anonymous message",
-        description: "They never see who sent it; moderators can, if they report it.",
+        description:
+          "They never see who sent it; moderators can see the sender of every anonymous message. Accounts under a day old get ACCOUNT_TOO_NEW, and someone the recipient blocked gets ANON_BLOCKED.",
         security,
         params: code,
         body: SendAnonInput,
@@ -89,7 +96,7 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags,
         summary: "The anonymous messages you sent, newest first",
-        description: "Only you see this list. It never says whether the recipient deleted a message or blocked you.",
+        description: "Only you see this list. It never says whether the recipient deleted a message.",
         security,
         querystring: PageQuery,
         response: { 200: page(SentAnonDTO) },
@@ -179,7 +186,8 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags,
         summary: "Stop whoever sent this anonymous message from sending you more",
-        description: "Deletes the message too. You still never learn who it was.",
+        description:
+          "Covers other accounts used on the sender's devices too, and deletes the message. They're told they can't write to you anymore; you still never learn who it was.",
         security,
         params: id,
         response: { 204: z.null() },

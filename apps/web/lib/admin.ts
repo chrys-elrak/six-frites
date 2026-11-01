@@ -37,17 +37,20 @@ export function refreshAdmin(qc: QueryClient) {
   void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === "admin" && q.queryKey[1] !== "me" });
 }
 
-/** True for the emails the server lists in ADMIN_EMAILS; anyone else gets a 403 and sees nothing. */
+/**
+ * Set for the emails the server lists in ADMIN_EMAILS, saying whether moderation still wants an authenticator code;
+ * null for anyone else, who gets a 403 and sees nothing.
+ */
 export function useIsAdmin() {
   const authed = useSession((s) => s.status === "authed");
   return useQuery({
     queryKey: adminKeys.me,
     queryFn: async () => {
       const res = await six.api.GET("/v1/admin/me");
-      return res.response.ok ? unwrap(res).admin : false;
+      return res.response.ok ? unwrap(res) : null;
     },
     enabled: authed,
-    staleTime: Infinity,
+    staleTime: 5 * 60_000,
     retry: false,
   });
 }

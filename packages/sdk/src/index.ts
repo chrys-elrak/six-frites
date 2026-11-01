@@ -44,14 +44,17 @@ export function createSixClient(opts: SixClientOptions) {
     onChange: tokens.onChange.bind(tokens),
     getAccessToken: () => tokens.getAccessToken(),
 
-    async loginWithGoogle(idToken: string, extra: Omit<GoogleLoginInput, "idToken" | "device"> & { deviceName?: string } = {}) {
+    async loginWithGoogle(
+      idToken: string,
+      extra: Omit<GoogleLoginInput, "idToken" | "device"> & { deviceName?: string; deviceId?: string } = {},
+    ) {
       const result = unwrap(
         await api.POST("/v1/auth/google", {
           body: {
             idToken,
             inviteCode: extra.inviteCode,
             guest: extra.guest,
-            device: { platform: opts.platform, name: extra.deviceName },
+            device: { platform: opts.platform, name: extra.deviceName, id: extra.deviceId },
           },
         }),
       ) as AuthResult;

@@ -39,7 +39,7 @@ import { toPhotoDataUrl } from "@/lib/image";
 import { MARKERS, parseMarkup } from "@/lib/markup";
 import { mediaMeta } from "@/lib/media-meta";
 import { type Recording, useRecorder } from "@/lib/recorder";
-import { deviceName, useSession } from "@/lib/session";
+import { deviceId, deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { type VoiceEffect, disguiseVoice } from "@/lib/voice-fx";
 
@@ -89,16 +89,23 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   const [signInError, setSignInError] = useState<string | null>(null);
 
   const profile = useQuery({
-    queryKey: ["ask-profile", code],
+    queryKey: ["ask-profile", code, status === "authed"],
     queryFn: async () => unwrap(await six.api.GET("/v1/ask/{code}", { params: { path: { code } } })),
+    enabled: status !== "loading",
     retry: false,
   });
 
   const body = { ...parseMarkup(emojifyEnd(text)), photo: photo?.url, gifId: gif?.id, voice: voice?.data };
   const valid = SendAnonInput.safeParse(body).success;
-  const sendError: Record<string, string | undefined> = {
-    RATE_LIMITED: tr.ask.slowDown,
-    CONFLICT: tr.ask.duplicate,
+  const sendError = (err: unknown) => {
+    if (!(err instanceof SixApiError)) return undefined;
+    if (err.code === "ACCOUNT_TOO_NEW") {
+      const { until } = err.details as { until: string };
+      return tr.ask.tooNew(new Date(until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" }));
+    }
+    return ({ RATE_LIMITED: tr.ask.slowDown, CONFLICT: tr.ask.duplicate, ANON_BLOCKED: tr.ask.blocked } as Record<string, string>)[
+      err.code
+    ];
   };
 
   const send = useMutation({
@@ -167,7 +174,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     setSignInError(null);
     try {
       unlock();
-      await six.auth.loginWithGoogle(idToken, { guest: true, deviceName: deviceName() });
+      await six.auth.loginWithGoogle(idToken, { guest: true, deviceName: deviceName(), deviceId: deviceId() });
     } catch (err) {
       setSignInError(
         err instanceof SixApiError
@@ -211,6 +218,10 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
             {tr.ask.sendAnother}
           </PrimaryButton>
         </div>
+      ) : status === "authed" && profile.data?.blocked ? (
+        <p className="rounded-2xl bg-stone-100 p-4 text-center font-medium text-stone-600 dark:bg-stone-900 dark:text-stone-300">
+          {tr.ask.blocked}
+        </p>
       ) : status === "authed" ? (
         <form
           onSubmit={(e) => {
@@ -446,7 +457,8 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {photoError ??
                 recorder.error ??
-                ((send.error instanceof SixApiError && sendError[send.error.code]) || tr.common.somethingWrongRetry)}
+                sendError(send.error) ??
+                tr.common.somethingWrongRetry}
             </p>
           )}
           <PrimaryButton type="submit" disabled={!valid || send.isPending || recorder.recording} className="w-full">

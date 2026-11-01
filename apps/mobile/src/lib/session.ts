@@ -1,4 +1,6 @@
+import { b64, randomBytes } from "@six/crypto";
 import type { UserDTO } from "@six/shared";
+import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import { GoogleOneTapSignIn } from "react-native-nitro-google-signin";
 import { create } from "zustand";
@@ -58,6 +60,21 @@ export async function logout() {
   await forgetE2EE();
   await six.auth.logout().catch(() => null);
   await GoogleOneTapSignIn.signOut().catch(() => null);
+}
+
+const DEVICE_KEY = "six.device-id";
+
+/** A random ID kept on this phone, so bans and anonymous blocks reach other accounts signed in here. */
+export async function deviceId() {
+  try {
+    const saved = await SecureStore.getItemAsync(DEVICE_KEY);
+    if (saved) return saved;
+    const fresh = b64(randomBytes(18));
+    await SecureStore.setItemAsync(DEVICE_KEY, fresh);
+    return fresh;
+  } catch {
+    return undefined;
+  }
 }
 
 export function deviceName() {

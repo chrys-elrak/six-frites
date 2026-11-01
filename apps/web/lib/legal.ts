@@ -156,6 +156,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Anonymous messages",
         body: [
           "The person you write to never learns who you are. We do keep who sent each anonymous message, so we can stop abuse, and we may share it when the law requires us to.",
+          "A new account can send anonymous messages once it is a day old. If the person you write to blocks you, you'll see that you can't write to them anymore; they still never learn who you are.",
           "Messages you receive can be shared by you, for example to your story. Messages you send can be shared by the person who gets them.",
         ],
       },
@@ -163,6 +164,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Safety and moderation",
         body: [
           "You can block anyone and report messages or people. Our moderators review reports and may remove content, limit an account or close it when these terms are broken.",
+          "A ban, or a block on anonymous messages, also covers other accounts used on the same phone or browser.",
           "We can't read end-to-end encrypted messages. When you report one, a copy of it and a few messages around it, as you see them, goes to our moderators.",
         ],
       },
@@ -239,6 +241,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Messages anonymes",
         body: [
           "La personne à qui vous écrivez ne sait jamais qui vous êtes. Nous gardons en revanche l'auteur de chaque message anonyme, pour pouvoir arrêter les abus, et nous pouvons le communiquer quand la loi nous y oblige.",
+          "Un nouveau compte peut envoyer des messages anonymes une fois âgé d'un jour. Si la personne à qui vous écrivez vous bloque, vous verrez que vous ne pouvez plus lui écrire ; elle ne sait toujours pas qui vous êtes.",
           "Vous pouvez partager les messages que vous recevez, par exemple en story. Ceux que vous envoyez peuvent être partagés par leur destinataire.",
         ],
       },
@@ -246,6 +249,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Sécurité et modération",
         body: [
           "Vous pouvez bloquer n'importe qui et signaler des messages ou des personnes. Nos modérateurs examinent les signalements et peuvent retirer un contenu, limiter un compte ou le fermer quand ces conditions ne sont pas respectées.",
+          "Un bannissement, ou un blocage des messages anonymes, s'applique aussi aux autres comptes utilisés sur le même téléphone ou navigateur.",
           "Nous ne pouvons pas lire les messages chiffrés de bout en bout. Quand vous en signalez un, une copie de ce message et de quelques messages autour, tels que vous les voyez, est transmise à nos modérateurs.",
         ],
       },
@@ -322,6 +326,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Hafatra tsy fantatra mpandefa",
         body: [
           "Tsy hahafantatra mihitsy hoe iza ianao ilay olona soratanao. Fantatray kosa hoe iza no nandefa ny hafatra tsirairay, mba hahafahanay manakana ny fanararaotana, ary mety homenay izany raha takian'ny lalàna.",
+          "Afaka mandefa hafatra tsy fantatra mpandefa ny kaonty vaovao rehefa feno iray andro. Raha sakanan'ilay olona soratanao ianao dia ho hitanao fa tsy afaka manoratra aminy intsony ianao; tsy ho fantany ihany hoe iza ianao.",
           "Azonao zaraina ny hafatra raisinao, ohatra ao amin'ny story-nao. Azon'ilay nandray zaraina koa ny hafatra alefanao.",
         ],
       },
@@ -329,6 +334,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Fiarovana sy fanaraha-maso",
         body: [
           "Afaka manakana na iza na iza ianao ary mitatitra hafatra na olona. Dinihin'ny mpandrindra anay ny tatitra ary mety hesorin'izy ireo ny votoaty, hoferana na hakatona ny kaonty rehefa tsy voahaja ireto fepetra ireto.",
+          "Mihatra amin'ireo kaonty hafa ampiasaina amin'io finday na navigateur io ihany koa ny fandraràna, na ny fanakanana hafatra tsy fantatra mpandefa.",
           "Tsy vakianay ny hafatra voaaro tanteraka. Rehefa mitatitra iray amin'izy ireo ianao dia mandeha any amin'ny mpandrindra anay ny dika mitovin'io hafatra io sy hafatra vitsivitsy manodidina azy, araka ny ahitanao azy.",
         ],
       },
@@ -382,7 +388,7 @@ export const privacy: Record<Locale, LegalDoc> = {
           [
             "Your Google account's name, email address, photo and ID, when you sign in. We never see your Google password.",
             "Your profile: the name and photo you show, the name and photo on your anonymous link, and the names and photos you give your contacts.",
-            "Your devices: their name and type, when they signed in, their encryption public keys, and notification tokens.",
+            "Your devices: their name and type, a random ID the app keeps for each phone or browser, when they signed in, their encryption public keys, and notification tokens.",
             "How you use the service: who you talk to and when, message types and sizes, reactions, read and delivery receipts, timers, and when you were last online.",
             "Reports you make and moderation decisions.",
             "Your IP address, which our servers see whenever you connect.",
@@ -407,7 +413,10 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "Anonymous messages",
         body: [
-          "Anonymous messages are not end-to-end encrypted. We store their text, photo, who sent them and who got them. The person who gets one never sees who sent it. Our moderators can, to deal with abuse, and we keep anonymous messages after they are deleted for the same reason.",
+          "Anonymous messages are not end-to-end encrypted. We store their text, their photo, GIF or voice note, who sent them and who got them. Photos are redrawn in your browser before they're sent, and voice notes are re-encoded on our servers, which removes details like where a photo was taken or which phone recorded it.",
+          "The person who gets one never sees who sent it. Our moderators can see who sent every anonymous message, reported or not, to deal with abuse.",
+          "If someone blocks you, you'll see that you can't write to them anymore, and neither can other accounts used on your phone or browser. They still never learn who you are.",
+          "We keep anonymous messages, with their photos and voice notes, after the sender or the recipient deletes them, and after the recipient deletes their account, for the same reason. They're gone for good only when a moderator removes them.",
         ],
       },
       {
@@ -440,8 +449,9 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "How long we keep it",
         body: [
-          "We keep your account until you delete it. Messages stay until they are deleted, or until their timer runs out. Moderation records are kept as long as they are needed for safety.",
-          "When you delete your account, we erase your Google link, email, name, photos, contact links, invites, blocks and backups, and sign you out everywhere. Messages you already sent stay with the people who got them, under \"Deleted account\".",
+          "We keep your account until you delete it. Messages stay until they are deleted, or until their timer runs out. Anonymous messages are kept as explained above. Moderation records are kept as long as they are needed for safety.",
+          "We keep a record of each sign-in, with its device ID, after you sign out, so a ban still reaches that phone or browser.",
+          "When you delete your account, we erase your Google link, email, name, photos, contact links, invites, blocks and backups, and sign you out everywhere. Messages you already sent stay with the people who got them, under \"Deleted account\". Anonymous messages you sent or got, and your sign-in records, are kept.",
         ],
       },
       {
@@ -460,6 +470,7 @@ export const privacy: Record<Locale, LegalDoc> = {
         heading: "Security",
         body: [
           "We use end-to-end encryption, encrypted connections and an optional app lock. No system is perfectly secure, so keep your devices and recovery key safe and tell us if something looks wrong.",
+          "Moderators need a code from an authenticator app, on top of their Google sign-in, before they can see reports, anonymous senders or accounts.",
         ],
       },
       {
@@ -490,7 +501,7 @@ export const privacy: Record<Locale, LegalDoc> = {
           [
             "Le nom, l'adresse e-mail, la photo et l'identifiant de votre compte Google, quand vous vous connectez. Nous ne voyons jamais votre mot de passe Google.",
             "Votre profil : le nom et la photo que vous affichez, ceux de votre lien anonyme, et les noms et photos que vous donnez à vos contacts.",
-            "Vos appareils : leur nom et leur type, leur date de connexion, leurs clés publiques de chiffrement et leurs jetons de notification.",
+            "Vos appareils : leur nom et leur type, un identifiant au hasard que l'application garde pour chaque téléphone ou navigateur, leur date de connexion, leurs clés publiques de chiffrement et leurs jetons de notification.",
             "Votre utilisation du service : avec qui vous parlez et quand, le type et la taille des messages, les réactions, les accusés de lecture et de réception, les minuteurs, et votre dernière connexion.",
             "Les signalements que vous faites et les décisions de modération.",
             "Votre adresse IP, que nos serveurs voient à chaque connexion.",
@@ -515,7 +526,10 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "Messages anonymes",
         body: [
-          "Les messages anonymes ne sont pas chiffrés de bout en bout. Nous stockons leur texte, leur photo, leur auteur et leur destinataire. Le destinataire ne voit jamais qui l'a envoyé. Nos modérateurs le peuvent, pour traiter les abus, et nous gardons les messages anonymes après leur suppression pour la même raison.",
+          "Les messages anonymes ne sont pas chiffrés de bout en bout. Nous stockons leur texte, leur photo, GIF ou message vocal, leur auteur et leur destinataire. Les photos sont redessinées dans votre navigateur avant l'envoi, et les messages vocaux réencodés sur nos serveurs, ce qui retire des détails comme le lieu d'une photo ou le téléphone qui a enregistré.",
+          "Le destinataire ne voit jamais qui l'a envoyé. Nos modérateurs voient l'auteur de chaque message anonyme, signalé ou non, pour traiter les abus.",
+          "Si quelqu'un vous bloque, vous verrez que vous ne pouvez plus lui écrire, et les autres comptes utilisés sur votre téléphone ou navigateur non plus. Cette personne ne sait toujours pas qui vous êtes.",
+          "Nous gardons les messages anonymes, avec leurs photos et messages vocaux, après leur suppression par l'auteur ou le destinataire, et après la suppression du compte du destinataire, pour la même raison. Ils ne disparaissent définitivement que lorsqu'un modérateur les retire.",
         ],
       },
       {
@@ -548,8 +562,9 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "Combien de temps nous les gardons",
         body: [
-          "Nous gardons votre compte jusqu'à ce que vous le supprimiez. Les messages restent jusqu'à leur suppression, ou jusqu'à la fin de leur minuteur. Les dossiers de modération sont conservés aussi longtemps que la sécurité l'exige.",
-          "Quand vous supprimez votre compte, nous effaçons le lien avec Google, votre e-mail, votre nom, vos photos, vos liens de contact, invitations, blocages et sauvegardes, et vous déconnectons partout. Les messages déjà envoyés restent chez leurs destinataires, sous « Compte supprimé ».",
+          "Nous gardons votre compte jusqu'à ce que vous le supprimiez. Les messages restent jusqu'à leur suppression, ou jusqu'à la fin de leur minuteur. Les messages anonymes sont conservés comme expliqué plus haut. Les dossiers de modération sont conservés aussi longtemps que la sécurité l'exige.",
+          "Nous gardons une trace de chaque connexion, avec l'identifiant de l'appareil, après la déconnexion, pour qu'un bannissement atteigne toujours ce téléphone ou ce navigateur.",
+          "Quand vous supprimez votre compte, nous effaçons le lien avec Google, votre e-mail, votre nom, vos photos, vos liens de contact, invitations, blocages et sauvegardes, et vous déconnectons partout. Les messages déjà envoyés restent chez leurs destinataires, sous « Compte supprimé ». Les messages anonymes envoyés ou reçus, et les traces de connexion, sont conservés.",
         ],
       },
       {
@@ -568,6 +583,7 @@ export const privacy: Record<Locale, LegalDoc> = {
         heading: "Sécurité",
         body: [
           "Nous utilisons le chiffrement de bout en bout, des connexions chiffrées et un verrouillage de l'application en option. Aucun système n'est parfaitement sûr : protégez vos appareils et votre clé de récupération, et prévenez-nous si quelque chose vous paraît anormal.",
+          "Les modérateurs doivent saisir un code d'une application d'authentification, en plus de leur connexion Google, avant de voir les signalements, les auteurs des messages anonymes ou les comptes.",
         ],
       },
       {
@@ -600,7 +616,7 @@ export const privacy: Record<Locale, LegalDoc> = {
           [
             "Ny anarana, adiresy mailaka, sary ary famantarana ny kaonty Google anao, rehefa miditra ianao. Tsy hitanay mihitsy ny tenimiafinao Google.",
             "Ny mombamomba anao: ny anarana sy sary asehonao, ireo eo amin'ny rohinao tsy fantatra mpandefa, ary ny anarana sy sary omenao ny olona ao amin'ny lisitrao.",
-            "Ny fitaovanao: ny anarany sy ny karazany, ny fotoana nidirany, ny fanalahidy ampahibemaso fiarovana, ary ny famantarana ho an'ny fampahafantarana.",
+            "Ny fitaovanao: ny anarany sy ny karazany, famantarana kisendrasendra tehirizin'ny fampiharana ho an'ny finday na navigateur tsirairay, ny fotoana nidirany, ny fanalahidy ampahibemaso fiarovana, ary ny famantarana ho an'ny fampahafantarana.",
             "Ny fampiasanao ny tolotra: iza no iresahanao sy rahoviana, ny karazana sy haben'ny hafatra, ny fihetsika, ny marika voavaky sy tonga, ny fe-potoana, ary ny fotoana farany nisianao.",
             "Ny tatitra ataonao sy ny fanapahan-kevitry ny mpandrindra.",
             "Ny adiresy IP-nao, izay hitan'ny mpizara anay isaky ny miditra ianao.",
@@ -625,7 +641,10 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "Hafatra tsy fantatra mpandefa",
         body: [
-          "Tsy voaaro tanteraka ny hafatra tsy fantatra mpandefa. Tehirizinay ny lahatsorany, ny sariny, ny nandefa azy sy ny nandray azy. Tsy hitan'ny mpandray mihitsy hoe iza no nandefa. Hitan'ny mpandrindra anay kosa izany, mba hiadiana amin'ny fanararaotana, ary tehirizinay ny hafatra tsy fantatra mpandefa na dia efa voafafa aza noho io antony io ihany.",
+          "Tsy voaaro tanteraka ny hafatra tsy fantatra mpandefa. Tehirizinay ny lahatsorany, ny sariny, ny GIF na hafatra am-peony, ny nandefa azy sy ny nandray azy. Averina soritana ao amin'ny navigateur-nao ny sary alohan'ny handefasana azy, ary averina amboarina ao amin'ny mpizara anay ny hafatra am-peo, ka voaesotra ny antsipiriany toy ny toerana nakana ny sary na ny finday nandrakitra.",
+          "Tsy hitan'ny mpandray mihitsy hoe iza no nandefa. Hitan'ny mpandrindra anay kosa ny nandefa ny hafatra tsy fantatra mpandefa rehetra, voatatitra na tsia, mba hiadiana amin'ny fanararaotana.",
+          "Raha misy manakana anao dia ho hitanao fa tsy afaka manoratra aminy intsony ianao, ary toy izany koa ireo kaonty hafa ampiasaina amin'ny finday na navigateur-nao. Tsy ho fantany ihany hoe iza ianao.",
+          "Tehirizinay ny hafatra tsy fantatra mpandefa, miaraka amin'ny sary sy hafatra am-peony, na dia efa nofafan'ny nandefa na ny nandray aza, ary na dia efa nofafan'ny nandray aza ny kaontiny, noho io antony io ihany. Tsy ho voafafa tanteraka izy ireo raha tsy esorin'ny mpandrindra.",
         ],
       },
       {
@@ -658,8 +677,9 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "Hafiriana no itahirizanay azy",
         body: [
-          "Tehirizinay ny kaontinao mandra-pamafanao azy. Mijanona ny hafatra mandra-pamafana azy, na mandra-pahataperan'ny fe-potoany. Tehirizina mandritra ny fotoana ilaina amin'ny fiarovana ny antontan-taratasin'ny fanaraha-maso.",
-          "Rehefa mamafa ny kaontinao ianao dia fafanay ny rohy amin'ny Google, ny mailakao, ny anaranao, ny sarinao, ny rohy fifandraisanao, ny fanasana, ny fanakanana ary ny tahiry, ary avoakanay amin'ny fitaovana rehetra ianao. Mijanona eo amin'ireo nandray azy kosa ny hafatra efa nalefanao, amin'ny anarana hoe « Kaonty voafafa ».",
+          "Tehirizinay ny kaontinao mandra-pamafanao azy. Mijanona ny hafatra mandra-pamafana azy, na mandra-pahataperan'ny fe-potoany. Tehirizina araka ny voalaza etsy ambony ny hafatra tsy fantatra mpandefa. Tehirizina mandritra ny fotoana ilaina amin'ny fiarovana ny antontan-taratasin'ny fanaraha-maso.",
+          "Tehirizinay ny firaketana ny fidirana tsirairay, miaraka amin'ny famantarana ny fitaovana, na dia efa nivoaka aza ianao, mba hahatongavan'ny fandraràna amin'io finday na navigateur io foana.",
+          "Rehefa mamafa ny kaontinao ianao dia fafanay ny rohy amin'ny Google, ny mailakao, ny anaranao, ny sarinao, ny rohy fifandraisanao, ny fanasana, ny fanakanana ary ny tahiry, ary avoakanay amin'ny fitaovana rehetra ianao. Mijanona eo amin'ireo nandray azy kosa ny hafatra efa nalefanao, amin'ny anarana hoe « Kaonty voafafa ». Tehirizina kosa ny hafatra tsy fantatra mpandefa nalefanao na noraisinao, sy ny firaketana ny fidiranao.",
         ],
       },
       {
@@ -678,6 +698,7 @@ export const privacy: Record<Locale, LegalDoc> = {
         heading: "Fiarovana",
         body: [
           "Mampiasa fiarovana tanteraka, fifandraisana voaaro ary hidin'ny fampiharana azo safidiana izahay. Tsy misy rafitra azo antoka tanteraka, ka arovy tsara ny fitaovanao sy ny fanalahidinao famerenana, ary ampahafantaro anay raha misy zavatra hafahafa.",
+          "Mila kaody avy amin'ny fampiharana fanamarinana ny mpandrindra, ankoatra ny fidirany amin'ny Google, vao afaka mahita ny tatitra, ny nandefa ny hafatra tsy fantatra mpandefa na ny kaonty.",
         ],
       },
       {

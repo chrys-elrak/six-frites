@@ -11,7 +11,7 @@ import { Logo } from "@/components/logo";
 import { unlock } from "@/lib/app-lock";
 import { clockTime } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
-import { deviceName, useSession } from "@/lib/session";
+import { deviceId, deviceName, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
 function Back() {
@@ -38,7 +38,7 @@ function SignIn() {
     setError(null);
     try {
       unlock();
-      await six.auth.loginWithGoogle(idToken, { guest: true, deviceName: deviceName() });
+      await six.auth.loginWithGoogle(idToken, { guest: true, deviceName: deviceName(), deviceId: deviceId() });
     } catch (err) {
       setError(
         err instanceof SixApiError

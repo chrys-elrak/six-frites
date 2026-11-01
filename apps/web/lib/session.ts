@@ -41,6 +41,21 @@ export const useSession = create<SessionState>((set) => {
   };
 });
 
+const DEVICE_KEY = "six:device-id";
+
+/** A random ID kept in this browser, so bans and anonymous blocks reach other accounts signed in here. */
+export function deviceId() {
+  try {
+    const saved = localStorage.getItem(DEVICE_KEY);
+    if (saved) return saved;
+    const fresh = crypto.randomUUID();
+    localStorage.setItem(DEVICE_KEY, fresh);
+    return fresh;
+  } catch {
+    return undefined;
+  }
+}
+
 export function deviceName() {
   if (typeof navigator === "undefined") return undefined;
   const tr = getT();

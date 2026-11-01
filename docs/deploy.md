@@ -55,6 +55,18 @@ To revoke it, remove the `six-frites-deploy` line from the server's `~/.ssh/auth
 
 Migrations run when the API starts. Logs: `docker compose -f docker-compose.prod.yml logs -f api worker web`.
 
+## Admin two-step
+
+Moderation stays shut until an admin enters a code from an authenticator app, and asks again every 12 hours per
+session. The first visit to `/admin` shows a QR code to scan: do it right after adding an email to `ADMIN_EMAILS`,
+since until then anyone holding that Google account could set it up. If an admin loses their authenticator, clear
+it so the next visit shows a new QR code:
+
+```sh
+docker compose -f docker-compose.prod.yml exec -T postgres psql -U six six \
+  -c "UPDATE \"User\" SET \"totpSecret\" = NULL, \"totpStep\" = NULL WHERE email = 'admin@example.com'"
+```
+
 ## Backups
 
 Postgres and media live in the `pgdata` and `seaweeddata` volumes. A database dump:

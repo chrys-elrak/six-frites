@@ -34,6 +34,20 @@ function checkBan({ bannedAt, bannedUntil }: Pick<User, "bannedAt" | "bannedUnti
   throw new AppError("ACCOUNT_BANNED", "This account has been banned", { until: bannedUntil?.toISOString() ?? null });
 }
 
+/** Refuses a browser or phone that a banned account signed in on, so a fresh account there doesn't get round the ban. */
+async function checkDeviceBan(db: Tx, deviceId: string | null | undefined, email: string) {
+  if (!deviceId || isAdminEmail(email)) return;
+  const banned = await db.user.findFirst({
+    where: {
+      bannedAt: { not: null },
+      OR: [{ bannedUntil: null }, { bannedUntil: { gt: new Date() } }],
+      sessions: { some: { deviceId } },
+    },
+    select: { bannedAt: true, bannedUntil: true },
+  });
+  if (banned) checkBan(banned);
+}
+
 export async function loginWithGoogle(
   input: GoogleLoginInput,
   verify: GoogleVerifier = verifyGoogleIdToken,
@@ -43,6 +57,7 @@ export async function loginWithGoogle(
   const signedIn = await withEvents(async (tx, emit) => {
     const existing = await tx.user.findUnique({ where: { googleSub: identity.sub } });
     if (existing) checkBan(existing);
+    await checkDeviceBan(tx, input.device.id, identity.email);
     const guest = existing
       ? existing.guest && !input.inviteCode
       : !input.inviteCode && env.INVITE_ONLY && !isAdminEmail(identity.email);
@@ -92,6 +107,7 @@ async function createSession(
       userId,
       platform: device.platform,
       deviceName: device.name ?? null,
+      deviceId: device.id ?? null,
       refreshTokenHash: refresh.hash,
       expiresAt: refreshExpiry(),
     },
@@ -110,6 +126,7 @@ export async function refreshSession(refreshToken: string): Promise<IssuedAuth> 
   if (session.revokedAt || session.expiresAt < new Date()) throw new AppError("SESSION_REVOKED");
   try {
     checkBan(session.user);
+    await checkDeviceBan(prisma, session.deviceId, session.user.email);
   } catch (err) {
     await revokeSession(session.id);
     throw err;

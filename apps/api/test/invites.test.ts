@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
-import { type Auth, bearer, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
+import { type Auth, asAdmin, bearer, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { signUp, get, call } = chatHelpers(ctx);
@@ -111,7 +111,7 @@ describe("invites", () => {
   });
 
   it("queues sign-ups past the inviter's limit until an admin raises it", async () => {
-    const boss: Auth = (await loginAs(ctx.app, "the-admin")).json();
+    const boss = await asAdmin(ctx.app);
     const host = await signUp("popular");
     expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 10, invited: 0, waiting: 0 });
     await call(boss, "POST", `/v1/admin/users/${host.user.id}/invite-limit`, { limit: 1 });

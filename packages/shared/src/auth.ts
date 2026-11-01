@@ -5,6 +5,11 @@ import { UserDTO } from "./users.js";
 export const DeviceInfo = z.object({
   platform: Platform,
   name: z.string().max(100).optional(),
+  id: z
+    .string()
+    .regex(/^[\w-]{16,64}$/)
+    .optional()
+    .describe("A random ID the app keeps for this browser or phone; bans and anonymous blocks also cover other accounts used on it"),
 });
 export type DeviceInfo = z.infer<typeof DeviceInfo>;
 

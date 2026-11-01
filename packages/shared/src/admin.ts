@@ -21,6 +21,28 @@ export const CreateReportInput = z
   );
 export type CreateReportInput = z.infer<typeof CreateReportInput>;
 
+export const AdminMeDTO = z.object({
+  admin: z.literal(true),
+  twoFactor: z
+    .enum(["setup", "required", "ok"])
+    .describe("setup: no authenticator yet; required: enter a code on this session; ok: moderation is open"),
+});
+export type AdminMeDTO = z.infer<typeof AdminMeDTO>;
+
+const TotpSecret = z.string().regex(/^[A-Z2-7]{32}$/, "Expected a base32 authenticator secret");
+
+export const AdminSecretDTO = z.object({
+  secret: TotpSecret,
+  uri: z.string().describe("An otpauth:// link to show as a QR code"),
+});
+export type AdminSecretDTO = z.infer<typeof AdminSecretDTO>;
+
+export const AdminCodeInput = z.object({
+  code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
+  secret: TotpSecret.optional().describe("Only the first time: the secret from POST /v1/admin/2fa/secret that the code was made with"),
+});
+export type AdminCodeInput = z.infer<typeof AdminCodeInput>;
+
 /** The ban lengths admins pick from, in hours. */
 export const BAN_HOURS = [1, 6, 24, 24 * 7, 24 * 30] as const;
 
