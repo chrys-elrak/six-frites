@@ -13,6 +13,7 @@ import { AndroidDownload } from "./android-download";
 import { Devices } from "./devices";
 import { EncryptionSettings, useHasRecoveryKey } from "./encryption-settings";
 import { FindMe } from "./find-me";
+import { LegalLinks } from "./legal-page";
 import { Invites, Referrals } from "./invites";
 import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
@@ -122,6 +123,7 @@ export function SettingsPanel() {
           <BlockedPeople />
           <DeleteAccount />
           <AdminLink />
+          <LegalLinks className="lg:[column-span:all]" />
           <BuildVersion />
           <p className="px-1 pb-2 text-center text-xs leading-relaxed text-stone-400 lg:[column-span:all]">
             {tr.settings.creditsFrom}{" "}

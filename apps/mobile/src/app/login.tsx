@@ -8,6 +8,7 @@ import { isErrorWithCode } from "react-native-nitro-google-signin";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { InviteCard, invitePreviewQuery } from "@/components/invites";
+import { LegalLinks } from "@/components/settings-panel";
 import { Logo } from "@/components/logo";
 import { Notice } from "@/components/ui";
 import { unlock } from "@/lib/app-lock";
@@ -117,6 +118,7 @@ export default function Login() {
         <Pressable onPress={() => void Linking.openURL(`${WEB_URL}/support`)} accessibilityRole="link" hitSlop={8}>
           <Text style={styles.support}>{tr.support.chatWithSupport}</Text>
         </Pressable>
+        <LegalLinks />
       </View>
     </SafeAreaView>
   );

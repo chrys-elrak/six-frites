@@ -27,6 +27,7 @@ import { useMedia } from "@/lib/viewport";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
 import { LanguageSelect } from "./language-select";
+import { LegalLinks } from "./legal-page";
 import { Logo } from "./logo";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
@@ -511,6 +512,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
               </Link>
             </p>
           )}
+          {guest && <LegalLinks />}
           <div role="tablist" className="flex rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
             {(["received", "sent"] as const).map((v) => (
               <button

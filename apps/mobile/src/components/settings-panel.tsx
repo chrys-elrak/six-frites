@@ -22,7 +22,7 @@ import { playTone, useNotifyPrefs } from "@/lib/notify";
 import { pickAvatar } from "@/lib/media";
 import { registerPush } from "@/lib/push";
 import { logout, useSession } from "@/lib/session";
-import { six } from "@/lib/six";
+import { six, WEB_URL } from "@/lib/six";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
@@ -568,6 +568,21 @@ function Devices() {
   );
 }
 
+/** About, Terms of Service and Privacy Policy, opened on the website. */
+export function LegalLinks() {
+  const t = useTheme();
+  const tr = useT();
+  return (
+    <View style={styles.legal}>
+      {(["about", "terms", "privacy"] as const).map((page) => (
+        <Pressable key={page} onPress={() => void Linking.openURL(`${WEB_URL}/${page}`)} accessibilityRole="link" hitSlop={6}>
+          <Text style={{ color: t.muted, fontSize: 12 }}>{tr.legal[page]}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 export function SettingsPanel() {
   const t = useTheme();
   const tr = useT();
@@ -598,6 +613,7 @@ export function SettingsPanel() {
         <AppLockSettings />
         <BlockedPeople />
         <AccountCard />
+        <LegalLinks />
         <Text style={[styles.credits, { color: t.faint, paddingBottom: 0 }]}>
           {tr.common.version(`${Constants.expoConfig?.version} (${Constants.expoConfig?.android?.versionCode})`)}
         </Text>
@@ -644,4 +660,5 @@ const styles = StyleSheet.create({
   pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   credits: { fontSize: 12, textAlign: "center", lineHeight: 18, paddingBottom: 8 },
   link: { textDecorationLine: "underline" },
+  legal: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 16, rowGap: 4 },
 });

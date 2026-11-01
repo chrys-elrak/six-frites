@@ -11,17 +11,20 @@ import {
   emojifyTyped,
 } from "@six/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ImagePlus, SearchX, X } from "lucide-react";
+import { Camera, ImagePlus, SearchX, X } from "lucide-react";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
 import { Avatar } from "@/components/avatar";
+import { CameraDialog } from "@/components/camera-dialog";
 import { EmojiSuggestions, useEmojiSuggestions } from "@/components/emoji-suggestions";
 import { FormatBar, formatShortcut } from "@/components/format-bar";
 import { GoogleButton } from "@/components/google-button";
 import { LanguageSelect } from "@/components/language-select";
+import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
 import { PrimaryButton } from "@/components/ui";
 import { unlock } from "@/lib/app-lock";
+import { isTouch } from "@/lib/camera";
 import { useT } from "@/lib/i18n";
 import { toPhotoDataUrl } from "@/lib/image";
 import { MARKERS, parseMarkup } from "@/lib/markup";
@@ -44,6 +47,8 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const [camera, setCamera] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
 
   const profile = useQuery({
@@ -132,6 +137,9 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
       <div className="flex flex-col items-center gap-3 text-center">
         {profile.data ? <Avatar user={profile.data} size="lg" /> : <Logo className="size-20" />}
         <h1 className="text-xl font-semibold tracking-tight">{profile.data && tr.ask.sendTo(profile.data.displayName)}</h1>
+        {profile.data && (
+          <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.notOnSixFrites(profile.data.displayName)}</p>
+        )}
       </div>
 
       {send.isSuccess ? (
@@ -153,11 +161,11 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
         >
           <div className="overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-black/5 dark:bg-stone-900 dark:ring-white/10">
             <p
-              className="flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-white"
+              className="@container flex items-center justify-center gap-2 px-3 py-3.5 font-semibold text-white"
               style={{ backgroundImage: `linear-gradient(135deg, ${ASK_COLORS[0][0]}, ${ASK_COLORS[0][1]})` }}
             >
-              <Logo className="size-7 shrink-0" />
-              {tr.ask.prompt}
+              <Logo className="size-6 shrink-0" />
+              <span className="min-w-0 truncate text-[length:min(1rem,4.5cqw)]">{tr.ask.prompt}</span>
             </p>
             {photo && (
               <div className="relative">
@@ -206,19 +214,41 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
               ) : hasSelection ? (
                 <FormatBar onFormat={wrap} />
               ) : (
-                <button
-                  type="button"
-                  onClick={() => file.current?.click()}
-                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
-                >
-                  <ImagePlus className="size-5" />
-                  {tr.ask.addPhoto}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => file.current?.click()}
+                    className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  >
+                    <ImagePlus className="size-5" />
+                    {tr.ask.addPhoto}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => (isTouch() ? cameraInput.current?.click() : setCamera(true))}
+                    aria-label={tr.composer.takePhoto}
+                    title={tr.composer.takePhoto}
+                    className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  >
+                    <Camera className="size-5" />
+                  </button>
+                </>
               )}
               <input
                 ref={file}
                 type="file"
                 accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  void pick(e.target.files?.[0]);
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={cameraInput}
+                type="file"
+                accept="image/*"
+                capture="environment"
                 className="hidden"
                 onChange={(e) => {
                   void pick(e.target.files?.[0]);
@@ -239,7 +269,6 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
           <PrimaryButton type="submit" disabled={!valid || send.isPending} className="w-full">
             {send.isPending ? tr.ask.sending : tr.common.send}
           </PrimaryButton>
-          <p className="text-center text-xs text-stone-500 dark:text-stone-400">{tr.ask.modNote}</p>
         </form>
       ) : status === "anon" ? (
         <div className="space-y-3">
@@ -258,6 +287,16 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
       <Link href="/inbox" className="text-center text-sm font-medium text-brand hover:underline">
         {tr.ask.getYours}
       </Link>
+      <LegalLinks />
+      {camera && (
+        <CameraDialog
+          onClose={() => setCamera(false)}
+          onCapture={(f) => {
+            setCamera(false);
+            void pick(f);
+          }}
+        />
+      )}
     </main>
   );
 }

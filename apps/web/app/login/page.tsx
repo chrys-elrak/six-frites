@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
 import { InviteCard, invitePreviewQuery } from "@/components/invite-card";
+import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
 import { unlock } from "@/lib/app-lock";
 import { deviceName, useSession } from "@/lib/session";
@@ -100,6 +101,7 @@ function LoginForm() {
       </div>
 
       <AndroidDownload compact />
+      <LegalLinks />
     </main>
   );
 }

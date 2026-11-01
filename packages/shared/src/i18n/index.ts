@@ -7,6 +7,7 @@ import common from "./common.js";
 import composer from "./composer.js";
 import contacts from "./contacts.js";
 import howTo from "./how-to.js";
+import legal from "./legal.js";
 import live from "./live.js";
 import messages from "./messages.js";
 import settings from "./settings.js";
@@ -34,7 +35,7 @@ export function pickLocale(tags: Iterable<string | null | undefined>): Locale {
   return "en";
 }
 
-const namespaces = { common, time, summary, auth, contacts, chats, chat, composer, messages, calls, settings, support, live, howTo, ask };
+const namespaces = { common, time, summary, auth, contacts, chats, chat, composer, messages, calls, settings, support, live, howTo, ask, legal };
 type Namespaces = typeof namespaces;
 
 /** Every string the apps show, in one language. Values are strings, or functions for text with parts. */
