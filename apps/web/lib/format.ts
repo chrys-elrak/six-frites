@@ -71,7 +71,8 @@ export const shareInvite = (code: string) => shareLink(getT().common.joinMe, inv
 
 export const shareContact = (code: string) => shareLink(getT().common.addMe, contactUrl(code));
 
-export const shareAsk = (code: string) => shareLink(getT().ask.prompt, askUrl(window.location.origin, code));
+export const shareAsk = (code: string, prompt?: string | null) =>
+  shareLink(prompt ?? getT().ask.prompt, askUrl(window.location.origin, code));
 
 async function shareLink(title: string, url: string): Promise<"shared" | "copied"> {
   if (navigator.share) {

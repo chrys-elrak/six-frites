@@ -5,18 +5,17 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
 import { SEND_LIMITS } from "../src/services/ask.js";
 import { createSocketServer } from "../src/socket/index.js";
-import { type Auth, ageAccount, asAdmin, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
+import { TEMP_LINK_MAX } from "@six/shared";
+import { type Auth, asAdmin, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, signUp } = chatHelpers(ctx);
 
-const walkIn = async (name: string, extra: Record<string, unknown> = {}): Promise<Auth & { user: { askCode: string } }> => {
-  const who = (await loginAs(ctx.app, uniqueSub(name), "web", { guest: true, ...extra })).json();
-  await ageAccount(who);
-  return who;
-};
+const walkIn = async (name: string, extra: Record<string, unknown> = {}): Promise<Auth & { user: { askCode: string } }> =>
+  (await loginAs(ctx.app, uniqueSub(name), "web", { guest: true, ...extra })).json();
 const ask = (who: Auth, code: string, text: string) => call(who, "POST", `/v1/ask/${code}`, { text });
-const inbox = async (who: Auth) => (await get(who, "/v1/ask")).items as { id: string; text: string; photoUrl: string | null; oldLink: boolean }[];
+const inbox = async (who: Auth) =>
+  (await get(who, "/v1/ask")).items as { id: string; text: string; prompt: string | null; photoUrl: string | null; oldLink: boolean }[];
 
 beforeAll(() => void (env.INVITE_ONLY = true));
 afterAll(() => void (env.INVITE_ONLY = false));
@@ -44,6 +43,7 @@ describe("anonymous messages", () => {
       voice: null,
       createdAt: expect.any(String),
       oldLink: false,
+      prompt: null,
     });
     expect(JSON.stringify(got)).not.toContain(fan.user.id);
     expect(await inbox(fan)).toEqual([]);
@@ -92,7 +92,7 @@ describe("anonymous messages", () => {
     const profile = async (code: string) => (await ctx.app.inject({ url: `/v1/ask/${code}` })).json();
     const account = await get(owner, "/v1/me");
 
-    expect(await profile(owner.user.askCode)).toEqual({ displayName: account.displayName, avatarUrl: null, blocked: false });
+    expect(await profile(owner.user.askCode)).toEqual({ displayName: account.displayName, avatarUrl: null, prompt: null, blocked: false });
 
     const pixel = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
     const updated = (await call(owner, "PATCH", "/v1/ask/profile", { name: "  Mystery Fry ", photo: pixel })).json();
@@ -102,6 +102,7 @@ describe("anonymous messages", () => {
     expect((await call(owner, "PATCH", "/v1/ask/profile", { name: "", photo: null })).json()).toEqual({
       displayName: account.displayName,
       avatarUrl: null,
+      prompt: null,
     });
 
     expect((await ask(fan, owner.user.askCode, "before the change")).statusCode).toBe(204);
@@ -114,6 +115,68 @@ describe("anonymous messages", () => {
       ["found you", false],
       ["before the change", true],
     ]);
+  });
+
+  it("lets the owner write the prompt on their link, and keeps the one each message answered", async () => {
+    const owner = await walkIn("owner");
+    const fan = await walkIn("fan");
+    const code = owner.user.askCode;
+    const prompt = async (value: string) => call(owner, "PATCH", "/v1/ask/profile", { prompt: value });
+    const link = async () => (await ctx.app.inject({ url: `/v1/ask/${code}` })).json().prompt;
+
+    expect((await prompt("x".repeat(61))).statusCode).toBe(400);
+    expect((await prompt("Ask me on six-frites.koera.mg/ask/ABC")).statusCode).toBe(400);
+    expect((await prompt("  Tell me a secret 🤫 ")).json().prompt).toBe("Tell me a secret 🤫");
+    expect(await link()).toBe("Tell me a secret 🤫");
+    await ask(fan, code, "I like your hair");
+
+    await prompt("Rate my outfit");
+    await ask(fan, code, "10/10");
+    expect((await inbox(owner)).map((m) => [m.text, m.prompt])).toEqual([
+      ["10/10", "Rate my outfit"],
+      ["I like your hair", "Tell me a secret 🤫"],
+    ]);
+    expect((await get(fan, "/v1/ask/sent")).items[0].prompt).toBe("Rate my outfit");
+
+    expect((await prompt("")).json().prompt).toBeNull();
+    expect(await link()).toBeNull();
+  });
+
+  it("makes temporary links that expire while the user's own link stays", async () => {
+    const owner = await walkIn("owner");
+    const fan = await walkIn("fan");
+    const page = async (code: string) => (await ctx.app.inject({ url: `/v1/ask/${code}` })).statusCode;
+
+    expect((await call(owner, "POST", "/v1/ask/links", { prompt: "Story time", hours: 5 })).statusCode).toBe(400);
+    expect((await call(owner, "POST", "/v1/ask/links", { prompt: "  ", hours: 24 })).statusCode).toBe(400);
+    expect((await call(owner, "POST", "/v1/ask/links", { prompt: "See bit.ly/x", hours: 24 })).statusCode).toBe(400);
+    await call(owner, "PATCH", "/v1/ask/profile", { prompt: "My usual prompt" });
+    const temp = (await call(owner, "POST", "/v1/ask/links", { prompt: " Rate my holiday pics 🏖️ ", hours: 24 })).json();
+    expect(temp.prompt).toBe("Rate my holiday pics 🏖️");
+    expect(Date.parse(temp.expiresAt) - Date.now()).toBeGreaterThan(23.9 * 3_600_000);
+    expect(await get(owner, "/v1/ask/links")).toEqual([temp]);
+    expect((await ctx.app.inject({ url: `/v1/ask/${temp.code}` })).json().prompt).toBe("Rate my holiday pics 🏖️");
+    expect((await ctx.app.inject({ url: `/v1/ask/${owner.user.askCode}` })).json().prompt).toBe("My usual prompt");
+    expect((await ask(fan, temp.code.toLowerCase(), "from your story")).statusCode).toBe(204);
+    expect((await inbox(owner)).map((m) => [m.text, m.prompt, m.oldLink])).toEqual([["from your story", "Rate my holiday pics 🏖️", false]]);
+
+    const renewed = (await call(owner, "POST", "/v1/ask/code")).json();
+    expect(await page(temp.code)).toBe(200);
+    expect(await page(renewed.askCode)).toBe(200);
+
+    await prisma.askLink.update({ where: { code: temp.code }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    expect(await page(temp.code)).toBe(404);
+    expect((await ask(fan, temp.code, "too late")).statusCode).toBe(404);
+    expect(await get(owner, "/v1/ask/links")).toEqual([]);
+
+    const next = (await call(owner, "POST", "/v1/ask/links", { prompt: "A week of questions", hours: 168 })).json();
+    expect((await call(fan, "DELETE", `/v1/ask/links/${next.code}`)).statusCode).toBe(204);
+    expect(await page(next.code)).toBe(200);
+    expect((await call(owner, "DELETE", `/v1/ask/links/${next.code}`)).statusCode).toBe(204);
+    expect(await page(next.code)).toBe(404);
+
+    for (let i = 0; i < TEMP_LINK_MAX; i++) await call(owner, "POST", "/v1/ask/links", { prompt: "Ask me anything", hours: 72 });
+    expect((await call(owner, "POST", "/v1/ask/links", { prompt: "Ask me anything", hours: 72 })).json().error.code).toBe("CONFLICT");
   });
 
   it("turns away empty-looking text, links in names, repeats and floods", async () => {
@@ -133,6 +196,17 @@ describe("anonymous messages", () => {
     expect((await inbox(owner)).length).toBe(SEND_LIMITS.perRecipient);
   });
 
+  it("stops one longer text pasted to link after link, but not a short greeting", async () => {
+    const sender = await walkIn("paster");
+    const pasted = "Win a free phone, write back to find out how!";
+    for (let i = 0; i < SEND_LIMITS.sameText; i++) {
+      expect((await ask(sender, (await walkIn(`target-${i}`)).user.askCode, pasted)).statusCode).toBe(204);
+    }
+    const next = (await walkIn("target-next")).user.askCode;
+    expect((await ask(sender, next, pasted.toUpperCase())).json().error.code).toBe("CONFLICT");
+    expect((await ask(sender, next, "Hi! 👋")).statusCode).toBe(204);
+  });
+
   it("keeps the formatting, and turns away ranges outside the text", async () => {
     const owner = await walkIn("owner");
     const fan = await walkIn("fan");
@@ -147,19 +221,20 @@ describe("anonymous messages", () => {
     expect(await inbox(owner)).toMatchObject([{ text: "Who is my crush", entities }]);
   });
 
-  it("takes links and real photos, and shows a reported photo to the moderators", async () => {
+  it("turns away links, Six Frites' own too, takes real photos, and shows a reported photo to the moderators", async () => {
     const owner = await walkIn("owner");
     const fan = await walkIn("fan");
     const code = owner.user.askCode;
     const pixel = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
     const send = (body: object) => call(fan, "POST", `/v1/ask/${code}`, body);
 
-    expect((await send({ text: "look at https://example.com" })).statusCode).toBe(204);
+    for (const text of ["look at https://example.com", "www.promo.net", "bit.ly/x", "six-frites.koera.mg/ask/ABC12345"]) {
+      expect((await send({ text })).statusCode).toBe(400);
+    }
     expect((await send({ photo: "data:image/png;base64,PGh0bWw+PC9odG1sPg==" })).statusCode).toBe(400);
     expect((await send({ photo: pixel })).statusCode).toBe(204);
-    const [photo, link] = await inbox(owner);
+    const [photo] = await inbox(owner);
     expect(photo).toMatchObject({ text: "", photoUrl: expect.any(String) });
-    expect(link).toMatchObject({ text: "look at https://example.com", photoUrl: null });
 
     expect((await call(owner, "POST", "/v1/reports", { anonMessageId: photo!.id, reason: "sexual" })).statusCode).toBe(204);
     await call(owner, "DELETE", `/v1/ask/messages/${photo!.id}`);
@@ -216,7 +291,7 @@ describe("anonymous messages", () => {
       const arrived = new Promise((resolve) => socket.once("ask:new", resolve));
       await ask(fan, owner.user.askCode, "live?");
       const m = await arrived;
-      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, gif: null, voice: null, createdAt: expect.any(String), oldLink: false });
+      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, gif: null, voice: null, createdAt: expect.any(String), oldLink: false, prompt: null });
     } finally {
       socket.disconnect();
     }
@@ -229,16 +304,6 @@ describe("anonymous messages", () => {
     const me = await get(member, "/v1/me");
     expect(me.guest).toBe(false);
     expect((await ctx.app.inject({ url: `/v1/ask/${me.askCode}` })).statusCode).toBe(200);
-  });
-
-  it("makes a new account wait a day before writing, saying until when", async () => {
-    const owner = await walkIn("owner");
-    const newcomer: Auth = (await loginAs(ctx.app, uniqueSub("newcomer"), "web", { guest: true })).json();
-    const refused = (await ask(newcomer, owner.user.askCode, "hi!")).json().error;
-    expect(refused.code).toBe("ACCOUNT_TOO_NEW");
-    expect(Date.parse(refused.details.until) - Date.now()).toBeGreaterThan(23.9 * 3_600_000);
-    await ageAccount(newcomer);
-    expect((await ask(newcomer, owner.user.askCode, "hi!")).statusCode).toBe(204);
   });
 });
 

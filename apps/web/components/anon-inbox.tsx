@@ -3,21 +3,26 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
   ASK_COLORS,
+  ASK_PROMPT_MAX,
   type AnonMessageDTO,
+  type AskProfileDTO,
   type SentAnonDTO,
+  TEMP_LINK_HOURS,
   type UpdateAskProfileInput,
   askUrl,
   doodleTileSvg,
+  durationLabel,
+  expiryLabel,
   hasLink,
   splitLinks,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Ellipsis, LogOut, Share, ShieldAlert, Trash2, VenetianMask, X } from "lucide-react";
+import { Camera, Check, Copy, Ellipsis, LogOut, Share, ShieldAlert, Trash2, VenetianMask, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type CardStyle, askCardPng, saveAskCard, shareAskCard } from "@/lib/ask-card";
 import { shareAsk, timeAgo } from "@/lib/format";
-import { useT } from "@/lib/i18n";
+import { getLocale, useT } from "@/lib/i18n";
 import { receiveAnon } from "@/lib/realtime";
 import { toAvatarDataUrl } from "@/lib/image";
 import { segments } from "@/lib/markup";
@@ -328,25 +333,81 @@ function CardExport({
 }
 
 /** The name and photo people see on your link, kept apart from your account's. */
-function PublicProfile({ code }: { code: string }) {
+/** The user's link as visitors see it, and a way to change it; `error` holds why the last change failed. */
+function useAskProfile(code: string) {
   const tr = useT();
   const qc = useQueryClient();
-  const [name, setName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const file = useRef<HTMLInputElement>(null);
   const profile = useQuery({
     queryKey: ["ask-profile", code],
     queryFn: async () => unwrap(await six.api.GET("/v1/ask/{code}", { params: { path: { code } } })),
   });
-
   const save = useMutation({
     mutationFn: async (body: UpdateAskProfileInput) => unwrap(await six.api.PATCH("/v1/ask/profile", { body })),
     onSuccess: (p) => {
       qc.setQueryData(["ask-profile", code], p);
-      setName(null);
+      setError(null);
     },
     onError: (err) => setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave),
   });
+  return { profile, save, error, setError };
+}
+
+const saveButton =
+  "rounded-lg bg-stone-900 px-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-stone-100 dark:text-stone-900";
+
+/** The line at the top of the user's link, which they can change right where they share it. */
+function PromptField({ code }: { code: string }) {
+  const tr = useT();
+  const { profile, save, error } = useAskProfile(code);
+  const [prompt, setPrompt] = useState<string | null>(null);
+  if (!profile.data) return null;
+  const text = prompt ?? profile.data.prompt ?? "";
+  const dirty = prompt !== null && prompt.trim() !== (profile.data.prompt ?? "");
+
+  return (
+    <form
+      className="space-y-1"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (dirty) save.mutate({ prompt: prompt!.trim() }, { onSuccess: () => setPrompt(null) });
+      }}
+    >
+      <label htmlFor="ask-prompt" className="flex justify-between text-sm font-medium">
+        {tr.ask.promptLabel}
+        <span className="text-xs font-normal text-stone-400">
+          {text.length}/{ASK_PROMPT_MAX}
+        </span>
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="ask-prompt"
+          value={text}
+          onChange={(e) => setPrompt(e.target.value)}
+          maxLength={ASK_PROMPT_MAX}
+          placeholder={tr.ask.prompt}
+          className="min-w-0 flex-1 rounded-lg bg-stone-100 px-3 py-2 text-sm ring-stone-300 outline-none focus:ring-2 dark:bg-stone-800 dark:ring-stone-700"
+        />
+        {dirty && (
+          <button disabled={save.isPending} className={saveButton}>
+            {tr.common.save}
+          </button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
+    </form>
+  );
+}
+
+function PublicProfile({ code }: { code: string }) {
+  const tr = useT();
+  const { profile, save, error, setError } = useAskProfile(code);
+  const [name, setName] = useState<string | null>(null);
+  const file = useRef<HTMLInputElement>(null);
 
   async function pick(f: File | undefined) {
     if (!f) return;
@@ -390,7 +451,7 @@ function PublicProfile({ code }: { code: string }) {
           className="flex min-w-0 flex-1 gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            if (dirty) save.mutate({ name: name!.trim() });
+            if (dirty) save.mutate({ name: name!.trim() }, { onSuccess: () => setName(null) });
           }}
         >
           <input
@@ -401,10 +462,7 @@ function PublicProfile({ code }: { code: string }) {
             className="min-w-0 flex-1 rounded-lg bg-transparent px-2 py-1 text-lg font-medium outline-none ring-stone-300 focus:ring-2 dark:ring-stone-700"
           />
           {dirty && (
-            <button
-              disabled={save.isPending}
-              className="rounded-lg bg-stone-900 px-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-stone-100 dark:text-stone-900"
-            >
+            <button disabled={save.isPending} className={saveButton}>
               {tr.common.save}
             </button>
           )}
@@ -430,18 +488,151 @@ function PublicProfile({ code }: { code: string }) {
   );
 }
 
+const iconButton =
+  "grid size-8 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800";
+
+/** Links that stop working after a while, for a story, under the user's own link `code`, which stays. */
+function TempLinks({ code }: { code: string }) {
+  const tr = useT();
+  const qc = useQueryClient();
+  const [title, setTitle] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const links = useQuery({
+    queryKey: ["ask-links"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/ask/links")),
+  });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["ask-links"] });
+  const create = useMutation({
+    mutationFn: async (hours: number) =>
+      unwrap(await six.api.POST("/v1/ask/links", { body: { prompt: title!.trim(), hours } })),
+    onSuccess: () => {
+      setTitle(null);
+      void refresh();
+    },
+  });
+  const remove = useMutation({
+    mutationFn: async (temp: string) => six.api.DELETE("/v1/ask/links/{code}", { params: { path: { code: temp } } }),
+    onSuccess: refresh,
+  });
+  const url = (temp: string) => askUrl(window.location.origin, temp);
+
+  function flash(temp: string) {
+    setCopied(temp);
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  return (
+    <div className="space-y-2 border-t border-stone-200 pt-3 dark:border-stone-800">
+      <p className="text-sm font-semibold tracking-wide text-stone-500 uppercase dark:text-stone-400">{tr.ask.tempLinks}</p>
+      <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.tempHint}</p>
+      {links.data?.map((l) => (
+        <div key={l.code} className="flex items-center gap-1">
+          <div className="min-w-0 flex-1">
+            {l.prompt && <p className="truncate text-sm font-medium">{l.prompt}</p>}
+            <p className="truncate font-mono text-xs select-text">{url(l.code).replace(/^https?:\/\//, "")}</p>
+            <p className="text-xs text-stone-500 dark:text-stone-400">{expiryLabel(l.expiresAt, tr)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              const prompt = l.prompt ?? qc.getQueryData<AskProfileDTO>(["ask-profile", code])?.prompt;
+              if ((await shareAsk(l.code, prompt)) === "copied") flash(l.code);
+            }}
+            aria-label={tr.common.share}
+            title={tr.common.share}
+            className={iconButton}
+          >
+            <Share className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              await navigator.clipboard.writeText(url(l.code));
+              flash(l.code);
+            }}
+            aria-label={tr.common.copyLink}
+            title={tr.common.copyLink}
+            className={iconButton}
+          >
+            {copied === l.code ? <Check className="size-4 text-brand" /> : <Copy className="size-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => remove.mutate(l.code)}
+            aria-label={tr.common.delete}
+            title={tr.common.delete}
+            className={`${iconButton} hover:text-red-600 dark:hover:text-red-400`}
+          >
+            <Trash2 className="size-4" />
+          </button>
+        </div>
+      ))}
+      {title === null ? (
+        <button
+          type="button"
+          onClick={() => setTitle("")}
+          className="w-full text-center text-sm font-semibold text-brand hover:underline"
+        >
+          {tr.ask.newTempLink}
+        </button>
+      ) : (
+        <div className="space-y-2 rounded-xl bg-stone-100 p-3 dark:bg-stone-800/60">
+          <label htmlFor="temp-title" className="flex justify-between text-sm font-medium">
+            {tr.ask.tempTitle}
+            <span className="text-xs font-normal text-stone-400">
+              {title.length}/{ASK_PROMPT_MAX}
+            </span>
+          </label>
+          <input
+            id="temp-title"
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={ASK_PROMPT_MAX}
+            placeholder={tr.ask.prompt}
+            className="w-full rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-stone-200 outline-none focus:ring-2 dark:bg-stone-900 dark:ring-stone-700"
+          />
+          <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.tempFor}</p>
+          <div className="flex gap-2">
+            {TEMP_LINK_HOURS.map((h) => (
+              <button
+                key={h}
+                type="button"
+                disabled={!title.trim() || create.isPending}
+                onClick={() => create.mutate(h)}
+                className="flex-1 rounded-lg bg-stone-900 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-stone-100 dark:text-stone-900"
+              >
+                {durationLabel(h * 3600, tr)}
+              </button>
+            ))}
+          </div>
+          {create.isError && (
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              {create.error.message}
+            </p>
+          )}
+          <button type="button" onClick={() => setTitle(null)} className="w-full text-center text-sm text-stone-500">
+            {tr.common.cancel}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** The Anonymous tab: your link to share, and what people sent through it. For guests it is the whole app. */
 export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const tr = useT();
   const qc = useQueryClient();
   const code = useSession((s) => s.user!.askCode);
+  const chatBan = useSession((s) => s.user!.chatBan);
   const setUser = useSession((s) => s.setUser);
   const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
   const [menu, setMenu] = useState<AnonMessageDTO | null>(null);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
   const [opening, setOpening] = useState<string | null>(null);
-  const [view, setView] = useState<"received" | "sent">("received");
+  const [view, setView] = useState<"received" | "sent" | "settings">("received");
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [reporting, setReporting] = useState<AnonMessageDTO | null>(null);
   const [exporting, setExporting] = useState<AnonMessageDTO | null>(null);
@@ -476,10 +667,18 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
     void done.finally(() => qc.invalidateQueries({ queryKey: ["ask"] }));
   }
 
-  async function shareLink() {
-    if ((await shareAsk(code)) !== "copied") return;
+  function flashCopied() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function shareLink() {
+    if ((await shareAsk(code, qc.getQueryData<AskProfileDTO>(["ask-profile", code])?.prompt)) === "copied") flashCopied();
+  }
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(link);
+    flashCopied();
   }
 
   async function renew() {
@@ -508,26 +707,26 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-lg space-y-4 p-4 lg:max-w-5xl lg:p-6">
           <Card className="space-y-3 p-4">
-            <PublicProfile code={code} />
+            <PromptField code={code} />
             <p className="border-t border-stone-200 pt-3 text-sm font-semibold tracking-wide text-stone-500 uppercase dark:border-stone-800 dark:text-stone-400">
               {tr.ask.yourLink}
             </p>
             <p className="truncate font-mono text-sm select-text">{link.replace(/^https?:\/\//, "")}</p>
             <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.linkHint}</p>
             <PrimaryButton type="button" onClick={() => void shareLink()} className="w-full">
-              {copied ? tr.settings.linkCopied : tr.common.shareLink}
+              {tr.common.shareLink}
             </PrimaryButton>
             <button
               type="button"
-              onClick={() => setRenewing(true)}
-              className="w-full text-center text-sm font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
+              onClick={() => void copyLink()}
+              className="w-full text-center text-sm font-semibold text-brand hover:underline"
             >
-              {tr.ask.newLink}
+              {copied ? tr.settings.linkCopied : tr.common.copyLink}
             </button>
           </Card>
           {guest && (
             <p className="px-1 text-sm text-stone-500 dark:text-stone-400">
-              {tr.ask.guestNote}{" "}
+              {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
               <Link href="/support" className="font-medium text-brand hover:underline">
                 {tr.support.chatWithSupport}
               </Link>
@@ -535,7 +734,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           )}
           {guest && <LegalLinks />}
           <div role="tablist" className="flex rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
-            {(["received", "sent"] as const).map((v) => (
+            {(["received", "sent", "settings"] as const).map((v) => (
               <button
                 key={v}
                 type="button"
@@ -546,11 +745,23 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   view === v ? "bg-white shadow-sm dark:bg-stone-950" : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
                 }`}
               >
-                {v === "received" ? tr.ask.received : tr.ask.sentTab}
+                {{ received: tr.ask.received, sent: tr.ask.sentTab, settings: tr.common.settings }[v]}
               </button>
             ))}
           </div>
-          {view === "sent" ? (
+          {view === "settings" ? (
+            <Card className="mx-auto w-full max-w-lg space-y-3 p-4">
+              <PublicProfile code={code} />
+              <TempLinks code={code} />
+              <button
+                type="button"
+                onClick={() => setRenewing(true)}
+                className="w-full border-t border-stone-200 pt-3 text-center text-sm font-medium text-stone-500 hover:text-stone-800 dark:border-stone-800 dark:hover:text-stone-200"
+              >
+                {tr.ask.newLink}
+              </button>
+            </Card>
+          ) : view === "sent" ? (
             <SentList />
           ) : (
             <>
@@ -575,7 +786,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                       }}
                     >
                       <Logo className="size-5 shrink-0" />
-                      {tr.ask.prompt}
+                      {m.prompt ?? tr.ask.prompt}
                     </p>
                     {m.photoUrl && (
                       <a href={m.photoUrl} target="_blank" rel="noreferrer" className="block bg-stone-100 dark:bg-stone-950">

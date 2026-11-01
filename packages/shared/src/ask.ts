@@ -5,6 +5,8 @@ import { ContactPhoto } from "./contacts.js";
 import { splitLinks } from "./links.js";
 
 export const ASK_MAX = 500;
+/** How long the prompt someone writes for the top of their link can be. */
+export const ASK_PROMPT_MAX = 60;
 export const ANON_PHOTO_BYTES = 512 * 1024;
 /** Voice messages last a minute at most; the server cuts anything longer. */
 export const ANON_VOICE_MS = 60_000;
@@ -13,9 +15,12 @@ export const ANON_VOICE_BYTES = 1024 * 1024;
 const VISIBLE = /[\p{L}\p{N}\p{Extended_Pictographic}]/u;
 
 // ponytail: bare domains are caught by a short TLD list; add TLDs as spam shows up
-const BARE_DOMAIN = /\b[a-z0-9-]+\.(com|net|org|io|me|ly|gg|co|app|link|site|xyz|top|info|biz|shop|ru|tk)\b/i;
+const BARE_DOMAIN = /\b[a-z0-9-]+\.(com|net|org|io|me|ly|gg|co|app|link|site|xyz|top|info|biz|shop|ru|tk|mg|fr)\b/i;
 
-/** Links are the usual spam in anonymous messages, so they're refused: URLs, www. hosts and bare domains like bit.ly/x. */
+/**
+ * Links are the usual spam in anonymous messages, so they're refused, Six Frites' own invite and ask links
+ * included: URLs, www. hosts and bare domains like bit.ly/x.
+ */
 export const hasLink = (text: string) => splitLinks(text).some((p) => p.href) || BARE_DOMAIN.test(text);
 
 const visible = (s: string) => !s || VISIBLE.test(s);
@@ -35,8 +40,37 @@ export type AskColors = (typeof ASK_COLORS)[number];
 export const AskProfileDTO = z.object({
   displayName: z.string(),
   avatarUrl: z.string().url().nullable(),
+  prompt: z.string().nullable().describe("The line at the top of the link; null shows the app's own"),
 });
 export type AskProfileDTO = z.infer<typeof AskProfileDTO>;
+
+/** The line at the top of a link: short, readable, and with no link in it. */
+const PromptText = z
+  .string()
+  .trim()
+  .max(ASK_PROMPT_MAX)
+  .refine(visible, "Write something people can read")
+  .refine((s) => !hasLink(s), "Links aren't allowed on your link");
+
+/** How long a temporary link can work, in hours, and how many can work at once. */
+export const TEMP_LINK_HOURS = [24, 72, 168] as const;
+export const TEMP_LINK_MAX = 10;
+
+export const TempLinkDTO = z.object({
+  code: z.string(),
+  prompt: z.string().nullable().describe("Its title, at the top of the link"),
+  expiresAt: IsoDate,
+});
+export type TempLinkDTO = z.infer<typeof TempLinkDTO>;
+
+export const CreateTempLinkInput = z.object({
+  prompt: PromptText.refine((s) => s.length > 0, "Give the link a title").describe("Its title, at the top of the link"),
+  hours: z
+    .number()
+    .int()
+    .refine((h) => (TEMP_LINK_HOURS as readonly number[]).includes(h), "Pick 24, 72 or 168 hours"),
+});
+export type CreateTempLinkInput = z.infer<typeof CreateTempLinkInput>;
 
 export const AskLinkDTO = AskProfileDTO.extend({
   blocked: z.boolean().describe("The signed-in viewer was blocked by this person and can't write to them; false when signed out"),
@@ -52,13 +86,20 @@ export const UpdateAskProfileInput = z.object({
     .refine((s) => !hasLink(s), "Links aren't allowed in names")
     .optional()
     .describe("Shown on your link; empty goes back to your account name"),
+  prompt: PromptText.optional().describe("The line at the top of your link, like \"Tell me a secret\"; empty goes back to the app's"),
   photo: ContactPhoto.nullable().optional().describe("A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes it"),
 });
 export type UpdateAskProfileInput = z.infer<typeof UpdateAskProfileInput>;
 
 export const SendAnonInput = z
   .object({
-    text: z.string().trim().max(ASK_MAX).refine(visible, "Write something people can read").default(""),
+    text: z
+      .string()
+      .trim()
+      .max(ASK_MAX)
+      .refine(visible, "Write something people can read")
+      .refine((s) => !hasLink(s), "Links aren't allowed in anonymous messages")
+      .default(""),
     entities: Entities.optional(),
     photo: z
       .string()
@@ -85,6 +126,7 @@ export type SendAnonInput = z.infer<typeof SendAnonInput>;
 export const AnonMessageDTO = z.object({
   id: Id,
   text: z.string().describe("Empty when only a photo, a GIF or a voice message was sent"),
+  prompt: z.string().nullable().describe("The prompt on the link when it was sent; null for the app's own"),
   entities: z.array(MessageEntity).describe("Bold, italic, strike, code and spoiler ranges of the text"),
   photoUrl: z.string().url().nullable(),
   gif: z

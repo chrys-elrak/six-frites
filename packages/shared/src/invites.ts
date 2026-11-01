@@ -79,7 +79,12 @@ function inviteState(i: InviteDTO, t: Dict) {
   if (i.status === "revoked") return t.settings.revoked;
   if (i.status === "exhausted") return t.settings.usedUp;
   if (!i.expiresAt) return t.settings.neverExpires;
-  const hours = (Date.parse(i.expiresAt) - Date.now()) / 36e5;
+  return expiryLabel(i.expiresAt, t);
+}
+
+/** "Expires in 5 hours", "Expires in 3 days", or "Expired". */
+export function expiryLabel(expiresAt: string, t: Dict) {
+  const hours = (Date.parse(expiresAt) - Date.now()) / 36e5;
   if (hours <= 0) return t.settings.expired;
   return t.settings.expiresIn(
     hours < 24 ? t.time.duration(Math.ceil(hours), "hour") : t.time.duration(Math.ceil(hours / 24), "day"),

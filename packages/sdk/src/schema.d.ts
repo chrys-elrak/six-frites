@@ -76,6 +76,13 @@ export interface paths {
                                 quickReactions: string[];
                                 /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                                 guest: boolean;
+                                /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                                chatBan: {
+                                    /** Format: date-time */
+                                    until: string | null;
+                                } | null;
+                                /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                                termsAccepted: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -152,6 +159,13 @@ export interface paths {
                                 quickReactions: string[];
                                 /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                                 guest: boolean;
+                                /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                                chatBan: {
+                                    /** Format: date-time */
+                                    until: string | null;
+                                } | null;
+                                /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                                termsAccepted: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -394,6 +408,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 };
                                 bytes: number;
                             }[];
@@ -458,6 +477,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                                 banReason: string | null;
                                 admin: boolean;
                                 /** Format: date-time */
@@ -473,6 +497,8 @@ export interface paths {
                                 storageBytes: number;
                                 /** @description Signed up after their inviter hit the limit and can't sign in yet */
                                 queued: boolean;
+                                /** @description Joined without an invite: anonymous messages and support only */
+                                guest: boolean;
                                 inviteLimit: number;
                                 /** @description People who joined with their links */
                                 invited: number;
@@ -494,6 +520,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 }[];
                             }[];
                             nextCursor: string | null;
@@ -548,6 +579,11 @@ export interface paths {
                              * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                              */
                             bannedUntil: string | null;
+                            /**
+                             * @description What the ban takes away, while bannedAt is set
+                             * @enum {string}
+                             */
+                            banScope: "full" | "chat";
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -563,6 +599,8 @@ export interface paths {
                             storageBytes: number;
                             /** @description Signed up after their inviter hit the limit and can't sign in yet */
                             queued: boolean;
+                            /** @description Joined without an invite: anonymous messages and support only */
+                            guest: boolean;
                             inviteLimit: number;
                             /** @description People who joined with their links */
                             invited: number;
@@ -584,6 +622,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             }[];
                         };
                     };
@@ -626,6 +669,11 @@ export interface paths {
                         reason: string;
                         /** @description How many hours the ban lasts; until an admin lifts it when left out */
                         hours?: number;
+                        /**
+                         * @default full
+                         * @enum {string}
+                         */
+                        scope?: "full" | "chat";
                     };
                 };
             };
@@ -649,6 +697,11 @@ export interface paths {
                              * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                              */
                             bannedUntil: string | null;
+                            /**
+                             * @description What the ban takes away, while bannedAt is set
+                             * @enum {string}
+                             */
+                            banScope: "full" | "chat";
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -664,6 +717,8 @@ export interface paths {
                             storageBytes: number;
                             /** @description Signed up after their inviter hit the limit and can't sign in yet */
                             queued: boolean;
+                            /** @description Joined without an invite: anonymous messages and support only */
+                            guest: boolean;
                             inviteLimit: number;
                             /** @description People who joined with their links */
                             invited: number;
@@ -685,6 +740,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             }[];
                         };
                     };
@@ -737,6 +797,11 @@ export interface paths {
                              * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                              */
                             bannedUntil: string | null;
+                            /**
+                             * @description What the ban takes away, while bannedAt is set
+                             * @enum {string}
+                             */
+                            banScope: "full" | "chat";
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -752,6 +817,8 @@ export interface paths {
                             storageBytes: number;
                             /** @description Signed up after their inviter hit the limit and can't sign in yet */
                             queued: boolean;
+                            /** @description Joined without an invite: anonymous messages and support only */
+                            guest: boolean;
                             inviteLimit: number;
                             /** @description People who joined with their links */
                             invited: number;
@@ -773,6 +840,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             }[];
                         };
                     };
@@ -834,6 +906,11 @@ export interface paths {
                              * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                              */
                             bannedUntil: string | null;
+                            /**
+                             * @description What the ban takes away, while bannedAt is set
+                             * @enum {string}
+                             */
+                            banScope: "full" | "chat";
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -849,6 +926,8 @@ export interface paths {
                             storageBytes: number;
                             /** @description Signed up after their inviter hit the limit and can't sign in yet */
                             queued: boolean;
+                            /** @description Joined without an invite: anonymous messages and support only */
+                            guest: boolean;
                             inviteLimit: number;
                             /** @description People who joined with their links */
                             invited: number;
@@ -870,6 +949,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             }[];
                         };
                     };
@@ -965,6 +1049,11 @@ export interface paths {
                              * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                              */
                             bannedUntil: string | null;
+                            /**
+                             * @description What the ban takes away, while bannedAt is set
+                             * @enum {string}
+                             */
+                            banScope: "full" | "chat";
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -980,6 +1069,8 @@ export interface paths {
                             storageBytes: number;
                             /** @description Signed up after their inviter hit the limit and can't sign in yet */
                             queued: boolean;
+                            /** @description Joined without an invite: anonymous messages and support only */
+                            guest: boolean;
                             inviteLimit: number;
                             /** @description People who joined with their links */
                             invited: number;
@@ -1001,6 +1092,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             }[];
                         };
                     };
@@ -1073,6 +1169,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 };
                                 recipient: {
                                     id: string;
@@ -1087,6 +1188,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 };
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1160,6 +1266,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 };
                                 target: {
                                     id: string;
@@ -1174,6 +1285,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 };
                                 /** @description Copied when the report was made, so later edits or deletes don't hide it */
                                 messages: {
@@ -1291,6 +1407,11 @@ export interface paths {
                         banUser?: boolean;
                         /** @description How many hours the ban lasts; until an admin lifts it when left out */
                         banHours?: number;
+                        /**
+                         * @default full
+                         * @enum {string}
+                         */
+                        banScope?: "full" | "chat";
                         note?: string;
                     };
                 };
@@ -1322,6 +1443,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             };
                             target: {
                                 id: string;
@@ -1336,6 +1462,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             };
                             /** @description Copied when the report was made, so later edits or deletes don't hide it */
                             messages: {
@@ -1465,6 +1596,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 } | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1538,6 +1674,11 @@ export interface paths {
                                  * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                  */
                                 bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
                             } | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1730,6 +1871,11 @@ export interface paths {
                                      * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
                                      */
                                     bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
                                 };
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2012,6 +2158,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2108,6 +2261,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2115,6 +2275,77 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/me/terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept the Terms of Service and Privacy Policy
+         * @description The apps ask once, the first time someone joins.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Your link for anonymous messages is /ask/{askCode} on the web app */
+                            askCode: string;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
+                            /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
+                            guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/me/contact-code": {
@@ -2168,6 +2399,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2363,6 +2601,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2410,6 +2655,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2670,7 +2922,32 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete one of your links that no longer works
+         * @description Only for a revoked, expired or used-up link (CONFLICT otherwise). People who joined with it stay connected and still count.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -10999,6 +11276,13 @@ export interface paths {
                                     quickReactions: string[];
                                     /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                                     guest: boolean;
+                                    /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                                    chatBan: {
+                                        /** Format: date-time */
+                                        until: string | null;
+                                    } | null;
+                                    /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                                    termsAccepted: boolean;
                                     /** Format: date-time */
                                     createdAt: string;
                                 };
@@ -11472,6 +11756,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -11589,6 +11880,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -12977,6 +13275,8 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
+                            /** @description The line at the top of the link; null shows the app's own */
+                            prompt: string | null;
                             /** @description The signed-in viewer was blocked by this person and can't write to them; false when signed out */
                             blocked: boolean;
                         };
@@ -12987,7 +13287,7 @@ export interface paths {
         put?: never;
         /**
          * Send someone an anonymous message
-         * @description They never see who sent it; moderators can see the sender of every anonymous message. Accounts under a day old get ACCOUNT_TOO_NEW, and someone the recipient blocked gets ANON_BLOCKED.
+         * @description They never see who sent it; moderators can see the sender of every anonymous message. Someone the recipient blocked gets ANON_BLOCKED.
          */
         post: {
             parameters: {
@@ -13068,6 +13368,8 @@ export interface paths {
                                 id: string;
                                 /** @description Empty when only a photo, a GIF or a voice message was sent */
                                 text: string;
+                                /** @description The prompt on the link when it was sent; null for the app's own */
+                                prompt: string | null;
                                 /** @description Bold, italic, strike, code and spoiler ranges of the text */
                                 entities: {
                                     /** @enum {string} */
@@ -13144,6 +13446,8 @@ export interface paths {
                                 id: string;
                                 /** @description Empty when only a photo, a GIF or a voice message was sent */
                                 text: string;
+                                /** @description The prompt on the link when it was sent; null for the app's own */
+                                prompt: string | null;
                                 /** @description Bold, italic, strike, code and spoiler ranges of the text */
                                 entities: {
                                     /** @enum {string} */
@@ -13176,6 +13480,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description The line at the top of the link; null shows the app's own */
+                                    prompt: string | null;
                                 };
                             }[];
                             nextCursor: string | null;
@@ -13247,7 +13553,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Change the name and photo shown on your link
+         * Change the name, photo and prompt shown on your link
          * @description Your account keeps its own name and photo.
          */
         patch: {
@@ -13262,6 +13568,8 @@ export interface paths {
                     "application/json": {
                         /** @description Shown on your link; empty goes back to your account name */
                         name?: string;
+                        /** @description The line at the top of your link, like "Tell me a secret"; empty goes back to the app's */
+                        prompt?: string;
                         /** @description A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes it */
                         photo?: string | null;
                     };
@@ -13278,11 +13586,133 @@ export interface paths {
                             displayName: string;
                             /** Format: uri */
                             avatarUrl: string | null;
+                            /** @description The line at the top of the link; null shows the app's own */
+                            prompt: string | null;
                         };
                     };
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/ask/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your temporary links that still work, newest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            /** @description Its title, at the top of the link */
+                            prompt: string | null;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Make a temporary link to your anonymous messages
+         * @description It stops working after the hours you pick; your own link doesn't change. 10 at once at most.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Its title, at the top of the link */
+                        prompt: string;
+                        hours: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            /** @description Its title, at the top of the link */
+                            prompt: string | null;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ask/links/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Stop a temporary link now
+         * @description Messages that came through it stay.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/ask/code": {
@@ -13336,6 +13766,13 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };

@@ -11,11 +11,12 @@ import {
   type GifDTO,
   SendAnonInput,
   emojifyEnd,
+  hasLink,
   emojifyTyped,
   signInMessage,
 } from "@six/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Camera, ImagePlus, Mic, Pencil, SearchX, Square, VenetianMask, X } from "lucide-react";
+import { Camera, ImagePlus, Info, Mic, Pencil, SearchX, Square, VenetianMask, X } from "lucide-react";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
 import { VoicePlayer } from "@/components/attachment";
@@ -97,16 +98,13 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
 
   const body = { ...parseMarkup(emojifyEnd(text)), photo: photo?.url, gifId: gif?.id, voice: voice?.data };
   const valid = SendAnonInput.safeParse(body).success;
-  const sendError = (err: unknown) => {
-    if (!(err instanceof SixApiError)) return undefined;
-    if (err.code === "ACCOUNT_TOO_NEW") {
-      const { until } = err.details as { until: string };
-      return tr.ask.tooNew(new Date(until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" }));
-    }
-    return ({ RATE_LIMITED: tr.ask.slowDown, CONFLICT: tr.ask.duplicate, ANON_BLOCKED: tr.ask.blocked } as Record<string, string>)[
-      err.code
-    ];
-  };
+  const linked = hasLink(body.text);
+  const sendError = (err: unknown) =>
+    err instanceof SixApiError
+      ? ({ RATE_LIMITED: tr.ask.slowDown, CONFLICT: tr.ask.duplicate, ANON_BLOCKED: tr.ask.blocked } as Record<string, string>)[
+          err.code
+        ]
+      : undefined;
 
   const send = useMutation({
     mutationFn: async () => {
@@ -189,7 +187,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center gap-4 px-4 text-center">
         <SearchX className="size-12 text-stone-400" />
         <p className="text-stone-600 dark:text-stone-300">{tr.ask.linkGone}</p>
-        <Link href="/inbox" className="font-medium text-brand hover:underline">
+        <Link href="/inbox" target="_blank" rel="noopener" className="font-medium text-brand hover:underline">
           {tr.ask.getYours}
         </Link>
       </main>
@@ -202,11 +200,30 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
         <LanguageSelect />
       </div>
       <div className="flex flex-col items-center gap-3 text-center">
-        {profile.data ? <Avatar user={profile.data} size="lg" /> : <Logo className="size-20" />}
-        <h1 className="text-xl font-semibold tracking-tight">{profile.data && tr.ask.sendTo(profile.data.displayName)}</h1>
-        {profile.data && (
-          <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.notOnSixFrites(profile.data.displayName)}</p>
+        {profile.data ? (
+          <div className="relative">
+            <Avatar user={profile.data} size="lg" />
+            <button
+              type="button"
+              popoverTarget="ask-note"
+              aria-label={tr.ask.aboutLink}
+              title={tr.ask.aboutLink}
+              className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full bg-white text-stone-500 shadow-sm ring-1 ring-black/5 hover:text-stone-800 dark:bg-stone-800 dark:text-stone-300 dark:ring-white/10 dark:hover:text-white"
+            >
+              <Info className="size-4" />
+            </button>
+            <p
+              id="ask-note"
+              popover="auto"
+              className="m-auto max-w-xs rounded-2xl bg-white p-4 text-center text-sm text-stone-600 shadow-xl ring-1 ring-black/5 backdrop:bg-black/30 dark:bg-stone-900 dark:text-stone-300 dark:ring-white/10"
+            >
+              {tr.ask.linkInfo}
+            </p>
+          </div>
+        ) : (
+          <Logo className="size-20" />
         )}
+        <h1 className="text-xl font-semibold tracking-tight">{profile.data && tr.ask.sendTo(profile.data.displayName)}</h1>
       </div>
 
       {send.isSuccess ? (
@@ -236,7 +253,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
               style={{ backgroundImage: `linear-gradient(135deg, ${ASK_COLORS[0][0]}, ${ASK_COLORS[0][1]})` }}
             >
               <Logo className="size-6 shrink-0" />
-              <span className="min-w-0 truncate text-[length:min(1rem,4.5cqw)]">{tr.ask.prompt}</span>
+              <span className="min-w-0 truncate text-[length:min(1rem,4.5cqw)]">{profile.data?.prompt ?? tr.ask.prompt}</span>
             </p>
             {photo && (
               <div className="relative">
@@ -453,12 +470,11 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
               )}
             </div>
           </div>
-          {(photoError || recorder.error || send.isError) && (
+          {(photoError || recorder.error || linked || send.isError) && (
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {photoError ??
                 recorder.error ??
-                sendError(send.error) ??
-                tr.common.somethingWrongRetry}
+                (linked ? tr.ask.noLinks : (sendError(send.error) ?? tr.common.somethingWrongRetry))}
             </p>
           )}
           <PrimaryButton type="submit" disabled={!valid || send.isPending || recorder.recording} className="w-full">
@@ -479,7 +495,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
         <p className="text-center text-sm text-stone-500">{tr.common.loading}</p>
       )}
 
-      <Link href="/inbox" className="text-center text-sm font-medium text-brand hover:underline">
+      <Link href="/inbox" target="_blank" rel="noopener" className="text-center text-sm font-medium text-brand hover:underline">
         {tr.ask.getYours}
       </Link>
       <LegalLinks />

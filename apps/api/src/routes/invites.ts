@@ -13,6 +13,7 @@ import {
 import {
   acceptInvite,
   createInvite,
+  hideInvite,
   inviteQuota,
   listInvites,
   listReferrals,
@@ -72,6 +73,25 @@ const inviteRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
       (req) => revokeInvite(req.auth.userId, req.params.code),
+    );
+
+    authed.delete(
+      "/invites/:code",
+      {
+        schema: {
+          tags: ["invites"],
+          summary: "Delete one of your links that no longer works",
+          description:
+            "Only for a revoked, expired or used-up link (CONFLICT otherwise). People who joined with it stay connected and still count.",
+          security: bearer,
+          params: Code,
+          response: { 204: z.null() },
+        },
+      },
+      async (req, reply) => {
+        await hideInvite(req.auth.userId, req.params.code);
+        return reply.status(204).send(null);
+      },
     );
 
     authed.get(

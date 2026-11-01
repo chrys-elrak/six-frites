@@ -9,9 +9,12 @@ import {
   type AnonMessageDTO,
   type AskLinkDTO,
   type AskProfileDTO,
+  type CreateTempLinkInput,
   type PageQuery,
   type SendAnonInput,
   type SentAnonDTO,
+  TEMP_LINK_MAX,
+  type TempLinkDTO,
   type UpdateAskProfileInput,
   maskSpoilers,
 } from "@six/shared";
@@ -32,6 +35,7 @@ import { toUserDTO } from "./users.js";
 const toAnonDTO = (m: AnonMessage, renewedAt?: Date | null): AnonMessageDTO => ({
   id: m.id,
   text: m.text,
+  prompt: m.prompt,
   entities: entitiesOf(m),
   photoUrl: m.photoKey ? presignGet(m.photoKey) : null,
   gif: m.gifKey ? { url: presignGet(m.gifKey), width: m.gifWidth, height: m.gifHeight } : null,
@@ -40,16 +44,62 @@ const toAnonDTO = (m: AnonMessage, renewedAt?: Date | null): AnonMessageDTO => (
   oldLink: !!renewedAt && m.createdAt < renewedAt,
 });
 
+/**
+ * Whose link this is, their own or a temporary one that hasn't expired, and the prompt it shows: the temporary
+ * link's title, else the user's own prompt.
+ */
 async function askerByCode(code: string) {
-  const user = await prisma.user.findFirst({ where: { askCode: code.toUpperCase(), deletedAt: null, bannedAt: null } });
-  if (!user) throw new AppError("USER_NOT_FOUND", "This link doesn't work anymore");
-  return user;
+  const askCode = code.toUpperCase();
+  const alive = { deletedAt: null, OR: [{ bannedAt: null }, { banScope: "chat" }] };
+  const user = await prisma.user.findFirst({ where: { askCode, ...alive } });
+  if (user) return { user, prompt: user.askPrompt };
+  const link = await prisma.askLink.findFirst({
+    where: { code: askCode, expiresAt: { gt: new Date() }, user: alive },
+    include: { user: true },
+  });
+  if (!link) throw new AppError("USER_NOT_FOUND", "This link doesn't work anymore");
+  return { user: link.user, prompt: link.prompt ?? link.user.askPrompt };
 }
 
-/** How someone looks on their link: the name they picked, else their account name, and only a photo they picked for it. */
+export async function listTempLinks(userId: string): Promise<TempLinkDTO[]> {
+  const rows = await prisma.askLink.findMany({
+    where: { userId, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((l) => ({ code: l.code, prompt: l.prompt, expiresAt: l.expiresAt.toISOString() }));
+}
+
+// ponytail: expired temporary links stay in the table; sweep them in the timers worker if it ever grows
+/** A second link to your messages, with its own title, that stops working after `hours`; your own link doesn't change. */
+export async function createTempLink(userId: string, { prompt, hours }: CreateTempLinkInput): Promise<TempLinkDTO> {
+  const active = await prisma.askLink.count({ where: { userId, expiresAt: { gt: new Date() } } });
+  if (active >= TEMP_LINK_MAX) throw new AppError("CONFLICT", `You can have ${TEMP_LINK_MAX} temporary links at once`);
+  const expiresAt = new Date(Date.now() + hours * HOUR);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateCode();
+    if (await prisma.user.findFirst({ where: { askCode: code }, select: { id: true } })) continue;
+    try {
+      await prisma.askLink.create({ data: { userId, code, prompt, expiresAt } });
+      return { code, prompt, expiresAt: expiresAt.toISOString() };
+    } catch (err) {
+      if (!isUniqueViolation(err)) throw err;
+    }
+  }
+  throw new AppError("CONFLICT", "Could not generate a unique link");
+}
+
+export async function deleteTempLink(userId: string, code: string) {
+  await prisma.askLink.deleteMany({ where: { userId, code: code.toUpperCase() } });
+}
+
+/**
+ * How someone looks on their link: the name they picked, else their account name, only a photo they picked for
+ * it, and their own prompt if they wrote one.
+ */
 const toAskProfile = (u: User): AskProfileDTO => ({
   displayName: u.askName ?? u.displayName,
   avatarUrl: u.askAvatarKey ? presignGet(u.askAvatarKey) : null,
+  prompt: u.askPrompt,
 });
 
 /** Whether `recipientId` blocked this sender, or another account that signed in on one of the sender's devices. */
@@ -74,8 +124,8 @@ async function isAnonBlocked(recipientId: string, senderId: string) {
 
 /** The link's public face, and whether the signed-in viewer, if any, was blocked from it. */
 export async function askLink(code: string, viewerId?: string): Promise<AskLinkDTO> {
-  const user = await askerByCode(code);
-  return { ...toAskProfile(user), blocked: !!viewerId && (await isAnonBlocked(user.id, viewerId)) };
+  const { user, prompt } = await askerByCode(code);
+  return { ...toAskProfile(user), prompt, blocked: !!viewerId && (await isAnonBlocked(user.id, viewerId)) };
 }
 
 export async function updateAskProfile(userId: string, input: UpdateAskProfileInput) {
@@ -88,7 +138,11 @@ export async function updateAskProfile(userId: string, input: UpdateAskProfileIn
   const before = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { askAvatarKey: true } });
   const user = await prisma.user.update({
     where: { id: userId },
-    data: { ...(input.name !== undefined && { askName: input.name || null }), askAvatarKey },
+    data: {
+      ...(input.name !== undefined && { askName: input.name || null }),
+      ...(input.prompt !== undefined && { askPrompt: input.prompt || null }),
+      askAvatarKey,
+    },
   });
   if (before.askAvatarKey && askAvatarKey !== undefined) await deleteObjects([before.askAvatarKey]).catch(() => null);
   return toAskProfile(user);
@@ -108,43 +162,37 @@ export async function resetAskCode(userId: string) {
 
 const HOUR = 60 * 60 * 1000;
 
-/** How many anonymous messages one person can send in an hour: to the same link, and to anyone. */
-export const SEND_LIMITS = { perRecipient: 5, total: 30 };
+/**
+ * How many anonymous messages one person can send in an hour, to the same link and to anyone, and to how many
+ * other people a day the same text of at least `copyMinLength` characters can go.
+ */
+export const SEND_LIMITS = { perRecipient: 5, total: 30, sameText: 3, copyMinLength: 20 };
 
-/** How old an account must be to send anonymous messages, so a banned or blocked sender can't just make another. */
-export const NEW_ACCOUNT_WAIT_MS = 24 * HOUR;
-
-async function assertOldEnough(senderId: string) {
-  const { createdAt } = await prisma.user.findUniqueOrThrow({ where: { id: senderId }, select: { createdAt: true } });
-  const from = new Date(createdAt.getTime() + NEW_ACCOUNT_WAIT_MS);
-  if (from > new Date()) {
-    throw new AppError("ACCOUNT_TOO_NEW", "New accounts wait a day before sending anonymous messages", {
-      until: from.toISOString(),
-    });
-  }
-}
-
-/** Turns away a sender who has hit the hourly limits or already sent this text to this person today. */
+/**
+ * Turns away a sender who has hit the hourly limits, already sent this text to this person today, or is pasting
+ * the same longer text to one link after another.
+ */
 async function assertNotSpam(senderId: string, recipientId: string, text: string) {
   const since = new Date(Date.now() - HOUR);
-  const [toThem, total, repeat] = await Promise.all([
+  const sameText = { senderId, text: { equals: text, mode: "insensitive" as const }, createdAt: { gte: new Date(Date.now() - 24 * HOUR) } };
+  const [toThem, total, repeat, copies] = await Promise.all([
     prisma.anonMessage.count({ where: { senderId, recipientId, createdAt: { gte: since } } }),
     prisma.anonMessage.count({ where: { senderId, createdAt: { gte: since } } }),
-    text &&
-      prisma.anonMessage.findFirst({
-      where: {
-        senderId,
-        recipientId,
-        text: { equals: text, mode: "insensitive" },
-        createdAt: { gte: new Date(Date.now() - 24 * HOUR) },
-      },
-      select: { id: true },
-    }),
+    text && prisma.anonMessage.findFirst({ where: { ...sameText, recipientId }, select: { id: true } }),
+    text.length >= SEND_LIMITS.copyMinLength
+      ? prisma.anonMessage.findMany({
+          where: { ...sameText, recipientId: { not: recipientId } },
+          distinct: ["recipientId"],
+          select: { recipientId: true },
+          take: SEND_LIMITS.sameText,
+        })
+      : [],
   ]);
   if (toThem >= SEND_LIMITS.perRecipient || total >= SEND_LIMITS.total) {
     throw new AppError("RATE_LIMITED", "Too many anonymous messages; try again later");
   }
   if (repeat) throw new AppError("CONFLICT", "You already sent this message");
+  if (copies.length >= SEND_LIMITS.sameText) throw new AppError("CONFLICT", "You already sent this message to other people");
 }
 
 /**
@@ -179,8 +227,7 @@ async function storeVoice(recipientId: string, dataUrl: string) {
  * recipient, so its address says nothing about who sent it.
  */
 export async function sendAnon(senderId: string, code: string, { text, entities, photo, gifId, voice }: SendAnonInput) {
-  const recipient = await askerByCode(code);
-  await assertOldEnough(senderId);
+  const { user: recipient, prompt } = await askerByCode(code);
   if (await isAnonBlocked(recipient.id, senderId)) throw new AppError("ANON_BLOCKED", "This person isn't taking your messages");
   await assertNotSpam(senderId, recipient.id, text);
   let photoKey: string | null = null;
@@ -196,6 +243,7 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
       recipientId: recipient.id,
       senderId,
       text,
+      prompt,
       entities: storedEntities(entities),
       photoKey,
       gifKey: gif?.key,

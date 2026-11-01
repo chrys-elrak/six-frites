@@ -129,7 +129,7 @@ export function NewInviteDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function InviteRow({ invite, onRevoke }: { invite: InviteDTO; onRevoke: () => void }) {
+function InviteRow({ invite, onRevoke, onDelete }: { invite: InviteDTO; onRevoke: () => void; onDelete: () => void }) {
   const tr = useT();
   const [flash, setFlash] = useState<string | null>(null);
   const live = invite.status === "valid" && !(invite.expiresAt && Date.parse(invite.expiresAt) < Date.now());
@@ -142,8 +142,8 @@ function InviteRow({ invite, onRevoke }: { invite: InviteDTO; onRevoke: () => vo
   }
 
   return (
-    <div className={`flex items-center gap-3 p-4 ${live ? "" : "opacity-50"}`}>
-      <div className="min-w-0 flex-1">
+    <div className="flex items-center gap-3 p-4">
+      <div className={`min-w-0 flex-1 ${live ? "" : "opacity-50"}`}>
         <p className="font-mono text-base font-semibold tracking-widest">{invite.code}</p>
         {invite.message && <p className="truncate text-sm italic">“{invite.message}”</p>}
         <p className="text-sm text-stone-500 dark:text-stone-400">{inviteSummary(invite, tr)}</p>
@@ -163,6 +163,14 @@ function InviteRow({ invite, onRevoke }: { invite: InviteDTO; onRevoke: () => vo
             {tr.settings.revoke}
           </button>
         </div>
+      )}
+      {!live && (
+        <button
+          onClick={onDelete}
+          className="rounded-lg px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+        >
+          {tr.common.delete}
+        </button>
       )}
     </div>
   );
@@ -193,6 +201,11 @@ export function Invites() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
   });
 
+  const remove = useMutation({
+    mutationFn: async (code: string) => six.api.DELETE("/v1/invites/{code}", { params: { path: { code } } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
+  });
+
   const items = invites.data?.pages.flatMap((p) => p.items) ?? [];
   const used = quota.data && quotaSummary(quota.data, tr);
   const full = quota.data?.limit != null && quota.data.invited >= quota.data.limit;
@@ -212,7 +225,7 @@ export function Invites() {
         {items.length > 0 && (
           <div className="divide-y divide-stone-200 lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
             {items.map((i) => (
-              <InviteRow key={i.code} invite={i} onRevoke={() => setRevoking(i.code)} />
+              <InviteRow key={i.code} invite={i} onRevoke={() => setRevoking(i.code)} onDelete={() => remove.mutate(i.code)} />
             ))}
             {invites.hasNextPage && (
               <button

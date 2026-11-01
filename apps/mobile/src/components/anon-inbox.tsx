@@ -1,21 +1,27 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
   ASK_COLORS,
+  ASK_PROMPT_MAX,
   LOCALES,
   LOCALE_NAMES,
   type AnonMessageDTO,
+  type AskProfileDTO,
   type AskColors,
   type SentAnonDTO,
+  TEMP_LINK_HOURS,
   ReportReason,
   type UpdateAskProfileInput,
   askUrl,
+  durationLabel,
+  expiryLabel,
   hasLink,
   splitLinks,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Clipboard from "expo-clipboard";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
 import * as Sharing from "expo-sharing";
-import { Camera, Ellipsis, Globe, LogOut, Play, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
+import { Camera, Check, Copy, Ellipsis, Globe, LogOut, Play, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,7 +29,7 @@ import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg"
 import { captureRef } from "react-native-view-shot";
 import { formatDuration, shareAsk, timeAgo } from "@/lib/format";
 import { segments } from "@/lib/markup";
-import { setLocale, useLocale, useT } from "@/lib/i18n";
+import { getLocale, setLocale, useLocale, useT } from "@/lib/i18n";
 import { pickAvatar } from "@/lib/media";
 import { receiveAnon } from "@/lib/realtime";
 import { logout, useSession } from "@/lib/session";
@@ -35,7 +41,7 @@ import { DoodlePattern } from "./chat-background";
 import { Logo } from "./logo";
 import { Sheet } from "./sheet";
 import { Text, TextInput } from "./text";
-import { Card, EmptyState, Notice, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
+import { Card, EmptyState, IconButton, Notice, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
 
 type Pending = { m: AnonMessageDTO; action: "menu" | "delete" | "block" | "report" };
 type Note = { tone: "error" | "success"; text: string };
@@ -51,26 +57,70 @@ const HEAD_DOODLES: Doodles = { ink: "#ffffff", opacity: 0.3, size: 150 };
 // ponytail: font size picked from length, not measured; fine up to ASK_MAX, measure with onTextLayout if it overflows
 const cardFont = (text: string) => (text.length < 60 ? 28 : text.length < 160 ? 22 : 16);
 
-/** The name and photo people see on your link, kept apart from your account's. */
-function PublicProfile({ code }: { code: string }) {
-  const t = useTheme();
+/** The user's link as visitors see it, and a way to change it; `error` holds why the last change failed. */
+function useAskProfile(code: string) {
   const tr = useT();
   const qc = useQueryClient();
-  const [name, setName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const profile = useQuery({
     queryKey: ["ask-profile", code],
     queryFn: async () => unwrap(await six.api.GET("/v1/ask/{code}", { params: { path: { code } } })),
   });
-
   const save = useMutation({
     mutationFn: async (body: UpdateAskProfileInput) => unwrap(await six.api.PATCH("/v1/ask/profile", { body })),
     onSuccess: (p) => {
       qc.setQueryData(["ask-profile", code], p);
-      setName(null);
+      setError(null);
     },
     onError: (err) => setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave),
   });
+  return { profile, save, error, setError };
+}
+
+/** The line at the top of the user's link, which they can change right where they share it. */
+function PromptField({ code }: { code: string }) {
+  const t = useTheme();
+  const tr = useT();
+  const { profile, save, error } = useAskProfile(code);
+  const [prompt, setPrompt] = useState<string | null>(null);
+  if (!profile.data) return null;
+  const text = prompt ?? profile.data.prompt ?? "";
+  const dirty = prompt !== null && prompt.trim() !== (profile.data.prompt ?? "");
+  const savePrompt = () => dirty && save.mutate({ prompt: prompt.trim() }, { onSuccess: () => setPrompt(null) });
+
+  return (
+    <View style={{ gap: 4 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        <Text style={{ color: t.text, fontSize: 14, fontWeight: "600" }}>{tr.ask.promptLabel}</Text>
+        <Text style={{ color: t.muted, fontSize: 12 }}>
+          {text.length}/{ASK_PROMPT_MAX}
+        </Text>
+      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <TextInput
+          value={text}
+          onChangeText={setPrompt}
+          maxLength={ASK_PROMPT_MAX}
+          placeholder={tr.ask.prompt}
+          placeholderTextColor={t.muted}
+          accessibilityLabel={tr.ask.promptLabel}
+          returnKeyType="done"
+          onSubmitEditing={savePrompt}
+          style={[styles.promptInput, { color: t.text, backgroundColor: t.surfaceAlt }]}
+        />
+        {dirty && <TextButton title={tr.common.save} onPress={savePrompt} disabled={save.isPending} color={t.text} />}
+      </View>
+      {error && <Notice tone="error">{error}</Notice>}
+    </View>
+  );
+}
+
+/** The name and photo people see on your link, kept apart from your account's. */
+function PublicProfile({ code }: { code: string }) {
+  const t = useTheme();
+  const tr = useT();
+  const { profile, save, error, setError } = useAskProfile(code);
+  const [name, setName] = useState<string | null>(null);
 
   async function choosePhoto() {
     setError(null);
@@ -84,7 +134,7 @@ function PublicProfile({ code }: { code: string }) {
 
   if (!profile.data) return null;
   const dirty = name !== null && name.trim() !== profile.data.displayName;
-  const saveName = () => dirty && save.mutate({ name: name.trim() });
+  const saveName = () => dirty && save.mutate({ name: name.trim() }, { onSuccess: () => setName(null) });
 
   return (
     <View style={{ gap: 8 }}>
@@ -120,6 +170,114 @@ function PublicProfile({ code }: { code: string }) {
   );
 }
 
+/** Links that stop working after a while, for a story, under the user's own link `code`, which stays. */
+function TempLinks({ code }: { code: string }) {
+  const t = useTheme();
+  const tr = useT();
+  const qc = useQueryClient();
+  const [title, setTitle] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const links = useQuery({
+    queryKey: ["ask-links"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/ask/links")),
+  });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["ask-links"] });
+  const create = useMutation({
+    mutationFn: async (hours: number) =>
+      unwrap(await six.api.POST("/v1/ask/links", { body: { prompt: title!.trim(), hours } })),
+    onSuccess: () => {
+      setTitle(null);
+      void refresh();
+    },
+  });
+  const remove = useMutation({
+    mutationFn: async (temp: string) => six.api.DELETE("/v1/ask/links/{code}", { params: { path: { code: temp } } }),
+    onSuccess: refresh,
+  });
+
+  async function copy(temp: string) {
+    await Clipboard.setStringAsync(askUrl(WEB_URL, temp));
+    setCopied(temp);
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  return (
+    <View style={[styles.divided, { gap: 8, borderColor: t.border }]}>
+      <Text style={[styles.label, { color: t.muted }]}>{tr.ask.tempLinks}</Text>
+      <Text style={{ color: t.muted, fontSize: 14 }}>{tr.ask.tempHint}</Text>
+      {links.data?.map((l) => (
+        <View key={l.code} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <View style={{ flex: 1 }}>
+            {l.prompt && (
+              <Text style={{ color: t.text, fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
+                {l.prompt}
+              </Text>
+            )}
+            <Text style={{ color: t.text, fontFamily: "monospace", fontSize: 12 }} numberOfLines={1} selectable>
+              {askUrl(WEB_URL, l.code).replace(/^https?:\/\//, "")}
+            </Text>
+            <Text style={{ color: t.muted, fontSize: 12 }}>{expiryLabel(l.expiresAt, tr)}</Text>
+          </View>
+          <IconButton
+            Icon={Share2}
+            size={18}
+            label={tr.common.share}
+            onPress={() => void shareAsk(l.code, l.prompt ?? qc.getQueryData<AskProfileDTO>(["ask-profile", code])?.prompt)}
+          />
+          <IconButton
+            Icon={copied === l.code ? Check : Copy}
+            size={18}
+            color={copied === l.code ? brand : undefined}
+            label={tr.common.copyLink}
+            onPress={() => void copy(l.code)}
+          />
+          <IconButton Icon={Trash2} size={18} label={tr.common.delete} onPress={() => remove.mutate(l.code)} />
+        </View>
+      ))}
+      {title === null ? (
+        <View style={{ alignItems: "center" }}>
+          <TextButton title={tr.ask.newTempLink} color={brand} onPress={() => setTitle("")} />
+        </View>
+      ) : (
+        <View style={{ gap: 8, borderRadius: 12, padding: 12, backgroundColor: t.surfaceAlt }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <Text style={{ color: t.text, fontSize: 14, fontWeight: "600" }}>{tr.ask.tempTitle}</Text>
+            <Text style={{ color: t.muted, fontSize: 12 }}>
+              {title.length}/{ASK_PROMPT_MAX}
+            </Text>
+          </View>
+          <TextInput
+            autoFocus
+            value={title}
+            onChangeText={setTitle}
+            maxLength={ASK_PROMPT_MAX}
+            placeholder={tr.ask.prompt}
+            placeholderTextColor={t.muted}
+            accessibilityLabel={tr.ask.tempTitle}
+            style={[styles.promptInput, { flex: 0, color: t.text, backgroundColor: t.surface }]}
+          />
+          <Text style={{ color: t.muted, fontSize: 14 }}>{tr.ask.tempFor}</Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {TEMP_LINK_HOURS.map((h) => (
+              <PrimaryButton
+                key={h}
+                title={durationLabel(h * 3600, tr)}
+                disabled={!title.trim() || create.isPending}
+                onPress={() => create.mutate(h)}
+                style={{ flex: 1 }}
+              />
+            ))}
+          </View>
+          {create.isError && <Notice tone="error">{create.error.message}</Notice>}
+          <View style={{ alignItems: "center" }}>
+            <TextButton title={tr.common.cancel} onPress={() => setTitle(null)} />
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
 function Gradient({ id, colors, wash, doodles }: { id: string; colors: AskColors; wash?: boolean; doodles?: Doodles }) {
   return (
     <Svg style={StyleSheet.absoluteFill}>
@@ -151,7 +309,7 @@ function AnonVoice({ voice }: { voice: NonNullable<AnonMessageDTO["voice"]> }) {
  * 9:16 story (captured at 1080×1920) with the link to send more under it.
  */
 function CardArt({
-  m: { text, entities, photoUrl, gif, voice },
+  m: { text, prompt, entities, photoUrl, gif, voice },
   link,
   style: { colors, transparent, doodles },
   onPhotoLoad,
@@ -170,7 +328,7 @@ function CardArt({
         <Gradient id="card-head" colors={colors} doodles={HEAD_DOODLES} />
         <Logo size={24} />
         <Text style={styles.storyPrompt} numberOfLines={1} adjustsFontSizeToFit>
-          {tr.ask.prompt}
+          {prompt ?? tr.ask.prompt}
         </Text>
       </View>
       {photoUrl && (
@@ -471,8 +629,10 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const tr = useT();
   const qc = useQueryClient();
   const code = useSession((s) => s.user!.askCode);
+  const chatBan = useSession((s) => s.user!.chatBan);
   const setUser = useSession((s) => s.setUser);
   const link = askUrl(WEB_URL, code);
+  const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
   const [languages, setLanguages] = useState(false);
   const locale = useLocale((s) => s.locale);
@@ -491,7 +651,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
     refetchOnMount: "always",
   });
   const items = messages.data?.pages.flatMap((p) => p.items) ?? [];
-  const [view, setView] = useState<"received" | "sent">("received");
+  const [view, setView] = useState<"received" | "sent" | "settings">("received");
   const [removing, setRemoving] = useState<SentAnonDTO | null>(null);
   const sent = useInfiniteQuery({
     queryKey: ["ask-sent"],
@@ -527,6 +687,12 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         ? six.api.DELETE("/v1/ask/messages/{id}", path)
         : six.api.POST("/v1/ask/messages/{id}/block", path);
     void done.finally(() => qc.invalidateQueries({ queryKey: ["ask"] }));
+  }
+
+  async function copyLink() {
+    await Clipboard.setStringAsync(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   async function renew() {
@@ -602,7 +768,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         )}
       </ScreenHeader>
       <FlatList
-        data={view === "sent" ? sentItems : items}
+        data={view === "settings" ? [] : view === "sent" ? sentItems : items}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.content}
         onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
@@ -612,27 +778,30 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           <View style={{ gap: 12 }}>
             {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
             <Card style={{ padding: 16, gap: 8 }}>
-              <PublicProfile code={code} />
+              <PromptField code={code} />
               <Text style={[styles.label, styles.divided, { color: t.muted, borderColor: t.border }]}>{tr.ask.yourLink}</Text>
               <Text style={{ color: t.text, fontFamily: "monospace" }} numberOfLines={1} selectable>
                 {link.replace(/^https?:\/\//, "")}
               </Text>
               <Text style={{ color: t.muted, fontSize: 14 }}>{tr.ask.linkHint}</Text>
-              <PrimaryButton title={tr.common.shareLink} onPress={() => void shareAsk(code)} />
+              <PrimaryButton
+                title={tr.common.shareLink}
+                onPress={() => void shareAsk(code, qc.getQueryData<AskProfileDTO>(["ask-profile", code])?.prompt)}
+              />
               <View style={{ alignItems: "center" }}>
-                <TextButton title={tr.ask.newLink} onPress={() => setRenewing(true)} />
+                <TextButton title={copied ? tr.settings.linkCopied : tr.common.copyLink} color={brand} onPress={() => void copyLink()} />
               </View>
             </Card>
             {guest && (
               <Text style={{ color: t.muted, fontSize: 14 }}>
-                {tr.ask.guestNote}{" "}
+                {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
                 <Text style={{ color: brand, fontWeight: "600" }} onPress={() => void Linking.openURL(`${WEB_URL}/support`)}>
                   {tr.support.chatWithSupport}
                 </Text>
               </Text>
             )}
             <View style={[styles.tabs, { backgroundColor: t.chip }]}>
-              {(["received", "sent"] as const).map((v) => (
+              {(["received", "sent", "settings"] as const).map((v) => (
                 <Pressable
                   key={v}
                   onPress={() => setView(v)}
@@ -641,11 +810,20 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   style={[styles.tab, view === v && { backgroundColor: t.surface }]}
                 >
                   <Text style={{ color: view === v ? t.text : t.muted, fontSize: 14, fontWeight: "600" }}>
-                    {v === "received" ? tr.ask.received : tr.ask.sentTab}
+                    {{ received: tr.ask.received, sent: tr.ask.sentTab, settings: tr.common.settings }[v]}
                   </Text>
                 </Pressable>
               ))}
             </View>
+            {view === "settings" && (
+              <Card style={{ padding: 16, gap: 8 }}>
+                <PublicProfile code={code} />
+                <TempLinks code={code} />
+                <View style={[styles.divided, { alignItems: "center", borderColor: t.border }]}>
+                  <TextButton title={tr.ask.newLink} onPress={() => setRenewing(true)} />
+                </View>
+              </Card>
+            )}
             {view === "received" && messages.isSuccess && !items.length && (
               <EmptyState Icon={VenetianMask}>{tr.ask.empty}</EmptyState>
             )}
@@ -663,7 +841,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                 <Gradient id="item-head" colors={cardStyle.colors} doodles={HEAD_DOODLES} />
                 <Logo size={18} />
                 <Text style={styles.itemPrompt} numberOfLines={1}>
-                  {tr.ask.prompt}
+                  {m.prompt ?? tr.ask.prompt}
                 </Text>
               </View>
               {m.photoUrl && <Image source={{ uri: m.photoUrl }} style={[styles.itemPhoto, { backgroundColor: t.surfaceAlt }]} resizeMode="contain" />}
@@ -792,6 +970,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
   },
   nameInput: { flex: 1, fontSize: 18, fontWeight: "500", paddingVertical: 2 },
+  promptInput: { flex: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14 },
   item: { borderRadius: 24, overflow: "hidden", elevation: 4 },
   itemHead: {
     flexDirection: "row",

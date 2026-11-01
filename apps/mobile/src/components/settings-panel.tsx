@@ -394,6 +394,11 @@ function Invites() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
   });
 
+  const remove = useMutation({
+    mutationFn: async (code: string) => six.api.DELETE("/v1/invites/{code}", { params: { path: { code } } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
+  });
+
   const items = invites.data?.pages.flatMap((p) => p.items) ?? [];
   const used = quota.data && quotaSummary(quota.data, tr);
   const full = quota.data?.limit != null && quota.data.invited >= quota.data.limit;
@@ -415,8 +420,8 @@ function Invites() {
           return (
             <View key={i.code}>
               <Divider />
-              <View style={[styles.cardRow, dead && { opacity: 0.5 }]}>
-                <View style={{ flex: 1 }}>
+              <View style={styles.cardRow}>
+                <View style={[{ flex: 1 }, dead && { opacity: 0.5 }]}>
                   <Text style={[styles.code, { color: t.text }]}>{i.code}</Text>
                   {i.message && (
                     <Text numberOfLines={1} style={{ color: t.text, fontSize: 14, fontStyle: "italic" }}>
@@ -431,6 +436,7 @@ function Invites() {
                     <TextButton title={tr.settings.revoke} color={t.danger} onPress={() => setRevoking(i.code)} />
                   </View>
                 )}
+                {dead && <TextButton title={tr.common.delete} color={t.danger} onPress={() => remove.mutate(i.code)} />}
               </View>
             </View>
           );

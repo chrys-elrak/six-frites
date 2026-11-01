@@ -57,10 +57,6 @@ export async function asAdmin(app: FastifyInstance): Promise<Auth> {
   return boss;
 }
 
-/** Backdates an account past the day new accounts wait before sending anonymous messages. */
-export const ageAccount = (who: Auth) =>
-  prisma.user.update({ where: { id: who.user.id }, data: { createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) } });
-
 export function chatHelpers(ctx: { app: FastifyInstance }) {
   const signUp = async (name: string, extra: Record<string, unknown> = {}): Promise<Auth> =>
     (await loginAs(ctx.app, uniqueSub(name), "ios", extra)).json();

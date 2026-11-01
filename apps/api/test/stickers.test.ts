@@ -4,7 +4,7 @@ import { redisConnection } from "../src/lib/queue.js";
 import { processUpload } from "../src/media/process.js";
 import { ensureBuiltinStickers } from "../src/services/stickers.js";
 import { env } from "../src/env.js";
-import { type Auth, ageAccount, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
+import { type Auth, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, send, makeFriends } = chatHelpers(ctx);
@@ -172,7 +172,6 @@ describe("GIFs", () => {
       env.INVITE_ONLY = true;
       const walkIn: Auth = (await loginAs(ctx.app, uniqueSub("walk-in"), "web", { guest: true })).json();
       expect(walkIn.user).toMatchObject({ guest: true });
-      await ageAccount(walkIn);
       expect((await get(walkIn, "/v1/gifs?q=Cats")).items.map((g: { id: string }) => g.id)).toContain("cat1");
       const ask = (body: object) => call(walkIn, "POST", `/v1/ask/${askCode}`, body);
       expect((await ask({ gifId: "cat1", photo: "data:image/png;base64,AAAA" })).statusCode).toBe(400);

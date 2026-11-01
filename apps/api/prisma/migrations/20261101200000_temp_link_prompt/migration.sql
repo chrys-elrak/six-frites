@@ -1,0 +1,1 @@
+ALTER TABLE "AskLink" ADD COLUMN "prompt" TEXT;

@@ -62,8 +62,16 @@ export async function revokeInvite(userId: string, code: string) {
   return toInviteDTO(await prisma.invite.update({ where: { id: invite.id }, data: { revokedAt: new Date() } }));
 }
 
+/** Takes a revoked, expired or used-up link off your list. Whoever joined with it stays, and still counts. */
+export async function hideInvite(userId: string, code: string) {
+  const invite = await prisma.invite.findUnique({ where: { code: normalizeCode(code) } });
+  if (invite?.creatorId !== userId) throw new AppError("INVITE_NOT_FOUND");
+  if (inviteStatus(invite) === "valid") throw new AppError("CONFLICT", "Revoke the link before deleting it");
+  await prisma.invite.update({ where: { id: invite.id }, data: { hiddenAt: new Date() } });
+}
+
 export async function listInvites(userId: string, q: PageQuery) {
-  const rows = await prisma.invite.findMany({ where: { creatorId: userId }, ...pageArgs(q) });
+  const rows = await prisma.invite.findMany({ where: { creatorId: userId, hiddenAt: null }, ...pageArgs(q) });
   return toPage(rows, q, toInviteDTO);
 }
 

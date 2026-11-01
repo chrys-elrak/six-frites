@@ -214,7 +214,7 @@ async function loadFrame(url: string) {
  * on a story-sized page with the link to send more under it.
  */
 export async function askCardPng(
-  { text, entities, photoUrl, gif, voice }: Pick<AnonMessageDTO, "text" | "entities" | "photoUrl" | "gif" | "voice">,
+  { text, prompt: asked, entities, photoUrl, gif, voice }: Pick<AnonMessageDTO, "text" | "prompt" | "entities" | "photoUrl" | "gif" | "voice">,
   link: string,
   { colors, transparent, doodles }: CardStyle,
 ) {
@@ -293,7 +293,7 @@ export async function askCardPng(
 
   const mid = x + CARD_W / 2;
   const headMid = y + HEADER_H / 2;
-  const prompt = getT().ask.prompt;
+  const prompt = asked ?? getT().ask.prompt;
   ctx.font = `700 46px ${FONT}`;
   const room = CARD_W - PAD * 2 - (icon ? LOGO + 20 : 0);
   const promptW = Math.min(ctx.measureText(prompt).width, room);

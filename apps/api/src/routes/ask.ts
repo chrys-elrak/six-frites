@@ -3,9 +3,12 @@ import {
   AnonMessageDTO,
   AskLinkDTO,
   AskProfileDTO,
+  CreateTempLinkInput,
   PageQuery,
   SendAnonInput,
   SentAnonDTO,
+  TEMP_LINK_MAX,
+  TempLinkDTO,
   UpdateAskProfileInput,
   UserDTO,
   page,
@@ -15,10 +18,13 @@ import { authenticateBearer } from "../plugins/auth.js";
 import {
   askLink,
   blockAnonSender,
+  createTempLink,
   deleteAnon,
   deleteSent,
+  deleteTempLink,
   listAnon,
   listSent,
+  listTempLinks,
   resetAskCode,
   sendAnon,
   updateAskProfile,
@@ -59,7 +65,7 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
         tags,
         summary: "Send someone an anonymous message",
         description:
-          "They never see who sent it; moderators can see the sender of every anonymous message. Accounts under a day old get ACCOUNT_TOO_NEW, and someone the recipient blocked gets ANON_BLOCKED.",
+          "They never see who sent it; moderators can see the sender of every anonymous message. Someone the recipient blocked gets ANON_BLOCKED.",
         security,
         params: code,
         body: SendAnonInput,
@@ -132,7 +138,7 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { guest: true, rateLimit: { max: 20, timeWindow: "1 minute" } },
       schema: {
         tags,
-        summary: "Change the name and photo shown on your link",
+        summary: "Change the name, photo and prompt shown on your link",
         description: "Your account keeps its own name and photo.",
         security,
         body: UpdateAskProfileInput,
@@ -140,6 +146,58 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => updateAskProfile(req.auth.userId, req.body),
+  );
+
+  app.get(
+    "/ask/links",
+    {
+      onRequest: app.requireAuth,
+      config: { guest: true },
+      schema: {
+        tags,
+        summary: "Your temporary links that still work, newest first",
+        security,
+        response: { 200: z.array(TempLinkDTO) },
+      },
+    },
+    (req) => listTempLinks(req.auth.userId),
+  );
+
+  app.post(
+    "/ask/links",
+    {
+      onRequest: app.requireAuth,
+      config: { guest: true, rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        tags,
+        summary: "Make a temporary link to your anonymous messages",
+        description: `It stops working after the hours you pick; your own link doesn't change. ${TEMP_LINK_MAX} at once at most.`,
+        security,
+        body: CreateTempLinkInput,
+        response: { 200: TempLinkDTO },
+      },
+    },
+    (req) => createTempLink(req.auth.userId, req.body),
+  );
+
+  app.delete(
+    "/ask/links/:code",
+    {
+      onRequest: app.requireAuth,
+      config: { guest: true },
+      schema: {
+        tags,
+        summary: "Stop a temporary link now",
+        description: "Messages that came through it stay.",
+        security,
+        params: code,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await deleteTempLink(req.auth.userId, req.params.code);
+      return reply.status(204).send(null);
+    },
   );
 
   app.post(

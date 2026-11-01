@@ -17,9 +17,11 @@ const en = {
   openLinkConfirm: "Open this link? It was sent anonymously, so check the address first.",
   slowDown: "You've sent a lot of messages. Try again later.",
   duplicate: "You already sent this message.",
+  noLinks: "Links aren't allowed in anonymous messages.",
   blocked: "This person isn't taking your messages anymore.",
-  tooNew: (when: string) => `New accounts wait a day before sending anonymous messages. You can from ${when}.`,
-  notOnSixFrites: (name: string) => `Having this link doesn't always mean ${name} has a Six Frites account.`,
+  aboutLink: "About this link",
+  linkInfo:
+    "Whoever made this link chose its name and photo. They'll never know who writes to them, but they can report a message, so watch what you write: no harassment, threats or hate.",
   received: "Received",
   oldLink: "via your old link",
   sentTab: "Sent",
@@ -31,6 +33,12 @@ const en = {
   yourLink: "Your link",
   publicName: "Name on your link",
   publicHint: "People who open your link see this name and photo. Your account keeps your Google name.",
+  promptLabel: "Text at the top of your link",
+  tempLinks: "Temporary links",
+  tempHint: "For a story: it stops working after the time you pick. Your own link stays.",
+  newTempLink: "New temporary link",
+  tempFor: "How long should it work?",
+  tempTitle: "Title of this link",
   newLink: "Get a new link",
   newLinkConfirm:
     "Get a new link? Your current one stops working, so nobody can send you messages through it anymore. Messages you already got stay.",
@@ -52,6 +60,8 @@ const en = {
   reportHint: "The moderators will see this message and who sent it. You won't.",
   newMessage: "New anonymous message",
   guestNote: "You don't need an invite for anonymous messages. Chatting on Six Frites needs one.",
+  chatsSuspended: (until: string | null) =>
+    `A moderator suspended your chats${until ? ` until ${until}` : ""}. Your anonymous messages still work.`,
 };
 
 const fr: typeof en = {
@@ -73,9 +83,11 @@ const fr: typeof en = {
   openLinkConfirm: "Ouvrir ce lien ? Il a été envoyé anonymement, vérifie d'abord l'adresse.",
   slowDown: "Tu as envoyé beaucoup de messages. Réessaie plus tard.",
   duplicate: "Tu as déjà envoyé ce message.",
+  noLinks: "Les liens ne sont pas autorisés dans les messages anonymes.",
   blocked: "Cette personne ne reçoit plus tes messages.",
-  tooNew: (when) => `Les nouveaux comptes attendent un jour avant d'envoyer des messages anonymes. Tu pourras à partir du ${when}.`,
-  notOnSixFrites: (name) => `Avoir ce lien ne veut pas toujours dire que ${name} a un compte Six Frites.`,
+  aboutLink: "À propos de ce lien",
+  linkInfo:
+    "La personne qui a créé ce lien a choisi son nom et sa photo. Elle ne saura jamais qui lui écrit, mais elle peut signaler un message, alors fais attention à ce que tu écris : pas de harcèlement, de menaces ni de haine.",
   received: "Reçus",
   oldLink: "via ton ancien lien",
   sentTab: "Envoyés",
@@ -87,6 +99,12 @@ const fr: typeof en = {
   yourLink: "Ton lien",
   publicName: "Nom sur ton lien",
   publicHint: "Les personnes qui ouvrent ton lien voient ce nom et cette photo. Ton compte garde ton nom Google.",
+  promptLabel: "Texte en haut de ton lien",
+  tempLinks: "Liens temporaires",
+  tempHint: "Pour une story : il ne marche plus après la durée choisie. Ton lien principal reste.",
+  newTempLink: "Nouveau lien temporaire",
+  tempFor: "Combien de temps doit-il marcher ?",
+  tempTitle: "Titre de ce lien",
   newLink: "Obtenir un nouveau lien",
   newLinkConfirm:
     "Obtenir un nouveau lien ? L'actuel ne fonctionnera plus, personne ne pourra plus t'envoyer de messages avec. Les messages déjà reçus restent.",
@@ -108,6 +126,8 @@ const fr: typeof en = {
   reportHint: "Les modérateurs verront ce message et qui l'a envoyé. Pas toi.",
   newMessage: "Nouveau message anonyme",
   guestNote: "Pas besoin d'invitation pour les messages anonymes. Pour discuter sur Six Frites, il en faut une.",
+  chatsSuspended: (until) =>
+    `Un modérateur a suspendu tes discussions${until ? ` jusqu'au ${until}` : ""}. Tes messages anonymes marchent toujours.`,
 };
 
 const mg: typeof en = {
@@ -129,9 +149,11 @@ const mg: typeof en = {
   openLinkConfirm: "Hosokafana ve ity rohy ity? Nalefa tsy fantatra izy, koa jereo aloha ny adiresy.",
   slowDown: "Maro loatra ny hafatra nalefanao. Andramo indray any aoriana.",
   duplicate: "Efa nalefanao io hafatra io.",
+  noLinks: "Tsy azo atao ny mametraka rohy amin'ny hafatra miafina.",
   blocked: "Tsy mandray ny hafatrao intsony io olona io.",
-  tooNew: (when) => `Miandry iray andro ny kaonty vaovao vao afaka mandefa hafatra miafina. Afaka manomboka amin'ny ${when} ianao.`,
-  notOnSixFrites: (name) => `Tsy midika foana fa manana kaonty Six Frites i ${name} satria manana ity rohy ity izy.`,
+  aboutLink: "Momba ity rohy ity",
+  linkInfo:
+    "Ny nanao ity rohy ity no nisafidy ny anarany sy ny sariny. Tsy ho fantany mihitsy hoe iza no manoratra aminy, saingy afaka mitatitra hafatra izy, koa tandremo izay soratanao: tsy misy fanorisorenana, fandrahonana na fankahalana.",
   received: "Voaray",
   oldLink: "tamin'ny rohinao taloha",
   sentTab: "Nalefa",
@@ -143,6 +165,12 @@ const mg: typeof en = {
   yourLink: "Ny rohinao",
   publicName: "Anarana eo amin'ny rohinao",
   publicHint: "Io anarana sy sary io no hitan'ny olona manokatra ny rohinao. Mitazona ny anaranao Google ny kaontinao.",
+  promptLabel: "Soratra eo an-tampon'ny rohinao",
+  tempLinks: "Rohy vonjimaika",
+  tempHint: "Ho an'ny story: tsy mandeha intsony izy rehefa tapitra ny fotoana nofidinao. Mijanona kosa ny rohinao lehibe.",
+  newTempLink: "Rohy vonjimaika vaovao",
+  tempFor: "Hafiriana no handehanany?",
+  tempTitle: "Lohatenin'ity rohy ity",
   newLink: "Haka rohy vaovao",
   newLinkConfirm:
     "Haka rohy vaovao ve? Tsy mandeha intsony ny rohy ankehitriny, ka tsy misy afaka mandefa hafatra aminao amin'ny alalany intsony. Mijanona ny hafatra efa voarainao.",
@@ -164,6 +192,8 @@ const mg: typeof en = {
   reportHint: "Ho hitan'ny mpandrindra ity hafatra ity sy ny nandefa azy. Tsy ho hitanao.",
   newMessage: "Hafatra miafina vaovao",
   guestNote: "Tsy mila fanasana ianao raha hafatra miafina. Ilaina kosa izany raha hiresaka ao amin'ny Six Frites.",
+  chatsSuspended: (until) =>
+    `Nampiatoan'ny mpandrindra ny resakao${until ? ` mandra-pahatongan'ny ${until}` : ""}. Mbola mandeha kosa ny hafatra miafina.`,
 };
 
 export default { en, fr, mg };

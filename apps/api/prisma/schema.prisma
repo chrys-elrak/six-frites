@@ -18,20 +18,22 @@ model User {
   askCode     String    @unique @default(dbgenerated("random_code()"))
   askName     String?
   askAvatarKey String?
+  /// The line at the top of their link, instead of the app's "Send me anonymous messages!".
+  askPrompt   String?
   /// When the user last replaced their anonymous link; what they got before came through an old one.
   askRenewedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  bannedAt    DateTime?
-  banReason   String?
   /// When they accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else.
   termsAcceptedAt DateTime?
+  bannedAt    DateTime?
+  banReason   String?
   /// When a timed ban is lifted on its own; null while `bannedAt` is set means it lasts until an admin lifts it.
   bannedUntil DateTime?
-  /// An admin's authenticator secret, in base32; moderation stays shut until it is set.
-  totpSecret  String?
   /// What a ban takes away: "full" shuts the account, "chat" leaves only anonymous messages and support, like a guest.
   banScope    String    @default("full")
+  /// An admin's authenticator secret, in base32; moderation stays shut until it is set.
+  totpSecret  String?
   /// The time step of the last authenticator code accepted, so no code works twice.
   totpStep    Int?
   lastSeenAt  DateTime?
@@ -49,6 +51,7 @@ model User {
 
   sessions       Session[]
   invites        Invite[]
+  askLinks       AskLink[]
   contactLinks   ContactLink[]
   referredBy     Referral?          @relation("referee")
   referrals      Referral[]         @relation("referrer")
@@ -119,6 +122,8 @@ model Invite {
   uses      Int       @default(0)
   expiresAt DateTime?
   revokedAt DateTime?
+  /// Taken off the creator's list once it no longer works; its referrals stay.
+  hiddenAt  DateTime?
   createdAt DateTime  @default(now())
 
   creator   User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
@@ -546,6 +551,8 @@ model AnonMessage {
   recipientId String
   senderId    String
   text        String
+  /// The recipient's own prompt when it was sent, so a shared card shows what it answered; null for the app's.
+  prompt      String?
   /// Formatting ranges of `text`, as on chat messages; null when it has none.
   entities    Json?
   photoKey    String?
@@ -571,6 +578,21 @@ model AnonMessage {
 }
 
 /// Someone who can no longer send `blockerId` anonymous messages, kept apart from Block so blocking never reveals who it was.
+/// A second link to someone's anonymous messages that stops working at `expiresAt`, for a story; their own link stays.
+model AskLink {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  userId    String
+  /// The title at the top of this link, instead of the user's own prompt.
+  prompt    String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
 model AnonBlock {
   blockerId String
   blockedId String

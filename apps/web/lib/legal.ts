@@ -168,7 +168,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Anonymous messages",
         body: [
           "The person you write to never learns who you are. We do keep who sent each anonymous message, so we can stop abuse, and we may share it when the law requires us to.",
-          "A new account can send anonymous messages once it is a day old. If the person you write to blocks you, you'll see that you can't write to them anymore; they still never learn who you are.",
+          "If the person you write to blocks you, you'll see that you can't write to them anymore; they still never learn who you are.",
           "Messages you receive can be shared by you, for example to your story. Messages you send can be shared by the person who gets them.",
         ],
       },
@@ -253,7 +253,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Messages anonymes",
         body: [
           "La personne à qui vous écrivez ne sait jamais qui vous êtes. Nous gardons en revanche l'auteur de chaque message anonyme, pour pouvoir arrêter les abus, et nous pouvons le communiquer quand la loi nous y oblige.",
-          "Un nouveau compte peut envoyer des messages anonymes une fois âgé d'un jour. Si la personne à qui vous écrivez vous bloque, vous verrez que vous ne pouvez plus lui écrire ; elle ne sait toujours pas qui vous êtes.",
+          "Si la personne à qui vous écrivez vous bloque, vous verrez que vous ne pouvez plus lui écrire ; elle ne sait toujours pas qui vous êtes.",
           "Vous pouvez partager les messages que vous recevez, par exemple en story. Ceux que vous envoyez peuvent être partagés par leur destinataire.",
         ],
       },
@@ -338,7 +338,7 @@ export const terms: Record<Locale, LegalDoc> = {
         heading: "Hafatra tsy fantatra mpandefa",
         body: [
           "Tsy hahafantatra mihitsy hoe iza ianao ilay olona soratanao. Fantatray kosa hoe iza no nandefa ny hafatra tsirairay, mba hahafahanay manakana ny fanararaotana, ary mety homenay izany raha takian'ny lalàna.",
-          "Afaka mandefa hafatra tsy fantatra mpandefa ny kaonty vaovao rehefa feno iray andro. Raha sakanan'ilay olona soratanao ianao dia ho hitanao fa tsy afaka manoratra aminy intsony ianao; tsy ho fantany ihany hoe iza ianao.",
+          "Raha sakanan'ilay olona soratanao ianao dia ho hitanao fa tsy afaka manoratra aminy intsony ianao; tsy ho fantany ihany hoe iza ianao.",
           "Azonao zaraina ny hafatra raisinao, ohatra ao amin'ny story-nao. Azon'ilay nandray zaraina koa ny hafatra alefanao.",
         ],
       },

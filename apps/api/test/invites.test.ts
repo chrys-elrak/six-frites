@@ -86,6 +86,24 @@ describe("invites", () => {
     expect(listed.items).toMatchObject([{ code, status: "revoked" }]);
   });
 
+  it("lets the owner delete a link that no longer works, keeping who joined with it", async () => {
+    const host = await signUp("tidy");
+    const { code } = await createInvite(host.accessToken, { maxUses: 5 });
+    const joined = await signUp("joined", { inviteCode: code });
+    const other = await signUp("stranger");
+
+    expect((await call(host, "DELETE", `/v1/invites/${code}`)).json().error.code).toBe("CONFLICT");
+    await call(host, "POST", `/v1/invites/${code}/revoke`);
+    expect((await call(other, "DELETE", `/v1/invites/${code}`)).json().error.code).toBe("INVITE_NOT_FOUND");
+    expect((await call(host, "DELETE", `/v1/invites/${code}`)).statusCode).toBe(204);
+
+    expect((await get(host, "/v1/invites")).items).toEqual([]);
+    expect((await get(host, "/v1/me/referrals")).items.map((r: { user: { id: string } }) => r.user.id)).toEqual([
+      joined.user.id,
+    ]);
+    expect((await get(host, "/v1/me/invite-quota")).invited).toBe(1);
+  });
+
   it("returns INVITE_NOT_FOUND for unknown codes", async () => {
     const res = await ctx.app.inject({ url: "/v1/invites/NOPE2345" });
     expect(res.statusCode).toBe(404);

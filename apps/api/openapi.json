@@ -150,6 +150,27 @@
                           "type": "boolean",
                           "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                         },
+                        "chatBan": {
+                          "nullable": true,
+                          "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                          "type": "object",
+                          "properties": {
+                            "until": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "until"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "termsAccepted": {
+                          "type": "boolean",
+                          "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -169,6 +190,8 @@
                         "ads",
                         "quickReactions",
                         "guest",
+                        "chatBan",
+                        "termsAccepted",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -286,6 +309,27 @@
                           "type": "boolean",
                           "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                         },
+                        "chatBan": {
+                          "nullable": true,
+                          "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                          "type": "object",
+                          "properties": {
+                            "until": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "until"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "termsAccepted": {
+                          "type": "boolean",
+                          "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -305,6 +349,8 @@
                         "ads",
                         "quickReactions",
                         "guest",
+                        "chatBan",
+                        "termsAccepted",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -613,6 +659,14 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
                               }
                             },
                             "required": [
@@ -621,7 +675,8 @@
                               "email",
                               "avatarUrl",
                               "bannedAt",
-                              "bannedUntil"
+                              "bannedUntil",
+                              "banScope"
                             ],
                             "additionalProperties": false
                           },
@@ -778,6 +833,14 @@
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
+                          "banScope": {
+                            "type": "string",
+                            "enum": [
+                              "full",
+                              "chat"
+                            ],
+                            "description": "What the ban takes away, while bannedAt is set"
+                          },
                           "banReason": {
                             "nullable": true,
                             "type": "string"
@@ -826,6 +889,10 @@
                           "queued": {
                             "type": "boolean",
                             "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                          },
+                          "guest": {
+                            "type": "boolean",
+                            "description": "Joined without an invite: anonymous messages and support only"
                           },
                           "inviteLimit": {
                             "type": "integer",
@@ -881,6 +948,14 @@
                                   "type": "string",
                                   "format": "date-time",
                                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "banScope": {
+                                  "type": "string",
+                                  "enum": [
+                                    "full",
+                                    "chat"
+                                  ],
+                                  "description": "What the ban takes away, while bannedAt is set"
                                 }
                               },
                               "required": [
@@ -889,7 +964,8 @@
                                 "email",
                                 "avatarUrl",
                                 "bannedAt",
-                                "bannedUntil"
+                                "bannedUntil",
+                                "banScope"
                               ],
                               "additionalProperties": false
                             }
@@ -902,6 +978,7 @@
                           "avatarUrl",
                           "bannedAt",
                           "bannedUntil",
+                          "banScope",
                           "banReason",
                           "admin",
                           "createdAt",
@@ -912,6 +989,7 @@
                           "openReports",
                           "storageBytes",
                           "queued",
+                          "guest",
                           "inviteLimit",
                           "invited",
                           "waiting",
@@ -995,6 +1073,14 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "banScope": {
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "chat"
+                      ],
+                      "description": "What the ban takes away, while bannedAt is set"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -1043,6 +1129,10 @@
                     "queued": {
                       "type": "boolean",
                       "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Joined without an invite: anonymous messages and support only"
                     },
                     "inviteLimit": {
                       "type": "integer",
@@ -1098,6 +1188,14 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "banScope": {
+                            "type": "string",
+                            "enum": [
+                              "full",
+                              "chat"
+                            ],
+                            "description": "What the ban takes away, while bannedAt is set"
                           }
                         },
                         "required": [
@@ -1106,7 +1204,8 @@
                           "email",
                           "avatarUrl",
                           "bannedAt",
-                          "bannedUntil"
+                          "bannedUntil",
+                          "banScope"
                         ],
                         "additionalProperties": false
                       }
@@ -1119,6 +1218,7 @@
                     "avatarUrl",
                     "bannedAt",
                     "bannedUntil",
+                    "banScope",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -1129,6 +1229,7 @@
                     "openReports",
                     "storageBytes",
                     "queued",
+                    "guest",
                     "inviteLimit",
                     "invited",
                     "waiting",
@@ -1166,6 +1267,14 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 8760
+                  },
+                  "scope": {
+                    "default": "full",
+                    "type": "string",
+                    "enum": [
+                      "full",
+                      "chat"
+                    ]
                   }
                 },
                 "required": [
@@ -1227,6 +1336,14 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "banScope": {
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "chat"
+                      ],
+                      "description": "What the ban takes away, while bannedAt is set"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -1275,6 +1392,10 @@
                     "queued": {
                       "type": "boolean",
                       "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Joined without an invite: anonymous messages and support only"
                     },
                     "inviteLimit": {
                       "type": "integer",
@@ -1330,6 +1451,14 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "banScope": {
+                            "type": "string",
+                            "enum": [
+                              "full",
+                              "chat"
+                            ],
+                            "description": "What the ban takes away, while bannedAt is set"
                           }
                         },
                         "required": [
@@ -1338,7 +1467,8 @@
                           "email",
                           "avatarUrl",
                           "bannedAt",
-                          "bannedUntil"
+                          "bannedUntil",
+                          "banScope"
                         ],
                         "additionalProperties": false
                       }
@@ -1351,6 +1481,7 @@
                     "avatarUrl",
                     "bannedAt",
                     "bannedUntil",
+                    "banScope",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -1361,6 +1492,7 @@
                     "openReports",
                     "storageBytes",
                     "queued",
+                    "guest",
                     "inviteLimit",
                     "invited",
                     "waiting",
@@ -1432,6 +1564,14 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "banScope": {
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "chat"
+                      ],
+                      "description": "What the ban takes away, while bannedAt is set"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -1480,6 +1620,10 @@
                     "queued": {
                       "type": "boolean",
                       "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Joined without an invite: anonymous messages and support only"
                     },
                     "inviteLimit": {
                       "type": "integer",
@@ -1535,6 +1679,14 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "banScope": {
+                            "type": "string",
+                            "enum": [
+                              "full",
+                              "chat"
+                            ],
+                            "description": "What the ban takes away, while bannedAt is set"
                           }
                         },
                         "required": [
@@ -1543,7 +1695,8 @@
                           "email",
                           "avatarUrl",
                           "bannedAt",
-                          "bannedUntil"
+                          "bannedUntil",
+                          "banScope"
                         ],
                         "additionalProperties": false
                       }
@@ -1556,6 +1709,7 @@
                     "avatarUrl",
                     "bannedAt",
                     "bannedUntil",
+                    "banScope",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -1566,6 +1720,7 @@
                     "openReports",
                     "storageBytes",
                     "queued",
+                    "guest",
                     "inviteLimit",
                     "invited",
                     "waiting",
@@ -1658,6 +1813,14 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "banScope": {
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "chat"
+                      ],
+                      "description": "What the ban takes away, while bannedAt is set"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -1706,6 +1869,10 @@
                     "queued": {
                       "type": "boolean",
                       "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Joined without an invite: anonymous messages and support only"
                     },
                     "inviteLimit": {
                       "type": "integer",
@@ -1761,6 +1928,14 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "banScope": {
+                            "type": "string",
+                            "enum": [
+                              "full",
+                              "chat"
+                            ],
+                            "description": "What the ban takes away, while bannedAt is set"
                           }
                         },
                         "required": [
@@ -1769,7 +1944,8 @@
                           "email",
                           "avatarUrl",
                           "bannedAt",
-                          "bannedUntil"
+                          "bannedUntil",
+                          "banScope"
                         ],
                         "additionalProperties": false
                       }
@@ -1782,6 +1958,7 @@
                     "avatarUrl",
                     "bannedAt",
                     "bannedUntil",
+                    "banScope",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -1792,6 +1969,7 @@
                     "openReports",
                     "storageBytes",
                     "queued",
+                    "guest",
                     "inviteLimit",
                     "invited",
                     "waiting",
@@ -1920,6 +2098,14 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "banScope": {
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "chat"
+                      ],
+                      "description": "What the ban takes away, while bannedAt is set"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -1968,6 +2154,10 @@
                     "queued": {
                       "type": "boolean",
                       "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Joined without an invite: anonymous messages and support only"
                     },
                     "inviteLimit": {
                       "type": "integer",
@@ -2023,6 +2213,14 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "banScope": {
+                            "type": "string",
+                            "enum": [
+                              "full",
+                              "chat"
+                            ],
+                            "description": "What the ban takes away, while bannedAt is set"
                           }
                         },
                         "required": [
@@ -2031,7 +2229,8 @@
                           "email",
                           "avatarUrl",
                           "bannedAt",
-                          "bannedUntil"
+                          "bannedUntil",
+                          "banScope"
                         ],
                         "additionalProperties": false
                       }
@@ -2044,6 +2243,7 @@
                     "avatarUrl",
                     "bannedAt",
                     "bannedUntil",
+                    "banScope",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2054,6 +2254,7 @@
                     "openReports",
                     "storageBytes",
                     "queued",
+                    "guest",
                     "inviteLimit",
                     "invited",
                     "waiting",
@@ -2177,6 +2378,14 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
                               }
                             },
                             "required": [
@@ -2185,7 +2394,8 @@
                               "email",
                               "avatarUrl",
                               "bannedAt",
-                              "bannedUntil"
+                              "bannedUntil",
+                              "banScope"
                             ],
                             "additionalProperties": false
                           },
@@ -2219,6 +2429,14 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
                               }
                             },
                             "required": [
@@ -2227,7 +2445,8 @@
                               "email",
                               "avatarUrl",
                               "bannedAt",
-                              "bannedUntil"
+                              "bannedUntil",
+                              "banScope"
                             ],
                             "additionalProperties": false
                           },
@@ -2397,6 +2616,14 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
                               }
                             },
                             "required": [
@@ -2405,7 +2632,8 @@
                               "email",
                               "avatarUrl",
                               "bannedAt",
-                              "bannedUntil"
+                              "bannedUntil",
+                              "banScope"
                             ],
                             "additionalProperties": false
                           },
@@ -2439,6 +2667,14 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
                               }
                             },
                             "required": [
@@ -2447,7 +2683,8 @@
                               "email",
                               "avatarUrl",
                               "bannedAt",
-                              "bannedUntil"
+                              "bannedUntil",
+                              "banScope"
                             ],
                             "additionalProperties": false
                           },
@@ -2777,6 +3014,14 @@
                     "minimum": 1,
                     "maximum": 8760
                   },
+                  "banScope": {
+                    "default": "full",
+                    "type": "string",
+                    "enum": [
+                      "full",
+                      "chat"
+                    ]
+                  },
                   "note": {
                     "type": "string",
                     "maxLength": 500
@@ -2867,6 +3112,14 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "banScope": {
+                          "type": "string",
+                          "enum": [
+                            "full",
+                            "chat"
+                          ],
+                          "description": "What the ban takes away, while bannedAt is set"
                         }
                       },
                       "required": [
@@ -2875,7 +3128,8 @@
                         "email",
                         "avatarUrl",
                         "bannedAt",
-                        "bannedUntil"
+                        "bannedUntil",
+                        "banScope"
                       ],
                       "additionalProperties": false
                     },
@@ -2909,6 +3163,14 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "banScope": {
+                          "type": "string",
+                          "enum": [
+                            "full",
+                            "chat"
+                          ],
+                          "description": "What the ban takes away, while bannedAt is set"
                         }
                       },
                       "required": [
@@ -2917,7 +3179,8 @@
                         "email",
                         "avatarUrl",
                         "bannedAt",
-                        "bannedUntil"
+                        "bannedUntil",
+                        "banScope"
                       ],
                       "additionalProperties": false
                     },
@@ -3308,6 +3571,14 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
                               }
                             },
                             "required": [
@@ -3316,7 +3587,8 @@
                               "email",
                               "avatarUrl",
                               "bannedAt",
-                              "bannedUntil"
+                              "bannedUntil",
+                              "banScope"
                             ],
                             "additionalProperties": false
                           },
@@ -3496,6 +3768,14 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "banScope": {
+                          "type": "string",
+                          "enum": [
+                            "full",
+                            "chat"
+                          ],
+                          "description": "What the ban takes away, while bannedAt is set"
                         }
                       },
                       "required": [
@@ -3504,7 +3784,8 @@
                         "email",
                         "avatarUrl",
                         "bannedAt",
-                        "bannedUntil"
+                        "bannedUntil",
+                        "banScope"
                       ],
                       "additionalProperties": false
                     },
@@ -3847,6 +4128,14 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
                               }
                             },
                             "required": [
@@ -3855,7 +4144,8 @@
                               "email",
                               "avatarUrl",
                               "bannedAt",
-                              "bannedUntil"
+                              "bannedUntil",
+                              "banScope"
                             ],
                             "additionalProperties": false
                           },
@@ -4199,6 +4489,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4218,6 +4529,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4337,6 +4650,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4356,6 +4690,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4409,6 +4745,131 @@
                   "enum": [
                     null
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/terms": {
+      "post": {
+        "summary": "Accept the Terms of Service and Privacy Policy",
+        "tags": [
+          "me"
+        ],
+        "description": "The apps ask once, the first time someone joins.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "contactCode": {
+                      "type": "string",
+                      "description": "Share it (or its QR code) so people can find you"
+                    },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
+                    "backupKeyId": {
+                      "nullable": true,
+                      "description": "Identifies the key from your recovery key; null until you set up a recovery key",
+                      "type": "string"
+                    },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
+                    "hasAppLock": {
+                      "type": "boolean",
+                      "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
+                    },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "avatarUrl",
+                    "contactCode",
+                    "askCode",
+                    "backupKeyId",
+                    "hasBackupPin",
+                    "hasAppLock",
+                    "ads",
+                    "quickReactions",
+                    "guest",
+                    "chatBan",
+                    "termsAccepted",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -4489,6 +4950,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4508,6 +4990,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4781,6 +5265,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4800,6 +5305,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4880,6 +5387,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4899,6 +5427,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -5257,6 +5787,46 @@
                     "status"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete one of your links that no longer works",
+        "tags": [
+          "invites"
+        ],
+        "description": "Only for a revoked, expired or used-up link (CONFLICT otherwise). People who joined with it stay connected and still count.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -37177,6 +37747,27 @@
                                     "type": "boolean",
                                     "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                                   },
+                                  "chatBan": {
+                                    "nullable": true,
+                                    "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                                    "type": "object",
+                                    "properties": {
+                                      "until": {
+                                        "nullable": true,
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "until"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "termsAccepted": {
+                                    "type": "boolean",
+                                    "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -37196,6 +37787,8 @@
                                   "ads",
                                   "quickReactions",
                                   "guest",
+                                  "chatBan",
+                                  "termsAccepted",
                                   "createdAt"
                                 ],
                                 "additionalProperties": false
@@ -38121,6 +38714,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -38140,6 +38754,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -38293,6 +38909,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -38312,6 +38949,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -41464,6 +42103,11 @@
                       "type": "string",
                       "format": "uri"
                     },
+                    "prompt": {
+                      "nullable": true,
+                      "description": "The line at the top of the link; null shows the app's own",
+                      "type": "string"
+                    },
                     "blocked": {
                       "type": "boolean",
                       "description": "The signed-in viewer was blocked by this person and can't write to them; false when signed out"
@@ -41472,6 +42116,7 @@
                   "required": [
                     "displayName",
                     "avatarUrl",
+                    "prompt",
                     "blocked"
                   ],
                   "additionalProperties": false
@@ -41486,7 +42131,7 @@
         "tags": [
           "ask"
         ],
-        "description": "They never see who sent it; moderators can see the sender of every anonymous message. Accounts under a day old get ACCOUNT_TOO_NEW, and someone the recipient blocked gets ANON_BLOCKED.",
+        "description": "They never see who sent it; moderators can see the sender of every anonymous message. Someone the recipient blocked gets ANON_BLOCKED.",
         "requestBody": {
           "required": true,
           "content": {
@@ -41643,6 +42288,11 @@
                             "type": "string",
                             "description": "Empty when only a photo, a GIF or a voice message was sent"
                           },
+                          "prompt": {
+                            "nullable": true,
+                            "description": "The prompt on the link when it was sent; null for the app's own",
+                            "type": "string"
+                          },
                           "entities": {
                             "type": "array",
                             "items": {
@@ -41755,6 +42405,7 @@
                         "required": [
                           "id",
                           "text",
+                          "prompt",
                           "entities",
                           "photoUrl",
                           "gif",
@@ -41835,6 +42486,11 @@
                           "text": {
                             "type": "string",
                             "description": "Empty when only a photo, a GIF or a voice message was sent"
+                          },
+                          "prompt": {
+                            "nullable": true,
+                            "description": "The prompt on the link when it was sent; null for the app's own",
+                            "type": "string"
                           },
                           "entities": {
                             "type": "array",
@@ -41954,11 +42610,17 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "prompt": {
+                                "nullable": true,
+                                "description": "The line at the top of the link; null shows the app's own",
+                                "type": "string"
                               }
                             },
                             "required": [
                               "displayName",
-                              "avatarUrl"
+                              "avatarUrl",
+                              "prompt"
                             ],
                             "additionalProperties": false,
                             "description": "Who you sent it to, as their link shows them"
@@ -41967,6 +42629,7 @@
                         "required": [
                           "id",
                           "text",
+                          "prompt",
                           "entities",
                           "photoUrl",
                           "gif",
@@ -42038,7 +42701,7 @@
     },
     "/v1/ask/profile": {
       "patch": {
-        "summary": "Change the name and photo shown on your link",
+        "summary": "Change the name, photo and prompt shown on your link",
         "tags": [
           "ask"
         ],
@@ -42054,6 +42717,11 @@
                     "description": "Shown on your link; empty goes back to your account name",
                     "type": "string",
                     "maxLength": 64
+                  },
+                  "prompt": {
+                    "description": "The line at the top of your link, like \"Tell me a secret\"; empty goes back to the app's",
+                    "type": "string",
+                    "maxLength": 60
                   },
                   "photo": {
                     "description": "A base64 JPEG, PNG or WebP data URL of at most 64 KB; null removes it",
@@ -42086,13 +42754,181 @@
                       "nullable": true,
                       "type": "string",
                       "format": "uri"
+                    },
+                    "prompt": {
+                      "nullable": true,
+                      "description": "The line at the top of the link; null shows the app's own",
+                      "type": "string"
                     }
                   },
                   "required": [
                     "displayName",
-                    "avatarUrl"
+                    "avatarUrl",
+                    "prompt"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/links": {
+      "get": {
+        "summary": "Your temporary links that still work, newest first",
+        "tags": [
+          "ask"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "prompt": {
+                        "nullable": true,
+                        "description": "Its title, at the top of the link",
+                        "type": "string"
+                      },
+                      "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "prompt",
+                      "expiresAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Make a temporary link to your anonymous messages",
+        "tags": [
+          "ask"
+        ],
+        "description": "It stops working after the hours you pick; your own link doesn't change. 10 at once at most.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "description": "Its title, at the top of the link"
+                  },
+                  "hours": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "prompt",
+                  "hours"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "prompt": {
+                      "nullable": true,
+                      "description": "Its title, at the top of the link",
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "prompt",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/links/{code}": {
+      "delete": {
+        "summary": "Stop a temporary link now",
+        "tags": [
+          "ask"
+        ],
+        "description": "Messages that came through it stay.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -42173,6 +43009,27 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -42192,6 +43049,8 @@
                     "ads",
                     "quickReactions",
                     "guest",
+                    "chatBan",
+                    "termsAccepted",
                     "createdAt"
                   ],
                   "additionalProperties": false
