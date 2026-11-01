@@ -11,6 +11,7 @@ http:
       entryPoints: [websecure]
       tls:
         certResolver: letsencrypt
+      middlewares: [six-frites-retry]
       service: six-frites-api
       priority: 30
 
@@ -27,7 +28,7 @@ http:
       entryPoints: [websecure]
       tls:
         certResolver: letsencrypt
-      middlewares: [six-frites-headers]
+      middlewares: [six-frites-headers, six-frites-retry]
       service: six-frites-web
       priority: 10
 
@@ -43,15 +44,36 @@ http:
         contentTypeNosniff: true
         referrerPolicy: strict-origin-when-cross-origin
 
+    # A deploy replaces one of each pair at a time; a request that reaches one as it stops goes to the other.
+    six-frites-retry:
+      retry:
+        attempts: 3
+        initialInterval: 100ms
+
   services:
     six-frites-api:
       loadBalancer:
         servers:
           - url: "http://six-frites-api:4000"
+          - url: "http://six-frites-api-2:4000"
+        healthCheck:
+          path: /health
+          interval: 2s
+          timeout: 1s
     six-frites-web:
       loadBalancer:
         servers:
           - url: "http://six-frites-web:3000"
+          - url: "http://six-frites-web-2:3000"
+        healthCheck:
+          path: /version
+          interval: 2s
+          timeout: 1s
+        sticky:
+          cookie:
+            name: six_web
+            secure: true
+            httpOnly: true
     six-frites-storage:
       loadBalancer:
         passHostHeader: true

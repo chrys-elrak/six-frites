@@ -26,6 +26,30 @@ x-app-env: &app-env
   STORE_URL: ${STORE_URL:-https://store.koera.mg}
   STORE_WEBHOOK_SECRET: ${STORE_WEBHOOK_SECRET:-}
 
+x-api-health: &api-health
+  test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:4000/health"]
+  interval: 3s
+  timeout: 2s
+  retries: 3
+  start_period: 60s
+
+x-web-health: &web-health
+  test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:3000/version"]
+  interval: 3s
+  timeout: 2s
+  retries: 3
+  start_period: 60s
+
+x-web: &web
+  image: six-frites:latest
+  pull_policy: never
+  restart: unless-stopped
+  working_dir: /repo/apps/web
+  environment:
+    NODE_ENV: production
+  command: npx next start --port 3000 --hostname 0.0.0.0
+  healthcheck: *web-health
+
 x-app: &app
   image: six-frites:latest
   pull_policy: never
@@ -84,11 +108,21 @@ services:
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:?set GOOGLE_WEB_CLIENT_ID in .env}
         NEXT_PUBLIC_ADSENSE_CLIENT: ${ADSENSE_CLIENT:-}
         NEXT_PUBLIC_ADSENSE_SLOT: ${ADSENSE_SLOT:-}
-    command: sh -c "npx prisma migrate deploy && exec npx tsx src/server.ts"
+    command: npx tsx src/server.ts
+    healthcheck: *api-health
     networks:
       default:
       proxy:
         aliases: [six-frites-api]
+
+  api-2:
+    <<: *app
+    command: npx tsx src/server.ts
+    healthcheck: *api-health
+    networks:
+      default:
+      proxy:
+        aliases: [six-frites-api-2]
 
   worker:
     <<: *app
@@ -96,18 +130,20 @@ services:
     depends_on: [api]
 
   web:
-    image: six-frites:latest
-    pull_policy: never
-    restart: unless-stopped
-    working_dir: /repo/apps/web
-    environment:
-      NODE_ENV: production
-    command: npx next start --port 3000 --hostname 0.0.0.0
+    <<: *web
     depends_on: [api]
     networks:
       default:
       proxy:
         aliases: [six-frites-web]
+
+  web-2:
+    <<: *web
+    depends_on: [api]
+    networks:
+      default:
+      proxy:
+        aliases: [six-frites-web-2]
 
   coturn:
     image: coturn/coturn:4.7

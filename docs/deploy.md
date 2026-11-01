@@ -2,16 +2,17 @@
 
 Production runs on the shared server (`six-frites.koera.mg -> 164.68.110.193`) next to the other projects.
 The server's Traefik terminates HTTPS and routes the domain: `/v1`, `/socket.io` and `/docs` to the API,
-`/six-media` to SeaweedFS and everything else to the web app. The compose file runs the API, the media worker,
-the web app, Postgres, Redis, SeaweedFS and coturn (TURN for calls, on the host network).
+`/six-media` to SeaweedFS and everything else to the web app. The compose file runs two API and two web
+containers, the media worker, Postgres, Redis, SeaweedFS and coturn (TURN for calls, on the host network).
 
 ## Layout on the server
 
 - `/root/six-frites`: the code and `.env` (secrets, chmod 600).
 - `/root/traefik/config/dynamic/six-frites.yml`: the Traefik routes, a copy of `infra/traefik/six-frites.yml`.
   Traefik watches that folder, so no restart is needed.
-- The API, web and storage containers join the `traefik_proxy` network as `six-frites-api`, `six-frites-web`
-  and `six-frites-storage`.
+- The API, web and storage containers join the `traefik_proxy` network as `six-frites-api`, `six-frites-api-2`,
+  `six-frites-web`, `six-frites-web-2` and `six-frites-storage`. Traefik health-checks each pair and sends traffic
+  to whichever is up; web visitors stick to one container through the `six_web` cookie.
 - coturn listens on 3478 (UDP and TCP) and relays on UDP 49160-49200.
 
 ## First setup
@@ -53,7 +54,14 @@ ssh-keyscan 164.68.110.193 | gh secret set DEPLOY_KNOWN_HOSTS
 
 To revoke it, remove the `six-frites-deploy` line from the server's `~/.ssh/authorized_keys`.
 
-Migrations run when the API starts. Logs: `docker compose -f docker-compose.prod.yml logs -f api worker web`.
+A deploy has no downtime. `scripts/server-deploy.sh` builds while the running containers keep serving, runs the
+migrations, then replaces `api-2`, `api`, `web-2` and `web` one at a time, each only once the previous one is
+healthy. If one never gets healthy the deploy stops there, and its pair keeps serving the old version.
+
+Because the old code keeps running for a minute against the new schema, a migration must not break it: add
+columns as nullable or with a default, and drop or rename one only in a later deploy, after no code reads it.
+
+Logs: `docker compose -f docker-compose.prod.yml logs -f api api-2 worker web web-2`.
 
 ## Admin two-step
 

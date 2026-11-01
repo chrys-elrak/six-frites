@@ -9,11 +9,8 @@ echo "Deploying $(git log -1 --format='%h %s')"
 git archive HEAD | "${ssh[@]}" 'cd /root/six-frites && tar -x'
 comm -23 <(git log --no-renames --diff-filter=D --name-only --pretty=format: | grep -v '^$' | grep -v '^\.env' | sort -u) \
   <(git ls-tree -r --name-only HEAD | sort -u) | "${ssh[@]}" "cd /root/six-frites && xargs -r -d '\n' rm -f --"
-# An interrupted `up` leaves the old container renamed to <id>_six-frites-…, which blocks the next one; the lock
-# stops a manual deploy and a CI one from interrupting each other in the first place.
-"${ssh[@]}" 'cd /root/six-frites && cp infra/traefik/six-frites.yml /root/traefik/config/dynamic/ && flock /root/six-frites/.deploy.lock sh -c "
-  docker ps -a --format \"{{.Names}}\" | grep -E \"^[0-9a-f]{12}_six-frites-\" | xargs -r docker rm -f
-  docker compose -f docker-compose.prod.yml up -d --build"'
+# The lock stops a manual deploy and a CI one from interrupting each other.
+"${ssh[@]}" 'cd /root/six-frites && flock .deploy.lock sh scripts/server-deploy.sh'
 
 for _ in $(seq 30); do
   curl -fs -o /dev/null https://six-frites.koera.mg/health && echo "Live" && exit 0
