@@ -42,7 +42,7 @@ export function LiveInviteSheet({ game, onClose }: { game: LiveGame; onClose: ()
   const friends = [
     ...new Map(
       (useChats().data ?? [])
-        .filter((c) => !isFrozen(c))
+        .filter((c) => !isFrozen(c) && !c.support && !c.supportDesk && !c.withSupport)
         .flatMap((c) => c.members.filter((m) => m.user.id !== meId).map((m) => [m.user.id, m.user] as const)),
     ).values(),
   ];

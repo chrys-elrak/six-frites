@@ -156,6 +156,7 @@ export function GamesPanel() {
           onPick={setChat}
           onClose={() => setGame(null)}
           top={isBotGame(game) && <BotRow onPick={() => setBot(true)} />}
+          noSupport
         />
       )}
       {game && bot && isBotGame(game) && (

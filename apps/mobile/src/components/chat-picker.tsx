@@ -17,18 +17,26 @@ export function ChatPicker({
   onPick,
   onClose,
   top,
+  noSupport,
 }: {
   title: string;
   empty: string;
   onPick: (chat: ChatDTO) => void;
   onClose: () => void;
   top?: React.ReactNode;
+  /** Leaves out support chats, for picking someone to play with. */
+  noSupport?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();
   const meId = useSession((s) => s.user!.id);
-  const chats = (useChats().data ?? []).filter((c) => !isFrozen(c) && c.members.some((m) => m.user.id !== meId));
+  const chats = (useChats().data ?? []).filter(
+    (c) =>
+      !isFrozen(c) &&
+      c.members.some((m) => m.user.id !== meId) &&
+      !(noSupport && (c.support || c.supportDesk || c.withSupport)),
+  );
 
   return (
     <Modal transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
