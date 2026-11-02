@@ -63,4 +63,6 @@ export interface ClientToServerEvents {
   "live:move": (p: { roomId: string; move: unknown }, cb: Ack<null>) => void;
   "live:say": (p: { roomId: string; text?: string; gifId?: string; voice?: ArrayBuffer }, cb: Ack<null>) => void;
   "live:giveup": (p: { roomId: string }, cb: Ack<null>) => void;
+  /** Gives up and leaves for good, closing a game no one else is in. */
+  "live:end": (p: { roomId: string }, cb?: Ack<null>) => void;
 }

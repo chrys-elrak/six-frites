@@ -2,8 +2,9 @@
 
 import {
   type ChatDTO,
+  type ContactDTO,
+  CHAT_FILTERS,
   type ChatFilter,
-  chatFilters,
   inChatFilter,
   isFrozen,
   isMuted,
@@ -27,6 +28,8 @@ import {
   Share2,
   UserPlus,
 } from "lucide-react";
+import { unwrap } from "@six/sdk";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { six } from "@/lib/six";
@@ -49,7 +52,8 @@ import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
-import { NewInviteDialog } from "./invites";
+import { FindMe } from "./find-me";
+import { Invites, NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
 import { ServiceIcon, callLabel } from "./service-icon";
 
@@ -84,7 +88,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
     return (
       <span className="inline-flex items-center gap-1">
         <ServiceIcon action={m.action} />{" "}
-        {m.action?.type === "call" ? callLabel(m.action, m.senderId === meId, tr) : serviceText(m, tr)}
+        {m.action?.type === "call" ? callLabel(m.action, m.senderId === meId, tr) : serviceText(m, tr, m.senderId === meId)}
       </span>
     );
   }
@@ -224,9 +228,63 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   );
 }
 
+function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean }) {
+  const online = usePresence(contact.user.id)?.online;
+  return (
+    <Link
+      href={`/chats/${contact.chatId}`}
+      className={`flex items-center gap-3 px-4 py-3 transition active:bg-black/5 dark:active:bg-white/10 ${
+        active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
+      }`}
+    >
+      <Avatar user={contact.user} size="md" online={online} />
+      <p className="min-w-0 flex-1 truncate font-semibold">{contact.user.displayName}</p>
+    </Link>
+  );
+}
+
 /**
- * The chat list, or with `archived` the archived chats behind the app lock code. The archived row sits
- * just above the top of the list, so it only shows when the list is pulled down.
+ * Everyone I share a direct chat with, A to Z, even the chats I deleted for me, and opens our chat.
+ * Below them, my contact codes and invite links, for adding more.
+ */
+function ContactRows({ needle, query }: { needle: string; query: string }) {
+  const tr = useT();
+  const pathname = usePathname();
+  const contacts = useQuery({
+    queryKey: ["contacts"],
+    staleTime: 0,
+    queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
+  });
+  const shown = contacts.data?.filter((c) => c.user.displayName.toLowerCase().includes(needle)) ?? [];
+  useWatchPresence(shown.map((c) => c.user.id));
+
+  return (
+    <>
+      {contacts.isPending ? (
+        <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>
+      ) : contacts.isError ? (
+        <p className="p-4 text-sm text-red-600">{tr.common.somethingWrong}</p>
+      ) : !shown.length ? (
+        <p className="p-8 text-center text-sm text-stone-500">{needle ? tr.contacts.noMatch(query) : tr.contacts.none}</p>
+      ) : (
+        shown.map((c) => <ContactRow key={c.user.id} contact={c} active={pathname === `/chats/${c.chatId}`} />)
+      )}
+      {!needle && (
+        <div className="flex flex-col gap-6 p-4">
+          <FindMe />
+          <Invites />
+        </div>
+      )}
+    </>
+  );
+}
+
+type ListView = "chats" | "desk" | "contacts";
+
+/**
+ * The chat list, or with `archived` the archived chats behind the app lock code. A switch on top shows
+ * my contacts instead, and the support chats for whoever answers support. The archived row sits just
+ * above the top of the list, so it only shows when the list is pulled down.
  */
 export function ChatList({ archived = false, rail = false }: { archived?: boolean; rail?: boolean }) {
   const tr = useT();
@@ -252,15 +310,21 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
   const needle = rail ? "" : query.trim().toLowerCase();
-  const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   const [picked, setPicked] = useState<ChatFilter>("all");
+  const [viewPicked, setView] = useState<ListView>("chats");
   const filtering = !archived && !rail;
-  const desk = filtering && visible.some((c) => c.supportDesk);
-  const filter = !filtering || !chatFilters(desk).includes(picked) ? "all" : picked;
+  const hasDesk = filtering && !!chats.data?.some((c) => c.supportDesk);
+  const views: ListView[] = hasDesk ? ["chats", "desk", "contacts"] : ["chats", "contacts"];
+  const view = filtering && views.includes(viewPicked) ? viewPicked : "chats";
+  const desk = view === "desk";
+  const unreadIn = (d: boolean) => chats.data?.filter((c) => c.supportDesk === d && c.unreadCount > 0).length ?? 0;
+  const visible =
+    chats.data?.filter((c) => (!hasDesk || c.supportDesk === desk) && c.title.toLowerCase().includes(needle)) ?? [];
+  const filter = filtering ? picked : "all";
   const shown = visible.filter((c) => inChatFilter(c, filter));
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
-  const showArchive = !archived && !rail && !needle && archivedCount > 0;
+  const showArchive = filtering && view === "chats" && !needle && archivedCount > 0;
   const scroller = useRef<HTMLDivElement>(null);
   const archiveRow = useRef<HTMLAnchorElement>(null);
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
@@ -327,6 +391,32 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
             </button>
           </>
         )}
+        {filtering && (
+          <div role="tablist" className="flex w-full rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
+            {views.map((v) => {
+              const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  role="tab"
+                  aria-selected={view === v}
+                  onClick={() => setView(v)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-sm font-semibold transition ${
+                    view === v ? "bg-white shadow-sm dark:bg-stone-950" : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
+                  }`}
+                >
+                  {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
+                  {unread > 0 && (
+                    <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <label
           className={`${rail ? "hidden" : "flex"} w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10`}
         >
@@ -339,9 +429,9 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
             className="min-w-0 flex-1 bg-transparent text-[16px] text-stone-900 outline-none placeholder:text-stone-500 md:text-sm dark:text-stone-100"
           />
         </label>
-        {filtering && (
+        {filtering && view !== "contacts" && (
           <div role="tablist" className="flex w-full gap-1.5 overflow-x-auto">
-            {chatFilters(desk).map((f) => (
+            {CHAT_FILTERS.map((f) => (
               <button
                 key={f}
                 type="button"
@@ -354,7 +444,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                     : "bg-black/5 text-stone-600 hover:bg-black/10 dark:bg-white/10 dark:text-stone-300 dark:hover:bg-white/15"
                 }`}
               >
-                {f === "support" ? tr.support.title : f === "chats" ? tr.common.chats : tr.chats.filters[f]}
+                {tr.chats.filters[f]}
               </button>
             ))}
           </div>
@@ -365,59 +455,65 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
       {!archived && !rail && <BackupPinBanner />}
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className={showArchive ? "min-h-[calc(100%+5rem)]" : undefined}>
-          {showArchive && (
-            <Link
-              ref={archiveRow}
-              href="/archived"
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-black/[0.03] dark:text-stone-300 dark:hover:bg-white/5"
-            >
-              <span className="grid size-14 place-items-center rounded-full bg-stone-200/70 text-stone-500 dark:bg-stone-800">
-                <Archive className="size-5" />
-              </span>
-              <span className="flex-1">{tr.common.archived}</span>
-              {archivedUnread > 0 && (
-                <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
-                  {archivedUnread > 99 ? "99+" : archivedUnread}
+        {view === "contacts" ? (
+          <ContactRows needle={needle} query={query.trim()} />
+        ) : (
+          <div className={showArchive ? "min-h-[calc(100%+5rem)]" : undefined}>
+            {showArchive && (
+              <Link
+                ref={archiveRow}
+                href="/archived"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-black/[0.03] dark:text-stone-300 dark:hover:bg-white/5"
+              >
+                <span className="grid size-14 place-items-center rounded-full bg-stone-200/70 text-stone-500 dark:bg-stone-800">
+                  <Archive className="size-5" />
                 </span>
-              )}
-            </Link>
-          )}
-          {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
-          {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
-          {chats.isSuccess && needle && visible.length === 0 && (
-            <p className="p-8 text-center text-sm text-stone-500">{tr.contacts.noMatch(query.trim())}</p>
-          )}
-          {chats.isSuccess && !rail && !needle && visible.length === 0 && (
-            <div className="flex flex-col items-center gap-3 p-8 text-center">
-              <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
-                {archived ? (
-                  <Archive className="size-8" strokeWidth={1.6} />
-                ) : (
-                  <MessageCircle className="size-8" strokeWidth={1.6} />
+                <span className="flex-1">{tr.common.archived}</span>
+                {archivedUnread > 0 && (
+                  <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
+                    {archivedUnread > 99 ? "99+" : archivedUnread}
+                  </span>
                 )}
-              </span>
-              <p className="font-medium">{archived ? tr.chats.noArchived : tr.chats.noChats}</p>
-              {!archived && (
-                <>
-                  <p className="text-sm text-stone-500">{tr.chats.noChatsHint}</p>
-                  <button
-                    onClick={() => setDialog("add")}
-                    className="rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-stone-100 dark:text-stone-900"
-                  >
-                    {tr.contacts.addContact}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-          {chats.isSuccess && visible.length > 0 && shown.length === 0 && (
-            <p className="p-8 text-center text-sm text-stone-500">{tr.chats.filterEmpty}</p>
-          )}
-          {shown.map((c) => (
-            <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} rail={rail} />
-          ))}
-        </div>
+              </Link>
+            )}
+            {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
+            {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
+            {chats.isSuccess && needle && visible.length === 0 && (
+              <p className="p-8 text-center text-sm text-stone-500">{tr.contacts.noMatch(query.trim())}</p>
+            )}
+            {chats.isSuccess && !rail && !needle && visible.length === 0 && (
+              <div className="flex flex-col items-center gap-3 p-8 text-center">
+                <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
+                  {archived ? (
+                    <Archive className="size-8" strokeWidth={1.6} />
+                  ) : desk ? (
+                    <LifeBuoy className="size-8" strokeWidth={1.6} />
+                  ) : (
+                    <MessageCircle className="size-8" strokeWidth={1.6} />
+                  )}
+                </span>
+                <p className="font-medium">{archived ? tr.chats.noArchived : tr.chats.noChats}</p>
+                {!archived && !desk && (
+                  <>
+                    <p className="text-sm text-stone-500">{tr.chats.noChatsHint}</p>
+                    <button
+                      onClick={() => setDialog("add")}
+                      className="rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white dark:bg-stone-100 dark:text-stone-900"
+                    >
+                      {tr.contacts.addContact}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+            {chats.isSuccess && visible.length > 0 && shown.length === 0 && (
+              <p className="p-8 text-center text-sm text-stone-500">{tr.chats.filterEmpty}</p>
+            )}
+            {shown.map((c) => (
+              <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} rail={rail} />
+            ))}
+          </div>
+        )}
       </div>
       {!rail && <AdBanner />}
     </div>

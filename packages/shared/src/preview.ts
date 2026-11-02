@@ -37,19 +37,19 @@ export function callText(a: { video: boolean; secs: number | null }, t: Dict) {
 }
 
 /** What a service message says, without the sender's name. */
-export function serviceText(m: Pick<MessageDTO, "action">, t: Dict) {
+export function serviceText(m: Pick<MessageDTO, "action">, t: Dict, mine = false) {
   const a = m.action;
   if (a?.type === "theme") return a.theme ? t.summary.background(themeName(a.theme, t)) : t.summary.backgroundReset;
   if (a?.type === "e2ee") return t.summary.encrypted;
   if (a?.type === "vanish") return a.on ? t.summary.vanishOn : t.summary.vanishOff;
   if (a?.type === "call") return callText(a, t);
-  if (a?.type === "live_invite" || a?.type === "live_result") return liveText(a, t);
+  if (a?.type === "live_invite" || a?.type === "live_result") return liveText(a, t, mine);
   return a?.secs ? t.summary.autoDeleteAfter(durationLabel(a.secs, t)) : t.summary.autoDeleteOff;
 }
 
-function liveText(a: Extract<ServiceAction, { type: "live_invite" | "live_result" }>, t: Dict) {
+function liveText(a: Extract<ServiceAction, { type: "live_invite" | "live_result" }>, t: Dict, mine: boolean) {
   const game = t.live.games[a.game];
-  if (a.type === "live_invite") return t.live.invites(a.from, game);
+  if (a.type === "live_invite") return mine ? t.live.youInvited(game) : t.live.invites(a.from, game);
   return a.outcome === "won" ? t.live.wonGame(game) : a.outcome === "lost" ? t.live.lostGame(game) : t.live.tieGame(game);
 }
 
@@ -65,7 +65,7 @@ export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | nul
   if (a?.type === "e2ee") return t.summary.turnedOnEncryption(who);
   if (a?.type === "vanish") return a.on ? t.summary.turnedOnVanish(who) : t.summary.turnedOffVanish(who);
   if (a?.type === "call") return t.summary.called(who, callText(a, t));
-  if (a?.type === "live_invite" || a?.type === "live_result") return liveText(a, t);
+  if (a?.type === "live_invite" || a?.type === "live_result") return liveText(a, t, who === null);
   return a?.secs ? t.summary.setAutoDelete(who, durationLabel(a.secs, t)) : t.summary.turnedOffAutoDelete(who);
 }
 

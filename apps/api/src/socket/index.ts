@@ -25,7 +25,7 @@ import { redisConnection } from "../lib/queue.js";
 import { type IO, rooms, setIo, socketKey } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
 import { relaySignal } from "../services/calls.js";
-import { createRoom, giveUp, joinRoom, leaveRoom, myRooms, playMove, say, setBot, startRoom } from "../services/live.js";
+import { createRoom, endRoom, giveUp, hasRoom, joinRoom, leaveRoom, myRooms, playMove, say, setBot, startRoom } from "../services/live.js";
 import { markDelivered, markRead } from "../services/chats.js";
 import { assertMember, sendMessage } from "../services/messages.js";
 
@@ -57,6 +57,43 @@ function handle<T>(fn: (payload: unknown) => Promise<T>) {
   };
 }
 
+/** What each live room event does, given who sent it and its payload. */
+const liveActions = {
+  "live:join": (userId: string, p: unknown) => joinRoom(userId, LiveRoomRef.parse(p).roomId),
+  "live:leave": async (userId: string, p: unknown) => leaveRoom(userId, LiveRoomRef.parse(p).roomId) ?? null,
+  "live:bot": async (userId: string, p: unknown) => {
+    const { roomId, add } = LiveBotInput.parse(p);
+    return setBot(userId, roomId, add);
+  },
+  "live:start": async (userId: string, p: unknown) => startRoom(userId, LiveRoomRef.parse(p).roomId),
+  "live:giveup": async (userId: string, p: unknown) => giveUp(userId, LiveRoomRef.parse(p).roomId),
+  "live:end": async (userId: string, p: unknown) => endRoom(userId, LiveRoomRef.parse(p).roomId) ?? null,
+  "live:say": (userId: string, p: unknown) => say(userId, LiveSayInput.parse(p)),
+  "live:move": async (userId: string, p: unknown) => {
+    const { roomId, move } = LiveMoveInput.parse(p);
+    return playMove(userId, roomId, move);
+  },
+};
+type LiveEvent = keyof typeof liveActions;
+
+/** Runs a live room event here, or null when the room is on another API instance. */
+async function liveHere(event: LiveEvent, userId: string, p: unknown) {
+  const ref = LiveRoomRef.safeParse(p);
+  if (ref.success && !hasRoom(ref.data.roomId)) return null;
+  return safe<unknown>(() => liveActions[event](userId, p));
+}
+
+/**
+ * Runs a live room event on the API instance holding the room. Rooms live in one process's memory and
+ * the players can be connected to different instances, so when it isn't here the others are asked.
+ */
+async function liveAnywhere(io: IO, event: LiveEvent, userId: string, p: unknown): Promise<AckResult<unknown>> {
+  const here = await liveHere(event, userId, p);
+  if (here) return here;
+  const there = await io.serverSideEmitWithAck("live", event, userId, p).catch(() => []);
+  return there.find((res) => res !== null) ?? { ok: false, ...new AppError("ROOM_NOT_FOUND", "This game has ended").toBody() };
+}
+
 export function createSocketServer(http: HttpServer) {
   const pub = redisConnection();
   const io: IO = new Server(http, {
@@ -77,7 +114,14 @@ export function createSocketServer(http: HttpServer) {
     }
   });
 
+  io.on("live", (event, userId, p, ack) => {
+    if (event in liveActions) void liveHere(event as LiveEvent, userId, p).then(ack);
+    else ack(null);
+  });
+  io.on("live:mine", (userId, ack) => ack(myRooms(userId)));
+
   io.on("connection", (socket) => {
+
     const { userId, sessionId } = socket.data;
     socket.join([rooms.user(userId), rooms.session(sessionId)]);
 
@@ -100,24 +144,25 @@ export function createSocketServer(http: HttpServer) {
     );
 
     socket.on("live:create", handle((p) => createRoom(userId, CreateLiveInput.parse(p))));
-    socket.on("live:join", handle((p) => joinRoom(userId, LiveRoomRef.parse(p).roomId)));
-    socket.on("live:leave", handle(async (p) => leaveRoom(userId, LiveRoomRef.parse(p).roomId) ?? null));
-    socket.on("live:mine", handle(async () => myRooms(userId)));
+    const live =
+      <T>(event: LiveEvent) =>
+      async (p: unknown, cb?: Ack<T>) => {
+        const res = await liveAnywhere(io, event, userId, p);
+        if (typeof cb === "function") cb(res as AckResult<T>);
+      };
+    socket.on("live:join", live("live:join"));
+    socket.on("live:leave", live("live:leave"));
+    socket.on("live:bot", live("live:bot"));
+    socket.on("live:start", live("live:start"));
+    socket.on("live:giveup", live("live:giveup"));
+    socket.on("live:end", live("live:end"));
+    socket.on("live:say", live("live:say"));
+    socket.on("live:move", live("live:move"));
     socket.on(
-      "live:bot",
-      handle(async (p) => {
-        const { roomId, add } = LiveBotInput.parse(p);
-        return setBot(userId, roomId, add);
-      }),
-    );
-    socket.on("live:start", handle(async (p) => startRoom(userId, LiveRoomRef.parse(p).roomId)));
-    socket.on("live:giveup", handle(async (p) => giveUp(userId, LiveRoomRef.parse(p).roomId)));
-    socket.on("live:say", handle((p) => say(userId, LiveSayInput.parse(p))));
-    socket.on(
-      "live:move",
-      handle(async (p) => {
-        const { roomId, move } = LiveMoveInput.parse(p);
-        return playMove(userId, roomId, move);
+      "live:mine",
+      handle(async () => {
+        const elsewhere = await io.serverSideEmitWithAck("live:mine", userId).catch(() => []);
+        return [...myRooms(userId), ...elsewhere.flat()];
       }),
     );
 

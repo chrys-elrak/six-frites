@@ -1,10 +1,16 @@
 import { Emitter } from "@socket.io/redis-emitter";
 import type { Server } from "socket.io";
-import type { ClientToServerEvents, ServerToClientEvents } from "@six/shared";
+import type { AckResult, ClientToServerEvents, LiveInviteDTO, ServerToClientEvents } from "@six/shared";
 import { env } from "../env.js";
 import { redisConnection } from "./queue.js";
 
-export type IO = Server<ClientToServerEvents, ServerToClientEvents>;
+/** What API instances ask each other through Redis: a live room lives in one instance's memory. */
+export interface InterServerEvents {
+  live: (event: string, userId: string, payload: unknown, ack: (res: AckResult<unknown> | null) => void) => void;
+  "live:mine": (userId: string, ack: (rooms: Omit<LiveInviteDTO, "from">[]) => void) => void;
+}
+
+export type IO = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents>;
 
 /** Redis channel shared by the Socket.IO adapter (API) and emitter (other processes). */
 export const socketKey = `${env.QUEUE_PREFIX}:socket.io`;

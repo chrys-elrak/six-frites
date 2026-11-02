@@ -27,6 +27,7 @@ import {
 } from "./messages.js";
 import { blockState } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
+import { supportCase } from "./users.js";
 import { purgeUploads } from "./uploads.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
@@ -82,7 +83,9 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
           ? supportProfile(m.userId, GAMES_ACCOUNT.displayName)
           : helped
             ? supportProfile(m.userId)
-            : shown(m.user),
+            : m.userId === chat.supportUserId
+              ? supportCase(shown(m.user), viewerId)
+              : shown(m.user),
   }));
   const others = members.filter((m) => m.userId !== viewerId);
   const peer = others[0];

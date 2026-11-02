@@ -6,6 +6,9 @@ import {
   type EmojiEntry,
   type EphemeralInput,
   type GifDTO,
+  LIVE_EMOJI,
+  LIVE_GAMES,
+  type LiveGame,
   MessageEffect,
   type MenuCommand,
   durationLabel,
@@ -17,13 +20,17 @@ import {
 import emojis from "@six/shared/emojis.json";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { playHref } from "./live";
 import { Text } from "./text";
 import { updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
 import { EPHEMERAL_OPTIONS } from "@/lib/ephemeral";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { useRealtime } from "@/lib/realtime";
+import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 
@@ -48,8 +55,9 @@ export interface CommandBarHandle {
 /**
  * Slash commands over the composer: `/` lists them, `/giphy love` shows GIFs and `/sticker wave` stickers
  * to send, `/effect`, `/emoji`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and `/search`
- * offer their choices inline, narrowed by what follows, and `/game` or `/schedule` opens that dialog.
- * After `/silent` it steps aside for the message to send without a notification.
+ * offer their choices inline, narrowed by what follows, `/play` starts a live game with the other person,
+ * and `/game` or `/schedule` opens that dialog. After `/silent` it steps aside for the message to send
+ * without a notification.
  */
 export function CommandBar({
   ref,
@@ -79,6 +87,8 @@ export function CommandBar({
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
+  const socket = useRealtime().realtime?.socket;
+  const meId = useSession((s) => s.user!.id);
   const chat = useChat(qc, chatId).data;
   const command = silentMessage(text) === null ? parseCommand(text, ANDROID_COMMANDS) : null;
   const run = command?.kind === "run" ? command : null;
@@ -106,6 +116,16 @@ export function CommandBar({
   function chatSetting(input: Parameters<typeof updateChatSettings>[2]) {
     onComplete("");
     void updateChatSettings(qc, chatId, input).catch(() => null);
+  }
+
+  function play(game: LiveGame) {
+    onComplete("");
+    const invite = chat?.members.flatMap((m) => (m.user.id === meId ? [] : [m.user.id])) ?? [];
+    void socket
+      ?.timeout(10_000)
+      .emitWithAck("live:create", { game, invite, locale: useLocale.getState().locale })
+      .then((res) => res.ok && router.push(playHref(res.data.id)))
+      .catch(() => null);
   }
 
   function choicesFor(name: CommandName, args: string): Choice[] | null {
@@ -162,6 +182,8 @@ export function CommandBar({
         ].filter(match);
       case "search":
         return [{ key: "search", label: args ? tr.composer.searchFor(args) : tr.chat.search, pick: () => onSearch(args) }];
+      case "play":
+        return LIVE_GAMES.map((g) => ({ key: g, label: `${LIVE_EMOJI[g]} ${tr.live.games[g]}`, pick: () => play(g) })).filter(match);
       default:
         return null;
     }

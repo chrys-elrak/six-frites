@@ -6,6 +6,7 @@ export const COMMANDS = [
   "effect",
   "emoji",
   "game",
+  "play",
   "location",
   "schedule",
   "destruct",

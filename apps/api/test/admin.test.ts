@@ -63,6 +63,8 @@ describe("aliases", () => {
     const found = await get(boss, `/v1/admin/users?q=${encodeURIComponent(alias)}`);
     const match = found.items.find((u: { id: string }) => u.id === host.user.id);
     expect(match.seenBy.map((v: { id: string }) => v.id)).toContain(guest.user.id);
+    const potato = await get(boss, `/v1/admin/users?q=${encodeURIComponent(alias.replace("frite", "Potato"))}`);
+    expect(potato.items.map((u: { id: string }) => u.id)).toContain(host.user.id);
   });
 });
 

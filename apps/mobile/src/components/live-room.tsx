@@ -22,7 +22,7 @@ import {
 import { File } from "expo-file-system";
 import { Image } from "expo-image";
 import { type Href, router } from "expo-router";
-import { ArrowLeft, Flag, Gamepad2, Mic, SendHorizontal, Smile, X } from "lucide-react-native";
+import { ArrowLeft, Gamepad2, Mic, MoreVertical, SendHorizontal, Smile, X } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -345,6 +345,7 @@ export function LiveRoom({ id }: { id: string }) {
   const socket = useRealtime().realtime?.socket;
   const [room, setRoom] = useState<LiveRoomDTO | null>(null);
   const [closed, setClosed] = useState<string | null>(null);
+  const [menu, setMenu] = useState(false);
   const [givingUp, setGivingUp] = useState(false);
 
   useEffect(() => {
@@ -368,11 +369,12 @@ export function LiveRoom({ id }: { id: string }) {
     };
   }, [socket, id]);
 
-  const leave = () => {
-    socket?.emit("live:leave", { roomId: id });
+  const exit = (event: "live:leave" | "live:end") => {
+    socket?.emit(event, { roomId: id });
     if (router.canGoBack()) router.back();
     else router.replace("/" as Href);
   };
+  const leave = () => exit("live:leave");
   const play: Play = async (move) => {
     if (!socket) return "OFFLINE";
     try {
@@ -414,7 +416,7 @@ export function LiveRoom({ id }: { id: string }) {
         </Text>
         {room && <HowToPlay game={room.game} size={22} />}
         {room?.status === "playing" && room.mySeat !== null && !closed && (
-          <IconButton Icon={Flag} label={tr.live.giveUp} onPress={() => setGivingUp(true)} />
+          <IconButton Icon={MoreVertical} label={tr.live.end} onPress={() => setMenu(true)} />
         )}
       </ScreenHeader>
       {closed ? (
@@ -464,6 +466,16 @@ export function LiveRoom({ id }: { id: string }) {
           </ScrollView>
           <RoomChat room={room} say={say} />
         </KeyboardAvoidingView>
+      )}
+      {menu && (
+        <Sheet
+          title={tr.live.endHint}
+          actions={[
+            { label: tr.live.end, destructive: true, onSelect: () => exit("live:end") },
+            { label: tr.live.giveUp, onSelect: () => setGivingUp(true) },
+          ]}
+          onClose={() => setMenu(false)}
+        />
       )}
       {givingUp && (
         <Sheet

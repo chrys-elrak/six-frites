@@ -16,6 +16,7 @@ import { prisma } from "../lib/prisma.js";
 import { pushQueue } from "../lib/queue.js";
 import { pushProviders } from "../push/providers.js";
 import { profilesFor } from "./contacts.js";
+import { supportCase } from "./users.js";
 import { messageInclude, toMessageDTO } from "./messages.js";
 import { memberMuted, supportProfile } from "./chats.js";
 
@@ -63,9 +64,12 @@ export async function queueReactionPush(messageId: string, authorId: string, rea
 }
 
 /** Whether `userId` is the person being helped in this chat with support, who sees the other side as Six Frites. */
-async function helpedBySupport(chatId: string, userId: string) {
+/** Someone as `userId` sees them in a chat: support is Six Frites to whoever it helps, and they are a Potato to support. */
+async function seenIn(chatId: string, userId: string, person: Parameters<Awaited<ReturnType<typeof profilesFor>>>[0]) {
   const chat = await prisma.chat.findUnique({ where: { id: chatId }, select: { supportUserId: true } });
-  return chat?.supportUserId === userId;
+  if (chat?.supportUserId === userId) return supportProfile(person.id);
+  const shown = (await profilesFor(prisma, userId, [person.id]))(person);
+  return chat?.supportUserId === person.id ? supportCase(shown, userId) : shown;
 }
 
 async function targetsFor(userId: string) {
@@ -105,9 +109,7 @@ export async function deliverPush(messageId: string, userId: string) {
   const targets = await targetsFor(userId);
   if (!targets.length) return 0;
 
-  const sender = (await helpedBySupport(m.chatId, userId))
-    ? supportProfile(m.senderId)
-    : (await profilesFor(prisma, userId, [m.senderId]))(m.sender);
+  const sender = await seenIn(m.chatId, userId, m.sender);
   const dto = toMessageDTO(m, userId);
   return sendToAll(targets, (t) => ({
     title: sender.displayName,
@@ -140,9 +142,7 @@ export async function deliverReactionPush(
 
   const reactor = await prisma.user.findUnique({ where: { id: reactorId } });
   if (!reactor) return 0;
-  const who = (await helpedBySupport(m.chatId, userId))
-    ? supportProfile(reactorId)
-    : (await profilesFor(prisma, userId, [reactorId]))(reactor);
+  const who = await seenIn(m.chatId, userId, reactor);
   const dto = toMessageDTO(m, userId);
   return sendToAll(targets, (t) => ({
     title: who.displayName,

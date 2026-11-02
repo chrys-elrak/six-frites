@@ -105,7 +105,7 @@ async function withTotals(rows: UserRow[]) {
   return rows.map((u) => toAdminUser(u, storage.get(u.id) ?? 0, invites(u.id)));
 }
 
-const ALIAS = /^frite\s*(\d{1,4})$/i;
+const ALIAS = /^(?:frite|potato)\s*(\d{1,4})$/i;
 
 /** The people someone sees under `alias`, each with everyone who sees them that way. */
 async function usersBehind(alias: string) {
