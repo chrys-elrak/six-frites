@@ -99,13 +99,13 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["me"],
         summary: "Create a contact link",
         description:
-          "Unlike your contact code, which changes once someone uses it, a contact link lets anyone add you until it expires or you delete it.",
+          "Unlike your contact code, which changes once someone uses it, a contact link lets anyone add you until it expires, a week at most, or you delete it. With maxUses, it expires once that many new contacts used it. You can have one at a time: CONTACT_LINK_LIMIT_REACHED otherwise.",
         security: [{ bearer: [] }],
         body: CreateContactLinkInput,
         response: { 201: ContactLinkDTO },
       },
     },
-    async (req, reply) => reply.status(201).send(await createContactLink(req.auth.userId, req.body.expiresAt)),
+    async (req, reply) => reply.status(201).send(await createContactLink(req.auth.userId, req.body)),
   );
 
   app.delete(

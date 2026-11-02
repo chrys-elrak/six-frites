@@ -194,6 +194,7 @@ export async function updateContact(
 ) {
   const contact = unwrap(await six.api.PATCH("/v1/contacts/{userId}", { params: { path: { userId } }, body: input }));
   void qc.invalidateQueries({ queryKey: ["contact", userId] });
+  void qc.invalidateQueries({ queryKey: ["contacts"] });
   void qc.invalidateQueries({ queryKey: ["referrals"] });
   void qc.invalidateQueries({ queryKey: chatKeys.lists });
   void qc.invalidateQueries({ queryKey: chatKeys.chat(contact.chatId) });
@@ -204,6 +205,7 @@ export async function updateContact(
 export async function removeContact(qc: QueryClient, chatId: string, userId: string) {
   unwrap(await six.api.DELETE("/v1/contacts/{userId}", { params: { path: { userId } } }));
   removeChat(qc, chatId);
+  void qc.invalidateQueries({ queryKey: ["contacts"] });
 }
 
 export async function updateChatSettings(

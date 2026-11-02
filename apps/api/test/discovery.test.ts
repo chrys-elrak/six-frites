@@ -125,31 +125,52 @@ describe("contact discovery", () => {
     expect(results.map((r) => r.statusCode).sort()).toEqual([200, 404]);
   });
 
-  it("lets anyone add you with a contact link until it expires or you delete it", async () => {
+  it("lets anyone add you with a contact link, one at a time, for a week at most or until you delete it", async () => {
     const owner = await signUp("linker");
     const [a, b, late] = [await signUp("link-a"), await signUp("link-b"), await signUp("link-late")];
     const codes = async () => (await get(owner, "/v1/me/contact-links")).items.map((l: { code: string }) => l.code);
+    const create = (expiresAt?: Date | null) =>
+      call(owner, "POST", "/v1/me/contact-links", expiresAt === undefined ? {} : { expiresAt: expiresAt?.toISOString() ?? null });
+    const aWeekOut = (link: { expiresAt: string }) => Math.abs(Date.parse(link.expiresAt) - (Date.now() + 7 * 864e5)) < 6e4;
     const { contactCode } = await get(owner, "/v1/me");
 
-    const forever = (await call(owner, "POST", "/v1/me/contact-links", { expiresAt: null })).json();
-    expect(forever).toMatchObject({ code: expect.stringMatching(/^[2-9A-HJ-NP-Z]{8}$/), expiresAt: null });
+    const link = (await create()).json();
+    expect(link.code).toMatch(/^[2-9A-HJ-NP-Z]{8}$/);
+    expect(aWeekOut(link)).toBe(true);
     for (const who of [a, b]) {
-      const added = await call(who, "POST", "/v1/contacts", { q: `https://six.example/add/${forever.code}` });
+      const added = await call(who, "POST", "/v1/contacts", { q: `https://six.example/add/${link.code}` });
       expect(added.json().user.id).toBe(owner.user.id);
     }
     expect((await get(owner, "/v1/me")).contactCode).toBe(contactCode);
+    expect((await create()).json().error.code).toBe("CONTACT_LINK_LIMIT_REACHED");
 
-    const soon = (await call(owner, "POST", "/v1/me/contact-links", { expiresAt: new Date(Date.now() + 6e4).toISOString() })).json();
-    expect(await codes()).toEqual([soon.code, forever.code]);
-    await prisma.contactLink.update({ where: { code: soon.code }, data: { expiresAt: new Date(Date.now() - 1000) } });
-    expect((await find(late, soon.code)).json().error.code).toBe("USER_NOT_FOUND");
-    expect(await codes()).toEqual([forever.code]);
-
-    expect((await call(owner, "DELETE", `/v1/me/contact-links/${forever.code}`)).statusCode).toBe(204);
-    expect((await find(late, forever.code)).json().error.code).toBe("USER_NOT_FOUND");
+    expect((await call(owner, "DELETE", `/v1/me/contact-links/${link.code}`)).statusCode).toBe(204);
+    expect((await find(late, link.code)).json().error.code).toBe("USER_NOT_FOUND");
     expect((await get(a, "/v1/contacts")).items.map((c: { user: { id: string } }) => c.user.id)).toEqual([owner.user.id]);
 
-    const past = await call(owner, "POST", "/v1/me/contact-links", { expiresAt: new Date(Date.now() - 1000).toISOString() });
-    expect(past.statusCode).toBe(400);
+    const soon = (await create(new Date(Date.now() + 6e4))).json();
+    expect(await codes()).toEqual([soon.code]);
+    await prisma.contactLink.update({ where: { code: soon.code }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    expect((await find(late, soon.code)).json().error.code).toBe("USER_NOT_FOUND");
+    expect(await codes()).toEqual([]);
+
+    expect(aWeekOut((await create(null)).json())).toBe(true);
+    await prisma.contactLink.deleteMany({ where: { userId: owner.user.id } });
+    expect(aWeekOut((await create(new Date(Date.now() + 30 * 864e5))).json())).toBe(true);
+
+    expect((await create(new Date(Date.now() - 1000))).statusCode).toBe(400);
+  });
+
+  it("stops a contact link once as many new contacts as allowed used it", async () => {
+    const owner = await signUp("few");
+    const [a, b, c] = [await signUp("few-a"), await signUp("few-b"), await signUp("few-c")];
+    const link = (await call(owner, "POST", "/v1/me/contact-links", { maxUses: 2 })).json();
+    expect(link).toMatchObject({ maxUses: 2, uses: 0 });
+
+    for (const who of [a, a, b]) expect((await call(who, "POST", "/v1/contacts", { q: link.code })).statusCode).toBe(200);
+    expect((await find(c, link.code)).json().error.code).toBe("USER_NOT_FOUND");
+    expect((await get(owner, "/v1/me/contact-links")).items).toEqual([]);
+    expect((await call(owner, "POST", "/v1/me/contact-links", { maxUses: 11 })).statusCode).toBe(400);
+    expect((await call(owner, "POST", "/v1/me/contact-links", {})).json()).toMatchObject({ maxUses: null, uses: 0 });
   });
 });

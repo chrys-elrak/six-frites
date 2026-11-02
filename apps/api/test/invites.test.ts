@@ -32,13 +32,23 @@ describe("invites", () => {
     expect(plain).toMatchObject({ maxUses: 1, message: null });
   });
 
-  it("caps links at 10 people and 30 days", async () => {
+  it("caps links at 10 people and 30 days, and all my working links together at my limit", async () => {
     const host = await signUp("greedy");
     for (const body of [{ maxUses: 11 }, { expiresInDays: 31 }, { maxUses: 0 }, { message: "x".repeat(501) }]) {
       const res = await ctx.app.inject({ method: "POST", url: "/v1/invites", headers: bearer(host.accessToken), payload: body });
       expect(res.statusCode).toBe(400);
     }
-    await createInvite(host.accessToken, { maxUses: 10, expiresInDays: 30 });
+    const big = await createInvite(host.accessToken, { maxUses: 10, expiresInDays: 30 });
+    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 10, invited: 0, waiting: 0, held: 10 });
+    expect((await call(host, "POST", "/v1/invites", {})).json().error.code).toBe("INVITE_LIMIT_REACHED");
+
+    await call(host, "POST", `/v1/invites/${big.code}/revoke`);
+    const ones = [];
+    for (let i = 0; i < 10; i++) ones.push(await createInvite(host.accessToken));
+    expect((await call(host, "POST", "/v1/invites", {})).json().error.code).toBe("INVITE_LIMIT_REACHED");
+    await signUp("joined", { inviteCode: ones[0].code });
+    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 10, invited: 1, waiting: 0, held: 9 });
+    expect((await call(host, "POST", "/v1/invites", {})).statusCode).toBe(409);
   });
 
   it("only counts new accounts, and labels them with the link", async () => {
@@ -131,9 +141,9 @@ describe("invites", () => {
   it("queues sign-ups past the inviter's limit until an admin raises it", async () => {
     const boss = await asAdmin(ctx.app);
     const host = await signUp("popular");
-    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 10, invited: 0, waiting: 0 });
-    await call(boss, "POST", `/v1/admin/users/${host.user.id}/invite-limit`, { limit: 1 });
+    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 10, invited: 0, waiting: 0, held: 0 });
     const { code } = await createInvite(host.accessToken, { maxUses: 3 });
+    await call(boss, "POST", `/v1/admin/users/${host.user.id}/invite-limit`, { limit: 1 });
 
     await signUp("first", { inviteCode: code });
     const late = uniqueSub("late");
@@ -143,7 +153,7 @@ describe("invites", () => {
     expect((await loginAs(ctx.app, late)).json().error.code).toBe("ACCOUNT_QUEUED");
     expect((await call(boss, "POST", "/v1/contacts", { q: `${late}@example.com` })).json().error.code).toBe("USER_NOT_FOUND");
 
-    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 1, invited: 1, waiting: 1 });
+    expect(await get(host, "/v1/me/invite-quota")).toEqual({ limit: 1, invited: 1, waiting: 1, held: 1 });
     expect((await get(host, "/v1/me/referrals")).items).toHaveLength(1);
     expect(await get(boss, `/v1/admin/users/${host.user.id}`)).toMatchObject({ inviteLimit: 1, invited: 1, waiting: 1 });
 

@@ -40,12 +40,24 @@ function inviteStatus(i: Invite): InviteStatus {
   return "valid";
 }
 
+/**
+ * A link for `maxUses` new accounts, taken from what my invite limit has left: everyone who joined with my
+ * links counts, and so does every place my working links still hold, so ten links for one person each, or
+ * one for ten, fill the same limit. Locks my row so two links can't both take the last places.
+ */
 export async function createInvite(userId: string, input: CreateInviteInput) {
   const expiresAt = new Date(Date.now() + input.expiresInDays * 864e5);
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      const invite = await prisma.invite.create({
-        data: { code: generateCode(), creatorId: userId, message: input.message || null, maxUses: input.maxUses, expiresAt },
+      const invite = await prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${userId} FOR UPDATE`;
+        const q = await quotaOf(tx, userId);
+        if (q.limit !== null && input.maxUses > q.limit - q.invited - q.waiting - q.held) {
+          throw new AppError("INVITE_LIMIT_REACHED", "Your links can't bring in that many more people");
+        }
+        return tx.invite.create({
+          data: { code: generateCode(), creatorId: userId, message: input.message || null, maxUses: input.maxUses, expiresAt },
+        });
       });
       return toInviteDTO(invite);
     } catch (err) {
@@ -119,10 +131,18 @@ async function roomLeft(tx: Tx, referrer: User) {
   return inviteLimit - (await invitesOf(tx, [referrer.id]))(referrer.id).invited;
 }
 
-export async function inviteQuota(userId: string): Promise<InviteQuota> {
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  return { limit: isAdminEmail(user.email) ? null : user.inviteLimit, ...(await invitesOf(prisma, [userId]))(userId) };
+async function quotaOf(db: Tx, userId: string): Promise<InviteQuota> {
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
+  const working = await db.invite.findMany({
+    where: { creatorId: userId, revokedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+    select: { maxUses: true, uses: true },
+  });
+  const limit = isAdminEmail(user.email) ? null : user.inviteLimit;
+  const held = working.reduce((n, i) => n + (i.maxUses === null ? (limit ?? 0) : Math.max(0, i.maxUses - i.uses)), 0);
+  return { limit, held, ...(await invitesOf(db, [userId]))(userId) };
 }
+
+export const inviteQuota = (userId: string) => quotaOf(prisma, userId);
 
 /**
  * Labels a new account with the link it signed up with and takes one of the link's places. If the link's

@@ -5031,10 +5031,22 @@
                             "description": "Works like your contact code, for anyone, until it expires or you delete it"
                           },
                           "expiresAt": {
-                            "nullable": true,
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "maxUses": {
+                            "nullable": true,
+                            "description": "How many people can add you with it; null for anyone",
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "uses": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "People who added you with it; ones you were already connected with don't count"
                           },
                           "createdAt": {
                             "type": "string",
@@ -5045,6 +5057,8 @@
                         "required": [
                           "code",
                           "expiresAt",
+                          "maxUses",
+                          "uses",
                           "createdAt"
                         ],
                         "additionalProperties": false
@@ -5066,7 +5080,7 @@
         "tags": [
           "me"
         ],
-        "description": "Unlike your contact code, which changes once someone uses it, a contact link lets anyone add you until it expires or you delete it.",
+        "description": "Unlike your contact code, which changes once someone uses it, a contact link lets anyone add you until it expires, a week at most, or you delete it. With maxUses, it expires once that many new contacts used it. You can have one at a time: CONTACT_LINK_LIMIT_REACHED otherwise.",
         "requestBody": {
           "required": true,
           "content": {
@@ -5075,16 +5089,20 @@
                 "type": "object",
                 "properties": {
                   "expiresAt": {
+                    "description": "When it stops working, at most 7 days from now, which is also what leaving it out gives",
                     "nullable": true,
-                    "description": "When it stops working; null keeps it until you delete it",
                     "type": "string",
                     "format": "date-time",
                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  "maxUses": {
+                    "description": "It expires once that many people added you with it; null or left out for anyone",
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
                   }
-                },
-                "required": [
-                  "expiresAt"
-                ]
+                }
               }
             }
           }
@@ -5107,10 +5125,22 @@
                       "description": "Works like your contact code, for anyone, until it expires or you delete it"
                     },
                     "expiresAt": {
-                      "nullable": true,
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "maxUses": {
+                      "nullable": true,
+                      "description": "How many people can add you with it; null for anyone",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "uses": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who added you with it; ones you were already connected with don't count"
                     },
                     "createdAt": {
                       "type": "string",
@@ -5121,6 +5151,8 @@
                   "required": [
                     "code",
                     "expiresAt",
+                    "maxUses",
+                    "uses",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -6247,12 +6279,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
                       "description": "People who signed up with your links after you hit the limit"
+                    },
+                    "held": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Places your links that still work keep for people who haven't joined yet"
                     }
                   },
                   "required": [
                     "limit",
                     "invited",
-                    "waiting"
+                    "waiting",
+                    "held"
                   ],
                   "additionalProperties": false
                 }
@@ -6400,7 +6439,7 @@
                         "direct",
                         "games"
                       ],
-                      "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
+                      "description": "`games` is your games inbox: Six Frites posts your results in live games against Frite Bot there, and nobody can write"
                     },
                     "title": {
                       "type": "string"
@@ -7037,7 +7076,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                         },
                         "location": {
                           "nullable": true,
@@ -8122,7 +8161,7 @@
                               "direct",
                               "games"
                             ],
-                            "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
+                            "description": "`games` is your games inbox: Six Frites posts your results in live games against Frite Bot there, and nobody can write"
                           },
                           "title": {
                             "type": "string"
@@ -8759,7 +8798,7 @@
                                     "additionalProperties": false
                                   }
                                 ],
-                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                               },
                               "location": {
                                 "nullable": true,
@@ -9828,7 +9867,7 @@
                         "direct",
                         "games"
                       ],
-                      "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
+                      "description": "`games` is your games inbox: Six Frites posts your results in live games against Frite Bot there, and nobody can write"
                     },
                     "title": {
                       "type": "string"
@@ -10465,7 +10504,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                         },
                         "location": {
                           "nullable": true,
@@ -11599,7 +11638,7 @@
                         "direct",
                         "games"
                       ],
-                      "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
+                      "description": "`games` is your games inbox: Six Frites posts your results in live games against Frite Bot there, and nobody can write"
                     },
                     "title": {
                       "type": "string"
@@ -12236,7 +12275,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                         },
                         "location": {
                           "nullable": true,
@@ -14151,7 +14190,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -15637,7 +15676,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -17113,7 +17152,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -18607,7 +18646,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -20244,7 +20283,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -21713,7 +21752,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                         },
                         "location": {
                           "nullable": true,
@@ -23193,7 +23232,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -24683,7 +24722,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -26274,7 +26313,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                           },
                           "location": {
                             "nullable": true,
@@ -28403,7 +28442,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -32080,7 +32119,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,
@@ -34652,7 +34691,7 @@
                                         "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -36108,7 +36147,7 @@
                                         "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -37119,7 +37158,7 @@
                                       "direct",
                                       "games"
                                     ],
-                                    "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
+                                    "description": "`games` is your games inbox: Six Frites posts your results in live games against Frite Bot there, and nobody can write"
                                   },
                                   "title": {
                                     "type": "string"
@@ -37756,7 +37795,7 @@
                                             "additionalProperties": false
                                           }
                                         ],
-                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                                       },
                                       "location": {
                                         "nullable": true,
@@ -41072,7 +41111,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends"
                     },
                     "location": {
                       "nullable": true,

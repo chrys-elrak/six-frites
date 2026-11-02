@@ -67,8 +67,13 @@ export const InviteQuota = z.object({
   limit: z.number().int().nullable().describe("How many people your links can bring in; null means no limit"),
   invited: z.number().int().describe("People who joined with your links"),
   waiting: z.number().int().describe("People who signed up with your links after you hit the limit"),
+  held: z.number().int().describe("Places your links that still work keep for people who haven't joined yet"),
 });
 export type InviteQuota = z.infer<typeof InviteQuota>;
+
+/** How many people a new link can be for: what my limit leaves after who joined and what my links hold. */
+export const invitePlacesLeft = (q: InviteQuota) =>
+  q.limit === null ? MAX_INVITE_USES : Math.max(0, Math.min(MAX_INVITE_USES, q.limit - q.invited - q.waiting - q.held));
 
 export const AcceptInviteResult = z.object({
   referrer: PublicUser,
@@ -91,11 +96,22 @@ export function expiryLabel(expiresAt: string, t: Dict) {
   );
 }
 
-/** "3 of 10 invites used · 2 waiting", or null when there's no limit. */
+/** Why I can't make another link, or null when I can. */
+export function inviteLimitNote(q: InviteQuota, t: Dict) {
+  if (invitePlacesLeft(q) > 0) return null;
+  return q.limit !== null && q.invited + q.waiting >= q.limit ? t.settings.inviteLimitReached : t.settings.placesHeld;
+}
+
+/** "3 of 10 invites used · 4 held by your links · 2 waiting", or null when there's no limit. */
 export function quotaSummary(q: InviteQuota, t: Dict) {
   if (q.limit === null) return null;
-  const used = t.settings.invitesUsed(q.invited, q.limit);
-  return q.waiting ? `${used} · ${t.settings.invitesWaiting(q.waiting)}` : used;
+  return [
+    t.settings.invitesUsed(q.invited, q.limit),
+    q.held && t.settings.invitesHeld(q.held),
+    q.waiting && t.settings.invitesWaiting(q.waiting),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 /** "2 of 5 joined · Expires in 3 days", or why the link no longer works. */

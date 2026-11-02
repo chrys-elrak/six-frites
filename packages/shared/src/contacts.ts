@@ -51,17 +51,33 @@ export type FoundUserDTO = z.infer<typeof FoundUserDTO>;
 export const AddContactInput = FindUserQuery;
 export type AddContactInput = FindUserQuery;
 
-export const MAX_CONTACT_LINKS = 10;
+export const MAX_CONTACT_LINKS = 1;
+
+/** How long a contact link works at most. */
+export const CONTACT_LINK_DAYS = 7;
+export const MAX_CONTACT_LINK_USES = 10;
 
 export const ContactLinkDTO = z.object({
   code: z.string().describe("Works like your contact code, for anyone, until it expires or you delete it"),
-  expiresAt: IsoDate.nullable(),
+  expiresAt: IsoDate,
+  maxUses: z.number().int().nullable().describe("How many people can add you with it; null for anyone"),
+  uses: z.number().int().describe("People who added you with it; ones you were already connected with don't count"),
   createdAt: IsoDate,
 });
 export type ContactLinkDTO = z.infer<typeof ContactLinkDTO>;
 
 export const CreateContactLinkInput = z.object({
-  expiresAt: IsoDate.nullable().describe("When it stops working; null keeps it until you delete it"),
+  expiresAt: IsoDate.nullable()
+    .optional()
+    .describe("When it stops working, at most 7 days from now, which is also what leaving it out gives"),
+  maxUses: z
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_CONTACT_LINK_USES)
+    .nullable()
+    .optional()
+    .describe("It expires once that many people added you with it; null or left out for anyone"),
 });
 export type CreateContactLinkInput = z.infer<typeof CreateContactLinkInput>;
 

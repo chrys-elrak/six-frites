@@ -12,9 +12,8 @@ import { AdminLink } from "./admin/admin-link";
 import { AndroidDownload } from "./android-download";
 import { Devices } from "./devices";
 import { EncryptionSettings, useHasRecoveryKey } from "./encryption-settings";
-import { FindMe } from "./find-me";
 import { LegalLinks } from "./legal-page";
-import { Invites, Referrals } from "./invites";
+import { Referrals } from "./invites";
 import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
@@ -113,9 +112,7 @@ export function SettingsPanel() {
           <LanguagePicker />
           <FontPicker />
           <QuickReactionsSettings />
-          <FindMe />
           <NotificationSettings />
-          <Invites />
           <Referrals />
           <AppLockSettings />
           <EncryptionSettings />
