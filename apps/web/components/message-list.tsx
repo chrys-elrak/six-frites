@@ -65,7 +65,17 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { VList, type VListHandle } from "virtua";
-import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, play, react, selfDestruct } from "@/lib/actions";
+import {
+  applyEdited,
+  check,
+  deleteMessage,
+  deleteMessages,
+  markOpenedLocally,
+  play,
+  react,
+  selfDestruct,
+  updateChatSettings,
+} from "@/lib/actions";
 import { type Hydrated, hydrate, messageFile } from "@/lib/e2ee";
 import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
@@ -1217,6 +1227,19 @@ export const MessageList = forwardRef<
               },
             ]),
         { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
+        ...(frozen || m.ephemeral || m.undecryptable || m.type === "service"
+          ? []
+          : [
+              {
+                label: chat.pinnedMessages.some((p) => p.id === m.id) ? tr.messages.unpin : tr.messages.pin,
+                onSelect: () =>
+                  void updateChatSettings(
+                    qc,
+                    chat.id,
+                    chat.pinnedMessages.some((p) => p.id === m.id) ? { unpin: m.id } : { pin: m.id },
+                  ).catch(() => null),
+              },
+            ]),
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
           : []),

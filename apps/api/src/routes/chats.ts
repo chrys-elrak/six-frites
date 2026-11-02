@@ -144,7 +144,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["chats"],
         summary: "Archive, mute or pin a chat, or set its auto-delete timer",
         description:
-          "`archived`, `muted` and `pinned` only change your view. `autoDeleteSecs` and `theme` apply to both people and each posts a `service` message: messages sent after an auto-delete change are deleted for everyone that long after sending, and `theme` sets the chat background (null for each person's default).",
+          "`archived`, `muted` and `pinned` only change your view. `autoDeleteSecs`, `theme`, `pin` and `unpin` apply to both people and each posts a `service` message (except unpinning): messages sent after an auto-delete change are deleted for everyone that long after sending, and `theme` sets the chat background (null for each person's default).",
         security,
         params: ChatParams,
         body: UpdateChatInput,

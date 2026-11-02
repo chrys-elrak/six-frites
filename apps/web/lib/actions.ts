@@ -20,7 +20,7 @@ import {
   resetMessages,
   upsertChat,
 } from "./chats";
-import { type Hydrated, e2ee, hydrate } from "./e2ee";
+import { type Hydrated, e2ee, hydrate, hydrateChat } from "./e2ee";
 import { useSession } from "./session";
 import { six } from "./six";
 
@@ -32,7 +32,11 @@ export function applyEdited(qc: QueryClient, m: MessageDTO) {
         ? { ...x, replyTo: { ...x.replyTo, text: m.text === null ? null : maskSpoilers(m.text, m.entities) } }
         : x,
   );
-  patchChat(qc, m.chatId, (c) => (c.lastMessage?.id === m.id ? { ...c, lastMessage: m } : c));
+  patchChat(qc, m.chatId, (c) => ({
+    ...c,
+    lastMessage: c.lastMessage?.id === m.id ? m : c.lastMessage,
+    pinnedMessages: c.pinnedMessages.map((x) => (x.id === m.id ? m : x)),
+  }));
 }
 
 /** Adds or removes one of my reactions, showing the change before the server answers. */
@@ -211,9 +215,12 @@ export async function removeContact(qc: QueryClient, chatId: string, userId: str
 export async function updateChatSettings(
   qc: QueryClient,
   chatId: string,
-  input: Partial<Pick<ChatDTO, "archived" | "muted" | "mutedUntil" | "pinned" | "safeView" | "autoDeleteSecs" | "vanish" | "theme">>,
+  input: Partial<Pick<ChatDTO, "archived" | "muted" | "mutedUntil" | "pinned" | "safeView" | "autoDeleteSecs" | "vanish" | "theme">> & {
+    pin?: string;
+    unpin?: string;
+  },
 ) {
-  const chat = unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input }));
+  const chat = await hydrateChat(unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input })));
   upsertChat(qc, chat);
   return chat;
 }

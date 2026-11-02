@@ -336,6 +336,8 @@ model Message {
   deletedAt    DateTime?
   deletedById  String?
   expiresAt    DateTime?
+  /// When someone pinned it to the top of the chat, for both people.
+  pinnedAt     DateTime?
 
   chat             Chat               @relation(fields: [chatId], references: [id], onDelete: Cascade)
   sender           User               @relation(fields: [senderId], references: [id], onDelete: Cascade)

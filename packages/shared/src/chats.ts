@@ -168,6 +168,7 @@ export const ServiceAction = z
     z.object({ type: z.literal("theme"), theme: z.string().nullable() }),
     z.object({ type: z.literal("e2ee") }),
     z.object({ type: z.literal("vanish"), on: z.boolean() }),
+    z.object({ type: z.literal("pin") }),
     z.object({
       type: z.literal("call"),
       video: z.boolean(),
@@ -176,9 +177,12 @@ export const ServiceAction = z
     z.object({ type: z.literal("live_invite"), game: z.enum(LIVE_GAMES), roomId: z.string(), from: z.string() }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
+
+/** How many messages a chat can have pinned at once. */
+export const PIN_LIMIT = 20;
 
 /** Allowed range for a chat's auto-delete timer, in seconds. */
 export const AUTO_DELETE = { min: 60 * 60, max: 365 * 24 * 60 * 60 } as const;
@@ -466,6 +470,9 @@ export const ChatDTO = z.object({
     .string()
     .nullable()
     .describe("Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default"),
+  pinnedMessages: z
+    .array(MessageDTO)
+    .describe(`Shared by both people: the messages pinned at the top of the chat, newest pin first, at most ${PIN_LIMIT}`),
   scheduledCount: z.number().int().describe("Your scheduled messages waiting to be sent in this chat"),
   draft: z
     .object({
@@ -584,6 +591,8 @@ export const UpdateChatInput = z
     pinned: z.boolean().optional(),
     safeView: z.boolean().optional().describe("Just for you: blur the photos and videos the other person sends"),
     vanish: z.boolean().optional().describe("For both people: turn vanish mode on or off"),
+    pin: Id.optional().describe(`For both people: pin this message. Past ${PIN_LIMIT} pins, the oldest is unpinned.`),
+    unpin: Id.optional().describe("For both people: unpin this message"),
     draft: z
       .union([z.object({ text: z.string().max(4000) }), z.object({ sealed: z.string().max(12000) })])
       .nullable()

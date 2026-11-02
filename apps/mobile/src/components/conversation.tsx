@@ -1,12 +1,12 @@
-import { type MessageDTO, chatTheme, durationLabel } from "@six/shared";
+import { type MessageDTO, chatTheme, durationLabel, previewText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
+import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { closeChat, deleteMessages } from "@/lib/actions";
+import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { isFrozen, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
@@ -16,7 +16,7 @@ import { brand, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { BubbleColorsContext } from "@/lib/bubble-colors";
 import { startCall, useCall } from "@/lib/calls";
-import { useKeyChanges } from "@/lib/e2ee";
+import { useHydratedMessage, useKeyChanges } from "@/lib/e2ee";
 import { useTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
@@ -28,6 +28,35 @@ import { MessageList, type MessageListHandle } from "./message-list";
 import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 import { IconButton, Loading, ScreenHeader, TextButton } from "./ui";
+
+function PinnedBar({
+  message,
+  label,
+  meId,
+  onJump,
+  onUnpin,
+}: {
+  message: MessageDTO;
+  label: string;
+  meId: string;
+  onJump: () => void;
+  onUnpin?: () => void;
+}) {
+  const t = useTheme();
+  const tr = useT();
+  const m = useHydratedMessage(meId, message);
+  return (
+    <View style={[styles.pinned, { backgroundColor: t.bar, borderColor: t.border }]}>
+      <Pressable onPress={onJump} accessibilityRole="button" style={styles.pinnedText}>
+        <Text style={{ color: brand, fontSize: 12, fontWeight: "700" }}>{label}</Text>
+        <Text numberOfLines={1} style={{ color: t.textSoft, fontSize: 14 }}>
+          {m && previewText(m, tr)}
+        </Text>
+      </Pressable>
+      {onUnpin && <IconButton Icon={PinOff} label={tr.messages.unpin} size={18} onPress={onUnpin} />}
+    </View>
+  );
+}
 
 export function Conversation({ chatId }: { chatId: string }) {
   const t = useTheme();
@@ -43,6 +72,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [shared, setShared] = useState<SharedTab | null>(null);
   const [searchFor, setSearchFor] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pinIndex, setPinIndex] = useState(0);
   const typing = useTyping(chatId);
   const inCall = useCall((s) => s.call !== null);
   const keyChanges = useKeyChanges((s) => s.userIds);
@@ -113,6 +143,8 @@ export function Conversation({ chatId }: { chatId: string }) {
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
   const app = c.withSupport;
   const count = selecting ? selectedIds.length : 0;
+  const pins = c.pinnedMessages;
+  const pin = pins[pinIndex % (pins.length || 1)];
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/"));
 
   const selectable = () =>
@@ -199,6 +231,18 @@ export function Conversation({ chatId }: { chatId: string }) {
         </ScreenHeader>
       )}
 
+      {!selecting && pin && (
+        <PinnedBar
+          message={pin}
+          label={pins.length > 1 ? tr.messages.pinnedOf(pins.indexOf(pin) + 1, pins.length) : tr.messages.pinnedMessage}
+          meId={meId}
+          onJump={() => {
+            list.current?.jumpTo(pin.id);
+            setPinIndex((pins.indexOf(pin) + 1) % pins.length);
+          }}
+          onUnpin={frozen ? undefined : () => void updateChatSettings(qc, chatId, { unpin: pin.id }).catch(() => null)}
+        />
+      )}
       {keyChanges.includes(peer.id) && !selecting && !c.withSupport && (
         <Pressable
           onPress={() => {
@@ -309,6 +353,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  pinned: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 16,
+    paddingRight: 4,
+    paddingVertical: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  pinnedText: { flex: 1, borderLeftWidth: 2, borderLeftColor: brand, paddingLeft: 8, paddingVertical: 2 },
   peer: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 12, paddingVertical: 2, paddingRight: 8 },
   closed: { fontSize: 13, textAlign: "center", paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
 });

@@ -3,6 +3,7 @@ import type { Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   MAX_MUTE_SECS,
+  PIN_LIMIT,
   type ChatDTO,
   type ChatListQuery,
   type ChatDeliveredDTO,
@@ -88,8 +89,13 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
 
   const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
   const readFloor = [me.lastReadAt, me.clearedAt].filter((d): d is Date => d !== null).sort((a, b) => +b - +a)[0];
-  const [lastMessage, unreadCount, scheduledCount] = await Promise.all([
+  const [lastMessage, pinnedMessages, unreadCount, scheduledCount] = await Promise.all([
     db.message.findFirst({ where: visible, orderBy: newestFirst, include: messageInclude }),
+    db.message.findMany({
+      where: { ...visible, pinnedAt: { not: null }, deletedAt: null },
+      orderBy: { pinnedAt: "desc" },
+      include: messageInclude,
+    }),
     db.message.count({
       where: {
         ...visible,
@@ -127,6 +133,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     autoDeleteSecs: chat.autoDeleteSecs,
     vanish: chat.vanish,
     theme: chat.theme,
+    pinnedMessages: pinnedMessages.map((m) => toMessageDTO(m, viewerId)),
     scheduledCount,
     blockedByMe: blocks.byMe,
     blockedByThem: blocks.byThem,
@@ -273,13 +280,14 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
 }
 
 /**
- * Archive, mute and pin only change this member's view. The auto-delete timer, vanish mode and the
- * background are shared: changing one posts a service message and updates the chat for everyone.
+ * Archive, mute and pin only change this member's view. The auto-delete timer, vanish mode, the background
+ * and pinned messages are shared: changing one updates the chat for everyone, and all but unpinning
+ * post a service message. Pinning past PIN_LIMIT unpins the oldest.
  */
 export async function updateChat(
   userId: string,
   chatId: string,
-  { autoDeleteSecs, vanish, theme, muted, mutedUntil, draft, ...view }: UpdateChatInput,
+  { autoDeleteSecs, vanish, theme, pin, unpin, muted, mutedUntil, draft, ...view }: UpdateChatInput,
 ) {
   const mine = {
     ...view,
@@ -291,7 +299,7 @@ export async function updateChat(
     }),
   };
   return withEvents(async (tx, emit) => {
-    await assertMember(tx, chatId, userId);
+    const me = await assertMember(tx, chatId, userId);
     if (Object.values(mine).some((v) => v !== undefined)) {
       await tx.chatMember.update({ where: { chatId_userId: { chatId, userId } }, data: mine });
     }
@@ -303,7 +311,25 @@ export async function updateChat(
     }
     if (vanish !== undefined && vanish !== chat.vanish) actions.push({ type: "vanish", on: vanish });
     if (theme !== undefined && theme !== chat.theme) actions.push({ type: "theme", theme });
-    if (!actions.length) {
+    const pinning = pin
+      ? await tx.message.findFirst({
+          where: {
+            ...visibleTo(userId, me.clearedAt),
+            id: pin,
+            chatId,
+            deletedAt: null,
+            type: { not: "service" },
+            maxViews: null,
+            ttlSeconds: null,
+          },
+        })
+      : null;
+    const unpinning = unpin ? await tx.message.findFirst({ where: { id: unpin, chatId } }) : null;
+    if ((pin && !pinning) || (unpin && !unpinning)) throw new AppError("MESSAGE_NOT_FOUND");
+    const pins = !!pinning && !pinning.pinnedAt;
+    const unpins = !!unpinning?.pinnedAt;
+    if (pins) actions.push({ type: "pin" });
+    if (!actions.length && !unpins) {
       const dto = await getChat(userId, chatId, tx);
       emit(userId, "chat.updated", dto);
       return dto;
@@ -317,6 +343,17 @@ export async function updateChat(
         ...(theme !== undefined && { theme }),
       },
     });
+    if (unpins) await tx.message.update({ where: { id: unpin }, data: { pinnedAt: null } });
+    if (pins) {
+      await tx.message.update({ where: { id: pin }, data: { pinnedAt: new Date() } });
+      const over = await tx.message.findMany({
+        where: { chatId, pinnedAt: { not: null } },
+        orderBy: { pinnedAt: "desc" },
+        skip: PIN_LIMIT,
+        select: { id: true },
+      });
+      if (over.length) await tx.message.updateMany({ where: { id: { in: over.map((m) => m.id) } }, data: { pinnedAt: null } });
+    }
     for (const action of actions) {
       const clientId = `${action.type.replace("_", "-")}-${createId()}`;
       await createMessage(tx, emit, userId, chatId, { clientId, action });

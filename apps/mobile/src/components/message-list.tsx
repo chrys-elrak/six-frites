@@ -60,7 +60,17 @@ import {
 } from "react-native";
 import { Text } from "./text";
 import Animated from "react-native-reanimated";
-import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, play, react, selfDestruct } from "@/lib/actions";
+import {
+  applyEdited,
+  check,
+  deleteMessage,
+  deleteMessages,
+  markOpenedLocally,
+  play,
+  react,
+  selfDestruct,
+  updateChatSettings,
+} from "@/lib/actions";
 import { useLatest } from "@/lib/latest";
 import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
@@ -1216,6 +1226,19 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
               },
             ]),
         { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
+        ...(frozen || m.ephemeral || m.type === "service"
+          ? []
+          : [
+              {
+                label: chat.pinnedMessages.some((p) => p.id === m.id) ? tr.messages.unpin : tr.messages.pin,
+                onSelect: () =>
+                  void updateChatSettings(
+                    qc,
+                    chat.id,
+                    chat.pinnedMessages.some((p) => p.id === m.id) ? { unpin: m.id } : { pin: m.id },
+                  ).catch(() => null),
+              },
+            ]),
         ...(m.ephemeral || frozen
           ? []
           : [

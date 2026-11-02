@@ -42,6 +42,7 @@ export function serviceText(m: Pick<MessageDTO, "action">, t: Dict, mine = false
   if (a?.type === "theme") return a.theme ? t.summary.background(themeName(a.theme, t)) : t.summary.backgroundReset;
   if (a?.type === "e2ee") return t.summary.encrypted;
   if (a?.type === "vanish") return a.on ? t.summary.vanishOn : t.summary.vanishOff;
+  if (a?.type === "pin") return t.summary.pinned;
   if (a?.type === "call") return callText(a, t);
   if (a?.type === "live_invite") return liveText(a, t, mine);
   return a?.secs ? t.summary.autoDeleteAfter(durationLabel(a.secs, t)) : t.summary.autoDeleteOff;
@@ -63,6 +64,7 @@ export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | nul
   }
   if (a?.type === "e2ee") return t.summary.turnedOnEncryption(who);
   if (a?.type === "vanish") return a.on ? t.summary.turnedOnVanish(who) : t.summary.turnedOffVanish(who);
+  if (a?.type === "pin") return t.summary.pinnedMessage(who);
   if (a?.type === "call") return t.summary.called(who, callText(a, t));
   if (a?.type === "live_invite") return liveText(a, t, who === null);
   return a?.secs ? t.summary.setAutoDelete(who, durationLabel(a.secs, t)) : t.summary.turnedOffAutoDelete(who);

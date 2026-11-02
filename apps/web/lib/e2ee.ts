@@ -141,7 +141,11 @@ export async function hydrate<T extends MessageDTO>(m: T): Promise<Hydrated<T>> 
 export const hydrateAll = <T extends MessageDTO>(items: T[]) => Promise.all(items.map(hydrate));
 
 export async function hydrateChat<T extends ChatDTO>(chat: T): Promise<T> {
-  return chat.lastMessage ? { ...chat, lastMessage: await hydrate(chat.lastMessage) } : chat;
+  const [lastMessage, pinnedMessages] = await Promise.all([
+    chat.lastMessage && hydrate(chat.lastMessage),
+    hydrateAll(chat.pinnedMessages),
+  ]);
+  return { ...chat, lastMessage, pinnedMessages };
 }
 
 /**

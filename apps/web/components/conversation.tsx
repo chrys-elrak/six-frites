@@ -1,12 +1,12 @@
 "use client";
 
-import { type MessageDTO, durationLabel, isFrozen, isMuted } from "@six/shared";
+import { type MessageDTO, durationLabel, isFrozen, isMuted, previewText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { closeChat, deleteMessages } from "@/lib/actions";
+import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { startCall, useCall } from "@/lib/call";
 import { useIdentityChanges } from "@/lib/e2ee";
 import { useChat, useMessages } from "@/lib/chats";
@@ -29,7 +29,7 @@ import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 
 const headerClass =
-  "absolute inset-x-0 top-0 z-10 flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
+  "flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
 const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
 
@@ -78,6 +78,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const [shared, setShared] = useState<SharedTab | null>(null);
   const [searchFor, setSearchFor] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pinIndex, setPinIndex] = useState(0);
   const [head, headHeight] = useHeight();
   const [foot, footHeight] = useHeight();
   const typing = useTyping(chatId);
@@ -151,6 +152,8 @@ export function Conversation({ chatId }: { chatId: string }) {
   const app = c.withSupport;
   const shownPresence = frozen || c.withSupport ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
+  const pins = c.pinnedMessages;
+  const pin = pins[pinIndex % (pins.length || 1)];
 
   const selectable = () =>
     (messages.data?.pages.flatMap((p) => p.items) ?? []).filter((m) => m.type !== "service").map((m) => m.id);
@@ -180,96 +183,126 @@ export function Conversation({ chatId }: { chatId: string }) {
       <ChatBackground themeId={c.theme} />
       <div className="relative flex min-h-0 flex-1">
         <div className="relative flex min-w-0 flex-1 flex-col">
-          {selecting ? (
-            <header ref={head} className={headerClass}>
-              <button onClick={clearSelection} aria-label={tr.chat.cancelSelection} className={iconButton}>
-                <X className="size-5" />
-              </button>
-              <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}</p>
-              {count >= 2 && (
-                <button onClick={selectBetween} aria-label={tr.chat.selectBetween} title={tr.chat.selectBetween} className={iconButton}>
-                  <ChevronsUpDown className="size-5" />
+          <div ref={head} className="absolute inset-x-0 top-0 z-10">
+            {selecting ? (
+              <header className={headerClass}>
+                <button onClick={clearSelection} aria-label={tr.chat.cancelSelection} className={iconButton}>
+                  <X className="size-5" />
                 </button>
-              )}
-              <button
-                onClick={() => setConfirmDelete(true)}
-                disabled={count === 0}
-                aria-label={tr.chat.deleteSelected}
-                className={`${iconButton} text-red-600 disabled:opacity-40 dark:text-red-400`}
-              >
-                <Trash2 className="size-5" />
-              </button>
-            </header>
-          ) : (
-            <header ref={head} className={headerClass}>
-              <Link
-                href={c.archived ? "/archived" : "/"}
-                aria-label={tr.common.backToChats}
-                className={`${iconButton} md:hidden`}
-              >
-                <ChevronLeft className="size-6" />
-              </Link>
-              <button
-                onClick={() => !app && setEditing(true)}
-                className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${app ? "cursor-default" : "cursor-pointer"}`}
-                aria-label={app ? c.title : tr.chat.editContact(c.title)}
-              >
-                <Avatar user={peer} online={shownPresence?.online} />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1 font-semibold">
-                    <span className="truncate">{c.title}</span>
-                    {c.supportDesk && (
-                      <span className="shrink-0 rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide text-brand uppercase">{tr.support.title}</span>
+                <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}</p>
+                {count >= 2 && (
+                  <button onClick={selectBetween} aria-label={tr.chat.selectBetween} title={tr.chat.selectBetween} className={iconButton}>
+                    <ChevronsUpDown className="size-5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={count === 0}
+                  aria-label={tr.chat.deleteSelected}
+                  className={`${iconButton} text-red-600 disabled:opacity-40 dark:text-red-400`}
+                >
+                  <Trash2 className="size-5" />
+                </button>
+              </header>
+            ) : (
+              <header className={headerClass}>
+                <Link
+                  href={c.archived ? "/archived" : "/"}
+                  aria-label={tr.common.backToChats}
+                  className={`${iconButton} md:hidden`}
+                >
+                  <ChevronLeft className="size-6" />
+                </Link>
+                <button
+                  onClick={() => !app && setEditing(true)}
+                  className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${app ? "cursor-default" : "cursor-pointer"}`}
+                  aria-label={app ? c.title : tr.chat.editContact(c.title)}
+                >
+                  <Avatar user={peer} online={shownPresence?.online} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1 font-semibold">
+                      <span className="truncate">{c.title}</span>
+                      {c.supportDesk && (
+                        <span className="shrink-0 rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide text-brand uppercase">{tr.support.title}</span>
+                      )}
+                      {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
+                    </span>
+                    {typing ? (
+                      <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
+                    ) : (
+                      (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport) && (
+                        <span className="line-clamp-2 text-xs text-stone-500">
+                          {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
+                          {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs || c.support) && " · "}
+                          {[
+                            c.support && tr.support.title,
+                            c.withSupport && tr.support.team,
+                            !shownPresence?.online && presenceLabel(shownPresence),
+                            c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
+                            muted && (c.mutedUntil ? tr.chat.mutedUntil(sendAtLabel(c.mutedUntil)) : tr.common.muted),
+                            c.archived && tr.common.archived,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      )
                     )}
-                    {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
                   </span>
-                  {typing ? (
-                    <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
-                  ) : (
-                    (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport) && (
-                      <span className="line-clamp-2 text-xs text-stone-500">
-                        {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
-                        {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs || c.support) && " · "}
-                        {[
-                          c.support && tr.support.title,
-                          c.withSupport && tr.support.team,
-                          !shownPresence?.online && presenceLabel(shownPresence),
-                          c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
-                          muted && (c.mutedUntil ? tr.chat.mutedUntil(sendAtLabel(c.mutedUntil)) : tr.common.muted),
-                          c.archived && tr.common.archived,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    )
-                  )}
-                </span>
-              </button>
-              {!frozen && !c.support && !c.withSupport && (
-                <>
+                </button>
+                {!frozen && !c.support && !c.withSupport && (
+                  <>
+                    <button
+                      onClick={() => void startCall(c, meId, false)}
+                      disabled={inCall || !realtime}
+                      aria-label={tr.chat.voiceCall}
+                      className={`${iconButton} disabled:opacity-40`}
+                    >
+                      <Phone className="size-5" />
+                    </button>
+                    <button
+                      onClick={() => void startCall(c, meId, true)}
+                      disabled={inCall || !realtime}
+                      aria-label={tr.chat.videoCall}
+                      className={`${iconButton} disabled:opacity-40`}
+                    >
+                      <Video className="size-5" />
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setMenu(true)} aria-label={tr.chat.options} className={iconButton}>
+                  <MoreVertical className="size-5" />
+                </button>
+              </header>
+            )}
+            {!selecting && pin && (
+              <div className="flex items-center gap-1 border-b border-black/5 bg-stone-50/45 py-1 pr-2 pl-4 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
+                <button
+                  onClick={() => {
+                    list.current?.jumpTo(pin.id);
+                    setPinIndex((pins.indexOf(pin) + 1) % pins.length);
+                  }}
+                  className="min-w-0 flex-1 border-l-2 border-brand py-0.5 pl-2 text-left"
+                >
+                  <span className="block text-xs font-semibold text-brand">
+                    {pins.length > 1 ? tr.messages.pinnedOf(pins.indexOf(pin) + 1, pins.length) : tr.messages.pinnedMessage}
+                  </span>
+                  <span className="block truncate text-sm text-stone-600 dark:text-stone-300">
+                    {previewText(pin, tr)}
+                  </span>
+                </button>
+                {!frozen && (
                   <button
-                    onClick={() => void startCall(c, meId, false)}
-                    disabled={inCall || !realtime}
-                    aria-label={tr.chat.voiceCall}
-                    className={`${iconButton} disabled:opacity-40`}
+                    onClick={() => void updateChatSettings(qc, chatId, { unpin: pin.id }).catch(() => null)}
+                    aria-label={tr.messages.unpin}
+                    title={tr.messages.unpin}
+                    className={iconButton}
                   >
-                    <Phone className="size-5" />
+                    <PinOff className="size-4" />
                   </button>
-                  <button
-                    onClick={() => void startCall(c, meId, true)}
-                    disabled={inCall || !realtime}
-                    aria-label={tr.chat.videoCall}
-                    className={`${iconButton} disabled:opacity-40`}
-                  >
-                    <Video className="size-5" />
-                  </button>
-                </>
-              )}
-              <button onClick={() => setMenu(true)} aria-label={tr.chat.options} className={iconButton}>
-                <MoreVertical className="size-5" />
-              </button>
-            </header>
-          )}
+                )}
+              </div>
+            )}
+          </div>
           <div className="relative flex min-h-0 flex-1 flex-col">
             <BubbleColors themeId={c.theme} scope="chat-colors" />
             <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
