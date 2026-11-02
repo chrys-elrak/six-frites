@@ -8,11 +8,13 @@ import {
   LIVE_EMOJI,
   LIVE_GAMES,
   type LiveGame,
+  type LiveInviteDTO,
   isBotGame,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
@@ -32,6 +34,15 @@ export function GamesPanel() {
   const [chat, setChat] = useState<ChatDTO | null>(null);
   const [bot, setBot] = useState(false);
   const [live, setLive] = useState<LiveGame | null>(null);
+  const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
+
+  useEffect(() => {
+    void realtime?.socket
+      .timeout(10_000)
+      .emitWithAck("live:mine", {})
+      .then((res) => res.ok && setMine(res.data))
+      .catch(() => null);
+  }, [realtime]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -39,6 +50,26 @@ export function GamesPanel() {
         <h1 className="flex-1 text-xl font-semibold tracking-tight">{tr.common.games}</h1>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {mine.length > 0 && (
+          <div className="mx-auto w-full max-w-lg px-4 pt-4 lg:max-w-5xl lg:px-6 lg:pt-6">
+            <h2 className="text-sm font-semibold tracking-wide text-stone-500 uppercase dark:text-stone-400">
+              {tr.live.inProgress}
+            </h2>
+            <div className="mt-3 grid gap-3 lg:grid-cols-3">
+              {mine.map((r) => (
+                <Link
+                  key={r.roomId}
+                  href={`/play/${r.roomId}`}
+                  className="flex items-center gap-3 rounded-2xl bg-brand/15 p-3 ring-1 ring-brand transition active:scale-[0.98]"
+                >
+                  <span className="text-2xl">{LIVE_EMOJI[r.game]}</span>
+                  <span className="min-w-0 flex-1 truncate font-semibold">{tr.live.games[r.game]}</span>
+                  <span className="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-brand-ink">{tr.live.resume}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="mx-auto w-full max-w-lg px-4 pt-4 lg:max-w-5xl lg:px-6 lg:pt-6">
           <h2 className="text-sm font-semibold tracking-wide text-stone-500 uppercase dark:text-stone-400">
             {tr.live.title}

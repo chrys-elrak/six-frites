@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const RATE = 44100;
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const out = [join(root, "apps/mobile/assets/tones"), join(root, "apps/web/public/tones")];
+const toneDirs = [join(root, "apps/mobile/assets/tones"), join(root, "apps/web/public/tones")];
+const soundDirs = [join(root, "apps/mobile/assets/sounds"), join(root, "apps/web/public/sounds")];
 
 const note = (at, freq, decay, extra = {}) => ({ at, freq, decay, gain: 1, attack: 0.01, ...extra });
 const bell = (at, freq, decay) => [
@@ -24,11 +25,35 @@ const TONES = {
   blip: [note(0, 660, 0.12, { to: 990, sweep: 0.04, attack: 0.004 }), note(0.08, 990, 0.28, { to: 1320, sweep: 0.03, attack: 0.004 })],
 };
 
+const click = (at, freq) => [note(at, freq, 0.035, { attack: 0.001 }), note(at, freq * 0.23, 0.05, { gain: 0.5, attack: 0.001 })];
+
+/** Game sound effects, with how loud each one plays. */
+const SOUNDS = {
+  dice: {
+    level: 0.5,
+    notes: [
+      ...[[0, 2600], [0.05, 1900], [0.28, 2400], [0.32, 3000], [0.6, 2200], [0.7, 2800]].flatMap(([at, f]) => click(at, f)),
+      note(0.28, 170, 0.09, { attack: 0.002 }),
+      note(0.6, 190, 0.07, { attack: 0.002, gain: 0.6 }),
+    ],
+  },
+  step: { level: 0.3, notes: [note(0, 1050, 0.07, { attack: 0.002 }), note(0, 3200, 0.025, { gain: 0.3, attack: 0.001 })] },
+  capture: { level: 0.6, notes: [note(0, 720, 0.4, { to: 130, sweep: 0.3, attack: 0.004 }), note(0, 1440, 0.2, { to: 260, sweep: 0.3, gain: 0.3 })] },
+  home: { level: 0.55, notes: [note(0, 1046.5, 0.18), note(0.07, 1318.5, 0.18), note(0.14, 1568, 0.18), note(0.21, 2093, 0.45)] },
+  win: {
+    level: 0.6,
+    notes: [
+      ...[784, 1046.5, 1318.5].map((f, i) => note(i * 0.13, f, 0.3)),
+      ...[1568, 1318.5, 1046.5].map((f, i) => note(0.39, f, 1.1, { gain: i ? 0.45 : 1 })),
+    ],
+  },
+};
+
 /**
  * Adds up sine partials, each with a short linear attack, an exponential decay reaching -60 dB after `decay`
  * seconds, and optionally an exponential pitch sweep to `to` over `sweep` seconds.
  */
-function render(notes) {
+function render(notes, level = 0.6) {
   const length = Math.ceil((Math.max(...notes.map((n) => n.at + n.attack + n.decay)) + 0.05) * RATE);
   const samples = new Float64Array(length);
   for (const n of notes) {
@@ -56,13 +81,16 @@ function render(notes) {
   pcm.writeUInt16LE(16, 34);
   pcm.write("data", 36);
   pcm.writeUInt32LE(length * 2, 40);
-  samples.forEach((s, i) => pcm.writeInt16LE(Math.round((s / peak) * 0.6 * 32767), 44 + i * 2));
+  samples.forEach((s, i) => pcm.writeInt16LE(Math.round((s / peak) * level * 32767), 44 + i * 2));
   return pcm;
 }
 
-for (const dir of out) mkdirSync(dir, { recursive: true });
-for (const [name, notes] of Object.entries(TONES)) {
-  const wav = render(notes);
-  for (const dir of out) writeFileSync(join(dir, `${name}.wav`), wav);
+const write = (dirs, name, wav) => {
+  for (const dir of dirs) {
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, `${name}.wav`), wav);
+  }
   console.log(name, `${(wav.length / 1024).toFixed(0)} KB`);
-}
+};
+for (const [name, notes] of Object.entries(TONES)) write(toneDirs, name, render(notes));
+for (const [name, { level, notes }] of Object.entries(SOUNDS)) write(soundDirs, name, render(notes, level));

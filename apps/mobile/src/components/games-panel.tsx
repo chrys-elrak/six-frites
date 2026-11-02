@@ -1,19 +1,29 @@
-import { CHAT_GAMES, type ChatDTO, GAME_EMOJI, type GameKind, LIVE_EMOJI, LIVE_GAMES, type LiveGame, isBotGame } from "@six/shared";
+import {
+  CHAT_GAMES,
+  type ChatDTO,
+  GAME_EMOJI,
+  type GameKind,
+  LIVE_EMOJI,
+  LIVE_GAMES,
+  type LiveGame,
+  type LiveInviteDTO,
+  isBotGame,
+} from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
-import { useTheme } from "@/lib/theme";
+import { brand, useTheme } from "@/lib/theme";
 import { BotGameSheet, BotRow } from "./bot-game";
 import { ChatPicker } from "./chat-picker";
 import { HowToPlay } from "./how-to-play";
-import { LiveInviteSheet } from "./live";
+import { LiveInviteSheet, playHref } from "./live";
 import { NewGame } from "./game";
-import { ScreenHeader, SectionTitle } from "./ui";
+import { PrimaryButton, ScreenHeader, SectionTitle } from "./ui";
 
 function GameCard({
   game,
@@ -64,6 +74,17 @@ export function GamesPanel() {
   const [chat, setChat] = useState<ChatDTO | null>(null);
   const [bot, setBot] = useState(false);
   const [live, setLive] = useState<LiveGame | null>(null);
+  const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void realtime?.socket
+        .timeout(10_000)
+        .emitWithAck("live:mine", {})
+        .then((res) => res.ok && setMine(res.data))
+        .catch(() => null);
+    }, [realtime]),
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
@@ -71,6 +92,21 @@ export function GamesPanel() {
         <Text style={[styles.title, { color: t.text }]}>{tr.common.games}</Text>
       </ScreenHeader>
       <ScrollView contentContainerStyle={styles.content}>
+        {mine.length > 0 && <SectionTitle>{tr.live.inProgress}</SectionTitle>}
+        {mine.map((r) => (
+          <Pressable
+            key={r.roomId}
+            onPress={() => router.push(playHref(r.roomId))}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.card, styles.resume, pressed && { opacity: 0.85 }]}
+          >
+            <Text style={{ fontSize: 26 }}>{LIVE_EMOJI[r.game]}</Text>
+            <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 16, fontWeight: "700" }}>
+              {tr.live.games[r.game]}
+            </Text>
+            <PrimaryButton title={tr.live.resume} onPress={() => router.push(playHref(r.roomId))} />
+          </Pressable>
+        ))}
         <View>
           <SectionTitle>{tr.live.title}</SectionTitle>
           <Text style={{ color: t.muted, fontSize: 13, paddingHorizontal: 4 }}>{tr.live.hint}</Text>
@@ -126,6 +162,7 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 22, fontWeight: "700", letterSpacing: -0.3, paddingHorizontal: 4 },
   content: { padding: 16, gap: 12 },
   card: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16, borderRadius: 20, borderWidth: 1 },
+  resume: { paddingVertical: 10, borderColor: brand, backgroundColor: "rgba(235,138,0,0.15)" },
   icon: {
     width: 56,
     height: 56,

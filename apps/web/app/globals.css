@@ -202,7 +202,92 @@ textarea {
   }
 }
 
+@keyframes ludo-throw {
+  0% {
+    transform: perspective(300px) translate(30px, -44px) rotate(-240deg) rotateX(40deg) scale(0.85);
+    animation-timing-function: ease-in;
+  }
+  35% {
+    transform: perspective(300px) translate(12px, 0) rotate(-70deg) rotateX(10deg) scale(1.08, 0.9);
+    animation-timing-function: ease-out;
+  }
+  55% {
+    transform: perspective(300px) translate(5px, -14px) rotate(-20deg) rotateX(-10deg) scale(1);
+    animation-timing-function: ease-in;
+  }
+  75% {
+    transform: perspective(300px) translate(0, 0) rotate(0deg) rotateX(0deg) scale(1.05, 0.95);
+    animation-timing-function: ease-out;
+  }
+  88% {
+    transform: perspective(300px) translate(0, -2px) rotate(0deg) rotateX(0deg) scale(1);
+    animation-timing-function: ease-in;
+  }
+  100% {
+    transform: perspective(300px) translate(0, 0) rotate(0deg) rotateX(0deg) scale(1);
+  }
+}
+
+@keyframes ludo-shadow {
+  0% {
+    transform: translateX(30px) scale(0.4);
+    opacity: 0.2;
+    animation-timing-function: ease-in;
+  }
+  35% {
+    transform: translateX(12px) scale(1);
+    opacity: 1;
+    animation-timing-function: ease-out;
+  }
+  55% {
+    transform: translateX(5px) scale(0.7);
+    opacity: 0.5;
+    animation-timing-function: ease-in;
+  }
+  75% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes ludo-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+.ludo-ring {
+  opacity: 0;
+}
+
+@keyframes ludo-hop {
+  50% {
+    transform: translateY(-35%) scale(1.15);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  .ludo-throw {
+    animation: ludo-throw 800ms;
+  }
+
+  .ludo-shadow {
+    animation: ludo-shadow 800ms;
+  }
+
+  .ludo-ring {
+    animation: ludo-ring 500ms ease-out;
+  }
+
+  .ludo-hop {
+    animation: ludo-hop 150ms ease-out;
+  }
+
   .call-reaction {
     animation: call-reaction 2.8s ease-out forwards;
   }

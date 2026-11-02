@@ -32,6 +32,7 @@ import {
   eightsStart,
   eightsView,
   ludoAuto,
+  ludoForced,
   ludoPlay,
   ludoStart,
   wordsAuto,
@@ -76,7 +77,7 @@ interface Seat {
   /** null for Frite Bot. */
   userId: string | null;
   left: boolean;
-  /** Ran out of time, so the bot plays for them until they move again. */
+  /** Ran out of time, so the bot finishes their turn for them. */
   away: boolean;
   /** Gave up: the bot plays the seat out, but it can't win. */
   gaveUp: boolean;
@@ -234,7 +235,8 @@ function close(room: Room) {
   live.delete(room.id);
   void deleteObjects(room.voiceKeys).catch(() => null);
   const out = broadcaster();
-  for (const id of [...humans(room), ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
+  const seated = room.seats.flatMap((s) => (s.userId ? [s.userId] : []));
+  for (const id of [...seated, ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
 }
 
 /** Posts in someone's games inbox, their chat with Six Frites Games, without a notification of its own. */
@@ -271,7 +273,11 @@ function finish(room: Room, ended: number[]) {
   });
 }
 
-/** After a move: ends the game, or hands the turn on, giving people a time limit and bots a short pause. */
+/**
+ * After a move: ends the game, or hands the turn on, giving people a time limit and bots a short pause.
+ * A Ludo move with nothing to pick is played after the same pause, and whoever ran out of time gets
+ * their full time back once their turn is over.
+ */
 function schedule(room: Room) {
   if (room.turnTimer) clearTimeout(room.turnTimer);
   room.turnTimer = null;
@@ -280,11 +286,14 @@ function schedule(room: Room) {
   if (winners) return finish(room, winners);
   const turn = turnOf(state);
   if (turn === null) return broadcast(room);
+  for (const [i, other] of room.seats.entries()) if (i !== turn) other.away = false;
   const seat = room.seats[turn]!;
-  const wait = playsItself(seat) ? BOT_MS[room.game] : LIVE_TURN_SECONDS * 1000;
-  room.deadline = playsItself(seat) ? null : Date.now() + wait;
+  const forced = state.game === "ludo" && ludoForced(state.s);
+  const quick = playsItself(seat) || forced;
+  const wait = quick ? BOT_MS[room.game] : LIVE_TURN_SECONDS * 1000;
+  room.deadline = quick ? null : Date.now() + wait;
   room.turnTimer = setTimeout(() => {
-    seat.away ||= !!seat.userId;
+    if (!forced) seat.away ||= !!seat.userId;
     act(room, turn, autoMove(room.state!, turn));
   }, wait);
   broadcast(room);
@@ -384,8 +393,12 @@ export async function joinRoom(userId: string, roomId: string) {
   const room = roomOf(roomId);
   const mine = room.seats.find((s) => s.userId === userId);
   if (mine) {
+    const back = mine.left || mine.away;
     mine.left = false;
-    broadcast(room);
+    mine.away = false;
+    const turn = room.status === "playing" && room.state ? turnOf(room.state) : null;
+    if (back && turn !== null && (!room.turnTimer || room.seats[turn] === mine)) schedule(room);
+    else broadcast(room);
     return toDTO(room, userId);
   }
   if (!room.invited.includes(userId)) throw new AppError("ROOM_NOT_FOUND", "This game has ended");
@@ -398,17 +411,34 @@ export async function joinRoom(userId: string, roomId: string) {
   return toDTO(room, userId);
 }
 
-/** Leaves the lobby, closing it if I'm the host, or hands my seat to the bot during a game. */
+/**
+ * Leaves the lobby, closing it if I'm the host, or hands my seat to the bot during a game. Either way I
+ * can come back: to the lobby through my invite, to the game through my seat. A game everyone left
+ * waits, paused, until someone does or the idle sweep closes it.
+ */
 export function leaveRoom(userId: string, roomId: string) {
   const room = live.get(roomId);
   const seat = room?.seats.findIndex((s) => s.userId === userId && !s.left) ?? -1;
   if (!room || seat < 0) return;
   if (room.status === "lobby" && userId === room.hostId) return close(room);
-  if (room.status === "lobby") room.seats.splice(seat, 1);
-  else room.seats[seat]!.left = true;
-  if (!humans(room).length) return close(room);
+  if (room.status === "lobby") {
+    room.seats.splice(seat, 1);
+    room.invited.push(userId);
+  } else room.seats[seat]!.left = true;
+  if (!humans(room).length) {
+    if (room.status !== "playing") return close(room);
+    if (room.state?.game !== "words") clearTimers(room);
+    return;
+  }
   if (room.status === "playing" && room.state && turnOf(room.state) === seat) return schedule(room);
   broadcast(room);
+}
+
+/** The games I have a seat in that haven't ended, even ones I left, so I can find my way back. */
+export function myRooms(userId: string) {
+  return [...live.values()].flatMap((r) =>
+    r.status !== "over" && r.seats.some((s) => s.userId === userId && !s.gaveUp) ? [{ roomId: r.id, game: r.game }] : [],
+  );
 }
 
 export function setBot(userId: string, roomId: string, add: boolean) {

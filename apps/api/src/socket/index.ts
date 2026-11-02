@@ -25,7 +25,7 @@ import { redisConnection } from "../lib/queue.js";
 import { type IO, rooms, setIo, socketKey } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
 import { relaySignal } from "../services/calls.js";
-import { createRoom, giveUp, joinRoom, leaveRoom, playMove, say, setBot, startRoom } from "../services/live.js";
+import { createRoom, giveUp, joinRoom, leaveRoom, myRooms, playMove, say, setBot, startRoom } from "../services/live.js";
 import { markDelivered, markRead } from "../services/chats.js";
 import { assertMember, sendMessage } from "../services/messages.js";
 
@@ -102,6 +102,7 @@ export function createSocketServer(http: HttpServer) {
     socket.on("live:create", handle((p) => createRoom(userId, CreateLiveInput.parse(p))));
     socket.on("live:join", handle((p) => joinRoom(userId, LiveRoomRef.parse(p).roomId)));
     socket.on("live:leave", handle(async (p) => leaveRoom(userId, LiveRoomRef.parse(p).roomId) ?? null));
+    socket.on("live:mine", handle(async () => myRooms(userId)));
     socket.on(
       "live:bot",
       handle(async (p) => {

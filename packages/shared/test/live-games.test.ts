@@ -11,6 +11,7 @@ import {
   eightsStart,
   eightsView,
   ludoAuto,
+  ludoForced,
   ludoPlay,
   ludoStart,
   solveGrid,
@@ -52,6 +53,15 @@ describe("ludo", () => {
     expect(ludoPlay(s, 0, { roll: true }, fixed(5))!.turn).toBe(1);
     const won = ludoPlay(ludoPlay(s, 0, { roll: true }, fixed(2))!, 0, { token: 0 }, Math.random)!;
     expect(won.winner).toBe(0);
+  });
+
+  it("knows when a roll leaves nothing to pick", () => {
+    const base: LudoState = { ...ludoStart(2), moving: true, dice: 6 };
+    expect(ludoForced(base)).toBe(true);
+    expect(ludoForced({ ...base, dice: 4, tokens: [[10, -1, -1, -1], [-1, -1, -1, -1]] })).toBe(true);
+    expect(ludoForced({ ...base, tokens: [[10, -1, -1, -1], [-1, -1, -1, -1]] })).toBe(false);
+    expect(ludoForced({ ...base, dice: 4, tokens: [[10, 10, -1, -1], [-1, -1, -1, -1]] })).toBe(true);
+    expect(ludoForced({ ...base, moving: false })).toBe(false);
   });
 
   it("plays whole games between bots to a winner", () => {

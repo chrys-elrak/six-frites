@@ -184,7 +184,29 @@ describe("live rooms", () => {
     }
     await until(() => p.rooms.some((r) => r.view?.game === "ludo" && r.view.state.rolledBy === 1));
     await p.ask("live:leave", { roomId });
-    expect((await p.ask("live:move", { roomId, move: { roll: true } })).error!.code).toBe("ROOM_NOT_FOUND");
+    expect((await p.ask("live:move", { roomId, move: { roll: true } })).error!.code).toBe("FORBIDDEN");
+  });
+
+  it("keeps my seat when I leave by mistake, and lets me back in", async () => {
+    const { host, guest } = await makeFriends();
+    const [a, b] = [await player(host), await player(guest)];
+    const solo = (await a.ask<LiveRoomDTO>("live:create", { game: "ludo", invite: [], locale: "en" })).data!;
+    await a.ask("live:bot", { roomId: solo.id, add: true });
+    await a.ask("live:start", { roomId: solo.id });
+    await a.ask("live:leave", { roomId: solo.id });
+    await new Promise((r) => setTimeout(r, 1500));
+    const paused = a.rooms.filter((r) => r.id === solo.id).at(-1)!;
+    expect((await a.ask("live:mine", {})).data).toEqual([{ roomId: solo.id, game: "ludo" }]);
+    const back = await a.ask<LiveRoomDTO>("live:join", { roomId: solo.id });
+    expect(back.data).toMatchObject({ status: "playing", mySeat: 0, view: paused.view });
+    expect(back.data!.deadline).not.toBeNull();
+
+    const lobby = (await a.ask<LiveRoomDTO>("live:create", { game: "dots", invite: [guest.user.id], locale: "en" })).data!;
+    await b.ask("live:join", { roomId: lobby.id });
+    await b.ask("live:leave", { roomId: lobby.id });
+    expect((await b.ask<LiveRoomDTO>("live:join", { roomId: lobby.id })).data!.mySeat).toBe(1);
+    await a.ask("live:leave", { roomId: solo.id });
+    await a.ask("live:leave", { roomId: lobby.id });
   });
 
   it("plays Fanorona, Dots and Boxes and Memory against Frite Bot, two at most for Fanorona", async () => {

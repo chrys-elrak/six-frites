@@ -54,6 +54,8 @@ export interface ClientToServerEvents {
   /** Takes an invited seat, or comes back to my own after a reconnect. */
   "live:join": (p: { roomId: string }, cb: Ack<LiveRoomDTO>) => void;
   "live:leave": (p: { roomId: string }, cb?: Ack<null>) => void;
+  /** The games I have a seat in that haven't ended, including ones I left, to go back to. */
+  "live:mine": (p: Record<string, never>, cb: Ack<Omit<LiveInviteDTO, "from">[]>) => void;
   /** The host adds or removes a Frite Bot seat in the lobby. */
   "live:bot": (p: { roomId: string; add: boolean }, cb: Ack<LiveRoomDTO>) => void;
   /** The host starts the game, or a rematch once it's over. */

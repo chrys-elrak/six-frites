@@ -73,7 +73,7 @@ const ANON_SOUND: number = require("../../assets/sounds/anonymous.mp3");
 
 const players = new Map<number, AudioPlayer>();
 
-function play(asset: number) {
+export function playSound(asset: number) {
   let player = players.get(asset);
   if (!player) {
     player = createAudioPlayer(asset);
@@ -85,7 +85,7 @@ function play(asset: number) {
 
 /** Plays the chosen notification tone, or `tone` to try one out. */
 export function playTone(tone = useNotifyPrefs.getState().tone) {
-  play(TONE_FILES[tone]);
+  playSound(TONE_FILES[tone]);
 }
 
 const FRESH_MS = 60_000;
@@ -114,7 +114,7 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean) {
 function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null, sound?: number) {
   if (AppState.currentState !== "active") return;
   const prefs = useNotifyPrefs.getState();
-  if (prefs.sound) play(sound ?? TONE_FILES[prefs.tone]);
+  if (prefs.sound) playSound(sound ?? TONE_FILES[prefs.tone]);
   if (prefs.popups) useToasts.getState().push({ id, href, title, body, avatar: { displayName: title, avatarUrl } });
 }
 

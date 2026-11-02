@@ -76,6 +76,10 @@ export function ludoMovable(s: LudoState, seat: number, dice: number) {
   return s.tokens[seat]!.flatMap((pos, i) => ((pos < 0 ? dice === 6 : pos + dice <= LUDO_HOME) ? [i] : []));
 }
 
+/** Whether the roll leaves nothing to pick: one token can move, or all that can stand on the same spot. */
+export const ludoForced = (s: LudoState) =>
+  s.moving && s.dice !== null && new Set(ludoMovable(s, s.turn, s.dice).map((t) => s.tokens[s.turn]![t])).size === 1;
+
 const next = (s: LudoState) => (s.turn + 1) % s.tokens.length;
 
 function pass(s: LudoState): LudoState {

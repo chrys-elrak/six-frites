@@ -9,9 +9,12 @@ import {
   type LudoMove,
   type LudoState,
   SEAT_COLORS,
+  ludoForced,
   ludoMovable,
 } from "@six/shared";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
+import { playSound } from "@/lib/notify";
 
 const LUDO_COLORS = SEAT_COLORS;
 const CORNERS: [number, number][] = [
@@ -48,7 +51,103 @@ function cellOf(color: number, token: number, pos: number): [number, number] {
   return LUDO_TRACK[(LUDO_STARTS[color]! + pos) % 52]!;
 }
 
-const DICE = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+const PIPS: [number, number][][] = [
+  [[1, 1]],
+  [[0, 0], [2, 2]],
+  [[0, 0], [1, 1], [2, 2]],
+  [[0, 0], [2, 0], [0, 2], [2, 2]],
+  [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]],
+  [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]],
+];
+const STEP_MS = 130;
+const ROLL_MS = 800;
+const SOUND = {
+  dice: "/sounds/dice.wav",
+  step: "/sounds/step.wav",
+  capture: "/sounds/capture.wav",
+  home: "/sounds/home.wav",
+  win: "/sounds/win.wav",
+};
+
+type Move = NonNullable<LudoState["last"]>;
+
+/**
+ * Plays out each roll and move as it comes in, with its sound: the die tumbles for a moment, and the
+ * moved token walks square by square while any token it takes waits on its target.
+ */
+function useLudoMotion(state: LudoState, mySeat: number | null) {
+  const seen = useRef(state);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [rolling, setRolling] = useState(false);
+  const [walk, setWalk] = useState<{ move: Move; pos: number } | null>(null);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useLayoutEffect(() => {
+    if (JSON.stringify(seen.current) === JSON.stringify(state)) return;
+    seen.current = state;
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    const later = (ms: number, f: () => void) => timers.current.push(setTimeout(f, ms));
+    const move = state.last;
+    setRolling(!move && state.dice !== null);
+    setWalk(move && { move, pos: move.from });
+    if (!move) {
+      if (state.dice !== null) playSound(SOUND.dice);
+      later(ROLL_MS, () => setRolling(false));
+      return;
+    }
+    const path = move.from < 0 ? [0] : Array.from({ length: move.to - move.from }, (_, i) => move.from + i + 1);
+    const end =
+      state.winner !== null && state.winner === mySeat
+        ? SOUND.win
+        : move.captured.length
+          ? SOUND.capture
+          : move.to === LUDO_HOME
+            ? SOUND.home
+            : SOUND.step;
+    path.forEach((pos, i) =>
+      later((i + 1) * STEP_MS, () => {
+        const done = i === path.length - 1;
+        playSound(done ? end : SOUND.step);
+        setWalk(done ? null : { move, pos });
+      }),
+    );
+  }, [state, mySeat]);
+
+  return { rolling, walk };
+}
+
+/** The die: thrown in while rolling, its faces flicking by slower and slower, then a ring when it lands. */
+function Die({ value, rolling }: { value: number | null; rolling: boolean }) {
+  const [face, setFace] = useState(1);
+  const [landed, setLanded] = useState(0);
+  useEffect(() => {
+    if (!rolling) return;
+    let wait = 40;
+    let timer: ReturnType<typeof setTimeout>;
+    const flick = () => {
+      setFace((f) => ((f + Math.floor(Math.random() * 5)) % 6) + 1);
+      timer = setTimeout(flick, (wait *= 1.3));
+    };
+    flick();
+    return () => {
+      clearTimeout(timer);
+      setLanded((n) => n + 1);
+    };
+  }, [rolling]);
+  const shown = rolling ? face : value;
+  return (
+    <span className="relative grid size-16 shrink-0 place-items-center">
+      <span className={`absolute -bottom-1 h-2 w-11 rounded-full bg-black/30 blur-[2px] ${rolling ? "ludo-shadow" : ""}`} />
+      <svg viewBox="0 0 3 3" className={`relative size-14 drop-shadow-md ${rolling ? "ludo-throw" : ""}`}>
+        <rect width={3} height={3} rx={0.5} fill="#fff" stroke="#d6d3d1" strokeWidth={0.06} />
+        {shown !== null &&
+          PIPS[shown - 1]!.map(([x, y], i) => <circle key={i} cx={0.7 + x * 0.8} cy={0.7 + y * 0.8} r={0.28} fill="#1c1917" />)}
+      </svg>
+      {landed > 0 && !rolling && <span key={landed} className="ludo-ring absolute inset-1 rounded-xl ring-4 ring-brand" />}
+    </span>
+  );
+}
 
 export function LudoBoard({
   state,
@@ -62,10 +161,18 @@ export function LudoBoard({
   play: (move: LudoMove) => void;
 }) {
   const tr = useT();
+  const { rolling, walk } = useLudoMotion(state, mySeat);
   const mine = mySeat !== null && state.turn === mySeat && state.winner === null;
-  const movable = mine && state.moving && state.dice !== null ? ludoMovable(state, mySeat, state.dice) : [];
+  const movable = mine && !rolling && state.moving && state.dice !== null ? ludoMovable(state, mySeat, state.dice) : [];
   const tokens = state.tokens.flatMap((positions, seat) =>
-    positions.map((pos, token) => ({ seat, token, cell: cellOf(state.colors[seat]!, token, pos) })),
+    positions.map((pos, token) => {
+      const hop = walk && walk.move.seat === seat && walk.move.token === token ? walk.pos : null;
+      const cell =
+        walk && walk.move.captured.some((c) => c.seat === seat && c.token === token)
+          ? cellOf(state.colors[walk.move.seat]!, walk.move.token, walk.move.to)
+          : cellOf(state.colors[seat]!, token, hop ?? pos);
+      return { seat, token, cell, hop };
+    }),
   );
   const crowd = (cell: [number, number]) => tokens.filter((t) => t.cell[0] === cell[0] && t.cell[1] === cell[1]);
 
@@ -116,7 +223,7 @@ export function LudoBoard({
             background: `conic-gradient(from -45deg, ${LUDO_COLORS[1]} 0 25%, ${LUDO_COLORS[2]} 0 50%, ${LUDO_COLORS[3]} 0 75%, ${LUDO_COLORS[0]} 0)`,
           }}
         />
-        {tokens.map(({ seat, token, cell }) => {
+        {tokens.map(({ seat, token, cell, hop }) => {
           const group = crowd(cell);
           const k = group.findIndex((t) => t.seat === seat && t.token === token);
           const shift = group.length > 1 ? { x: (k % 2) * 40 - 20, y: Math.floor(k / 2) * 40 - 20 } : { x: 0, y: 0 };
@@ -128,11 +235,12 @@ export function LudoBoard({
               disabled={!can}
               onClick={() => play({ token })}
               aria-label={nameOf(seat)}
-              className="absolute grid place-items-center transition-[left,top] duration-300 ease-out"
+              className="absolute grid place-items-center transition-[left,top] duration-150 ease-out"
               style={{ ...at(cell), transform: `translate(${shift.x}%, ${shift.y}%) scale(${group.length > 1 ? 0.7 : 1})` }}
             >
               <span
-                className={`block size-[78%] rounded-full border-[3px] border-white shadow-md ${can ? "animate-pulse ring-4 ring-stone-900/70" : ""}`}
+                key={hop ?? "still"}
+                className={`block size-[78%] rounded-full border-[3px] border-white shadow-md ${can ? "animate-pulse ring-4 ring-stone-900/70" : ""} ${hop !== null ? "ludo-hop" : ""}`}
                 style={{ background: LUDO_COLORS[state.colors[seat]!] }}
               />
             </button>
@@ -140,24 +248,22 @@ export function LudoBoard({
         })}
       </div>
       <div className="flex items-center gap-4">
-        <span key={`${state.rolledBy}-${state.dice}-${state.turn}`} className="reaction-pop text-6xl leading-none">
-          {state.dice ? DICE[state.dice - 1] : "🎲"}
-        </span>
+        <Die value={state.dice} rolling={rolling} />
         <div className="min-w-0 text-sm">
-          {state.rolledBy !== null && state.dice !== null && (
+          {!rolling && state.rolledBy !== null && state.dice !== null && (
             <p className="text-stone-500">{tr.live.rolled(nameOf(state.rolledBy), state.dice)}</p>
           )}
           <p className="font-semibold">
             {state.winner !== null
               ? ""
               : mine
-                ? state.moving
+                ? state.moving && !ludoForced(state)
                   ? tr.live.pickToken
                   : tr.live.yourTurn
                 : tr.live.theirTurn(nameOf(state.turn))}
           </p>
         </div>
-        {mine && !state.moving && (
+        {mine && !rolling && !state.moving && (
           <button
             type="button"
             onClick={() => play({ roll: true })}
