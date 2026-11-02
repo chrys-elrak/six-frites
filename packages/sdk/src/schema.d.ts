@@ -72,6 +72,8 @@ export interface paths {
                                 hasAppLock: boolean;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
+                                /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                                anonBot: boolean;
                                 /** @description The emojis offered first when you react, in order; empty means the defaults */
                                 quickReactions: string[];
                                 /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -155,6 +157,8 @@ export interface paths {
                                 hasAppLock: boolean;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
+                                /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                                anonBot: boolean;
                                 /** @description The emojis offered first when you react, in order; empty means the defaults */
                                 quickReactions: string[];
                                 /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2154,6 +2158,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2257,6 +2263,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2324,6 +2332,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2395,6 +2405,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2607,6 +2619,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2661,6 +2675,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -11850,6 +11866,8 @@ export interface paths {
                                     hasAppLock: boolean;
                                     /** @description Whether the apps show you ads; admins can turn them off for you */
                                     ads: boolean;
+                                    /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                                    anonBot: boolean;
                                     /** @description The emojis offered first when you react, in order; empty means the defaults */
                                     quickReactions: string[];
                                     /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -12330,6 +12348,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -12454,6 +12474,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -13982,6 +14004,8 @@ export interface paths {
                                 createdAt: string;
                                 /** @description Came through a link the recipient has since replaced; always false on sent messages */
                                 oldLink: boolean;
+                                /** @description A question from the Six Frites bot, not from a person */
+                                bot: boolean;
                             }[];
                             nextCursor: string | null;
                         };
@@ -14060,6 +14084,8 @@ export interface paths {
                                 createdAt: string;
                                 /** @description Came through a link the recipient has since replaced; always false on sent messages */
                                 oldLink: boolean;
+                                /** @description A question from the Six Frites bot, not from a person */
+                                bot: boolean;
                                 /** @description Who you sent it to, as their link shows them */
                                 to: {
                                     displayName: string;
@@ -14347,6 +14373,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -14365,6 +14393,85 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ask/bot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Turn the Six Frites bot's questions on or off
+         * @description Now and then, at no set time, the bot sends a question to your anonymous inbox, never the same one twice.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        on: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** Format: email */
+                            email: string;
+                            displayName: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** @description Share it (or its QR code) so people can find you */
+                            contactCode: string;
+                            /** @description Your link for anonymous messages is /ask/{askCode} on the web app */
+                            askCode: string;
+                            /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                            backupKeyId: string | null;
+                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            hasBackupPin: boolean;
+                            /** @description Whether the apps ask for your app lock code when they open */
+                            hasAppLock: boolean;
+                            /** @description Whether the apps show you ads; admins can turn them off for you */
+                            ads: boolean;
+                            /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                            anonBot: boolean;
+                            /** @description The emojis offered first when you react, in order; empty means the defaults */
+                            quickReactions: string[];
+                            /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
+                            guest: boolean;
+                            /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                            chatBan: {
+                                /** Format: date-time */
+                                until: string | null;
+                            } | null;
+                            /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                            termsAccepted: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

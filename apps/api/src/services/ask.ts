@@ -16,9 +16,11 @@ import {
   TEMP_LINK_MAX,
   type TempLinkDTO,
   type UpdateAskProfileInput,
+  isLocale,
   maskSpoilers,
 } from "@six/shared";
 import type { AnonMessage, User } from "../generated/prisma/client.js";
+import { BOT_LINES } from "../lib/bot-lines.js";
 import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
@@ -42,6 +44,7 @@ const toAnonDTO = (m: AnonMessage, renewedAt?: Date | null): AnonMessageDTO => (
   voice: m.voiceKey ? { url: presignGet(m.voiceKey), durationMs: m.voiceMs ?? 0, waveform: m.voiceWaveform } : null,
   createdAt: m.createdAt.toISOString(),
   oldLink: !!renewedAt && m.createdAt < renewedAt,
+  bot: m.senderId === null,
 });
 
 /**
@@ -298,6 +301,7 @@ export async function deleteSent(userId: string, id: string) {
 export async function blockAnonSender(userId: string, id: string) {
   const m = await prisma.anonMessage.findFirst({ where: { id, recipientId: userId, recipientDeletedAt: null } });
   if (!m) throw new AppError("MESSAGE_NOT_FOUND");
+  if (!m.senderId) throw new AppError("VALIDATION_FAILED", "Six Frites sent this one; turn its questions off in your settings");
   await prisma.$transaction([
     prisma.anonBlock.upsert({
       where: { blockerId_blockedId: { blockerId: userId, blockedId: m.senderId } },
@@ -313,7 +317,7 @@ export async function listAnonForAdmin(q: AdminAnonQuery) {
   const match = { contains: q.q ?? "", mode: "insensitive" as const };
   const who = { OR: [{ email: match }, { displayName: match }] };
   const rows = await prisma.anonMessage.findMany({
-    where: q.q ? { OR: [{ sender: who }, { recipient: who }] } : {},
+    where: { senderId: { not: null }, ...(q.q && { OR: [{ sender: who }, { recipient: who }] }) },
     include: { sender: true, recipient: true },
     ...pageArgs(q),
   });
@@ -323,10 +327,63 @@ export async function listAnonForAdmin(q: AdminAnonQuery) {
     photoUrl: m.photoKey ? presignGet(m.photoKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
     gifUrl: m.gifKey ? presignGet(m.gifKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
     voiceUrl: m.voiceKey ? presignGet(m.voiceKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
-    sender: toUserRef(m.sender),
+    sender: toUserRef(m.sender!),
     recipient: toUserRef(m.recipient),
     createdAt: m.createdAt.toISOString(),
     senderDeletedAt: m.senderDeletedAt?.toISOString() ?? null,
     recipientDeletedAt: m.recipientDeletedAt?.toISOString() ?? null,
   }));
+}
+
+const DAY = 24 * HOUR;
+
+// ponytail: everyone's night is Madagascar's (UTC+3); keep a timezone per user if people elsewhere join
+/** When the bot next writes: 2 to 6 days on, at any minute, moved out of the night (22:00 to 8:00). */
+export function nextBotAt(from = Date.now()) {
+  const at = from + 2 * DAY + Math.random() * 4 * DAY;
+  const hour = new Date(at + 3 * HOUR).getUTCHours();
+  return new Date(hour < 8 || hour >= 22 ? at + 10 * HOUR : at);
+}
+
+/** Turns the bot's questions on or off; turned back on, it picks a new time. */
+export async function setAnonBot(userId: string, on: boolean) {
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { anonBotDisabled: !on, anonBotAt: null } }));
+}
+
+/**
+ * The bot's turn, from the worker's sweep: picks a time for whoever has none yet, then sends whoever's time came
+ * a line they never got, in the language of their latest device. Once they got every line, it stays quiet.
+ */
+export async function sendDueBotAnon(batch = 100) {
+  const reachable = { deletedAt: null, anonBotDisabled: false, OR: [{ bannedAt: null }, { banScope: "chat" }] };
+  const fresh = await prisma.user.findMany({ where: { ...reachable, anonBotAt: null }, select: { id: true }, take: 1000 });
+  for (const u of fresh) await prisma.user.update({ where: { id: u.id }, data: { anonBotAt: nextBotAt() } });
+
+  const due = await prisma.user.findMany({
+    where: { ...reachable, anonBotAt: { lte: new Date() } },
+    select: { id: true, anonBotAt: true },
+    take: batch,
+  });
+  let sent = 0;
+  for (const u of due) {
+    const claimed = await prisma.user.updateMany({ where: { id: u.id, anonBotAt: u.anonBotAt }, data: { anonBotAt: nextBotAt() } });
+    if (claimed.count && (await sendBotLine(u.id))) sent++;
+  }
+  return sent;
+}
+
+async function sendBotLine(userId: string) {
+  const [got, device] = await Promise.all([
+    prisma.anonMessage.findMany({ where: { recipientId: userId, botLine: { not: null } }, select: { botLine: true } }),
+    prisma.pushToken.findFirst({ where: { session: { userId } }, orderBy: { session: { lastUsedAt: "desc" } }, select: { locale: true } }),
+  ]);
+  const lines = BOT_LINES[isLocale(device?.locale) ? device.locale : "en"];
+  const used = new Set(got.map((m) => m.botLine));
+  const left = lines.flatMap((_, i) => (used.has(i) ? [] : [i]));
+  if (!left.length) return false;
+  const botLine = left[Math.floor(Math.random() * left.length)]!;
+  const m = await prisma.anonMessage.create({ data: { recipientId: userId, text: lines[botLine]!, botLine } });
+  broadcaster().to(rooms.user(userId)).emit("ask:new", toAnonDTO(m));
+  await deliverAnonPush(userId, m.text, "image").catch(() => null);
+  return true;
 }

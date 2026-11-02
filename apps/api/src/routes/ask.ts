@@ -1,5 +1,6 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import {
+  AnonBotInput,
   AnonMessageDTO,
   AskLinkDTO,
   AskProfileDTO,
@@ -27,6 +28,7 @@ import {
   listTempLinks,
   resetAskCode,
   sendAnon,
+  setAnonBot,
   updateAskProfile,
 } from "../services/ask.js";
 
@@ -214,6 +216,23 @@ const askRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => resetAskCode(req.auth.userId),
+  );
+
+  app.put(
+    "/ask/bot",
+    {
+      onRequest: app.requireAuth,
+      config: { guest: true },
+      schema: {
+        tags,
+        summary: "Turn the Six Frites bot's questions on or off",
+        description: "Now and then, at no set time, the bot sends a question to your anonymous inbox, never the same one twice.",
+        security,
+        body: AnonBotInput,
+        response: { 200: UserDTO },
+      },
+    },
+    (req) => setAnonBot(req.auth.userId, req.body.on),
   );
 
   app.delete(

@@ -3,7 +3,8 @@ import type { AddressInfo } from "node:net";
 import { io as connect } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
-import { SEND_LIMITS } from "../src/services/ask.js";
+import { BOT_LINES } from "../src/lib/bot-lines.js";
+import { SEND_LIMITS, nextBotAt, sendDueBotAnon } from "../src/services/ask.js";
 import { createSocketServer } from "../src/socket/index.js";
 import { TEMP_LINK_MAX } from "@six/shared";
 import { type Auth, asAdmin, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
@@ -43,6 +44,7 @@ describe("anonymous messages", () => {
       voice: null,
       createdAt: expect.any(String),
       oldLink: false,
+      bot: false,
       prompt: null,
     });
     expect(JSON.stringify(got)).not.toContain(fan.user.id);
@@ -291,7 +293,7 @@ describe("anonymous messages", () => {
       const arrived = new Promise((resolve) => socket.once("ask:new", resolve));
       await ask(fan, owner.user.askCode, "live?");
       const m = await arrived;
-      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, gif: null, voice: null, createdAt: expect.any(String), oldLink: false, prompt: null });
+      expect(m).toEqual({ id: expect.any(String), text: "live?", entities: [], photoUrl: null, gif: null, voice: null, createdAt: expect.any(String), oldLink: false, bot: false, prompt: null });
     } finally {
       socket.disconnect();
     }
@@ -337,5 +339,47 @@ describe.skipIf(!hasFfmpeg)("anonymous voice messages", () => {
     expect(m.voice.url).toContain(owner.user.id);
     const file = Buffer.from(await (await fetch(m.voice.url)).arrayBuffer());
     expect(file.toString("latin1")).not.toContain("Secret Name");
+  });
+});
+
+describe("the Six Frites bot", () => {
+  it("has every line in every language, each once", () => {
+    for (const lines of Object.values(BOT_LINES)) {
+      expect(lines).toHaveLength(BOT_LINES.en.length);
+      expect(new Set(lines).size).toBe(lines.length);
+    }
+  });
+
+  it("writes again 2 to 6 days later, never at night in Madagascar", () => {
+    const now = Date.now();
+    for (let i = 0; i < 1000; i++) {
+      const at = nextBotAt(now).getTime();
+      expect(at - now).toBeGreaterThanOrEqual(2 * 86_400_000);
+      expect(at - now).toBeLessThan(6 * 86_400_000 + 10 * 3_600_000);
+      const hour = new Date(at + 3 * 3_600_000).getUTCHours();
+      expect(hour >= 8 && hour < 22).toBe(true);
+    }
+  });
+
+  it("sends each line once, marked as the bot's, which can't be reported or blocked, until turned off", async () => {
+    const owner = await walkIn("owner");
+    const due = () => prisma.user.update({ where: { id: owner.user.id }, data: { anonBotAt: new Date(Date.now() - 1000) } });
+    for (const _ of [...BOT_LINES.en, "one too many"]) {
+      await due();
+      await sendDueBotAnon();
+    }
+    const got = (await get(owner, "/v1/ask?limit=100")).items as { id: string; text: string; bot: boolean }[];
+    expect(new Set(got.map((m) => m.text))).toEqual(new Set(BOT_LINES.en));
+    expect(got.every((m) => m.bot)).toBe(true);
+    expect((await call(owner, "POST", "/v1/reports", { anonMessageId: got[0]!.id, reason: "spam" })).statusCode).toBe(400);
+    expect((await call(owner, "POST", `/v1/ask/messages/${got[0]!.id}/block`)).statusCode).toBe(400);
+
+    const other = await walkIn("other");
+    expect((await get(other, "/v1/me")).anonBot).toBe(true);
+    const off = await call(other, "PUT", "/v1/ask/bot", { on: false });
+    expect(off.json().anonBot).toBe(false);
+    await prisma.user.update({ where: { id: other.user.id }, data: { anonBotAt: new Date(Date.now() - 1000) } });
+    await sendDueBotAnon();
+    expect(await inbox(other)).toEqual([]);
   });
 });

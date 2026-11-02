@@ -626,6 +626,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const qc = useQueryClient();
   const code = useSession((s) => s.user!.askCode);
   const chatBan = useSession((s) => s.user!.chatBan);
+  const anonBot = useSession((s) => s.user!.anonBot);
   const setUser = useSession((s) => s.setUser);
   const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
@@ -683,6 +684,11 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
 
   async function renew() {
     const res = await six.api.POST("/v1/ask/code");
+    if (res.data) setUser(res.data);
+  }
+
+  async function toggleBot(on: boolean) {
+    const res = await six.api.PUT("/v1/ask/bot", { body: { on } });
     if (res.data) setUser(res.data);
   }
 
@@ -753,6 +759,9 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
             <Card className="mx-auto w-full max-w-lg space-y-3 p-4">
               <PublicProfile code={code} />
               <TempLinks code={code} />
+              <div className="-mx-4 border-t border-stone-200 dark:border-stone-800">
+                <Toggle label={tr.ask.bot} hint={tr.ask.botHint} checked={anonBot} onChange={(on) => void toggleBot(on)} />
+              </div>
               <button
                 type="button"
                 onClick={() => setRenewing(true)}
@@ -832,6 +841,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                       <span className="flex-1 text-xs text-stone-400">
                         {timeAgo(m.createdAt)}
                         {m.oldLink && ` · ${tr.ask.oldLink}`}
+                        {m.bot && ` · ${tr.ask.fromBot}`}
                       </span>
                       <button
                         type="button"
@@ -876,8 +886,12 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           at={menuAt}
           onClose={() => setMenu(null)}
           actions={[
-            { label: tr.common.report, onSelect: () => setReporting(menu) },
-            { label: tr.ask.block, destructive: true, onSelect: () => setConfirm({ m: menu, action: "block" }) },
+            ...(menu.bot
+              ? []
+              : [
+                  { label: tr.common.report, onSelect: () => setReporting(menu) },
+                  { label: tr.ask.block, destructive: true, onSelect: () => setConfirm({ m: menu, action: "block" }) },
+                ]),
             { label: tr.common.delete, destructive: true, onSelect: () => setConfirm({ m: menu, action: "delete" }) },
           ]}
         />

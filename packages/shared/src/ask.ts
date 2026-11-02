@@ -139,8 +139,12 @@ export const AnonMessageDTO = z.object({
     .describe("A voice message, as AAC in MP4"),
   createdAt: IsoDate,
   oldLink: z.boolean().describe("Came through a link the recipient has since replaced; always false on sent messages"),
+  bot: z.boolean().describe("A question from the Six Frites bot, not from a person"),
 });
 export type AnonMessageDTO = z.infer<typeof AnonMessageDTO>;
+
+export const AnonBotInput = z.object({ on: z.boolean() });
+export type AnonBotInput = z.infer<typeof AnonBotInput>;
 
 export const SentAnonDTO = AnonMessageDTO.extend({ to: AskProfileDTO.describe("Who you sent it to, as their link shows them") });
 export type SentAnonDTO = z.infer<typeof SentAnonDTO>;

@@ -47,6 +47,10 @@ model User {
   queuedAt       DateTime?
   guest          Boolean   @default(false)
   adsDisabled    Boolean   @default(false)
+  /// Turned off the questions the Six Frites bot sends to their anonymous inbox.
+  anonBotDisabled Boolean  @default(false)
+  /// When the bot next writes to them; null until the worker picks a time.
+  anonBotAt      DateTime?
   quickReactions String[]  @default([])
 
   sessions       Session[]
@@ -78,6 +82,8 @@ model User {
   anonSent       AnonMessage[]      @relation("anonSender")
   anonBlocking   AnonBlock[]        @relation("anonBlocker")
   anonBlockedBy  AnonBlock[]        @relation("anonBlocked")
+
+  @@index([anonBotAt])
 }
 
 model Report {
@@ -554,7 +560,10 @@ model Block {
 model AnonMessage {
   id          String   @id @default(cuid())
   recipientId String
-  senderId    String
+  /// Null when the Six Frites bot sent it.
+  senderId    String?
+  /// Which of the bot's lines this is, so nobody gets the same one twice.
+  botLine     Int?
   text        String
   /// The recipient's own prompt when it was sent, so a shared card shows what it answered; null for the app's.
   prompt      String?
@@ -576,7 +585,7 @@ model AnonMessage {
   recipientDeletedAt DateTime?
 
   recipient User @relation("anonRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
-  sender    User @relation("anonSender", fields: [senderId], references: [id], onDelete: Cascade)
+  sender    User? @relation("anonSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt])
   @@index([senderId, createdAt])

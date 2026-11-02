@@ -17,6 +17,7 @@ import {
 import { ensureBucket } from "./lib/storage.js";
 import { processUpload } from "./media/process.js";
 import { liftExpiredBans } from "./services/admin.js";
+import { sendDueBotAnon } from "./services/ask.js";
 import { deleteExpiredMessages, expireMessage, purgeMessage } from "./services/messages.js";
 import { deliverPush, deliverReactionPush } from "./services/push.js";
 import { sendDueScheduled } from "./services/scheduled.js";
@@ -37,7 +38,12 @@ const timers = new Worker<TimerJob>(
   TIMERS_QUEUE,
   async (job) => {
     if ("sweep" in job.data) {
-      return { sent: await sendDueScheduled(), deleted: await deleteExpiredMessages(), unbanned: await liftExpiredBans() };
+      return {
+        sent: await sendDueScheduled(),
+        deleted: await deleteExpiredMessages(),
+        unbanned: await liftExpiredBans(),
+        bot: await sendDueBotAnon(),
+      };
     }
     if ("messageId" in job.data) await expireMessage(job.data.messageId, job.data.cycle);
     else if ("purgeMessageId" in job.data) await purgeMessage(job.data.purgeMessageId, job.data.cycle);

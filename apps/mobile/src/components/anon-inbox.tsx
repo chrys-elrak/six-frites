@@ -630,6 +630,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const qc = useQueryClient();
   const code = useSession((s) => s.user!.askCode);
   const chatBan = useSession((s) => s.user!.chatBan);
+  const anonBot = useSession((s) => s.user!.anonBot);
   const setUser = useSession((s) => s.setUser);
   const link = askUrl(WEB_URL, code);
   const [copied, setCopied] = useState(false);
@@ -701,6 +702,12 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
     else setNotice({ tone: "error", text: tr.common.somethingWrongRetry });
   }
 
+  async function toggleBot(on: boolean) {
+    const res = await six.api.PUT("/v1/ask/bot", { body: { on } }).catch(() => null);
+    if (res?.data) setUser(res.data);
+    else setNotice({ tone: "error", text: tr.common.somethingWrongRetry });
+  }
+
   async function report(m: AnonMessageDTO, reason: ReportReason) {
     const res = await six.api.POST("/v1/reports", { body: { anonMessageId: m.id, reason } }).catch(() => null);
     setNotice(res?.response.ok ? { tone: "success", text: tr.chat.reportThanks } : { tone: "error", text: tr.chat.reportFailed });
@@ -715,8 +722,12 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         <Sheet
           onClose={close}
           actions={[
-            { label: tr.common.report, keepOpen: true, onSelect: () => setPending({ m, action: "report" }) },
-            { label: tr.ask.block, destructive: true, keepOpen: true, onSelect: () => setPending({ m, action: "block" }) },
+            ...(m.bot
+              ? []
+              : [
+                  { label: tr.common.report, keepOpen: true, onSelect: () => setPending({ m, action: "report" }) },
+                  { label: tr.ask.block, destructive: true, keepOpen: true, onSelect: () => setPending({ m, action: "block" }) },
+                ]),
             { label: tr.common.delete, destructive: true, keepOpen: true, onSelect: () => setPending({ m, action: "delete" }) },
           ]}
         />
@@ -819,6 +830,9 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
               <Card style={{ padding: 16, gap: 8 }}>
                 <PublicProfile code={code} />
                 <TempLinks code={code} />
+                <View style={[styles.divided, { borderColor: t.border, marginHorizontal: -16, paddingTop: 0 }]}>
+                  <Toggle label={tr.ask.bot} hint={tr.ask.botHint} value={anonBot} onChange={(on) => void toggleBot(on)} />
+                </View>
                 <View style={[styles.divided, { alignItems: "center", borderColor: t.border }]}>
                   <TextButton title={tr.ask.newLink} onPress={() => setRenewing(true)} />
                 </View>
@@ -876,6 +890,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                 <Text style={{ flex: 1, color: "#a8a29e", fontSize: 12 }}>
                   {timeAgo(m.createdAt)}
                   {m.oldLink && ` · ${tr.ask.oldLink}`}
+                  {m.bot && ` · ${tr.ask.fromBot}`}
                 </Text>
                 <Pressable
                   onPress={() => setExporting(m)}

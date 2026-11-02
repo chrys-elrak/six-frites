@@ -31,6 +31,7 @@ export function toUserDTO(u: User): UserDTO {
     hasBackupPin: u.backupPinHash !== null,
     hasAppLock: u.appLockHash !== null,
     ads: !u.adsDisabled,
+    anonBot: !u.anonBotDisabled,
     quickReactions: u.quickReactions,
     guest: u.guest,
     chatBan: chatBanned(u) ? { until: u.bannedUntil?.toISOString() ?? null } : null,

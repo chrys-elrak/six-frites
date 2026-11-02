@@ -17,6 +17,7 @@ export const UserDTO = z.object({
   hasBackupPin: z.boolean().describe("Whether a new device can restore your backup with your 6-digit PIN"),
   hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
   ads: z.boolean().describe("Whether the apps show you ads; admins can turn them off for you"),
+  anonBot: z.boolean().describe("Whether the Six Frites bot sends you a question in your anonymous inbox now and then"),
   quickReactions: z.array(z.string()).describe("The emojis offered first when you react, in order; empty means the defaults"),
   guest: z
     .boolean()

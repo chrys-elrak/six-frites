@@ -139,6 +139,10 @@
                           "type": "boolean",
                           "description": "Whether the apps show you ads; admins can turn them off for you"
                         },
+                        "anonBot": {
+                          "type": "boolean",
+                          "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                        },
                         "quickReactions": {
                           "type": "array",
                           "items": {
@@ -188,6 +192,7 @@
                         "hasBackupPin",
                         "hasAppLock",
                         "ads",
+                        "anonBot",
                         "quickReactions",
                         "guest",
                         "chatBan",
@@ -298,6 +303,10 @@
                           "type": "boolean",
                           "description": "Whether the apps show you ads; admins can turn them off for you"
                         },
+                        "anonBot": {
+                          "type": "boolean",
+                          "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                        },
                         "quickReactions": {
                           "type": "array",
                           "items": {
@@ -347,6 +356,7 @@
                         "hasBackupPin",
                         "hasAppLock",
                         "ads",
+                        "anonBot",
                         "quickReactions",
                         "guest",
                         "chatBan",
@@ -4478,6 +4488,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -4527,6 +4541,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -4639,6 +4654,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -4688,6 +4707,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -4814,6 +4834,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -4863,6 +4887,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -4939,6 +4964,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -4988,6 +5017,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -5286,6 +5316,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -5335,6 +5369,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -5408,6 +5443,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -5457,6 +5496,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -40110,6 +40150,10 @@
                                     "type": "boolean",
                                     "description": "Whether the apps show you ads; admins can turn them off for you"
                                   },
+                                  "anonBot": {
+                                    "type": "boolean",
+                                    "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                                  },
                                   "quickReactions": {
                                     "type": "array",
                                     "items": {
@@ -40159,6 +40203,7 @@
                                   "hasBackupPin",
                                   "hasAppLock",
                                   "ads",
+                                  "anonBot",
                                   "quickReactions",
                                   "guest",
                                   "chatBan",
@@ -41077,6 +41122,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -41126,6 +41175,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -41272,6 +41322,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -41321,6 +41375,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",
@@ -44809,6 +44864,10 @@
                           "oldLink": {
                             "type": "boolean",
                             "description": "Came through a link the recipient has since replaced; always false on sent messages"
+                          },
+                          "bot": {
+                            "type": "boolean",
+                            "description": "A question from the Six Frites bot, not from a person"
                           }
                         },
                         "required": [
@@ -44820,7 +44879,8 @@
                           "gif",
                           "voice",
                           "createdAt",
-                          "oldLink"
+                          "oldLink",
+                          "bot"
                         ],
                         "additionalProperties": false
                       }
@@ -45009,6 +45069,10 @@
                             "type": "boolean",
                             "description": "Came through a link the recipient has since replaced; always false on sent messages"
                           },
+                          "bot": {
+                            "type": "boolean",
+                            "description": "A question from the Six Frites bot, not from a person"
+                          },
                           "to": {
                             "type": "object",
                             "properties": {
@@ -45045,6 +45109,7 @@
                           "voice",
                           "createdAt",
                           "oldLink",
+                          "bot",
                           "to"
                         ],
                         "additionalProperties": false
@@ -45407,6 +45472,10 @@
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
                     },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
                     "quickReactions": {
                       "type": "array",
                       "items": {
@@ -45456,6 +45525,155 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "ads",
+                    "anonBot",
+                    "quickReactions",
+                    "guest",
+                    "chatBan",
+                    "termsAccepted",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ask/bot": {
+      "put": {
+        "summary": "Turn the Six Frites bot's questions on or off",
+        "tags": [
+          "ask"
+        ],
+        "description": "Now and then, at no set time, the bot sends a question to your anonymous inbox, never the same one twice.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "on": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "on"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "contactCode": {
+                      "type": "string",
+                      "description": "Share it (or its QR code) so people can find you"
+                    },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                    },
+                    "backupKeyId": {
+                      "nullable": true,
+                      "description": "Identifies the key from your recovery key; null until you set up a recovery key",
+                      "type": "string"
+                    },
+                    "hasBackupPin": {
+                      "type": "boolean",
+                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                    },
+                    "hasAppLock": {
+                      "type": "boolean",
+                      "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether the apps show you ads; admins can turn them off for you"
+                    },
+                    "anonBot": {
+                      "type": "boolean",
+                      "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                    },
+                    "quickReactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The emojis offered first when you react, in order; empty means the defaults"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
+                    },
+                    "chatBan": {
+                      "nullable": true,
+                      "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                      "type": "object",
+                      "properties": {
+                        "until": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "until"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "termsAccepted": {
+                      "type": "boolean",
+                      "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "avatarUrl",
+                    "contactCode",
+                    "askCode",
+                    "backupKeyId",
+                    "hasBackupPin",
+                    "hasAppLock",
+                    "ads",
+                    "anonBot",
                     "quickReactions",
                     "guest",
                     "chatBan",

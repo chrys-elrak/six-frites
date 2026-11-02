@@ -100,6 +100,7 @@ export async function createReport(reporterId: string, input: CreateReportInput)
       where: { id: input.anonMessageId, recipientId: reporterId, recipientDeletedAt: null },
     });
     if (!m) throw new AppError("MESSAGE_NOT_FOUND");
+    if (!m.senderId) throw new AppError("VALIDATION_FAILED", "Six Frites sent this one; turn its questions off in your settings");
     if (m.senderId === reporterId) throw new AppError("VALIDATION_FAILED", "You can't report your own message");
     snapshot = [
       {
