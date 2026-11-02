@@ -46,7 +46,7 @@ import {
   Trash2,
   X,
 } from "lucide-react-native";
-import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentRef, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { randomUUID } from "expo-crypto";
 import { File, Paths } from "expo-file-system";
 import { Keyboard, Pressable, ScrollView, StyleSheet, View, findNodeHandle } from "react-native";
@@ -65,7 +65,7 @@ import { useRealtime } from "@/lib/realtime";
 import { type Draft, type LocalFile, queueMessage } from "@/lib/send";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
-import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
+import { brand, brandInk, flame, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { NewChecklist } from "./checklist";
 import { NewGame } from "./game";
@@ -212,17 +212,19 @@ export function Composer({
 
   const editing = mode?.kind === "edit" ? mode.message : null;
 
-  useEffect(() => {
-    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (useDrafts.getState().byChat[chatId] ?? ""));
-  }, [editing, chatId, draftsReady]);
-
   const stored = useDrafts((s) => s.byChat[chatId] ?? "");
-  useEffect(() => {
+  const [shownFor, setShownFor] = useState({ editing: null as typeof editing, chatId, draftsReady, stored });
+  if (shownFor.editing !== editing || shownFor.chatId !== chatId || shownFor.draftsReady !== draftsReady) {
+    setShownFor({ editing, chatId, draftsReady, stored });
+    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : stored);
+  } else if (shownFor.stored !== stored) {
+    setShownFor({ ...shownFor, stored });
     if (!editing && stored.trim() !== text.trim()) setText(stored);
-  }, [stored]);
+  }
 
+  const pullDraft = useEffectEvent(() => chat && void receiveDraft(chat));
   useEffect(() => {
-    if (chat) void receiveDraft(chat);
+    pullDraft();
   }, [chat?.id, chat?.encrypted, chat?.draft?.at]);
 
   useEffect(() => {
@@ -305,7 +307,8 @@ export function Composer({
   }
 
   const query = parseCommand(text) && silentMessage(text) === null ? null : emojiQuery(text, caret);
-  const suggestions = useMemo(() => (query ? suggestEmoji(allEmoji, query.query) : []), [query?.query]);
+  const typed = query?.query;
+  const suggestions = useMemo(() => (typed ? suggestEmoji(allEmoji, typed) : []), [typed]);
 
   function pickSuggestion(emoji: string) {
     if (!query) return;

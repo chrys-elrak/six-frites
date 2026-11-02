@@ -26,7 +26,7 @@ import { Image } from "expo-image";
 import { type Href, router } from "expo-router";
 import { ArrowLeft, Gamepad2, Mic, MoreVertical, Reply, SendHorizontal, Smile, X } from "lucide-react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import { type ComponentRef, useEffect, useRef, useState } from "react";
+import { type ComponentRef, useEffect, useEffectEvent, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
@@ -290,8 +290,9 @@ function RoomChat({
     return () => clearTimeout(timer);
   }, [search]);
 
+  const stopAtLimit = useEffectEvent(() => void stopVoice(true));
   useEffect(() => {
-    if (recording && rec.durationMillis >= LIVE_VOICE_MS) void stopVoice(true);
+    if (recording && rec.durationMillis >= LIVE_VOICE_MS) stopAtLimit();
   }, [recording, rec.durationMillis]);
 
   async function startVoice() {

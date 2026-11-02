@@ -17,7 +17,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   const bar = useAnimatedStyle(() => ({ transform: [{ scaleX: life.value }] }));
 
   useEffect(() => {
-    life.value = withTiming(0, { duration: 5000, easing: Easing.linear });
+    life.set(withTiming(0, { duration: 5000, easing: Easing.linear }));
   }, [life]);
 
   return (

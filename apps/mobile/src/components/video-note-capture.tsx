@@ -1,11 +1,12 @@
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { EyeOff, RefreshCw, Square, Volume2, VolumeX } from "lucide-react-native";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useEffectEvent, useImperativeHandle, useRef, useState } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "./text";
 import Svg, { Circle, Path } from "react-native-svg";
 import { formatDuration } from "@/lib/format";
+import { useLatest } from "@/lib/latest";
 import { useT } from "@/lib/i18n";
 import type { LocalFile } from "@/lib/send";
 import { brand } from "@/lib/theme";
@@ -109,14 +110,16 @@ export const VideoNoteCapture = forwardRef<
   const pending = useRef<Promise<{ uri: string } | undefined> | null>(null);
   const startedAt = useRef(0);
   const stopped = useRef(false);
-  const handlers = useRef({ onTick, onLimit });
-  handlers.current = { onTick, onLimit };
+  const handlers = useLatest({ onTick, onLimit });
 
   useEffect(() => {
     if (camPerm && !camPerm.granted && camPerm.canAskAgain) void requestCam();
     else if (micPerm && !micPerm.granted && micPerm.canAskAgain) void requestMic();
   }, [camPerm, micPerm, requestCam, requestMic]);
 
+  const stopIfRecording = useEffectEvent(() => {
+    if (pending.current && !stopped.current) camera.current?.stopRecording();
+  });
   useEffect(() => {
     const timer = setInterval(() => {
       if (!pending.current || stopped.current) return;
@@ -126,9 +129,9 @@ export const VideoNoteCapture = forwardRef<
     }, 100);
     return () => {
       clearInterval(timer);
-      if (pending.current && !stopped.current) camera.current?.stopRecording();
+      stopIfRecording();
     };
-  }, []);
+  }, [handlers]);
 
   function begin() {
     if (pending.current || stopped.current || !camera.current) return;
@@ -229,7 +232,9 @@ export function VideoNotePreview({
     p.loop = true;
     p.play();
   });
+  // eslint-disable-next-line react-hooks/immutability -- expo-video players are controlled by assigning their properties
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- expo-video players are controlled by assigning their properties
     player.muted = options.muted;
   }, [player, options.muted]);
   return (

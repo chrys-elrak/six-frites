@@ -27,7 +27,7 @@ import {
 import { useFonts } from "expo-font";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { Check, Crop, Droplet, FlipHorizontal2, Pencil, RotateCcw, Smile, Trash2, Type, Undo2, X } from "lucide-react-native";
-import { type Ref, useEffect, useMemo, useRef, useState } from "react";
+import { type Ref, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   type GestureResponderHandlers,
@@ -43,6 +43,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, G, Mask, Path, Image as SvgImage, Text as SvgText } from "react-native-svg";
 import { useT } from "@/lib/i18n";
+import { useLatest } from "@/lib/latest";
 import { editPhoto, editedFromPng } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
 import { brand, brandInk } from "@/lib/theme";
@@ -242,6 +243,7 @@ export function PhotoEditor({
   const [fontsLoaded, fontsFailed] = useFonts(FONT_FILES);
   const ready = src && (fontsLoaded || !!fontsFailed);
 
+  const fail = useEffectEvent(onCancel);
   useEffect(() => {
     let gone = false;
     (async () => {
@@ -253,11 +255,11 @@ export function PhotoEditor({
       const tinyRef = await ImageManipulator.manipulate(base).resize({ width: BLUR_DETAIL }).renderAsync();
       const tiny = (await tinyRef.saveAsync({ format: SaveFormat.PNG })).uri;
       if (!gone) setSrc({ uri, tiny, width: base.width, height: base.height });
-    })().catch(onCancel);
+    })().catch(fail);
     return () => {
       gone = true;
     };
-  }, [file.uri]);
+  }, [file.uri, file.mime]);
 
   const view = tool === "crop" ? FULL_CROP : edit.crop;
   const oriented = src ? orientedSize(src.width, src.height, edit.turns) : { width: 1, height: 1 };
@@ -281,8 +283,7 @@ export function PhotoEditor({
   };
 
   const handle = { x: half.halfW * onScreen, y: half.halfH * onScreen };
-  const latest = useRef({ edit, tool, view, frame, oriented, color, size, selected, handle });
-  latest.current = { edit, tool, view, frame, oriented, color, size, selected, handle };
+  const latest = useLatest({ edit, tool, view, frame, oriented, color, size, selected, handle });
 
   const grips = useMemo(
     () =>
@@ -304,38 +305,39 @@ export function PhotoEditor({
           return [handle, pan.panHandlers];
         }),
       ) as Record<CropHandle, GestureResponderHandlers>,
-    [],
+    [latest],
   );
 
   const sizer = useMemo(() => {
-    let index = -1;
-    let from: Label | undefined;
-    let corner = { x: 0, y: 0 };
+    const drag: { index: number; from?: Label; corner: { x: number; y: number } } = { index: -1, corner: { x: 0, y: 0 } };
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
         const { edit: ed, selected: s, handle: h } = latest.current;
-        index = s ?? -1;
-        from = ed.labels[index];
-        corner = h;
+        drag.index = s ?? -1;
+        drag.from = ed.labels[drag.index];
+        drag.corner = h;
         setHistory((list) => [...list, ed]);
       },
       onPanResponderMove: (_, g) => {
+        const { from, corner, index } = drag;
         if (!from) return;
         const l = scaleLabel(from, Math.hypot(corner.x + g.dx, corner.y + g.dy) / Math.max(1, Math.hypot(corner.x, corner.y)));
         setEdit((now) => ({ ...now, labels: now.labels.map((it, i) => (i === index ? l : it)) }));
       },
     });
-  }, []);
+  }, [latest]);
 
   const touch = useMemo(() => {
-    let start = { x: 0, y: 0 };
-    let index = -1;
-    let from: Label | undefined;
-    let moved = false;
-    let onLabel = false;
-    let pinch: { from: Label; distance: number } | null = null;
+    const drag: {
+      start: { x: number; y: number };
+      index: number;
+      from?: Label;
+      moved: boolean;
+      onLabel: boolean;
+      pinch: { from: Label; distance: number } | null;
+    } = { start: { x: 0, y: 0 }, index: -1, moved: false, onLabel: false, pinch: null };
     const at = (x: number, y: number) => {
       const { view: v, frame: f } = latest.current;
       return [v.x + (x / f.width) * v.w, v.y + (y / f.height) * v.h] as const;
@@ -350,39 +352,39 @@ export function PhotoEditor({
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (e) => {
         const { edit: ed, tool: t, oriented: o, color: c, size: s } = latest.current;
-        start = { x: e.nativeEvent.locationX, y: e.nativeEvent.locationY };
-        moved = false;
-        pinch = null;
+        drag.start = { x: e.nativeEvent.locationX, y: e.nativeEvent.locationY };
+        drag.moved = false;
+        drag.pinch = null;
         if (drawing()) {
-          index = -1;
-          from = undefined;
-          const stroke = { blur: t === "blur" || undefined, color: c, size: (t === "blur" ? BLUR_SIZES : PEN_SIZES)[s]!, points: [...at(start.x, start.y)] };
+          drag.index = -1;
+          drag.from = undefined;
+          const stroke = { blur: t === "blur" || undefined, color: c, size: (t === "blur" ? BLUR_SIZES : PEN_SIZES)[s]!, points: [...at(drag.start.x, drag.start.y)] };
           setHistory((h) => [...h, ed]);
           setEdit((now) => ({ ...now, strokes: [...now.strokes, stroke] }));
           return;
         }
-        const hit = labelAt(ed.labels, ...at(start.x, start.y), o.width, o.height);
-        onLabel = hit >= 0;
-        index = onLabel ? hit : (latest.current.selected ?? -1);
-        from = ed.labels[index];
+        const hit = labelAt(ed.labels, ...at(drag.start.x, drag.start.y), o.width, o.height);
+        drag.onLabel = hit >= 0;
+        drag.index = drag.onLabel ? hit : (latest.current.selected ?? -1);
+        drag.from = ed.labels[drag.index];
       },
       onPanResponderMove: (e, g) => {
         const touches = e.nativeEvent.touches;
-        if (from && touches.length >= 2) {
+        if (drag.from && touches.length >= 2) {
           const distance = Math.hypot(touches[0]!.pageX - touches[1]!.pageX, touches[0]!.pageY - touches[1]!.pageY);
           const ed = latest.current.edit;
-          if (!pinch) {
-            pinch = { from: ed.labels[index]!, distance: Math.max(1, distance) };
-            if (!moved) setHistory((h) => [...h, ed]);
-            moved = true;
+          if (!drag.pinch) {
+            drag.pinch = { from: ed.labels[drag.index]!, distance: Math.max(1, distance) };
+            if (!drag.moved) setHistory((h) => [...h, ed]);
+            drag.moved = true;
           }
-          const l = scaleLabel(pinch.from, distance / pinch.distance);
-          setEdit((now) => ({ ...now, labels: now.labels.map((it, i) => (i === index ? l : it)) }));
+          const l = scaleLabel(drag.pinch.from, distance / drag.pinch.distance);
+          setEdit((now) => ({ ...now, labels: now.labels.map((it, i) => (i === drag.index ? l : it)) }));
           return;
         }
-        if (pinch || (index >= 0 && !onLabel)) return;
-        if (index < 0) {
-          const [x, y] = at(start.x + g.dx, start.y + g.dy);
+        if (drag.pinch || (drag.index >= 0 && !drag.onLabel)) return;
+        if (drag.index < 0) {
+          const [x, y] = at(drag.start.x + g.dx, drag.start.y + g.dy);
           setEdit((now) => {
             const strokes = now.strokes.slice();
             const last = strokes.at(-1)!;
@@ -391,22 +393,22 @@ export function PhotoEditor({
           });
           return;
         }
-        if (!from || (!moved && Math.hypot(g.dx, g.dy) < 6)) return;
+        if (!drag.from || (!drag.moved && Math.hypot(g.dx, g.dy) < 6)) return;
         const { view: v, frame: f, edit: ed } = latest.current;
-        if (!moved) setHistory((h) => [...h, ed]);
-        moved = true;
-        const l = { ...from, x: from.x + (g.dx / f.width) * v.w, y: from.y + (g.dy / f.height) * v.h };
-        setEdit((now) => ({ ...now, labels: now.labels.map((it, i) => (i === index ? l : it)) }));
+        if (!drag.moved) setHistory((h) => [...h, ed]);
+        drag.moved = true;
+        const l = { ...drag.from, x: drag.from.x + (g.dx / f.width) * v.w, y: drag.from.y + (g.dy / f.height) * v.h };
+        setEdit((now) => ({ ...now, labels: now.labels.map((it, i) => (i === drag.index ? l : it)) }));
       },
       onPanResponderRelease: () => {
-        if (index < 0 || !from) return;
-        if (!onLabel && !pinch) return setSelected(null);
-        if (moved || latest.current.selected !== index) return setSelected(index);
-        const sizes = from.emoji ? EMOJI_SIZES : TEXT_SIZES;
-        setWriting({ index, text: from.text, color: from.color, size: sizes.indexOf(from.size), font: from.font ?? "classic", emoji: from.emoji });
+        if (drag.index < 0 || !drag.from) return;
+        if (!drag.onLabel && !drag.pinch) return setSelected(null);
+        if (drag.moved || latest.current.selected !== drag.index) return setSelected(drag.index);
+        const sizes = drag.from.emoji ? EMOJI_SIZES : TEXT_SIZES;
+        setWriting({ index: drag.index, text: drag.from.text, color: drag.from.color, size: sizes.indexOf(drag.from.size), font: drag.from.font ?? "classic", emoji: drag.from.emoji });
       },
     });
-  }, []);
+  }, [latest]);
 
   function finishWriting() {
     const w = writing!;
@@ -452,7 +454,7 @@ export function PhotoEditor({
     editPhoto(file, edit, src.width, src.height).then(onDone, onCancel);
   }
 
-  useEffect(() => {
+  const exportDrawing = useEffectEvent(() => {
     if (!exporting || tool === "crop" || !svg.current || !(edit.strokes.length || edit.labels.length)) return;
     const px = cropPixels(edit.crop, oriented.width, oriented.height);
     const k = Math.min(1, EXPORT_EDGE / Math.max(px.width, px.height));
@@ -460,6 +462,9 @@ export function PhotoEditor({
       width: Math.round(px.width * k),
       height: Math.round(px.height * k),
     });
+  });
+  useEffect(() => {
+    exportDrawing();
   }, [exporting, tool]);
 
   const pick = (t: Tool) => {

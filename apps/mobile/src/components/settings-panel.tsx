@@ -359,6 +359,7 @@ export function FindMe() {
 }
 
 export function Invites() {
+  const [now] = useState(Date.now);
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
@@ -405,7 +406,7 @@ export function Invites() {
           <PrimaryButton title={tr.settings.newLink} onPress={() => setCreating(true)} disabled={!!note} />
         </View>
         {items.map((i) => {
-          const dead = i.status !== "valid" || (i.expiresAt !== null && Date.parse(i.expiresAt) < Date.now());
+          const dead = i.status !== "valid" || (i.expiresAt !== null && Date.parse(i.expiresAt) < now);
           return (
             <View key={i.code}>
               <Divider />

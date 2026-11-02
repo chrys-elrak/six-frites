@@ -79,6 +79,7 @@ export function WordHunt({
       const near = Math.abs(x - col * step - side / 2) < side * 0.42 && Math.abs(y - row * step - side / 2) < side * 0.42;
       return near ? row * 4 + col : null;
     };
+    // eslint-disable-next-line react-hooks/refs -- PanResponder only calls these on touch, never while rendering
     const pan = PanResponder.create({
       onStartShouldSetPanResponder: () => live.current.playing,
       onPanResponderTerminationRequest: () => false,

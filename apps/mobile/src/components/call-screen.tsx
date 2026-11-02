@@ -38,7 +38,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react-native";
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -72,7 +72,7 @@ const GREEN = "#16a34a";
 type Person = Pick<PublicUser, "displayName" | "avatarUrl">;
 
 function useElapsed(since: number | null) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(Date.now);
   useEffect(() => {
     if (!since) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -109,7 +109,7 @@ function Backdrop({ user }: { user: Person }) {
 
 function FloatingEmoji({ id, emoji, mine }: Call["reactions"][number]) {
   const { height } = useWindowDimensions();
-  const t = useRef(new Animated.Value(0)).current;
+  const [t] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const run = Animated.timing(t, { toValue: 1, duration: 2800, easing: Easing.out(Easing.quad), useNativeDriver: true });
     run.start();
@@ -149,7 +149,7 @@ function FloatingReactions({ reactions }: { reactions: Call["reactions"] }) {
 /** Shakes for a beat before the picks show, like fists pumping or a die tumbling. */
 function useShake() {
   const [revealed, setRevealed] = useState(false);
-  const bounce = useRef(new Animated.Value(0)).current;
+  const [bounce] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const step = (toValue: number) => Animated.timing(bounce, { toValue, duration: 150, useNativeDriver: true });
     const shake = Animated.loop(Animated.sequence([step(1), step(0)]), { iterations: 3 });
@@ -522,10 +522,11 @@ export function CallScreen() {
   const elapsed = useElapsed(call?.status === "active" ? call.startedAt : null);
   const [small, setSmall] = useState<"video" | "pill" | null>(null);
   const [tray, setTray] = useState(false);
-  useEffect(() => setSmall(null), [call?.id]);
-  useEffect(() => {
-    if (call?.gameOpen) setSmall(null);
-  }, [call?.gameOpen]);
+  const [seen, setSeen] = useState({ id: call?.id, gameOpen: call?.gameOpen });
+  if (seen.id !== call?.id || seen.gameOpen !== call?.gameOpen) {
+    setSeen({ id: call?.id, gameOpen: call?.gameOpen });
+    if (seen.id !== call?.id || call?.gameOpen) setSmall(null);
+  }
   if (!call) return null;
 
   const incomingRinging = call.direction === "incoming" && call.status === "ringing";

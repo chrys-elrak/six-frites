@@ -1,11 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MessageEffect } from "@six/shared";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Animated, Easing, type LayoutRectangle, Pressable, StyleSheet, View, type ViewStyle } from "react-native";
 import { create } from "zustand";
 import { useT } from "@/lib/i18n";
-import { useTheme } from "@/lib/theme";
-import { Text } from "./text";
 
 const KEY = "six:effects-seen";
 
@@ -25,7 +23,7 @@ function markSeen(id: string) {
 const CONFETTI = ["#f97316", "#facc15", "#22c55e", "#3b82f6", "#ec4899", "#a855f7"];
 
 function useLoop(ms: number, delay = 0) {
-  const v = useRef(new Animated.Value(0)).current;
+  const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
@@ -77,7 +75,7 @@ function Gift({ radius, onOpen }: { radius: ViewStyle; onOpen: () => void }) {
 }
 
 function Particle({ effect, i, n }: { effect: "hearts" | "confetti"; i: number; n: number }) {
-  const v = useRef(new Animated.Value(0)).current;
+  const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
     Animated.timing(v, {
       toValue: 1,
@@ -123,6 +121,7 @@ export function EffectLayer({ effect, id, box, radius }: { effect: MessageEffect
     if (!ready || (effect !== "hearts" && effect !== "confetti")) return;
     if (useSeen.getState().ids.includes(`play:${id}`)) return;
     markSeen(`play:${id}`);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- plays once, after the list of seen effects loads from storage
     setBurst(true);
     const t = setTimeout(() => setBurst(false), 2200);
     return () => clearTimeout(t);

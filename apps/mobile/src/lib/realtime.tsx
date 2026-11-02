@@ -3,6 +3,7 @@ import type { AnonMessageDTO, ChangeEventDTO, ChatDTO, MessageDTO } from "@six/s
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "expo-router";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useLatest } from "./latest";
 import { AppState } from "react-native";
 import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
 import { chatKeys, insertMessage, patchChat, upsertChat } from "./chats";
@@ -146,8 +147,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const meId = useSession((s) => s.user?.id);
   const [status, setStatus] = useState<Status>("connecting");
   const [realtime, setRealtime] = useState<Realtime | null>(null);
-  const me = useRef(meId);
-  me.current = meId;
+  const me = useLatest(meId);
   const pathname = usePathname();
   const path = useRef(pathname);
   useEffect(() => {
@@ -170,6 +170,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     attachCalls(meId, rt);
     rt.start();
     rt.setPresence(AppState.currentState === "active");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the effect owns the socket, so it hands it out once it exists
     setRealtime(rt);
     const sub = AppState.addEventListener("change", (state) => {
       rt.setPresence(state === "active");
@@ -180,7 +181,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       rt.stop();
       setRealtime(null);
     };
-  }, [meId, qc]);
+  }, [meId, qc, me]);
 
   return <Ctx.Provider value={{ realtime, status }}>{children}</Ctx.Provider>;
 }

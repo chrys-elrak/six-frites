@@ -1,7 +1,7 @@
 import { E2EE, type Hydrated, decryptFile } from "@six/sdk";
 import type { ChatDTO, EncryptedFile, MessageDTO } from "@six/shared";
 import { Directory, File, Paths } from "expo-file-system";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { AppState } from "react-native";
 import { create } from "zustand";
 import { closeDrafts, openDrafts } from "./drafts";
@@ -196,7 +196,9 @@ export function useHydratedMessages(meId: string, messages: MessageDTO[]) {
   const byKey = useDecrypted((s) => s.byKey);
   const retries = useDecrypted((s) => s.retries);
   const latest = useRef(messages);
-  latest.current = messages;
+  useLayoutEffect(() => {
+    latest.current = messages;
+  });
   const decryptSeen = useCallback(() => {
     for (const m of [...latest.current].reverse()) {
       if (m.encryption && onScreen.has(m.id)) decrypt(meId, m, () => onScreen.has(m.id));

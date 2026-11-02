@@ -34,7 +34,7 @@ export function EphemeralViewer({
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(Date.now);
   const left = deadline ? Math.max(0, deadline - now) : null;
   const e = message?.ephemeral;
   const a = message?.attachment;

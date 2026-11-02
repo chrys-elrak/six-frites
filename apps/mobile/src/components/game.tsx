@@ -71,7 +71,7 @@ interface Colors {
 /** Shakes for a beat before showing an answer that just came in; older ones show straight away. */
 function useReveal(at: string) {
   const [revealed, setRevealed] = useState(() => Date.now() - Date.parse(at) > 3000);
-  const bounce = useRef(new Animated.Value(0)).current;
+  const [bounce] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (revealed) return;
     const step = (toValue: number) => Animated.timing(bounce, { toValue, duration: 150, useNativeDriver: true });
@@ -291,27 +291,29 @@ function SketchPad({ strokes, setStrokes }: { strokes: DrawStroke[]; setStrokes:
   const [color, setColor] = useState(1);
   const live = useRef({ strokes, color: 1, size: 1 });
   const pan = useMemo(() => {
-    let start = { x: 0, y: 0 };
-    let drawing = false;
+    const touch = { start: { x: 0, y: 0 }, drawing: false };
     const update = (next: DrawStroke[]) => {
       if (next === live.current.strokes) return false;
       live.current.strokes = next;
       setStrokes(next);
       return true;
     };
+    // eslint-disable-next-line react-hooks/refs -- PanResponder only calls these on touch, never while rendering
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (e) => {
         const { strokes: s, color: c, size } = live.current;
-        start = { x: e.nativeEvent.locationX, y: e.nativeEvent.locationY };
-        drawing = update(drawStart(s, c, start.x / size, start.y / size));
+        touch.start = { x: e.nativeEvent.locationX, y: e.nativeEvent.locationY };
+        touch.drawing = update(drawStart(s, c, touch.start.x / size, touch.start.y / size));
       },
       onPanResponderMove: (_, g) => {
         const { strokes: s, size } = live.current;
-        if (drawing) update(drawTo(s, (start.x + g.dx) / size, (start.y + g.dy) / size));
+        if (touch.drawing) update(drawTo(s, (touch.start.x + g.dx) / size, (touch.start.y + g.dy) / size));
       },
-      onPanResponderRelease: () => (drawing = false),
+      onPanResponderRelease: () => {
+        touch.drawing = false;
+      },
     });
   }, [setStrokes]);
   return (

@@ -34,7 +34,7 @@ import {
   UserPlus,
   Video,
 } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
 import { isFrozen, useChats } from "@/lib/chats";
@@ -152,7 +152,8 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const [menu, setMenu] = useState(false);
   const typing = useTyping(chat.id);
   const draft = useDrafts((s) => s.byChat[chat.id]);
-  useEffect(() => void receiveDraft(chat), [chat.id, chat.encrypted, chat.draft?.at]);
+  const pullDraft = useEffectEvent(() => void receiveDraft(chat));
+  useEffect(() => pullDraft(), [chat.id, chat.encrypted, chat.draft?.at]);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const online = usePresence(peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;

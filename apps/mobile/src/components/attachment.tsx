@@ -3,7 +3,7 @@ import { useEvent } from "expo";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { AlertCircle, Download, EyeOff, FileText, FileX, Pause, Play, X } from "lucide-react-native";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useEffectEvent, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "./text";
 import {
@@ -18,12 +18,12 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-na
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { shareRemoteFile } from "@/lib/download";
+import { useLatest } from "@/lib/latest";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
 import {
   claimPlayback,
-  ensureAudioMode,
   pauseVoice,
   playVoice,
   seekVoice,
@@ -179,8 +179,7 @@ export function VoicePlayer({
 }) {
   const tr = useT();
   const [barsWidth, setBarsWidth] = useState(1);
-  const stopped = useRef(onStop);
-  stopped.current = onStop;
+  const stopped = useLatest(onStop);
   const isPlaying = useVoice((s) => !!url && s.track?.url === url && s.playing);
   const position = useVoice((s) => (url && s.track?.url === url ? s.position : 0));
   const loadedMs = useVoice((s) => (url && s.track?.url === url ? s.duration : 0));
@@ -197,10 +196,12 @@ export function VoicePlayer({
       onStop: (finished) => stopped.current?.(finished),
     });
 
-  useEffect(() => () => void (!track && active() && stopVoice()), [url, track?.chatId]);
+  const tracked = !!track;
+  useEffect(() => () => void (!tracked && url && useVoice.getState().track?.url === url && stopVoice()), [url, tracked]);
 
+  const autoStart = useEffectEvent(() => void start());
   useEffect(() => {
-    if (autoPlay && url) start();
+    if (autoPlay && url) autoStart();
   }, [autoPlay, url]);
 
   function seek(x: number) {
@@ -296,11 +297,12 @@ function VideoNotePlayer({ url, onDone }: { url: string; onDone: () => void }) {
   });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- expo-video players are controlled by assigning their properties
     player.playbackRate = rate;
   }, [player, rate]);
   const { currentTime } = useEvent(player, "timeUpdate", { currentTime: 0, currentLiveTimestamp: null, currentOffsetFromLive: null, bufferedPosition: 0 });
   const { isPlaying } = useEvent(player, "playingChange", { isPlaying: true, oldIsPlaying: false });
-  const stop = useRef(() => onDone()).current;
+  const [stop] = useState(() => () => onDone());
 
   useEffect(() => {
     claimPlayback(stop);
@@ -709,8 +711,7 @@ function ZoomImage({
   const view = useRef(NO_ZOOM);
   const pinchStart = useRef({ was: NO_ZOOM, at: { x: 0, y: 0 } });
   const panStart = useRef(NO_ZOOM);
-  const latest = useRef({ width, height, onZoom });
-  latest.current = { width, height, onZoom };
+  const latest = useLatest({ width, height, onZoom });
 
   const center = (px: number, py: number) => ({ x: px - latest.current.width / 2, y: py - latest.current.height / 2 });
   const fit = (was: ZoomView, scale: number, from: { x: number; y: number }, to: { x: number; y: number }) =>

@@ -26,13 +26,11 @@ export function MemoryBoard({
   const { width } = useWindowDimensions();
   const card = (Math.min(width - 32, 400) - GAP * (COLUMNS - 1)) / COLUMNS;
   const missed = state.open.length === 2 ? state.open.join() : null;
-  const [hidden, setHidden] = useState<string | null>(null);
+  const [peek, setPeek] = useState({ missed, over: false });
+  if (peek.missed !== missed) setPeek({ missed, over: false });
   useEffect(() => {
-    if (!missed) {
-      setHidden(null);
-      return;
-    }
-    const timer = setTimeout(() => setHidden(missed), PEEK_MS);
+    if (!missed) return;
+    const timer = setTimeout(() => setPeek({ missed, over: true }), PEEK_MS);
     return () => clearTimeout(timer);
   }, [missed]);
   const mine = room.mySeat !== null && state.turn === room.mySeat && room.status === "playing" && !state.winners;
@@ -42,7 +40,7 @@ export function MemoryBoard({
       <View style={[styles.grid, { width: card * COLUMNS + GAP * (COLUMNS - 1) }]}>
         {state.faces.map((face, i) => {
           const owner = state.taken[i] ?? null;
-          const up = face !== null && (owner !== null || !missed || hidden !== missed);
+          const up = face !== null && (owner !== null || !missed || !peek.over);
           const can = mine && owner === null && !(state.open.length === 1 && state.open[0] === i);
           return (
             <Pressable

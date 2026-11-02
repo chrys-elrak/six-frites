@@ -2,7 +2,7 @@ import { unwrap } from "@six/sdk";
 import { type ChatDTO, findInText, maskSpoilers, messageLinks, previewText } from "@six/shared";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { CalendarDays, MessageSquareText, Search as SearchIcon, X } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Linking,
@@ -16,6 +16,7 @@ import {
 import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHydratedMessages } from "@/lib/e2ee";
+import { useLatest } from "@/lib/latest";
 import { dayLabel, listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -52,11 +53,10 @@ function useShared(chatId: string, tab: SharedTab, range: Range, { seeAll = fals
   });
   const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
   const { shown, see } = useHydratedMessages(meId, items);
-  const seeRef = useRef(see);
-  seeRef.current = see;
-  const onViewable = useRef(({ viewableItems }: { viewableItems: ListViewToken[] }) =>
+  const seeRef = useLatest(see);
+  const [onViewable] = useState(() => ({ viewableItems }: { viewableItems: ListViewToken[] }) =>
     seeRef.current(viewableItems.map((v) => (v.item as { id: string }).id)),
-  ).current;
+  );
   useEffect(() => {
     if (seeAll) see(items.map((m) => m.id));
   }, [seeAll, see, items]);

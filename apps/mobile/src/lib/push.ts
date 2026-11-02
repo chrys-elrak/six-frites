@@ -1,5 +1,6 @@
 import { unwrap } from "@six/sdk";
 import * as Notifications from "expo-notifications";
+import { AndroidImportance } from "expo-notifications";
 import { type Href, router } from "expo-router";
 import { useEffect } from "react";
 import { Linking, Platform } from "react-native";
@@ -16,7 +17,7 @@ async function saveToken(token: string) {
 async function register(ask: boolean) {
   await Notifications.setNotificationChannelAsync("messages", {
     name: getT().settings.messagesChannel,
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: AndroidImportance.HIGH,
   });
   const permission = ask ? await Notifications.requestPermissionsAsync() : await Notifications.getPermissionsAsync();
   if (!permission.granted) return;

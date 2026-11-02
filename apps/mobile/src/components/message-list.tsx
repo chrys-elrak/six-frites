@@ -43,9 +43,8 @@ import {
   Video,
   RotateCcw,
   Timer,
-  X,
 } from "lucide-react-native";
-import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -62,6 +61,7 @@ import {
 import { Text } from "./text";
 import Animated from "react-native-reanimated";
 import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, play, react, selfDestruct } from "@/lib/actions";
+import { useLatest } from "@/lib/latest";
 import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { useComposerMode } from "@/lib/composer";
@@ -79,7 +79,7 @@ import { deliver, forwardMessages, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
-import { brand, brandInk, flame, stone, type Theme, useTheme } from "@/lib/theme";
+import { brand, flame, stone, type Theme, useTheme } from "@/lib/theme";
 import { AnimatedEmoji } from "./animated-emoji";
 import {
   AlbumViewer,
@@ -747,8 +747,7 @@ function Bubble({
   const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
   const [fxBox, setFxBox] = useState<LayoutRectangle | null>(null);
   const canReact = !frozen && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
-  const latest = useRef({ selectable, selecting, canReact, onToggle, onMenu, onReact });
-  latest.current = { selectable, selecting, canReact, onToggle, onMenu, onReact };
+  const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact });
   const hold = useLongPressGesture({
     minDuration: 350,
     runOnJS: true,
@@ -1010,7 +1009,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [viewing, setViewing] = useState<ViewMessageResult | null>(null);
     const [opening, setOpening] = useState(false);
     const viewingRef = useRef(viewing);
-    viewingRef.current = viewing;
+    useLayoutEffect(() => {
+      viewingRef.current = viewing;
+    }, [viewing]);
     const closeViewer = useCallback(() => {
       const shown = viewingRef.current;
       if (!shown) return;
@@ -1067,15 +1068,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 
     const loaded = useMemo(() => messages.data?.pages.flatMap((p) => p.items) ?? [], [messages.data]);
     const { shown, see } = useHydratedMessages(meId, loaded);
-    const seeRef = useRef(see);
-    seeRef.current = see;
-    const onViewable = useRef(({ viewableItems }: { viewableItems: ListViewToken[] }) =>
+    const seeRef = useLatest(see);
+    const [onViewable] = useState(() => ({ viewableItems }: { viewableItems: ListViewToken[] }) =>
       seeRef.current(
         viewableItems.flatMap(({ item }: { item: Row }) =>
           item.kind === "msg" ? (item.id ? [item.id] : []) : item.kind === "service" ? [item.message.id] : [],
         ),
       ),
-    ).current;
+    );
     const ordered = useMemo(() => shown.slice().reverse(), [shown]);
     const rows = useMemo(
       () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish).reverse(),
@@ -1127,13 +1127,16 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       return rows.findIndex((r) => r.kind === "msg" && (r.id === id || !!r.album?.some((it) => it.message?.id === id)));
     }
 
-    useEffect(() => {
-      const index = jumping ? rowIndex(jumping) : -1;
-      if (index < 0) return;
+    const [jump, setJump] = useState<{ index: number } | null>(null);
+    const jumpIndex = jumping ? rowIndex(jumping) : -1;
+    if (jumping && jumpIndex >= 0) {
       setJumping(null);
-      list.current?.scrollToIndex({ index, viewPosition: 0.5, animated: false });
       setHighlight(jumping);
-    }, [jumping, rows]);
+      setJump({ index: jumpIndex });
+    }
+    useEffect(() => {
+      if (jump) list.current?.scrollToIndex({ index: jump.index, viewPosition: 0.5, animated: false });
+    }, [jump]);
 
     function jumpTo(id: string) {
       const index = rowIndex(id);

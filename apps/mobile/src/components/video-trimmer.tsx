@@ -2,10 +2,11 @@ import { cutStart, type videoCuts } from "@six/shared";
 import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Check, Play, X } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Modal, PanResponder, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatDuration } from "@/lib/format";
+import { useLatest } from "@/lib/latest";
 import { useT } from "@/lib/i18n";
 import { readVideoCuts } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
@@ -31,20 +32,21 @@ function Handle({
   onMove: (seconds: number) => void;
   onStep: (direction: 1 | -1) => void;
 }) {
-  const latest = useRef({ value, length, width, onMove });
-  latest.current = { value, length, width, onMove };
+  const latest = useLatest({ value, length, width, onMove });
   const pan = useMemo(() => {
-    let start = 0;
+    const drag = { start: 0 };
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: () => (start = latest.current.value),
+      onPanResponderGrant: () => {
+        drag.start = latest.current.value;
+      },
       onPanResponderMove: (_, g) => {
         const { length: l, width: w, onMove: move } = latest.current;
-        if (w) move(start + (g.dx / w) * l);
+        if (w) move(drag.start + (g.dx / w) * l);
       },
     });
-  }, []);
+  }, [latest]);
   return (
     <View
       {...pan.panHandlers}
@@ -100,12 +102,14 @@ export function VideoTrimmer({
   useEffect(() => {
     if (isPlaying && currentTime >= to) {
       player.pause();
+      // eslint-disable-next-line react-hooks/immutability -- expo-video players are controlled by assigning their properties
       player.currentTime = from;
     }
   }, [isPlaying, currentTime, from, to, player]);
 
   const seek = (t: number) => {
     player.pause();
+    // eslint-disable-next-line react-hooks/immutability -- expo-video players are controlled by assigning their properties
     player.currentTime = t;
   };
   const setStart = (seconds: number) => {
@@ -122,6 +126,7 @@ export function VideoTrimmer({
   };
   const toggle = () => {
     if (isPlaying) return player.pause();
+    // eslint-disable-next-line react-hooks/immutability -- expo-video players are controlled by assigning their properties
     if (player.currentTime < from || player.currentTime >= to - 0.05) player.currentTime = from;
     player.play();
   };

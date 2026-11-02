@@ -1,5 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { useRef } from "react";
+import { useLatest } from "./latest";
 import { usePanGesture } from "react-native-gesture-handler";
 import { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
@@ -13,8 +14,7 @@ const TRIGGER = 64;
 export function useSwipe(onSwipe: (() => void) | null, dir: 1 | -1) {
   const dx = useSharedValue(0);
   const pulled = useRef(0);
-  const latest = useRef(onSwipe);
-  latest.current = onSwipe;
+  const latest = useLatest(onSwipe);
 
   const gesture = usePanGesture({
     enabled: !!onSwipe,
