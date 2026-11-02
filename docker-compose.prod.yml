@@ -47,6 +47,7 @@ x-web: &web
   working_dir: /repo/apps/web
   environment:
     NODE_ENV: production
+    API_INTERNAL_URL: http://api:4000
   command: npx next start --port 3000 --hostname 0.0.0.0
   healthcheck: *web-health
 
