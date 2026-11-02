@@ -13,6 +13,7 @@ import {
   durationLabel,
   isMuted,
   themeName,
+  isFrozen,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -122,7 +123,7 @@ export function ChatMenu({
   const [range, setRange] = useState<Range | undefined>(undefined);
   const meId = useSession((s) => s.user?.id);
   const peerId = chat.members.find((m) => m.user.id !== meId)?.user.id;
-  const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
+  const frozen = isFrozen(chat);
   const block = (blocked: boolean) => peerId && void setBlocked(qc, chat, peerId, blocked).catch(() => null);
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
@@ -340,12 +341,12 @@ export function ChatMenu({
                       onSelect: () => setView("theme"),
                     },
                   ]),
-              ...(chat.peerDeleted
+              ...(chat.type !== "direct" || chat.peerDeleted
                 ? []
                 : chat.blockedByMe
                   ? [{ label: tr.chat.unblockName(peerName), onSelect: () => block(false) }]
                   : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
-              ...(chat.peerDeleted
+              ...(chat.type !== "direct" || chat.peerDeleted
                 ? []
                 : [
                     {

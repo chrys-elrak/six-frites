@@ -1,6 +1,6 @@
 "use client";
 
-import { type MessageDTO, durationLabel, isMuted } from "@six/shared";
+import { type MessageDTO, durationLabel, isFrozen, isMuted } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
@@ -147,7 +147,8 @@ export function Conversation({ chatId }: { chatId: string }) {
   const c = chat.data;
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
   const muted = isMuted(c);
-  const frozen = c.blockedByMe || c.blockedByThem || c.peerDeleted;
+  const frozen = isFrozen(c);
+  const app = c.withSupport || c.type === "games";
   const shownPresence = frozen || c.withSupport ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
 
@@ -209,9 +210,9 @@ export function Conversation({ chatId }: { chatId: string }) {
                 <ChevronLeft className="size-6" />
               </Link>
               <button
-                onClick={() => !c.withSupport && setEditing(true)}
-                className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${c.withSupport ? "cursor-default" : "cursor-pointer"}`}
-                aria-label={c.withSupport ? c.title : tr.chat.editContact(c.title)}
+                onClick={() => !app && setEditing(true)}
+                className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${app ? "cursor-default" : "cursor-pointer"}`}
+                aria-label={app ? c.title : tr.chat.editContact(c.title)}
               >
                 <Avatar user={peer} online={shownPresence?.online} />
                 <span className="min-w-0 flex-1">

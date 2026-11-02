@@ -6,9 +6,7 @@ import { deliverReleasePush } from "./push.js";
 
 const STORE_APP = "six-frites";
 
-const downloadLink = `${env.PUBLIC_URL}/v1/app/android/download`;
-
-export const storeDownloadUrl = `${env.STORE_URL}/${STORE_APP}/download`;
+export const storePage = `${env.STORE_URL}/${STORE_APP}`;
 
 const StoreRelease = z.object({
   app: z.string(),
@@ -29,7 +27,7 @@ export async function latestRelease(): Promise<LatestAppDTO | null> {
     notes: release.notes || null,
     size: release.size,
     publishedAt: release.publishedAt,
-    downloadUrl: downloadLink,
+    downloadUrl: storePage,
   };
 }
 
@@ -45,5 +43,5 @@ export function announceRelease(body: string, signature: string | undefined) {
     throw new AppError("FORBIDDEN", "The signature doesn't match");
   }
   const release = StoreRelease.parse(JSON.parse(body));
-  if (release.app === STORE_APP) void deliverReleasePush(release.version, downloadLink).catch(() => null);
+  if (release.app === STORE_APP) void deliverReleasePush(release.version, storePage).catch(() => null);
 }

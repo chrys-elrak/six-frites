@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatDTO } from "@six/shared";
+import { type ChatDTO, isFrozen } from "@six/shared";
 import { X } from "lucide-react";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
@@ -25,7 +25,7 @@ export function ChatPicker({
   const tr = useT();
   const meId = useSession((s) => s.user!.id);
   const chats = (useChats().data ?? []).filter(
-    (c) => !c.blockedByMe && !c.blockedByThem && !c.peerDeleted && c.members.some((m) => m.user.id !== meId),
+    (c) => !isFrozen(c) && c.members.some((m) => m.user.id !== meId),
   );
 
   return (

@@ -45,8 +45,7 @@ export async function loadUntil(qc: QueryClient, chatId: string, messageId: stri
   }
 }
 
-/** Nobody can write in this chat: someone blocked the other, or the other person deleted their account. */
-export const isFrozen = (c: ChatDTO) => c.blockedByMe || c.blockedByThem || c.peerDeleted;
+export { isFrozen } from "@six/shared";
 
 export function sortChats(chats: ChatDTO[]) {
   return [...chats].sort(

@@ -1,10 +1,11 @@
 "use client";
 
 import {
-  CHAT_FILTERS,
   type ChatDTO,
   type ChatFilter,
+  chatFilters,
   inChatFilter,
+  isFrozen,
   isMuted,
   maskSpoilers,
   serviceText,
@@ -134,7 +135,7 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   const draft = useDrafts((s) => (active ? undefined : s.byChat[chat.id]));
   useEffect(() => void receiveDraft(chat), [chat.id, chat.encrypted, chat.draft?.at]);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
-  const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
+  const frozen = isFrozen(chat);
   const online = usePresence(peer.id === meId || frozen ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
   const badge = unread && (
@@ -255,15 +256,8 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   const [picked, setPicked] = useState<ChatFilter>("all");
   const filtering = !archived && !rail;
   const desk = filtering && visible.some((c) => c.supportDesk);
-  const filter = !filtering || (picked === "support" && !desk) ? "all" : picked;
+  const filter = !filtering || !chatFilters(desk).includes(picked) ? "all" : picked;
   const shown = visible.filter((c) => inChatFilter(c, filter));
-  const sections =
-    desk && filter === "all"
-      ? [
-          { title: tr.support.title, items: shown.filter((c) => c.supportDesk) },
-          { title: tr.common.chats, items: shown.filter((c) => !c.supportDesk) },
-        ].filter((s) => s.items.length)
-      : [{ title: null, items: shown }];
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
   const showArchive = !archived && !rail && !needle && archivedCount > 0;
@@ -347,7 +341,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
         </label>
         {filtering && (
           <div role="tablist" className="flex w-full gap-1.5 overflow-x-auto">
-            {CHAT_FILTERS.filter((f) => f !== "support" || desk).map((f) => (
+            {chatFilters(desk).map((f) => (
               <button
                 key={f}
                 type="button"
@@ -360,7 +354,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                     : "bg-black/5 text-stone-600 hover:bg-black/10 dark:bg-white/10 dark:text-stone-300 dark:hover:bg-white/15"
                 }`}
               >
-                {f === "support" ? tr.support.title : tr.chats.filters[f]}
+                {f === "support" ? tr.support.title : f === "chats" ? tr.common.chats : tr.chats.filters[f]}
               </button>
             ))}
           </div>
@@ -420,15 +414,8 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
           {chats.isSuccess && visible.length > 0 && shown.length === 0 && (
             <p className="p-8 text-center text-sm text-stone-500">{tr.chats.filterEmpty}</p>
           )}
-          {sections.map((s) => (
-            <section key={s.title ?? "all"}>
-              {s.title && (
-                <h2 className="px-4 pt-3 pb-1 text-xs font-semibold tracking-wide text-stone-500 uppercase">{s.title}</h2>
-              )}
-              {s.items.map((c) => (
-                <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} rail={rail} />
-              ))}
-            </section>
+          {shown.map((c) => (
+            <ChatRow key={c.id} chat={c} meId={meId} active={pathname === `/chats/${c.id}`} rail={rail} />
           ))}
         </div>
       </div>

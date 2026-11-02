@@ -1,7 +1,7 @@
 import {
-  CHAT_FILTERS,
   type ChatDTO,
   type ChatFilter,
+  chatFilters,
   inChatFilter,
   maskSpoilers,
   serviceText,
@@ -17,6 +17,7 @@ import {
   EyeOff,
   Flame,
   Ghost,
+  Gamepad2,
   Lock,
   MessageCircle,
   Palette,
@@ -27,11 +28,12 @@ import {
   LifeBuoy,
   Share2,
   Timer,
+  Trophy,
   UserPlus,
   Video,
 } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, RefreshControl, SectionList, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
 import { isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
@@ -86,6 +88,10 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         ) : (
           <Phone size={14} color={color} />
         )
+      ) : m.action?.type === "live_invite" ? (
+        <Gamepad2 size={14} color={color} />
+      ) : m.action?.type === "live_result" ? (
+        <Trophy size={14} color={color} />
       ) : (
         <Timer size={14} color={color} />
       );
@@ -235,16 +241,8 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   const [picked, setPicked] = useState<ChatFilter>("all");
   const desk = !archived && visible.some((c) => c.supportDesk);
-  const filter = archived || (picked === "support" && !desk) ? "all" : picked;
+  const filter = archived || !chatFilters(desk).includes(picked) ? "all" : picked;
   const shown = visible.filter((c) => inChatFilter(c, filter));
-  const sections = (
-    desk && filter === "all"
-      ? [
-          { key: "support", title: tr.support.title, data: shown.filter((c) => c.supportDesk) },
-          { key: "chats", title: tr.common.chats, data: shown.filter((c) => !c.supportDesk) },
-        ]
-      : [{ key: "all", title: null, data: shown }]
-  ).filter((s) => s.data.length);
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
@@ -305,7 +303,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           </View>
           {!archived && (
             <View style={styles.filters}>
-              {CHAT_FILTERS.filter((f) => f !== "support" || desk).map((f) => (
+              {chatFilters(desk).map((f) => (
                 <Pressable
                   key={f}
                   onPress={() => setPicked(f)}
@@ -314,7 +312,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
                   style={[styles.filter, { backgroundColor: filter === f ? brand : t.chip }]}
                 >
                   <Text style={{ color: filter === f ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>
-                    {f === "support" ? tr.support.title : tr.chats.filters[f]}
+                    {f === "support" ? tr.support.title : f === "chats" ? tr.common.chats : tr.chats.filters[f]}
                   </Text>
                 </Pressable>
               ))}
@@ -323,15 +321,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         </View>
       </ScreenHeader>
 
-      <SectionList
-        sections={sections}
+      <FlatList
+        data={shown}
         keyExtractor={(c) => c.id}
         keyboardShouldPersistTaps="handled"
-        stickySectionHeadersEnabled={false}
         renderItem={({ item }) => <ChatRow chat={item} meId={meId} />}
-        renderSectionHeader={({ section }) =>
-          section.title ? <Text style={[styles.sectionTitle, { color: t.muted }]}>{section.title}</Text> : null
-        }
         ListHeaderComponent={header}
         refreshControl={
           <RefreshControl
@@ -382,17 +376,8 @@ const styles = StyleSheet.create({
   rowBody: { flex: 1, minWidth: 0, gap: 2 },
   rowLine: { flexDirection: "row", alignItems: "center", gap: 6 },
   name: { flexShrink: 1, fontSize: 16, fontWeight: "600" },
-  filters: { flexDirection: "row", gap: 6 },
+  filters: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   filter: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
   supportTag: {
     color: brand,
     backgroundColor: "rgba(235,138,0,0.15)",

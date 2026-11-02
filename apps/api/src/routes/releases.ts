@@ -1,6 +1,6 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { LatestAppDTO } from "@six/shared";
-import { announceRelease, latestRelease, storeDownloadUrl } from "../services/releases.js";
+import { announceRelease, latestRelease, storePage } from "../services/releases.js";
 
 /** The Android app, published on Koera Store and open to everyone so the link works before signing in. */
 const appRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -18,8 +18,8 @@ const appRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.get(
     "/app/android/download",
-    { schema: { tags: ["app"], summary: "Redirects to the newest Android APK" } },
-    (_req, reply) => reply.redirect(storeDownloadUrl, 302),
+    { schema: { tags: ["app"], summary: "Redirects to the app's page on Koera Store" } },
+    (_req, reply) => reply.redirect(storePage, 302),
   );
 
   await app.register(async (hook) => {

@@ -47,11 +47,36 @@ export type CreateLiveInput = z.infer<typeof CreateLiveInput>;
 export const LiveRoomRef = z.object({ roomId: z.string().min(1).max(64) });
 export const LiveBotInput = LiveRoomRef.extend({ add: z.boolean() });
 export const LiveMoveInput = LiveRoomRef.extend({ move: z.unknown() });
+/** How many lines of chat a room keeps. */
+export const LIVE_CHAT_LINES = 30;
+/** How long a voice note said in a room can be, and how large its recording. */
+export const LIVE_VOICE_MS = 30_000;
+export const LIVE_VOICE_BYTES = 512 * 1024;
+
+export const LiveSayInput = LiveRoomRef.extend({
+  text: z.string().trim().max(200).default(""),
+  gifId: z.string().min(1).max(100).optional().describe("A GIF from GET /v1/gifs"),
+  voice: z
+    .custom<Uint8Array>((v) => v instanceof Uint8Array && v.byteLength <= LIVE_VOICE_BYTES, "Expected a voice note up to 512 KB")
+    .optional()
+    .describe("A recorded voice note, sent as binary; the server keeps its first 30 seconds"),
+}).refine((v) => [v.text, v.gifId, v.voice].filter(Boolean).length === 1, "Say something, or send one GIF or voice note");
+export type LiveSayInput = z.infer<typeof LiveSayInput>;
+
+export interface LiveChatLineDTO {
+  user: PublicUser;
+  text: string;
+  gif: { url: string; width: number | null; height: number | null } | null;
+  voice: { url: string; durationMs: number; waveform: number[] } | null;
+  at: string;
+}
 
 export interface LiveSeatDTO {
   /** null for Frite Bot, or for a bot playing the seat of someone who left. */
   user: PublicUser | null;
   left: boolean;
+  /** Gave up: the bot plays the seat out, but it can't win. */
+  gaveUp: boolean;
 }
 
 export type LiveView =
@@ -76,6 +101,8 @@ export interface LiveRoomDTO {
   deadline: string | null;
   winners: number[];
   view: LiveView | null;
+  /** What the players said, oldest first. */
+  chat: LiveChatLineDTO[];
 }
 
 export interface LiveInviteDTO {

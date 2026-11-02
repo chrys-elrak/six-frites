@@ -196,24 +196,24 @@ async function assertNotSpam(senderId: string, recipientId: string, text: string
 }
 
 /**
- * Re-encodes a voice message to AAC, keeping its first minute and none of its metadata, and stores it under
- * the recipient like a photo.
+ * Re-encodes a voice message to AAC, keeping its first `maxMs` and none of its metadata, and stores it under
+ * `folder`: the recipient's, like a photo, for an anonymous message.
  */
-async function storeVoice(recipientId: string, dataUrl: string) {
+export async function storeVoice(folder: string, bytes: Buffer, maxMs: number) {
   const dir = await mkdtemp(join(tmpdir(), "anon-voice-"));
   try {
     const input = join(dir, "input");
     const out = join(dir, "voice.m4a");
-    await writeFile(input, Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1), "base64"));
+    await writeFile(input, bytes);
     await ffmpeg([
-      ...["-i", input, "-t", String(ANON_VOICE_MS / 1000), "-vn", "-map_metadata", "-1"],
+      ...["-i", input, "-t", String(maxMs / 1000), "-vn", "-map_metadata", "-1"],
       ...["-c:a", "aac", "-b:a", "48k", "-ac", "1", "-movflags", "+faststart", out],
     ]);
     const info = await probe(out);
     if (!info.hasAudio || !info.durationMs) throw new Error("no sound");
-    const key = `x/${recipientId}/${randomUUID()}.m4a`;
+    const key = `x/${folder}/${randomUUID()}.m4a`;
     await putObject(key, await readFile(out), "audio/mp4");
-    return { key, durationMs: Math.min(info.durationMs, ANON_VOICE_MS), waveform: await waveform(out) };
+    return { key, durationMs: Math.min(info.durationMs, maxMs), waveform: await waveform(out) };
   } catch {
     throw new AppError("VALIDATION_FAILED", "Couldn't read that voice message");
   } finally {
@@ -237,7 +237,9 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
     await putObject(photoKey, p.bytes, p.mime);
   }
   const gif = gifId ? await sharedGif(gifId) : null;
-  const sound = voice ? await storeVoice(recipient.id, voice) : null;
+  const sound = voice
+    ? await storeVoice(recipient.id, Buffer.from(voice.slice(voice.indexOf(",") + 1), "base64"), ANON_VOICE_MS)
+    : null;
   const m = await prisma.anonMessage.create({
     data: {
       recipientId: recipient.id,

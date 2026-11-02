@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import {
   AppError,
   type CreateLiveInput,
@@ -8,6 +8,10 @@ import {
   type EightsState,
   FanoronaMove,
   type FanoronaState,
+  LIVE_CHAT_LINES,
+  type LiveChatLineDTO,
+  type LiveSayInput,
+  LIVE_VOICE_MS,
   LIVE_SEATS,
   LIVE_TURN_SECONDS,
   type LiveGame,
@@ -19,6 +23,7 @@ import {
   MemoryMove,
   type MemoryState,
   type PublicUser,
+  type ServiceAction,
   WORDS_SECONDS,
   WordsMove,
   type WordsState,
@@ -47,10 +52,16 @@ import {
 } from "@six/shared";
 import type { User } from "../generated/prisma/client.js";
 import { lexicon } from "../lib/lexicon.js";
+import { withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
+import { deleteObjects, presignGet } from "../lib/storage.js";
+import { storeVoice } from "./ask.js";
 import { blockedWith } from "./blocks.js";
+import { GAMES_ACCOUNT } from "./chats.js";
 import { profilesFor } from "./contacts.js";
+import { sharedGif } from "./gifs.js";
+import { createMessage } from "./messages.js";
 import { deliverLiveInvitePush } from "./push.js";
 
 type GameState =
@@ -67,6 +78,8 @@ interface Seat {
   left: boolean;
   /** Ran out of time, so the bot plays for them until they move again. */
   away: boolean;
+  /** Gave up: the bot plays the seat out, but it can't win. */
+  gaveUp: boolean;
 }
 
 interface Room {
@@ -84,6 +97,9 @@ interface Room {
   roundTimers: NodeJS.Timeout[];
   users: Map<string, User>;
   profiles: Map<string, (u: User) => PublicUser>;
+  chat: (Omit<LiveChatLineDTO, "user" | "at"> & { userId: string; at: number })[];
+  saidAt: Map<string, number>;
+  voiceKeys: string[];
   touched: number;
 }
 
@@ -102,7 +118,7 @@ setInterval(() => {
 }, 60_000).unref();
 
 const humans = (room: Room) => room.seats.flatMap((s) => (s.userId && !s.left ? [s.userId] : []));
-const playsItself = (seat: Seat) => !seat.userId || seat.left || seat.away;
+const playsItself = (seat: Seat) => !seat.userId || seat.left || seat.away || seat.gaveUp;
 
 function startState(room: Room): GameState {
   const n = room.seats.length;
@@ -173,19 +189,22 @@ function viewOf(state: GameState, seat: number | null): LiveView {
 function toDTO(room: Room, viewerId: string): LiveRoomDTO {
   const profile = room.profiles.get(viewerId)!;
   const user = (id: string) => profile(room.users.get(id)!);
-  const mySeat = room.seats.findIndex((s) => s.userId === viewerId && !s.left);
+  const mySeat = room.seats.findIndex((s) => s.userId === viewerId && !s.left && !s.gaveUp);
   return {
     id: room.id,
     game: room.game,
     hostId: room.hostId,
     locale: room.locale,
     status: room.status,
-    seats: room.seats.map((s) => ({ user: s.userId ? user(s.userId) : null, left: s.left })),
+    seats: room.seats.map((s) => ({ user: s.userId ? user(s.userId) : null, left: s.left, gaveUp: s.gaveUp })),
     invited: room.invited.map(user),
     mySeat: mySeat < 0 ? null : mySeat,
     deadline: room.deadline ? new Date(room.deadline).toISOString() : null,
     winners: room.winners,
     view: room.state && viewOf(room.state, mySeat < 0 ? null : mySeat),
+    chat: room.chat
+      .filter((l) => room.users.has(l.userId))
+      .map(({ userId, at, ...l }) => ({ ...l, user: user(userId), at: new Date(at).toISOString() })),
   };
 }
 
@@ -213,16 +232,43 @@ function clearTimers(room: Room) {
 function close(room: Room) {
   clearTimers(room);
   live.delete(room.id);
+  void deleteObjects(room.voiceKeys).catch(() => null);
   const out = broadcaster();
   for (const id of [...humans(room), ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
 }
 
-function finish(room: Room, winners: number[]) {
+/** Posts in someone's games inbox, their chat with Six Frites Games, without a notification of its own. */
+async function postToInbox(userId: string, action: ServiceAction) {
+  const app = await prisma.user.upsert({
+    where: { googleSub: GAMES_ACCOUNT.googleSub },
+    create: GAMES_ACCOUNT,
+    update: {},
+    select: { id: true },
+  });
+  const directKey = `games:${userId}`;
+  await withEvents(async (tx, emit) => {
+    const chat = await tx.chat.upsert({
+      where: { directKey },
+      create: { directKey, type: "games", members: { create: [{ userId: app.id }, { userId }] } },
+      update: {},
+      select: { id: true },
+    });
+    return createMessage(tx, emit, app.id, chat.id, { clientId: randomUUID(), action, silent: true });
+  });
+}
+
+function finish(room: Room, ended: number[]) {
+  const winners = ended.filter((i) => !room.seats[i]!.gaveUp);
   clearTimers(room);
   room.status = "over";
   room.winners = winners;
   room.deadline = null;
   broadcast(room);
+  room.seats.forEach((s, i) => {
+    if (!s.userId || s.left) return;
+    const outcome = !winners.includes(i) ? "lost" : winners.length > 1 ? "tie" : "won";
+    void postToInbox(s.userId, { type: "live_result", game: room.game, outcome }).catch(() => null);
+  });
 }
 
 /** After a move: ends the game, or hands the turn on, giving people a time limit and bots a short pause. */
@@ -307,7 +353,7 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
     hostId: userId,
     locale: input.locale,
     status: "lobby",
-    seats: [{ userId, left: false, away: false }],
+    seats: [{ userId, left: false, away: false, gaveUp: false }],
     invited: invite,
     state: null,
     winners: [],
@@ -316,6 +362,9 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
     roundTimers: [],
     users: new Map(),
     profiles: new Map(),
+    chat: [],
+    saidAt: new Map(),
+    voiceKeys: [],
     touched: Date.now(),
   };
   await refresh(room);
@@ -325,6 +374,7 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
     const from = room.profiles.get(id)!(room.users.get(userId)!);
     out.to(rooms.user(id)).emit("live:invite", { roomId: room.id, game: room.game, from });
     void deliverLiveInvitePush(id, from, room.game, room.id).catch(() => null);
+    void postToInbox(id, { type: "live_invite", game: room.game, roomId: room.id, from: from.displayName }).catch(() => null);
   }
   return toDTO(room, userId);
 }
@@ -342,7 +392,7 @@ export async function joinRoom(userId: string, roomId: string) {
   if (room.status !== "lobby") throw new AppError("GAME_STARTED", "This game has already started");
   if (room.seats.length >= LIVE_SEATS[room.game].max) throw new AppError("ROOM_FULL", "This game is full");
   room.invited = room.invited.filter((id) => id !== userId);
-  room.seats.push({ userId, left: false, away: false });
+  room.seats.push({ userId, left: false, away: false, gaveUp: false });
   await refresh(room);
   broadcast(room);
   return toDTO(room, userId);
@@ -366,7 +416,7 @@ export function setBot(userId: string, roomId: string, add: boolean) {
   if (room.status !== "lobby") throw new AppError("GAME_STARTED", "This game has already started");
   if (add && room.seats.length >= LIVE_SEATS[room.game].max) throw new AppError("ROOM_FULL", "This game is full");
   const bot = room.seats.map((s) => !s.userId).lastIndexOf(true);
-  if (add) room.seats.push({ userId: null, left: false, away: false });
+  if (add) room.seats.push({ userId: null, left: false, away: false, gaveUp: false });
   else if (bot >= 0) room.seats.splice(bot, 1);
   broadcast(room);
   return toDTO(room, userId);
@@ -378,7 +428,10 @@ export function startRoom(userId: string, roomId: string) {
   if (room.status === "playing") throw new AppError("GAME_STARTED", "This game has already started");
   if (room.seats.length < LIVE_SEATS[room.game].min) throw new AppError("VALIDATION_FAILED", "Not enough players");
   clearTimers(room);
-  room.seats.forEach((s) => (s.away = false));
+  room.seats.forEach((s) => {
+    s.away = false;
+    s.gaveUp = false;
+  });
   room.invited = [];
   room.status = "playing";
   room.winners = [];
@@ -388,9 +441,47 @@ export function startRoom(userId: string, roomId: string) {
   return toDTO(room, userId);
 }
 
+/** Says something to everyone in the room, a line a second at most. */
+export async function say(userId: string, { roomId, text, gifId, voice }: LiveSayInput) {
+  const room = roomOf(roomId);
+  if (!room.seats.some((s) => s.userId === userId && !s.left)) throw new AppError("FORBIDDEN", "You're not in this game");
+  if (Date.now() - (room.saidAt.get(userId) ?? 0) < 1000) throw new AppError("RATE_LIMITED", "Slow down");
+  room.saidAt.set(userId, Date.now());
+  const gif = gifId ? await sharedGif(gifId) : null;
+  const sound = voice ? await storeVoice(`live/${room.id}`, Buffer.from(voice), LIVE_VOICE_MS) : null;
+  if (sound) room.voiceKeys.push(sound.key);
+  if (!live.has(room.id)) {
+    if (sound) await deleteObjects([sound.key]);
+    throw new AppError("ROOM_NOT_FOUND", "This game has ended");
+  }
+  const line = {
+    userId,
+    text,
+    gif: gif && { url: presignGet(gif.key), width: gif.width, height: gif.height },
+    voice: sound && { url: presignGet(sound.key), durationMs: sound.durationMs, waveform: sound.waveform },
+    at: Date.now(),
+  };
+  room.chat = [...room.chat, line].slice(-LIVE_CHAT_LINES);
+  broadcast(room);
+  return null;
+}
+
+/** Gives up my seat: the bot plays it out but it can't win, and the last one still in wins. */
+export function giveUp(userId: string, roomId: string) {
+  const room = roomOf(roomId);
+  const seat = room.seats.findIndex((s) => s.userId === userId && !s.left && !s.gaveUp);
+  if (seat < 0 || room.status !== "playing" || !room.state) throw new AppError("FORBIDDEN", "You're not playing in this game");
+  room.seats[seat]!.gaveUp = true;
+  const still = room.seats.flatMap((s, i) => (s.gaveUp ? [] : [i]));
+  if (still.length <= 1) finish(room, still);
+  else if (turnOf(room.state) === seat) schedule(room);
+  else broadcast(room);
+  return null;
+}
+
 export function playMove(userId: string, roomId: string, move: unknown) {
   const room = roomOf(roomId);
-  const seat = room.seats.findIndex((s) => s.userId === userId && !s.left);
+  const seat = room.seats.findIndex((s) => s.userId === userId && !s.left && !s.gaveUp);
   if (seat < 0 || room.status !== "playing" || !room.state) throw new AppError("FORBIDDEN", "You're not playing in this game");
   const turn = turnOf(room.state);
   if (turn !== null && turn !== seat) throw new AppError("NOT_YOUR_TURN", "Wait for your turn");

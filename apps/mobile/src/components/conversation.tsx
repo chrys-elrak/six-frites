@@ -111,6 +111,7 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   const c = chat.data;
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
+  const app = c.withSupport || c.type === "games";
   const count = selecting ? selectedIds.length : 0;
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/"));
 
@@ -155,9 +156,9 @@ export function Conversation({ chatId }: { chatId: string }) {
         <ScreenHeader background={t.bar}>
           <IconButton Icon={ChevronLeft} label={tr.common.backToChats} size={26} onPress={goBack} />
           <Pressable
-            onPress={() => !c.withSupport && setEditing(true)}
-            disabled={c.withSupport}
-            accessibilityLabel={c.withSupport ? c.title : tr.chat.editContact(c.title)}
+            onPress={() => !app && setEditing(true)}
+            disabled={app}
+            accessibilityLabel={app ? c.title : tr.chat.editContact(c.title)}
             style={({ pressed }) => [styles.peer, pressed && { backgroundColor: t.pressed }]}
           >
             <Avatar user={peer} online={!!presence?.online} />

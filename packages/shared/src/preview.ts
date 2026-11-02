@@ -1,4 +1,4 @@
-import { type MessageDTO, type MessageType, maskSpoilers } from "./chats.js";
+import { type MessageDTO, type MessageType, type ServiceAction, maskSpoilers } from "./chats.js";
 import { chatTheme, customThemeColor } from "./chat-themes.js";
 import { GAME_EMOJI } from "./games.js";
 import type { Dict } from "./i18n/index.js";
@@ -43,7 +43,14 @@ export function serviceText(m: Pick<MessageDTO, "action">, t: Dict) {
   if (a?.type === "e2ee") return t.summary.encrypted;
   if (a?.type === "vanish") return a.on ? t.summary.vanishOn : t.summary.vanishOff;
   if (a?.type === "call") return callText(a, t);
+  if (a?.type === "live_invite" || a?.type === "live_result") return liveText(a, t);
   return a?.secs ? t.summary.autoDeleteAfter(durationLabel(a.secs, t)) : t.summary.autoDeleteOff;
+}
+
+function liveText(a: Extract<ServiceAction, { type: "live_invite" | "live_result" }>, t: Dict) {
+  const game = t.live.games[a.game];
+  if (a.type === "live_invite") return t.live.invites(a.from, game);
+  return a.outcome === "won" ? t.live.wonGame(game) : a.outcome === "lost" ? t.live.lostGame(game) : t.live.tieGame(game);
 }
 
 /** What a service message says as a sentence about its sender; `who` is null when it was you. */
@@ -58,6 +65,7 @@ export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | nul
   if (a?.type === "e2ee") return t.summary.turnedOnEncryption(who);
   if (a?.type === "vanish") return a.on ? t.summary.turnedOnVanish(who) : t.summary.turnedOffVanish(who);
   if (a?.type === "call") return t.summary.called(who, callText(a, t));
+  if (a?.type === "live_invite" || a?.type === "live_result") return liveText(a, t);
   return a?.secs ? t.summary.setAutoDelete(who, durationLabel(a.secs, t)) : t.summary.turnedOffAutoDelete(who);
 }
 

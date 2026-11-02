@@ -4386,7 +4386,7 @@
                     "downloadUrl": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Stable link that always gets the newest version"
+                      "description": "The app's page on Koera Store"
                     }
                   },
                   "required": [
@@ -4406,7 +4406,7 @@
     },
     "/v1/app/android/download": {
       "get": {
-        "summary": "Redirects to the newest Android APK",
+        "summary": "Redirects to the app's page on Koera Store",
         "tags": [
           "app"
         ],
@@ -6397,8 +6397,10 @@
                     "type": {
                       "type": "string",
                       "enum": [
-                        "direct"
-                      ]
+                        "direct",
+                        "games"
+                      ],
+                      "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
                     },
                     "title": {
                       "type": "string"
@@ -6962,9 +6964,80 @@
                                 "secs"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_invite"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "roomId": {
+                                  "type": "string"
+                                },
+                                "from": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "roomId",
+                                "from"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "outcome": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "tie"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "outcome"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                         },
                         "location": {
                           "nullable": true,
@@ -8046,8 +8119,10 @@
                           "type": {
                             "type": "string",
                             "enum": [
-                              "direct"
-                            ]
+                              "direct",
+                              "games"
+                            ],
+                            "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
                           },
                           "title": {
                             "type": "string"
@@ -8611,9 +8686,80 @@
                                       "secs"
                                     ],
                                     "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "live_invite"
+                                        ]
+                                      },
+                                      "game": {
+                                        "type": "string",
+                                        "enum": [
+                                          "fanorona",
+                                          "ludo",
+                                          "eights",
+                                          "words",
+                                          "dots",
+                                          "memory"
+                                        ]
+                                      },
+                                      "roomId": {
+                                        "type": "string"
+                                      },
+                                      "from": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "game",
+                                      "roomId",
+                                      "from"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "live_result"
+                                        ]
+                                      },
+                                      "game": {
+                                        "type": "string",
+                                        "enum": [
+                                          "fanorona",
+                                          "ludo",
+                                          "eights",
+                                          "words",
+                                          "dots",
+                                          "memory"
+                                        ]
+                                      },
+                                      "outcome": {
+                                        "type": "string",
+                                        "enum": [
+                                          "won",
+                                          "lost",
+                                          "tie"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "game",
+                                      "outcome"
+                                    ],
+                                    "additionalProperties": false
                                   }
                                 ],
-                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                               },
                               "location": {
                                 "nullable": true,
@@ -9679,8 +9825,10 @@
                     "type": {
                       "type": "string",
                       "enum": [
-                        "direct"
-                      ]
+                        "direct",
+                        "games"
+                      ],
+                      "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
                     },
                     "title": {
                       "type": "string"
@@ -10244,9 +10392,80 @@
                                 "secs"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_invite"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "roomId": {
+                                  "type": "string"
+                                },
+                                "from": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "roomId",
+                                "from"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "outcome": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "tie"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "outcome"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                         },
                         "location": {
                           "nullable": true,
@@ -11377,8 +11596,10 @@
                     "type": {
                       "type": "string",
                       "enum": [
-                        "direct"
-                      ]
+                        "direct",
+                        "games"
+                      ],
+                      "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
                     },
                     "title": {
                       "type": "string"
@@ -11942,9 +12163,80 @@
                                 "secs"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_invite"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "roomId": {
+                                  "type": "string"
+                                },
+                                "from": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "roomId",
+                                "from"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "outcome": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "tie"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "outcome"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                         },
                         "location": {
                           "nullable": true,
@@ -13786,9 +14078,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -15201,9 +15564,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -16606,9 +17040,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -18029,9 +18534,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -19595,9 +20171,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -20993,9 +21640,80 @@
                                 "secs"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_invite"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "roomId": {
+                                  "type": "string"
+                                },
+                                "from": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "roomId",
+                                "from"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "outcome": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "tie"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "outcome"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                         },
                         "location": {
                           "nullable": true,
@@ -22402,9 +23120,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -23821,9 +24610,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -25341,9 +26201,80 @@
                                   "secs"
                                 ],
                                 "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_invite"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "roomId": {
+                                    "type": "string"
+                                  },
+                                  "from": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "roomId",
+                                  "from"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_result"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "outcome": {
+                                    "type": "string",
+                                    "enum": [
+                                      "won",
+                                      "lost",
+                                      "tie"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "outcome"
+                                ],
+                                "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                           },
                           "location": {
                             "nullable": true,
@@ -27399,9 +28330,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -31005,9 +32007,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,
@@ -33506,9 +34579,80 @@
                                           "secs"
                                         ],
                                         "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "live_invite"
+                                            ]
+                                          },
+                                          "game": {
+                                            "type": "string",
+                                            "enum": [
+                                              "fanorona",
+                                              "ludo",
+                                              "eights",
+                                              "words",
+                                              "dots",
+                                              "memory"
+                                            ]
+                                          },
+                                          "roomId": {
+                                            "type": "string"
+                                          },
+                                          "from": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "game",
+                                          "roomId",
+                                          "from"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "live_result"
+                                            ]
+                                          },
+                                          "game": {
+                                            "type": "string",
+                                            "enum": [
+                                              "fanorona",
+                                              "ludo",
+                                              "eights",
+                                              "words",
+                                              "dots",
+                                              "memory"
+                                            ]
+                                          },
+                                          "outcome": {
+                                            "type": "string",
+                                            "enum": [
+                                              "won",
+                                              "lost",
+                                              "tie"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "game",
+                                          "outcome"
+                                        ],
+                                        "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -34891,9 +36035,80 @@
                                           "secs"
                                         ],
                                         "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "live_invite"
+                                            ]
+                                          },
+                                          "game": {
+                                            "type": "string",
+                                            "enum": [
+                                              "fanorona",
+                                              "ludo",
+                                              "eights",
+                                              "words",
+                                              "dots",
+                                              "memory"
+                                            ]
+                                          },
+                                          "roomId": {
+                                            "type": "string"
+                                          },
+                                          "from": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "game",
+                                          "roomId",
+                                          "from"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "live_result"
+                                            ]
+                                          },
+                                          "game": {
+                                            "type": "string",
+                                            "enum": [
+                                              "fanorona",
+                                              "ludo",
+                                              "eights",
+                                              "words",
+                                              "dots",
+                                              "memory"
+                                            ]
+                                          },
+                                          "outcome": {
+                                            "type": "string",
+                                            "enum": [
+                                              "won",
+                                              "lost",
+                                              "tie"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "game",
+                                          "outcome"
+                                        ],
+                                        "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -35901,8 +37116,10 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
-                                      "direct"
-                                    ]
+                                      "direct",
+                                      "games"
+                                    ],
+                                    "description": "`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"
                                   },
                                   "title": {
                                     "type": "string"
@@ -36466,9 +37683,80 @@
                                               "secs"
                                             ],
                                             "additionalProperties": false
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "live_invite"
+                                                ]
+                                              },
+                                              "game": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "fanorona",
+                                                  "ludo",
+                                                  "eights",
+                                                  "words",
+                                                  "dots",
+                                                  "memory"
+                                                ]
+                                              },
+                                              "roomId": {
+                                                "type": "string"
+                                              },
+                                              "from": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "game",
+                                              "roomId",
+                                              "from"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "live_result"
+                                                ]
+                                              },
+                                              "game": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "fanorona",
+                                                  "ludo",
+                                                  "eights",
+                                                  "words",
+                                                  "dots",
+                                                  "memory"
+                                                ]
+                                              },
+                                              "outcome": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "won",
+                                                  "lost",
+                                                  "tie"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "game",
+                                              "outcome"
+                                            ],
+                                            "additionalProperties": false
                                           }
                                         ],
-                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                                       },
                                       "location": {
                                         "nullable": true,
@@ -39711,9 +40999,80 @@
                             "secs"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_invite"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "roomId": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "roomId",
+                            "from"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "outcome": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "tie"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "outcome"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends"
                     },
                     "location": {
                       "nullable": true,

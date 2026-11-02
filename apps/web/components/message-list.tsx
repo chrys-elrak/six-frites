@@ -21,6 +21,7 @@ import {
   previewLink,
   serviceSentence,
   splitLinks,
+  isFrozen,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -61,6 +62,7 @@ import {
   useRef,
   useState,
 } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { VList, type VListHandle } from "virtua";
 import { applyEdited, check, deleteMessage, deleteMessages, markOpenedLocally, play, react, selfDestruct } from "@/lib/actions";
@@ -971,7 +973,7 @@ export const MessageList = forwardRef<
   { chat: ChatDTO; meId: string; onSeen: () => void; insetTop?: number; insetBottom?: number }
 >(
   function MessageList({ chat, meId, onSeen, insetTop = 0, insetBottom = 0 }, handle) {
-    const frozen = chat.blockedByMe || chat.blockedByThem || chat.peerDeleted;
+    const frozen = isFrozen(chat);
     const tr = useT();
     const qc = useQueryClient();
     const { realtime } = useRealtime();
@@ -1319,6 +1321,11 @@ export const MessageList = forwardRef<
                         row.message.senderId === meId ? null : nameOf(row.message.senderId),
                         tr,
                       )}
+                  {row.message.action?.type === "live_invite" && (
+                    <Link href={`/play/${row.message.action.roomId}`} className="ml-1 font-semibold underline underline-offset-2">
+                      {tr.live.join}
+                    </Link>
+                  )}
                 </span>
               </div>
             ) : (

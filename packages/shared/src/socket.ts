@@ -59,4 +59,6 @@ export interface ClientToServerEvents {
   /** The host starts the game, or a rematch once it's over. */
   "live:start": (p: { roomId: string }, cb: Ack<LiveRoomDTO>) => void;
   "live:move": (p: { roomId: string; move: unknown }, cb: Ack<null>) => void;
+  "live:say": (p: { roomId: string; text?: string; gifId?: string; voice?: ArrayBuffer }, cb: Ack<null>) => void;
+  "live:giveup": (p: { roomId: string }, cb: Ack<null>) => void;
 }

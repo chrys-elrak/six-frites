@@ -298,7 +298,7 @@ export async function createMessage(
   emit: Emit,
   userId: string,
   chatId: string,
-  input: SendMessageInput | { clientId: string; action: ServiceAction },
+  input: SendMessageInput | { clientId: string; action: ServiceAction; silent?: boolean },
   opts: CreateOptions = {},
 ) {
   await assertMember(tx, chatId, userId);
@@ -313,6 +313,7 @@ export async function createMessage(
     throw new AppError("STICKER_NOT_FOUND");
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
+  if (content && chat.type === "games") throw new AppError("FORBIDDEN", "Nobody can write in the games inbox");
   if (content) checkEncryption(chat, content, upload);
   if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content, upload);
 
@@ -352,7 +353,7 @@ export async function createMessage(
       stickerId: content?.stickerId ?? null,
       spoiler: content?.spoiler ?? false,
       effect: content?.effect ?? null,
-      silent: content?.silent ?? false,
+      silent: input.silent ?? false,
       bump: content?.bump ?? false,
       vanish: !!content && chat.vanish,
       maxViews: content?.ephemeral?.maxViews ?? null,

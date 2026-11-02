@@ -20,7 +20,7 @@ import {
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import { Image } from "expo-image";
 import { GestureDetector, useLongPressGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
 import {
@@ -33,12 +33,14 @@ import {
   Clock,
   EyeOff,
   Flame,
+  Gamepad2,
   Ghost,
   Lock,
   Palette,
   Phone,
   PhoneMissed,
   Reply,
+  Trophy,
   Video,
   RotateCcw,
   Timer,
@@ -97,6 +99,7 @@ import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { type Anchor, ReactionChips, ReactionPopover } from "./reactions";
 import { styleFor } from "./rich-text";
+import { playHref } from "./live";
 import { EffectLayer } from "./message-effects";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
@@ -1319,6 +1322,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                       ) : (
                         <Phone size={14} color="#fff" />
                       )
+                    ) : row.message.action?.type === "live_invite" ? (
+                      <Gamepad2 size={14} color="#fff" />
+                    ) : row.message.action?.type === "live_result" ? (
+                      <Trophy size={14} color="#fff" />
                     ) : (
                       <Timer size={14} color="#fff" />
                     )}
@@ -1337,6 +1344,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                               tr,
                             )}
                     </Text>
+                    {row.message.action?.type === "live_invite" && (
+                      <Link
+                        href={playHref(row.message.action.roomId)}
+                        style={{ color: "#fff", fontSize: 12, fontWeight: "700", textDecorationLine: "underline" }}
+                      >
+                        {tr.live.join}
+                      </Link>
+                    )}
                   </View>
                 </View>
               ) : (

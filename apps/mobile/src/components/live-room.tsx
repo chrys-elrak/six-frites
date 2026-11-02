@@ -1,21 +1,50 @@
-import { LIVE_EMOJI, LIVE_SEATS, type LiveRoomDTO, SEAT_COLORS, dotsScores, fanoronaCounts, memoryScores } from "@six/shared";
+import { unwrap } from "@six/sdk";
+import {
+  type GifDTO,
+  LIVE_EMOJI,
+  LIVE_SEATS,
+  LIVE_VOICE_MS,
+  type LiveRoomDTO,
+  SEAT_COLORS,
+  dotsScores,
+  fanoronaCounts,
+  memoryScores,
+  parseCommand,
+} from "@six/shared";
+import { useQuery } from "@tanstack/react-query";
+import {
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
+import { File } from "expo-file-system";
+import { Image } from "expo-image";
 import { type Href, router } from "expo-router";
-import { ArrowLeft, Gamepad2, X } from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ArrowLeft, Flag, Gamepad2, Mic, SendHorizontal, Smile, X } from "lucide-react-native";
+import { type ComponentRef, useEffect, useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
+import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
+import { GifLoop, VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
 import { DotsBoard } from "./dots-board";
 import { EightsTable } from "./eights-table";
+import { EmojiPicker } from "./emoji-picker";
 import { FanoronaBoard, STONES } from "./fanorona-board";
 import { HowToPlay } from "./how-to-play";
 import { type Play, useSecondsLeft } from "./live";
 import { LudoBoard } from "./ludo-board";
 import { MemoryBoard } from "./memory-board";
-import { Text } from "./text";
+import { Sheet } from "./sheet";
+import { Text, TextInput } from "./text";
 import { Card, EmptyState, IconButton, Loading, PrimaryButton, ScreenHeader, TextButton } from "./ui";
 import { WordHunt } from "./word-hunt";
 
@@ -62,7 +91,7 @@ function Seats({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) => 
         return (
           <View
             key={i}
-            style={[styles.seat, { borderColor: turn === i ? brand : t.border, backgroundColor: t.surface }, seat.left && { opacity: 0.5 }]}
+            style={[styles.seat, { borderColor: turn === i ? brand : t.border, backgroundColor: t.surface }, (seat.left || seat.gaveUp) && { opacity: 0.5 }]}
           >
             {seat.user ? <Avatar user={seat.user} /> : <BotFace />}
             {color && <View style={[styles.dot, { backgroundColor: color, borderColor: t.surface }]} />}
@@ -70,7 +99,7 @@ function Seats({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) => 
               {i === room.mySeat ? tr.common.you : nameOf(i)}
             </Text>
             <Text numberOfLines={1} style={{ color: turn === i ? brand : t.muted, fontSize: 11, fontWeight: turn === i ? "700" : "400" }}>
-              {seat.left ? tr.live.left : turn === i && secs !== null ? `${secs}s` : sub}
+              {seat.gaveUp ? tr.live.gaveUp : seat.left ? tr.live.left : turn === i && secs !== null ? `${secs}s` : sub}
             </Text>
           </View>
         );
@@ -132,6 +161,183 @@ function Lobby({
 }
 
 /** A live game room: joins it on open and after every reconnect, then follows what the server sends. */
+type Line = { text?: string; gifId?: string; voice?: ArrayBuffer };
+
+const VOICE_NOTE = { ...RecordingPresets.HIGH_QUALITY, numberOfChannels: 1, bitRate: 32_000 };
+
+/** What the players said, with a box to say something, `/giphy` for a GIF, emoji and voice notes, under the game. */
+function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promise<boolean> }) {
+  const t = useTheme();
+  const tr = useT();
+  const insets = useSafeAreaInsets();
+  const meId = useSession((s) => s.user!.id);
+  const [text, setText] = useState("");
+  const [emoji, setEmoji] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const lines = useRef<ComponentRef<typeof ScrollView>>(null);
+  const recorder = useAudioRecorder(VOICE_NOTE);
+  const rec = useAudioRecorderState(recorder, 200);
+  const command = parseCommand(text, ["giphy"]);
+  const search = command?.kind === "run" ? command.args : null;
+  const [q, setQ] = useState("");
+  const gifs = useQuery({
+    queryKey: ["gifs", "gif", q],
+    queryFn: async () => unwrap(await six.api.GET("/v1/gifs", { params: { query: { q: q || undefined, kind: "gif" } } })),
+    enabled: search !== null,
+    staleTime: 30 * 60_000,
+    retry: false,
+  });
+  const found = search !== null ? (gifs.data?.items ?? []) : [];
+
+  useEffect(() => {
+    const timer = setTimeout(() => setQ(search ?? ""), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    if (recording && rec.durationMillis >= LIVE_VOICE_MS) void stopVoice(true);
+  }, [recording, rec.durationMillis]);
+
+  async function startVoice() {
+    setError(null);
+    if (!(await requestRecordingPermissionsAsync()).granted) return setError(tr.composer.micDenied);
+    await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+    await recorder.prepareToRecordAsync();
+    recorder.record();
+    setRecording(true);
+  }
+
+  async function stopVoice(keep: boolean) {
+    const durationMs = rec.durationMillis;
+    setRecording(false);
+    await recorder.stop();
+    await setAudioModeAsync({ allowsRecording: false }).catch(() => null);
+    if (keep && recorder.uri && durationMs >= 500) await say({ voice: await new File(recorder.uri).arrayBuffer() });
+  }
+
+  function sendGif(gif: GifDTO) {
+    setText("");
+    void say({ gifId: gif.id });
+  }
+
+  async function send() {
+    if (recording) return void stopVoice(true);
+    if (command?.kind === "names") return setText("/giphy ");
+    if (command?.kind === "run") return found[0] && sendGif(found[0]);
+    const line = text.trim();
+    if (!line) return;
+    setText("");
+    if (!(await say({ text: line }))) setText(line);
+  }
+
+  return (
+    <View style={[styles.chat, { borderColor: t.border, backgroundColor: t.bar, paddingBottom: Math.max(insets.bottom, 12) }]}>
+      {room.chat.length > 0 && (
+        <ScrollView
+          ref={lines}
+          style={{ maxHeight: 200 }}
+          contentContainerStyle={styles.lines}
+          onContentSizeChange={() => lines.current?.scrollToEnd({ animated: false })}
+        >
+          {room.chat.map((l) => (
+            <View key={`${l.at}${l.user.id}`}>
+              <Text style={{ color: t.text, fontSize: 14 }}>
+                <Text style={{ fontWeight: "700" }}>{l.user.id === meId ? tr.common.you : l.user.displayName}</Text> {l.text}
+              </Text>
+              {l.gif && (
+                <View
+                  style={[
+                    styles.gif,
+                    { backgroundColor: t.chip, aspectRatio: l.gif.width && l.gif.height ? l.gif.width / l.gif.height : 4 / 3 },
+                  ]}
+                >
+                  <GifLoop url={l.gif.url} fit="contain" />
+                </View>
+              )}
+              {l.voice && (
+                <View style={{ marginTop: 4, maxWidth: 280 }}>
+                  <VoicePlayer
+                    url={l.voice.url}
+                    durationMs={l.voice.durationMs}
+                    waveform={l.voice.waveform}
+                    mine={l.user.id === meId}
+                    compact
+                  />
+                </View>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      )}
+      {command?.kind === "names" && (
+        <Pressable onPress={() => setText("/giphy ")} style={styles.hint}>
+          <Text style={{ color: t.text, fontWeight: "700" }}>/giphy</Text>
+          <Text style={{ color: t.muted, flexShrink: 1 }}>{tr.composer.commandHints.giphy}</Text>
+        </Pressable>
+      )}
+      {search !== null &&
+        (found.length ? (
+          <ScrollView horizontal keyboardShouldPersistTaps="handled" contentContainerStyle={styles.gifRow}>
+            {found.map((g) => (
+              <Pressable key={g.id} onPress={() => sendGif(g)} accessibilityLabel={g.title}>
+                <Image
+                  source={g.previewUrl}
+                  style={{ height: 96, width: (96 * g.width) / g.height, borderRadius: 8, backgroundColor: t.chip }}
+                />
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={[styles.hint, { color: t.muted }]}>
+            {gifs.isError ? tr.composer.couldNotLoadGifs : gifs.data ? tr.composer.noGifs : tr.common.loading}
+          </Text>
+        ))}
+      {error && <Text style={[styles.hint, { color: t.danger, fontSize: 12 }]}>{error}</Text>}
+      <View style={styles.chatRow}>
+        {recording ? (
+          <>
+            <IconButton Icon={X} label={tr.common.cancel} onPress={() => void stopVoice(false)} />
+            <View style={styles.timer}>
+              <View style={styles.dotRec} />
+              <Text style={{ color: t.text, fontVariant: ["tabular-nums"] }}>
+                {formatDuration(rec.durationMillis)} / {formatDuration(LIVE_VOICE_MS)}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <IconButton Icon={Smile} color={t.muted} label={tr.composer.commandHints.emoji} onPress={() => setEmoji(true)} />
+            <TextInput
+              value={text}
+              onChangeText={setText}
+              onSubmitEditing={() => void send()}
+              submitBehavior="submit"
+              returnKeyType="send"
+              maxLength={200}
+              placeholder={tr.live.saySomething}
+              placeholderTextColor={t.muted}
+              accessibilityLabel={tr.live.saySomething}
+              style={[styles.chatInput, { backgroundColor: t.chip, color: t.text }]}
+            />
+          </>
+        )}
+        {text.trim() || recording ? (
+          <IconButton
+            Icon={SendHorizontal}
+            color={brand}
+            label={recording ? tr.composer.sendVoice : tr.common.send}
+            onPress={() => void send()}
+          />
+        ) : (
+          <IconButton Icon={Mic} color={brand} label={tr.composer.recordVoice} onPress={() => void startVoice()} />
+        )}
+      </View>
+      <EmojiPicker open={emoji} onClose={() => setEmoji(false)} onPick={(e) => setText((x) => x + e)} />
+    </View>
+  );
+}
+
 export function LiveRoom({ id }: { id: string }) {
   const t = useTheme();
   const tr = useT();
@@ -139,6 +345,7 @@ export function LiveRoom({ id }: { id: string }) {
   const socket = useRealtime().realtime?.socket;
   const [room, setRoom] = useState<LiveRoomDTO | null>(null);
   const [closed, setClosed] = useState(false);
+  const [givingUp, setGivingUp] = useState(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -176,6 +383,10 @@ export function LiveRoom({ id }: { id: string }) {
     }
   };
   const start = () => socket?.emit("live:start", { roomId: id }, noop);
+  const say = async (line: Line) => {
+    const res = await socket?.timeout(20_000).emitWithAck("live:say", { roomId: id, ...line }).catch(() => null);
+    return !!res?.ok;
+  };
 
   const nameOf = (seat: number) => {
     const user = room?.seats[seat]?.user;
@@ -186,7 +397,13 @@ export function LiveRoom({ id }: { id: string }) {
   const view = room?.view;
   const winners = room?.winners ?? [];
   const result =
-    winners.length === 1 ? (winners[0] === room?.mySeat ? tr.live.youWon : tr.live.won(nameOf(winners[0]!))) : tr.live.tie;
+    winners.length === 1
+      ? winners[0] === room?.mySeat
+        ? tr.live.youWon
+        : tr.live.won(nameOf(winners[0]!))
+      : winners.length
+        ? tr.live.tie
+        : tr.live.noWinner;
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -196,6 +413,9 @@ export function LiveRoom({ id }: { id: string }) {
           {room ? `${LIVE_EMOJI[room.game]} ${tr.live.games[room.game]}` : ""}
         </Text>
         {room && <HowToPlay game={room.game} size={22} />}
+        {room?.status === "playing" && room.mySeat !== null && !closed && (
+          <IconButton Icon={Flag} label={tr.live.giveUp} onPress={() => setGivingUp(true)} />
+        )}
       </ScreenHeader>
       {closed ? (
         <EmptyState Icon={Gamepad2} title={tr.live.closed}>
@@ -204,40 +424,52 @@ export function LiveRoom({ id }: { id: string }) {
       ) : !room ? (
         <Loading />
       ) : (
-        <ScrollView
-          contentContainerStyle={styles.body}
-          scrollEnabled={!(view?.game === "words" && room.status === "playing")}
-          keyboardShouldPersistTaps="handled"
-        >
-          {room.status === "lobby" ? (
-            <Lobby room={room} nameOf={nameOf} onBot={(add) => socket?.emit("live:bot", { roomId: id, add }, noop)} onStart={start} />
-          ) : (
-            <>
-              <Seats room={room} nameOf={nameOf} />
-              {room.status === "over" && (
-                <Card style={{ padding: 16, gap: 10, alignItems: "center" }}>
-                  <Text style={{ color: t.text, fontSize: 20, fontWeight: "800" }}>{result}</Text>
-                  {meId === room.hostId && <PrimaryButton title={tr.live.rematch} onPress={start} style={{ alignSelf: "stretch" }} />}
-                  <TextButton title={tr.live.leave} onPress={leave} />
-                </Card>
-              )}
-              {view?.game === "ludo" && <LudoBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
-              {view?.game === "eights" && <EightsTable room={room} state={view.state} nameOf={nameOf} play={play} />}
-              {view?.game === "words" && <WordHunt room={room} state={view.state} nameOf={nameOf} play={play} />}
-              {view?.game === "fanorona" && (
-                <FanoronaBoard
-                  key={`${view.state.turn}-${view.state.last?.from}-${view.state.last?.to}`}
-                  room={room}
-                  state={view.state}
-                  nameOf={nameOf}
-                  play={play}
-                />
-              )}
-              {view?.game === "dots" && <DotsBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
-              {view?.game === "memory" && <MemoryBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
-            </>
-          )}
-        </ScrollView>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+          <ScrollView
+            contentContainerStyle={styles.body}
+            scrollEnabled={!(view?.game === "words" && room.status === "playing")}
+            keyboardShouldPersistTaps="handled"
+          >
+            {room.status === "lobby" ? (
+              <Lobby room={room} nameOf={nameOf} onBot={(add) => socket?.emit("live:bot", { roomId: id, add }, noop)} onStart={start} />
+            ) : (
+              <>
+                <Seats room={room} nameOf={nameOf} />
+                {room.status === "over" && (
+                  <Card style={{ padding: 16, gap: 10, alignItems: "center" }}>
+                    <Text style={{ color: t.text, fontSize: 20, fontWeight: "800" }}>{result}</Text>
+                    {meId === room.hostId && <PrimaryButton title={tr.live.rematch} onPress={start} style={{ alignSelf: "stretch" }} />}
+                    <TextButton title={tr.live.leave} onPress={leave} />
+                  </Card>
+                )}
+                {view?.game === "ludo" && <LudoBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
+                {view?.game === "eights" && <EightsTable room={room} state={view.state} nameOf={nameOf} play={play} />}
+                {view?.game === "words" && <WordHunt room={room} state={view.state} nameOf={nameOf} play={play} />}
+                {view?.game === "fanorona" && (
+                  <FanoronaBoard
+                    key={`${view.state.turn}-${view.state.last?.from}-${view.state.last?.to}`}
+                    room={room}
+                    state={view.state}
+                    nameOf={nameOf}
+                    play={play}
+                  />
+                )}
+                {view?.game === "dots" && <DotsBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
+                {view?.game === "memory" && <MemoryBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
+              </>
+            )}
+          </ScrollView>
+          <RoomChat room={room} say={say} />
+        </KeyboardAvoidingView>
+      )}
+      {givingUp && (
+        <Sheet
+          title={tr.live.giveUpConfirm}
+          actions={[
+            { label: tr.live.giveUp, destructive: true, onSelect: () => socket?.emit("live:giveup", { roomId: id }, noop) },
+          ]}
+          onClose={() => setGivingUp(false)}
+        />
       )}
     </View>
   );
@@ -247,6 +479,15 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 18, fontWeight: "700", paddingHorizontal: 4 },
   body: { flexGrow: 1, justifyContent: "center", padding: 16, gap: 16 },
   seats: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 },
+  chat: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, gap: 10 },
+  lines: { paddingHorizontal: 16, gap: 10 },
+  gif: { marginTop: 4, height: 120, borderRadius: 12, overflow: "hidden", alignSelf: "flex-start" },
+  gifRow: { gap: 6, paddingHorizontal: 12 },
+  hint: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
+  timer: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 8 },
+  dotRec: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#ef4444" },
+  chatRow: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 4 },
+  chatInput: { flex: 1, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, fontSize: 16 },
   seat: { alignItems: "center", gap: 2, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 16, borderWidth: 2, minWidth: 80 },
   dot: { position: "absolute", top: 34, left: "50%", marginLeft: 6, width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
   bot: { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(235,138,0,0.15)" },

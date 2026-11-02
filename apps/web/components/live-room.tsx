@@ -1,27 +1,37 @@
 "use client";
 
 import {
+  type GifDTO,
   LIVE_EMOJI,
   LIVE_SEATS,
+  LIVE_VOICE_MS,
   type LiveRoomDTO,
   SEAT_COLORS,
   dotsScores,
   fanoronaCounts,
   memoryScores,
+  parseCommand,
 } from "@six/shared";
-import { Bot, ChevronLeft, LogOut } from "lucide-react";
+import { Bot, ChevronLeft, Flag, LogOut, Mic, SendHorizontal, Smile, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
+import { formatDuration } from "@/lib/format";
 import { useCountdown, useLiveRoom } from "@/lib/live";
+import { type Recording, useRecorder } from "@/lib/recorder";
 import { useSession } from "@/lib/session";
+import { VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
 import { DotsBoard } from "./dots-board";
 import { EightsTable } from "./eights-table";
+import { Emojis } from "./emoji-picker";
 import { FanoronaBoard } from "./fanorona-board";
+import { useGifs } from "./gif-picker";
 import { HowToPlay } from "./how-to-play";
 import { LudoBoard } from "./ludo-board";
 import { MemoryBoard } from "./memory-board";
+import { Sheet } from "./sheet";
 import { WordHunt } from "./word-hunt";
 
 const iconButton =
@@ -65,7 +75,7 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
             key={i}
             className={`flex items-center gap-2 rounded-full py-1 pr-3 pl-1 ring-1 transition ${
               turn === i ? "bg-brand/15 ring-brand" : "bg-white/70 ring-black/5 dark:bg-stone-900/70 dark:ring-white/10"
-            } ${s.left ? "opacity-50" : ""}`}
+            } ${s.left || s.gaveUp ? "opacity-50" : ""}`}
           >
             <span className="relative">
               <Face room={room} seat={i} />
@@ -79,7 +89,7 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
             <span className="text-sm leading-tight">
               <span className="block max-w-28 truncate font-medium">{nameOf(i)}</span>
               <span className="block text-xs text-stone-500">
-                {s.left ? tr.live.left : turn === i && seconds !== null ? `${seconds}s` : extra}
+                {s.gaveUp ? tr.live.gaveUp : s.left ? tr.live.left : turn === i && seconds !== null ? `${seconds}s` : extra}
               </span>
             </span>
           </div>
@@ -172,7 +182,7 @@ function Result({
         ? tr.live.youWon
         : winner !== undefined
           ? tr.live.won(nameOf(winner))
-          : "";
+          : tr.live.noWinner;
   return (
     <div className="flex flex-col items-center gap-3">
       <p className="reaction-pop text-2xl font-black">{text}</p>
@@ -194,9 +204,193 @@ function Result({
   );
 }
 
+type Line = { text?: string; gifId?: string; voice?: ArrayBuffer };
+
+/** What the players said, with a box to say something, `/giphy` for a GIF, emoji and voice notes, under the game. */
+function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promise<boolean> }) {
+  const tr = useT();
+  const meId = useSession((s) => s.user!.id);
+  const [text, setText] = useState("");
+  const [emoji, setEmoji] = useState(false);
+  const lines = useRef<HTMLDivElement>(null);
+  const newest = room.chat.at(-1)?.at;
+  const command = parseCommand(text, ["giphy"]);
+  const search = command?.kind === "run" ? command.args : null;
+  const [q, setQ] = useState("");
+  const gifs = useGifs(q, search !== null);
+  const found = gifs.data?.pages[0]?.items ?? [];
+  const recorder = useRecorder({ maxMs: LIVE_VOICE_MS, bitsPerSecond: 32_000, raw: true, onLimit: (r) => void sendVoice(r) });
+
+  useEffect(() => {
+    lines.current?.scrollTo({ top: lines.current.scrollHeight });
+  }, [newest]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setQ(search ?? ""), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  async function sendVoice(r: Recording | null) {
+    if (r && r.durationMs >= 500) await say({ voice: await r.blob.arrayBuffer() });
+  }
+
+  function sendGif(gif: GifDTO) {
+    setText("");
+    void say({ gifId: gif.id });
+  }
+
+  async function send(e: FormEvent) {
+    e.preventDefault();
+    if (recorder.recording) return void sendVoice(await recorder.stop());
+    if (command?.kind === "names") return setText("/giphy ");
+    if (command?.kind === "run") return found[0] && sendGif(found[0]);
+    const line = text.trim();
+    if (!line) return;
+    setText("");
+    setEmoji(false);
+    if (!(await say({ text: line }))) setText(line);
+  }
+
+  return (
+    <div className="border-t border-black/5 bg-stone-50/45 backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/40">
+      {room.chat.length > 0 && (
+        <div ref={lines} className="mx-auto max-h-56 w-full max-w-2xl space-y-2.5 overflow-y-auto px-4 pt-4 pb-2 text-sm">
+          {room.chat.map((l) => (
+            <div key={`${l.at}${l.user.id}`} className="break-words">
+              <span className="font-semibold">{l.user.id === meId ? tr.common.you : l.user.displayName}</span> {l.text}
+              {l.gif && (
+                <video
+                  src={l.gif.url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  aria-label="GIF"
+                  className="mt-1 max-h-32 rounded-xl bg-stone-100 dark:bg-stone-800"
+                />
+              )}
+              {l.voice && (
+                <div className="mt-1 max-w-72">
+                  <VoicePlayer
+                    url={l.voice.url}
+                    durationMs={l.voice.durationMs}
+                    waveform={l.voice.waveform}
+                    mine={l.user.id === meId}
+                    compact
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {command?.kind === "names" && (
+        <button
+          type="button"
+          onClick={() => setText("/giphy ")}
+          className="mx-auto flex w-full max-w-2xl items-baseline gap-2 px-4 pt-3 text-left text-sm"
+        >
+          <span className="font-semibold">/giphy</span>
+          <span className="text-stone-500">{tr.composer.commandHints.giphy}</span>
+        </button>
+      )}
+      {search !== null && (
+        <div className="mx-auto w-full max-w-2xl px-3 pt-3">
+          {found.length ? (
+            <div className="flex gap-1.5 overflow-x-auto overscroll-contain">
+              {found.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => sendGif(g)}
+                  title={g.title}
+                  className="h-24 shrink-0 overflow-hidden rounded-lg bg-stone-100 dark:bg-stone-800"
+                  style={{ aspectRatio: `${g.width} / ${g.height}` }}
+                >
+                  <img src={g.previewUrl} alt={g.title} draggable={false} className="size-full object-cover" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="py-6 text-center text-sm text-stone-400">
+              {gifs.isError ? tr.composer.couldNotLoadGifs : gifs.data ? tr.composer.noGifs : tr.common.loading}
+            </p>
+          )}
+          <p className="pt-1 text-[11px] text-stone-400">{tr.composer.poweredByGiphy}</p>
+        </div>
+      )}
+      {emoji && (
+        <div className="mx-auto flex h-72 w-full max-w-2xl flex-col pt-2">
+          <Emojis onPick={(e) => setText((t) => t + e)} />
+        </div>
+      )}
+      {recorder.error && <p className="mx-auto w-full max-w-2xl px-4 pt-2 text-xs text-red-600">{recorder.error}</p>}
+      <form
+        onSubmit={(e) => void send(e)}
+        className="mx-auto flex w-full max-w-2xl items-center gap-2 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      >
+        {recorder.recording ? (
+          <>
+            <button
+              type="button"
+              onClick={recorder.cancel}
+              aria-label={tr.common.cancel}
+              className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              <X className="size-5" />
+            </button>
+            <p className="flex min-w-0 flex-1 items-center gap-2 px-2 text-sm tabular-nums">
+              <span className="size-2.5 animate-pulse rounded-full bg-red-500" />
+              {formatDuration(recorder.elapsed)} / {formatDuration(LIVE_VOICE_MS)}
+            </p>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setEmoji((on) => !on)}
+              aria-label={tr.composer.commandHints.emoji}
+              aria-pressed={emoji}
+              className={`grid size-10 shrink-0 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 ${emoji ? "text-brand" : "text-stone-500"}`}
+            >
+              <Smile className="size-5" />
+            </button>
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={200}
+              placeholder={tr.live.saySomething}
+              aria-label={tr.live.saySomething}
+              className="min-w-0 flex-1 rounded-full bg-black/5 px-4 py-2 text-[16px] outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-white/10"
+            />
+          </>
+        )}
+        {text.trim() || recorder.recording ? (
+          <button
+            type="submit"
+            aria-label={recorder.recording ? tr.composer.sendVoice : tr.common.send}
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink"
+          >
+            <SendHorizontal className="size-5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void recorder.start()}
+            aria-label={tr.composer.recordVoice}
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-brand-ink"
+          >
+            <Mic className="size-5" />
+          </button>
+        )}
+      </form>
+    </div>
+  );
+}
+
 type Ask = (
-  event: "live:bot" | "live:start" | "live:move",
-  extra: { add?: boolean; move?: unknown },
+  event: "live:bot" | "live:start" | "live:move" | "live:say" | "live:giveup",
+  extra: { add?: boolean; move?: unknown } & Line,
 ) => Promise<boolean>;
 
 /** A live game room: the lobby, then the game, then who won and a rematch. */
@@ -205,6 +399,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   const router = useRouter();
   const meId = useSession((s) => s.user!.id);
   const { room, gone, socket } = useLiveRoom(roomId);
+  const [givingUp, setGivingUp] = useState(false);
 
   const ask: Ask = async (event, extra) => {
     const timed = socket?.timeout(10_000) as
@@ -233,6 +428,17 @@ export function LiveRoom({ roomId }: { roomId: string }) {
           {room ? `${LIVE_EMOJI[room.game]} ${tr.live.games[room.game]}` : tr.live.title}
         </h1>
         {room && <HowToPlay game={room.game} className="size-10 text-stone-600 opacity-100 dark:text-stone-300" />}
+        {room?.status === "playing" && room.mySeat !== null && !gone && (
+          <button
+            type="button"
+            onClick={() => setGivingUp(true)}
+            aria-label={tr.live.giveUp}
+            title={tr.live.giveUp}
+            className={iconButton}
+          >
+            <Flag className="size-5" />
+          </button>
+        )}
         {room && !gone && (
           <button type="button" onClick={leave} aria-label={tr.live.leave} title={tr.live.leave} className={iconButton}>
             <LogOut className="size-5" />
@@ -304,6 +510,14 @@ export function LiveRoom({ roomId }: { roomId: string }) {
           )}
         </div>
       </div>
+      {room && !gone && <RoomChat room={room} say={(line) => ask("live:say", line)} />}
+      {givingUp && (
+        <Sheet
+          title={tr.live.giveUpConfirm}
+          actions={[{ label: tr.live.giveUp, destructive: true, onSelect: () => void ask("live:giveup", {}) }]}
+          onClose={() => setGivingUp(false)}
+        />
+      )}
     </div>
   );
 }

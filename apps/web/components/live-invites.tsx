@@ -1,6 +1,6 @@
 "use client";
 
-import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO } from "@six/shared";
+import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO, isFrozen } from "@six/shared";
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ export function NewLiveRoom({ game, onClose }: { game: LiveGame; onClose: () => 
   const [busy, setBusy] = useState(false);
   const friends = (useChats().data ?? []).flatMap((c) => {
     const peer = c.members.find((m) => m.user.id !== meId)?.user;
-    return peer && !c.blockedByMe && !c.blockedByThem && !c.peerDeleted ? [{ ...peer, displayName: c.title }] : [];
+    return peer && !isFrozen(c) ? [{ ...peer, displayName: c.title }] : [];
   });
 
   async function create() {

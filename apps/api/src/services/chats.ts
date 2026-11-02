@@ -58,10 +58,13 @@ function muteData({ muted, mutedUntil }: Pick<UpdateChatInput, "muted" | "mutedU
   return { muted, mutedUntil: until };
 }
 
-/** Whoever answers support, as the person being helped sees them: the app itself. */
-export const supportProfile = (id: string) => ({
+/** The account that posts in everyone's games inbox. */
+export const GAMES_ACCOUNT = { googleSub: "system:games", email: "games@six-frites.invalid", displayName: "Six Frites Games" };
+
+/** Whoever answers support, or the games account, as the other person sees them: the app itself. */
+export const supportProfile = (id: string, displayName = "Six Frites") => ({
   id,
-  displayName: "Six Frites",
+  displayName,
   avatarUrl: `${env.WEB_ORIGIN.split(",")[0]}/icon-192.png`,
 });
 
@@ -72,7 +75,14 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
   const helped = chat.supportUserId === viewerId;
   const members = chat.members.map((m) => ({
     ...m,
-    shown: helped && m.userId !== viewerId ? supportProfile(m.userId) : shown(m.user),
+    shown:
+      m.userId === viewerId
+        ? shown(m.user)
+        : chat.type === "games"
+          ? supportProfile(m.userId, GAMES_ACCOUNT.displayName)
+          : helped
+            ? supportProfile(m.userId)
+            : shown(m.user),
   }));
   const others = members.filter((m) => m.userId !== viewerId);
   const peer = others[0];
@@ -95,7 +105,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
 
   return {
     id: chat.id,
-    type: "direct",
+    type: chat.type === "games" ? "games" : "direct",
     title: others.map((m) => m.shown.displayName).join(", ") || "Just you",
     members: members.map((m) => ({
       user: m.shown,

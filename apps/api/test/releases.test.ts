@@ -21,19 +21,19 @@ const published = {
 afterEach(() => vi.restoreAllMocks());
 
 describe("android releases on Koera Store", () => {
-  it("offers the store's newest version through a stable download link", async () => {
+  it("offers the store's newest version with a link to its store page", async () => {
     const store = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(Response.json(published));
     const latest = (await ctx.app.inject({ method: "GET", url: "/v1/app/android" })).json();
     expect(store).toHaveBeenCalledWith("https://store.test/api/apps/six-frites/latest", expect.anything());
     expect(latest).toMatchObject({ version: "1.2.0", notes: "Calls", size: 3 });
-    expect(latest.downloadUrl).toMatch(/\/v1\/app\/android\/download$/);
+    expect(latest.downloadUrl).toBe("https://store.test/six-frites");
 
     store.mockResolvedValueOnce(new Response(null, { status: 404 }));
     expect((await ctx.app.inject({ method: "GET", url: "/v1/app/android" })).json()).toBeNull();
 
     const download = await ctx.app.inject({ method: "GET", url: "/v1/app/android/download" });
     expect(download.statusCode).toBe(302);
-    expect(download.headers.location).toBe("https://store.test/six-frites/download");
+    expect(download.headers.location).toBe("https://store.test/six-frites");
   });
 
   it("tells Android phones about a version once the store's signed webhook says it went live", async () => {
@@ -61,7 +61,7 @@ describe("android releases on Koera Store", () => {
     expect(pushed.find((p) => p.token === token)!.payload).toMatchObject({
       title: "Six Frites 1.2.0 est disponible",
       chatId: null,
-      url: expect.stringMatching(/\/v1\/app\/android\/download$/),
+      url: "https://store.test/six-frites",
     });
   });
 });

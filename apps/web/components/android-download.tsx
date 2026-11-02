@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Smartphone } from "lucide-react";
+import { ExternalLink, Smartphone } from "lucide-react";
 import { useAndroidApp } from "@/lib/android-app";
 import { formatBytes } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -15,6 +15,8 @@ export function AndroidDownload({ compact = false }: { compact?: boolean }) {
     return (
       <a
         href={downloadUrl}
+        target="_blank"
+        rel="noreferrer"
         className="mx-auto flex items-center justify-center gap-2 text-sm font-medium text-stone-600 underline-offset-4 hover:underline dark:text-stone-300"
       >
         <Smartphone className="size-4" />
@@ -26,6 +28,8 @@ export function AndroidDownload({ compact = false }: { compact?: boolean }) {
   return (
     <a
       href={downloadUrl}
+      target="_blank"
+      rel="noreferrer"
       className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-stone-200 hover:bg-stone-50 dark:bg-stone-900 dark:ring-stone-800 dark:hover:bg-stone-800"
     >
       <Smartphone className="size-5 text-brand" />
@@ -35,7 +39,7 @@ export function AndroidDownload({ compact = false }: { compact?: boolean }) {
           {tr.auth.version(version, formatBytes(size))}
         </span>
       </span>
-      <Download className="size-5 text-stone-400" />
+      <ExternalLink className="size-5 text-stone-400" />
     </a>
   );
 }

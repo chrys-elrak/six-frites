@@ -1,12 +1,14 @@
+import { execFileSync } from "node:child_process";
 import type { AddressInfo } from "node:net";
-import { type LiveInviteDTO, type LiveRoomDTO, fanoronaOptions, ludoMovable } from "@six/shared";
+import { type ChatDTO, type LiveInviteDTO, type LiveRoomDTO, fanoronaOptions, ludoMovable } from "@six/shared";
 import { type Socket, io as connect } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSocketServer } from "../src/socket/index.js";
 import { type Auth, chatHelpers, useApp } from "./helpers.js";
 
+const hasFfmpeg = hasFfmpegCheck();
 const ctx = useApp();
-const { signUp, makeFriends } = chatHelpers(ctx);
+const { signUp, get, send, makeFriends } = chatHelpers(ctx);
 
 let url: string;
 const sockets: Socket[] = [];
@@ -79,6 +81,87 @@ describe("live rooms", () => {
     if (seen.game === "eights") expect(seen.state.hand).not.toEqual(view.state.hand);
   });
 
+  it("posts invites in the games inbox, which isn't a contact", async () => {
+    const { host, guest } = await makeFriends();
+    const a = await player(host);
+    const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "dots", invite: [guest.user.id], locale: "en" });
+
+    let inbox: ChatDTO | undefined;
+    for (const end = Date.now() + 4000; !inbox && Date.now() < end; await new Promise((r) => setTimeout(r, 50))) {
+      inbox = ((await get(guest, "/v1/chats")).items as ChatDTO[]).find((c) => c.type === "games");
+    }
+    expect(inbox).toMatchObject({ title: "Six Frites Games", unreadCount: 1 });
+    expect(inbox!.lastMessage).toMatchObject({
+      type: "service",
+      silent: true,
+      action: { type: "live_invite", game: "dots", roomId: data!.id },
+    });
+    expect((await get(guest, "/v1/contacts")).items).toHaveLength(1);
+    expect((await send(guest, inbox!.id, "hi")).statusCode).toBe(403);
+    await a.ask("live:leave", { roomId: data!.id });
+  });
+
+  it("lets the players chat in the room, a line a second at most", async () => {
+    const { host, guest } = await makeFriends();
+    const [a, b] = [await player(host), await player(guest)];
+    const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "dots", invite: [guest.user.id], locale: "en" });
+    const roomId = data!.id;
+    expect((await b.ask("live:say", { roomId, text: "hi" })).error!.code).toBe("FORBIDDEN");
+    await b.ask("live:join", { roomId });
+
+    expect((await b.ask("live:say", { roomId, text: "  hello  " })).ok).toBe(true);
+    expect((await b.ask("live:say", { roomId, text: "again" })).error!.code).toBe("RATE_LIMITED");
+    expect((await a.ask("live:say", { roomId, text: "" })).ok).toBe(false);
+    await until(() => a.rooms.some((r) => r.chat.length > 0));
+    expect(a.rooms.at(-1)!.chat).toMatchObject([{ user: { id: guest.user.id }, text: "hello" }]);
+    await a.ask("live:leave", { roomId });
+  });
+
+  it("lets a player give up: the other one wins, or the rest play on", async () => {
+    const { host, guest } = await makeFriends();
+    const [a, b] = [await player(host), await player(guest)];
+    const duel = (await a.ask<LiveRoomDTO>("live:create", { game: "fanorona", invite: [guest.user.id], locale: "en" })).data!;
+    await b.ask("live:join", { roomId: duel.id });
+    expect((await b.ask("live:giveup", { roomId: duel.id })).error!.code).toBe("FORBIDDEN");
+    await a.ask("live:start", { roomId: duel.id });
+    expect((await b.ask("live:giveup", { roomId: duel.id })).ok).toBe(true);
+    await until(() => a.rooms.at(-1)?.status === "over");
+    expect(a.rooms.at(-1)!.winners).toEqual([0]);
+
+    const table = (await a.ask<LiveRoomDTO>("live:create", { game: "dots", invite: [guest.user.id], locale: "en" })).data!;
+    await b.ask("live:join", { roomId: table.id });
+    await a.ask("live:bot", { roomId: table.id, add: true });
+    await a.ask("live:start", { roomId: table.id });
+    expect((await a.ask("live:giveup", { roomId: table.id })).ok).toBe(true);
+    await until(() => b.rooms.some((r) => r.id === table.id && r.seats[0]!.gaveUp));
+    const seen = b.rooms.filter((r) => r.id === table.id).at(-1)!;
+    expect(seen.status).toBe("playing");
+    expect(a.rooms.filter((r) => r.id === table.id).at(-1)!.mySeat).toBeNull();
+    expect((await a.ask("live:move", { roomId: table.id, move: { line: 0 } })).error!.code).toBe("FORBIDDEN");
+    await b.ask("live:leave", { roomId: table.id });
+    await a.ask("live:leave", { roomId: table.id });
+  });
+
+  it.skipIf(!hasFfmpeg)("keeps the first 30 seconds of a voice note said in the room", async () => {
+    const p = await player(await signUp("talker"));
+    const { data } = await p.ask<LiveRoomDTO>("live:create", { game: "words", invite: [], locale: "en" });
+    const clip = execFileSync("ffmpeg", [
+      ...["-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=40"],
+      ...["-c:a", "libopus", "-b:a", "16k", "-f", "webm", "pipe:1"],
+    ]);
+    expect((await p.ask("live:say", { roomId: data!.id, voice: clip, gifId: "cat1" })).ok).toBe(false);
+    expect((await p.ask("live:say", { roomId: data!.id, voice: clip })).ok).toBe(true);
+    await until(() => p.rooms.some((r) => r.chat.length > 0));
+    const { voice } = p.rooms.at(-1)!.chat[0]!;
+    expect(voice!.durationMs).toBeGreaterThan(29_000);
+    expect(voice!.durationMs).toBeLessThanOrEqual(30_000);
+    expect((await fetch(voice!.url)).ok).toBe(true);
+
+    await p.ask("live:leave", { roomId: data!.id });
+    await new Promise((r) => setTimeout(r, 300));
+    expect((await fetch(voice!.url)).ok).toBe(false);
+  });
+
   it("only lets me invite my contacts", async () => {
     const [me, stranger] = [await signUp("me"), await signUp("stranger")];
     const p = await player(me);
@@ -137,3 +220,12 @@ describe("live rooms", () => {
     await p.ask("live:leave", { roomId: data!.id });
   });
 });
+
+function hasFfmpegCheck() {
+  try {
+    execFileSync("ffprobe", ["-version"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}

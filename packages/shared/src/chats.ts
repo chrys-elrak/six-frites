@@ -6,6 +6,7 @@ import { StickerDTO } from "./stickers.js";
 import { isChatThemeId } from "./chat-themes.js";
 import { EncryptedInput, EncryptionDTO } from "./e2ee.js";
 import { ChatGame, GameMoveDTO } from "./games.js";
+import { LIVE_GAMES } from "./live.js";
 
 export const MessageType = z.enum([
   "text",
@@ -172,9 +173,11 @@ export const ServiceAction = z
       video: z.boolean(),
       secs: z.number().int().nullable().describe("How long it lasted; null if it was missed or declined"),
     }),
+    z.object({ type: z.literal("live_invite"), game: z.enum(LIVE_GAMES), roomId: z.string(), from: z.string() }),
+    z.object({ type: z.literal("live_result"), game: z.enum(LIVE_GAMES), outcome: z.enum(["won", "lost", "tie"]) }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` and `live_result` are posted in the games inbox when `from` asks you to a live game and when one ends",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 
@@ -437,7 +440,9 @@ export type ChatMemberDTO = z.infer<typeof ChatMemberDTO>;
 
 export const ChatDTO = z.object({
   id: Id,
-  type: z.enum(["direct"]),
+  type: z
+    .enum(["direct", "games"])
+    .describe("`games` is your games inbox: Six Frites posts your live game invites and results there, and nobody can write"),
   title: z.string(),
   members: z.array(ChatMemberDTO),
   lastMessage: MessageDTO.nullable(),
@@ -493,12 +498,26 @@ export const ChatDTO = z.object({
 });
 export type ChatDTO = z.infer<typeof ChatDTO>;
 
-export const CHAT_FILTERS = ["all", "unread", "read", "support"] as const;
+/** Nobody can write here: one of you blocked the other, they deleted their account, or it's the games inbox. */
+export const isFrozen = (c: ChatDTO) => c.blockedByMe || c.blockedByThem || c.peerDeleted || c.type === "games";
+
+export const CHAT_FILTERS = ["all", "unread", "read", "support", "chats"] as const;
 export type ChatFilter = (typeof CHAT_FILTERS)[number];
 
-/** Whether a chat shows under one of the chat list's filters; "support" is for whoever answers support. */
+/** The chat list's filters; "support" and "chats" split the list for whoever answers support. */
+export const chatFilters = (desk: boolean) => CHAT_FILTERS.filter((f) => desk || (f !== "support" && f !== "chats"));
+
+/** Whether a chat shows under one of the chat list's filters. */
 export const inChatFilter = (c: ChatDTO, filter: ChatFilter) =>
-  filter === "unread" ? c.unreadCount > 0 : filter === "read" ? c.unreadCount === 0 : filter === "support" ? c.supportDesk : true;
+  filter === "unread"
+    ? c.unreadCount > 0
+    : filter === "read"
+      ? c.unreadCount === 0
+      : filter === "support"
+        ? c.supportDesk
+        : filter === "chats"
+          ? !c.supportDesk
+          : true;
 
 export const ChatListQuery = z.object({
   archived: z

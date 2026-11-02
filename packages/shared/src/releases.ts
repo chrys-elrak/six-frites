@@ -6,7 +6,7 @@ export const LatestAppDTO = z.object({
   notes: z.string().nullable(),
   size: z.number().int(),
   publishedAt: IsoDate,
-  downloadUrl: z.string().url().describe("Stable link that always gets the newest version"),
+  downloadUrl: z.string().url().describe("The app's page on Koera Store"),
 });
 export type LatestAppDTO = z.infer<typeof LatestAppDTO>;
 
