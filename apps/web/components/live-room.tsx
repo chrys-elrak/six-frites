@@ -5,6 +5,8 @@ import {
   LIVE_EMOJI,
   LIVE_SEATS,
   LIVE_VOICE_MS,
+  type LiveChatLineDTO,
+  type LiveReplyDTO,
   type LiveRoomDTO,
   SEAT_COLORS,
   dotsScores,
@@ -12,15 +14,16 @@ import {
   memoryScores,
   parseCommand,
 } from "@six/shared";
-import { Bot, ChevronLeft, LogOut, Mic, MoreVertical, SendHorizontal, Smile, X } from "lucide-react";
+import { Bot, ChevronLeft, LogOut, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
-import { formatDuration } from "@/lib/format";
-import { useCountdown, useLiveRoom } from "@/lib/live";
+import { clockTime, formatDuration } from "@/lib/format";
+import { useCountdown, useLiveRoom, useMyTurn } from "@/lib/live";
 import { type Recording, useRecorder } from "@/lib/recorder";
 import { useSession } from "@/lib/session";
+import { useSwipe } from "@/lib/swipe";
 import { VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
 import { DotsBoard } from "./dots-board";
@@ -31,6 +34,7 @@ import { useGifs } from "./gif-picker";
 import { HowToPlay } from "./how-to-play";
 import { LudoBoard } from "./ludo-board";
 import { MemoryBoard } from "./memory-board";
+import { ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
 import { Sheet } from "./sheet";
 import { WordHunt } from "./word-hunt";
 
@@ -204,14 +208,116 @@ function Result({
   );
 }
 
-type Line = { text?: string; gifId?: string; voice?: ArrayBuffer };
+type Line = { text?: string; gifId?: string; voice?: ArrayBuffer; replyTo?: string };
 
-/** What the players said, with a box to say something, `/giphy` for a GIF, emoji and voice notes, under the game. */
-function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promise<boolean> }) {
+/** What a reply quotes: the line's text, or what kind of line it was. */
+function Quote({ reply, meId }: { reply: LiveReplyDTO; meId: string }) {
+  const tr = useT();
+  return (
+    <span className="block truncate border-l-2 border-brand pl-2 text-xs text-stone-500">
+      <span className="font-semibold">{reply.user.id === meId ? tr.common.you : reply.user.displayName}</span>{" "}
+      {reply.kind === "gif" ? tr.summary.kinds.gif : reply.kind === "voice" ? `🎤 ${tr.summary.kinds.voice}` : reply.text}
+    </span>
+  );
+}
+
+/** One line of the room's chat: drag it right on a touch screen to answer it, or use the buttons that show on hover. */
+function ChatLine({
+  line: l,
+  meId,
+  nameOf,
+  onReact,
+  onPickReaction,
+  onReply,
+}: {
+  line: LiveChatLineDTO;
+  meId: string;
+  nameOf: (userId: string) => string;
+  onReact: (emoji: string) => void;
+  onPickReaction: (at: DOMRect) => void;
+  onReply: () => void;
+}) {
+  const tr = useT();
+  const swipe = useSwipe(onReply, 1);
+  const hover =
+    "grid size-6 shrink-0 place-items-center rounded-full text-stone-400 transition group-hover:opacity-100 hover:bg-black/5 hover:text-stone-600 focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 dark:hover:bg-white/10 dark:hover:text-stone-200";
+  return (
+    <div {...swipe.handlers} className="group relative touch-pan-y overflow-x-clip">
+      <div ref={swipe.hint} className="pointer-events-none absolute inset-y-0 left-0 flex items-center opacity-0">
+        <span className="grid size-7 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm">
+          <Reply className="size-4" />
+        </span>
+      </div>
+      <div ref={swipe.moving} className="flex items-start gap-1.5">
+        <div className="min-w-0 flex-1 break-words">
+          {l.replyTo && (
+            <span className="mb-1 block">
+              <Quote reply={l.replyTo} meId={meId} />
+            </span>
+          )}
+          <span className="font-semibold">{l.user.id === meId ? tr.common.you : l.user.displayName}</span> {l.text}
+          {l.gif && (
+            <video
+              src={l.gif.url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              aria-label="GIF"
+              className="mt-1 max-h-32 rounded-xl bg-stone-100 dark:bg-stone-800"
+            />
+          )}
+          {l.voice && (
+            <div className="mt-1 max-w-72">
+              <VoicePlayer url={l.voice.url} durationMs={l.voice.durationMs} waveform={l.voice.waveform} mine={l.user.id === meId} compact />
+            </div>
+          )}
+          {l.reactions.length > 0 && (
+            <div className="pt-3">
+              <ReactionChips message={l} meId={meId} mine={false} nameOf={nameOf} onReact={onReact} />
+            </div>
+          )}
+        </div>
+        <span className="shrink-0 pt-0.5 text-[11px] text-stone-400 tabular-nums">{clockTime(l.at)}</span>
+        <button type="button" onClick={onReply} aria-label={tr.messages.reply} title={tr.messages.reply} className={hover}>
+          <Reply className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => onPickReaction(e.currentTarget.getBoundingClientRect())}
+          aria-label={tr.messages.react}
+          title={tr.messages.react}
+          className={hover}
+        >
+          <SmilePlus className="size-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * What the players said, when, and their reactions, with a box to say something, `/giphy` for a GIF, emoji and
+ * voice notes, under the game.
+ */
+function RoomChat({
+  room,
+  say,
+  react,
+}: {
+  room: LiveRoomDTO;
+  say: (line: Line) => Promise<boolean>;
+  react: (lineId: string, emoji: string) => void;
+}) {
   const tr = useT();
   const meId = useSession((s) => s.user!.id);
   const [text, setText] = useState("");
   const [emoji, setEmoji] = useState(false);
+  const [reacting, setReacting] = useState<{ id: string; at: DOMRect } | null>(null);
+  const [picking, setPicking] = useState<string | null>(null);
+  const [replying, setReplying] = useState<LiveChatLineDTO | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const nameOf = (id: string) => room.seats.find((s) => s.user?.id === id)?.user?.displayName ?? "";
   const lines = useRef<HTMLDivElement>(null);
   const newest = room.chat.at(-1)?.at;
   const command = parseCommand(text, ["giphy"]);
@@ -230,13 +336,19 @@ function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promi
     return () => clearTimeout(t);
   }, [search]);
 
+  async function answer(line: Line) {
+    const ok = await say({ ...line, replyTo: replying?.id });
+    if (ok) setReplying(null);
+    return ok;
+  }
+
   async function sendVoice(r: Recording | null) {
-    if (r && r.durationMs >= 500) await say({ voice: await r.blob.arrayBuffer() });
+    if (r && r.durationMs >= 500) await answer({ voice: await r.blob.arrayBuffer() });
   }
 
   function sendGif(gif: GifDTO) {
     setText("");
-    void say({ gifId: gif.id });
+    void answer({ gifId: gif.id });
   }
 
   async function send(e: FormEvent) {
@@ -248,42 +360,57 @@ function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promi
     if (!line) return;
     setText("");
     setEmoji(false);
-    if (!(await say({ text: line }))) setText(line);
+    if (!(await answer({ text: line }))) setText(line);
   }
 
+  useEffect(() => {
+    const keyboard = (navigator as Navigator & { virtualKeyboard?: { overlaysContent: boolean } }).virtualKeyboard;
+    if (!keyboard) return;
+    keyboard.overlaysContent = true;
+    return () => void (keyboard.overlaysContent = false);
+  }, []);
+
   return (
-    <div className="border-t border-black/5 bg-stone-50/45 backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/40">
+    <div
+      className="relative z-10 border-t border-black/5 bg-stone-50/45 backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/40"
+      style={{ transform: "translateY(calc(-1 * env(keyboard-inset-height, 0px)))" }}
+    >
       {room.chat.length > 0 && (
         <div ref={lines} className="mx-auto max-h-56 w-full max-w-2xl space-y-2.5 overflow-y-auto px-4 pt-4 pb-2 text-sm">
           {room.chat.map((l) => (
-            <div key={`${l.at}${l.user.id}`} className="break-words">
-              <span className="font-semibold">{l.user.id === meId ? tr.common.you : l.user.displayName}</span> {l.text}
-              {l.gif && (
-                <video
-                  src={l.gif.url}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  aria-label="GIF"
-                  className="mt-1 max-h-32 rounded-xl bg-stone-100 dark:bg-stone-800"
-                />
-              )}
-              {l.voice && (
-                <div className="mt-1 max-w-72">
-                  <VoicePlayer
-                    url={l.voice.url}
-                    durationMs={l.voice.durationMs}
-                    waveform={l.voice.waveform}
-                    mine={l.user.id === meId}
-                    compact
-                  />
-                </div>
-              )}
-            </div>
+            <ChatLine
+              key={l.id}
+              line={l}
+              meId={meId}
+              nameOf={nameOf}
+              onReact={(e) => react(l.id, e)}
+              onPickReaction={(at) => setReacting({ id: l.id, at })}
+              onReply={() => {
+                setReplying(l);
+                input.current?.focus();
+              }}
+            />
           ))}
         </div>
       )}
+      {reacting && (
+        <ReactionPopover
+          anchor={reacting.at}
+          alignEnd
+          message={room.chat.find((l) => l.id === reacting.id) ?? { reactions: [] }}
+          meId={meId}
+          onReact={(e) => {
+            react(reacting.id, e);
+            setReacting(null);
+          }}
+          onMore={() => {
+            setPicking(reacting.id);
+            setReacting(null);
+          }}
+          onClose={() => setReacting(null)}
+        />
+      )}
+      {picking && <ReactionPicker onPick={(e) => react(picking, e)} onClose={() => setPicking(null)} />}
       {command?.kind === "names" && (
         <button
           type="button"
@@ -324,6 +451,24 @@ function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promi
           <Emojis onPick={(e) => setText((t) => t + e)} />
         </div>
       )}
+      {replying && (
+        <div className="mx-auto flex w-full max-w-2xl items-center gap-2 px-4 pt-3 text-sm">
+          <span className="min-w-0 flex-1">
+            <Quote
+              reply={{ ...replying, kind: replying.gif ? "gif" : replying.voice ? "voice" : "text" }}
+              meId={meId}
+            />
+          </span>
+          <button
+            type="button"
+            onClick={() => setReplying(null)}
+            aria-label={tr.common.cancel}
+            className="grid size-7 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-black/5 dark:hover:bg-white/10"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
       {recorder.error && <p className="mx-auto w-full max-w-2xl px-4 pt-2 text-xs text-red-600">{recorder.error}</p>}
       <form
         onSubmit={(e) => void send(e)}
@@ -356,6 +501,7 @@ function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promi
               <Smile className="size-5" />
             </button>
             <input
+              ref={input}
               value={text}
               onChange={(e) => setText(e.target.value)}
               maxLength={200}
@@ -389,8 +535,8 @@ function RoomChat({ room, say }: { room: LiveRoomDTO; say: (line: Line) => Promi
 }
 
 type Ask = (
-  event: "live:bot" | "live:start" | "live:move" | "live:say" | "live:giveup",
-  extra: { add?: boolean; move?: unknown } & Line,
+  event: "live:bot" | "live:start" | "live:move" | "live:say" | "live:react" | "live:giveup",
+  extra: { add?: boolean; move?: unknown; lineId?: string; emoji?: string } & Line,
 ) => Promise<boolean>;
 
 /** A live game room: the lobby, then the game, then who won and a rematch. */
@@ -401,6 +547,8 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   const { room, gone, socket } = useLiveRoom(roomId);
   const [menu, setMenu] = useState(false);
   const [givingUp, setGivingUp] = useState(false);
+  const turn = useMyTurn(room);
+  const urgent = turn.seconds !== null && turn.seconds <= 10;
 
   const ask: Ask = async (event, extra) => {
     const timed = socket?.timeout(10_000) as
@@ -464,6 +612,18 @@ export function LiveRoom({ roomId }: { roomId: string }) {
             <Lobby room={room} nameOf={nameOf} ask={ask} />
           ) : (
             <>
+              {turn.mine && room.view?.game !== "words" && (
+                <p
+                  key={room.deadline}
+                  role="status"
+                  className={`reaction-pop rounded-full px-5 py-2 text-sm font-bold shadow-lg ${
+                    urgent ? "animate-pulse bg-red-500 text-white" : "bg-brand text-brand-ink"
+                  }`}
+                >
+                  {tr.live.yourTurn}
+                  {turn.seconds !== null && ` · ${turn.seconds}s`}
+                </p>
+              )}
               <Players room={room} nameOf={nameOf} />
               {room.status === "over" && <Result room={room} nameOf={nameOf} ask={ask} leave={leave} />}
               {room.view?.game === "ludo" ? (
@@ -514,7 +674,13 @@ export function LiveRoom({ roomId }: { roomId: string }) {
           )}
         </div>
       </div>
-      {room && !gone && <RoomChat room={room} say={(line) => ask("live:say", line)} />}
+      {room && !gone && (
+        <RoomChat
+          room={room}
+          say={(line) => ask("live:say", line)}
+          react={(lineId, emoji) => void ask("live:react", { lineId, emoji })}
+        />
+      )}
       {menu && (
         <Sheet
           title={tr.live.endHint}

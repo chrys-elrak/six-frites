@@ -10,7 +10,7 @@ import { Emojis } from "./emoji-picker";
 import { Portal } from "./portal";
 import { Card, SectionTitle } from "./ui";
 
-export const isMine = (m: MessageDTO, meId: string, emoji: string) =>
+export const isMine = (m: Pick<MessageDTO, "reactions">, meId: string, emoji: string) =>
   !!m.reactions?.some((r) => r.emoji === emoji && r.userIds.includes(meId));
 
 /** Your own quick reactions, or the app's when you haven't picked any. */
@@ -25,7 +25,7 @@ export function ReactionBar({
   onReact,
   onMore,
 }: {
-  message: MessageDTO;
+  message: Pick<MessageDTO, "reactions">;
   meId: string;
   onReact: (emoji: string) => void;
   onMore: () => void;
@@ -119,7 +119,7 @@ export function ReactionPopover({
 }: {
   anchor: DOMRect;
   alignEnd: boolean;
-  message: MessageDTO;
+  message: Pick<MessageDTO, "reactions">;
   meId: string;
   onReact: (emoji: string) => void;
   onMore: () => void;
@@ -212,7 +212,7 @@ export function ReactionChips({
   nameOf,
   onReact,
 }: {
-  message: MessageDTO;
+  message: Pick<MessageDTO, "reactions">;
   meId: string;
   mine: boolean;
   nameOf: (userId: string) => string;

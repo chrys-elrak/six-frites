@@ -2,6 +2,7 @@
 
 import type { LiveRoomDTO } from "@six/shared";
 import { useEffect, useState } from "react";
+import { playSound } from "./notify";
 import { useRealtime } from "./realtime";
 
 /** The room as the server shows it to me, kept up to date and rejoined after a reconnect; `gone` holds why I can't be in it. */
@@ -48,4 +49,21 @@ export function useCountdown(deadline: string | null) {
     return () => clearInterval(timer);
   }, [deadline]);
   return seconds;
+}
+
+/**
+ * Whether the game waits on me, for my turn or a word hunt round I'm in, and the seconds I have left. Chimes
+ * when my turn comes and ticks through its last 10 seconds.
+ */
+export function useMyTurn(room: LiveRoomDTO | null) {
+  const view = room?.status === "playing" ? room.view : null;
+  const mine = !!view && room!.mySeat !== null && (view.game === "words" || view.state.turn === room!.mySeat);
+  const seconds = useCountdown(mine ? room!.deadline : null);
+  useEffect(() => {
+    if (mine) playSound("/sounds/turn.wav");
+  }, [mine]);
+  useEffect(() => {
+    if (seconds !== null && seconds > 0 && seconds <= 10) playSound("/sounds/tick.wav");
+  }, [seconds]);
+  return { mine, seconds };
 }

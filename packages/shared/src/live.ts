@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ReactionEmoji } from "./chats.js";
 import { Id } from "./common.js";
 import type { DotsState } from "./dots.js";
 import type { EightsView } from "./eights.js";
@@ -60,15 +61,31 @@ export const LiveSayInput = LiveRoomRef.extend({
     .custom<Uint8Array>((v) => v instanceof Uint8Array && v.byteLength <= LIVE_VOICE_BYTES, "Expected a voice note up to 512 KB")
     .optional()
     .describe("A recorded voice note, sent as binary; the server keeps its first 30 seconds"),
+  replyTo: z.string().min(1).max(64).optional().describe("The id of the line this answers"),
 }).refine((v) => [v.text, v.gifId, v.voice].filter(Boolean).length === 1, "Say something, or send one GIF or voice note");
 export type LiveSayInput = z.infer<typeof LiveSayInput>;
 
-export interface LiveChatLineDTO {
+export const LiveReactInput = LiveRoomRef.extend({ lineId: z.string().min(1).max(64), emoji: z.lazy(() => ReactionEmoji) });
+export type LiveReactInput = z.infer<typeof LiveReactInput>;
+
+/** The line a chat line answers, copied when it was said, so it stays after the original scrolls out. */
+export interface LiveReplyDTO {
+  id: string;
   user: PublicUser;
+  text: string;
+  kind: "text" | "gif" | "voice";
+}
+
+export interface LiveChatLineDTO {
+  id: string;
+  user: PublicUser;
+  replyTo: LiveReplyDTO | null;
   text: string;
   gif: { url: string; width: number | null; height: number | null } | null;
   voice: { url: string; durationMs: number; waveform: number[] } | null;
   at: string;
+  /** One entry per emoji, oldest first, like on chat messages. */
+  reactions: { emoji: string; userIds: string[] }[];
 }
 
 export interface LiveSeatDTO {

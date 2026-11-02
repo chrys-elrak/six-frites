@@ -9,7 +9,10 @@ import {
   FanoronaMove,
   type FanoronaState,
   LIVE_CHAT_LINES,
+  MAX_REACTIONS_PER_USER,
   type LiveChatLineDTO,
+  type LiveReactInput,
+  type LiveReplyDTO,
   type LiveSayInput,
   LIVE_VOICE_MS,
   LIVE_SEATS,
@@ -96,7 +99,11 @@ interface Room {
   roundTimers: NodeJS.Timeout[];
   users: Map<string, User>;
   profiles: Map<string, (u: User) => PublicUser>;
-  chat: (Omit<LiveChatLineDTO, "user" | "at"> & { userId: string; at: number })[];
+  chat: (Omit<LiveChatLineDTO, "user" | "at" | "replyTo"> & {
+    userId: string;
+    at: number;
+    replyTo: (Omit<LiveReplyDTO, "user"> & { userId: string }) | null;
+  })[];
   saidAt: Map<string, number>;
   voiceKeys: string[];
   touched: number;
@@ -203,7 +210,15 @@ function toDTO(room: Room, viewerId: string): LiveRoomDTO {
     view: room.state && viewOf(room.state, mySeat < 0 ? null : mySeat),
     chat: room.chat
       .filter((l) => room.users.has(l.userId))
-      .map(({ userId, at, ...l }) => ({ ...l, user: user(userId), at: new Date(at).toISOString() })),
+      .map(({ userId, at, replyTo, ...l }) => ({
+        ...l,
+        user: user(userId),
+        at: new Date(at).toISOString(),
+        replyTo:
+          replyTo && room.users.has(replyTo.userId)
+            ? { id: replyTo.id, text: replyTo.text, kind: replyTo.kind, user: user(replyTo.userId) }
+            : null,
+      })),
   };
 }
 
@@ -462,8 +477,10 @@ export function startRoom(userId: string, roomId: string) {
   return toDTO(room, userId);
 }
 
-/** Says something to everyone in the room, a line a second at most. */
-export async function say(userId: string, { roomId, text, gifId, voice }: LiveSayInput) {
+const kindOf = (l: Pick<Room["chat"][number], "gif" | "voice">): LiveReplyDTO["kind"] => (l.gif ? "gif" : l.voice ? "voice" : "text");
+
+/** Says something to everyone in the room, a line a second at most, maybe in answer to one of its lines. */
+export async function say(userId: string, { roomId, text, gifId, voice, replyTo }: LiveSayInput) {
   const room = roomOf(roomId);
   if (!room.seats.some((s) => s.userId === userId && !s.left)) throw new AppError("FORBIDDEN", "You're not in this game");
   if (Date.now() - (room.saidAt.get(userId) ?? 0) < 1000) throw new AppError("RATE_LIMITED", "Slow down");
@@ -475,14 +492,35 @@ export async function say(userId: string, { roomId, text, gifId, voice }: LiveSa
     if (sound) await deleteObjects([sound.key]);
     throw new AppError("ROOM_NOT_FOUND", "This game has ended");
   }
+  const quoted = replyTo ? room.chat.find((l) => l.id === replyTo) : undefined;
   const line = {
+    id: randomUUID(),
     userId,
+    replyTo: quoted ? { id: quoted.id, userId: quoted.userId, text: quoted.text, kind: kindOf(quoted) } : null,
     text,
     gif: gif && { url: presignGet(gif.key), width: gif.width, height: gif.height },
     voice: sound && { url: presignGet(sound.key), durationMs: sound.durationMs, waveform: sound.waveform },
     at: Date.now(),
+    reactions: [],
   };
   room.chat = [...room.chat, line].slice(-LIVE_CHAT_LINES);
+  broadcast(room);
+  return null;
+}
+
+/** Adds my reaction to a line of the room's chat, or takes it back when I already put that emoji there. */
+export function react(userId: string, { roomId, lineId, emoji }: LiveReactInput) {
+  const room = roomOf(roomId);
+  if (!room.seats.some((s) => s.userId === userId && !s.left)) throw new AppError("FORBIDDEN", "You're not in this game");
+  const line = room.chat.find((l) => l.id === lineId);
+  if (!line) throw new AppError("MESSAGE_NOT_FOUND");
+  const had = line.reactions.find((r) => r.emoji === emoji);
+  if (had?.userIds.includes(userId)) had.userIds = had.userIds.filter((id) => id !== userId);
+  else if (line.reactions.filter((r) => r.userIds.includes(userId)).length >= MAX_REACTIONS_PER_USER) {
+    throw new AppError("VALIDATION_FAILED", "Too many reactions on this message");
+  } else if (had) had.userIds.push(userId);
+  else line.reactions.push({ emoji, userIds: [userId] });
+  line.reactions = line.reactions.filter((r) => r.userIds.length);
   broadcast(room);
   return null;
 }

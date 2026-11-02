@@ -1,4 +1,5 @@
-import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO } from "@six/shared";
+import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO, type LiveRoomDTO } from "@six/shared";
+import * as Haptics from "expo-haptics";
 import { type Href, router } from "expo-router";
 import { Check, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -7,6 +8,7 @@ import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isFrozen, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
+import { playSound } from "@/lib/notify";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, useTheme } from "@/lib/theme";
@@ -27,6 +29,28 @@ export function useSecondsLeft(deadline: string | null) {
     return () => clearInterval(id);
   }, [deadline]);
   return deadline ? Math.max(0, Math.ceil((Date.parse(deadline) - now) / 1000)) : null;
+}
+
+const TURN_SOUND = require("../../assets/sounds/turn.wav");
+const TICK_SOUND = require("../../assets/sounds/tick.wav");
+
+/**
+ * Whether the game waits on me, for my turn or a word hunt round I'm in, and the seconds I have left. Chimes and
+ * buzzes when my turn comes, and ticks through its last 10 seconds.
+ */
+export function useMyTurn(room: LiveRoomDTO | null) {
+  const view = room?.status === "playing" ? room.view : null;
+  const mine = !!view && room!.mySeat !== null && (view.game === "words" || view.state.turn === room!.mySeat);
+  const seconds = useSecondsLeft(mine ? room!.deadline : null);
+  useEffect(() => {
+    if (!mine) return;
+    playSound(TURN_SOUND);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [mine]);
+  useEffect(() => {
+    if (seconds !== null && seconds > 0 && seconds <= 10) playSound(TICK_SOUND);
+  }, [seconds]);
+  return { mine, seconds };
 }
 
 /** Picks contacts for the game's free seats, then opens its room; nobody picked means playing with Frite Bot. */

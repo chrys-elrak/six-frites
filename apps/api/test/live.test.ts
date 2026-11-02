@@ -139,7 +139,25 @@ describe("live rooms", () => {
     expect((await b.ask("live:say", { roomId, text: "again" })).error!.code).toBe("RATE_LIMITED");
     expect((await a.ask("live:say", { roomId, text: "" })).ok).toBe(false);
     await until(() => a.rooms.some((r) => r.chat.length > 0));
-    expect(a.rooms.at(-1)!.chat).toMatchObject([{ user: { id: guest.user.id }, text: "hello" }]);
+    expect(a.rooms.at(-1)!.chat).toMatchObject([{ user: { id: guest.user.id }, text: "hello", reactions: [] }]);
+
+    const lineId = a.rooms.at(-1)!.chat[0]!.id;
+    const reactions = () => b.rooms.at(-1)!.chat[0]!.reactions;
+    expect((await a.ask("live:react", { roomId, lineId, emoji: "nope" })).ok).toBe(false);
+    expect((await a.ask("live:react", { roomId, lineId: "gone", emoji: "😂" })).error!.code).toBe("MESSAGE_NOT_FOUND");
+    expect((await a.ask("live:react", { roomId, lineId, emoji: "😂" })).ok).toBe(true);
+    expect((await b.ask("live:react", { roomId, lineId, emoji: "😂" })).ok).toBe(true);
+    await until(() => reactions()[0]?.userIds.length === 2);
+    expect(reactions()).toEqual([{ emoji: "😂", userIds: [host.user.id, guest.user.id] }]);
+    await a.ask("live:react", { roomId, lineId, emoji: "😂" });
+    await b.ask("live:react", { roomId, lineId, emoji: "😂" });
+    await until(() => reactions().length === 0);
+
+    await new Promise((r) => setTimeout(r, 1000));
+    expect((await a.ask("live:say", { roomId, text: "hi back", replyTo: lineId })).ok).toBe(true);
+    await until(() => b.rooms.at(-1)!.chat.length === 2);
+    expect(b.rooms.at(-1)!.chat[1]!.replyTo).toEqual({ id: lineId, user: expect.objectContaining({ id: guest.user.id }), text: "hello", kind: "text" });
+    expect(b.rooms.at(-1)!.chat[0]!.replyTo).toBeNull();
     await a.ask("live:leave", { roomId });
   });
 
