@@ -100,6 +100,15 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
       </span>
     );
   }
+  if (m.bump) {
+    return (
+      <span className="inline-flex max-w-full items-center gap-1">
+        {m.senderId === meId && tr.chats.youPrefix}
+        {tr.messages.bumped}
+        {m.replyTo?.text && <span className="truncate">· {m.replyTo.text}</span>}
+      </span>
+    );
+  }
   if (m.type !== "text") {
     const voiceLength =
       m.type === "voice" && m.attachment?.durationMs ? ` (${formatDuration(m.attachment.durationMs)})` : "";

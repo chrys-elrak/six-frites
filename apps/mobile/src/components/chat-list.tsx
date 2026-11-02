@@ -110,6 +110,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
       m.ephemeral.expired ? tr.chats.opened : tr.chats.selfDestructing[m.type],
     );
   }
+  if (m.bump) return line(null, `${you}${tr.messages.bumped}${m.replyTo?.text ? ` · ${m.replyTo.text}` : ""}`);
   if (m.type !== "text") {
     const type = shownType(m as typeof m & { file?: { sticker?: boolean } }) as MediaType;
     const voiceLength =
