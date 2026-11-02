@@ -449,7 +449,9 @@ export function LiveRoom({ roomId }: { roomId: string }) {
         <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col items-center justify-center gap-5 px-4 py-5">
           {gone ? (
             <>
-              <p className="pt-10 text-center text-stone-500">{tr.live.closed}</p>
+              <p className="pt-10 text-center text-stone-500">
+                {gone === "GAME_STARTED" ? tr.live.started : gone === "ROOM_FULL" ? tr.live.full : tr.live.closed}
+              </p>
               <Link href="/games" className={`${pill} bg-brand text-brand-ink`}>
                 {tr.common.games}
               </Link>

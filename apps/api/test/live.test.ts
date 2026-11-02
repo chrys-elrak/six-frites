@@ -209,6 +209,22 @@ describe("live rooms", () => {
     await a.ask("live:leave", { roomId: lobby.id });
   });
 
+  it("lets someone invited late take Frite Bot's seat, or says the game started without them", async () => {
+    const { host, guest } = await makeFriends();
+    const [a, b] = [await player(host), await player(guest)];
+    const ludo = (await a.ask<LiveRoomDTO>("live:create", { game: "ludo", invite: [guest.user.id], locale: "en" })).data!;
+    await a.ask("live:bot", { roomId: ludo.id, add: true });
+    await a.ask("live:start", { roomId: ludo.id });
+    const late = await b.ask<LiveRoomDTO>("live:join", { roomId: ludo.id });
+    expect(late.data).toMatchObject({ status: "playing", mySeat: 1, seats: [{ user: { id: host.user.id } }, { user: { id: guest.user.id } }] });
+
+    const words = (await a.ask<LiveRoomDTO>("live:create", { game: "words", invite: [guest.user.id], locale: "en" })).data!;
+    await a.ask("live:start", { roomId: words.id });
+    expect((await b.ask("live:join", { roomId: words.id })).error!.code).toBe("GAME_STARTED");
+    for (const id of [ludo.id, words.id]) await a.ask("live:leave", { roomId: id });
+    await b.ask("live:leave", { roomId: ludo.id });
+  });
+
   it("plays Fanorona, Dots and Boxes and Memory against Frite Bot, two at most for Fanorona", async () => {
     const { host, guest } = await makeFriends();
     const p = await player(host);

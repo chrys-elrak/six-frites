@@ -322,7 +322,7 @@ function startRound(room: Room) {
   room.seats.forEach((seat, i) => {
     if (!playsItself(seat)) return;
     const tick = () => {
-      if (room.status !== "playing" || !room.state) return;
+      if (room.status !== "playing" || !room.state || !playsItself(seat)) return;
       act(room, i, autoMove(room.state, i));
       room.roundTimers.push(setTimeout(tick, 4000 + Math.random() * 5000));
     };
@@ -388,7 +388,10 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   return toDTO(room, userId);
 }
 
-/** Takes an invited seat in the lobby, or comes back to my seat after a reconnect or leaving by mistake. */
+/**
+ * Takes an invited seat in the lobby, or Frite Bot's seat once the game started, or comes back to my
+ * seat after a reconnect or leaving by mistake.
+ */
 export async function joinRoom(userId: string, roomId: string) {
   const room = roomOf(roomId);
   const mine = room.seats.find((s) => s.userId === userId);
@@ -402,12 +405,17 @@ export async function joinRoom(userId: string, roomId: string) {
     return toDTO(room, userId);
   }
   if (!room.invited.includes(userId)) throw new AppError("ROOM_NOT_FOUND", "This game has ended");
-  if (room.status !== "lobby") throw new AppError("GAME_STARTED", "This game has already started");
-  if (room.seats.length >= LIVE_SEATS[room.game].max) throw new AppError("ROOM_FULL", "This game is full");
-  room.invited = room.invited.filter((id) => id !== userId);
-  room.seats.push({ userId, left: false, away: false, gaveUp: false });
   await refresh(room);
-  broadcast(room);
+  const bot = room.status === "lobby" ? undefined : room.seats.find((s) => !s.userId);
+  if (room.status !== "lobby" && !bot) throw new AppError("GAME_STARTED", "This game has already started");
+  if (room.status === "lobby" && room.seats.length >= LIVE_SEATS[room.game].max) throw new AppError("ROOM_FULL", "This game is full");
+  room.invited = room.invited.filter((id) => id !== userId);
+  const seat = { userId, left: false, away: false, gaveUp: false };
+  if (bot) Object.assign(bot, seat);
+  else room.seats.push(seat);
+  const turn = room.status === "playing" && room.state ? turnOf(room.state) : null;
+  if (bot && turn !== null && room.seats[turn] === bot) schedule(room);
+  else broadcast(room);
   return toDTO(room, userId);
 }
 
@@ -462,7 +470,6 @@ export function startRoom(userId: string, roomId: string) {
     s.away = false;
     s.gaveUp = false;
   });
-  room.invited = [];
   room.status = "playing";
   room.winners = [];
   room.state = startState(room);

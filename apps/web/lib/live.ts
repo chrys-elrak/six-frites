@@ -4,11 +4,11 @@ import type { LiveRoomDTO } from "@six/shared";
 import { useEffect, useState } from "react";
 import { useRealtime } from "./realtime";
 
-/** The room as the server shows it to me, kept up to date and rejoined after a reconnect; `gone` once it ended. */
+/** The room as the server shows it to me, kept up to date and rejoined after a reconnect; `gone` holds why I can't be in it. */
 export function useLiveRoom(roomId: string) {
   const { realtime } = useRealtime();
   const [room, setRoom] = useState<LiveRoomDTO | null>(null);
-  const [gone, setGone] = useState(false);
+  const [gone, setGone] = useState<string | null>(null);
 
   useEffect(() => {
     const socket = realtime?.socket;
@@ -17,10 +17,10 @@ export function useLiveRoom(roomId: string) {
       void socket
         .timeout(10_000)
         .emitWithAck("live:join", { roomId })
-        .then((res) => (res.ok ? setRoom(res.data) : setGone(true)))
+        .then((res) => (res.ok ? setRoom(res.data) : setGone(res.error.code)))
         .catch(() => null);
     const onRoom = (r: LiveRoomDTO) => r.id === roomId && setRoom(r);
-    const onClosed = (e: { roomId: string }) => e.roomId === roomId && setGone(true);
+    const onClosed = (e: { roomId: string }) => e.roomId === roomId && setGone("ROOM_NOT_FOUND");
     socket.on("live:room", onRoom);
     socket.on("live:closed", onClosed);
     socket.on("connect", join);

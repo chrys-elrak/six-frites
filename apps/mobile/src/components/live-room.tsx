@@ -344,7 +344,7 @@ export function LiveRoom({ id }: { id: string }) {
   const meId = useSession((s) => s.user!.id);
   const socket = useRealtime().realtime?.socket;
   const [room, setRoom] = useState<LiveRoomDTO | null>(null);
-  const [closed, setClosed] = useState(false);
+  const [closed, setClosed] = useState<string | null>(null);
   const [givingUp, setGivingUp] = useState(false);
 
   useEffect(() => {
@@ -353,10 +353,10 @@ export function LiveRoom({ id }: { id: string }) {
       void socket
         .timeout(10_000)
         .emitWithAck("live:join", { roomId: id })
-        .then((res) => (res.ok ? setRoom(res.data) : setClosed(true)))
+        .then((res) => (res.ok ? setRoom(res.data) : setClosed(res.error.code)))
         .catch(() => null);
     const onRoom = (r: LiveRoomDTO) => r.id === id && setRoom(r);
-    const onClosed = (e: { roomId: string }) => e.roomId === id && setClosed(true);
+    const onClosed = (e: { roomId: string }) => e.roomId === id && setClosed("ROOM_NOT_FOUND");
     socket.on("live:room", onRoom);
     socket.on("live:closed", onClosed);
     socket.on("connect", join);
@@ -418,7 +418,10 @@ export function LiveRoom({ id }: { id: string }) {
         )}
       </ScreenHeader>
       {closed ? (
-        <EmptyState Icon={Gamepad2} title={tr.live.closed}>
+        <EmptyState
+          Icon={Gamepad2}
+          title={closed === "GAME_STARTED" ? tr.live.started : closed === "ROOM_FULL" ? tr.live.full : tr.live.closed}
+        >
           <PrimaryButton title={tr.live.leave} onPress={leave} />
         </EmptyState>
       ) : !room ? (
