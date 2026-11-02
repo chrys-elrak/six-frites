@@ -27,6 +27,7 @@
     "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@csstools/postcss-oklab-function": "^5.0.15",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",

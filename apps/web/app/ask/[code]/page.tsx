@@ -22,6 +22,7 @@ import { use, useRef, useState } from "react";
 import { VoicePlayer } from "@/components/attachment";
 import { Avatar } from "@/components/avatar";
 import { CameraDialog } from "@/components/camera-dialog";
+import { Dialog } from "@/components/dialog";
 import { EmojiSuggestions, useEmojiSuggestions } from "@/components/emoji-suggestions";
 import { FormatBar, formatShortcut } from "@/components/format-bar";
 import { GifSearch } from "@/components/gif-picker";
@@ -87,6 +88,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
   const file = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [camera, setCamera] = useState(false);
+  const [about, setAbout] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
 
   const profile = useQuery({
@@ -205,20 +207,18 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
             <Avatar user={profile.data} size="lg" />
             <button
               type="button"
-              popoverTarget="ask-note"
+              onClick={() => setAbout(true)}
               aria-label={tr.ask.aboutLink}
               title={tr.ask.aboutLink}
               className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full bg-white text-stone-500 shadow-sm ring-1 ring-black/5 hover:text-stone-800 dark:bg-stone-800 dark:text-stone-300 dark:ring-white/10 dark:hover:text-white"
             >
               <Info className="size-4" />
             </button>
-            <p
-              id="ask-note"
-              popover="auto"
-              className="m-auto max-w-xs rounded-2xl bg-white p-4 text-center text-sm text-stone-600 shadow-xl ring-1 ring-black/5 backdrop:bg-black/30 dark:bg-stone-900 dark:text-stone-300 dark:ring-white/10"
-            >
-              {tr.ask.linkInfo}
-            </p>
+            {about && (
+              <Dialog onClose={() => setAbout(false)}>
+                <p className="p-4 text-center text-sm text-stone-600 dark:text-stone-300">{tr.ask.linkInfo}</p>
+              </Dialog>
+            )}
           </div>
         ) : (
           <Logo className="size-20" />
