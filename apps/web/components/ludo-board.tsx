@@ -163,6 +163,7 @@ export function LudoBoard({
   const tr = useT();
   const { rolling, walk } = useLudoMotion(state, mySeat);
   const mine = mySeat !== null && state.turn === mySeat && state.winner === null;
+  const canRoll = mine && !rolling && !state.moving;
   const movable = mine && !rolling && state.moving && state.dice !== null ? ludoMovable(state, mySeat, state.dice) : [];
   const tokens = state.tokens.flatMap((positions, seat) =>
     positions.map((pos, token) => {
@@ -248,7 +249,15 @@ export function LudoBoard({
         })}
       </div>
       <div className="flex items-center gap-4">
-        <Die value={state.dice} rolling={rolling} />
+        <button
+          type="button"
+          disabled={!canRoll}
+          onClick={() => play({ roll: true })}
+          aria-label={tr.live.roll}
+          className="rounded-xl transition enabled:cursor-pointer enabled:hover:scale-105 enabled:active:scale-95"
+        >
+          <Die value={state.dice} rolling={rolling} />
+        </button>
         <div className="min-w-0 text-sm">
           {!rolling && state.rolledBy !== null && state.dice !== null && (
             <p className="text-stone-500">{tr.live.rolled(nameOf(state.rolledBy), state.dice)}</p>
@@ -263,7 +272,7 @@ export function LudoBoard({
                 : tr.live.theirTurn(nameOf(state.turn))}
           </p>
         </div>
-        {mine && !rolling && !state.moving && (
+        {canRoll && (
           <button
             type="button"
             onClick={() => play({ roll: true })}

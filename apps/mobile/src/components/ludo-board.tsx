@@ -244,6 +244,7 @@ export function LudoBoard({
   const me = room.mySeat;
   const { rolling, walk } = useLudoMotion(state, me);
   const mine = me !== null && state.turn === me && room.status === "playing";
+  const canRoll = mine && !rolling && !state.moving;
   const movable = mine && !rolling && state.moving && state.dice !== null ? ludoMovable(state, me, state.dice) : [];
 
   const tokens = state.tokens.flatMap((seatTokens, seat) =>
@@ -295,7 +296,15 @@ export function LudoBoard({
         })}
       </View>
       <View style={styles.controls}>
-        <Die value={state.dice} size={52} rolling={rolling} />
+        <Pressable
+          disabled={!canRoll}
+          onPress={() => void play({ roll: true })}
+          accessibilityRole="button"
+          accessibilityLabel={tr.live.roll}
+          style={({ pressed }) => pressed && { transform: [{ scale: 0.92 }] }}
+        >
+          <Die value={state.dice} size={52} rolling={rolling} />
+        </Pressable>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={{ color: t.text, fontSize: 16, fontWeight: "700" }}>
             {mine ? (state.moving && !ludoForced(state) ? tr.live.pickToken : tr.live.yourTurn) : tr.live.theirTurn(nameOf(state.turn))}
@@ -304,7 +313,7 @@ export function LudoBoard({
             <Text style={{ color: t.muted, fontSize: 13 }}>{tr.live.rolled(nameOf(state.rolledBy), state.dice)}</Text>
           )}
         </View>
-        {mine && !rolling && !state.moving && <PrimaryButton title={`🎲 ${tr.live.roll}`} onPress={() => void play({ roll: true })} />}
+        {canRoll && <PrimaryButton title={`🎲 ${tr.live.roll}`} onPress={() => void play({ roll: true })} />}
       </View>
     </View>
   );
