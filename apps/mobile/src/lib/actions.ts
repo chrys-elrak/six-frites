@@ -210,6 +210,11 @@ export async function updateChatSettings(
   return chat;
 }
 
+/** Support closes a conversation; it moves to their archive until someone writes again. */
+export async function closeSupportChat(qc: QueryClient, chatId: string) {
+  upsertChat(qc, unwrap(await six.api.POST("/v1/chats/{id}/support/close", { params: { path: { id: chatId } } })));
+}
+
 /** Deletes the whole chat, or with `range` only the messages sent in it, which the server's message.deleted removes. */
 export async function deleteChat(
   qc: QueryClient,

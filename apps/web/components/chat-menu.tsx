@@ -17,7 +17,7 @@ import {
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
+import { closeSupportChat, deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
 import { sendAtLabel, toLocalInput } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -320,6 +320,9 @@ export function ChatMenu({
           label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
           onSelect: () => settings({ archived: !chat.archived }),
         },
+        ...(chat.supportDesk && !chat.supportClosedAt
+          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
+          : []),
         ...(chat.withSupport
           ? []
           : [

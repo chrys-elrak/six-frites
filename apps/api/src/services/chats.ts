@@ -135,6 +135,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     support: chat.members.some((m) => m.user.guest),
     supportDesk: chat.supportUserId !== null && !helped,
     withSupport: helped,
+    supportClosedAt: chat.supportClosedAt?.toISOString() ?? null,
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
   };

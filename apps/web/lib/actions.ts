@@ -218,6 +218,11 @@ export async function updateChatSettings(
   return chat;
 }
 
+/** Support closes a conversation; it moves to their archive until someone writes again. */
+export async function closeSupportChat(qc: QueryClient, chatId: string) {
+  upsertChat(qc, unwrap(await six.api.POST("/v1/chats/{id}/support/close", { params: { path: { id: chatId } } })));
+}
+
 /** Blocks or unblocks the other person in a chat; the server's chat.updated refreshes the chat. */
 /** Tells the server I left the chat, so the vanish-mode messages I've read go for both of us. */
 export function closeChat(chatId: string) {

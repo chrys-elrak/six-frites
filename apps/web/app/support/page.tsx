@@ -149,6 +149,7 @@ function SupportChat({ meId }: { meId: string }) {
       onEvent: (e) => {
         if (e.type === "message.new" || e.type === "message.edited") upsert([e.data]);
         if (e.type === "message.deleted") setMessages((list) => list.filter((m) => !e.data.messageIds.includes(m.id)));
+        if (e.type === "chat.updated") setChat((c) => (c?.id === e.data.id ? e.data : c));
       },
     });
     realtime.current = rt;
@@ -231,6 +232,7 @@ function SupportChat({ meId }: { meId: string }) {
         ))}
         {chat && !shown.length && <p className="m-auto max-w-xs text-center text-sm text-stone-500">{tr.support.empty}</p>}
       </div>
+      {chat?.supportClosedAt && <p className="px-4 pb-2 text-center text-sm text-stone-500">{tr.support.closed}</p>}
       {error && (
         <p role="alert" className="px-4 pb-1 text-sm text-red-600 dark:text-red-400">
           {error}

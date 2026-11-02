@@ -1,0 +1,1 @@
+ALTER TABLE "Chat" ADD COLUMN "supportClosedAt" TIMESTAMP(3);

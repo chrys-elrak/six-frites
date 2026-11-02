@@ -128,4 +128,21 @@ describe("support chat", () => {
     const joined = (await loginAs(ctx.app, sub, "web", { inviteCode: code })).json();
     expect(joined.user).toMatchObject({ id: guest.user.id, guest: false });
   });
+
+  it("lets support close a conversation, which opens again when someone writes", async () => {
+    const boss = await admin();
+    const guest = await walkIn("closer");
+    const chat = await openSupport(guest);
+    await send(guest, chat.id, "It works now, thanks");
+    const close = (who: Auth) => call(who, "POST", `/v1/chats/${chat.id}/support/close`);
+
+    expect((await close(guest)).statusCode).toBe(403);
+    const closed = (await close(boss)).json();
+    expect(closed).toMatchObject({ archived: true, supportDesk: true });
+    expect(closed.supportClosedAt).not.toBeNull();
+    expect((await openSupport(guest)).supportClosedAt).toBe(closed.supportClosedAt);
+
+    await send(guest, chat.id, "Actually, one more thing");
+    expect(await get(boss, `/v1/chats/${chat.id}`)).toMatchObject({ archived: false, supportClosedAt: null });
+  });
 });

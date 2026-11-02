@@ -321,6 +321,11 @@ export async function createMessage(
   let senderDevice: string | null = null;
   let createdAt = new Date();
   let started = false;
+  if (content && chat.supportClosedAt) {
+    await tx.chat.update({ where: { id: chatId }, data: { supportClosedAt: null } });
+    await tx.chatMember.updateMany({ where: { chatId, userId: { not: chat.supportUserId! } }, data: { archived: false } });
+    started = true;
+  }
   if (encrypted) {
     if (opts.scheduled) {
       envelopes = await liveEnvelopes(tx, chatId, envelopes);

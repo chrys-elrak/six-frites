@@ -220,6 +220,11 @@ export function Conversation({ chatId }: { chatId: string }) {
             <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
           </BubbleColorsContext.Provider>
         </View>
+        {!selecting && c.supportClosedAt && (
+          <Text style={[styles.closed, { color: t.muted, borderColor: t.border }]}>
+            {c.supportDesk ? tr.support.closedDesk : tr.support.closed}
+          </Text>
+        )}
         {!selecting &&
           (frozen ? (
             <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />
@@ -305,4 +310,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   peer: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 12, paddingVertical: 2, paddingRight: 8 },
+  closed: { fontSize: 13, textAlign: "center", paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
 });

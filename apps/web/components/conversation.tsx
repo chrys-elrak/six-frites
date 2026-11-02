@@ -303,6 +303,11 @@ export function Conversation({ chatId }: { chatId: string }) {
                 </button>
               </div>
             )}
+            {!selecting && c.supportClosedAt && (
+              <p className="border-t border-black/5 bg-stone-50/45 px-4 py-2 text-center text-sm text-stone-500 backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/40 dark:text-stone-400">
+                {c.supportDesk ? tr.support.closedDesk : tr.support.closed}
+              </p>
+            )}
             {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
             {!selecting && !frozen && (
               <div className="chat-colors contents">

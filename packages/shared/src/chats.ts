@@ -490,6 +490,7 @@ export const ChatDTO = z.object({
   withSupport: z
     .boolean()
     .describe("Your chat with Six Frites support: no calls, no presence, and text and photos only"),
+  supportClosedAt: IsoDate.nullable().describe("When support closed this conversation; the next message opens it again"),
   lastActivityAt: IsoDate,
   createdAt: IsoDate,
 });
