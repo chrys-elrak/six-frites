@@ -313,7 +313,6 @@ export async function createMessage(
     throw new AppError("STICKER_NOT_FOUND");
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
-  if (content && chat.type === "games") throw new AppError("FORBIDDEN", "Nobody can write in the games inbox");
   if (content) checkEncryption(chat, content, upload);
   if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content, upload);
 

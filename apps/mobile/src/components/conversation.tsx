@@ -111,7 +111,7 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   const c = chat.data;
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
-  const app = c.withSupport || c.type === "games";
+  const app = c.withSupport;
   const count = selecting ? selectedIds.length : 0;
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/"));
 

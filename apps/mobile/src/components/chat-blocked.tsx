@@ -1,6 +1,6 @@
 import type { ChatDTO } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Ban, Gamepad2, UserX } from "lucide-react-native";
+import { Ban, UserX } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -23,14 +23,12 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
     setBusy(false);
   }
 
-  const Icon = chat.type === "games" ? Gamepad2 : chat.peerDeleted ? UserX : Ban;
-  const message = chat.type === "games"
-    ? tr.live.inboxHint
-    : chat.peerDeleted
-      ? tr.chat.peerDeleted
-      : chat.blockedByMe
-        ? tr.chat.youBlocked(peerName)
-        : tr.chat.blockedYou(peerName);
+  const Icon = chat.peerDeleted ? UserX : Ban;
+  const message = chat.peerDeleted
+    ? tr.chat.peerDeleted
+    : chat.blockedByMe
+      ? tr.chat.youBlocked(peerName)
+      : tr.chat.blockedYou(peerName);
 
   return (
     <View
@@ -38,7 +36,7 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
     >
       <Icon size={20} color={t.faint} />
       <Text style={{ flex: 1, color: t.textSoft, fontSize: 14 }}>{message}</Text>
-      {chat.blockedByMe && !chat.peerDeleted && chat.type !== "games" && (
+      {chat.blockedByMe && !chat.peerDeleted && (
         <Pressable
           onPress={() => void unblock()}
           disabled={busy}

@@ -174,10 +174,9 @@ export const ServiceAction = z
       secs: z.number().int().nullable().describe("How long it lasted; null if it was missed or declined"),
     }),
     z.object({ type: z.literal("live_invite"), game: z.enum(LIVE_GAMES), roomId: z.string(), from: z.string() }),
-    z.object({ type: z.literal("live_result"), game: z.enum(LIVE_GAMES), outcome: z.enum(["won", "lost", "tie"]) }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game, and `live_result` in the games inbox when a game against Frite Bot ends",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 
@@ -440,9 +439,7 @@ export type ChatMemberDTO = z.infer<typeof ChatMemberDTO>;
 
 export const ChatDTO = z.object({
   id: Id,
-  type: z
-    .enum(["direct", "games"])
-    .describe("`games` is your games inbox: Six Frites posts your results in live games against Frite Bot there, and nobody can write"),
+  type: z.enum(["direct"]),
   title: z.string(),
   members: z.array(ChatMemberDTO),
   lastMessage: MessageDTO.nullable(),
@@ -498,8 +495,8 @@ export const ChatDTO = z.object({
 });
 export type ChatDTO = z.infer<typeof ChatDTO>;
 
-/** Nobody can write here: one of you blocked the other, they deleted their account, or it's the games inbox. */
-export const isFrozen = (c: ChatDTO) => c.blockedByMe || c.blockedByThem || c.peerDeleted || c.type === "games";
+/** Nobody can write here: one of you blocked the other, or they deleted their account. */
+export const isFrozen = (c: ChatDTO) => c.blockedByMe || c.blockedByThem || c.peerDeleted;
 
 export const CHAT_FILTERS = ["all", "unread", "read"] as const;
 export type ChatFilter = (typeof CHAT_FILTERS)[number];

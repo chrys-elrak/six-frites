@@ -31,7 +31,6 @@ import {
   LifeBuoy,
   Share2,
   Timer,
-  Trophy,
   UserPlus,
   Video,
 } from "lucide-react-native";
@@ -94,8 +93,6 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         )
       ) : m.action?.type === "live_invite" ? (
         <Gamepad2 size={14} color={color} />
-      ) : m.action?.type === "live_result" ? (
-        <Trophy size={14} color={color} />
       ) : (
         <Timer size={14} color={color} />
       );

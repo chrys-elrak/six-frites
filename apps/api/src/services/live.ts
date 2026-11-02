@@ -23,7 +23,6 @@ import {
   MemoryMove,
   type MemoryState,
   type PublicUser,
-  type ServiceAction,
   WORDS_SECONDS,
   WordsMove,
   type WordsState,
@@ -59,7 +58,6 @@ import { broadcaster, rooms } from "../lib/realtime.js";
 import { deleteObjects, presignGet } from "../lib/storage.js";
 import { storeVoice } from "./ask.js";
 import { blockedWith } from "./blocks.js";
-import { GAMES_ACCOUNT } from "./chats.js";
 import { profilesFor } from "./contacts.js";
 import { sharedGif } from "./gifs.js";
 import { createMessage } from "./messages.js";
@@ -239,27 +237,7 @@ function close(room: Room) {
   for (const id of [...seated, ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
 }
 
-/** Posts in someone's games inbox, their chat with Six Frites Games, without a notification of its own. */
-async function postToInbox(userId: string, action: ServiceAction) {
-  const app = await prisma.user.upsert({
-    where: { googleSub: GAMES_ACCOUNT.googleSub },
-    create: GAMES_ACCOUNT,
-    update: {},
-    select: { id: true },
-  });
-  const directKey = `games:${userId}`;
-  await withEvents(async (tx, emit) => {
-    const chat = await tx.chat.upsert({
-      where: { directKey },
-      create: { directKey, type: "games", members: { create: [{ userId: app.id }, { userId }] } },
-      update: {},
-      select: { id: true },
-    });
-    return createMessage(tx, emit, app.id, chat.id, { clientId: randomUUID(), action, silent: true });
-  });
-}
-
-/** Ends the game and, when it was only me against Frite Bot, posts how it went in my games inbox. */
+/** Ends the game: who won shows in the room until the next game or everyone leaves. */
 function finish(room: Room, ended: number[]) {
   const winners = ended.filter((i) => !room.seats[i]!.gaveUp);
   clearTimers(room);
@@ -267,12 +245,6 @@ function finish(room: Room, ended: number[]) {
   room.winners = winners;
   room.deadline = null;
   broadcast(room);
-  if (room.seats.filter((s) => s.userId).length > 1) return;
-  room.seats.forEach((s, i) => {
-    if (!s.userId || s.left) return;
-    const outcome = !winners.includes(i) ? "lost" : winners.length > 1 ? "tie" : "won";
-    void postToInbox(s.userId, { type: "live_result", game: room.game, outcome }).catch(() => null);
-  });
 }
 
 /**

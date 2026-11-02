@@ -22,7 +22,6 @@ import { prisma } from "../lib/prisma.js";
 import { deleteObjects } from "../lib/storage.js";
 import { matchTotp, newTotpSecret, totpUri } from "../lib/totp.js";
 import { adminTwoFactor, isAdminEmail } from "../plugins/auth.js";
-import { GAMES_ACCOUNT } from "./chats.js";
 import { admitQueued, invitesOf } from "./referrals.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
@@ -130,7 +129,6 @@ export async function listUsers(q: AdminUserQuery) {
   if (alias) return { items: await usersBehind(`Frite ${alias.padStart(4, "0")}`), nextCursor: null };
   const rows = await prisma.user.findMany({
     where: {
-      googleSub: { not: GAMES_ACCOUNT.googleSub },
       ...(q.q && {
         OR: [
           { displayName: { contains: q.q, mode: "insensitive" } },

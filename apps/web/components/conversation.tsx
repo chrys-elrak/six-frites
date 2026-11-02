@@ -148,7 +148,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
   const muted = isMuted(c);
   const frozen = isFrozen(c);
-  const app = c.withSupport || c.type === "games";
+  const app = c.withSupport;
   const shownPresence = frozen || c.withSupport ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
 

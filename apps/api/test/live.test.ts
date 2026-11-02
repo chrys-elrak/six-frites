@@ -8,7 +8,7 @@ import { type Auth, chatHelpers, useApp } from "./helpers.js";
 
 const hasFfmpeg = hasFfmpegCheck();
 const ctx = useApp();
-const { signUp, get, send, makeFriends } = chatHelpers(ctx);
+const { signUp, get, makeFriends } = chatHelpers(ctx);
 
 let url: string;
 const sockets: Socket[] = [];
@@ -102,39 +102,29 @@ describe("live rooms", () => {
     if (seen.game === "eights") expect(seen.state.hand).not.toEqual(view.state.hand);
   });
 
-  it("posts invites in our chat, and only results against Frite Bot in the games inbox, which isn't a contact", async () => {
+  it("posts invites in our chat, and nothing else after the game", async () => {
     const { host, guest } = await makeFriends();
     const [a, b] = [await player(host), await player(guest)];
     const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "fanorona", invite: [guest.user.id], locale: "en" });
-    const chatOf = async (type: string, has: (c: ChatDTO) => boolean) => {
-      for (const end = Date.now() + 4000; Date.now() < end; await new Promise((r) => setTimeout(r, 50))) {
-        const chat = ((await get(guest, "/v1/chats")).items as ChatDTO[]).find((c) => c.type === type);
-        if (chat && has(chat)) return chat;
-      }
-      throw new Error(`no ${type} chat`);
-    };
-
-    const direct = await chatOf("direct", (c) => c.lastMessage?.action?.type === "live_invite");
-    expect(direct.lastMessage).toMatchObject({
+    const chats = async () => (await get(guest, "/v1/chats")).items as ChatDTO[];
+    let direct: ChatDTO | undefined;
+    for (const end = Date.now() + 4000; !direct && Date.now() < end; await new Promise((r) => setTimeout(r, 50))) {
+      direct = (await chats()).find((c) => c.lastMessage?.action?.type === "live_invite");
+    }
+    expect(direct!.lastMessage).toMatchObject({
       type: "service",
       silent: true,
       senderId: host.user.id,
       action: { type: "live_invite", game: "fanorona", roomId: data!.id },
     });
 
-    await b.ask("live:join", { roomId: data!.id });
-    await a.ask("live:start", { roomId: data!.id });
-    await b.ask("live:giveup", { roomId: data!.id });
-    await until(() => b.rooms.some((r) => r.id === data!.id && r.status === "over"));
     const solo = (await b.ask<LiveRoomDTO>("live:create", { game: "fanorona", invite: [], locale: "en" })).data!;
     await b.ask("live:bot", { roomId: solo.id, add: true });
     await b.ask("live:start", { roomId: solo.id });
     await b.ask("live:giveup", { roomId: solo.id });
-    const inbox = await chatOf("games", (c) => !!c.lastMessage);
-    expect(inbox).toMatchObject({ title: "Six Frites Games", unreadCount: 1 });
-    expect(inbox.lastMessage).toMatchObject({ type: "service", action: { type: "live_result", game: "fanorona", outcome: "lost" } });
-    expect((await get(guest, "/v1/contacts")).items).toHaveLength(1);
-    expect((await send(guest, inbox.id, "hi")).statusCode).toBe(403);
+    await until(() => b.rooms.some((r) => r.id === solo.id && r.status === "over"));
+    await new Promise((r) => setTimeout(r, 300));
+    expect((await chats()).map((c) => c.id)).toEqual([direct!.id]);
   });
 
   it("lets the players chat in the room, a line a second at most", async () => {
