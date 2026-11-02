@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
+import { pairAlias } from "../src/services/users.js";
 import { type Auth, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -67,7 +68,7 @@ describe("support chat", () => {
     await send(guest, chat.id, "Hello?");
     const desk = await get(boss, `/v1/chats/${chat.id}`);
     expect(desk.supportDesk).toBe(true);
-    expect(desk.title).not.toBe("Six Frites");
+    expect(desk.title).toBe(pairAlias(boss.user.id, guest.user.id, "Potato"));
 
     const { code } = (await call(boss, "POST", "/v1/invites", {})).json();
     const friend: Auth = (await loginAs(ctx.app, uniqueSub("friend"), "web", { inviteCode: code })).json();
@@ -75,6 +76,14 @@ describe("support chat", () => {
     const help = await openSupport(friend);
     expect(personal.map((c) => c.id)).not.toContain(help.id);
     expect(help).toMatchObject({ title: "Six Frites", withSupport: true });
+    await send(friend, help.id, "Hi");
+    const seen = ((await get(boss, "/v1/chats")).items as { id: string; title: string; members: { user: { id: string } }[] }[])
+      .filter((c) => c.members.some((m) => m.user.id === friend.user.id))
+      .map((c) => [c.id === help.id, c.title]);
+    expect(Object.fromEntries(seen)).toEqual({
+      false: pairAlias(boss.user.id, friend.user.id),
+      true: pairAlias(boss.user.id, friend.user.id, "Potato"),
+    });
 
     const friendsInvite = (await call(friend, "POST", "/v1/invites", {})).json().code;
     const stranger: Auth = (await loginAs(ctx.app, uniqueSub("stranger"), "web", { inviteCode: friendsInvite })).json();
@@ -118,5 +127,22 @@ describe("support chat", () => {
     const { code } = (await call(boss, "POST", "/v1/invites", {})).json();
     const joined = (await loginAs(ctx.app, sub, "web", { inviteCode: code })).json();
     expect(joined.user).toMatchObject({ id: guest.user.id, guest: false });
+  });
+
+  it("lets support close a conversation, which opens again when someone writes", async () => {
+    const boss = await admin();
+    const guest = await walkIn("closer");
+    const chat = await openSupport(guest);
+    await send(guest, chat.id, "It works now, thanks");
+    const close = (who: Auth) => call(who, "POST", `/v1/chats/${chat.id}/support/close`);
+
+    expect((await close(guest)).statusCode).toBe(403);
+    const closed = (await close(boss)).json();
+    expect(closed).toMatchObject({ archived: true, supportDesk: true });
+    expect(closed.supportClosedAt).not.toBeNull();
+    expect((await openSupport(guest)).supportClosedAt).toBe(closed.supportClosedAt);
+
+    await send(guest, chat.id, "Actually, one more thing");
+    expect(await get(boss, `/v1/chats/${chat.id}`)).toMatchObject({ archived: false, supportClosedAt: null });
   });
 });

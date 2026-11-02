@@ -21,10 +21,13 @@ export function NewLiveRoom({ game, onClose }: { game: LiveGame; onClose: () => 
   const meId = useSession((s) => s.user!.id);
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const friends = (useChats().data ?? []).flatMap((c) => {
-    const peer = c.members.find((m) => m.user.id !== meId)?.user;
-    return peer && !isFrozen(c) ? [{ ...peer, displayName: c.title }] : [];
-  });
+  const friends = (useChats().data ?? [])
+    .filter((c) => !isFrozen(c) && !c.support && !c.supportDesk && !c.withSupport)
+    .flatMap((c) => {
+      const peer = c.members.find((m) => m.user.id !== meId)?.user;
+      return peer ? [{ ...peer, displayName: c.title }] : [];
+    })
+    .filter((f, i, all) => all.findIndex((g) => g.id === f.id) === i);
 
   async function create() {
     if (!realtime || busy) return;

@@ -73,7 +73,7 @@ import {
   scheduleMessage,
   sendScheduledNow,
 } from "../services/scheduled.js";
-import { openSupportChat } from "../services/support.js";
+import { closeSupportChat, openSupportChat } from "../services/support.js";
 import { sync } from "../services/sync.js";
 
 const ChatParams = z.object({ id: Id });
@@ -97,6 +97,22 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => openSupportChat(req.auth.userId),
+  );
+
+  app.post(
+    "/chats/:id/support/close",
+    {
+      schema: {
+        tags: ["chats"],
+        summary: "Close a support conversation",
+        description:
+          "Only support can close one. It moves to support's archive, and the next message from either side opens it again. Both get chat.updated.",
+        security,
+        params: ChatParams,
+        response: { 200: ChatDTO },
+      },
+    },
+    (req) => closeSupportChat(req.auth.userId, req.params.id),
   );
 
   app.get(

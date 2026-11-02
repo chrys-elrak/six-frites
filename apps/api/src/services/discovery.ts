@@ -1,5 +1,12 @@
 import type { ContactLink } from "../generated/prisma/client.js";
-import { AppError, type ContactLinkDTO, type FoundUserDTO, MAX_CONTACT_LINKS } from "@six/shared";
+import {
+  AppError,
+  CONTACT_LINK_DAYS,
+  type ContactLinkDTO,
+  type CreateContactLinkInput,
+  type FoundUserDTO,
+  MAX_CONTACT_LINKS,
+} from "@six/shared";
 import { CODE_ALPHABET, generateCode } from "../lib/codes.js";
 import { withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
@@ -16,7 +23,7 @@ function contactCodeOf(q: string) {
   return CODE_PATTERN.test(code) ? code : null;
 }
 
-const unexpired = () => ({ OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] });
+const unexpired = () => ({ expiresAt: { gt: new Date() } });
 
 /** Whoever `q` names, by their contact code or one of their contact links that hasn't expired. */
 async function resolve(userId: string, q: string) {
@@ -51,7 +58,8 @@ export async function findUser(userId: string, q: string): Promise<FoundUserDTO>
 /**
  * Opens a direct chat with whoever `q` names, or returns the one that already exists, bringing
  * it back if the user had deleted it on their side. A contact code works once: using it gives its
- * owner a new one, so whoever added them can't pass it on. Contact links keep working.
+ * owner a new one, so whoever added them can't pass it on. Contact links keep working, for as many
+ * new contacts as their owner allowed, then expire.
  */
 export async function addContact(userId: string, q: string) {
   const { user, code } = await resolve(userId, q);
@@ -60,6 +68,12 @@ export async function addContact(userId: string, q: string) {
       const used = await tx.user.updateMany({ where: { id: user.id, contactCode: code }, data: { contactCode: generateCode() } });
       if (!used.count) throw new AppError("USER_NOT_FOUND", "That contact code was just used");
       emit(user.id, "me.updated", toUserDTO(await tx.user.findUniqueOrThrow({ where: { id: user.id } })));
+    } else if (!(await tx.chat.findUnique({ where: { directKey: [userId, user.id].sort().join(":") } }))) {
+      const claimed = await tx.$executeRaw`
+        UPDATE "ContactLink" SET uses = uses + 1,
+          "expiresAt" = CASE WHEN uses + 1 >= "maxUses" THEN now() ELSE "expiresAt" END
+        WHERE code = ${code} AND "expiresAt" > now() AND ("maxUses" IS NULL OR uses < "maxUses")`;
+      if (!claimed) throw new AppError("USER_NOT_FOUND", "That contact link was just used up");
     }
     const chatId = await ensureDirectChat(tx, emit, userId, user.id);
     const unhidden = await tx.chatMember.updateMany({ where: { chatId, userId, hidden: true }, data: { hidden: false } });
@@ -69,7 +83,13 @@ export async function addContact(userId: string, q: string) {
 }
 
 function toContactLinkDTO(l: ContactLink): ContactLinkDTO {
-  return { code: l.code, expiresAt: l.expiresAt?.toISOString() ?? null, createdAt: l.createdAt.toISOString() };
+  return {
+    code: l.code,
+    expiresAt: l.expiresAt.toISOString(),
+    maxUses: l.maxUses,
+    uses: l.uses,
+    createdAt: l.createdAt.toISOString(),
+  };
 }
 
 export async function listContactLinks(userId: string) {
@@ -77,12 +97,15 @@ export async function listContactLinks(userId: string) {
   return { items: links.map(toContactLinkDTO) };
 }
 
-export async function createContactLink(userId: string, expiresAt: string | null) {
+/** A link that works for a week at most, or until `expiresAt` if that comes sooner, or until `maxUses` people used it. */
+export async function createContactLink(userId: string, { expiresAt, maxUses }: CreateContactLinkInput) {
   if (expiresAt && Date.parse(expiresAt) <= Date.now()) throw new AppError("VALIDATION_FAILED", "expiresAt is in the past");
   if ((await prisma.contactLink.count({ where: { userId, ...unexpired() } })) >= MAX_CONTACT_LINKS) {
-    throw new AppError("CONTACT_LINK_LIMIT_REACHED", `You can have ${MAX_CONTACT_LINKS} contact links`);
+    throw new AppError("CONTACT_LINK_LIMIT_REACHED", "You already have a reusable contact link");
   }
-  return toContactLinkDTO(await prisma.contactLink.create({ data: { userId, expiresAt } }));
+  const latest = Date.now() + CONTACT_LINK_DAYS * 864e5;
+  const until = new Date(Math.min(expiresAt ? Date.parse(expiresAt) : latest, latest));
+  return toContactLinkDTO(await prisma.contactLink.create({ data: { userId, expiresAt: until, maxUses: maxUses ?? null } }));
 }
 
 export async function deleteContactLink(userId: string, code: string) {

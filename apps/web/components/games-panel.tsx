@@ -12,6 +12,7 @@ import {
   isBotGame,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
+import { MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,6 +24,7 @@ import { ChatPicker } from "./chat-picker";
 import { GameDialog } from "./game";
 import { HowToPlay } from "./how-to-play";
 import { NewLiveRoom } from "./live-invites";
+import { Sheet } from "./sheet";
 
 /** The Games tab: pick a game, then a friend and your move, sent to your chat with them, or the bot. */
 export function GamesPanel() {
@@ -35,6 +37,7 @@ export function GamesPanel() {
   const [bot, setBot] = useState(false);
   const [live, setLive] = useState<LiveGame | null>(null);
   const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
+  const [ending, setEnding] = useState<Omit<LiveInviteDTO, "from"> | null>(null);
 
   useEffect(() => {
     void realtime?.socket
@@ -57,15 +60,22 @@ export function GamesPanel() {
             </h2>
             <div className="mt-3 grid gap-3 lg:grid-cols-3">
               {mine.map((r) => (
-                <Link
-                  key={r.roomId}
-                  href={`/play/${r.roomId}`}
-                  className="flex items-center gap-3 rounded-2xl bg-brand/15 p-3 ring-1 ring-brand transition active:scale-[0.98]"
-                >
-                  <span className="text-2xl">{LIVE_EMOJI[r.game]}</span>
-                  <span className="min-w-0 flex-1 truncate font-semibold">{tr.live.games[r.game]}</span>
-                  <span className="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-brand-ink">{tr.live.resume}</span>
-                </Link>
+                <div key={r.roomId} className="flex items-center gap-1 rounded-2xl bg-brand/15 p-3 pr-1 ring-1 ring-brand">
+                  <Link href={`/play/${r.roomId}`} className="flex min-w-0 flex-1 items-center gap-3 transition active:scale-[0.98]">
+                    <span className="text-2xl">{LIVE_EMOJI[r.game]}</span>
+                    <span className="min-w-0 flex-1 truncate font-semibold">{tr.live.games[r.game]}</span>
+                    <span className="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-brand-ink">{tr.live.resume}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setEnding(r)}
+                    aria-label={tr.live.end}
+                    title={tr.live.end}
+                    className="grid size-9 shrink-0 place-items-center rounded-full text-stone-600 hover:bg-black/5 dark:text-stone-300 dark:hover:bg-white/10"
+                  >
+                    <MoreVertical className="size-5" />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -122,6 +132,22 @@ export function GamesPanel() {
           ))}
         </div>
       </div>
+      {ending && (
+        <Sheet
+          title={tr.live.endHint}
+          actions={[
+            {
+              label: tr.live.end,
+              destructive: true,
+              onSelect: () => {
+                realtime?.socket.emit("live:end", { roomId: ending.roomId });
+                setMine((m) => m.filter((r) => r.roomId !== ending.roomId));
+              },
+            },
+          ]}
+          onClose={() => setEnding(null)}
+        />
+      )}
       {live && <NewLiveRoom game={live} onClose={() => setLive(null)} />}
       {game && !chat && !bot && (
         <ChatPicker
@@ -130,6 +156,7 @@ export function GamesPanel() {
           onPick={setChat}
           onClose={() => setGame(null)}
           top={isBotGame(game) && <BotRow onPick={() => setBot(true)} />}
+          noSupport
         />
       )}
       {game && bot && isBotGame(game) && (

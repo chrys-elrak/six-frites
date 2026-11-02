@@ -3,10 +3,11 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
   type InviteDTO,
+  inviteLimitNote,
+  invitePlacesLeft,
   inviteSummary,
   MAX_INVITE_DAYS,
   MAX_INVITE_MESSAGE,
-  MAX_INVITE_USES,
   quotaSummary,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,6 +23,11 @@ import { Card, PrimaryButton, SectionTitle } from "./ui";
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
 
+const quotaQuery = {
+  queryKey: ["invite-quota"],
+  queryFn: async () => unwrap(await six.api.GET("/v1/me/invite-quota")),
+};
+
 export function NewInviteDialog({ onClose }: { onClose: () => void }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -29,16 +35,21 @@ export function NewInviteDialog({ onClose }: { onClose: () => void }) {
   const [maxUses, setMaxUses] = useState(1);
   const [days, setDays] = useState(7);
   const [copied, setCopied] = useState<string | null>(null);
+  const quota = useQuery(quotaQuery);
+  const left = quota.data ? invitePlacesLeft(quota.data) : 0;
+  const note = quota.data && inviteLimitNote(quota.data, tr);
+  const people = Math.min(maxUses, left);
 
   const create = useMutation({
     mutationFn: async () =>
       unwrap(
         await six.api.POST("/v1/invites", {
-          body: { message: message.trim() || undefined, maxUses, expiresInDays: days },
+          body: { message: message.trim() || undefined, maxUses: people, expiresInDays: days },
         }),
       ),
     onSuccess: async (invite) => {
       void qc.invalidateQueries({ queryKey: ["invites"] });
+      void qc.invalidateQueries({ queryKey: ["invite-quota"] });
       if ((await shareInvite(invite.code)) === "copied") setCopied(invite.code);
       else onClose();
     },
@@ -90,11 +101,12 @@ export function NewInviteDialog({ onClose }: { onClose: () => void }) {
           <label className="flex items-center justify-between gap-3 text-sm">
             <span className="font-medium">{tr.settings.invitePeople}</span>
             <select
-              value={maxUses}
+              value={people}
               onChange={(e) => setMaxUses(Number(e.target.value))}
+              disabled={!left}
               className="rounded-lg bg-stone-100 px-3 py-2 dark:bg-stone-800"
             >
-              {range(MAX_INVITE_USES).map((n) => (
+              {range(left).map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>
@@ -115,12 +127,13 @@ export function NewInviteDialog({ onClose }: { onClose: () => void }) {
               ))}
             </select>
           </label>
+          {note && <p className="text-sm text-amber-700 dark:text-amber-400">{note}</p>}
           {create.isError && (
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {create.error instanceof SixApiError ? create.error.message : tr.common.somethingWrong}
             </p>
           )}
-          <PrimaryButton type="submit" disabled={create.isPending} className="w-full">
+          <PrimaryButton type="submit" disabled={create.isPending || !left} className="w-full">
             {tr.settings.createLink}
           </PrimaryButton>
         </form>
@@ -190,15 +203,15 @@ export function Invites() {
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
 
-  const quota = useQuery({
-    queryKey: ["invite-quota"],
-    queryFn: async () => unwrap(await six.api.GET("/v1/me/invite-quota")),
-  });
+  const quota = useQuery(quotaQuery);
 
   const revoke = useMutation({
     mutationFn: async (code: string) =>
       unwrap(await six.api.POST("/v1/invites/{code}/revoke", { params: { path: { code } } })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["invites"] });
+      void qc.invalidateQueries({ queryKey: ["invite-quota"] });
+    },
   });
 
   const remove = useMutation({
@@ -208,7 +221,7 @@ export function Invites() {
 
   const items = invites.data?.pages.flatMap((p) => p.items) ?? [];
   const used = quota.data && quotaSummary(quota.data, tr);
-  const full = quota.data?.limit != null && quota.data.invited >= quota.data.limit;
+  const note = quota.data && inviteLimitNote(quota.data, tr);
 
   return (
     <section className="space-y-3">
@@ -218,9 +231,11 @@ export function Invites() {
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.inviteHint}</p>
             {used && <p className="text-xs text-stone-500 dark:text-stone-400">{used}</p>}
-            {full && <p className="text-xs text-amber-700 dark:text-amber-400">{tr.settings.inviteLimitReached}</p>}
+            {note && <p className="text-xs text-amber-700 dark:text-amber-400">{note}</p>}
           </div>
-          <PrimaryButton onClick={() => setCreating(true)}>{tr.settings.newLink}</PrimaryButton>
+          <PrimaryButton onClick={() => setCreating(true)} disabled={!!note}>
+            {tr.settings.newLink}
+          </PrimaryButton>
         </div>
         {items.length > 0 && (
           <div className="divide-y divide-stone-200 lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">

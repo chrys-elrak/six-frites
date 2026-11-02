@@ -27,6 +27,7 @@ import {
 } from "./messages.js";
 import { blockState } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
+import { supportCase } from "./users.js";
 import { purgeUploads } from "./uploads.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
@@ -58,13 +59,10 @@ function muteData({ muted, mutedUntil }: Pick<UpdateChatInput, "muted" | "mutedU
   return { muted, mutedUntil: until };
 }
 
-/** The account that posts in everyone's games inbox. */
-export const GAMES_ACCOUNT = { googleSub: "system:games", email: "games@six-frites.invalid", displayName: "Six Frites Games" };
-
-/** Whoever answers support, or the games account, as the other person sees them: the app itself. */
-export const supportProfile = (id: string, displayName = "Six Frites") => ({
+/** Whoever answers support, as the person they help sees them: the app itself. */
+export const supportProfile = (id: string) => ({
   id,
-  displayName,
+  displayName: "Six Frites",
   avatarUrl: `${env.WEB_ORIGIN.split(",")[0]}/icon-192.png`,
 });
 
@@ -78,10 +76,10 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     shown:
       m.userId === viewerId
         ? shown(m.user)
-        : chat.type === "games"
-          ? supportProfile(m.userId, GAMES_ACCOUNT.displayName)
-          : helped
-            ? supportProfile(m.userId)
+        : helped
+          ? supportProfile(m.userId)
+          : m.userId === chat.supportUserId
+            ? supportCase(shown(m.user), viewerId)
             : shown(m.user),
   }));
   const others = members.filter((m) => m.userId !== viewerId);
@@ -105,7 +103,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
 
   return {
     id: chat.id,
-    type: chat.type === "games" ? "games" : "direct",
+    type: "direct",
     title: others.map((m) => m.shown.displayName).join(", ") || "Just you",
     members: members.map((m) => ({
       user: m.shown,
@@ -137,6 +135,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     support: chat.members.some((m) => m.user.guest),
     supportDesk: chat.supportUserId !== null && !helped,
     withSupport: helped,
+    supportClosedAt: chat.supportClosedAt?.toISOString() ?? null,
     lastActivityAt: chat.lastMessageAt.toISOString(),
     createdAt: chat.createdAt.toISOString(),
   };

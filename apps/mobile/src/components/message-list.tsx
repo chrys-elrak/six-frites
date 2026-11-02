@@ -40,7 +40,6 @@ import {
   Phone,
   PhoneMissed,
   Reply,
-  Trophy,
   Video,
   RotateCcw,
   Timer,
@@ -1324,8 +1323,6 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                       )
                     ) : row.message.action?.type === "live_invite" ? (
                       <Gamepad2 size={14} color="#fff" />
-                    ) : row.message.action?.type === "live_result" ? (
-                      <Trophy size={14} color="#fff" />
                     ) : (
                       <Timer size={14} color="#fff" />
                     )}

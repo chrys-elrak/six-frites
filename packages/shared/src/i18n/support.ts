@@ -11,6 +11,9 @@ const en = {
   photoTooBig: "Photos can be up to 100 MB.",
   contact: "Contact support",
   welcome: "Tell us what's going on. Screenshots help us fix bugs faster.",
+  close: "Close conversation",
+  closed: "Support closed this conversation. Write here if you need anything else.",
+  closedDesk: "You closed this conversation. It opens again when someone writes.",
 };
 
 const fr: typeof en = {
@@ -26,6 +29,9 @@ const fr: typeof en = {
   photoTooBig: "Les photos peuvent faire 100 Mo au maximum.",
   contact: "Contacter l'assistance",
   welcome: "Dites-nous ce qui se passe. Des captures d'écran nous aident à corriger les bugs plus vite.",
+  close: "Clore la conversation",
+  closed: "Le support a clos cette conversation. Écrivez ici si vous avez besoin d'autre chose.",
+  closedDesk: "Vous avez clos cette conversation. Elle se rouvre dès que quelqu'un écrit.",
 };
 
 const mg: typeof en = {
@@ -41,6 +47,9 @@ const mg: typeof en = {
   photoTooBig: "100 Mo farafahabetsany ny sary.",
   contact: "Hifandray amin'ny fanampiana",
   welcome: "Lazao anay izay mitranga. Manampy anay hanamboatra haingana kokoa ny sary amin'ny efijery.",
+  close: "Hamarana ny resaka",
+  closed: "Namarana ity resaka ity ny support. Manorata eto raha mila zavatra hafa ianao.",
+  closedDesk: "Namaranao ity resaka ity. Hisokatra indray izy raha misy manoratra.",
 };
 
 export default { en, fr, mg };

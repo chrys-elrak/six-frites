@@ -23,7 +23,6 @@ import {
   MemoryMove,
   type MemoryState,
   type PublicUser,
-  type ServiceAction,
   WORDS_SECONDS,
   WordsMove,
   type WordsState,
@@ -59,7 +58,6 @@ import { broadcaster, rooms } from "../lib/realtime.js";
 import { deleteObjects, presignGet } from "../lib/storage.js";
 import { storeVoice } from "./ask.js";
 import { blockedWith } from "./blocks.js";
-import { GAMES_ACCOUNT } from "./chats.js";
 import { profilesFor } from "./contacts.js";
 import { sharedGif } from "./gifs.js";
 import { createMessage } from "./messages.js";
@@ -239,26 +237,7 @@ function close(room: Room) {
   for (const id of [...seated, ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
 }
 
-/** Posts in someone's games inbox, their chat with Six Frites Games, without a notification of its own. */
-async function postToInbox(userId: string, action: ServiceAction) {
-  const app = await prisma.user.upsert({
-    where: { googleSub: GAMES_ACCOUNT.googleSub },
-    create: GAMES_ACCOUNT,
-    update: {},
-    select: { id: true },
-  });
-  const directKey = `games:${userId}`;
-  await withEvents(async (tx, emit) => {
-    const chat = await tx.chat.upsert({
-      where: { directKey },
-      create: { directKey, type: "games", members: { create: [{ userId: app.id }, { userId }] } },
-      update: {},
-      select: { id: true },
-    });
-    return createMessage(tx, emit, app.id, chat.id, { clientId: randomUUID(), action, silent: true });
-  });
-}
-
+/** Ends the game: who won shows in the room until the next game or everyone leaves. */
 function finish(room: Room, ended: number[]) {
   const winners = ended.filter((i) => !room.seats[i]!.gaveUp);
   clearTimers(room);
@@ -266,11 +245,6 @@ function finish(room: Room, ended: number[]) {
   room.winners = winners;
   room.deadline = null;
   broadcast(room);
-  room.seats.forEach((s, i) => {
-    if (!s.userId || s.left) return;
-    const outcome = !winners.includes(i) ? "lost" : winners.length > 1 ? "tie" : "won";
-    void postToInbox(s.userId, { type: "live_result", game: room.game, outcome }).catch(() => null);
-  });
 }
 
 /**
@@ -343,17 +317,21 @@ function hostRoom(userId: string, roomId: string) {
   return room;
 }
 
-/** Opens a room with me in the first seat and asks my contacts to join, in the app or with a notification. */
+/**
+ * Opens a room with me in the first seat and asks my contacts to join: a banner in the app, a
+ * notification, and the invite in our chat, sent silently since the notification already rang.
+ */
 export async function createRoom(userId: string, input: CreateLiveInput) {
   const invite = [...new Set(input.invite)].filter((id) => id !== userId);
   if (invite.length >= LIVE_SEATS[input.game].max) throw new AppError("ROOM_FULL", "Too many people for this game");
   const blocked = await blockedWith(prisma, userId);
   const chats = await prisma.chat.findMany({
     where: { directKey: { in: invite.map((id) => [userId, id].sort().join(":")) } },
-    select: { directKey: true },
+    select: { id: true, directKey: true },
   });
   const people = await prisma.user.count({ where: { id: { in: invite }, deletedAt: null, bannedAt: null } });
-  const known = invite.every((id) => !blocked.has(id) && chats.some((c) => c.directKey === [userId, id].sort().join(":")));
+  const chatWith = (id: string) => chats.find((c) => c.directKey === [userId, id].sort().join(":"));
+  const known = invite.every((id) => !blocked.has(id) && chatWith(id));
   if (!known || people !== invite.length) throw new AppError("CONTACT_NOT_FOUND", "You can only invite your contacts");
 
   const room: Room = {
@@ -383,7 +361,10 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
     const from = room.profiles.get(id)!(room.users.get(userId)!);
     out.to(rooms.user(id)).emit("live:invite", { roomId: room.id, game: room.game, from });
     void deliverLiveInvitePush(id, from, room.game, room.id).catch(() => null);
-    void postToInbox(id, { type: "live_invite", game: room.game, roomId: room.id, from: from.displayName }).catch(() => null);
+    const action = { type: "live_invite" as const, game: room.game, roomId: room.id, from: from.displayName };
+    void withEvents((tx, emit) =>
+      createMessage(tx, emit, userId, chatWith(id)!.id, { clientId: randomUUID(), action, silent: true }),
+    ).catch(() => null);
   }
   return toDTO(room, userId);
 }
@@ -406,6 +387,7 @@ export async function joinRoom(userId: string, roomId: string) {
   }
   if (!room.invited.includes(userId)) throw new AppError("ROOM_NOT_FOUND", "This game has ended");
   await refresh(room);
+  if (room.seats.some((s) => s.userId === userId)) return joinRoom(userId, roomId);
   const bot = room.status === "lobby" ? undefined : room.seats.find((s) => !s.userId);
   if (room.status !== "lobby" && !bot) throw new AppError("GAME_STARTED", "This game has already started");
   if (room.status === "lobby" && room.seats.length >= LIVE_SEATS[room.game].max) throw new AppError("ROOM_FULL", "This game is full");
@@ -441,6 +423,8 @@ export function leaveRoom(userId: string, roomId: string) {
   if (room.status === "playing" && room.state && turnOf(room.state) === seat) return schedule(room);
   broadcast(room);
 }
+
+export const hasRoom = (roomId: string) => live.has(roomId);
 
 /** The games I have a seat in that haven't ended, even ones I left, so I can find my way back. */
 export function myRooms(userId: string) {
@@ -514,6 +498,22 @@ export function giveUp(userId: string, roomId: string) {
   else if (turnOf(room.state) === seat) schedule(room);
   else broadcast(room);
   return null;
+}
+
+/**
+ * Ends the game for me in one go, even after I left it: gives up my seat and leaves for good. A game
+ * nobody else is still in closes right away.
+ */
+export function endRoom(userId: string, roomId: string) {
+  const room = live.get(roomId);
+  const seat = room?.seats.find((s) => s.userId === userId);
+  if (!room || !seat) return;
+  if (room.status === "playing") {
+    if (!room.seats.some((s) => s.userId && s !== seat && !s.gaveUp)) return close(room);
+    seat.left = false;
+    if (!seat.gaveUp) giveUp(userId, roomId);
+  }
+  leaveRoom(userId, roomId);
 }
 
 export function playMove(userId: string, roomId: string, move: unknown) {

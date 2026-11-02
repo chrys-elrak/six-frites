@@ -1,7 +1,9 @@
 import { AppError } from "@six/shared";
 import { env } from "../env.js";
+import { withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { getChat } from "./chats.js";
+import { assertMember } from "./messages.js";
 
 /**
  * Your chat with support, answered by the first admin in ADMIN_EMAILS who has an account. It's a chat of its own,
@@ -27,4 +29,17 @@ export async function openSupportChat(userId: string) {
     update: {},
   });
   return getChat(userId, chat.id);
+}
+
+/** Support closes a conversation: it moves to their archive, and comes back open when either side writes. */
+export async function closeSupportChat(userId: string, chatId: string) {
+  return withEvents(async (tx, emit) => {
+    await assertMember(tx, chatId, userId);
+    const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId }, include: { members: true } });
+    if (!chat.supportUserId || chat.supportUserId === userId) throw new AppError("FORBIDDEN", "Only support can close this chat");
+    await tx.chat.update({ where: { id: chatId }, data: { supportClosedAt: new Date() } });
+    await tx.chatMember.update({ where: { chatId_userId: { chatId, userId } }, data: { archived: true } });
+    for (const m of chat.members) emit(m.userId, "chat.updated", await getChat(m.userId, chatId, tx));
+    return getChat(userId, chatId, tx);
+  });
 }

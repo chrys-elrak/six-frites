@@ -105,8 +105,11 @@ model ContactLink {
   id        String    @id @default(cuid())
   code      String    @unique @default(dbgenerated("random_code()"))
   userId    String
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  /// Null: anyone, until it expires. Once that many people added me with it, it expires.
+  maxUses   Int?
+  uses      Int      @default(0)
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -257,6 +260,8 @@ model Chat {
   encryptedAt    DateTime?
   /// Set on a chat with support: the person being helped, who sees the other side as Six Frites.
   supportUserId  String?
+  /// Support closed the conversation; the next message opens it again.
+  supportClosedAt DateTime?
 
   members   ChatMember[]
   messages  Message[]

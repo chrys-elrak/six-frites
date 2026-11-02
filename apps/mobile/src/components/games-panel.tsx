@@ -11,6 +11,7 @@ import {
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect } from "expo-router";
+import { MoreVertical } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -23,7 +24,8 @@ import { ChatPicker } from "./chat-picker";
 import { HowToPlay } from "./how-to-play";
 import { LiveInviteSheet, playHref } from "./live";
 import { NewGame } from "./game";
-import { PrimaryButton, ScreenHeader, SectionTitle } from "./ui";
+import { Sheet } from "./sheet";
+import { IconButton, PrimaryButton, ScreenHeader, SectionTitle } from "./ui";
 
 function GameCard({
   game,
@@ -75,6 +77,7 @@ export function GamesPanel() {
   const [bot, setBot] = useState(false);
   const [live, setLive] = useState<LiveGame | null>(null);
   const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
+  const [ending, setEnding] = useState<Omit<LiveInviteDTO, "from"> | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -105,6 +108,7 @@ export function GamesPanel() {
               {tr.live.games[r.game]}
             </Text>
             <PrimaryButton title={tr.live.resume} onPress={() => router.push(playHref(r.roomId))} />
+            <IconButton Icon={MoreVertical} label={tr.live.end} onPress={() => setEnding(r)} />
           </Pressable>
         ))}
         <View>
@@ -121,6 +125,22 @@ export function GamesPanel() {
           <GameCard key={g} game={g} emoji={GAME_EMOJI[g]} title={tr.calls[g]} about={tr.calls.about[g]} onPress={() => setGame(g)} />
         ))}
       </ScrollView>
+      {ending && (
+        <Sheet
+          title={tr.live.endHint}
+          actions={[
+            {
+              label: tr.live.end,
+              destructive: true,
+              onSelect: () => {
+                realtime?.socket.emit("live:end", { roomId: ending.roomId });
+                setMine((m) => m.filter((r) => r.roomId !== ending.roomId));
+              },
+            },
+          ]}
+          onClose={() => setEnding(null)}
+        />
+      )}
       {live && <LiveInviteSheet game={live} onClose={() => setLive(null)} />}
       {game && !chat && !bot && (
         <ChatPicker
@@ -129,6 +149,7 @@ export function GamesPanel() {
           onPick={setChat}
           onClose={() => setGame(null)}
           top={isBotGame(game) && <BotRow onPick={() => setBot(true)} />}
+          noSupport
         />
       )}
       {game && bot && isBotGame(game) && (

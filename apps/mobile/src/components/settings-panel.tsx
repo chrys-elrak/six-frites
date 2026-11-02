@@ -1,5 +1,6 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
+  inviteLimitNote,
   inviteSummary,
   LOCALES,
   LOCALE_NAMES,
@@ -13,6 +14,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { Camera, Check, ChevronRight, LogOut, Monitor, Smartphone, Volume2 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
 import { Text, TextInput } from "./text";
 import { formatCode, contactUrl, sendAtLabel, shareContact, shareInvite, timeAgo } from "@/lib/format";
@@ -29,8 +31,7 @@ import { EncryptionSettings } from "./encryption-settings";
 import { AppLockSettings } from "./app-lock";
 import { Avatar } from "./avatar";
 import { QrCode } from "./qr-code";
-import { ScheduleDialog } from "./scheduled";
-import { NewInvite } from "./invites";
+import { NewContactLink, NewInvite, quotaQuery } from "./invites";
 import { QuickReactionsSettings } from "./reactions";
 import { Sheet } from "./sheet";
 import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton, Toggle } from "./ui";
@@ -249,16 +250,16 @@ function CodeRow({ code, label, children }: { code: string; label: string; child
   );
 }
 
-function FindMe() {
+export function FindMe() {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
   const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [choosing, setChoosing] = useState(false);
-  const [pickingDate, setPickingDate] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const me = useQuery({
     queryKey: ["me"],
@@ -278,11 +279,6 @@ function FindMe() {
     queryFn: async () => unwrap(await six.api.GET("/v1/me/contact-links")).items,
   });
   const refresh = () => qc.invalidateQueries({ queryKey: ["contact-links"] });
-  const create = useMutation({
-    mutationFn: async (expiresAt: Date | null) =>
-      unwrap(await six.api.POST("/v1/me/contact-links", { body: { expiresAt: expiresAt?.toISOString() ?? null } })),
-    onSuccess: refresh,
-  });
   const remove = useMutation({
     mutationFn: async (code: string) =>
       unwrap(await six.api.DELETE("/v1/me/contact-links/{code}", { params: { path: { code } } })),
@@ -297,6 +293,15 @@ function FindMe() {
         {user.contactCode ? (
           <CodeRow code={user.contactCode} label={tr.settings.contactCode}>
             <TextButton title={tr.common.shareLink} color={t.text} onPress={() => void shareContact(user.contactCode)} />
+            <TextButton
+              title={codeCopied ? tr.common.copied : tr.settings.copyCode}
+              color={t.text}
+              onPress={() => {
+                void Clipboard.setStringAsync(formatCode(user.contactCode));
+                setCodeCopied(true);
+                setTimeout(() => setCodeCopied(false), 2000);
+              }}
+            />
             <TextButton title={tr.settings.newCode} onPress={() => setConfirmReset(true)} disabled={reset.isPending} />
           </CodeRow>
         ) : null}
@@ -312,7 +317,12 @@ function FindMe() {
             <Divider />
             <CodeRow
               code={l.code}
-              label={l.expiresAt ? tr.settings.worksUntil(sendAtLabel(l.expiresAt)) : tr.settings.worksUntilDeleted}
+              label={[
+                tr.settings.worksUntil(sendAtLabel(l.expiresAt)),
+                l.maxUses !== null && tr.settings.addedOf(l.uses, l.maxUses),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             >
               <TextButton title={tr.common.shareLink} color={t.text} onPress={() => void shareContact(l.code)} />
               <TextButton title={tr.common.delete} onPress={() => setDeleting(l.code)} />
@@ -322,40 +332,19 @@ function FindMe() {
         {items.length < MAX_CONTACT_LINKS && (
           <>
             <Divider />
-            <Pressable onPress={() => setChoosing(true)} disabled={create.isPending} style={styles.cardRow}>
+            <Pressable onPress={() => setCreating(true)} style={styles.cardRow}>
               <Text style={{ color: brand, fontWeight: "600", fontSize: 15 }}>{tr.settings.newReusableCode}</Text>
             </Pressable>
           </>
         )}
       </Card>
 
+      {creating && <NewContactLink onClose={() => setCreating(false)} />}
       {confirmReset && (
         <Sheet
           title={tr.settings.resetCodeWarning}
           actions={[{ label: tr.settings.getNewCode, destructive: true, onSelect: () => reset.mutate() }]}
           onClose={() => setConfirmReset(false)}
-        />
-      )}
-      {choosing && (
-        <Sheet
-          title={tr.settings.newReusableCode}
-          actions={[
-            { label: tr.settings.untilDeleted, onSelect: () => create.mutate(null) },
-            { label: tr.settings.untilDate, onSelect: () => setPickingDate(true) },
-          ]}
-          onClose={() => setChoosing(false)}
-        />
-      )}
-      {pickingDate && (
-        <ScheduleDialog
-          title={tr.settings.stopsWorking}
-          confirm={tr.settings.create}
-          initial={new Date(Date.now() + 7 * 864e5)}
-          onPick={(at) => {
-            setPickingDate(false);
-            create.mutate(at);
-          }}
-          onClose={() => setPickingDate(false)}
         />
       )}
       {deleting && (
@@ -369,7 +358,7 @@ function FindMe() {
   );
 }
 
-function Invites() {
+export function Invites() {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
@@ -383,15 +372,15 @@ function Invites() {
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
 
-  const quota = useQuery({
-    queryKey: ["invite-quota"],
-    queryFn: async () => unwrap(await six.api.GET("/v1/me/invite-quota")),
-  });
+  const quota = useQuery(quotaQuery);
 
   const revoke = useMutation({
     mutationFn: async (code: string) =>
       unwrap(await six.api.POST("/v1/invites/{code}/revoke", { params: { path: { code } } })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["invites"] });
+      void qc.invalidateQueries({ queryKey: ["invite-quota"] });
+    },
   });
 
   const remove = useMutation({
@@ -401,7 +390,7 @@ function Invites() {
 
   const items = invites.data?.pages.flatMap((p) => p.items) ?? [];
   const used = quota.data && quotaSummary(quota.data, tr);
-  const full = quota.data?.limit != null && quota.data.invited >= quota.data.limit;
+  const note = quota.data && inviteLimitNote(quota.data, tr);
 
   return (
     <View>
@@ -411,9 +400,9 @@ function Invites() {
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={{ color: t.textSoft, fontSize: 14 }}>{tr.settings.inviteHint}</Text>
             {used && <Text style={{ color: t.muted, fontSize: 12 }}>{used}</Text>}
-            {full && <Text style={{ color: t.text, fontSize: 12 }}>{tr.settings.inviteLimitReached}</Text>}
+            {note && <Text style={{ color: t.text, fontSize: 12 }}>{note}</Text>}
           </View>
-          <PrimaryButton title={tr.settings.newLink} onPress={() => setCreating(true)} />
+          <PrimaryButton title={tr.settings.newLink} onPress={() => setCreating(true)} disabled={!!note} />
         </View>
         {items.map((i) => {
           const dead = i.status !== "valid" || (i.expiresAt !== null && Date.parse(i.expiresAt) < Date.now());
@@ -610,9 +599,7 @@ export function SettingsPanel() {
         <LanguagePicker />
         <FontPicker />
         <QuickReactionsSettings />
-        <FindMe />
         <NotificationSettings />
-        <Invites />
         <Referrals />
         <Devices />
         <EncryptionSettings />

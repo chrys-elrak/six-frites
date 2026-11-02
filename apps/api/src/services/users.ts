@@ -43,9 +43,14 @@ export function toUserDTO(u: User): UserDTO {
  * The alias `viewerId` sees for `userId`. Each pair gets its own, so two people can't tell they know the same
  * person by comparing names. Matches the pair_alias SQL function, which the contact list sorts and searches by.
  */
-export function pairAlias(viewerId: string, userId: string) {
+export function pairAlias(viewerId: string, userId: string, word = "Frite") {
   const n = parseInt(createHash("md5").update(`${viewerId}:${userId}`).digest("hex").slice(0, 7), 16) % 10000;
-  return `Frite ${String(n).padStart(4, "0")}`;
+  return `${word} ${String(n).padStart(4, "0")}`;
+}
+
+/** Whoever asked support for help, as the desk sees them: a Potato instead of a Frite, with the same number. */
+export function supportCase<P extends { id: string; displayName: string }>(p: P, viewerId: string): P {
+  return p.displayName === pairAlias(viewerId, p.id) ? { ...p, displayName: pairAlias(viewerId, p.id, "Potato") } : p;
 }
 
 /** Someone as `viewerId` sees them: their alias for that viewer and no photo, unless they share their profile. */

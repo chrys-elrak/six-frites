@@ -1,5 +1,7 @@
 const en = {
   search: "Search",
+  title: "Contacts",
+  none: "No contacts yet.",
   addContact: "Add contact",
   inviteFriend: "Invite a friend",
   noMatch: (q: string) => `No contacts match “${q}”.`,
@@ -45,6 +47,8 @@ const en = {
 
 const fr: typeof en = {
   search: "Rechercher",
+  title: "Contacts",
+  none: "Aucun contact pour l'instant.",
   addContact: "Ajouter un contact",
   inviteFriend: "Inviter un(e) ami(e)",
   noMatch: (q) => `Aucun contact ne correspond à « ${q} ».`,
@@ -90,6 +94,8 @@ const fr: typeof en = {
 
 const mg: typeof en = {
   search: "Hikaroka",
+  title: "Mpifandray",
+  none: "Mbola tsy misy mpifandray.",
   addContact: "Hanampy mpifandray",
   inviteFriend: "Hanasa namana",
   noMatch: (q) => `Tsy misy mpifandray mifanaraka amin'ny hoe “${q}”.`,

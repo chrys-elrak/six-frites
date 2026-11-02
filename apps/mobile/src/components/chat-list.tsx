@@ -1,12 +1,15 @@
 import {
+  CHAT_FILTERS,
   type ChatDTO,
+  type ContactDTO,
   type ChatFilter,
-  chatFilters,
   inChatFilter,
   maskSpoilers,
   serviceText,
   shownType,
 } from "@six/shared";
+import { unwrap } from "@six/sdk";
+import { useQuery } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { router, useFocusEffect } from "expo-router";
 import {
@@ -28,7 +31,6 @@ import {
   LifeBuoy,
   Share2,
   Timer,
-  Trophy,
   UserPlus,
   Video,
 } from "lucide-react-native";
@@ -51,6 +53,7 @@ import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
 import { NewInvite } from "./invites";
+import { FindMe, Invites } from "./settings-panel";
 import { MediaIcon, type MediaType, mediaLabel } from "./media-label";
 import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
 import { UpdateBanner } from "./update-banner";
@@ -90,12 +93,10 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         )
       ) : m.action?.type === "live_invite" ? (
         <Gamepad2 size={14} color={color} />
-      ) : m.action?.type === "live_result" ? (
-        <Trophy size={14} color={color} />
       ) : (
         <Timer size={14} color={color} />
       );
-    return line(icon, serviceText(m, tr));
+    return line(icon, serviceText(m, tr, m.senderId === meId));
   }
   if (m.undecryptable || m.decrypting) {
     return line(<Lock size={14} color={color} />, m.decrypting ? tr.chats.decrypting : tr.chats.encryptedMessage, true);
@@ -215,6 +216,80 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   );
 }
 
+function ContactRow({ contact }: { contact: ContactDTO }) {
+  const t = useTheme();
+  const online = usePresence(contact.user.id)?.online;
+  return (
+    <Pressable
+      onPress={() => router.push(`/chats/${contact.chatId}`)}
+      style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
+    >
+      <Avatar user={contact.user} size="md" online={!!online} />
+      <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
+        {contact.user.displayName}
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Everyone I share a direct chat with, A to Z, even the chats I deleted for me, and opens our chat.
+ * Below them, my contact codes and invite links, for adding more.
+ */
+function ContactList({ needle, query }: { needle: string; query: string }) {
+  const t = useTheme();
+  const tr = useT();
+  const contacts = useQuery({
+    queryKey: ["contacts"],
+    staleTime: 0,
+    queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
+  });
+  const shown = contacts.data?.filter((c) => c.user.displayName.toLowerCase().includes(needle)) ?? [];
+  useWatchPresence(shown.map((c) => c.user.id));
+
+  return (
+    <FlatList
+      data={shown}
+      keyExtractor={(c) => c.user.id}
+      keyboardShouldPersistTaps="handled"
+      renderItem={({ item }) => <ContactRow contact={item} />}
+      ListFooterComponent={
+        needle ? undefined : (
+          <View style={{ padding: 16, gap: 24 }}>
+            <FindMe />
+            <Invites />
+          </View>
+        )
+      }
+      refreshControl={
+        <RefreshControl
+          refreshing={contacts.isRefetching}
+          onRefresh={() => void contacts.refetch()}
+          colors={[brand]}
+          progressBackgroundColor={t.surface}
+        />
+      }
+      ListEmptyComponent={
+        <Text style={[styles.note, { color: contacts.isError ? t.danger : t.muted, textAlign: "center" }]}>
+          {contacts.isPending
+            ? tr.common.loading
+            : contacts.isError
+              ? tr.common.somethingWrong
+              : needle
+                ? tr.contacts.noMatch(query)
+                : tr.contacts.none}
+        </Text>
+      }
+    />
+  );
+}
+
+type ListView = "chats" | "desk" | "contacts";
+
+/**
+ * The chat list, or with `archived` the archived chats. A switch on top shows my contacts instead, and
+ * the support chats for whoever answers support.
+ */
 export function ChatList({ archived = false }: { archived?: boolean }) {
   const t = useTheme();
   const tr = useT();
@@ -238,10 +313,16 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const [pulled, setPulled] = useState(false);
   useFocusEffect(useCallback(() => () => setPulled(false), []));
   const needle = query.trim().toLowerCase();
-  const visible = chats.data?.filter((c) => c.title.toLowerCase().includes(needle)) ?? [];
   const [picked, setPicked] = useState<ChatFilter>("all");
-  const desk = !archived && visible.some((c) => c.supportDesk);
-  const filter = archived || !chatFilters(desk).includes(picked) ? "all" : picked;
+  const [viewPicked, setView] = useState<ListView>("chats");
+  const hasDesk = !archived && !!chats.data?.some((c) => c.supportDesk);
+  const views: ListView[] = hasDesk ? ["chats", "desk", "contacts"] : ["chats", "contacts"];
+  const view = !archived && views.includes(viewPicked) ? viewPicked : "chats";
+  const desk = view === "desk";
+  const unreadIn = (d: boolean) => chats.data?.filter((c) => c.supportDesk === d && c.unreadCount > 0).length ?? 0;
+  const visible =
+    chats.data?.filter((c) => (!hasDesk || c.supportDesk === desk) && c.title.toLowerCase().includes(needle)) ?? [];
+  const filter = archived ? "all" : picked;
   const shown = visible.filter((c) => inChatFilter(c, filter));
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
   const archivedCount = archivedChats.data?.length ?? 0;
@@ -251,7 +332,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
     <>
       <UpdateBanner />
       <BackupPinBanner />
-      {pulled && !needle && archivedCount > 0 && (
+      {pulled && view === "chats" && !needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}
           style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
@@ -290,6 +371,31 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
               </>
             )}
           </View>
+          {!archived && (
+            <View style={[styles.tabs, { backgroundColor: t.chip }]}>
+              {views.map((v) => {
+                const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
+                return (
+                  <Pressable
+                    key={v}
+                    onPress={() => setView(v)}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: view === v }}
+                    style={[styles.tab, view === v && { backgroundColor: t.surface }]}
+                  >
+                    <Text numberOfLines={1} style={{ color: view === v ? t.text : t.muted, fontSize: 14, fontWeight: "600" }}>
+                      {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
+                    </Text>
+                    {unread > 0 && (
+                      <View style={[styles.badge, { backgroundColor: brand }]}>
+                        <Text style={[styles.badgeText, { color: brandInk }]}>{unread > 99 ? "99+" : unread}</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
           <View style={[styles.search, { backgroundColor: t.chip }]}>
             <Search size={16} color={t.muted} />
             <TextInput
@@ -301,9 +407,9 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
               style={[styles.searchInput, { color: t.text }]}
             />
           </View>
-          {!archived && (
+          {!archived && view !== "contacts" && (
             <View style={styles.filters}>
-              {chatFilters(desk).map((f) => (
+              {CHAT_FILTERS.map((f) => (
                 <Pressable
                   key={f}
                   onPress={() => setPicked(f)}
@@ -312,7 +418,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
                   style={[styles.filter, { backgroundColor: filter === f ? brand : t.chip }]}
                 >
                   <Text style={{ color: filter === f ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>
-                    {f === "support" ? tr.support.title : f === "chats" ? tr.common.chats : tr.chats.filters[f]}
+                    {tr.chats.filters[f]}
                   </Text>
                 </Pressable>
               ))}
@@ -321,49 +427,53 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
         </View>
       </ScreenHeader>
 
-      <FlatList
-        data={shown}
-        keyExtractor={(c) => c.id}
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => <ChatRow chat={item} meId={meId} />}
-        ListHeaderComponent={header}
-        refreshControl={
-          <RefreshControl
-            refreshing={chats.isRefetching}
-            onRefresh={() => {
-              setPulled(true);
-              void chats.refetch();
-            }}
-            colors={[brand]}
-            progressBackgroundColor={t.surface}
-          />
-        }
-        ListEmptyComponent={
-          chats.isPending ? (
-            <Text style={[styles.note, { color: t.muted }]}>{tr.common.loading}</Text>
-          ) : chats.isError ? (
-            <Text style={[styles.note, { color: t.danger }]}>{tr.chats.couldNotLoad}</Text>
-          ) : needle ? (
-            <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.contacts.noMatch(query.trim())}</Text>
-          ) : visible.length ? (
-            <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.chats.filterEmpty}</Text>
-          ) : (
-            <EmptyState
-              Icon={archived ? Archive : MessageCircle}
-              title={archived ? tr.chats.noArchived : tr.chats.noChats}
-            >
-              {!archived && (
-                <View style={{ alignItems: "center", gap: 12 }}>
-                  <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
-                    {tr.chats.noChatsHint}
-                  </Text>
-                  <PrimaryButton title={tr.contacts.addContact} onPress={() => setDialog("add")} />
-                </View>
-              )}
-            </EmptyState>
-          )
-        }
-      />
+      {view === "contacts" ? (
+        <ContactList needle={needle} query={query.trim()} />
+      ) : (
+        <FlatList
+          data={shown}
+          keyExtractor={(c) => c.id}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => <ChatRow chat={item} meId={meId} />}
+          ListHeaderComponent={header}
+          refreshControl={
+            <RefreshControl
+              refreshing={chats.isRefetching}
+              onRefresh={() => {
+                setPulled(true);
+                void chats.refetch();
+              }}
+              colors={[brand]}
+              progressBackgroundColor={t.surface}
+            />
+          }
+          ListEmptyComponent={
+            chats.isPending ? (
+              <Text style={[styles.note, { color: t.muted }]}>{tr.common.loading}</Text>
+            ) : chats.isError ? (
+              <Text style={[styles.note, { color: t.danger }]}>{tr.chats.couldNotLoad}</Text>
+            ) : needle ? (
+              <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.contacts.noMatch(query.trim())}</Text>
+            ) : visible.length ? (
+              <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.chats.filterEmpty}</Text>
+            ) : (
+              <EmptyState
+                Icon={archived ? Archive : desk ? LifeBuoy : MessageCircle}
+                title={archived ? tr.chats.noArchived : tr.chats.noChats}
+              >
+                {!archived && !desk && (
+                  <View style={{ alignItems: "center", gap: 12 }}>
+                    <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
+                      {tr.chats.noChatsHint}
+                    </Text>
+                    <PrimaryButton title={tr.contacts.addContact} onPress={() => setDialog("add")} />
+                  </View>
+                )}
+              </EmptyState>
+            )
+          }
+        />
+      )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInvite onClose={() => setDialog(null)} />}
     </View>
@@ -377,6 +487,8 @@ const styles = StyleSheet.create({
   rowLine: { flexDirection: "row", alignItems: "center", gap: 6 },
   name: { flexShrink: 1, fontSize: 16, fontWeight: "600" },
   filters: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  tabs: { flexDirection: "row", borderRadius: 999, padding: 4 },
+  tab: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 7, borderRadius: 999 },
   filter: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
   supportTag: {
     color: brand,

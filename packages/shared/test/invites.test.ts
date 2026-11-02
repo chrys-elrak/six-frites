@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dict, type InviteDTO, inviteSummary } from "../src/index.js";
+import { dict, type InviteDTO, inviteLimitNote, invitePlacesLeft, inviteSummary, quotaSummary } from "../src/index.js";
 
 const invite = (over: Partial<InviteDTO>): InviteDTO => ({
   code: "ABCD2345",
@@ -27,5 +27,22 @@ describe("inviteSummary", () => {
     expect(inviteSummary(invite({ status: "exhausted", uses: 5 }), t)).toBe("5 of 5 joined · Used up");
     const past = new Date(Date.now() - 1000).toISOString();
     expect(inviteSummary(invite({ status: "expired", expiresAt: past }), t)).toBe("2 of 5 joined · Expired");
+  });
+});
+
+describe("invite places", () => {
+  const t = dict.en;
+
+  it("leaves my limit less who joined, who waits and what my links hold, ten at most per link", () => {
+    expect(invitePlacesLeft({ limit: 10, invited: 2, waiting: 0, held: 3 })).toBe(5);
+    expect(invitePlacesLeft({ limit: 50, invited: 0, waiting: 0, held: 0 })).toBe(10);
+    expect(invitePlacesLeft({ limit: null, invited: 99, waiting: 0, held: 99 })).toBe(10);
+    expect(quotaSummary({ limit: 10, invited: 2, waiting: 0, held: 3 }, t)).toBe("2 of 10 invites used · 3 held by your links");
+  });
+
+  it("says whether my links or the people who joined took the last places", () => {
+    expect(inviteLimitNote({ limit: 10, invited: 2, waiting: 0, held: 3 }, t)).toBeNull();
+    expect(inviteLimitNote({ limit: 10, invited: 2, waiting: 0, held: 8 }, t)).toBe(t.settings.placesHeld);
+    expect(inviteLimitNote({ limit: 10, invited: 9, waiting: 1, held: 0 }, t)).toBe(t.settings.inviteLimitReached);
   });
 });

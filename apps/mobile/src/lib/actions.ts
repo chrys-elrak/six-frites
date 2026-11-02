@@ -186,6 +186,7 @@ export async function updateContact(
 ) {
   const contact = unwrap(await six.api.PATCH("/v1/contacts/{userId}", { params: { path: { userId } }, body: input }));
   void qc.invalidateQueries({ queryKey: ["contact", userId] });
+  void qc.invalidateQueries({ queryKey: ["contacts"] });
   void qc.invalidateQueries({ queryKey: ["referrals"] });
   void qc.invalidateQueries({ queryKey: chatKeys.lists });
   void qc.invalidateQueries({ queryKey: chatKeys.chat(contact.chatId) });
@@ -196,6 +197,7 @@ export async function updateContact(
 export async function removeContact(qc: QueryClient, chatId: string, userId: string) {
   unwrap(await six.api.DELETE("/v1/contacts/{userId}", { params: { path: { userId } } }));
   removeChat(qc, chatId);
+  void qc.invalidateQueries({ queryKey: ["contacts"] });
 }
 
 export async function updateChatSettings(
@@ -206,6 +208,11 @@ export async function updateChatSettings(
   const chat = unwrap(await six.api.PATCH("/v1/chats/{id}", { params: { path: { id: chatId } }, body: input }));
   upsertChat(qc, chat);
   return chat;
+}
+
+/** Support closes a conversation; it moves to their archive until someone writes again. */
+export async function closeSupportChat(qc: QueryClient, chatId: string) {
+  upsertChat(qc, unwrap(await six.api.POST("/v1/chats/{id}/support/close", { params: { path: { id: chatId } } })));
 }
 
 /** Deletes the whole chat, or with `range` only the messages sent in it, which the server's message.deleted removes. */

@@ -6,6 +6,9 @@ import {
   type EmojiEntry,
   type EphemeralInput,
   type GifDTO,
+  LIVE_EMOJI,
+  LIVE_GAMES,
+  type LiveGame,
   MessageEffect,
   type MenuCommand,
   durationLabel,
@@ -15,12 +18,15 @@ import {
   suggestEmoji,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
 import { emojiList } from "@/lib/emoji";
 import { updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
 import { EPHEMERAL_OPTIONS } from "@/lib/ephemeral";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { useRealtime } from "@/lib/realtime";
+import { useSession } from "@/lib/session";
 import { VOICE_EFFECTS, useVoiceEffect } from "@/lib/voice-fx";
 import { useGifs } from "./gif-picker";
 
@@ -43,8 +49,9 @@ export interface CommandBarHandle {
 /**
  * Slash commands over the composer: `/` lists them, `/giphy love` shows GIFs and `/sticker wave` stickers
  * to send, `/effect`, `/emoji`, `/voice`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and
- * `/search` offer their choices inline, narrowed by what follows, and `/game` or `/schedule` opens that
- * dialog. After `/silent` it steps aside for the message to send without a notification.
+ * `/search` offer their choices inline, narrowed by what follows, `/play` starts a live game with the
+ * other person, and `/game` or `/schedule` opens that dialog. After `/silent` it steps aside for the
+ * message to send without a notification.
  */
 export function CommandBar({
   ref,
@@ -73,6 +80,10 @@ export function CommandBar({
 }) {
   const tr = useT();
   const qc = useQueryClient();
+  const router = useRouter();
+  const { realtime } = useRealtime();
+  const { locale } = useLocale();
+  const meId = useSession((s) => s.user!.id);
   const chat = useChat(qc, chatId).data;
   const voice = useVoiceEffect((s) => s.effect);
   const setVoice = useVoiceEffect((s) => s.set);
@@ -97,6 +108,16 @@ export function CommandBar({
   function chatSetting(input: Parameters<typeof updateChatSettings>[2]) {
     onComplete("");
     void updateChatSettings(qc, chatId, input).catch(() => null);
+  }
+
+  function play(game: LiveGame) {
+    onComplete("");
+    const invite = chat?.members.flatMap((m) => (m.user.id === meId ? [] : [m.user.id])) ?? [];
+    void realtime?.socket
+      .timeout(10_000)
+      .emitWithAck("live:create", { game, invite, locale })
+      .then((res) => res.ok && router.push(`/play/${res.data.id}`))
+      .catch(() => null);
   }
 
   function choicesFor(name: string, args: string): Choice[] | null {
@@ -163,6 +184,8 @@ export function CommandBar({
         ].filter(match);
       case "search":
         return [{ key: "search", label: args ? tr.composer.searchFor(args) : tr.chat.search, pick: () => onSearch(args) }];
+      case "play":
+        return LIVE_GAMES.map((g) => ({ key: g, label: `${LIVE_EMOJI[g]} ${tr.live.games[g]}`, pick: () => play(g) })).filter(match);
       default:
         return null;
     }

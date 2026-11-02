@@ -12,7 +12,7 @@ import {
   memoryScores,
   parseCommand,
 } from "@six/shared";
-import { Bot, ChevronLeft, Flag, LogOut, Mic, SendHorizontal, Smile, X } from "lucide-react";
+import { Bot, ChevronLeft, LogOut, Mic, MoreVertical, SendHorizontal, Smile, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -399,6 +399,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   const router = useRouter();
   const meId = useSession((s) => s.user!.id);
   const { room, gone, socket } = useLiveRoom(roomId);
+  const [menu, setMenu] = useState(false);
   const [givingUp, setGivingUp] = useState(false);
 
   const ask: Ask = async (event, extra) => {
@@ -407,10 +408,11 @@ export function LiveRoom({ roomId }: { roomId: string }) {
     const res = await timed?.emitWithAck(event, { roomId, ...extra }).catch(() => null);
     return !!res?.ok;
   };
-  const leave = () => {
-    socket?.emit("live:leave", { roomId });
+  const exit = (event: "live:leave" | "live:end") => {
+    socket?.emit(event, { roomId });
     router.push("/games");
   };
+  const leave = () => exit("live:leave");
   const nameOf = (seat: number) => {
     const user = room?.seats[seat]?.user;
     if (user) return user.id === meId ? tr.common.you : user.displayName;
@@ -431,12 +433,12 @@ export function LiveRoom({ roomId }: { roomId: string }) {
         {room?.status === "playing" && room.mySeat !== null && !gone && (
           <button
             type="button"
-            onClick={() => setGivingUp(true)}
-            aria-label={tr.live.giveUp}
-            title={tr.live.giveUp}
+            onClick={() => setMenu(true)}
+            aria-label={tr.live.end}
+            title={tr.live.end}
             className={iconButton}
           >
-            <Flag className="size-5" />
+            <MoreVertical className="size-5" />
           </button>
         )}
         {room && !gone && (
@@ -513,6 +515,16 @@ export function LiveRoom({ roomId }: { roomId: string }) {
         </div>
       </div>
       {room && !gone && <RoomChat room={room} say={(line) => ask("live:say", line)} />}
+      {menu && (
+        <Sheet
+          title={tr.live.endHint}
+          actions={[
+            { label: tr.live.end, destructive: true, onSelect: () => exit("live:end") },
+            { label: tr.live.giveUp, onSelect: () => setGivingUp(true) },
+          ]}
+          onClose={() => setMenu(false)}
+        />
+      )}
       {givingUp && (
         <Sheet
           title={tr.live.giveUpConfirm}
