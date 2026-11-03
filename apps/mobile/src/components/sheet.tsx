@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react-native";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "./text";
@@ -7,6 +8,8 @@ import { useTheme } from "@/lib/theme";
 
 export interface SheetAction {
   label: string;
+  /** Shown in a message's long-press bar; sheets list labels only. */
+  icon?: LucideIcon;
   onSelect: () => void;
   destructive?: boolean;
   keepOpen?: boolean;

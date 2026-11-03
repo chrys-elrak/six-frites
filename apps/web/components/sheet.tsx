@@ -1,12 +1,14 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, type LucideIcon } from "lucide-react";
 import { useEffect } from "react";
 import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 
 export interface SheetAction {
   label: string;
+  /** Shown in a message's long-press bar; sheets list labels only. */
+  icon?: LucideIcon;
   onSelect: () => void;
   destructive?: boolean;
   keepOpen?: boolean;

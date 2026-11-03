@@ -33,17 +33,24 @@ import {
   Clock,
   EyeOff,
   Flame,
+  Forward,
   Gamepad2,
   Ghost,
+  ImagePlus,
+  Info,
   KeyRound,
   Lock,
   Palette,
+  Pencil,
   Phone,
   PhoneMissed,
+  Pin,
+  PinOff,
   Reply,
   Video,
   RotateCcw,
   Timer,
+  Trash2,
 } from "lucide-react-native";
 import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
@@ -1279,34 +1286,36 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         const p = row.pending;
         return [
           ...(p.status === "failed" && realtime
-            ? [{ label: tr.common.retry, onSelect: () => void deliver(qc, realtime, p) }]
+            ? [{ label: tr.common.retry, icon: RotateCcw, onSelect: () => void deliver(qc, realtime, p) }]
             : []),
-          { label: tr.messages.discard, destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
+          { label: tr.messages.discard, icon: Trash2, destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
         ];
       }
       const m = row.message!;
       if (row.deleted) {
         return [
-          { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
+          { label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) },
           ...(chat.type === "direct" || row.mine
             ? [
                 {
                   label: chat.type === "direct" ? tr.messages.removeForMeAnd(chat.title) : tr.messages.removeForEveryone,
+                  icon: Trash2,
                   destructive: true,
                   onSelect: () => void deleteMessage(qc, m, "all").catch(() => null),
                 },
               ]
             : []),
-          { label: tr.messages.removeForMe, destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) },
+          { label: tr.messages.removeForMe, icon: Trash2, destructive: true, onSelect: () => void deleteMessage(qc, m, "me").catch(() => null) },
         ];
       }
       return [
-        ...(frozen ? [] : [{ label: tr.messages.reply, onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
+        ...(frozen ? [] : [{ label: tr.messages.reply, icon: Reply, onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
         ...(frozen || m.ephemeral || m.bump || m.type === "service" || !realtime
           ? []
           : [
               {
                 label: tr.messages.bump,
+                icon: ArrowUp,
                 onSelect: () => void queueMessage(qc, realtime, chat.id, { text: "", replyTo: m, bump: true }),
               },
             ]),
@@ -1318,15 +1327,17 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           : [
               {
                 label: tr.messages.forward,
+                icon: Forward,
                 onSelect: () => setForwarding(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
               },
             ]),
-        { label: tr.common.select, onSelect: () => startSelection(chat.id, m.id) },
+        { label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) },
         ...(frozen || m.ephemeral || m.type === "service"
           ? []
           : [
               {
                 label: chat.pinnedMessages.some((p) => p.id === m.id) ? tr.messages.unpin : tr.messages.pin,
+                icon: chat.pinnedMessages.some((p) => p.id === m.id) ? PinOff : Pin,
                 onSelect: () =>
                   void updateChatSettings(
                     qc,
@@ -1339,7 +1350,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           ? []
           : [
               ...(row.mine && m.text !== null
-                ? [{ label: tr.common.edit, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
+                ? [{ label: tr.common.edit, icon: Pencil, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
                 : []),
             ]),
         ...(row.mine &&
@@ -1352,6 +1363,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           ? [
               {
                 label: tr.messages.editAndResend,
+                icon: ImagePlus,
                 onSelect: () =>
                   void messageFile(m).then(
                     (file) => useComposerMode.getState().hand(chat.id, file),
@@ -1361,14 +1373,15 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             ]
           : []),
         ...(m.ephemeral && canResend(m.ephemeral)
-          ? [{ label: tr.messages.resendAgain, onSelect: () => void resendEphemeral(m) }]
+          ? [{ label: tr.messages.resendAgain, icon: RotateCcw, onSelect: () => void resendEphemeral(m) }]
           : []),
         ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist", "game"].includes(m.type)
-          ? [{ label: tr.messages.makeSelfDestruct, onSelect: () => setDestructFor(m) }]
+          ? [{ label: tr.messages.makeSelfDestruct, icon: Flame, onSelect: () => setDestructFor(m) }]
           : []),
-        { label: tr.messages.timing, onSelect: () => setTimingFor(m.id) },
+        { label: tr.messages.timing, icon: Info, onSelect: () => setTimingFor(m.id) },
         {
           label: tr.common.delete,
+          icon: Trash2,
           destructive: true,
           onSelect: () => setConfirmDelete(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
         },
