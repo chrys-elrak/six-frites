@@ -1,13 +1,17 @@
 import { LOCALE_COOKIE, pickLocale } from "@six/shared";
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Six Frites",
   description: "Chat with the people who matter.",
   appleWebApp: { title: "Six Frites", statusBarStyle: "default" },
+  openGraph: { type: "website", siteName: "Six Frites", title: "Six Frites", description: "Chat with the people who matter." },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

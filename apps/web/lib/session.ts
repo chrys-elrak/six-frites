@@ -2,6 +2,7 @@ import { type UserDTO, isLimited } from "@six/shared";
 import { create } from "zustand";
 import { startE2EE } from "./e2ee";
 import { getT } from "./i18n";
+import { SIGNED_IN_COOKIE } from "./site";
 import { six } from "./six";
 
 type Status = "loading" | "authed" | "anon";
@@ -39,6 +40,11 @@ export const useSession = create<SessionState>((set) => {
       return bootstrapped;
     },
   };
+});
+
+useSession.subscribe(({ status }) => {
+  if (status === "loading") return;
+  document.cookie = `${SIGNED_IN_COOKIE}=1; path=/; samesite=lax; max-age=${status === "authed" ? 31_536_000 : 0}`;
 });
 
 const DEVICE_KEY = "six:device-id";
