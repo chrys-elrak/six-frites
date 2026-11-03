@@ -17,7 +17,7 @@ export const about: Record<Locale, LegalDoc> = {
         heading: "What you can do",
         body: [
           [
-            "Chat one to one or in groups, with end-to-end encryption.",
+            "Chat one to one, with end-to-end encryption.",
             "Call by voice or video.",
             "Send photos, videos, voice notes, files, your location, checklists, stickers and GIFs.",
             "Play games together: Ludo, Fanorona, Crazy Eights, dots and boxes, memory, word hunt and more.",
@@ -55,7 +55,7 @@ export const about: Record<Locale, LegalDoc> = {
         heading: "Ce que vous pouvez faire",
         body: [
           [
-            "Discuter à deux ou en groupe, avec un chiffrement de bout en bout.",
+            "Discuter à deux, avec un chiffrement de bout en bout.",
             "Appeler en audio ou en vidéo.",
             "Envoyer photos, vidéos, messages vocaux, fichiers, votre position, listes, stickers et GIF.",
             "Jouer ensemble : Ludo, Fanorona, Huit américain, pipopipette, memory, chasse aux mots et plus.",
@@ -95,7 +95,7 @@ export const about: Record<Locale, LegalDoc> = {
         heading: "Izay azonao atao",
         body: [
           [
-            "Miresaka mianaka na amin'ny vondrona, miaro tanteraka (chiffrement de bout en bout).",
+            "Miresaka mianaka, miaro tanteraka (chiffrement de bout en bout).",
             "Miantso amin'ny feo na amin'ny video.",
             "Mandefa sary, video, hafatra am-peo, rakitra, ny toerana misy anao, lisitra, sticker ary GIF.",
             "Milalao miaraka: Ludo, Fanorona, Huit, teboka, fahatsiarovana, fikarohana teny sy ny maro hafa.",
