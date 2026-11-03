@@ -114,7 +114,7 @@ import { Sheet, type SheetAction } from "./sheet";
 import { ServiceIcon } from "./service-icon";
 import { StickerView } from "./sticker";
 
-type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
+type Delivery = "sending" | "waiting" | "failed" | "sent" | "delivered" | "read";
 
 interface MsgRow {
   kind: "msg";
@@ -349,7 +349,7 @@ function buildRows(
 /** On a white-on-dark pill read ticks turn sky blue; inside a bubble they keep its text colour at full strength. */
 function Ticks({ delivery, pill = false }: { delivery: Delivery; pill?: boolean }) {
   const tr = useT();
-  if (delivery === "sending") return <Clock aria-label={tr.messages.status.sending} className="size-3" />;
+  if (delivery === "sending" || delivery === "waiting") return <Clock aria-label={tr.messages.status.sending} className="size-3" />;
   if (delivery === "failed") return null;
   const label = tr.messages.status[delivery];
   return (
@@ -1001,6 +1001,7 @@ function Bubble({
               <ReactionChips message={row.message} meId={meId} mine={mine} nameOf={nameOf} onReact={onReact} />
             )}
             {row.message && !row.deleted && <ResealPrompt message={row.message} mine={mine} locked={row.locked} meId={meId} />}
+            {row.delivery === "waiting" && <p className="px-1 text-xs text-stone-500">{tr.chats.waitingForNetwork}</p>}
             {row.delivery === "failed" && (
               <button onClick={() => onMenu(undefined, anchor())} className="text-xs font-medium text-red-600 dark:text-red-400">
                 {tr.messages.notSent}

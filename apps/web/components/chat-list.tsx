@@ -13,10 +13,12 @@ import {
   shownType,
 } from "@six/shared";
 import {
+  AlertCircle,
   Archive,
   Ban,
   BellOff,
   ChevronLeft,
+  Clock,
   EyeOff,
   Flame,
   Lock,
@@ -29,6 +31,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { unwrap } from "@six/sdk";
+import { useOutbox } from "@/lib/outbox";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -146,6 +149,10 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   const press = useLongPress((at) => setMenu({ at }));
   const typing = useTyping(chat.id);
   const draft = useDrafts((s) => (active ? undefined : s.byChat[chat.id]));
+  const unsent = useOutbox((s) => {
+    const pending = s.byChat[chat.id];
+    return pending?.find((m) => m.status === "failed") ?? pending?.find((m) => m.status === "waiting");
+  });
   useEffect(() => void receiveDraft(chat), [chat.id, chat.encrypted, chat.draft?.at]);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const frozen = isFrozen(chat);
@@ -199,6 +206,18 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
             >
               {typing ? (
                 tr.chats.typing[typing]
+              ) : unsent ? (
+                <span className="inline-flex items-center gap-1">
+                  {unsent.status === "failed" ? (
+                    <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400">
+                      <AlertCircle className="size-3.5" /> {tr.messages.notSent}
+                    </span>
+                  ) : (
+                    <>
+                      <Clock className="size-3.5" /> {tr.chats.waitingForNetwork}
+                    </>
+                  )}
+                </span>
               ) : draft ? (
                 <>
                   <span className="text-red-600 dark:text-red-400">{tr.chats.draft}</span> {draft}

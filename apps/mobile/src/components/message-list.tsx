@@ -118,7 +118,7 @@ import { EffectLayer } from "./message-effects";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
 
-type Delivery = "sending" | "failed" | "sent" | "delivered" | "read";
+type Delivery = "sending" | "waiting" | "failed" | "sent" | "delivered" | "read";
 
 interface MsgRow {
   kind: "msg";
@@ -352,7 +352,9 @@ function buildRows(
 
 function Ticks({ delivery, color, readColor }: { delivery: Delivery; color: string; readColor: string }) {
   const tr = useT();
-  if (delivery === "sending") return <Clock size={12} color={color} accessibilityLabel={tr.messages.status.sending} />;
+  if (delivery === "sending" || delivery === "waiting") {
+    return <Clock size={12} color={color} accessibilityLabel={tr.messages.status.sending} />;
+  }
   if (delivery === "failed") return null;
   const label = tr.messages.status[delivery];
   const Icon = delivery === "sent" ? Check : CheckCheck;
@@ -1052,6 +1054,9 @@ function Bubble({
         )}
         {row.message && !row.deleted && (
           <ResealPrompt message={row.message} mine={mine} locked={row.locked === "undecryptable"} meId={meId} t={t} />
+        )}
+        {row.delivery === "waiting" && (
+          <Text style={{ color: t.muted, fontSize: 12, marginTop: 2 }}>{tr.chats.waitingForNetwork}</Text>
         )}
         {row.delivery === "failed" && (
           <Pressable onPress={openMenu} hitSlop={6}>

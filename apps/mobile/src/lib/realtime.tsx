@@ -12,6 +12,7 @@ import { hydrateNow, startE2EE } from "./e2ee";
 import { notifyAnon, notifyIncoming, notifyReaction } from "./notify";
 import { usePresenceStore } from "./presence";
 import { useOutbox } from "./outbox";
+import { resendWaiting } from "./send";
 import { useSession } from "./session";
 import { six } from "./six";
 import { useTypingStore } from "./typing";
@@ -160,7 +161,10 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     const rt = six.realtime({
       onEvent: (e) => me.current && applyEvent(qc, me.current, e),
       onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing ? (e.kind ?? "text") : null),
-      onStatus: setStatus,
+      onStatus: (s) => {
+        setStatus(s);
+        if (s === "live") resendWaiting(qc, rt);
+      },
       onResyncRequired: () => void qc.invalidateQueries(),
     });
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));

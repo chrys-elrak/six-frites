@@ -117,7 +117,7 @@ export async function forgetE2EE() {
 
 export type { Hydrated };
 
-const unreachable = (err: unknown) =>
+export const unreachable = (err: unknown) =>
   err instanceof TypeError || (err instanceof SixApiError && (err.status >= 500 || err.status === 429));
 
 /**

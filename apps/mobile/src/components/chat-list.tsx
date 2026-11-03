@@ -15,8 +15,10 @@ import { router, useFocusEffect } from "expo-router";
 import {
   Archive,
   Ban,
+  AlertCircle,
   BellOff,
   ChevronLeft,
+  Clock,
   EyeOff,
   Flame,
   Ghost,
@@ -47,6 +49,7 @@ import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { usePresence, useWatchPresence } from "@/lib/presence";
 import { useTyping } from "@/lib/typing";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
+import { useOutbox } from "@/lib/outbox";
 import { six } from "@/lib/six";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
@@ -152,6 +155,10 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const [menu, setMenu] = useState(false);
   const typing = useTyping(chat.id);
   const draft = useDrafts((s) => s.byChat[chat.id]);
+  const unsent = useOutbox((s) => {
+    const pending = s.byChat[chat.id];
+    return pending?.find((m) => m.status === "failed") ?? pending?.find((m) => m.status === "waiting");
+  });
   const pullDraft = useEffectEvent(() => void receiveDraft(chat));
   useEffect(() => pullDraft(), [chat.id, chat.encrypted, chat.draft?.at]);
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
@@ -185,6 +192,13 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
             <View style={{ flex: 1 }}>
               {typing ? (
                 <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing[typing]}</Text>
+              ) : unsent ? (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  {unsent.status === "failed" ? <AlertCircle size={14} color={t.danger} /> : <Clock size={14} color={t.muted} />}
+                  <Text numberOfLines={1} style={[styles.preview, { color: unsent.status === "failed" ? t.danger : t.muted }]}>
+                    {unsent.status === "failed" ? tr.messages.notSent : tr.chats.waitingForNetwork}
+                  </Text>
+                </View>
               ) : draft ? (
                 <Text numberOfLines={1} style={[styles.preview, { color: t.muted }]}>
                   <Text style={{ color: t.danger }}>{tr.chats.draft}</Text> {draft.replace(/\s+/g, " ")}

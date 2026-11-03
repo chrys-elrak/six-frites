@@ -71,7 +71,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const meId = useSession((s) => s.user!.id);
   const chat = useChat(qc, chatId);
   const messages = useMessages(chatId);
-  const { realtime } = useRealtime();
+  const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -227,7 +227,11 @@ export function Conversation({ chatId }: { chatId: string }) {
                       )}
                       {c.encrypted && <Lock className="size-3.5 shrink-0 text-stone-400" aria-label={tr.chat.encrypted} />}
                     </span>
-                    {typing ? (
+                    {status === "offline" || status === "connecting" ? (
+                      <span className="block text-xs text-stone-500">
+                        {status === "offline" ? tr.chats.waitingForNetwork : tr.common.connecting}
+                      </span>
+                    ) : typing ? (
                       <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
                     ) : (
                       (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport) && (

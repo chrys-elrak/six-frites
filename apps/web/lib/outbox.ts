@@ -48,7 +48,8 @@ export interface PendingMessage {
   groupId?: string;
   sendAt?: string;
   createdAt: string;
-  status: "sending" | "failed";
+  /** `waiting` for the network: it goes out by itself when the connection is back. */
+  status: "sending" | "waiting" | "failed";
 }
 
 interface OutboxState {
@@ -85,10 +86,10 @@ export const useOutbox = create<OutboxState>((set) => ({
 }));
 
 const EMPTY: PendingMessage[] = [];
-/** Pending messages to show in the chat; a scheduled one only shows if it failed, to retry it. */
+/** Pending messages to show in the chat; a scheduled one only shows once it's stuck, to retry it. */
 export function usePending(chatId: string) {
   const all = useOutbox((s) => s.byChat[chatId] ?? EMPTY);
-  return useMemo(() => all.filter((m) => !m.sendAt || m.status === "failed"), [all]);
+  return useMemo(() => all.filter((m) => !m.sendAt || m.status !== "sending"), [all]);
 }
 
 /** The raw files behind pending attachments, kept outside the store because they are not serializable. */

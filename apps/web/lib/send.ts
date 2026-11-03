@@ -18,7 +18,7 @@ import {
 } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { chatKeys, findCached, insertMessage, patchChat } from "./chats";
-import { type Hydrated, e2ee, hydrate, messageFile, shouldEncrypt } from "./e2ee";
+import { type Hydrated, e2ee, hydrate, messageFile, shouldEncrypt, unreachable } from "./e2ee";
 import { useDataSaver } from "./data-saver";
 import { lighterPhoto } from "./image";
 import { mediaMeta } from "./media-meta";
@@ -178,7 +178,18 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
     if (pending.attachment) setTimeout(() => URL.revokeObjectURL(pending.attachment!.localUrl), 60_000);
   } catch (err) {
     console.error("could not send:", err);
-    outbox.setStatus(chatId, clientId, "failed");
+    if (!offline(err)) return outbox.setStatus(chatId, clientId, "failed");
+    outbox.setStatus(chatId, clientId, "waiting");
+    if (realtime.socket.connected) setTimeout(() => resendWaiting(qc, realtime, clientId), 15_000);
+  }
+}
+
+const offline = (err: unknown) => unreachable(err) || (err instanceof Error && err.message.includes("timed out"));
+
+/** Sends the messages that were waiting for the network, or only `clientId`; the server drops any it already has. */
+export function resendWaiting(qc: QueryClient, realtime: Realtime, clientId?: string) {
+  for (const list of Object.values(useOutbox.getState().byChat)) {
+    for (const m of list) if (m.status === "waiting" && (!clientId || m.clientId === clientId)) void deliver(qc, realtime, m);
   }
 }
 

@@ -1,4 +1,4 @@
-import { type Hydrated, type Realtime, encryptFile, unwrap } from "@six/sdk";
+import { type Hydrated, type Realtime, SixApiError, encryptFile, unwrap } from "@six/sdk";
 import {
   type ChatGame,
   type Checklist,
@@ -160,8 +160,22 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       patchChat(qc, m.chatId, (c) => ({ ...c, lastMessage: m, lastActivityAt: m.createdAt }));
     }
     outbox.remove(chatId, clientId);
-  } catch {
-    outbox.setStatus(chatId, clientId, "failed");
+  } catch (err) {
+    if (!offline(err)) return outbox.setStatus(chatId, clientId, "failed");
+    outbox.setStatus(chatId, clientId, "waiting");
+    if (realtime.socket.connected) setTimeout(() => resendWaiting(qc, realtime, clientId), 15_000);
+  }
+}
+
+const offline = (err: unknown) =>
+  err instanceof TypeError ||
+  (err instanceof SixApiError && (err.status >= 500 || err.status === 429)) ||
+  (err instanceof Error && err.message.includes("timed out"));
+
+/** Sends the messages that were waiting for the network, or only `clientId`; the server drops any it already has. */
+export function resendWaiting(qc: QueryClient, realtime: Realtime, clientId?: string) {
+  for (const list of Object.values(useOutbox.getState().byChat)) {
+    for (const m of list) if (m.status === "waiting" && (!clientId || m.clientId === clientId)) void deliver(qc, realtime, m);
   }
 }
 

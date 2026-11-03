@@ -10,6 +10,7 @@ import { receiveSignal, setCallRealtime } from "./call";
 import { chatKeys, findMessage, insertMessage, patchChat, upsertChat } from "./chats";
 import { hydrate, hydrateChat } from "./e2ee";
 import { useOutbox } from "./outbox";
+import { resendWaiting } from "./send";
 import { notifyAnon, notifyIncoming, notifyReaction } from "./notify";
 import { usePresenceStore } from "./presence";
 import { useTypingStore } from "./typing";
@@ -162,7 +163,10 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           .catch((err) => console.error("could not apply event:", err));
       },
       onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing ? (e.kind ?? "text") : null),
-      onStatus: setStatus,
+      onStatus: (s) => {
+        setStatus(s);
+        if (s === "live") resendWaiting(qc, rt);
+      },
       onResyncRequired: () => void qc.invalidateQueries(),
     });
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));

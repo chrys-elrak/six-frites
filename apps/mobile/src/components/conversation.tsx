@@ -65,7 +65,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   const meId = useSession((s) => s.user!.id);
   const chat = useChat(qc, chatId);
   const messages = useMessages(chatId);
-  const { realtime } = useRealtime();
+  const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -201,7 +201,11 @@ export function Conversation({ chatId }: { chatId: string }) {
                 </Text>
                 {c.supportDesk && <Text style={styles.supportTag}>{tr.support.title}</Text>}
               </View>
-              {typing ? (
+              {status === "offline" || status === "connecting" ? (
+                <Text style={{ color: t.muted, fontSize: 12 }}>
+                  {status === "offline" ? tr.chats.waitingForNetwork : tr.common.connecting}
+                </Text>
+              ) : typing ? (
                 <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
               ) : (
                 (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support || c.withSupport) && (
