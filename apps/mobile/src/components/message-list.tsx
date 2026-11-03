@@ -35,6 +35,7 @@ import {
   Flame,
   Gamepad2,
   Ghost,
+  KeyRound,
   Lock,
   Palette,
   Phone,
@@ -68,12 +69,15 @@ import {
   markOpenedLocally,
   play,
   react,
+  requestReseal,
+  resealMessage,
   selfDestruct,
   updateChatSettings,
 } from "@/lib/actions";
 import { useLatest } from "@/lib/latest";
 import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
+import { RestoreBackupDialog, useHasRecoveryKey } from "./encryption-settings";
 import { useComposerMode } from "@/lib/composer";
 import { messageFile } from "@/lib/media";
 import { emojiOnly, splitEmoji } from "@/lib/emoji";
@@ -634,6 +638,77 @@ function AlbumGrid({
   );
 }
 
+/**
+ * Under an encrypted message someone couldn't open: they can restore it from their backup or ask for it
+ * again, and once they have asked, the sender's devices offer to encrypt it again for everyone's devices.
+ */
+function ResealPrompt({
+  message,
+  mine,
+  locked,
+  meId,
+  t,
+}: {
+  message: MessageDTO;
+  mine: boolean;
+  locked: boolean;
+  meId: string;
+  t: Theme;
+}) {
+  const tr = useT();
+  const qc = useQueryClient();
+  const hasKey = useHasRecoveryKey();
+  const [busy, setBusy] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const reseal = message.encryption?.reseal ?? null;
+  const restorable = locked && !!message.encryption?.backup && hasKey.data === false;
+  const askedOfMe = mine && !!reseal && reseal.by !== meId;
+  const canResend = askedOfMe && !restorable && (reseal.state === "requested" || !locked);
+  const canAsk = locked && !reseal;
+  const note = askedOfMe
+    ? reseal.state === "failed" && locked
+      ? tr.messages.resendFailedMine
+      : tr.messages.resendRequested
+    : !locked || !reseal
+      ? null
+      : reseal.state === "failed"
+        ? tr.messages.resendFailed
+        : tr.messages.resendAsked;
+  if (!note && !restorable && !canResend && !canAsk) return null;
+
+  async function run() {
+    setBusy(true);
+    try {
+      await (canResend ? resealMessage(qc, message) : requestReseal(qc, message));
+    } catch {
+      void qc.invalidateQueries({ queryKey: ["messages", message.chatId] });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const label = { color: brand, fontSize: 12, fontWeight: "600" } as const;
+  const action = { flexDirection: "row", alignItems: "center", gap: 4 } as const;
+  return (
+    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 8, rowGap: 2, marginTop: 2 }}>
+      {note && <Text style={{ color: t.muted, fontSize: 12 }}>{note}</Text>}
+      {restorable && (
+        <Pressable onPress={() => setRestoring(true)} hitSlop={6} style={action}>
+          <KeyRound size={14} color={brand} />
+          <Text style={label}>{tr.messages.restoreFromBackup}</Text>
+        </Pressable>
+      )}
+      {(canResend || canAsk) && (
+        <Pressable onPress={() => void run()} disabled={busy} hitSlop={6} style={[action, { opacity: busy ? 0.5 : 1 }]}>
+          <RotateCcw size={14} color={brand} />
+          <Text style={label}>{canResend ? tr.messages.resendEncrypted : tr.messages.askResend}</Text>
+        </Pressable>
+      )}
+      {restoring && <RestoreBackupDialog onClose={() => setRestoring(false)} />}
+    </View>
+  );
+}
+
 function Bubble({
   row,
   highlighted,
@@ -959,6 +1034,9 @@ function Bubble({
             nameOf={nameOf}
             onReact={frozen ? () => {} : onReact}
           />
+        )}
+        {row.message && !row.deleted && (
+          <ResealPrompt message={row.message} mine={mine} locked={row.locked === "undecryptable"} meId={meId} t={t} />
         )}
         {row.delivery === "failed" && (
           <Pressable onPress={() => onMenu()} hitSlop={6}>

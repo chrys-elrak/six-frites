@@ -104,6 +104,12 @@ export function BackupPinPrompt() {
   return <PinDialog restoring prompted onClose={() => setDismissed(true)} />;
 }
 
+/** Restores past messages on this device with the account's backup PIN, or its recovery key on older accounts. */
+export function RestoreBackupDialog({ onClose }: { onClose: () => void }) {
+  const pin = useSession((s) => s.user?.hasBackupPin);
+  return pin ? <PinDialog restoring onClose={onClose} /> : <RestoreKeyDialog onClose={onClose} />;
+}
+
 let snoozed = false;
 
 /**

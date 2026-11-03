@@ -69,7 +69,9 @@ interface Patch {
   undecryptable?: boolean;
 }
 
-const keyOf = (m: MessageDTO) => `${m.id}:${m.editedAt ?? ""}`;
+/** Changes when the message is edited or encrypted again for a device that couldn't read it. */
+const keyOf = (m: MessageDTO) =>
+  `${m.id}:${m.editedAt ?? ""}:${m.encryption?.envelopes.map((e) => e.envelope.header).join(",") ?? ""}`;
 
 export const useDecrypted = create<{ byKey: Record<string, Patch>; retries: number }>(() => ({ byKey: {}, retries: 0 }));
 

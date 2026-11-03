@@ -397,6 +397,17 @@ export class E2EE {
   }
 
   /**
+   * Seals one of my messages again, from what this device can read of it, for every device in the
+   * chat now; for someone who couldn't open it. Throws when this device can't read it either.
+   */
+  async reseal<T>(m: MessageDTO, memberIds: string[], post: (encrypted: EncryptedInput) => Promise<T>): Promise<T> {
+    const opened = await this.open(m);
+    if (opened.status !== "ok") throw new CryptoError("DECRYPT_FAILED", "This device can't read that message");
+    const { v: _v, chatId: _chatId, clientId: _clientId, ...input } = opened.content;
+    return this.send(m.chatId, memberIds, m.clientId, input, ({ envelopes }) => post({ envelopes }));
+  }
+
+  /**
    * Decrypts a message for this device: from the local copy if it was opened before, from its
    * envelope, from what this device sent, or from the user's backup, in that order.
    */

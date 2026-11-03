@@ -36,7 +36,7 @@ import { timersQueue } from "../lib/queue.js";
 import { saveGif } from "./gifs.js";
 import { assertCanMessage } from "./blocks.js";
 import { activeDevices, checkEnvelopes } from "./devices.js";
-import { queuePush, queueReactionPush } from "./push.js";
+import { deliverResealPush, queuePush, queueReactionPush } from "./push.js";
 import { toStickerDTO } from "./stickers.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
@@ -90,9 +90,13 @@ export function toReplyPreview(r: Message): ReplyPreview {
 /** The viewer's own envelopes and backup copy of an encrypted message, or nothing while it is hidden. */
 function encryptionFor(m: MessageRow, viewerId: string, hidden: boolean): EncryptionDTO | null {
   if (!m.encrypted) return null;
-  if (hidden) return { senderDeviceId: m.senderDevice, envelopes: [], backup: null };
+  const reseal = m.resealRequestedBy
+    ? { state: m.resealFailedAt ? ("failed" as const) : ("requested" as const), by: m.resealRequestedBy }
+    : null;
+  if (hidden) return { senderDeviceId: m.senderDevice, envelopes: [], backup: null, reseal };
   return {
     senderDeviceId: m.senderDevice,
+    reseal,
     envelopes: m.envelopes
       .filter((e) => e.device.userId === viewerId)
       .map((e) => ({ deviceId: e.deviceId, envelope: e.envelope as EncryptionDTO["envelopes"][number]["envelope"] })),
@@ -777,6 +781,84 @@ export async function makeEphemeral(userId: string, messageId: string, rule: Eph
     await notifyMembers(tx, emit, messageId);
     const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
     return toMessageDTO(updated, userId);
+  });
+}
+
+/** An encrypted message whose content still exists, for asking for it again or sealing it again. */
+async function resealable(tx: Tx, userId: string, messageId: string) {
+  await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
+  const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+  if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
+  await assertMember(tx, m.chatId, userId).catch(() => {
+    throw new AppError("MESSAGE_NOT_FOUND");
+  });
+  if (!m.encrypted || m.purgedAt || m.expiredAt) throw new AppError("MESSAGE_NOT_EDITABLE");
+  return m;
+}
+
+/**
+ * Asks the sender to seal an encrypted message again, for someone whose device has no way to open it,
+ * and tells the sender's devices they aren't using. Asking after it failed asks again.
+ */
+export async function requestReseal(userId: string, messageId: string): Promise<MessageDTO> {
+  const { dto, asked } = await withEvents(async (tx, emit) => {
+    const m = await resealable(tx, userId, messageId);
+    if (m.resealRequestedBy && !m.resealFailedAt) return { dto: toMessageDTO(m, userId), asked: null };
+    await tx.message.update({
+      where: { id: messageId },
+      data: { resealRequestedAt: new Date(), resealRequestedBy: userId, resealFailedAt: null },
+    });
+    await notifyMembers(tx, emit, messageId);
+    const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    return { dto: toMessageDTO(fresh, userId), asked: fresh };
+  });
+  if (asked && asked.senderId !== userId) void deliverResealPush(asked, asked.senderId, userId, "requested").catch(() => null);
+  return dto;
+}
+
+/**
+ * The sender's device couldn't read the message either, so it can't be sealed again from there: everyone sees
+ * it failed, and whoever asked is told on the devices they aren't using.
+ */
+export async function failReseal(userId: string, messageId: string): Promise<MessageDTO> {
+  const { dto, failed } = await withEvents(async (tx, emit) => {
+    const m = await resealable(tx, userId, messageId);
+    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can encrypt it again");
+    if (!m.resealRequestedBy || m.resealFailedAt) return { dto: toMessageDTO(m, userId), failed: null };
+    await tx.message.update({ where: { id: messageId }, data: { resealFailedAt: new Date() } });
+    await notifyMembers(tx, emit, messageId);
+    const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    return { dto: toMessageDTO(fresh, userId), failed: fresh };
+  });
+  if (failed?.resealRequestedBy && failed.resealRequestedBy !== userId) {
+    void deliverResealPush(failed, failed.resealRequestedBy, userId, "failed").catch(() => null);
+  }
+  return dto;
+}
+
+/**
+ * Replaces an encrypted message's envelopes with ones sealed again by one of the sender's devices, for
+ * every device signed in now. It isn't an edit: the content and editedAt stay the same.
+ */
+export async function resealMessage(userId: string, messageId: string, input: EncryptedInput, sessionId?: string) {
+  if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
+  return withEvents(async (tx, emit) => {
+    const m = await resealable(tx, userId, messageId);
+    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can encrypt it again");
+    const senderDevice = await checkEnvelopes(tx, m.chatId, sessionId, input.envelopes);
+    await tx.messageEnvelope.deleteMany({ where: { messageId } });
+    await tx.message.update({
+      where: { id: messageId },
+      data: {
+        senderDevice,
+        resealRequestedAt: null,
+        resealRequestedBy: null,
+        resealFailedAt: null,
+        envelopes: { create: input.envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
+      },
+    });
+    await notifyMembers(tx, emit, messageId);
+    return toMessageDTO(await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude }), userId);
   });
 }
 

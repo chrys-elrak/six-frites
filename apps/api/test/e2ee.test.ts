@@ -248,7 +248,7 @@ describe("encrypted messages", () => {
     expect((await call(phone.auth, "DELETE", `/v1/messages?ids=${id}&scope=all`)).statusCode).toBe(204);
     expect(await prisma.messageEnvelope.count({ where: { messageId: id } })).toBe(0);
     const gone = (await get(guest.auth, `/v1/chats/${chatId}/messages`)).items[0];
-    expect(gone.encryption).toEqual({ senderDeviceId: phone.id, envelopes: [], backup: null });
+    expect(gone.encryption).toEqual({ senderDeviceId: phone.id, envelopes: [], backup: null, reseal: null });
   });
 
   it("keeps backups per person, sealed with their recovery key", async () => {

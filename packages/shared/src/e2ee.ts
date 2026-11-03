@@ -120,6 +120,12 @@ export const EncryptionDTO = z.object({
   senderDeviceId: Id.nullable().describe("The device that encrypted it; open the envelope with your session with it"),
   envelopes: z.array(DeviceEnvelope).describe("Only the envelopes for your own devices"),
   backup: SealedBackup.nullable().describe("Your backup copy, if you stored one"),
+  reseal: z
+    .object({ state: z.enum(["requested", "failed"]), by: Id })
+    .nullable()
+    .describe(
+      "`requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either",
+    ),
 });
 export type EncryptionDTO = z.infer<typeof EncryptionDTO>;
 

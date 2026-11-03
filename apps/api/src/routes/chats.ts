@@ -22,6 +22,7 @@ import {
   DeleteMessagesQuery,
   EditMessageInput,
   EditScheduledInput,
+  EncryptedInput,
   EphemeralInput,
   Id,
   MarkDeliveredInput,
@@ -62,6 +63,9 @@ import {
   messageTiming,
   playGame,
   setReaction,
+  failReseal,
+  requestReseal,
+  resealMessage,
   resendMessage,
   sendMessage,
   viewMessage,
@@ -308,6 +312,55 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => resendMessage(req.auth.userId, req.params.id),
+  );
+
+  app.post(
+    "/messages/:id/reseal-request",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Ask the sender to encrypt a message again",
+        description:
+          "For an encrypted message your device can't open, as when it signed in after the message was sent. Sets `encryption.reseal` to requested, everyone gets message.edited so the sender's devices can offer to seal it again, and the sender gets a push. Asking again after it failed starts over. MESSAGE_NOT_EDITABLE if it isn't encrypted or was destroyed.",
+        security,
+        params: MessageParams,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => requestReseal(req.auth.userId, req.params.id),
+  );
+
+  app.post(
+    "/messages/:id/reseal-failed",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Say you can't encrypt a message again",
+        description:
+          "Sender only, after someone asked: your device can't read it either. Sets `encryption.reseal` to failed, everyone gets message.edited, and whoever asked gets a push.",
+        security,
+        params: MessageParams,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => failReseal(req.auth.userId, req.params.id),
+  );
+
+  app.put(
+    "/messages/:id/envelopes",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Encrypt one of your messages again",
+        description:
+          "Sender only. Replaces its envelopes with new ones for every device signed in now, like an edit with the same content but without marking it edited, and clears `encryption.reseal`. Everyone gets message.edited. DEVICES_CHANGED as when sending.",
+        security,
+        params: MessageParams,
+        body: EncryptedInput,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => resealMessage(req.auth.userId, req.params.id, req.body, req.auth.sessionId),
   );
 
   app.post(

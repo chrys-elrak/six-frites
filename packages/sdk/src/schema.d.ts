@@ -3633,6 +3633,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             } | null;
                             unreadCount: number;
@@ -3957,6 +3963,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             }[];
                             /** @description Your scheduled messages waiting to be sent in this chat */
@@ -4356,6 +4368,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             } | null;
                             unreadCount: number;
@@ -4680,6 +4698,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             }[];
                             /** @description Your scheduled messages waiting to be sent in this chat */
@@ -5077,6 +5101,12 @@ export interface paths {
                                         }[];
                                         /** @description Your backup copy, if you stored one */
                                         backup: string | null;
+                                        /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                        reseal: {
+                                            /** @enum {string} */
+                                            state: "requested" | "failed";
+                                            by: string;
+                                        } | null;
                                     } | null;
                                 } | null;
                                 unreadCount: number;
@@ -5401,6 +5431,12 @@ export interface paths {
                                         }[];
                                         /** @description Your backup copy, if you stored one */
                                         backup: string | null;
+                                        /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                        reseal: {
+                                            /** @enum {string} */
+                                            state: "requested" | "failed";
+                                            by: string;
+                                        } | null;
                                     } | null;
                                 }[];
                                 /** @description Your scheduled messages waiting to be sent in this chat */
@@ -5799,6 +5835,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             } | null;
                             unreadCount: number;
@@ -6123,6 +6165,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             }[];
                             /** @description Your scheduled messages waiting to be sent in this chat */
@@ -6574,6 +6622,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             } | null;
                             unreadCount: number;
@@ -6898,6 +6952,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             }[];
                             /** @description Your scheduled messages waiting to be sent in this chat */
@@ -7373,6 +7433,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -7719,6 +7785,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -8065,6 +8137,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -8414,6 +8492,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -8786,6 +8870,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -9131,6 +9221,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             };
                             /**
@@ -9481,12 +9577,1100 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/{id}/reseal-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask the sender to encrypt a message again
+         * @description For an encrypted message your device can't open, as when it signed in after the message was sent. Sets `encryption.reseal` to requested, everyone gets message.edited so the sender's devices can offer to seal it again, and the sender gets a push. Asking again after it failed starts over. MESSAGE_NOT_EDITABLE if it isn't encrypted or was destroyed.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
+                            /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
+                            bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            action: ({
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
+                            } | {
+                                /** @enum {string} */
+                                type: "pin";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_invite";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                roomId: string;
+                                from: string;
+                            }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            game: ({
+                                /** @enum {string} */
+                                game: "rps";
+                                /** @enum {string} */
+                                hand: "rock" | "paper" | "scissors";
+                            } | {
+                                /** @enum {string} */
+                                game: "dice";
+                                pick: number;
+                                seed: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "guess";
+                                secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            }) | null;
+                            /** @description Answers to the game, oldest first; anyone but the sender can play */
+                            moves: {
+                                userId: string;
+                                move: {
+                                    /** @enum {string} */
+                                    hand: "rock" | "paper" | "scissors";
+                                } | {
+                                    pick: number;
+                                    seed: number;
+                                } | {
+                                    n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
+                                };
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/{id}/reseal-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Say you can't encrypt a message again
+         * @description Sender only, after someone asked: your device can't read it either. Sets `encryption.reseal` to failed, everyone gets message.edited, and whoever asked gets a push.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
+                            /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
+                            bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            action: ({
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
+                            } | {
+                                /** @enum {string} */
+                                type: "pin";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_invite";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                roomId: string;
+                                from: string;
+                            }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            game: ({
+                                /** @enum {string} */
+                                game: "rps";
+                                /** @enum {string} */
+                                hand: "rock" | "paper" | "scissors";
+                            } | {
+                                /** @enum {string} */
+                                game: "dice";
+                                pick: number;
+                                seed: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "guess";
+                                secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            }) | null;
+                            /** @description Answers to the game, oldest first; anyone but the sender can play */
+                            moves: {
+                                userId: string;
+                                move: {
+                                    /** @enum {string} */
+                                    hand: "rock" | "paper" | "scissors";
+                                } | {
+                                    pick: number;
+                                    seed: number;
+                                } | {
+                                    n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
+                                };
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/{id}/envelopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Encrypt one of your messages again
+         * @description Sender only. Replaces its envelopes with new ones for every device signed in now, like an edit with the same content but without marking it edited, and clears `encryption.reseal`. Everyone gets message.edited. DEVICES_CHANGED as when sending.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description End-to-end encrypted content. The server rejects it with DEVICES_CHANGED if a device is missing or unknown. */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description One per device of every member, your other devices included, except the one sending */
+                        envelopes: {
+                            deviceId: string;
+                            envelope: {
+                                /** @enum {number} */
+                                v: 1;
+                                x3dh?: {
+                                    identity: {
+                                        /** @description Ed25519 identity key */
+                                        signPub: string;
+                                        /** @description X25519 identity key, signed by signPub */
+                                        dhPub: string;
+                                        /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                        dhSig: string;
+                                    };
+                                    /** @description A 32-byte public key, base64url without padding */
+                                    ephemeral: string;
+                                    signedPreKeyId: number;
+                                    oneTimePreKeyId: number | null;
+                                };
+                                header: string;
+                                body: string;
+                            };
+                        }[];
+                        /** @description The content sealed with your backup key (@six/crypto sealBackup) */
+                        backup?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            chatId: string;
+                            senderId: string;
+                            clientId: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                            text: string | null;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "strike" | "code" | "spoiler";
+                                offset: number;
+                                length: number;
+                            }[];
+                            spoiler: boolean;
+                            /**
+                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
+                             * @enum {string|null}
+                             */
+                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
+                            /** @description Sent with `/silent`: it arrives without a notification or sound */
+                            silent: boolean;
+                            /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
+                            bump: boolean;
+                            /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                            vanish: boolean;
+                            attachment: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
+                            } | null;
+                            sticker: {
+                                id: string;
+                                packId: string;
+                                emoji: string;
+                                /**
+                                 * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                 * @enum {string}
+                                 */
+                                format: "lottie" | "image";
+                                /**
+                                 * Format: uri
+                                 * @description Null while an uploaded sticker is still being processed
+                                 */
+                                url: string | null;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            ephemeral: {
+                                maxViews: number | null;
+                                ttlSeconds: number | null;
+                                /** @description How many times the recipient opened it */
+                                views: number;
+                                /** Format: date-time */
+                                firstViewedAt: string | null;
+                                /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                locked: boolean;
+                                /** @description Its views or timer ran out; the recipient can no longer open it */
+                                expired: boolean;
+                                /** @description Content permanently deleted; it can no longer be resent */
+                                purged: boolean;
+                                /** @description The sender re-armed it after it was opened */
+                                resent: boolean;
+                                /** @description How many more times the sender can re-arm it */
+                                resendsLeft: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Until when the sender can resend it, once it has been opened
+                                 */
+                                resendUntil: string | null;
+                            } | null;
+                            /** @description Photos and videos sent together share it and show as one album */
+                            groupId: string | null;
+                            replyTo: {
+                                id: string;
+                                senderId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game";
+                                text: string | null;
+                                spoiler: boolean;
+                                ephemeral: boolean;
+                                deleted: boolean;
+                                /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                encrypted: boolean;
+                            } | null;
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            action: ({
+                                /** @enum {string} */
+                                type: "auto_delete";
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "theme";
+                                theme: string | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "e2ee";
+                            } | {
+                                /** @enum {string} */
+                                type: "vanish";
+                                on: boolean;
+                            } | {
+                                /** @enum {string} */
+                                type: "pin";
+                            } | {
+                                /** @enum {string} */
+                                type: "call";
+                                video: boolean;
+                                /** @description How long it lasted; null if it was missed or declined */
+                                secs: number | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_invite";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                roomId: string;
+                                from: string;
+                            }) | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                            } | null;
+                            checklist: {
+                                title: string;
+                                items: string[];
+                            } | null;
+                            /** @description The checklist items marked done; either person can tick them */
+                            checks: {
+                                /** @description Index in the checklist's items */
+                                item: number;
+                                /** @description Who marked it done */
+                                userId: string;
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            game: ({
+                                /** @enum {string} */
+                                game: "rps";
+                                /** @enum {string} */
+                                hand: "rock" | "paper" | "scissors";
+                            } | {
+                                /** @enum {string} */
+                                game: "dice";
+                                pick: number;
+                                seed: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "guess";
+                                secret: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "penalty";
+                                shots: ("left" | "middle" | "right")[];
+                                dives: ("left" | "middle" | "right")[];
+                            } | {
+                                /** @enum {string} */
+                                game: "hangman";
+                                word: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "lie";
+                                statements: string[];
+                                lie: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "rather";
+                                options: string[];
+                                choice: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "riddle";
+                                emojis: string;
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            } | {
+                                /** @enum {string} */
+                                game: "ships";
+                                boats: number[][];
+                            } | {
+                                /** @enum {string} */
+                                game: "ttt";
+                                cell: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "four";
+                                col: number;
+                            } | {
+                                /** @enum {string} */
+                                game: "sketch";
+                                strokes: {
+                                    color: number;
+                                    points: number[];
+                                }[];
+                                answer: string;
+                                /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                key: string;
+                            }) | null;
+                            /** @description Answers to the game, oldest first; anyone but the sender can play */
+                            moves: {
+                                userId: string;
+                                move: {
+                                    /** @enum {string} */
+                                    hand: "rock" | "paper" | "scissors";
+                                } | {
+                                    pick: number;
+                                    seed: number;
+                                } | {
+                                    n: number;
+                                } | {
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    letter: string;
+                                } | {
+                                    choice: number;
+                                } | {
+                                    sealed: string;
+                                } | {
+                                    shot: number;
+                                } | {
+                                    cell: number;
+                                } | {
+                                    col: number;
+                                };
+                                /** Format: date-time */
+                                at: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            editedAt: string | null;
+                            /** Format: date-time */
+                            deletedAt: string | null;
+                            /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                            deletedBy: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the chat's auto-delete timer removes it for everyone
+                             */
+                            expiresAt: string | null;
+                            /** @description One entry per emoji, oldest first; a person can add several different emoji */
+                            reactions: {
+                                emoji: string;
+                                userIds: string[];
+                            }[];
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            encryption: {
+                                /** @description The device that encrypted it; open the envelope with your session with it */
+                                senderDeviceId: string | null;
+                                /** @description Only the envelopes for your own devices */
+                                envelopes: {
+                                    deviceId: string;
+                                    envelope: {
+                                        /** @enum {number} */
+                                        v: 1;
+                                        x3dh?: {
+                                            identity: {
+                                                /** @description Ed25519 identity key */
+                                                signPub: string;
+                                                /** @description X25519 identity key, signed by signPub */
+                                                dhPub: string;
+                                                /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                dhSig: string;
+                                            };
+                                            /** @description A 32-byte public key, base64url without padding */
+                                            ephemeral: string;
+                                            signedPreKeyId: number;
+                                            oneTimePreKeyId: number | null;
+                                        };
+                                        header: string;
+                                        body: string;
+                                    };
+                                }[];
+                                /** @description Your backup copy, if you stored one */
+                                backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9834,6 +11018,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -10228,6 +11418,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             }[];
                             nextCursor: string | null;
@@ -10716,6 +11912,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -10850,6 +12052,12 @@ export interface paths {
                                     }[];
                                     /** @description Your backup copy, if you stored one */
                                     backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
                                 } | null;
                             }[];
                             nextCursor: string | null;
@@ -11134,6 +12342,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -11336,6 +12550,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -11673,6 +12893,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };
@@ -12664,6 +13890,12 @@ export interface paths {
                                         }[];
                                         /** @description Your backup copy, if you stored one */
                                         backup: string | null;
+                                        /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                        reseal: {
+                                            /** @enum {string} */
+                                            state: "requested" | "failed";
+                                            by: string;
+                                        } | null;
                                     } | null;
                                 };
                                 createdAt: string;
@@ -12973,6 +14205,12 @@ export interface paths {
                                         }[];
                                         /** @description Your backup copy, if you stored one */
                                         backup: string | null;
+                                        /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                        reseal: {
+                                            /** @enum {string} */
+                                            state: "requested" | "failed";
+                                            by: string;
+                                        } | null;
                                     } | null;
                                 };
                                 createdAt: string;
@@ -13330,6 +14568,12 @@ export interface paths {
                                             }[];
                                             /** @description Your backup copy, if you stored one */
                                             backup: string | null;
+                                            /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                            reseal: {
+                                                /** @enum {string} */
+                                                state: "requested" | "failed";
+                                                by: string;
+                                            } | null;
                                         } | null;
                                     } | null;
                                     unreadCount: number;
@@ -13654,6 +14898,12 @@ export interface paths {
                                             }[];
                                             /** @description Your backup copy, if you stored one */
                                             backup: string | null;
+                                            /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                            reseal: {
+                                                /** @enum {string} */
+                                                state: "requested" | "failed";
+                                                by: string;
+                                            } | null;
                                         } | null;
                                     }[];
                                     /** @description Your scheduled messages waiting to be sent in this chat */
@@ -14880,6 +16130,12 @@ export interface paths {
                                 }[];
                                 /** @description Your backup copy, if you stored one */
                                 backup: string | null;
+                                /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                reseal: {
+                                    /** @enum {string} */
+                                    state: "requested" | "failed";
+                                    by: string;
+                                } | null;
                             } | null;
                         };
                     };

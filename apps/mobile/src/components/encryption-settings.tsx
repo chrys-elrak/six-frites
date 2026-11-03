@@ -18,7 +18,7 @@ async function refreshMe() {
   useSession.getState().setUser(unwrap(await six.api.GET("/v1/me")));
 }
 
-function useHasRecoveryKey() {
+export function useHasRecoveryKey() {
   const user = useSession((s) => s.user);
   return useQuery({
     queryKey: ["recovery-key", user?.id, user?.backupKeyId],
@@ -89,6 +89,12 @@ export function BackupPinPrompt() {
   const [dismissed, setDismissed] = useState(false);
   if (!user || dismissed || local.data !== false || !user.hasBackupPin) return null;
   return <PinDialog restoring prompted onClose={() => setDismissed(true)} />;
+}
+
+/** Restores past messages on this phone with the account's backup PIN, or its recovery key on older accounts. */
+export function RestoreBackupDialog({ onClose }: { onClose: () => void }) {
+  const pin = useSession((s) => s.user?.hasBackupPin);
+  return pin ? <PinDialog restoring onClose={onClose} /> : <RestoreKey onClose={onClose} />;
 }
 
 let snoozed = false;

@@ -8,50 +8,50 @@ datasource db {
 }
 
 model User {
-  id          String    @id @default(cuid())
-  googleSub   String    @unique
-  email       String    @unique
-  displayName String
-  avatarUrl   String?
-  avatarKey   String?
-  contactCode String    @unique @default(dbgenerated("random_code()"))
-  askCode     String    @unique @default(dbgenerated("random_code()"))
-  askName     String?
-  askAvatarKey String?
+  id              String    @id @default(cuid())
+  googleSub       String    @unique
+  email           String    @unique
+  displayName     String
+  avatarUrl       String?
+  avatarKey       String?
+  contactCode     String    @unique @default(dbgenerated("random_code()"))
+  askCode         String    @unique @default(dbgenerated("random_code()"))
+  askName         String?
+  askAvatarKey    String?
   /// The line at the top of their link, instead of the app's "Send me anonymous messages!".
-  askPrompt   String?
+  askPrompt       String?
   /// When the user last replaced their anonymous link; what they got before came through an old one.
-  askRenewedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  askRenewedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   /// When they accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else.
   termsAcceptedAt DateTime?
-  bannedAt    DateTime?
-  banReason   String?
+  bannedAt        DateTime?
+  banReason       String?
   /// When a timed ban is lifted on its own; null while `bannedAt` is set means it lasts until an admin lifts it.
-  bannedUntil DateTime?
+  bannedUntil     DateTime?
   /// What a ban takes away: "full" shuts the account, "chat" leaves only anonymous messages and support, like a guest.
-  banScope    String    @default("full")
+  banScope        String    @default("full")
   /// An admin's authenticator secret, in base32; moderation stays shut until it is set.
-  totpSecret  String?
+  totpSecret      String?
   /// The time step of the last authenticator code accepted, so no code works twice.
-  totpStep    Int?
-  lastSeenAt  DateTime?
-  deletedAt   DateTime?
-  backupKeyId String?
-  backupPinHash  String?
-  backupWrapped  String?
-  backupPinTries Int       @default(0)
-  appLockHash    String?
-  inviteLimit    Int       @default(10)
-  queuedAt       DateTime?
-  guest          Boolean   @default(false)
-  adsDisabled    Boolean   @default(false)
+  totpStep        Int?
+  lastSeenAt      DateTime?
+  deletedAt       DateTime?
+  backupKeyId     String?
+  backupPinHash   String?
+  backupWrapped   String?
+  backupPinTries  Int       @default(0)
+  appLockHash     String?
+  inviteLimit     Int       @default(10)
+  queuedAt        DateTime?
+  guest           Boolean   @default(false)
+  adsDisabled     Boolean   @default(false)
   /// Turned off the questions the Six Frites bot sends to their anonymous inbox.
-  anonBotDisabled Boolean  @default(false)
+  anonBotDisabled Boolean   @default(false)
   /// When the bot next writes to them; null until the worker picks a time.
-  anonBotAt      DateTime?
-  quickReactions String[]  @default([])
+  anonBotAt       DateTime?
+  quickReactions  String[]  @default([])
 
   sessions       Session[]
   invites        Invite[]
@@ -108,8 +108,8 @@ model Report {
 }
 
 model ContactLink {
-  id        String    @id @default(cuid())
-  code      String    @unique @default(dbgenerated("random_code()"))
+  id        String   @id @default(cuid())
+  code      String   @unique @default(dbgenerated("random_code()"))
   userId    String
   expiresAt DateTime
   /// Null: anyone, until it expires. Once that many people added me with it, it expires.
@@ -255,17 +255,17 @@ model ChangeEvent {
 }
 
 model Chat {
-  id             String   @id @default(cuid())
-  type           String   @default("direct")
-  directKey      String?  @unique
-  createdAt      DateTime @default(now())
-  lastMessageAt  DateTime @default(now())
-  autoDeleteSecs Int?
-  theme          String?
-  vanish         Boolean  @default(false)
-  encryptedAt    DateTime?
+  id              String    @id @default(cuid())
+  type            String    @default("direct")
+  directKey       String?   @unique
+  createdAt       DateTime  @default(now())
+  lastMessageAt   DateTime  @default(now())
+  autoDeleteSecs  Int?
+  theme           String?
+  vanish          Boolean   @default(false)
+  encryptedAt     DateTime?
   /// Set on a chat with support: the person being helped, who sees the other side as Six Frites.
-  supportUserId  String?
+  supportUserId   String?
   /// Support closed the conversation; the next message opens it again.
   supportClosedAt DateTime?
 
@@ -302,42 +302,47 @@ model ChatMember {
 }
 
 model Message {
-  id           String    @id @default(cuid())
-  chatId       String
-  senderId     String
-  clientId     String
-  type         String    @default("text")
-  text         String?
-  entities     Json?
-  spoiler      Boolean   @default(false)
-  effect       String?
-  silent       Boolean   @default(false)
-  bump         Boolean   @default(false)
-  vanish       Boolean   @default(false)
-  maxViews     Int?
-  ttlSeconds   Int?
-  expiredAt    DateTime?
-  resendCount  Int       @default(0)
-  purgedAt     DateTime?
-  attachmentId String?
-  stickerId    String?
-  replyToId    String?
-  groupId      String?
-  action       Json?
-  location     Json?
-  checklist    Json?
-  game         Json?
-  encrypted    Boolean   @default(false)
-  senderDevice String?
-  sentAt       DateTime?
-  arrivedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  editedAt     DateTime?
-  deletedAt    DateTime?
-  deletedById  String?
-  expiresAt    DateTime?
+  id                String    @id @default(cuid())
+  chatId            String
+  senderId          String
+  clientId          String
+  type              String    @default("text")
+  text              String?
+  entities          Json?
+  spoiler           Boolean   @default(false)
+  effect            String?
+  silent            Boolean   @default(false)
+  bump              Boolean   @default(false)
+  vanish            Boolean   @default(false)
+  maxViews          Int?
+  ttlSeconds        Int?
+  expiredAt         DateTime?
+  resendCount       Int       @default(0)
+  purgedAt          DateTime?
+  attachmentId      String?
+  stickerId         String?
+  replyToId         String?
+  groupId           String?
+  action            Json?
+  location          Json?
+  checklist         Json?
+  game              Json?
+  encrypted         Boolean   @default(false)
+  senderDevice      String?
+  /// When someone who couldn't decrypt it asked the sender to encrypt it again for their devices, and who.
+  resealRequestedAt DateTime?
+  resealRequestedBy String?
+  /// When the sender's device couldn't read it either, so it couldn't be encrypted again.
+  resealFailedAt    DateTime?
+  sentAt            DateTime?
+  arrivedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  editedAt          DateTime?
+  deletedAt         DateTime?
+  deletedById       String?
+  expiresAt         DateTime?
   /// When someone pinned it to the top of the chat, for both people.
-  pinnedAt     DateTime?
+  pinnedAt          DateTime?
 
   chat             Chat               @relation(fields: [chatId], references: [id], onDelete: Cascade)
   sender           User               @relation(fields: [senderId], references: [id], onDelete: Cascade)
@@ -557,36 +562,35 @@ model Block {
   @@index([blockedId])
 }
 
-
 /// A message sent through someone's ask link. The recipient never learns who sent it; moderators can.
 model AnonMessage {
-  id          String   @id @default(cuid())
-  recipientId String
+  id                 String    @id @default(cuid())
+  recipientId        String
   /// Null when the Six Frites bot sent it.
-  senderId    String?
+  senderId           String?
   /// Which of the bot's lines this is, so nobody gets the same one twice.
-  botLine     Int?
-  text        String
+  botLine            Int?
+  text               String
   /// The recipient's own prompt when it was sent, so a shared card shows what it answered; null for the app's.
-  prompt      String?
+  prompt             String?
   /// Formatting ranges of `text`, as on chat messages; null when it has none.
-  entities    Json?
-  photoKey    String?
+  entities           Json?
+  photoKey           String?
   /// A GIF: the MP4 in shared storage that chat GIFs use too, so it is never deleted with the message.
-  gifKey      String?
-  gifWidth    Int?
-  gifHeight   Int?
+  gifKey             String?
+  gifWidth           Int?
+  gifHeight          Int?
   /// A voice message, re-encoded to AAC, stored under the recipient like the photo.
-  voiceKey      String?
-  voiceMs       Int?
-  voiceWaveform Int[]   @default([])
-  createdAt   DateTime @default(now())
+  voiceKey           String?
+  voiceMs            Int?
+  voiceWaveform      Int[]     @default([])
+  createdAt          DateTime  @default(now())
   /// Hidden from the sender's sent list; the message stays, for the recipient and the moderators.
   senderDeletedAt    DateTime?
   /// Hidden from the recipient's inbox, by them or because they blocked the sender; moderators still see it.
   recipientDeletedAt DateTime?
 
-  recipient User @relation("anonRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipient User  @relation("anonRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
   sender    User? @relation("anonSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt])

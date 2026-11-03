@@ -237,6 +237,39 @@ describe("E2EE client", () => {
     expect(await phone.e2ee.hasRecoveryKey(null)).toBe(false);
   }, 15_000);
 
+  it("sends a message again to a device that signed in after it, or says the sender can't", async () => {
+    const { sub, guestSub, phone, laptop, guest, chatId, members } = await setup();
+    await say(phone, chatId, members, "before the tablet");
+    const tablet = appFor((await loginAs(ctx.app, guestSub)).json());
+    await tablet.e2ee.ready();
+    const missed = await latest(tablet, chatId);
+    expect(await textOf(tablet, missed)).toBe("unavailable");
+
+    const path = { id: missed.id };
+    const ask = async () => unwrap(await tablet.api.POST("/v1/messages/{id}/reseal-request", { params: { path } }));
+    expect((await ask()).encryption?.reseal).toEqual({ state: "requested", by: guest.auth.user.id });
+    await expect(
+      guest.api.PUT("/v1/messages/{id}/envelopes", { params: { path }, body: { envelopes: [] } }).then(unwrap),
+    ).rejects.toMatchObject({ code: "NOT_MESSAGE_SENDER" });
+
+    const newPhone = appFor((await loginAs(ctx.app, sub)).json());
+    await newPhone.e2ee.ready();
+    await expect(newPhone.e2ee.reseal(await latest(newPhone, chatId), members, async () => null)).rejects.toMatchObject({
+      code: "DECRYPT_FAILED",
+    });
+    const failed = unwrap(await newPhone.api.POST("/v1/messages/{id}/reseal-failed", { params: { path } }));
+    expect(failed.encryption?.reseal).toEqual({ state: "failed", by: guest.auth.user.id });
+    expect((await ask()).encryption?.reseal).toEqual({ state: "requested", by: guest.auth.user.id });
+
+    const fresh = await laptop.e2ee.reseal(await latest(laptop, chatId), members, async (encrypted) =>
+      unwrap(await laptop.api.PUT("/v1/messages/{id}/envelopes", { params: { path }, body: encrypted })),
+    );
+    expect(fresh).toMatchObject({ editedAt: null, encryption: { reseal: null } });
+    expect(await textOf(tablet, await latest(tablet, chatId))).toBe("before the tablet");
+    expect(await textOf(guest, await latest(guest, chatId))).toBe("before the tablet");
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("before the tablet");
+  });
+
   it("agrees on safety numbers and reports a reinstall", async () => {
     const { guestSub, phone, laptop, guest, chatId, members } = await setup();
     const number = await phone.e2ee.safetyNumber(guest.auth.user.id);

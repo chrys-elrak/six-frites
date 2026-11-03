@@ -161,6 +161,29 @@ export async function editMessage(qc: QueryClient, message: Hydrated, text: stri
   return m;
 }
 
+export async function requestReseal(qc: QueryClient, m: MessageDTO) {
+  const params = { path: { id: m.id } };
+  applyEdited(qc, unwrap(await six.api.POST("/v1/messages/{id}/reseal-request", { params })));
+}
+
+/**
+ * Encrypts one of my messages again for every device in the chat, for someone who couldn't open it.
+ * When this phone can't read it either, says so instead, which tells whoever asked.
+ */
+export async function resealMessage(qc: QueryClient, m: MessageDTO) {
+  const params = { path: { id: m.id } };
+  const chat = await chatFor(qc, m.chatId);
+  const fresh = await e2eeFor(useSession.getState().user!.id)!
+    .reseal(m, chat.members.map((x) => x.user.id), async (encrypted) =>
+      unwrap(await six.api.PUT("/v1/messages/{id}/envelopes", { params, body: encrypted })),
+    )
+    .catch(async (err) => {
+      if ((err as { code?: string }).code !== "DECRYPT_FAILED") throw err;
+      return unwrap(await six.api.POST("/v1/messages/{id}/reseal-failed", { params }));
+    });
+  applyEdited(qc, fresh);
+}
+
 export async function deleteMessages(qc: QueryClient, chatId: string, messages: MessageDTO[], scope: DeleteScope) {
   if (!messages.length) return;
   const tombstones = messages.filter((m) => m.deletedAt).map((m) => m.id);

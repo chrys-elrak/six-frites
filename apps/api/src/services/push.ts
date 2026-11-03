@@ -167,6 +167,29 @@ export async function deliverLiveInvitePush(userId: string, from: PublicUser, ga
   }));
 }
 
+/**
+ * Tells the sender that `fromId` can't read their message and asks for it again, or tells whoever asked
+ * that the sender can't send it again, on the devices they aren't using.
+ */
+export async function deliverResealPush(
+  m: { id: string; chatId: string },
+  userId: string,
+  fromId: string,
+  kind: "requested" | "failed",
+) {
+  const targets = await targetsFor(userId);
+  if (!targets.length) return 0;
+  const from = await seenIn(m.chatId, userId, await prisma.user.findUniqueOrThrow({ where: { id: fromId } }));
+  return sendToAll(targets, (t) => ({
+    title: from.displayName,
+    body: kind === "requested" ? t.messages.resendRequestedPush : t.messages.resendFailedPush,
+    icon: from.avatarUrl,
+    chatId: m.chatId,
+    messageId: m.id,
+    url: `/chats/${m.chatId}`,
+  }));
+}
+
 /** Shows someone an anonymous message they just got, on the devices they aren't using right now. */
 export async function deliverAnonPush(userId: string, text: string, kind: "image" | "gif" | "voice") {
   const targets = await targetsFor(userId);

@@ -53,6 +53,7 @@ function toScheduledDTO(s: ScheduledRow): ScheduledMessageDTO {
       senderDeviceId: s.senderDevice,
       envelopes: [],
       backup: encryptedOf(s)!.backup ?? null,
+      reseal: null,
     },
   };
 }
