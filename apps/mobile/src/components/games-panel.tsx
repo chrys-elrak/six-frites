@@ -11,7 +11,7 @@ import {
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect } from "expo-router";
-import { MoreVertical } from "lucide-react-native";
+import { ArrowLeft, MoreVertical } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -19,7 +19,7 @@ import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
 import { brand, useTheme } from "@/lib/theme";
-import { BotGameSheet, BotRow } from "./bot-game";
+import { BotGameSheet } from "./bot-game";
 import { ChatPicker } from "./chat-picker";
 import { HowToPlay } from "./how-to-play";
 import { LiveInviteSheet, playHref } from "./live";
@@ -64,8 +64,8 @@ function GameCard({
 }
 
 /**
- * The Games tab: live games played together in a room, then the chat games: pick one, then a friend
- * and your move, sent to your chat with them, or the bot.
+ * Frite Bot's chat, pinned at the top of the chat list: it greets you, lists live games played together in a room,
+ * then the chat games, which it plays itself when it can and otherwise sends to the friend you pick.
  */
 export function GamesPanel() {
   const t = useTheme();
@@ -74,7 +74,6 @@ export function GamesPanel() {
   const { realtime } = useRealtime();
   const [game, setGame] = useState<GameKind | null>(null);
   const [chat, setChat] = useState<ChatDTO | null>(null);
-  const [bot, setBot] = useState(false);
   const [live, setLive] = useState<LiveGame | null>(null);
   const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
   const [ending, setEnding] = useState<Omit<LiveInviteDTO, "from"> | null>(null);
@@ -91,10 +90,24 @@ export function GamesPanel() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
-      <ScreenHeader inset={false}>
-        <Text style={[styles.title, { color: t.text }]}>{tr.common.games}</Text>
+      <ScreenHeader>
+        <IconButton Icon={ArrowLeft} label={tr.common.back} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
+        <View style={styles.botAvatar}>
+          <Text style={{ fontSize: 22 }}>🤖</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text numberOfLines={1} style={{ color: t.text, fontSize: 17, fontWeight: "700" }}>
+            {tr.calls.bot}
+          </Text>
+          <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12 }}>
+            {tr.calls.botHint}
+          </Text>
+        </View>
       </ScreenHeader>
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={[styles.bubble, { backgroundColor: t.bubbleIn, borderColor: t.border }]}>
+          <Text style={{ color: t.text, fontSize: 15, lineHeight: 21 }}>{tr.calls.botIntro}</Text>
+        </View>
         {mine.length > 0 && <SectionTitle>{tr.live.inProgress}</SectionTitle>}
         {mine.map((r) => (
           <Pressable
@@ -142,25 +155,16 @@ export function GamesPanel() {
         />
       )}
       {live && <LiveInviteSheet game={live} onClose={() => setLive(null)} />}
-      {game && !chat && !bot && (
+      {game && !chat && !isBotGame(game) && (
         <ChatPicker
           title={`${GAME_EMOJI[game]} ${tr.calls.playWith}`}
           empty={tr.calls.noOneToPlay}
           onPick={setChat}
           onClose={() => setGame(null)}
-          top={isBotGame(game) && <BotRow onPick={() => setBot(true)} />}
           noSupport
         />
       )}
-      {game && bot && isBotGame(game) && (
-        <BotGameSheet
-          kind={game}
-          onClose={() => {
-            setGame(null);
-            setBot(false);
-          }}
-        />
-      )}
+      {game && isBotGame(game) && <BotGameSheet kind={game} onClose={() => setGame(null)} />}
       {game && chat && (
         <NewGame
           initial={game}
@@ -180,7 +184,24 @@ export function GamesPanel() {
 }
 
 const styles = StyleSheet.create({
-  title: { flex: 1, fontSize: 22, fontWeight: "700", letterSpacing: -0.3, paddingHorizontal: 4 },
+  botAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(235,138,0,0.15)",
+  },
+  bubble: {
+    alignSelf: "flex-start",
+    maxWidth: "88%",
+    borderRadius: 18,
+    borderTopLeftRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 4,
+  },
   content: { padding: 16, gap: 12 },
   card: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16, borderRadius: 20, borderWidth: 1 },
   resume: { paddingVertical: 10, borderColor: brand, backgroundColor: "rgba(235,138,0,0.15)" },

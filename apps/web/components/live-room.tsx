@@ -558,7 +558,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   };
   const exit = (event: "live:leave" | "live:end") => {
     socket?.emit(event, { roomId });
-    router.push("/games");
+    router.push("/bot");
   };
   const leave = () => exit("live:leave");
   const nameOf = (seat: number) => {
@@ -571,7 +571,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 py-2 backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/40">
-        <Link href="/games" aria-label={tr.common.games} className={`${iconButton} md:hidden`}>
+        <Link href="/bot" aria-label={tr.calls.bot} className={`${iconButton} md:hidden`}>
           <ChevronLeft className="size-6" />
         </Link>
         <h1 className="min-w-0 flex-1 truncate px-2 font-semibold">
@@ -602,8 +602,8 @@ export function LiveRoom({ roomId }: { roomId: string }) {
               <p className="pt-10 text-center text-stone-500">
                 {gone === "GAME_STARTED" ? tr.live.started : gone === "ROOM_FULL" ? tr.live.full : tr.live.closed}
               </p>
-              <Link href="/games" className={`${pill} bg-brand text-brand-ink`}>
-                {tr.common.games}
+              <Link href="/bot" className={`${pill} bg-brand text-brand-ink`}>
+                {tr.calls.bot}
               </Link>
             </>
           ) : !room ? (

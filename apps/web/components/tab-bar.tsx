@@ -1,16 +1,15 @@
 "use client";
 
-import { Gamepad2, MessageCircle, Settings, VenetianMask } from "lucide-react";
+import { MessageCircle, Settings, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { isMuted } from "@six/shared";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
-export type Tab = "chats" | "games" | "inbox" | "settings";
+export type Tab = "chats" | "inbox" | "settings";
 
 const tabs = [
   { id: "chats", href: "/", Icon: MessageCircle },
-  { id: "games", href: "/games", Icon: Gamepad2 },
   { id: "inbox", href: "/inbox", Icon: VenetianMask },
   { id: "settings", href: "/settings", Icon: Settings },
 ] as const;
@@ -50,10 +49,10 @@ export function TabBar({ active, children }: { active: Tab; children?: React.Rea
   };
 
   return (
-    <nav className="grid shrink-0 grid-cols-4 border-t border-black/5 pb-[env(safe-area-inset-bottom)] md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:py-3 dark:border-white/10">
-      {tabs.slice(0, 3).map(link)}
+    <nav className="grid shrink-0 grid-cols-3 border-t border-black/5 pb-[env(safe-area-inset-bottom)] md:order-first md:flex md:w-20 md:flex-col md:gap-2 md:border-t-0 md:border-r md:py-3 dark:border-white/10">
+      {tabs.slice(0, 2).map(link)}
       {children && <div className="hidden min-h-0 flex-1 flex-col md:flex">{children}</div>}
-      {link(tabs[3])}
+      {link(tabs[2])}
     </nav>
   );
 }

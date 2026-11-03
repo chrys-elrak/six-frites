@@ -59,6 +59,8 @@ const en = {
   noOneToPlay: "Add a friend to play together",
   bot: "Frite Bot",
   botHint: "Always up for a game",
+  botIntro:
+    "Hi! I'm Frite Bot. Pick a game below and I'll play with you, or start a live game with friends and I'll take the empty seats. To play with someone else, open your chat with them and tap Game.",
   pickDice: "Pick a number from 1 to 6. Closest to the roll wins.",
   rolled: (n: number) => `Rolled ${n}`,
   pickSecret: "Pick a secret number from 1 to 100",
@@ -180,6 +182,8 @@ const fr: typeof en = {
   noOneToPlay: "Ajoute un ami pour jouer ensemble",
   bot: "Frite Bot",
   botHint: "Toujours partant pour jouer",
+  botIntro:
+    "Salut ! Moi c'est Frite Bot. Choisissez un jeu ci-dessous et je joue avec vous, ou lancez une partie en direct avec des amis et je prends les places libres. Pour jouer avec quelqu'un d'autre, ouvrez votre discussion avec lui et touchez Jeu.",
   pickDice: "Choisis un nombre de 1 à 6. Le plus proche du dé gagne.",
   rolled: (n) => `Le dé donne ${n}`,
   pickSecret: "Choisis un nombre secret de 1 à 100",
@@ -301,6 +305,8 @@ const mg: typeof en = {
   noOneToPlay: "Manampia namana hiara-milalao",
   bot: "Frite Bot",
   botHint: "Vonona hilalao foana",
+  botIntro:
+    "Salama! Izaho no Frite Bot. Misafidiana lalao eto ambany dia hiara-milalao aminao aho, na manombohy lalao mivantana miaraka amin'ny namana dia izaho no hipetraka amin'ny toerana malalaka. Raha hilalao amin'olon-kafa, sokafy ny resakao aminy ary tsindrio ny Lalao.",
   pickDice: "Mifidiana isa 1 ka hatramin'ny 6. Izay akaiky indrindra no mandresy.",
   rolled: (n) => `Nivoaka ny ${n}`,
   pickSecret: "Mifidiana isa miafina 1 ka hatramin'ny 100",

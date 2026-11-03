@@ -11,31 +11,6 @@ import { HowToPlay } from "./how-to-play";
 import { Text } from "./text";
 import { IconButton } from "./ui";
 
-/** The bot row at the top of the "Play with…" list. */
-export function BotRow({ onPick }: { onPick: () => void }) {
-  const t = useTheme();
-  const tr = useT();
-  return (
-    <Pressable
-      onPress={onPick}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.row, { borderBottomColor: t.border }, pressed && { backgroundColor: t.pressed }]}
-    >
-      <View style={styles.avatar}>
-        <Text style={{ fontSize: 20 }}>🤖</Text>
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text numberOfLines={1} style={{ color: t.text, fontSize: 16, fontWeight: "500" }}>
-          {tr.calls.bot}
-        </Text>
-        <Text numberOfLines={1} style={{ color: t.muted, fontSize: 13 }}>
-          {tr.calls.botHint}
-        </Text>
-      </View>
-    </Pressable>
-  );
-}
-
 /** A game against the bot, played on this phone only: the bot opens, you answer, and on the board it takes its turns. */
 export function BotGameSheet({ kind, onClose }: { kind: BotGame; onClose: () => void }) {
   const t = useTheme();
@@ -94,8 +69,6 @@ export function BotGameSheet({ kind, onClose }: { kind: BotGame; onClose: () => 
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 4, borderBottomWidth: StyleSheet.hairlineWidth },
-  avatar: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(235,138,0,0.15)" },
   wrap: { flex: 1, justifyContent: "flex-end" },
   panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, gap: 8, maxHeight: "90%" },
   head: { flexDirection: "row", alignItems: "center", gap: 4 },

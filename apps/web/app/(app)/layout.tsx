@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { AnonInbox } from "@/components/anon-inbox";
 import { LockScreen } from "@/components/app-lock";
 import { ChatList, useChatRail } from "@/components/chat-list";
-import { GamesPanel } from "@/components/games-panel";
 import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
 import { type Tab, TabBar } from "@/components/tab-bar";
@@ -35,7 +34,6 @@ const appWallpaper = chatTheme(null);
 const tabRoutes: Record<string, Tab> = {
   "/": "chats",
   "/archived": "chats",
-  "/games": "games",
   "/inbox": "inbox",
   "/settings": "settings",
 };
@@ -96,7 +94,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const topLevel = tabRoutes[pathname];
   const tab = topLevel ?? "chats";
-  const wide = tab === "settings" || tab === "games" || tab === "inbox";
+  const wide = tab === "settings" || tab === "inbox";
   const rail = railable && tab === "chats" && pathname !== "/archived";
 
   return (
@@ -120,7 +118,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {!rail && (
               <div className="min-h-0 min-w-0 flex-1">
                 {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
-                {tab === "games" && <GamesPanel />}
                 {tab === "inbox" && <AnonInbox />}
                 {tab === "settings" && <SettingsPanel />}
               </div>

@@ -10,23 +10,6 @@ import { GameView } from "./game";
 import { HowToPlay } from "./how-to-play";
 
 /** The bot row at the top of the "Play with…" list. */
-export function BotRow({ onPick }: { onPick: () => void }) {
-  const tr = useT();
-  return (
-    <button
-      type="button"
-      onClick={onPick}
-      className="flex w-full items-center gap-3 border-b border-stone-200 px-4 py-2.5 text-left hover:bg-stone-100 dark:border-stone-800 dark:hover:bg-stone-800"
-    >
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/15 text-xl">🤖</span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium">{tr.calls.bot}</span>
-        <span className="block truncate text-xs text-stone-500">{tr.calls.botHint}</span>
-      </span>
-    </button>
-  );
-}
-
 /** A game against the bot, played on this device only: the bot opens, you answer, and on the board it takes its turns. */
 export function BotGameDialog({ kind, onClose }: { kind: BotGame; onClose: () => void }) {
   const tr = useT();

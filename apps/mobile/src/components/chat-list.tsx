@@ -364,6 +364,21 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           )}
         </Pressable>
       )}
+      {view === "chats" && !needle && (
+        <Pressable onPress={() => router.push("/bot")} style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}>
+          <View style={styles.botAvatar}>
+            <Text style={{ fontSize: 28 }}>🤖</Text>
+          </View>
+          <View style={styles.rowBody}>
+            <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
+              {tr.calls.bot}
+            </Text>
+            <Text numberOfLines={1} style={[styles.preview, { color: t.muted }]}>
+              {tr.calls.botHint}
+            </Text>
+          </View>
+        </Pressable>
+      )}
     </>
   );
 
@@ -499,6 +514,14 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
 const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
+  botAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(235,138,0,0.15)",
+  },
   rowBody: { flex: 1, minWidth: 0, gap: 2 },
   rowLine: { flexDirection: "row", alignItems: "center", gap: 6 },
   name: { flexShrink: 1, fontSize: 16, fontWeight: "600" },

@@ -504,6 +504,20 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                 )}
               </Link>
             )}
+            {filtering && view === "chats" && !needle && (
+              <Link
+                href="/bot"
+                className={`flex items-center gap-3 px-4 py-3 transition active:bg-black/5 dark:active:bg-white/10 ${
+                  pathname === "/bot" ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
+                }`}
+              >
+                <span className="grid size-14 shrink-0 place-items-center rounded-full bg-brand/15 text-3xl">🤖</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold">{tr.calls.bot}</span>
+                  <span className="block truncate text-sm text-stone-500 dark:text-stone-400">{tr.calls.botHint}</span>
+                </span>
+              </Link>
+            )}
             {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
             {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
             {chats.isSuccess && needle && visible.length === 0 && (
