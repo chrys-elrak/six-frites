@@ -4,6 +4,7 @@ import { Directory, File, Paths } from "expo-file-system";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { AppState } from "react-native";
 import { create } from "zustand";
+import { useDataSaver } from "./data-saver";
 import { closeDrafts, openDrafts } from "./drafts";
 import { DeviceSecretStore } from "./secret-store";
 import { six } from "./six";
@@ -66,6 +67,8 @@ interface Patch {
   file?: EncryptedFile;
   fileUri?: string;
   fileFailed?: boolean;
+  /** The attachment data saver left for a tap. */
+  fileSkipped?: string;
   undecryptable?: boolean;
 }
 
@@ -132,6 +135,25 @@ async function decryptToCache(m: MessageDTO, file: EncryptedFile) {
   return out.uri;
 }
 
+const asked = new Set<string>();
+
+/** Downloads an attachment that data saver left for a tap. */
+export function downloadAttachment(attachmentId: string) {
+  asked.add(attachmentId);
+  useDecrypted.setState((s) => ({
+    byKey: Object.fromEntries(Object.entries(s.byKey).filter(([, p]) => p.fileSkipped !== attachmentId)),
+    retries: s.retries + 1,
+  }));
+}
+
+useDataSaver.subscribe(({ on }) => {
+  if (on) return;
+  useDecrypted.setState((s) => ({
+    byKey: Object.fromEntries(Object.entries(s.byKey).filter(([, p]) => !p.fileSkipped)),
+    retries: s.retries + 1,
+  }));
+});
+
 function decrypt(meId: string, m: MessageDTO, stillWanted = () => true) {
   const key = keyOf(m);
   if (queued.has(key) || useDecrypted.getState().byKey[key]) return;
@@ -143,6 +165,11 @@ function decrypt(meId: string, m: MessageDTO, stillWanted = () => true) {
     const patch = patchOf(await e.hydrate(m));
     useDecrypted.setState((s) => ({ byKey: { ...s.byKey, [key]: patch } }));
     if (patch.file && m.attachment?.url && m.attachment.status === "ready") {
+      const auto = m.attachment.kind === "voice" || m.attachment.kind === "video_note" || patch.file.mime.startsWith("audio/");
+      if (useDataSaver.getState().on && !auto && !asked.has(m.attachment.id)) {
+        const skipped = { ...patch, fileSkipped: m.attachment.id };
+        return useDecrypted.setState((s) => ({ byKey: { ...s.byKey, [key]: skipped } }));
+      }
       const fileUri = await decryptToCache(m, patch.file).catch((err) => {
         console.warn("could not download attachment:", err?.message ?? err);
         return null;
@@ -179,7 +206,12 @@ export function withContent<T extends MessageDTO>(m: T, patch: Patch | undefined
             height: patch.file.height ?? null,
             durationMs: patch.file.durationMs ?? null,
             waveform: patch.file.waveform ?? null,
-            status: patch.fileUri ? "ready" : patch.fileFailed || m.attachment.status === "failed" ? "failed" : "processing",
+            status:
+              patch.fileUri || patch.fileSkipped
+                ? "ready"
+                : patch.fileFailed || m.attachment.status === "failed"
+                  ? "failed"
+                  : "processing",
             url: patch.fileUri ?? null,
             thumbUrl: (m.attachment.kind === "image" && patch.fileUri) || patch.file.thumb || null,
           }

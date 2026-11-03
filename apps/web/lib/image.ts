@@ -69,6 +69,24 @@ export async function toPhotoDataUrl(file: File, maxBytes: number): Promise<stri
   throw new Error(getT().contacts.photoTooDetailed);
 }
 
+/** A lighter copy of a photo for data saver: 1280 px on its long side at most, as a JPEG, unless that isn't smaller. */
+export async function lighterPhoto(blob: Blob): Promise<Blob> {
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
+    const canvas = new OffscreenCanvas(Math.round(bitmap.width * scale), Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const out = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.75 });
+    return out.size < blob.size ? out : blob;
+  } catch {
+    return blob;
+  }
+}
+
 /** Keyboards send stickers as PNG or WebP with see-through corners, which photos and screenshots don't have. */
 export async function looksLikeSticker(file: Blob) {
   if (file.type !== "image/png" && file.type !== "image/webp") return false;

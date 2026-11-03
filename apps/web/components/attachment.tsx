@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDataSaver } from "@/lib/data-saver";
 import { decryptedUrl, streamUrl } from "@/lib/e2ee";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -489,9 +490,10 @@ export function AttachmentView({
   const kind = attachment.data.kind;
   const audio = kind === "file" && attachment.data.mime.startsWith("audio/");
   const [wanted, setWanted] = useState(false);
+  const saver = useDataSaver((s) => s.on);
   const decrypted = useDecrypted(
     attachment,
-    wanted || audio || kind === "image" || kind === "voice" || kind === "video_note",
+    wanted || audio || (kind === "image" && !saver) || kind === "voice" || kind === "video_note",
   );
   const a = view(attachment, decrypted);
   const fetching = wanted && !!decrypted && !decrypted.url && !decrypted.failed;
@@ -549,6 +551,17 @@ export function AttachmentView({
           </button>
         ) : attachment.source === "local" ? (
           <img src={a.url ?? undefined} alt="" draggable={false} className="size-full object-cover" />
+        ) : saver && !wanted ? (
+          <button
+            type="button"
+            onClick={() => setWanted(true)}
+            aria-label={tr.messages.playVideo}
+            className="absolute inset-0 grid place-items-center"
+          >
+            <span className="grid size-12 place-items-center rounded-full bg-black/50 text-white">
+              <Play className="ml-0.5 size-6 fill-current" />
+            </span>
+          </button>
         ) : (
           a.url && (
             <video
@@ -606,6 +619,14 @@ export function AttachmentView({
               </span>
             </span>
           </>
+        )}
+        {a.kind === "image" && a.state === "ready" && !a.url && !hidden && (
+          <span className="absolute inset-0 grid place-items-center">
+            <span className="flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white">
+              {fetching ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+              {formatBytes(a.size)}
+            </span>
+          </span>
         )}
         {a.kind === "video" && a.state === "ready" && !hidden && (
           <>

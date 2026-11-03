@@ -18,6 +18,7 @@ import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
 import { Text, TextInput } from "./text";
 import { formatCode, contactUrl, sendAtLabel, shareContact, shareInvite, timeAgo } from "@/lib/format";
+import { useDataSaver } from "@/lib/data-saver";
 import { setPlainFont, usePlainFont } from "@/lib/font";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { playTone, useNotifyPrefs } from "@/lib/notify";
@@ -230,6 +231,19 @@ function FontPicker() {
           value={!plain}
           onChange={(on) => setPlainFont(!on)}
         />
+      </Card>
+    </View>
+  );
+}
+
+function DataSaverSettings() {
+  const tr = useT();
+  const saver = useDataSaver();
+  return (
+    <View>
+      <SectionTitle>{tr.settings.dataUsage}</SectionTitle>
+      <Card>
+        <Toggle label={tr.settings.dataSaver} hint={tr.settings.dataSaverHint} value={saver.on} onChange={saver.set} />
       </Card>
     </View>
   );
@@ -612,6 +626,7 @@ export function SettingsPanel() {
         <FontPicker />
         <QuickReactionsSettings />
         <NotificationSettings />
+        <DataSaverSettings />
         <Referrals />
         <Devices />
         <EncryptionSettings />

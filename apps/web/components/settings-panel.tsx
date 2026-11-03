@@ -3,6 +3,7 @@
 import { LOCALES, LOCALE_NAMES, isLocale } from "@six/shared";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
+import { useDataSaver } from "@/lib/data-saver";
 import { signOut } from "@/lib/e2ee";
 import { useLocale, useT } from "@/lib/i18n";
 import { relinkPush } from "@/lib/push";
@@ -75,6 +76,19 @@ function FontPicker() {
 }
 
 /** When this web build was made, and its id, the same one /version reports. */
+function DataSaverSettings() {
+  const tr = useT();
+  const saver = useDataSaver();
+  return (
+    <section className="space-y-3">
+      <SectionTitle>{tr.settings.dataUsage}</SectionTitle>
+      <Card>
+        <Toggle label={tr.settings.dataSaver} hint={tr.settings.dataSaverHint} checked={saver.on} onChange={saver.set} />
+      </Card>
+    </section>
+  );
+}
+
 function BuildVersion() {
   const tr = useT();
   const { locale } = useLocale();
@@ -113,6 +127,7 @@ export function SettingsPanel() {
           <FontPicker />
           <QuickReactionsSettings />
           <NotificationSettings />
+          <DataSaverSettings />
           <Referrals />
           <AppLockSettings />
           <EncryptionSettings />

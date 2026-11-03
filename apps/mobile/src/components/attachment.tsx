@@ -19,6 +19,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { shareRemoteFile } from "@/lib/download";
 import { useLatest } from "@/lib/latest";
+import { useDataSaver } from "@/lib/data-saver";
+import { downloadAttachment } from "@/lib/e2ee";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
@@ -485,6 +487,24 @@ export function AttachmentView({
   const bubble = useBubbleColors();
   const a = view(attachment);
   const [busy, setBusy] = useState(false);
+  const saver = useDataSaver((s) => s.on);
+  const [playGif, setPlayGif] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const skipped = attachment.source === "server" && attachment.data.encrypted && a.state === "ready" && !a.url;
+  const loading = fetching && skipped;
+  const fetchNow = () => {
+    if (attachment.source !== "server") return;
+    setFetching(true);
+    downloadAttachment(attachment.data.id);
+  };
+  const downloadChip = (
+    <View style={[StyleSheet.absoluteFill, styles.center]}>
+      <View style={styles.chip}>
+        {loading ? <ActivityIndicator size="small" color="#fff" /> : <Download size={14} color="#fff" />}
+        <Text style={styles.chipText}>{formatBytes(a.size)}</Text>
+      </View>
+    </View>
+  );
 
   if (attachment.source === "server" && attachment.data.status === "removed") {
     const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
@@ -507,10 +527,11 @@ export function AttachmentView({
 
   if (a.kind === "gif") {
     const size = tile ? styles.tile : boxSize(a.width, a.height, Math.min(280, maxWidth));
+    const still = attachment.source === "server" && saver && !playGif;
     return (
       <Pressable
-        onPress={onReveal}
-        disabled={!hidden}
+        onPress={hidden ? onReveal : () => setPlayGif(true)}
+        disabled={!hidden && !still}
         accessibilityLabel={hidden ? tr.messages.revealSpoiler : a.name}
         style={[styles.visual, size, { backgroundColor: t.dark ? stone[700] : stone[200] }]}
       >
@@ -523,6 +544,12 @@ export function AttachmentView({
           </View>
         ) : attachment.source === "local" ? (
           a.url && <Image source={{ uri: a.url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        ) : still ? (
+          <View style={[StyleSheet.absoluteFill, styles.center]}>
+            <View style={styles.play}>
+              <Play size={24} color="#fff" fill="#fff" style={{ marginLeft: 2 }} />
+            </View>
+          </View>
         ) : (
           a.url && <GifLoop url={a.url} />
         )}
@@ -538,8 +565,8 @@ export function AttachmentView({
       onOpen({ kind: a.kind as "image" | "video", url: a.url!, poster: a.thumbUrl, name: a.name, mime: a.mime });
     return (
       <Pressable
-        onPress={hidden ? onReveal : open}
-        disabled={!ready && !hidden}
+        onPress={hidden ? onReveal : skipped ? fetchNow : open}
+        disabled={!ready && !hidden && !skipped}
         accessibilityLabel={hidden ? tr.messages.revealSpoiler : a.kind === "image" ? tr.messages.openPhoto : tr.messages.playVideo}
         style={[styles.visual, size, { backgroundColor: t.dark ? stone[700] : stone[200] }]}
       >
@@ -560,7 +587,8 @@ export function AttachmentView({
             </View>
           </View>
         )}
-        {a.kind === "video" && a.state === "ready" && !hidden && (
+        {skipped && !hidden && downloadChip}
+        {a.kind === "video" && a.state === "ready" && !hidden && !skipped && (
           <>
             <View style={[StyleSheet.absoluteFill, styles.center]}>
               <View style={styles.play}>
@@ -659,11 +687,11 @@ export function AttachmentView({
 
   const ready = a.state === "ready" && attachment.source === "server" && a.url;
   return (
-    <Pressable disabled={!ready || busy} onPress={save} style={styles.file}>
+    <Pressable disabled={(!ready && !skipped) || busy || loading} onPress={skipped ? fetchNow : save} style={styles.file}>
       <View style={[styles.fileIcon, { backgroundColor: mine ? alpha(bubble.ink, 0.15) : "rgba(235,138,0,0.15)" }]}>
-        {a.state === "uploading" || busy ? (
+        {a.state === "uploading" || busy || loading ? (
           <ActivityIndicator size="small" color={mine ? bubble.ink : brand} />
-        ) : ready ? (
+        ) : ready || skipped ? (
           <Download size={20} color={mine ? bubble.ink : brand} />
         ) : (
           <FileText size={20} color={mine ? bubble.ink : brand} />

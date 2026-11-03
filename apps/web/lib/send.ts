@@ -19,6 +19,8 @@ import {
 import type { QueryClient } from "@tanstack/react-query";
 import { chatKeys, findCached, insertMessage, patchChat } from "./chats";
 import { type Hydrated, e2ee, hydrate, messageFile, shouldEncrypt } from "./e2ee";
+import { useDataSaver } from "./data-saver";
+import { lighterPhoto } from "./image";
 import { mediaMeta } from "./media-meta";
 import { type PendingMessage, pendingFiles, sealedFiles, useOutbox } from "./outbox";
 import { six } from "./six";
@@ -180,9 +182,18 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
   }
 }
 
+/** With data saver on, swaps a photo for a lighter JPEG before it's queued. */
+async function forDataSaver(file: Draft["file"]): Promise<Draft["file"]> {
+  if (!file || file.kind !== "image" || file.sticker || file.mime === "image/gif" || !useDataSaver.getState().on) return file;
+  const blob = await lighterPhoto(file.blob);
+  if (blob === file.blob) return file;
+  return { ...file, blob, mime: "image/jpeg", name: file.name.replace(/\.\w+$/, "") + ".jpg" };
+}
+
 export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string, draft: Draft) {
   const clientId = crypto.randomUUID();
-  const { replyTo, file, gif } = draft;
+  const { replyTo, gif } = draft;
+  const file = await forDataSaver(draft.file);
   if (file) pendingFiles.set(clientId, file.blob);
 
   const pending: PendingMessage = {

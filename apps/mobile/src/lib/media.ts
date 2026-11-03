@@ -15,6 +15,7 @@ import { File, Paths } from "expo-file-system";
 import { ImageManipulator, type ImageRef, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import type { ReceivedImage } from "../../modules/rich-input";
+import { useDataSaver } from "./data-saver";
 import { getT } from "./i18n";
 import type { LocalFile } from "./send";
 
@@ -131,11 +132,28 @@ export async function cutVideo(file: LocalFile, from: number, to: number): Promi
   return { ...file, uri: out.uri, size: bytes.length, durationMs: duration ? Math.round(duration * 1000) : file.durationMs };
 }
 
+/** With data saver on, a lighter copy of a photo: 1280 px on its long side at most, as a JPEG, unless that isn't smaller. */
+async function forDataSaver(file: LocalFile): Promise<LocalFile> {
+  if (file.kind !== "image" || file.mime === "image/gif" || !useDataSaver.getState().on) return file;
+  try {
+    const long = Math.max(file.width ?? 0, file.height ?? 0);
+    let context = ImageManipulator.manipulate(file.uri);
+    if (long > 1280) context = context.resize((file.width ?? 0) >= (file.height ?? 0) ? { width: 1280 } : { height: 1280 });
+    const saved = await (await context.renderAsync()).saveAsync({ format: SaveFormat.JPEG, compress: 0.75 });
+    const size = (await (await fetch(saved.uri)).blob()).size;
+    if (size >= file.size) return file;
+    const name = file.name.replace(/\.\w+$/, "") + ".jpg";
+    return { ...file, uri: saved.uri, mime: "image/jpeg", name, size, width: saved.width, height: saved.height };
+  } catch {
+    return file;
+  }
+}
+
 async function fromPickerAsset(a: ImagePicker.ImagePickerAsset): Promise<LocalFile> {
   const name = a.fileName ?? nameFromUri(a.uri);
   const mime = guessMime(name, a.mimeType);
   const size = a.fileSize ?? (await (await fetch(a.uri)).blob()).size;
-  return asSendableImage({
+  return forDataSaver(await asSendableImage({
     uri: a.uri,
     name,
     mime,
@@ -144,7 +162,7 @@ async function fromPickerAsset(a: ImagePicker.ImagePickerAsset): Promise<LocalFi
     width: a.width || null,
     height: a.height || null,
     durationMs: a.duration ?? null,
-  });
+  }));
 }
 
 export class TooLargeError extends Error {

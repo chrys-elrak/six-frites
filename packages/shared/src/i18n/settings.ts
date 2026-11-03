@@ -85,6 +85,10 @@ const en = {
   systemHint: "Shows a notification when Six Frites is in the background.",
 
   devices: "Devices",
+  dataUsage: "Data",
+  dataSaver: "Data saver",
+  dataSaverHint:
+    "Photos, GIFs, videos and files download only when you tap them, and the photos you send are smaller. Voice messages and video notes still download on their own.",
   linkComputer: "Link a computer",
   linkScanHint: "On your computer, open six-frites.koera.mg and scan the code shown there.",
   linkConfirm: "Sign in on this computer?",
@@ -293,6 +297,10 @@ const fr: typeof en = {
   systemHint: "Affiche une notification quand Six Frites est en arrière-plan.",
 
   devices: "Appareils",
+  dataUsage: "Données",
+  dataSaver: "Économiseur de données",
+  dataSaverHint:
+    "Les photos, GIF, vidéos et fichiers ne se téléchargent que quand vous les touchez, et les photos que vous envoyez sont plus légères. Les messages vocaux et vidéo se téléchargent toujours tout seuls.",
   linkComputer: "Associer un ordinateur",
   linkScanHint: "Sur votre ordinateur, ouvrez six-frites.koera.mg et scannez le code affiché.",
   linkConfirm: "Se connecter sur cet ordinateur ?",
@@ -502,6 +510,10 @@ const mg: typeof en = {
   systemHint: "Mampiseho fampandrenesana rehefa miasa ao ambadika ny Six Frites.",
 
   devices: "Fitaovana",
+  dataUsage: "Angona",
+  dataSaver: "Fitsitsiana angona",
+  dataSaverHint:
+    "Tsy misintona raha tsy tsindrianao ny sary, GIF, horonantsary ary rakitra, ary maivana kokoa ny sary alefanao. Mbola misintona irery ny hafatra feo sy ny hafatra video.",
   linkComputer: "Hampifandray solosaina",
   linkScanHint: "Amin'ny solosainao, sokafy ny six-frites.koera.mg ary scanne ny kaody miseho eo.",
   linkConfirm: "Hiditra amin'ity solosaina ity?",
