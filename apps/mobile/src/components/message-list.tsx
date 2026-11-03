@@ -489,7 +489,7 @@ function Linked({ text, selecting }: { text: string; selecting: boolean }) {
             {part.text}
           </Text>
         ) : (
-          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={20} /> : s))
+          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={20} inline /> : s))
         ),
       )}
     </>
