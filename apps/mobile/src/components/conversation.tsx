@@ -9,6 +9,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { isFrozen, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
+import { clearChatNotifications } from "@/lib/push";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
 import { useSession } from "@/lib/session";
@@ -100,6 +101,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   useEffect(() => {
     setActiveChat(chatId);
     closeChat(chatId);
+    clearChatNotifications(chatId);
     return () => {
       setActiveChat(null);
       closeChat(chatId);

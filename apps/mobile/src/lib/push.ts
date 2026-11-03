@@ -9,6 +9,32 @@ import { six } from "./six";
 
 const provider = Platform.OS === "ios" ? "apns" : "fcm";
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
+/**
+ * Shows a message as a system notification while the app is open, like Messenger, on a silent channel since the app
+ * plays its own tone. A newer one from the same chat replaces it. False when notifications are turned off.
+ */
+export async function showBanner(tag: string, title: string, body: string, url: string) {
+  if (!(await Notifications.getPermissionsAsync()).granted) return false;
+  await Notifications.scheduleNotificationAsync({
+    identifier: tag,
+    content: { title, body, data: { url } },
+    trigger: { channelId: "in-app" },
+  });
+  return true;
+}
+
+/** Clears a chat's notifications, pushed or shown in the app, once it's open. */
+export const clearChatNotifications = (chatId: string) => void Notifications.dismissNotificationAsync(chatId).catch(() => null);
+
 async function saveToken(token: string) {
   unwrap(await six.api.POST("/v1/devices/push-token", { body: { provider, token, locale: getLocale() } }));
 }
@@ -18,6 +44,11 @@ async function register(ask: boolean) {
   await Notifications.setNotificationChannelAsync("messages", {
     name: getT().settings.messagesChannel,
     importance: AndroidImportance.HIGH,
+  });
+  await Notifications.setNotificationChannelAsync("in-app", {
+    name: getT().settings.inAppChannel,
+    importance: AndroidImportance.HIGH,
+    sound: null,
   });
   const permission = ask ? await Notifications.requestPermissionsAsync() : await Notifications.getPermissionsAsync();
   if (!permission.granted) return;

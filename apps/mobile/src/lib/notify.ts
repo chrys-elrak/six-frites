@@ -13,6 +13,7 @@ import { type AudioPlayer, createAudioPlayer } from "expo-audio";
 import { AppState } from "react-native";
 import { create } from "zustand";
 import { getT } from "./i18n";
+import { showBanner } from "./push";
 
 const PREFS_KEY = "six:notifications";
 
@@ -115,7 +116,11 @@ function alert(id: string, href: string, title: string, body: string, avatarUrl:
   if (AppState.currentState !== "active") return;
   const prefs = useNotifyPrefs.getState();
   if (prefs.sound) playSound(sound ?? TONE_FILES[prefs.tone]);
-  if (prefs.popups) useToasts.getState().push({ id, href, title, body, avatar: { displayName: title, avatarUrl } });
+  if (!prefs.popups) return;
+  const tag = href.startsWith("/chats/") ? href.slice("/chats/".length) : href;
+  void showBanner(tag, title, body, href)
+    .catch(() => false)
+    .then((shown) => shown || useToasts.getState().push({ id, href, title, body, avatar: { displayName: title, avatarUrl } }));
 }
 
 /** Tells you someone reacted to your message, with the same rules as for new messages. */
