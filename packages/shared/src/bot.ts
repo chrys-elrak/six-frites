@@ -17,6 +17,9 @@ import type { Locale } from "./i18n/index.js";
 /** Who the bot is in a game played against it, which never leaves the device. */
 export const BOT_ID = "bot";
 
+/** Frite Bot's account: everyone has a chat with it, where it starts games and takes its turns. */
+export const FRITE_BOT_ID = "frite-bot";
+
 /** The games the bot can start: it can't write statements or riddles, nor read a typed guess. */
 export const BOT_GAMES = ["rps", "dice", "guess", "penalty", "hangman", "ships", "ttt", "four"] as const satisfies GameKind[];
 export type BotGame = (typeof BOT_GAMES)[number];
@@ -102,9 +105,13 @@ const TTT_RANK = [1, 2, 1, 2, 0, 2, 1, 2, 1];
  * one that doesn't hand over a win, the most central first with a little luck between equals.
  * ponytail: looks one move ahead, so forks beat it; add a minimax search if it should play perfectly.
  */
-export function botBoardMove(game: Extract<ChatGame, { game: BoardKind }>, moves: GameMoveDTO[]): GameMove | null {
+export function botBoardMove(
+  game: Extract<ChatGame, { game: BoardKind }>,
+  moves: GameMoveDTO[],
+  botId = BOT_ID,
+): GameMove | null {
   const kind = game.game;
-  const g = boardGame(game, BOT_ID, moves);
+  const g = boardGame(game, botId, moves);
   if (g.over || g.turn !== 0 || !g.opponent) return null;
   const options = openings(kind, g.board);
   const safe = options.filter((n) => {

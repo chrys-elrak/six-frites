@@ -28,6 +28,8 @@ import {
   MAX_REACTIONS_PER_USER,
   isTurnMove,
   maskSpoilers,
+  FRITE_BOT_ID,
+  botBoardMove,
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
@@ -431,6 +433,10 @@ export async function sendMessage(
       createMessage(tx, emit, userId, chatId, ready, { sessionId }),
     );
     await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
+    if (recipients.includes(FRITE_BOT_ID) && message.type === "text") {
+      const { botReply } = await import("./bot.js");
+      await botReply(userId, chatId).catch((err) => console.error("Frite Bot could not answer:", err.message));
+    }
     return toMessageDTO(message, userId);
   } catch (err) {
     if ((err as { code?: string }).code !== "P2002") throw err;
@@ -580,7 +586,15 @@ export async function playGame(userId: string, messageId: string, move: GameMove
     if (message.moves.length >= MAX_GAME_MOVES) throw new AppError("CONFLICT", "This game is over");
 
     await tx.gameMove.create({ data: { messageId, userId, move } });
-    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    let updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    const game = toMessageDTO(updated, userId);
+    if (message.senderId === FRITE_BOT_ID && (game.game?.game === "ttt" || game.game?.game === "four")) {
+      const answer = botBoardMove(game.game, game.moves, FRITE_BOT_ID);
+      if (answer) {
+        await tx.gameMove.create({ data: { messageId, userId: FRITE_BOT_ID, move: answer } });
+        updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+      }
+    }
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
   });

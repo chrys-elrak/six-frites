@@ -1,8 +1,11 @@
 "use client";
 
 import { LOCALES, LOCALE_NAMES, isLocale } from "@six/shared";
-import { LogOut } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { openBotChat } from "@/lib/chats";
 import { useDataSaver } from "@/lib/data-saver";
 import { signOut } from "@/lib/e2ee";
 import { useLocale, useT } from "@/lib/i18n";
@@ -76,6 +79,40 @@ function FontPicker() {
 }
 
 /** When this web build was made, and its id, the same one /version reports. */
+/** Opens the chat with Frite Bot, bringing it back to the chat list after it was deleted. */
+function FriteBotSettings() {
+  const tr = useT();
+  const qc = useQueryClient();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  async function open() {
+    setBusy(true);
+    const chat = await openBotChat(qc).catch(() => null);
+    setBusy(false);
+    if (chat) router.push(`/chats/${chat.id}`);
+  }
+  return (
+    <section className="space-y-3">
+      <SectionTitle>{tr.common.games}</SectionTitle>
+      <Card>
+        <button
+          type="button"
+          onClick={() => void open()}
+          disabled={busy}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.03] disabled:opacity-60 dark:hover:bg-white/5"
+        >
+          <img src="/frite-bot.svg" alt="" className="size-10 rounded-full" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">{tr.calls.bot}</span>
+            <span className="block text-sm text-stone-500 dark:text-stone-400">{tr.calls.botHint}</span>
+          </span>
+          <ChevronRight className="size-4 text-stone-400" />
+        </button>
+      </Card>
+    </section>
+  );
+}
+
 function DataSaverSettings() {
   const tr = useT();
   const saver = useDataSaver();
@@ -128,6 +165,7 @@ export function SettingsPanel() {
           <QuickReactionsSettings />
           <NotificationSettings />
           <DataSaverSettings />
+          <FriteBotSettings />
           <Referrals />
           <AppLockSettings />
           <EncryptionSettings />

@@ -46,6 +46,8 @@ model User {
   inviteLimit     Int       @default(10)
   queuedAt        DateTime?
   guest           Boolean   @default(false)
+  /// The app language last seen for this account, for what Frite Bot says.
+  locale          String?
   adsDisabled     Boolean   @default(false)
   /// Turned off the questions the Six Frites bot sends to their anonymous inbox.
   anonBotDisabled Boolean   @default(false)

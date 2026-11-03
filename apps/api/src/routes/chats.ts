@@ -1,6 +1,9 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { openBotChat, startBotGame } from "../services/bot.js";
 import { z } from "zod";
 import {
+  BOT_GAMES,
+  LOCALES,
   ChatDTO,
   ChatDeliveredDTO,
   ChatListQuery,
@@ -86,6 +89,39 @@ const security = [{ bearer: [] }];
 
 const chatRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook("onRequest", app.requireAuth);
+
+  app.post(
+    "/bot",
+    {
+      config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["chats"],
+        summary: "Your chat with Frite Bot",
+        description:
+          "Made the first time, with a hello in `locale`, which Frite Bot also answers in. With `open` it comes back to the chat list after you deleted it for yourself.",
+        security,
+        body: z.object({ locale: z.enum(LOCALES), open: z.boolean() }),
+        response: { 200: ChatDTO },
+      },
+    },
+    (req) => openBotChat(req.auth.userId, req.body.locale, req.body.open),
+  );
+
+  app.post(
+    "/bot/games",
+    {
+      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["chats"],
+        summary: "Have Frite Bot start a game in your chat with it",
+        description: "It sends the game as its own message; answer it like any game. On the boards it takes its turn right after yours.",
+        security,
+        body: z.object({ kind: z.enum(BOT_GAMES), locale: z.enum(LOCALES) }),
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => startBotGame(req.auth.userId, req.body.kind, req.body.locale),
+  );
 
   app.post(
     "/support",

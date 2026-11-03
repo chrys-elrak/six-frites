@@ -6,6 +6,7 @@ import {
   type DotsState,
   EightsMove,
   type EightsState,
+  FRITE_BOT_ID,
   FanoronaMove,
   type FanoronaState,
   LIVE_CHAT_LINES,
@@ -337,7 +338,7 @@ function hostRoom(userId: string, roomId: string) {
  * notification, and the invite in our chat, sent silently since the notification already rang.
  */
 export async function createRoom(userId: string, input: CreateLiveInput) {
-  const invite = [...new Set(input.invite)].filter((id) => id !== userId);
+  const invite = [...new Set(input.invite)].filter((id) => id !== userId && id !== FRITE_BOT_ID);
   if (invite.length >= LIVE_SEATS[input.game].max) throw new AppError("ROOM_FULL", "Too many people for this game");
   const blocked = await blockedWith(prisma, userId);
   const chats = await prisma.chat.findMany({

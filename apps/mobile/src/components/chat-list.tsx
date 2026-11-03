@@ -9,7 +9,7 @@ import {
   shownType,
 } from "@six/shared";
 import { unwrap } from "@six/sdk";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { router, useFocusEffect } from "expo-router";
 import {
@@ -30,7 +30,7 @@ import {
   PhoneMissed,
   Pin,
   Search,
-  LifeBuoy,
+  Headset,
   Share2,
   Timer,
   UserPlus,
@@ -39,7 +39,7 @@ import {
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
-import { isFrozen, useChats } from "@/lib/chats";
+import { ensureBotChat, isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
 import { formatDuration, listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -316,6 +316,10 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const meId = useSession((s) => s.user!.id);
   const chats = useChats(archived);
   const archivedChats = useChats(true);
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!archived && chats.data) ensureBotChat(qc, chats.data);
+  }, [archived, chats.data, qc]);
   const { status } = useRealtime();
   const statusText = {
     connecting: tr.common.connecting,
@@ -364,21 +368,6 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           )}
         </Pressable>
       )}
-      {view === "chats" && !needle && (
-        <Pressable onPress={() => router.push("/bot")} style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}>
-          <View style={styles.botAvatar}>
-            <Text style={{ fontSize: 28 }}>🤖</Text>
-          </View>
-          <View style={styles.rowBody}>
-            <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
-              {tr.calls.bot}
-            </Text>
-            <Text numberOfLines={1} style={[styles.preview, { color: t.muted }]}>
-              {tr.calls.botHint}
-            </Text>
-          </View>
-        </Pressable>
-      )}
     </>
   );
 
@@ -396,7 +385,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             </View>
             {!archived && (
               <>
-                <IconButton Icon={LifeBuoy} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
+                <IconButton Icon={Headset} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
                 <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
                 <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
               </>
@@ -489,7 +478,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
               <Text style={[styles.note, { color: t.muted, textAlign: "center" }]}>{tr.chats.filterEmpty}</Text>
             ) : (
               <EmptyState
-                Icon={archived ? Archive : desk ? LifeBuoy : MessageCircle}
+                Icon={archived ? Archive : desk ? Headset : MessageCircle}
                 title={archived ? tr.chats.noArchived : tr.chats.noChats}
               >
                 {!archived && !desk && (
@@ -514,14 +503,6 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
 const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
-  botAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(235,138,0,0.15)",
-  },
   rowBody: { flex: 1, minWidth: 0, gap: 2 },
   rowLine: { flexDirection: "row", alignItems: "center", gap: 6 },
   name: { flexShrink: 1, fontSize: 16, fontWeight: "600" },

@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage, updateChatSettings } from "@/lib/actions";
-import { useChat } from "@/lib/chats";
+import { isBotChat, useChat } from "@/lib/chats";
 import { useIsAdmin } from "@/lib/admin";
 import { useLongPress } from "@/lib/long-press";
 import { useComposerMode } from "@/lib/composer";
@@ -45,6 +45,7 @@ import { isTouch } from "@/lib/camera";
 import { shortRule } from "@/lib/ephemeral";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { ChecklistDialog } from "./checklist";
+import { BotGames } from "./bot-games";
 import { GameDialog } from "./game";
 import { currentPosition } from "./location-card";
 import { EmojiSuggestions, useEmojiSuggestions } from "./emoji-suggestions";
@@ -133,6 +134,7 @@ export function Composer({
   const [askLocation, setAskLocation] = useState(false);
   const [writingChecklist, setWritingChecklist] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
+  const withBot = !!chat && isBotChat(chat);
   const [camera, setCamera] = useState(false);
   const recorder = useRecorder();
   const [recMode, setRecMode] = useState<RecordMode>("voice");
@@ -1000,7 +1002,12 @@ export function Composer({
       {writingChecklist && (
         <ChecklistDialog onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
-      {startingGame && <GameDialog onClose={() => setStartingGame(false)} onSend={(game) => sendSpecial({ game })} />}
+      {startingGame &&
+        (withBot ? (
+          <BotGames onClose={() => setStartingGame(false)} />
+        ) : (
+          <GameDialog onClose={() => setStartingGame(false)} onSend={(game) => sendSpecial({ game })} />
+        ))}
       {scheduling && (
         <ScheduleDialog
           title={tr.composer.scheduleMessage}

@@ -1,7 +1,30 @@
 import { unwrap } from "@six/sdk";
-import type { ChatDTO, MessageDTO } from "@six/shared";
+import { type ChatDTO, FRITE_BOT_ID, type MessageDTO } from "@six/shared";
 import { type InfiniteData, type QueryClient, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { getLocale } from "./i18n";
 import { six } from "./six";
+
+export const isBotChat = (chat: Pick<ChatDTO, "members">) => chat.members.some((m) => m.user.id === FRITE_BOT_ID);
+
+let botChecked = false;
+
+/** Makes the chat with Frite Bot the first time, once a session, without bringing back one the user deleted. */
+export function ensureBotChat(qc: QueryClient, chats: ChatDTO[]) {
+  if (botChecked) return;
+  botChecked = true;
+  if (chats.some(isBotChat)) return;
+  void six.api
+    .POST("/v1/bot", { body: { locale: getLocale(), open: false } })
+    .then(() => qc.invalidateQueries({ queryKey: chatKeys.lists }))
+    .catch(() => (botChecked = false));
+}
+
+/** Brings Frite Bot's chat back to the chat list, for opening it. */
+export async function openBotChat(qc: QueryClient) {
+  const chat = unwrap(await six.api.POST("/v1/bot", { body: { locale: getLocale(), open: true } }));
+  void qc.invalidateQueries({ queryKey: chatKeys.lists });
+  return chat;
+}
 
 export interface MessagePage {
   items: MessageDTO[];

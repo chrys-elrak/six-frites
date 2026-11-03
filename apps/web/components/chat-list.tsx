@@ -26,19 +26,19 @@ import {
   MoreHorizontal,
   Pin,
   Search,
-  LifeBuoy,
+  Headset,
   Share2,
   UserPlus,
 } from "lucide-react";
 import { unwrap } from "@six/sdk";
 import { useOutbox } from "@/lib/outbox";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { six } from "@/lib/six";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
-import { useChats } from "@/lib/chats";
+import { ensureBotChat, useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { usePresence, useWatchPresence } from "@/lib/presence";
@@ -325,6 +325,10 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   const hasAppLock = useSession((s) => s.user!.hasAppLock);
   const archiveOpen = useAppLock((s) => s.archiveOpen);
   const chats = useChats(archived);
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!archived && chats.data) ensureBotChat(qc, chats.data);
+  }, [archived, chats.data, qc]);
   const archivedChats = useChats(true);
   const { status } = useRealtime();
   const pathname = usePathname();
@@ -399,7 +403,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
               title={tr.support.contact}
               className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
             >
-              <LifeBuoy className="size-5" />
+              <Headset className="size-5" />
             </button>
             <button
               onClick={() => setDialog("invite")}
@@ -504,20 +508,6 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                 )}
               </Link>
             )}
-            {filtering && view === "chats" && !needle && (
-              <Link
-                href="/bot"
-                className={`flex items-center gap-3 px-4 py-3 transition active:bg-black/5 dark:active:bg-white/10 ${
-                  pathname === "/bot" ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
-                }`}
-              >
-                <span className="grid size-14 shrink-0 place-items-center rounded-full bg-brand/15 text-3xl">🤖</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{tr.calls.bot}</span>
-                  <span className="block truncate text-sm text-stone-500 dark:text-stone-400">{tr.calls.botHint}</span>
-                </span>
-              </Link>
-            )}
             {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
             {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
             {chats.isSuccess && needle && visible.length === 0 && (
@@ -529,7 +519,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                   {archived ? (
                     <Archive className="size-8" strokeWidth={1.6} />
                   ) : desk ? (
-                    <LifeBuoy className="size-8" strokeWidth={1.6} />
+                    <Headset className="size-8" strokeWidth={1.6} />
                   ) : (
                     <MessageCircle className="size-8" strokeWidth={1.6} />
                   )}

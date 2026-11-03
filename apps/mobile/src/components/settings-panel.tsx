@@ -30,6 +30,8 @@ import { brand, brandInk, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
 import { AppLockSettings } from "./app-lock";
+import { router } from "expo-router";
+import { openBotChat } from "@/lib/chats";
 import { Avatar } from "./avatar";
 import { QrCode } from "./qr-code";
 import { NewContactLink, NewInvite, quotaQuery } from "./invites";
@@ -231,6 +233,39 @@ function FontPicker() {
           value={!plain}
           onChange={(on) => setPlainFont(!on)}
         />
+      </Card>
+    </View>
+  );
+}
+
+/** Opens the chat with Frite Bot, bringing it back to the chat list after it was deleted. */
+function FriteBotSettings() {
+  const t = useTheme();
+  const tr = useT();
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  async function open() {
+    setBusy(true);
+    const chat = await openBotChat(qc).catch(() => null);
+    setBusy(false);
+    if (chat) router.push(`/chats/${chat.id}`);
+  }
+  return (
+    <View>
+      <SectionTitle>{tr.common.games}</SectionTitle>
+      <Card>
+        <Pressable
+          onPress={() => void open()}
+          disabled={busy}
+          style={({ pressed }) => [styles.cardRow, pressed && { backgroundColor: t.pressed }]}
+        >
+          <Avatar user={{ displayName: tr.calls.bot, avatarUrl: `${WEB_URL}/frite-bot.svg` }} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.calls.bot}</Text>
+            <Text style={{ color: t.muted, fontSize: 13 }}>{tr.calls.botHint}</Text>
+          </View>
+          <ChevronRight size={18} color={t.muted} />
+        </Pressable>
       </Card>
     </View>
   );
@@ -627,6 +662,7 @@ export function SettingsPanel() {
         <QuickReactionsSettings />
         <NotificationSettings />
         <DataSaverSettings />
+        <FriteBotSettings />
         <Referrals />
         <Devices />
         <EncryptionSettings />

@@ -14,6 +14,7 @@ import {
   parseCommand,
   silentMessage,
   suggestEmoji,
+  FRITE_BOT_ID,
 } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
 import { unwrap } from "@six/sdk";
@@ -68,6 +69,7 @@ import { six } from "@/lib/six";
 import { brand, brandInk, flame, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { NewChecklist } from "./checklist";
+import { BotGames } from "./bot-games";
 import { NewGame } from "./game";
 import { currentPosition } from "./location-card";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
@@ -163,6 +165,7 @@ export function Composer({
   const [askLocation, setAskLocation] = useState(false);
   const [writingChecklist, setWritingChecklist] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
+  const withBot = !!chat?.members.some((m) => m.user.id === FRITE_BOT_ID);
   const [recMode, setRecMode] = useState<RecordMode>("voice");
   const [capture, setCapture] = useState<{ kind: RecordMode; muted?: boolean; spoiler?: boolean } | null>(null);
   const captureNow = useRef(capture);
@@ -912,7 +915,12 @@ export function Composer({
       {writingChecklist && (
         <NewChecklist onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
-      {startingGame && <NewGame onClose={() => setStartingGame(false)} onSend={(game) => sendSpecial({ game })} />}
+      {startingGame &&
+        (withBot ? (
+          <BotGames onClose={() => setStartingGame(false)} />
+        ) : (
+          <NewGame onClose={() => setStartingGame(false)} onSend={(game) => sendSpecial({ game })} />
+        ))}
       {scheduling && (
         <ScheduleDialog
           title={tr.composer.scheduleMessage}
