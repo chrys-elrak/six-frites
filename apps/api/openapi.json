@@ -2460,6 +2460,10 @@
                             ],
                             "additionalProperties": false
                           },
+                          "recipientAskCode": {
+                            "type": "string",
+                            "description": "The recipient's own anonymous link code, as it is now; for the URL, see askUrl"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -2487,6 +2491,7 @@
                           "voiceUrl",
                           "sender",
                           "recipient",
+                          "recipientAskCode",
                           "createdAt",
                           "senderDeletedAt",
                           "recipientDeletedAt"

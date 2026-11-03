@@ -276,6 +276,7 @@ describe("anonymous messages", () => {
       text: "hi there",
       sender: { id: fan.user.id },
       recipient: { id: owner.user.id },
+      recipientAskCode: owner.user.askCode,
       senderDeletedAt: expect.any(String),
       recipientDeletedAt: expect.any(String),
     });

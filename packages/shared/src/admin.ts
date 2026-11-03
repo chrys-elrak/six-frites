@@ -113,6 +113,7 @@ export const AdminAnonDTO = z.object({
   voiceUrl: z.string().url().nullable(),
   sender: AdminUserRef,
   recipient: AdminUserRef,
+  recipientAskCode: z.string().describe("The recipient's own anonymous link code, as it is now; for the URL, see askUrl"),
   createdAt: IsoDate,
   senderDeletedAt: IsoDate.nullable(),
   recipientDeletedAt: IsoDate.nullable().describe("Also set when the recipient had blocked the sender"),

@@ -329,6 +329,7 @@ export async function listAnonForAdmin(q: AdminAnonQuery) {
     voiceUrl: m.voiceKey ? presignGet(m.voiceKey, undefined, EPHEMERAL_LINK_SECONDS) : null,
     sender: toUserRef(m.sender!),
     recipient: toUserRef(m.recipient),
+    recipientAskCode: m.recipient.askCode,
     createdAt: m.createdAt.toISOString(),
     senderDeletedAt: m.senderDeletedAt?.toISOString() ?? null,
     recipientDeletedAt: m.recipientDeletedAt?.toISOString() ?? null,

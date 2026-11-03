@@ -1198,6 +1198,8 @@ export interface paths {
                                      */
                                     banScope: "full" | "chat";
                                 };
+                                /** @description The recipient's own anonymous link code, as it is now; for the URL, see askUrl */
+                                recipientAskCode: string;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
