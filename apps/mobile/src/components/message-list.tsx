@@ -690,7 +690,19 @@ function ResealPrompt({
   const label = { color: brand, fontSize: 12, fontWeight: "600" } as const;
   const action = { flexDirection: "row", alignItems: "center", gap: 4 } as const;
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 8, rowGap: 2, marginTop: 2 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignItems: "center",
+        alignSelf: "stretch",
+        justifyContent: mine ? "flex-end" : "flex-start",
+        columnGap: 8,
+        rowGap: 2,
+        marginTop: 2,
+        paddingHorizontal: 6,
+      }}
+    >
       {note && <Text style={{ color: t.muted, fontSize: 12 }}>{note}</Text>}
       {restorable && (
         <Pressable onPress={() => setRestoring(true)} hitSlop={6} style={action}>
