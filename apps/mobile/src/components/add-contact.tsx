@@ -13,7 +13,7 @@ import { useTheme } from "@/lib/theme";
 import { FoundUser, findErrorText } from "./found-user";
 import { IconButton, PrimaryButton } from "./ui";
 
-function QrScanner({ onScan }: { onScan: (value: string) => void }) {
+export function QrScanner({ onScan }: { onScan: (value: string) => void }) {
   const t = useTheme();
   const tr = useT();
   const { width } = useWindowDimensions();

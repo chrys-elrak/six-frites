@@ -5,11 +5,12 @@ import { signInMessage } from "@six/shared";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
 import { InviteCard, invitePreviewQuery } from "@/components/invite-card";
 import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
+import { PhoneLink } from "@/components/phone-link";
 import { unlock } from "@/lib/app-lock";
 import { deviceId, deviceName, useSession } from "@/lib/session";
 import { AndroidDownload } from "@/components/android-download";
@@ -29,6 +30,15 @@ function LoginForm() {
   const [error, setError] = useState<{ text: string; queued: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const signingIn = useRef(false);
+  const [computer, setComputer] = useState(false);
+
+  useEffect(() => setComputer(matchMedia("(pointer: fine)").matches), []);
+
+  const onLinked = useCallback(() => {
+    signingIn.current = true;
+    unlock();
+    router.replace(home);
+  }, [router, home]);
 
   useEffect(() => {
     if (status !== "authed" || signingIn.current) return;
@@ -96,6 +106,7 @@ function LoginForm() {
             {error.text}
           </p>
         )}
+        {computer && !inviteCode && <PhoneLink onLinked={onLinked} />}
         <Link href="/support" className="block text-center text-sm font-medium text-brand hover:underline">
           {tr.support.chatWithSupport}
         </Link>

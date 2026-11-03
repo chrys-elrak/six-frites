@@ -48,3 +48,37 @@ export const SessionDTO = z.object({
   current: z.boolean(),
 });
 export type SessionDTO = z.infer<typeof SessionDTO>;
+
+export const LinkTicket = z.object({
+  id: Id,
+  secret: z.string(),
+  expiresAt: IsoDate,
+});
+export type LinkTicket = z.infer<typeof LinkTicket>;
+
+export const StartLinkInput = z.object({ device: DeviceInfo });
+export type StartLinkInput = z.infer<typeof StartLinkInput>;
+
+export const ClaimLinkInput = z.object({ id: Id, secret: z.string().min(1).max(100) });
+export type ClaimLinkInput = z.infer<typeof ClaimLinkInput>;
+
+export const LinkClaim = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("waiting") }),
+  AuthResult.extend({
+    status: z.literal("linked"),
+    sealedKey: z
+      .string()
+      .nullable()
+      .describe("The account's backup key, sealed by the phone to the one-time key in the QR code; the server can't open it"),
+  }),
+]);
+export type LinkClaim = z.infer<typeof LinkClaim>;
+
+export const LinkPreview = z.object({ platform: Platform, deviceName: z.string().nullable() });
+export type LinkPreview = z.infer<typeof LinkPreview>;
+
+export const ApproveLinkInput = z.object({
+  secret: z.string().min(1).max(100),
+  sealedKey: z.string().max(500).nullable(),
+});
+export type ApproveLinkInput = z.infer<typeof ApproveLinkInput>;

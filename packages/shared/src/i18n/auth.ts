@@ -45,6 +45,8 @@ const en = {
   browser: "Browser",
   unknownOs: "Unknown OS",
   deviceName: (browser: string, os: string) => `${browser} on ${os}`,
+  linkWithPhone: "Sign in with your phone",
+  linkSteps: "On your phone, open Six Frites, go to Settings, tap Link a computer and scan this code.",
 };
 
 const fr: typeof en = {
@@ -96,6 +98,8 @@ const fr: typeof en = {
   browser: "Navigateur",
   unknownOs: "OS inconnu",
   deviceName: (browser, os) => `${browser} sur ${os}`,
+  linkWithPhone: "Se connecter avec son téléphone",
+  linkSteps: "Sur votre téléphone, ouvrez Six Frites, allez dans Paramètres, touchez Associer un ordinateur et scannez ce code.",
 };
 
 const mg: typeof en = {
@@ -145,6 +149,8 @@ const mg: typeof en = {
   browser: "Navigateur",
   unknownOs: "OS tsy fantatra",
   deviceName: (browser, os) => `${browser} amin'ny ${os}`,
+  linkWithPhone: "Hiditra amin'ny finday",
+  linkSteps: "Amin'ny findainao, sokafy ny Six Frites, mankanesa any amin'ny Paramètres, tsindrio ny Hampifandray solosaina ary scanne ity kaody ity.",
 };
 
 export default { en, fr, mg };

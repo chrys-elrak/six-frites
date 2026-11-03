@@ -215,6 +215,291 @@
         }
       }
     },
+    "/v1/auth/link": {
+      "post": {
+        "summary": "Start signing in this computer by scanning a QR code with a signed-in phone",
+        "tags": [
+          "auth"
+        ],
+        "description": "Show `id` and `secret` in a QR code, with a one-time X25519 public key the phone seals the backup key to. Expires after two minutes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device": {
+                    "type": "object",
+                    "properties": {
+                      "platform": {
+                        "type": "string",
+                        "enum": [
+                          "web",
+                          "ios",
+                          "android"
+                        ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      "id": {
+                        "description": "A random ID the app keeps for this browser or phone; bans and anonymous blocks also cover other accounts used on it",
+                        "type": "string",
+                        "pattern": "^[\\w-]{16,64}$"
+                      }
+                    },
+                    "required": [
+                      "platform"
+                    ]
+                  }
+                },
+                "required": [
+                  "device"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "secret": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "secret",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/link/claim": {
+      "post": {
+        "summary": "Check whether a phone has approved this computer",
+        "tags": [
+          "auth"
+        ],
+        "description": "`waiting` until then; once approved it signs in like /google, once only. LINK_NOT_FOUND when the code expired or was used.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "secret": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "id",
+                  "secret"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "waiting"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "accessTokenExpiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "refreshToken": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "email": {
+                              "type": "string",
+                              "format": "email",
+                              "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "avatarUrl": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "contactCode": {
+                              "type": "string",
+                              "description": "Share it (or its QR code) so people can find you"
+                            },
+                            "askCode": {
+                              "type": "string",
+                              "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                            },
+                            "backupKeyId": {
+                              "nullable": true,
+                              "description": "Identifies the key from your recovery key; null until you set up a recovery key",
+                              "type": "string"
+                            },
+                            "hasBackupPin": {
+                              "type": "boolean",
+                              "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                            },
+                            "hasAppLock": {
+                              "type": "boolean",
+                              "description": "Whether the apps ask for your app lock code when they open"
+                            },
+                            "ads": {
+                              "type": "boolean",
+                              "description": "Whether the apps show you ads; admins can turn them off for you"
+                            },
+                            "anonBot": {
+                              "type": "boolean",
+                              "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                            },
+                            "quickReactions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "The emojis offered first when you react, in order; empty means the defaults"
+                            },
+                            "guest": {
+                              "type": "boolean",
+                              "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
+                            },
+                            "chatBan": {
+                              "nullable": true,
+                              "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                              "type": "object",
+                              "properties": {
+                                "until": {
+                                  "nullable": true,
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "termsAccepted": {
+                              "type": "boolean",
+                              "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "email",
+                            "displayName",
+                            "avatarUrl",
+                            "contactCode",
+                            "askCode",
+                            "backupKeyId",
+                            "hasBackupPin",
+                            "hasAppLock",
+                            "ads",
+                            "anonBot",
+                            "quickReactions",
+                            "guest",
+                            "chatBan",
+                            "termsAccepted",
+                            "createdAt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "linked"
+                          ]
+                        },
+                        "sealedKey": {
+                          "nullable": true,
+                          "description": "The account's backup key, sealed by the phone to the one-time key in the QR code; the server can't open it",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "accessToken",
+                        "accessTokenExpiresAt",
+                        "user",
+                        "status",
+                        "sealedKey"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/auth/refresh": {
       "post": {
         "summary": "Rotate the refresh token and get a new access token",
@@ -54234,6 +54519,134 @@
                     "hasMore"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/links/{id}": {
+      "get": {
+        "summary": "See which computer a scanned QR code would sign in",
+        "tags": [
+          "devices"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "secret",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "platform": {
+                      "type": "string",
+                      "enum": [
+                        "web",
+                        "ios",
+                        "android"
+                      ]
+                    },
+                    "deviceName": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "platform",
+                    "deviceName"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Sign in the computer showing this QR code as me",
+        "tags": [
+          "devices"
+        ],
+        "description": "`sealedKey` is my backup key sealed to the computer's one-time key, so it can read past messages.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "secret": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "sealedKey": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "secret",
+                  "sealedKey"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }

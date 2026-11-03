@@ -1,6 +1,8 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import {
   AddPreKeysInput,
+  ApproveLinkInput,
+  LinkPreview,
   BackupPinInput,
   BackupSecretDTO,
   ClaimPreKeysInput,
@@ -18,6 +20,7 @@ import {
   UserDTO,
 } from "@six/shared";
 import { z } from "zod";
+import { approveLink, previewLink } from "../services/auth.js";
 import { backupSecret, setBackupKey, setBackupPin, storeBackups, unlockBackup } from "../services/backups.js";
 import {
   addPreKeys,
@@ -32,6 +35,42 @@ const security = [{ bearer: [] }];
 
 const deviceRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook("onRequest", app.requireAuth);
+
+  app.get(
+    "/devices/links/:id",
+    {
+      config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["devices"],
+        summary: "See which computer a scanned QR code would sign in",
+        security,
+        params: z.object({ id: z.string() }),
+        querystring: z.object({ secret: z.string().min(1).max(100) }),
+        response: { 200: LinkPreview },
+      },
+    },
+    (req) => previewLink(req.params.id, req.query.secret),
+  );
+
+  app.post(
+    "/devices/links/:id",
+    {
+      config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["devices"],
+        summary: "Sign in the computer showing this QR code as me",
+        description: "`sealedKey` is my backup key sealed to the computer's one-time key, so it can read past messages.",
+        security,
+        params: z.object({ id: z.string() }),
+        body: ApproveLinkInput,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await approveLink(req.auth.userId, req.params.id, req.body);
+      return reply.status(204).send(null);
+    },
+  );
 
   app.put(
     "/devices/me",

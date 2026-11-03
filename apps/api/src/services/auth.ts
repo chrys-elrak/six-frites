@@ -1,5 +1,14 @@
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
-import { AppError, type AuthResult, type DeviceInfo, type GoogleLoginInput } from "@six/shared";
+import {
+  type ApproveLinkInput,
+  AppError,
+  type AuthResult,
+  type DeviceInfo,
+  type GoogleLoginInput,
+  type LinkTicket,
+  Platform,
+} from "@six/shared";
 import { env } from "../env.js";
 import type { User } from "../generated/prisma/client.js";
 import { type Tx, withEvents } from "../lib/events.js";
@@ -157,6 +166,75 @@ export async function refreshSession(refreshToken: string): Promise<IssuedAuth> 
     refreshToken: next.token,
     refreshTokenExpiresAt: expiresAt,
     user: toUserDTO(session.user),
+  };
+}
+
+const LINK_TTL_MS = 2 * 60 * 1000;
+const hashSecret = (secret: string) => createHash("sha256").update(secret).digest();
+
+/** Starts signing in a computer from a phone: the computer shows the ticket, with its own one-time key, as a QR code. */
+export async function startLink(device: DeviceInfo): Promise<LinkTicket> {
+  await prisma.deviceLink.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+  const secret = randomBytes(24).toString("base64url");
+  const link = await prisma.deviceLink.create({
+    data: {
+      secretHash: hashSecret(secret).toString("base64url"),
+      platform: device.platform,
+      deviceName: device.name ?? null,
+      deviceId: device.id ?? null,
+      expiresAt: new Date(Date.now() + LINK_TTL_MS),
+    },
+  });
+  return { id: link.id, secret, expiresAt: link.expiresAt.toISOString() };
+}
+
+async function openLink(id: string, secret: string) {
+  const link = await prisma.deviceLink.findUnique({ where: { id } });
+  const matches = link && timingSafeEqual(Buffer.from(link.secretHash, "base64url"), hashSecret(secret));
+  if (!link || !matches || link.expiresAt < new Date()) {
+    throw new AppError("LINK_NOT_FOUND", "That code has expired. Show a new one on the computer.");
+  }
+  return link;
+}
+
+/** What the phone shows before approving: the computer's browser and system, as it described itself. */
+export async function previewLink(id: string, secret: string) {
+  const link = await openLink(id, secret);
+  return { platform: Platform.parse(link.platform), deviceName: link.deviceName };
+}
+
+/** Signs the computer in as `userId`, once; it picks up its session on its next check. */
+export async function approveLink(userId: string, id: string, input: ApproveLinkInput) {
+  await openLink(id, input.secret);
+  const approved = await prisma.deviceLink.updateMany({
+    where: { id, userId: null },
+    data: { userId, sealedKey: input.sealedKey },
+  });
+  if (!approved.count) throw new AppError("LINK_NOT_FOUND", "That code was already used");
+}
+
+/**
+ * The computer's check: null until a phone approves, then a new session for that account, with the sealed
+ * backup key. The ticket is used up either way, so a copied secret can't sign in a second browser.
+ */
+export async function claimLink(id: string, secret: string): Promise<(IssuedAuth & { sealedKey: string | null }) | null> {
+  const link = await openLink(id, secret);
+  if (!link.userId) return null;
+  const { user, session, refresh } = await prisma.$transaction(async (tx) => {
+    const used = await tx.deviceLink.deleteMany({ where: { id, userId: link.userId } });
+    if (!used.count) throw new AppError("LINK_NOT_FOUND", "That code was already used");
+    const user = await tx.user.findUniqueOrThrow({ where: { id: link.userId! } });
+    checkBan(user);
+    await checkDeviceBan(tx, link.deviceId, user.email);
+    const device = { platform: Platform.parse(link.platform), name: link.deviceName ?? undefined, id: link.deviceId ?? undefined };
+    return { user, ...(await createSession(tx, user.id, device)) };
+  });
+  return {
+    ...(await issueAccess(user.id, session.id)),
+    refreshToken: refresh.token,
+    refreshTokenExpiresAt: session.expiresAt,
+    user: toUserDTO(user),
+    sealedKey: link.sealedKey,
   };
 }
 

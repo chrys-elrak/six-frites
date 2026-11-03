@@ -54,6 +54,7 @@ model User {
   quickReactions  String[]  @default([])
 
   sessions       Session[]
+  deviceLinks    DeviceLink[]
   invites        Invite[]
   askLinks       AskLink[]
   contactLinks   ContactLink[]
@@ -151,6 +152,25 @@ model Referral {
   invite   Invite @relation(fields: [inviteId], references: [id], onDelete: Cascade)
   referrer User   @relation("referrer", fields: [referrerId], references: [id], onDelete: Cascade)
   referee  User   @relation("referee", fields: [refereeId], references: [id], onDelete: Cascade)
+}
+
+/// A computer waiting to be signed in by scanning its QR code with a signed-in phone. Lives two minutes.
+model DeviceLink {
+  id         String   @id @default(cuid())
+  secretHash String
+  platform   String
+  deviceName String?
+  deviceId   String?
+  /// Who approved it from their phone; the computer gets a session for them on its next check.
+  userId     String?
+  /// The backup key sealed by the phone to the computer's one-time key, which the server never sees.
+  sealedKey  String?
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
 }
 
 model Session {

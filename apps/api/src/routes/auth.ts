@@ -1,9 +1,9 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { AppError, AuthResult, GoogleLoginInput, RefreshInput } from "@six/shared";
+import { AppError, AuthResult, ClaimLinkInput, GoogleLoginInput, LinkClaim, LinkTicket, RefreshInput, StartLinkInput } from "@six/shared";
 import { isProd } from "../env.js";
-import { type IssuedAuth, loginWithGoogle, logout, refreshSession } from "../services/auth.js";
+import { type IssuedAuth, claimLink, loginWithGoogle, logout, refreshSession, startLink } from "../services/auth.js";
 
 const REFRESH_COOKIE = "six_rt";
 const cookiePath = "/v1/auth";
@@ -37,6 +37,43 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const issued = await loginWithGoogle(req.body);
       return respond(req, reply, issued, req.body.device.platform === "web");
+    },
+  );
+
+  app.post(
+    "/link",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["auth"],
+        summary: "Start signing in this computer by scanning a QR code with a signed-in phone",
+        description:
+          "Show `id` and `secret` in a QR code, with a one-time X25519 public key the phone seals the backup key to. Expires after two minutes.",
+        body: StartLinkInput,
+        response: { 200: LinkTicket },
+      },
+    },
+    (req) => startLink(req.body.device),
+  );
+
+  app.post(
+    "/link/claim",
+    {
+      config: { rateLimit: { max: 90, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["auth"],
+        summary: "Check whether a phone has approved this computer",
+        description:
+          "`waiting` until then; once approved it signs in like /google, once only. LINK_NOT_FOUND when the code expired or was used.",
+        body: ClaimLinkInput,
+        response: { 200: LinkClaim },
+      },
+    },
+    async (req, reply) => {
+      const claimed = await claimLink(req.body.id, req.body.secret);
+      if (!claimed) return { status: "waiting" as const };
+      const { sealedKey, ...issued } = claimed;
+      return { status: "linked" as const, sealedKey, ...respond(req, reply, issued, true) };
     },
   );
 

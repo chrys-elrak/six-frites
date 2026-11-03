@@ -1,3 +1,4 @@
+import { generateLinkKey } from "@six/crypto";
 import { E2EE, type SecretStore, unwrap } from "@six/sdk";
 import type { paths } from "@six/sdk";
 import type { MessageDTO } from "@six/shared";
@@ -201,6 +202,24 @@ describe("E2EE client", () => {
     const newPhone = appFor((await loginAs(ctx.app, sub)).json());
     await newPhone.e2ee.unlockWithPin("123456");
     expect(await textOf(newPhone, await latest(newPhone, chatId))).toBe("read before the PIN");
+  });
+
+  it("hands a computer signed in by QR code the backup key, so it reads past messages without the PIN", async () => {
+    const { phone, chatId, members } = await setup();
+    const { backupKeyId } = await phone.e2ee.setBackupPin("123456");
+    await say(phone, chatId, members, "before the computer");
+
+    const key = generateLinkKey();
+    const post = (url: string, payload: object) => ctx.app.inject({ method: "POST", url, payload });
+    const ticket = (await post("/v1/auth/link", { device: { platform: "web" } })).json();
+    const sealedKey = await phone.e2ee.sealBackupKeyFor(key.pub);
+    expect((await call(phone.auth, "POST", `/v1/devices/links/${ticket.id}`, { secret: ticket.secret, sealedKey })).statusCode).toBe(204);
+    const claim = (await post("/v1/auth/link/claim", { id: ticket.id, secret: ticket.secret })).json();
+
+    const computer = appFor(claim);
+    await computer.e2ee.ready();
+    await computer.e2ee.adoptLinkedBackupKey(key, claim.sealedKey, backupKeyId);
+    expect(await textOf(computer, await latest(computer, chatId))).toBe("before the computer");
   });
 
   it("keeps the backup when the PIN changes and deletes it after 10 wrong PINs", async () => {

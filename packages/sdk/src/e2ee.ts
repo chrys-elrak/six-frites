@@ -22,6 +22,7 @@ import {
   identityToJSON,
   initiateSession,
   openBackup,
+  openWithLinkKey,
   publicIdentity,
   publicIdentityFromJSON,
   publicIdentityToJSON,
@@ -31,6 +32,7 @@ import {
   safetyNumber,
   sameIdentity,
   sealBackup,
+  sealToLinkKey,
   sessionFromJSON,
   sessionToJSON,
   unwrapBackupKey,
@@ -604,6 +606,18 @@ export class E2EE {
       throw new SixApiError(409, "BACKUP_KEY_MISMATCH", "That is not this account's recovery key");
     }
     await this.store.set("backupKey", b64(key));
+  }
+
+  /** This device's backup key sealed to a new computer's one-time link key, or null when this device has none. */
+  async sealBackupKeyFor(linkPub: Uint8Array) {
+    const key = await this.backupKey();
+    return key ? sealToLinkKey(linkPub, key) : null;
+  }
+
+  /** Keeps the backup key a phone sealed to this computer while linking it, so past messages open without the PIN. */
+  async adoptLinkedBackupKey(link: { priv: Uint8Array; pub: Uint8Array }, sealed: string, accountBackupKeyId: string | null) {
+    const key = openWithLinkKey(link, sealed);
+    if (backupKeyId(key) === accountBackupKeyId) await this.store.set("backupKey", b64(key));
   }
 
   /** The 12 emoji two people compare to check nobody is in between, covering all their devices. */

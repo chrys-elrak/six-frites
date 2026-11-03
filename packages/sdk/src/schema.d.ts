@@ -99,6 +99,155 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start signing in this computer by scanning a QR code with a signed-in phone
+         * @description Show `id` and `secret` in a QR code, with a one-time X25519 public key the phone seals the backup key to. Expires after two minutes.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        device: {
+                            /** @enum {string} */
+                            platform: "web" | "ios" | "android";
+                            name?: string;
+                            /** @description A random ID the app keeps for this browser or phone; bans and anonymous blocks also cover other accounts used on it */
+                            id?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            secret: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/link/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check whether a phone has approved this computer
+         * @description `waiting` until then; once approved it signs in like /google, once only. LINK_NOT_FOUND when the code expired or was used.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                        secret: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            status: "waiting";
+                        } | {
+                            accessToken: string;
+                            /** Format: date-time */
+                            accessTokenExpiresAt: string;
+                            refreshToken?: string;
+                            user: {
+                                id: string;
+                                /** Format: email */
+                                email: string;
+                                displayName: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** @description Share it (or its QR code) so people can find you */
+                                contactCode: string;
+                                /** @description Your link for anonymous messages is /ask/{askCode} on the web app */
+                                askCode: string;
+                                /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                                backupKeyId: string | null;
+                                /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                hasBackupPin: boolean;
+                                /** @description Whether the apps ask for your app lock code when they open */
+                                hasAppLock: boolean;
+                                /** @description Whether the apps show you ads; admins can turn them off for you */
+                                ads: boolean;
+                                /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                                anonBot: boolean;
+                                /** @description The emojis offered first when you react, in order; empty means the defaults */
+                                quickReactions: string[];
+                                /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
+                                guest: boolean;
+                                /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                                chatBan: {
+                                    /** Format: date-time */
+                                    until: string | null;
+                                } | null;
+                                /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                                termsAccepted: boolean;
+                                /** Format: date-time */
+                                createdAt: string;
+                            };
+                            /** @enum {string} */
+                            status: "linked";
+                            /** @description The account's backup key, sealed by the phone to the one-time key in the QR code; the server can't open it */
+                            sealedKey: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/refresh": {
         parameters: {
             query?: never;
@@ -15036,6 +15185,82 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices/links/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** See which computer a scanned QR code would sign in */
+        get: {
+            parameters: {
+                query: {
+                    secret: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            platform: "web" | "ios" | "android";
+                            deviceName: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Sign in the computer showing this QR code as me
+         * @description `sealedKey` is my backup key sealed to the computer's one-time key, so it can read past messages.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        secret: string;
+                        sealedKey: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

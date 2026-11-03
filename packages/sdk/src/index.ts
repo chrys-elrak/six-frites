@@ -1,4 +1,4 @@
-import type { AuthResult, GoogleLoginInput, Platform } from "@six/shared";
+import type { AuthResult, GoogleLoginInput, LinkClaim, Platform } from "@six/shared";
 import { unwrap } from "./errors.js";
 import { createRestClient } from "./rest.js";
 import { type UploadOptions, uploadFile } from "./uploads.js";
@@ -60,6 +60,13 @@ export function createSixClient(opts: SixClientOptions) {
       ) as AuthResult;
       await tokens.accept(result);
       return result.user;
+    },
+
+    /** Checks whether a phone approved this computer's QR code, and signs in once it has. */
+    async claimLink(id: string, secret: string) {
+      const claim = unwrap(await api.POST("/v1/auth/link/claim", { body: { id, secret } })) as LinkClaim;
+      if (claim.status === "linked") await tokens.accept(claim);
+      return claim;
     },
 
     /** Restores a session on app start (cookie on web, secure storage on native). */

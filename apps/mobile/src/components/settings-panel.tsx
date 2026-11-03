@@ -32,6 +32,7 @@ import { AppLockSettings } from "./app-lock";
 import { Avatar } from "./avatar";
 import { QrCode } from "./qr-code";
 import { NewContactLink, NewInvite, quotaQuery } from "./invites";
+import { LinkComputer } from "./link-computer";
 import { QuickReactionsSettings } from "./reactions";
 import { Sheet } from "./sheet";
 import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton, Toggle } from "./ui";
@@ -505,6 +506,7 @@ function Devices() {
     onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
   });
   const others = sessions.data?.filter((s) => !s.current).length ?? 0;
+  const [linking, setLinking] = useState(false);
 
   return (
     <View>
@@ -559,7 +561,16 @@ function Devices() {
             </View>
           );
         })}
+        <Divider />
+        <Pressable onPress={() => setLinking(true)} style={({ pressed }) => [styles.cardRow, pressed && { backgroundColor: t.pressed }]}>
+          <View style={[styles.deviceIcon, { backgroundColor: t.surfaceAlt }]}>
+            <Monitor size={20} color={brand} />
+          </View>
+          <Text style={{ flex: 1, color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.linkComputer}</Text>
+          <ChevronRight size={18} color={t.muted} />
+        </Pressable>
       </Card>
+      {linking && <LinkComputer onClose={() => setLinking(false)} />}
     </View>
   );
 }

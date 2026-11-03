@@ -85,6 +85,14 @@ const en = {
   systemHint: "Shows a notification when Six Frites is in the background.",
 
   devices: "Devices",
+  linkComputer: "Link a computer",
+  linkScanHint: "On your computer, open six-frites.koera.mg and scan the code shown there.",
+  linkConfirm: "Sign in on this computer?",
+  linkWarning: (device: string) =>
+    `${device} will be signed in to your account and can read your messages. Only continue if it's your own computer and you opened Six Frites on it yourself.`,
+  linkApprove: "Sign in",
+  linkDone: "Your computer is signed in.",
+  linkBadCode: "That isn't a Six Frites code, or it has expired. Show a new one on the computer.",
   logOutOthers: "Log out other devices",
   couldNotLoadDevices: "Couldn't load devices.",
   thisDevice: "This device",
@@ -285,6 +293,14 @@ const fr: typeof en = {
   systemHint: "Affiche une notification quand Six Frites est en arrière-plan.",
 
   devices: "Appareils",
+  linkComputer: "Associer un ordinateur",
+  linkScanHint: "Sur votre ordinateur, ouvrez six-frites.koera.mg et scannez le code affiché.",
+  linkConfirm: "Se connecter sur cet ordinateur ?",
+  linkWarning: (device) =>
+    `${device} sera connecté à votre compte et pourra lire vos messages. Continuez seulement si c'est votre ordinateur et que vous y avez ouvert Six Frites vous-même.`,
+  linkApprove: "Se connecter",
+  linkDone: "Votre ordinateur est connecté.",
+  linkBadCode: "Ce n'est pas un code Six Frites, ou il a expiré. Affichez-en un nouveau sur l'ordinateur.",
   logOutOthers: "Déconnecter les autres appareils",
   couldNotLoadDevices: "Impossible de charger les appareils.",
   thisDevice: "Cet appareil",
@@ -486,6 +502,14 @@ const mg: typeof en = {
   systemHint: "Mampiseho fampandrenesana rehefa miasa ao ambadika ny Six Frites.",
 
   devices: "Fitaovana",
+  linkComputer: "Hampifandray solosaina",
+  linkScanHint: "Amin'ny solosainao, sokafy ny six-frites.koera.mg ary scanne ny kaody miseho eo.",
+  linkConfirm: "Hiditra amin'ity solosaina ity?",
+  linkWarning: (device) =>
+    `Hiditra amin'ny kaontinao i ${device} ary afaka mamaky ny hafatrao. Tohizo raha ny solosainao manokana io ary ianao ihany no nanokatra ny Six Frites tao.`,
+  linkApprove: "Hiditra",
+  linkDone: "Tafiditra ny solosainao.",
+  linkBadCode: "Tsy kaody Six Frites io, na efa lany daty. Asehoy kaody vaovao amin'ny solosaina.",
   logOutOthers: "Avoahy amin'ny fitaovana hafa",
   couldNotLoadDevices: "Tsy nety niseho ny fitaovana.",
   thisDevice: "Ity fitaovana ity",
