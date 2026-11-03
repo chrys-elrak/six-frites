@@ -270,6 +270,26 @@ describe("E2EE client", () => {
     expect(await textOf(phone, await latest(phone, chatId))).toBe("before the tablet");
   });
 
+  it("treats a view-once message the recipient opened as gone, not unreadable", async () => {
+    const { phone, guest, chatId, members } = await setup();
+    const clientId = `m-${n++}`;
+    const sent = await phone.e2ee.send(chatId, members, clientId, { text: "only once" }, async (encrypted) =>
+      unwrap(
+        await phone.api.POST("/v1/chats/{id}/messages", {
+          params: { path: { id: chatId } },
+          body: { clientId, encrypted, ephemeral: { maxViews: 1 } },
+        }),
+      ),
+    );
+    const viewed = unwrap(await guest.api.POST("/v1/messages/{id}/view", { params: { path: { id: sent.id } } })).message;
+    expect(await textOf(guest, viewed)).toBe("only once");
+
+    const spent = await latest(guest, chatId);
+    expect(spent.ephemeral?.expired).toBe(true);
+    expect(await guest.e2ee.open(spent)).toEqual({ status: "unavailable", reason: "hidden" });
+    expect(await textOf(phone, await latest(phone, chatId))).toBe("only once");
+  });
+
   it("agrees on safety numbers and reports a reinstall", async () => {
     const { guestSub, phone, laptop, guest, chatId, members } = await setup();
     const number = await phone.e2ee.safetyNumber(guest.auth.user.id);
