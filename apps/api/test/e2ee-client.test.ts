@@ -204,6 +204,25 @@ describe("E2EE client", () => {
     expect(await textOf(newPhone, await latest(newPhone, chatId))).toBe("read before the PIN");
   });
 
+  it("reuses the device list between messages, and still reaches a device that signs in between", async () => {
+    const { guestSub, phone, chatId, members } = await setup();
+    let lookups = 0;
+    phone.api.use({
+      onRequest({ request }) {
+        if (new URL(request.url).pathname === "/v1/devices") lookups++;
+      },
+    });
+    await say(phone, chatId, members, "one");
+    await say(phone, chatId, members, "two");
+    expect(lookups).toBe(1);
+
+    const tablet = appFor((await loginAs(ctx.app, guestSub)).json());
+    await tablet.e2ee.ready();
+    await say(phone, chatId, members, "three");
+    expect(lookups).toBe(2);
+    expect(await textOf(tablet, await latest(tablet, chatId))).toBe("three");
+  });
+
   it("hands a computer signed in by QR code the backup key, so it reads past messages without the PIN", async () => {
     const { phone, chatId, members } = await setup();
     const { backupKeyId } = await phone.e2ee.setBackupPin("123456");

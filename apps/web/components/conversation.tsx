@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { startCall, useCall } from "@/lib/call";
-import { useIdentityChanges } from "@/lib/e2ee";
+import { e2ee, useIdentityChanges } from "@/lib/e2ee";
 import { useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
@@ -85,6 +85,11 @@ export function Conversation({ chatId }: { chatId: string }) {
   const selecting = useSelection((s) => s.chatId === chatId);
   const selectedIds = useSelection((s) => s.ids);
   const clearSelection = useSelection((s) => s.clear);
+
+  const encryptedFor = chat.data?.encrypted ? chat.data.members.map((m) => m.user.id).join(",") : null;
+  useEffect(() => {
+    if (encryptedFor) void e2ee()?.warmDevices(encryptedFor.split(",")).catch(() => null);
+  }, [encryptedFor]);
 
   useEffect(() => {
     setActiveChat(chatId);

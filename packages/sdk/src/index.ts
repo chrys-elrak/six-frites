@@ -69,11 +69,11 @@ export function createSixClient(opts: SixClientOptions) {
       return claim;
     },
 
-    /** Restores a session on app start (cookie on web, secure storage on native). */
+    /** Restores a session on app start (cookie on web, secure storage on native), with the account the refresh returns. */
     async resume() {
       const token = await tokens.refresh();
       if (!token) return null;
-      return unwrap(await api.GET("/v1/me"));
+      return tokens.user ?? unwrap(await api.GET("/v1/me"));
     },
 
     async logout() {

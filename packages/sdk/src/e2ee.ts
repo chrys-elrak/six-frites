@@ -105,6 +105,8 @@ const KEEP_SIGNED = 3;
 const KEEP_ONE_TIME = 400;
 const MAX_ARCHIVED = 2;
 
+const DEVICE_LIST_TTL = 2 * 60 * 1000;
+
 const backupLabel = (chatId: string, senderId: string, clientId: string) => utf8(`${chatId}:${senderId}:${clientId}`);
 
 const identityKey = (d: { signPub: string; dhPub: string }) => `${d.signPub}.${d.dhPub}`;
@@ -123,6 +125,7 @@ export class E2EE {
   private pendingBackups = new Map<string, string>();
   private backupTimer: ReturnType<typeof setTimeout> | null = null;
   private identityListeners = new Set<(userId: string) => void>();
+  private deviceLists = new Map<string, { at: number; devices: DeviceDTO[] }>();
 
   constructor(
     private readonly api: RestClient,
@@ -286,11 +289,26 @@ export class E2EE {
     return this.setJSON(`session:${deviceId}`, sessionToJSON(s));
   }
 
-  private async devicesOf(userIds: string[]) {
+  /**
+   * The devices of these people. With `cached`, a list fetched in the last two minutes will do: the server refuses
+   * envelopes for a stale list with DEVICES_CHANGED and send() then seals again from a fresh one.
+   */
+  private async devicesOf(userIds: string[], cached = false) {
+    const key = [...userIds].sort().join(",");
+    const hit = this.deviceLists.get(key);
+    // ponytail: a device that reset its keys under the same id is only noticed after two minutes; its owner can ask to resend
+    if (cached && hit && Date.now() - hit.at < DEVICE_LIST_TTL) return hit.devices;
     const devices = unwrap(await this.api.GET("/v1/devices", { params: { query: { userIds: userIds.join(",") } } }))
       .items as DeviceDTO[];
     for (const userId of userIds) await this.noteIdentities(userId, devices.filter((d) => d.userId === userId));
+    this.deviceLists.set(key, { at: Date.now(), devices });
     return devices;
+  }
+
+  /** Fetches a chat's devices as it opens, so its first message goes out in one round trip. */
+  async warmDevices(memberIds: string[]) {
+    await this.ready();
+    await this.serial(() => this.devicesOf(memberIds));
   }
 
   /** Remembers which identities a person has, and reports a change after the first sighting. */
@@ -307,12 +325,12 @@ export class E2EE {
    * Encrypts content for every device in a chat except this one, starting sessions where needed,
    * plus a backup copy when a recovery key is set up. `memberIds` are the chat's members.
    */
-  async seal(chatId: string, memberIds: string[], clientId: string, input: ContentInput): Promise<EncryptedInput> {
+  async seal(chatId: string, memberIds: string[], clientId: string, input: ContentInput, cached = false): Promise<EncryptedInput> {
     await this.ready();
     const content = MessageContentSchema.parse({ v: 1, chatId, clientId, ...input });
     return this.serial(async () => {
       const plaintext = utf8(JSON.stringify(content));
-      const envelopes = await this.encryptForAll(memberIds, plaintext);
+      const envelopes = await this.encryptForAll(memberIds, plaintext, cached);
       await this.setJSON(`sent:${chatId}:${clientId}`, content);
       const key = await this.backupKey();
       const backup = key ? sealBackup(key, plaintext, backupLabel(chatId, this.userId, clientId)) : undefined;
@@ -343,8 +361,8 @@ export class E2EE {
   }
 
   /** Encrypts for every device of these people but this one, starting sessions as needed. Runs inside serial(). */
-  private async encryptForAll(memberIds: string[], plaintext: Uint8Array) {
-    const devices = (await this.devicesOf(memberIds)).filter((d) => d.id !== this.deviceId);
+  private async encryptForAll(memberIds: string[], plaintext: Uint8Array, cached = false) {
+    const devices = (await this.devicesOf(memberIds, cached)).filter((d) => d.id !== this.deviceId);
     const missing: string[] = [];
     const sessions = new Map<string, Session>();
     for (const d of devices) {
@@ -387,7 +405,7 @@ export class E2EE {
     post: (encrypted: EncryptedInput) => Promise<T>,
   ): Promise<T> {
     for (let attempt = 0; ; attempt++) {
-      const encrypted = await this.seal(chatId, memberIds, clientId, input);
+      const encrypted = await this.seal(chatId, memberIds, clientId, input, attempt === 0);
       try {
         return await post(encrypted);
       } catch (err) {

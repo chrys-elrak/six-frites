@@ -16,7 +16,7 @@ import { brand, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { BubbleColorsContext } from "@/lib/bubble-colors";
 import { startCall, useCall } from "@/lib/calls";
-import { useHydratedMessage, useKeyChanges } from "@/lib/e2ee";
+import { e2eeFor, useHydratedMessage, useKeyChanges } from "@/lib/e2ee";
 import { useTyping } from "@/lib/typing";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
@@ -91,6 +91,11 @@ export function Conversation({ chatId }: { chatId: string }) {
   const selecting = useSelection((s) => s.chatId === chatId);
   const selectedIds = useSelection((s) => s.ids);
   const clearSelection = useSelection((s) => s.clear);
+  const encryptedFor = chat.data?.encrypted ? chat.data.members.map((m) => m.user.id).join(",") : null;
+
+  useEffect(() => {
+    if (encryptedFor) void e2eeFor(meId)?.warmDevices(encryptedFor.split(",")).catch(() => null);
+  }, [encryptedFor, meId]);
 
   useEffect(() => {
     setActiveChat(chatId);
