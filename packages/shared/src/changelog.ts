@@ -19,7 +19,7 @@ export const CHANGELOG: Release[] = [
       en: [
         "Sign in on a computer with your phone: open six-frites.koera.mg, then scan its code from Settings, Devices, Link a computer. Your past messages come along, no PIN needed.",
         "Long-press a message, like on Messenger: the reactions sit on top of it and the actions line up as icons at the bottom.",
-        "Games move to Frite Bot, pinned at the top of your chats: play against it straight away, or start a live game with friends. To play with someone, open your chat with them and tap Game.",
+        "Games move to Frite Bot, a chat of its own: tap Game there and it plays with you, or start a live game with friends. To play with someone, open your chat with them and tap Game. Don't want it? Delete the chat, and find it again in Settings.",
         "While the app is open, new messages from other chats show up as phone notifications.",
         "Data saver: photos, GIFs, videos and files download only when you tap them, and the photos you send are smaller. Turn it on in Settings, Data.",
         "No network? Your messages wait and go out by themselves when you're back online, and the chat list shows which chats still have some waiting.",
@@ -29,7 +29,7 @@ export const CHANGELOG: Release[] = [
       fr: [
         "Connectez-vous sur un ordinateur avec votre téléphone : ouvrez six-frites.koera.mg, puis scannez son code depuis Paramètres, Appareils, Associer un ordinateur. Vos anciens messages suivent, sans code PIN.",
         "Appui long sur un message, comme sur Messenger : les réactions s'affichent au-dessus et les actions en icônes en bas.",
-        "Les jeux passent chez Frite Bot, épinglé en haut de vos discussions : jouez contre lui tout de suite, ou lancez une partie en direct avec des amis. Pour jouer avec quelqu'un, ouvrez votre discussion avec lui et touchez Jeu.",
+        "Les jeux passent chez Frite Bot, une discussion à part : touchez Jeu et il joue avec vous, ou lancez une partie en direct avec des amis. Pour jouer avec quelqu'un, ouvrez votre discussion avec lui et touchez Jeu. Pas envie ? Supprimez la discussion, elle reste dans les Paramètres.",
         "Quand l'application est ouverte, les nouveaux messages des autres discussions s'affichent en notifications du téléphone.",
         "Économiseur de données : les photos, GIF, vidéos et fichiers ne se téléchargent que quand vous les touchez, et les photos que vous envoyez sont plus légères. À activer dans Paramètres, Données.",
         "Pas de réseau ? Vos messages attendent et partent tout seuls quand la connexion revient, et la liste des discussions montre celles où il en reste en attente.",
@@ -39,7 +39,7 @@ export const CHANGELOG: Release[] = [
       mg: [
         "Midira amin'ny solosaina amin'ny alalan'ny findainao: sokafy ny six-frites.koera.mg, dia scanne ny kaodiny avy amin'ny Paramètres, Fitaovana, Hampifandray solosaina. Miaraka aminy ny hafatrao taloha, tsy mila PIN.",
         "Tsindrio ela ny hafatra iray, toy ny amin'ny Messenger: eo amboniny ny fihetseham-po ary eo ambany ny asa miendrika sary kely.",
-        "Any amin'i Frite Bot, voahombo eo ambony indrindra amin'ny resakao, izao ny lalao: milalao miaraka aminy avy hatrany, na manomboka lalao mivantana miaraka amin'ny namana. Raha hilalao amin'olona, sokafy ny resakao aminy ary tsindrio ny Lalao.",
+        "Any amin'i Frite Bot izao ny lalao, resaka manokana: tsindrio ny Lalao ao dia hiara-milalao aminao izy, na manomboka lalao mivantana miaraka amin'ny namana. Raha hilalao amin'olona, sokafy ny resakao aminy ary tsindrio ny Lalao. Tsy tianao? Fafao ny resaka, mbola hita ao amin'ny Paramètres izy.",
         "Raha misokatra ny app, miseho ho fampandrenesana amin'ny finday ny hafatra vaovao avy amin'ny resaka hafa.",
         "Fitsitsiana angona: tsy misintona raha tsy tsindrianao ny sary, GIF, horonantsary ary rakitra, ary maivana kokoa ny sary alefanao. Alefaso ao amin'ny Paramètres, Angona.",
         "Tsy misy tambajotra? Miandry ny hafatrao ary lasa irery rehefa tafaverina ny fifandraisana, ary asehon'ny lisitry ny resaka izay mbola misy miandry.",
