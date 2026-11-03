@@ -36,7 +36,7 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
         <Text style={{ color: t.text, fontSize: 18, fontWeight: "700" }}>{found.user.displayName}</Text>
       </View>
       <PrimaryButton
-        title={found.chatId ? tr.contacts.openChat : tr.common.message}
+        title={found.chatId ? tr.contacts.openChat : tr.contacts.addContact}
         onPress={() => add.mutate()}
         disabled={add.isPending}
         busy={add.isPending}

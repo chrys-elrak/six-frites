@@ -35,7 +35,7 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
         <p className="text-lg font-semibold">{found.user.displayName}</p>
       </div>
       <PrimaryButton className="w-full" onClick={() => add.mutate()} disabled={add.isPending}>
-        {found.chatId ? tr.contacts.openChat : tr.common.message}
+        {found.chatId ? tr.contacts.openChat : tr.contacts.addContact}
       </PrimaryButton>
       {add.isError && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
