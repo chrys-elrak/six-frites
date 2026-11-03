@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,7 +22,7 @@ export function Sheet({
 }: {
   title?: string;
   header?: React.ReactNode;
-  floating?: React.ReactNode;
+  floating?: (sheetTop: number) => React.ReactNode;
   actions: SheetAction[];
   onClose: () => void;
 }) {
@@ -29,13 +30,17 @@ export function Sheet({
   const tr = useT();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
+  const [sheetTop, setSheetTop] = useState<number | null>(null);
 
   return (
     <Modal transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
-      {floating}
+      {sheetTop !== null && floating?.(sheetTop)}
       <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]} pointerEvents="box-none">
-        <View style={[styles.group, { backgroundColor: t.surface }]}>
+        <View
+          onLayout={(e) => setSheetTop(e.nativeEvent.layout.y)}
+          style={[styles.group, { backgroundColor: t.surface }]}
+        >
           {header && <View style={[styles.title, { borderColor: t.border }]}>{header}</View>}
           {title && (
             <View style={[styles.title, { borderColor: t.border }]}>

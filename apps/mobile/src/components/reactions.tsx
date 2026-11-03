@@ -214,12 +214,14 @@ export function ReactionPopover({
   mine,
   onPick,
   onMore,
+  sheetTop,
 }: {
   anchor: Anchor;
   alignRight: boolean;
   mine: string[];
   onPick: (emoji: string) => void;
   onMore: () => void;
+  sheetTop: number;
 }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
@@ -227,7 +229,7 @@ export function ReactionPopover({
   const [size, setSize] = useState({ width: 330, height: 52 });
 
   const above = anchor.y - size.height - 8;
-  const top = above >= insets.top + 8 ? above : anchor.y + anchor.height + 8;
+  const top = Math.min(above >= insets.top + 8 ? above : anchor.y + anchor.height + 8, sheetTop - size.height - 8);
   const preferred = alignRight ? anchor.x + anchor.width - size.width : anchor.x;
   const left = Math.min(Math.max(preferred, 8), screen - size.width - 8);
 

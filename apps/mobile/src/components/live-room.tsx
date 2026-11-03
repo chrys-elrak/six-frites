@@ -361,9 +361,10 @@ function RoomChat({
         )}
         {reacting && (
           <Sheet
-            floating={
+            floating={(sheetTop) => (
               <ReactionPopover
                 anchor={{ x: 0, y: reacting.y - 24, width, height: 48 }}
+                sheetTop={sheetTop}
                 alignRight={false}
                 mine={mineOn(reacting.id)}
                 onPick={(e) => {
@@ -375,7 +376,7 @@ function RoomChat({
                   setReacting(null);
                 }}
               />
-            }
+            )}
             actions={[]}
             onClose={() => setReacting(null)}
           />
