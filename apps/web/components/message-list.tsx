@@ -740,7 +740,7 @@ function Bubble({
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
   const anchor = () => bubble.current!.getBoundingClientRect();
-  const press = useLongPress(selectable ? onToggle : (at) => onMenu(at, at ? undefined : anchor()));
+  const press = useLongPress(selectable ? onToggle : (at) => onMenu(at, anchor()));
   const reactable = !selecting && !frozen && canReact(row);
   const swipe = useSwipe(
     !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
@@ -1002,7 +1002,7 @@ function Bubble({
             )}
             {row.message && !row.deleted && <ResealPrompt message={row.message} mine={mine} locked={row.locked} meId={meId} />}
             {row.delivery === "failed" && (
-              <button onClick={() => onMenu()} className="text-xs font-medium text-red-600 dark:text-red-400">
+              <button onClick={() => onMenu(undefined, anchor())} className="text-xs font-medium text-red-600 dark:text-red-400">
                 {tr.messages.notSent}
               </button>
             )}
@@ -1019,7 +1019,7 @@ function Bubble({
           <button
             onClick={(e) => {
               const r = e.currentTarget.getBoundingClientRect();
-              onMenu({ x: r.left, y: r.bottom });
+              onMenu({ x: r.left, y: r.bottom }, anchor());
             }}
             aria-label={tr.messages.options}
             className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
@@ -1459,7 +1459,7 @@ export const MessageList = forwardRef<
             onClose={() => setMenuFor(null)}
           >
             {!frozen && canReact(menuFor) && (
-              <div className="rounded-full bg-white/70 backdrop-blur-xl backdrop-saturate-150 px-1.5 py-1 shadow-xl ring-1 ring-black/5 pointer-fine:hidden dark:bg-stone-900/70 dark:ring-white/10">
+              <div className="rounded-full bg-white/70 backdrop-blur-xl backdrop-saturate-150 px-1.5 py-1 shadow-xl ring-1 ring-black/5 dark:bg-stone-900/70 dark:ring-white/10">
                 <ReactionBar
                   message={menuFor.message!}
                   meId={meId}

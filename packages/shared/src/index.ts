@@ -35,4 +35,5 @@ export * from "./links.js";
 export * from "./search.js";
 export * from "./media-edit.js";
 export * from "./tones.js";
+export * from "./menu.js";
 export * from "./i18n/index.js";

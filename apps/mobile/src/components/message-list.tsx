@@ -110,7 +110,8 @@ import { LocationCard } from "./location-card";
 import { EmojiPicker } from "./emoji-picker";
 import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
-import { type Anchor, ReactionChips, ReactionPopover } from "./reactions";
+import { MessageMenu } from "./message-menu";
+import { type Anchor, ReactionBar, ReactionChips } from "./reactions";
 import { styleFor } from "./rich-text";
 import { playHref } from "./live";
 import { EffectLayer } from "./message-effects";
@@ -845,16 +846,18 @@ function Bubble({
   const [fxBox, setFxBox] = useState<LayoutRectangle | null>(null);
   const canReact = !frozen && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
   const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact });
+  const openMenu = () => {
+    const node = bubbleRef.current;
+    if (!node) return latest.current.onMenu();
+    node.measureInWindow((x, y, width, height) => latest.current.onMenu({ x, y, width, height }));
+  };
   const hold = useLongPressGesture({
     minDuration: 350,
     runOnJS: true,
     onActivate: () => {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const l = latest.current;
-      if (l.selectable) return l.onToggle();
-      const node = bubbleRef.current;
-      if (!node) return l.onMenu();
-      node.measureInWindow((x, y, width, height) => l.onMenu({ x, y, width, height }));
+      if (latest.current.selectable) return latest.current.onToggle();
+      openMenu();
     },
   });
   const doubleTap = useTapGesture({
@@ -1051,7 +1054,7 @@ function Bubble({
           <ResealPrompt message={row.message} mine={mine} locked={row.locked === "undecryptable"} meId={meId} t={t} />
         )}
         {row.delivery === "failed" && (
-          <Pressable onPress={() => onMenu()} hitSlop={6}>
+          <Pressable onPress={openMenu} hitSlop={6}>
             <Text style={{ color: t.danger, fontSize: 12, fontWeight: "600", marginTop: 2 }}>{tr.messages.notSent}</Text>
           </Pressable>
         )}
@@ -1248,13 +1251,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const reactable = (row: MsgRow) =>
       !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
 
-    function reactionPopover(row: MsgRow, at: Anchor) {
+    function reactionBar(row: MsgRow) {
       const m = row.message!;
       const own = (m.reactions ?? []).filter((r) => r.userIds.includes(meId)).map((r) => r.emoji);
       return (
-        <ReactionPopover
-          anchor={at}
-          alignRight={row.mine}
+        <ReactionBar
           mine={own}
           onPick={(emoji) => {
             setMenuFor(null);
@@ -1508,13 +1509,14 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           />
         )}
 
-        {menuFor && (
-          <Sheet
-            floating={anchor && !frozen && reactable(menuFor) ? reactionPopover(menuFor, anchor) : undefined}
-            actions={actionsFor(menuFor)}
-            onClose={() => setMenuFor(null)}
-          />
-        )}
+        {menuFor &&
+          (anchor ? (
+            <MessageMenu anchor={anchor} mine={menuFor.mine} actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)}>
+              {!frozen && reactable(menuFor) && reactionBar(menuFor)}
+            </MessageMenu>
+          ) : (
+            <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)} />
+          ))}
         <EmojiPicker
           open={reactingTo !== null}
           onClose={() => setReactingTo(null)}

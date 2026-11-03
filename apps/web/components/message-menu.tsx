@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { placeMessageMenu } from "@six/shared";
+import { useEffect, useRef } from "react";
 import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 import { Sheet, type SheetAction } from "./sheet";
 
 /**
- * A message's long-press menu, Instagram style: the screen dims except for the message, `children` (the reaction
- * bar) floats right above it and the actions line up at the bottom. Without `rect` it is the usual sheet or
+ * A message's long-press menu, Messenger style: the screen dims except for the message, `children` (the reaction
+ * bar) sits right on top of it and the actions open in a card next to it. Without `rect` it is the usual sheet or
  * right-click menu.
  */
 export function MessageMenu({
@@ -26,6 +27,7 @@ export function MessageMenu({
   children?: React.ReactNode;
 }) {
   const tr = useT();
+  const bar = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -40,13 +42,15 @@ export function MessageMenu({
     );
   }
 
-  const place = (el: HTMLDivElement | null) => {
-    if (!el) return;
-    const { width, height } = el.getBoundingClientRect();
-    const above = rect.top - height - 8;
-    el.style.top = `${above >= 8 ? above : Math.min(rect.bottom + 8, window.innerHeight - height - 96)}px`;
-    const left = mine ? rect.right - width : rect.left;
-    el.style.left = `${Math.min(Math.max(8, left), window.innerWidth - width - 8)}px`;
+  const place = (card: HTMLDivElement | null) => {
+    if (!card) return;
+    const size = (el: HTMLElement) => ({ width: el.offsetWidth, height: el.offsetHeight });
+    const screen = { top: 8, bottom: window.innerHeight - 8, width: window.innerWidth };
+    const spot = placeMessageMenu(rect, bar.current && size(bar.current), size(card), screen, mine);
+    const put = (el: HTMLElement | null, to: { top: number; left: number } | null) =>
+      el && to && Object.assign(el.style, { top: `${to.top}px`, left: `${to.left}px`, visibility: "visible" });
+    put(bar.current, spot.bar);
+    put(card, spot.card);
   };
 
   return (
@@ -59,11 +63,14 @@ export function MessageMenu({
           style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
         />
         {children && (
-          <div ref={place} className="fixed max-w-[calc(100vw-1rem)]">
+          <div ref={bar} className="invisible fixed max-w-[calc(100vw-1rem)]">
             {children}
           </div>
         )}
-        <div className="chat-colors fixed inset-x-0 bottom-0 flex gap-1 overflow-x-auto bg-(--bubble-their)/70 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl backdrop-saturate-150">
+        <div
+          ref={place}
+          className="chat-colors invisible fixed flex max-h-[calc(100dvh-1rem)] min-w-52 flex-col overflow-y-auto rounded-2xl bg-(--bubble-their)/80 py-1 shadow-xl ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 dark:ring-white/10"
+        >
           {actions.map((a, i) => (
             <button
               key={a.label}
@@ -73,7 +80,7 @@ export function MessageMenu({
                 if (!a.keepOpen) onClose();
                 a.onSelect();
               }}
-              className={`shrink-0 rounded-xl px-4 py-3 text-sm font-medium whitespace-nowrap hover:bg-black/5 focus:outline-none focus-visible:bg-black/5 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 ${
+              className={`px-4 py-2.5 text-left text-[15px] font-medium whitespace-nowrap hover:bg-black/5 focus:outline-none focus-visible:bg-black/5 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 ${
                 a.destructive ? "text-red-600 dark:text-red-400" : "text-(--bubble-their-ink)"
               }`}
             >
