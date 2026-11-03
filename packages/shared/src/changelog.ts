@@ -17,6 +17,7 @@ export const CHANGELOG: Release[] = [
     date: "2026-11-02",
     notes: {
       en: [
+        "Pin messages to the top of a chat, up to 20, for both of you. Tap the bar to jump from one to the next.",
         "A Games tab, and games to play with a friend right in a chat, from a penalty shootout and hangman to draw and guess.",
         "No one around? Play against Frite Bot from the Games tab.",
         "Live games: Fanorona, Ludo, Crazy Eights, Word Hunt, Dots and Boxes and Memory with up to 3 friends at the same time, with Frite Bot in the empty seats.",
@@ -45,6 +46,7 @@ export const CHANGELOG: Release[] = [
         "Zoom into photos, and see where unread messages start.",
       ],
       fr: [
+        "Épinglez des messages en haut d'une discussion, jusqu'à 20, pour vous deux. Touchez la barre pour passer de l'un à l'autre.",
         "Un onglet Jeux, et des jeux à faire avec un ami dans une discussion, du tir au but et du pendu au dessin à deviner.",
         "Personne pour jouer ? Affrontez Frite Bot depuis l'onglet Jeux.",
         "Jeux en direct : fanorona, petits chevaux, huit américain, chasse aux mots, pipopipette et memory avec jusqu'à 3 amis en même temps, et Frite Bot aux places libres.",
@@ -73,6 +75,7 @@ export const CHANGELOG: Release[] = [
         "Zoomez sur les photos, et voyez où commencent les messages non lus.",
       ],
       mg: [
+        "Apetaho eo ambony amin'ny resaka ny hafatra, hatramin'ny 20, ho anareo roa. Tsindrio ny tsipika hifindra amin'ny manaraka.",
         "Fizarana Lalao vaovao, sy lalao azonao atao miaraka amin'ny namana ao anatin'ny resaka.",
         "Tsy misy olona? Milalaova amin'i Frite Bot ao amin'ny fizarana Lalao.",
         "Lalao mivantana: Fanorona, Ludo, Valo adala, Fihazana teny, Teboka sy efamira ary Tadidy miaraka amin'ny namana hatramin'ny 3 amin'ny fotoana iray, ary i Frite Bot amin'ny toerana banga.",
