@@ -13,6 +13,36 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: "1.5.0",
+    date: "2026-11-03",
+    notes: {
+      en: [
+        "Sign in on a computer with your phone: open six-frites.koera.mg, then scan its code from Settings, Devices, Link a computer. Your past messages come along, no PIN needed.",
+        "Long-press a message for a menu right next to it, with the reactions on top of the message.",
+        "Data saver: photos, GIFs, videos and files download only when you tap them, and the photos you send are smaller. Turn it on in Settings, Data.",
+        "No network? Your messages wait and go out by themselves when you're back online, and the chat list shows which chats still have some waiting.",
+        "Can't read a message? Ask the sender to send it again, or restore it from your backup.",
+        "The app opens and sends messages faster on slow connections.",
+      ],
+      fr: [
+        "Connectez-vous sur un ordinateur avec votre téléphone : ouvrez six-frites.koera.mg, puis scannez son code depuis Paramètres, Appareils, Associer un ordinateur. Vos anciens messages suivent, sans code PIN.",
+        "Appuyez longuement sur un message pour ouvrir un menu juste à côté, avec les réactions au-dessus du message.",
+        "Économiseur de données : les photos, GIF, vidéos et fichiers ne se téléchargent que quand vous les touchez, et les photos que vous envoyez sont plus légères. À activer dans Paramètres, Données.",
+        "Pas de réseau ? Vos messages attendent et partent tout seuls quand la connexion revient, et la liste des discussions montre celles où il en reste en attente.",
+        "Impossible de lire un message ? Demandez à l'expéditeur de le renvoyer, ou restaurez-le depuis votre sauvegarde.",
+        "L'application s'ouvre et envoie les messages plus vite sur les connexions lentes.",
+      ],
+      mg: [
+        "Midira amin'ny solosaina amin'ny alalan'ny findainao: sokafy ny six-frites.koera.mg, dia scanne ny kaodiny avy amin'ny Paramètres, Fitaovana, Hampifandray solosaina. Miaraka aminy ny hafatrao taloha, tsy mila PIN.",
+        "Tsindrio ela ny hafatra iray dia hiseho eo akaikiny ny menu, miaraka amin'ny fihetseham-po eo ambonin'ny hafatra.",
+        "Fitsitsiana angona: tsy misintona raha tsy tsindrianao ny sary, GIF, horonantsary ary rakitra, ary maivana kokoa ny sary alefanao. Alefaso ao amin'ny Paramètres, Angona.",
+        "Tsy misy tambajotra? Miandry ny hafatrao ary lasa irery rehefa tafaverina ny fifandraisana, ary asehon'ny lisitry ny resaka izay mbola misy miandry.",
+        "Tsy vakianao ny hafatra iray? Angataho amin'ny mpandefa mba haveriny alefa, na avereno avy amin'ny backup-nao.",
+        "Haingana kokoa ny fanokafana ny app sy ny fandefasana hafatra rehefa miadana ny fifandraisana.",
+      ],
+    },
+  },
+  {
     version: "1.4.0",
     date: "2026-11-02",
     notes: {
