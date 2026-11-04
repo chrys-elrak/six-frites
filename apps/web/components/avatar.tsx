@@ -3,7 +3,6 @@ import { useT } from "@/lib/i18n";
 
 const sizes = { sm: "size-9", md: "size-14", lg: "size-20", xl: "size-28" };
 const letters = { sm: "text-sm", md: "text-xl", lg: "text-3xl", xl: "text-5xl" };
-const aliasText = { sm: "text-[9px]", md: "text-[13px]", lg: "text-lg", xl: "text-2xl" };
 const foods = { sm: "text-xl", md: "text-3xl", lg: "text-5xl", xl: "text-6xl" };
 
 export function Avatar({
@@ -46,14 +45,9 @@ function Picture({ user, size }: { user: Pick<PublicUser, "displayName" | "avata
     return (
       <div
         style={{ backgroundImage: alias.gradient }}
-        className={`${sizes[size]} ${alias.food ? foods[size] : aliasText[size]} flex shrink-0 flex-col items-center justify-center rounded-full leading-none text-white select-none`}
+        className={`${sizes[size]} ${foods[size]} grid shrink-0 place-items-center rounded-full leading-none select-none`}
       >
-        {alias.food ?? (
-          <>
-            <span className="text-[1.5em] font-bold">F</span>
-            <span className="font-semibold tabular-nums opacity-90">{alias.number}</span>
-          </>
-        )}
+        {alias.food}
       </div>
     );
   }

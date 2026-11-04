@@ -606,7 +606,7 @@ export interface paths {
                 query?: {
                     cursor?: string;
                     limit?: number;
-                    /** @description Matches name or email, or an alias like #EF4535 or Frite 0327 */
+                    /** @description Matches name or email, or an alias like #EF4535 */
                     q?: string;
                     banned?: "true" | "false";
                 };

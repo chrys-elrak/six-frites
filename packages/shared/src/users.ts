@@ -64,31 +64,12 @@ export type ContactLabelInput = z.infer<typeof ContactLabelInput>;
 export const ContactLabelDTO = z.object({ label: z.string().nullable() });
 export type ContactLabelDTO = z.infer<typeof ContactLabelDTO>;
 
-const ALIAS_GRADIENTS = [
-  ["#f97316", "#c2410c"],
-  ["#f43f5e", "#be123c"],
-  ["#3b82f6", "#1d4ed8"],
-  ["#10b981", "#047857"],
-  ["#8b5cf6", "#6d28d9"],
-  ["#ec4899", "#be185d"],
-  ["#14b8a6", "#0f766e"],
-  ["#f59e0b", "#b45309"],
-] as const;
-
 const ALIAS_FOODS = ["🍟", "🍔", "🌭", "🍕", "🌮", "🌯", "🥙", "🥪", "🍗", "🍿", "🥨", "🥕", "🥦", "🌽", "🍅", "🥑", "🍆", "🥒", "🧅", "🧄", "🥬", "🍄", "🍠", "🥜"];
 
-/**
- * The picture behind an alias. Since 1.5.0 one like `#EF4535` is that colour with a food picked from it (a potato for
- * support); people who joined before keep their `Frite 0327`, an F and the number on a gradient.
- */
-export function aliasAvatar(name: string): { gradient: string; number?: string; food?: string } | null {
+/** The picture behind an alias like `#EF4535`: that colour, with a food picked from it. Support sees a potato. */
+export function aliasAvatar(name: string): { gradient: string; food: string } | null {
   const hex = /^(Potato )?(#[0-9A-F]{6})$/.exec(name);
-  if (hex) {
-    const food = hex[1] ? "🥔" : ALIAS_FOODS[parseInt(hex[2]!.slice(1), 16) % ALIAS_FOODS.length]!;
-    return { gradient: `linear-gradient(${hex[2]}, ${hex[2]})`, food };
-  }
-  const number = /^Frite (\d+)$/.exec(name)?.[1];
-  if (!number) return null;
-  const [from, to] = ALIAS_GRADIENTS[Number(number) % ALIAS_GRADIENTS.length]!;
-  return { number, gradient: `linear-gradient(135deg, ${from}, ${to})` };
+  if (!hex) return null;
+  const food = hex[1] ? "🥔" : ALIAS_FOODS[parseInt(hex[2]!.slice(1), 16) % ALIAS_FOODS.length]!;
+  return { gradient: `linear-gradient(${hex[2]}, ${hex[2]})`, food };
 }

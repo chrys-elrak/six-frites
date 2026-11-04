@@ -157,7 +157,7 @@ export const ResolveReportInput = z.object({
 export type ResolveReportInput = z.infer<typeof ResolveReportInput>;
 
 export const AdminUserQuery = PageQuery.extend({
-  q: z.string().trim().max(100).optional().describe("Matches name or email, or an alias like #EF4535 or Frite 0327"),
+  q: z.string().trim().max(100).optional().describe("Matches name or email, or an alias like #EF4535"),
   banned: z
     .enum(["true", "false"])
     .optional()

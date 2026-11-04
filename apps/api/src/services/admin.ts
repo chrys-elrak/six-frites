@@ -104,7 +104,7 @@ async function withTotals(rows: UserRow[]) {
   return rows.map((u) => toAdminUser(u, storage.get(u.id) ?? 0, invites(u.id)));
 }
 
-const ALIAS = /^(?:(?:frite|potato)\s*(\d{1,4})|(?:potato\s*)?#([0-9a-f]{6}))$/i;
+const ALIAS = /^(?:potato\s*)?#([0-9a-f]{6})$/i;
 
 /** The people someone sees under `alias`, each with everyone who sees them that way. */
 async function usersBehind(alias: string) {
@@ -112,9 +112,7 @@ async function usersBehind(alias: string) {
     SELECT DISTINCT me."userId" AS "viewerId", cm."userId"
     FROM "ChatMember" me
     JOIN "ChatMember" cm ON cm."chatId" = me."chatId" AND cm."userId" <> me."userId"
-    JOIN "User" u ON u.id = cm."userId"
-    LEFT JOIN "ContactOverride" o ON o."ownerId" = me."userId" AND o."contactId" = cm."userId"
-    WHERE pair_alias(me."userId", cm."userId", u."hexAlias" OR COALESCE(o."hexAlias", false)) = ${alias}`;
+    WHERE pair_alias(me."userId", cm."userId") = ${alias}`;
   const [rows, viewers] = await Promise.all([
     prisma.user.findMany({ where: { id: { in: pairs.map((p) => p.userId) } }, include: userInclude() }),
     prisma.user.findMany({ where: { id: { in: pairs.map((p) => p.viewerId) } } }),
@@ -127,11 +125,8 @@ async function usersBehind(alias: string) {
 }
 
 export async function listUsers(q: AdminUserQuery) {
-  const alias = q.q?.match(ALIAS);
-  if (alias) {
-    const name = alias[1] ? `Frite ${alias[1].padStart(4, "0")}` : `#${alias[2]!.toUpperCase()}`;
-    return { items: await usersBehind(name), nextCursor: null };
-  }
+  const alias = q.q?.match(ALIAS)?.[1];
+  if (alias) return { items: await usersBehind(`#${alias.toUpperCase()}`), nextCursor: null };
   const rows = await prisma.user.findMany({
     where: {
       ...(q.q && {

@@ -46,27 +46,24 @@ export function toUserDTO(u: User): UserDTO {
  * The alias `viewerId` sees for `userId`. Each pair gets its own, so two people can't tell they know the same
  * person by comparing names. Matches the pair_alias SQL function, which the contact list sorts and searches by.
  */
-export function pairAlias(viewerId: string, userId: string, hex = true) {
-  const hash = createHash("md5").update(`${viewerId}:${userId}`).digest("hex");
-  if (hex) return `#${hash.slice(0, 6).toUpperCase()}`;
-  return `Frite ${String(parseInt(hash.slice(0, 7), 16) % 10000).padStart(4, "0")}`;
+export function pairAlias(viewerId: string, userId: string) {
+  return `#${createHash("md5").update(`${viewerId}:${userId}`).digest("hex").slice(0, 6).toUpperCase()}`;
 }
 
-/** Whoever asked support for help, as the desk sees them: a Potato instead of a Frite, or in front of their code. */
+/** Whoever asked support for help, as the desk sees them: their alias with Potato in front. */
 export function supportCase<P extends { id: string; displayName: string }>(p: P, viewerId: string): P {
-  const aliased = [true, false].some((hex) => p.displayName === pairAlias(viewerId, p.id, hex));
-  return aliased ? { ...p, displayName: `Potato ${p.displayName.replace(/^Frite /, "")}` } : p;
+  const alias = pairAlias(viewerId, p.id);
+  return p.displayName === alias ? { ...p, displayName: `Potato ${alias}` } : p;
 }
 
 /** Someone as `viewerId` sees them: their alias for that viewer and no photo, unless they share their profile. */
 export function toPublicUser(
-  u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey" | "deletedAt" | "hexAlias">,
+  u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey" | "deletedAt">,
   viewerId: string,
   shared: boolean,
-  hex = false,
 ) {
   if (shared) return { id: u.id, displayName: u.displayName, avatarUrl: avatarOf(u) };
-  return { id: u.id, displayName: u.deletedAt ? u.displayName : pairAlias(viewerId, u.id, u.hexAlias || hex), avatarUrl: null };
+  return { id: u.id, displayName: u.deletedAt ? u.displayName : pairAlias(viewerId, u.id), avatarUrl: null };
 }
 
 /** Sends everyone who shares a chat with `userId` that chat again, after their name or photo changed. */

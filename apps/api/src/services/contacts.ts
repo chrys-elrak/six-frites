@@ -19,7 +19,6 @@ import { avatarOf, requireAppLock, toPublicUser } from "./users.js";
 interface Override {
   displayName: string | null;
   photoKey: string | null;
-  hexAlias?: boolean;
 }
 
 const photoUrl = (o: Override) => (o.photoKey ? presignGet(o.photoKey) : null);
@@ -47,7 +46,7 @@ export async function profilesFor(db: Tx, viewerId: string, userIds: string[]) {
   const byId = new Map<string, Override>(overrides.map((o) => [o.contactId, o]));
   const shared = new Set(sharing.map((m) => m.userId));
   return (u: Parameters<typeof toPublicUser>[0]) =>
-    applyOverride(toPublicUser(u, viewerId, u.id === viewerId || shared.has(u.id), byId.get(u.id)?.hexAlias), byId.get(u.id));
+    applyOverride(toPublicUser(u, viewerId, u.id === viewerId || shared.has(u.id)), byId.get(u.id));
 }
 
 function encodeCursor(name: string, id: string) {
@@ -92,11 +91,11 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
   return prisma.$queryRaw<ContactRow[]>`
     SELECT * FROM (
       SELECT cm."chatId", u.id,
-             CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id, u."hexAlias" OR COALESCE(o."hexAlias", false)) END AS "originalName",
+             CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END AS "originalName",
              CASE WHEN cm."showProfile" THEN u."avatarUrl" END AS "avatarUrl",
              CASE WHEN cm."showProfile" THEN u."avatarKey" END AS "avatarKey",
              o."displayName" AS "customName", o."photoKey", me."showProfile" AS "sharingProfile",
-             COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id, u."hexAlias" OR COALESCE(o."hexAlias", false)) END) AS name
+             COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END) AS name
       FROM "ChatMember" cm
       JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct' AND c."supportUserId" IS NULL
       JOIN "ChatMember" me ON me."chatId" = cm."chatId" AND me."userId" = ${userId}
@@ -171,23 +170,17 @@ export async function updateContact(ownerId: string, contactId: string, input: U
     await putObject(photoKey, photo.bytes, photo.mime);
   }
 
-  const restored =
-    (contact.customName ?? contact.photoKey) !== null &&
-    (input.displayName === undefined ? contact.customName : input.displayName) === null &&
-    (photoKey === undefined ? contact.photoKey : photoKey) === null;
-
   await withEvents(async (tx, emit) => {
     const data = {
       ...(input.displayName !== undefined && { displayName: input.displayName }),
       ...(photoKey !== undefined && { photoKey }),
-      ...(restored && { hexAlias: true }),
     };
     const saved = await tx.contactOverride.upsert({
       where: { ownerId_contactId: { ownerId, contactId } },
       create: { ownerId, contactId, ...data },
       update: data,
     });
-    if (saved.displayName === null && saved.photoKey === null && saved.label === null && !saved.hexAlias) {
+    if (saved.displayName === null && saved.photoKey === null && saved.label === null) {
       await tx.contactOverride.delete({ where: { ownerId_contactId: { ownerId, contactId } } });
     }
     emit(ownerId, "chat.updated", await getChat(ownerId, contact.chatId, tx));
@@ -216,7 +209,7 @@ export async function setLabel(ownerId: string, contactId: string, input: Contac
   const key = { ownerId_contactId: { ownerId, contactId } };
   const label = input.label || null;
   const saved = await prisma.contactOverride.upsert({ where: key, create: { ownerId, contactId, label }, update: { label } });
-  if (saved.displayName === null && saved.photoKey === null && saved.label === null && !saved.hexAlias) {
+  if (saved.displayName === null && saved.photoKey === null && saved.label === null) {
     await prisma.contactOverride.delete({ where: key });
   }
   return { label: saved.label };

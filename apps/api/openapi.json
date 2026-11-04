@@ -1082,7 +1082,7 @@
             "in": "query",
             "name": "q",
             "required": false,
-            "description": "Matches name or email, or an alias like #EF4535 or Frite 0327"
+            "description": "Matches name or email, or an alias like #EF4535"
           },
           {
             "schema": {
