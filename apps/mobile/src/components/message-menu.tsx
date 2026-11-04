@@ -1,11 +1,10 @@
 import { placeReactionBar } from "@six/shared";
 import { useState } from "react";
-import { type LayoutChangeEvent, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { type LayoutChangeEvent, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/theme";
 import type { Anchor } from "./reactions";
-import type { SheetAction } from "./sheet";
-import { Text } from "./text";
+import { ActionBar, type SheetAction } from "./sheet";
 
 type Size = { width: number; height: number };
 
@@ -52,32 +51,7 @@ export function MessageMenu({
           {children}
         </View>
       )}
-      <View
-        onLayout={(e) => setTools(e.nativeEvent.layout.height)}
-        style={[styles.tools, { backgroundColor: t.surface, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 8) }]}
-      >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRow}>
-          {actions.map((a) => {
-            const color = a.destructive ? t.danger : t.text;
-            return (
-              <Pressable
-                key={a.label}
-                onPress={() => {
-                  if (!a.keepOpen) onClose();
-                  a.onSelect();
-                }}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.tool, pressed && { backgroundColor: t.pressed }]}
-              >
-                {a.icon && <a.icon size={22} color={color} />}
-                <Text numberOfLines={1} style={[styles.toolLabel, { color }]}>
-                  {a.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      <ActionBar actions={actions} onClose={onClose} onHeight={setTools} />
     </Modal>
   );
 }
@@ -94,8 +68,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
   },
   hidden: { top: 0, left: 0, opacity: 0 },
-  tools: { position: "absolute", left: 0, right: 0, bottom: 0, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8 },
-  toolRow: { flexGrow: 1, justifyContent: "space-around", paddingHorizontal: 4, gap: 2 },
-  tool: { minWidth: 72, alignItems: "center", gap: 4, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 12 },
-  toolLabel: { fontSize: 12, textAlign: "center", lineHeight: 15 },
 });

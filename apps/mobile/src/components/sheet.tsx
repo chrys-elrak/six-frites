@@ -8,7 +8,7 @@ import { useTheme } from "@/lib/theme";
 
 export interface SheetAction {
   label: string;
-  /** Shown in a message's long-press bar; sheets list labels only. */
+  /** Shown in an icon bar; sheets list labels only. */
   icon?: LucideIcon;
   onSelect: () => void;
   destructive?: boolean;
@@ -22,18 +22,30 @@ export function Sheet({
   floating,
   actions,
   onClose,
+  bar,
 }: {
   title?: string;
   header?: React.ReactNode;
   floating?: (sheetTop: number) => React.ReactNode;
   actions: SheetAction[];
   onClose: () => void;
+  /** Shows the actions as icons in a bar at the bottom instead of the sheet. */
+  bar?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const [sheetTop, setSheetTop] = useState<number | null>(null);
+
+  if (bar) {
+    return (
+      <Modal transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
+        <ActionBar actions={actions} onClose={onClose} />
+      </Modal>
+    );
+  }
 
   return (
     <Modal transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
@@ -82,10 +94,55 @@ export function Sheet({
   );
 }
 
+export function ActionBar({
+  actions,
+  onClose,
+  onHeight,
+}: {
+  actions: SheetAction[];
+  onClose: () => void;
+  onHeight?: (height: number) => void;
+}) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      onLayout={(e) => onHeight?.(e.nativeEvent.layout.height)}
+      style={[styles.tools, { backgroundColor: t.surface, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 8) }]}
+    >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRow}>
+        {actions.map((a) => {
+          const color = a.destructive ? t.danger : t.text;
+          return (
+            <Pressable
+              key={a.label}
+              onPress={() => {
+                if (!a.keepOpen) onClose();
+                a.onSelect();
+              }}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.tool, pressed && { backgroundColor: t.pressed }]}
+            >
+              {a.icon && <a.icon size={22} color={color} />}
+              <Text numberOfLines={1} style={[styles.toolLabel, { color }]}>
+                {a.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 12, gap: 8 },
   group: { borderRadius: 16, overflow: "hidden" },
   title: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   action: { paddingVertical: 15, paddingHorizontal: 16, alignItems: "center" },
   label: { fontSize: 17 },
+  tools: { position: "absolute", left: 0, right: 0, bottom: 0, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8 },
+  toolRow: { flexGrow: 1, justifyContent: "space-around", paddingHorizontal: 4, gap: 2 },
+  tool: { minWidth: 72, alignItems: "center", gap: 4, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 12 },
+  toolLabel: { fontSize: 12, textAlign: "center" },
 });

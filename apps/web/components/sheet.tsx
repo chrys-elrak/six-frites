@@ -3,11 +3,12 @@
 import { Check, type LucideIcon } from "lucide-react";
 import { useEffect } from "react";
 import { useT } from "@/lib/i18n";
+import { useMedia } from "@/lib/viewport";
 import { Portal } from "./portal";
 
 export interface SheetAction {
   label: string;
-  /** Shown in a message's long-press bar; sheets list labels only. */
+  /** Shown in an icon bar; sheets list labels only. */
   icon?: LucideIcon;
   onSelect: () => void;
   destructive?: boolean;
@@ -21,6 +22,7 @@ export function Sheet({
   onClose,
   children,
   at,
+  bar,
 }: {
   title?: React.ReactNode;
   actions: SheetAction[];
@@ -28,8 +30,11 @@ export function Sheet({
   children?: React.ReactNode;
   /** Shows a context menu at this point, as for a right-click, instead of the sheet. */
   at?: { x: number; y: number };
+  /** On a narrow screen, shows the actions as icons in a bar at the bottom instead of the sheet. */
+  bar?: boolean;
 }) {
   const tr = useT();
+  const narrow = useMedia("(width < 48rem)");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -92,6 +97,22 @@ export function Sheet({
     );
   }
 
+  if (bar && narrow) {
+    return (
+      <Portal>
+        <div key="bar" className="fixed inset-0 z-50" role="dialog" aria-modal>
+          <button
+            type="button"
+            aria-label={tr.common.close}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+          />
+          <ActionBar actions={actions} onSelect={select} />
+        </div>
+      </Portal>
+    );
+  }
+
   return (
     <Portal>
       <div key="sheet" className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal>
@@ -133,5 +154,39 @@ export function Sheet({
         </div>
       </div>
     </Portal>
+  );
+}
+
+export function ActionBar({
+  actions,
+  onSelect,
+  ref,
+}: {
+  actions: SheetAction[];
+  onSelect: (a: SheetAction) => void;
+  ref?: React.Ref<HTMLDivElement>;
+}) {
+  return (
+    <div
+      ref={ref}
+      className="chat-colors fixed inset-x-0 bottom-0 overflow-x-auto bg-(--bubble-their)/80 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl backdrop-saturate-150"
+    >
+      <div className="flex w-max min-w-full justify-around gap-1">
+        {actions.map((a, i) => (
+          <button
+            key={a.label}
+            type="button"
+            autoFocus={i === 0}
+            onClick={() => onSelect(a)}
+            className={`flex min-w-19 shrink-0 flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-xs leading-tight font-medium hover:bg-black/5 focus:outline-none focus-visible:bg-black/5 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 ${
+              a.destructive ? "text-red-600 dark:text-red-400" : "text-(--bubble-their-ink)"
+            }`}
+          >
+            {a.icon && <a.icon className="size-5.5" />}
+            <span className="whitespace-nowrap">{a.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
