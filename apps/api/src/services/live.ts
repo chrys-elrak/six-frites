@@ -57,6 +57,7 @@ import {
 import type { User } from "../generated/prisma/client.js";
 import { lexicon } from "../lib/lexicon.js";
 import { withEvents } from "../lib/events.js";
+import { postBotLiveGame } from "./bot.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { deleteObjects, presignGet } from "../lib/storage.js";
@@ -372,6 +373,11 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   };
   await refresh(room);
   live.set(room.id, room);
+  if (!invite.length) {
+    void postBotLiveGame(userId, input.locale, room.game, room.id).catch((err) =>
+      console.error("could not post the live game in the bot's chat:", err.message),
+    );
+  }
   const out = broadcaster();
   for (const id of invite) {
     const from = room.profiles.get(id)!(room.users.get(userId)!);

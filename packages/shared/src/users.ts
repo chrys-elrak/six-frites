@@ -22,6 +22,7 @@ export const UserDTO = z.object({
   guest: z
     .boolean()
     .describe("Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"),
+  support: z.boolean().describe("Answers the support chats, so the apps don't offer to contact support"),
   chatBan: z
     .object({ until: IsoDate.nullable() })
     .nullable()
@@ -74,7 +75,18 @@ const ALIAS_GRADIENTS = [
   ["#f59e0b", "#b45309"],
 ] as const;
 
-export function aliasAvatar(name: string): { number: string; gradient: string } | null {
+const ALIAS_FOODS = ["🍟", "🍔", "🌭", "🍕", "🌮", "🌯", "🥙", "🥪", "🍗", "🍿", "🥨", "🥕", "🥦", "🌽", "🍅", "🥑", "🍆", "🥒", "🧅", "🧄", "🥬", "🍄", "🍠", "🥜"];
+
+/**
+ * The picture behind an alias. Since 1.5.0 one like `#EF4535` is that colour with a food picked from it (a potato for
+ * support); people who joined before keep their `Frite 0327`, an F and the number on a gradient.
+ */
+export function aliasAvatar(name: string): { gradient: string; number?: string; food?: string } | null {
+  const hex = /^(Potato )?(#[0-9A-F]{6})$/.exec(name);
+  if (hex) {
+    const food = hex[1] ? "🥔" : ALIAS_FOODS[parseInt(hex[2]!.slice(1), 16) % ALIAS_FOODS.length]!;
+    return { gradient: `linear-gradient(${hex[2]}, ${hex[2]})`, food };
+  }
   const number = /^Frite (\d+)$/.exec(name)?.[1];
   if (!number) return null;
   const [from, to] = ALIAS_GRADIENTS[Number(number) % ALIAS_GRADIENTS.length]!;

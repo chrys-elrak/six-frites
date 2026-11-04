@@ -40,7 +40,7 @@ describe("contact discovery", () => {
       const res = await find(bob, q);
       expect(res.statusCode, q).toBe(200);
       expect(res.json()).toEqual({
-        user: { id: alice.user.id, displayName: expect.stringMatching(/^Frite \d{4}$/), avatarUrl: null },
+        user: { id: alice.user.id, displayName: expect.stringMatching(/^#[0-9A-F]{6}$/), avatarUrl: null },
         chatId: null,
       });
     }

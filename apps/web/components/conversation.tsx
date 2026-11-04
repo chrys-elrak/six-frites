@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { startCall, useCall } from "@/lib/call";
 import { e2ee, useIdentityChanges } from "@/lib/e2ee";
-import { useChat, useMessages } from "@/lib/chats";
+import { isBotChat, useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { useSelection } from "@/lib/selection";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
@@ -258,7 +258,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                     )}
                   </span>
                 </button>
-                {!frozen && !c.support && !c.withSupport && (
+                {!frozen && !c.support && !c.withSupport && !isBotChat(c) && (
                   <>
                     <button
                       onClick={() => void startCall(c, meId, false)}

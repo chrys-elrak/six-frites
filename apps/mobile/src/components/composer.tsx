@@ -29,8 +29,15 @@ import {
 import {
   Bold,
   CalendarClock,
+  Camera,
   Check,
   Code,
+  FileText,
+  Gamepad2,
+  Image as ImageIcon,
+  ListChecks,
+  MapPin,
+  Music,
   EyeOff,
   Flame,
   Ghost,
@@ -774,7 +781,7 @@ export function Composer({
               </>
             )
           ) : !editing && (
-            <Pressable onPress={() => setAttachMenu(true)} accessibilityLabel={tr.composer.attach} style={styles.round40}>
+            <Pressable onPress={() => (withBot ? setStartingGame(true) : setAttachMenu(true))} accessibilityLabel={tr.composer.attach} style={styles.round40}>
               <Paperclip size={22} color={t.muted} />
             </Pressable>
           )}
@@ -891,17 +898,17 @@ export function Composer({
 
       {attachMenu && (
         <Sheet
-          title={tr.common.send}
+          bar
           onClose={() => setAttachMenu(false)}
           actions={[
-            { label: tr.composer.photoOrVideo, onSelect: () => void pick(pickMedia) },
-            { label: tr.composer.camera, onSelect: () => void pick(takePhoto) },
-            { label: tr.summary.kinds.file, onSelect: () => void pick(pickFiles) },
-            { label: tr.composer.audio, onSelect: () => void pick(() => pickFiles("audio/*")) },
-            { label: tr.composer.location, onSelect: () => setAskLocation(true) },
-            { label: tr.composer.checklist, onSelect: () => setWritingChecklist(true) },
-            { label: tr.composer.game, onSelect: () => setStartingGame(true) },
-            { label: tr.composer.scheduleMessage, onSelect: () => setScheduling("next") },
+            { label: tr.composer.photoOrVideo, icon: ImageIcon, onSelect: () => void pick(pickMedia) },
+            { label: tr.composer.camera, icon: Camera, onSelect: () => void pick(takePhoto) },
+            { label: tr.summary.kinds.file, icon: FileText, onSelect: () => void pick(pickFiles) },
+            { label: tr.composer.audio, icon: Music, onSelect: () => void pick(() => pickFiles("audio/*")) },
+            { label: tr.composer.location, icon: MapPin, onSelect: () => setAskLocation(true) },
+            { label: tr.composer.checklist, icon: ListChecks, onSelect: () => setWritingChecklist(true) },
+            { label: tr.composer.game, icon: Gamepad2, onSelect: () => setStartingGame(true) },
+            { label: tr.composer.scheduleMessage, icon: CalendarClock, onSelect: () => setScheduling("next") },
           ]}
         />
       )}

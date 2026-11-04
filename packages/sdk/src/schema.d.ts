@@ -78,6 +78,8 @@ export interface paths {
                                 quickReactions: string[];
                                 /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                                 guest: boolean;
+                                /** @description Answers the support chats, so the apps don't offer to contact support */
+                                support: boolean;
                                 /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                                 chatBan: {
                                     /** Format: date-time */
@@ -223,6 +225,8 @@ export interface paths {
                                 quickReactions: string[];
                                 /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                                 guest: boolean;
+                                /** @description Answers the support chats, so the apps don't offer to contact support */
+                                support: boolean;
                                 /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                                 chatBan: {
                                     /** Format: date-time */
@@ -312,6 +316,8 @@ export interface paths {
                                 quickReactions: string[];
                                 /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                                 guest: boolean;
+                                /** @description Answers the support chats, so the apps don't offer to contact support */
+                                support: boolean;
                                 /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                                 chatBan: {
                                     /** Format: date-time */
@@ -600,7 +606,7 @@ export interface paths {
                 query?: {
                     cursor?: string;
                     limit?: number;
-                    /** @description Matches name or email, or an alias like Frite 0327 */
+                    /** @description Matches name or email, or an alias like #EF4535 or Frite 0327 */
                     q?: string;
                     banned?: "true" | "false";
                 };
@@ -2315,6 +2321,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -2420,6 +2428,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -2489,6 +2499,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -2562,6 +2574,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -2776,6 +2790,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -2832,6 +2848,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -3444,8 +3462,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Your chat with Frite Bot
-         * @description Made the first time, with a hello in `locale`, which Frite Bot also answers in. With `open` it comes back to the chat list after you deleted it for yourself.
+         * Your chat with Six Frites Game
+         * @description Made the first time, with a hello in `locale`, which Six Frites Game also answers in. With `open` it comes back to the chat list after you deleted it for yourself.
          */
         post: {
             parameters: {
@@ -4185,7 +4203,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Have Frite Bot start a game in your chat with it
+         * Have Six Frites Game start a game in your chat with it
          * @description It sends the game as its own message; answer it like any game. On the boards it takes its turn right after yours.
          */
         post: {
@@ -16262,6 +16280,8 @@ export interface paths {
                                     quickReactions: string[];
                                     /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                                     guest: boolean;
+                                    /** @description Answers the support chats, so the apps don't offer to contact support */
+                                    support: boolean;
                                     /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                                     chatBan: {
                                         /** Format: date-time */
@@ -16820,6 +16840,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -16946,6 +16968,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -18854,6 +18878,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */
@@ -18932,6 +18958,8 @@ export interface paths {
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
                             guest: boolean;
+                            /** @description Answers the support chats, so the apps don't offer to contact support */
+                            support: boolean;
                             /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
                             chatBan: {
                                 /** Format: date-time */

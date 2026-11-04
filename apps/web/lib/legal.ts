@@ -410,7 +410,7 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "What other people see",
         body: [
-          "The people you talk to don't see your Google name or photo. Each of them sees you under a random name, like Frite 0327, that is different for each person, until you choose to show them your real name and photo.",
+          "The people you talk to don't see your Google name or photo. Each of them sees you under a random name, like #EF4535, that is different for each person, until you choose to show them your real name and photo.",
           "People who open your anonymous link see the name and photo you chose for it. Your email address is never shown to other people.",
         ],
       },
@@ -523,7 +523,7 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "Ce que voient les autres",
         body: [
-          "Les personnes avec qui vous parlez ne voient ni votre nom ni votre photo Google. Chacune vous voit sous un nom au hasard, comme Frite 0327, différent pour chaque personne, jusqu'à ce que vous choisissiez de lui montrer votre vrai nom et votre photo.",
+          "Les personnes avec qui vous parlez ne voient ni votre nom ni votre photo Google. Chacune vous voit sous un nom au hasard, comme #EF4535, différent pour chaque personne, jusqu'à ce que vous choisissiez de lui montrer votre vrai nom et votre photo.",
           "Les personnes qui ouvrent votre lien anonyme voient le nom et la photo que vous avez choisis pour lui. Votre adresse e-mail n'est jamais montrée aux autres.",
         ],
       },
@@ -638,7 +638,7 @@ export const privacy: Record<Locale, LegalDoc> = {
       {
         heading: "Izay hitan'ny hafa",
         body: [
-          "Tsy hitan'ireo olona iresahanao ny anarana sy sary Google anao. Samy mahita anao amin'ny anarana kisendrasendra toy ny Frite 0327 izy ireo, tsy mitovy isaky ny olona, mandra-pisafidinao haneho aminy ny tena anaranao sy ny sarinao.",
+          "Tsy hitan'ireo olona iresahanao ny anarana sy sary Google anao. Samy mahita anao amin'ny anarana kisendrasendra toy ny #EF4535 izy ireo, tsy mitovy isaky ny olona, mandra-pisafidinao haneho aminy ny tena anaranao sy ny sarinao.",
           "Ireo manokatra ny rohinao tsy fantatra mpandefa dia mahita ny anarana sy sary nofidinao ho azy. Tsy aseho amin'ny hafa mihitsy ny adiresy mailakao.",
         ],
       },

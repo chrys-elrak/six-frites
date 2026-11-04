@@ -318,10 +318,14 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   const tr = useT();
   const router = useRouter();
   const openSupport = async () => {
-    const res = await six.api.POST("/v1/support");
-    if (res.data) router.push(`/chats/${res.data.id}`);
+    try {
+      router.push(`/chats/${unwrap(await six.api.POST("/v1/support")).id}`);
+    } catch (err) {
+      alert((err as Error).message);
+    }
   };
   const meId = useSession((s) => s.user!.id);
+  const isSupport = useSession((s) => s.user!.support);
   const hasAppLock = useSession((s) => s.user!.hasAppLock);
   const archiveOpen = useAppLock((s) => s.archiveOpen);
   const chats = useChats(archived);
@@ -397,14 +401,16 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
         </div>
         {!archived && !rail && (
           <>
-            <button
-              onClick={() => void openSupport()}
-              aria-label={tr.support.contact}
-              title={tr.support.contact}
-              className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
-            >
-              <Headset className="size-5" />
-            </button>
+            {!isSupport && (
+              <button
+                onClick={() => void openSupport()}
+                aria-label={tr.support.contact}
+                title={tr.support.contact}
+                className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+              >
+                <Headset className="size-5" />
+              </button>
+            )}
             <button
               onClick={() => setDialog("invite")}
               aria-label={tr.contacts.inviteFriend}

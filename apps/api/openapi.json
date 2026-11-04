@@ -154,6 +154,10 @@
                           "type": "boolean",
                           "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                         },
+                        "support": {
+                          "type": "boolean",
+                          "description": "Answers the support chats, so the apps don't offer to contact support"
+                        },
                         "chatBan": {
                           "nullable": true,
                           "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -195,6 +199,7 @@
                         "anonBot",
                         "quickReactions",
                         "guest",
+                        "support",
                         "chatBan",
                         "termsAccepted",
                         "createdAt"
@@ -424,6 +429,10 @@
                               "type": "boolean",
                               "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                             },
+                            "support": {
+                              "type": "boolean",
+                              "description": "Answers the support chats, so the apps don't offer to contact support"
+                            },
                             "chatBan": {
                               "nullable": true,
                               "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -465,6 +474,7 @@
                             "anonBot",
                             "quickReactions",
                             "guest",
+                            "support",
                             "chatBan",
                             "termsAccepted",
                             "createdAt"
@@ -603,6 +613,10 @@
                           "type": "boolean",
                           "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                         },
+                        "support": {
+                          "type": "boolean",
+                          "description": "Answers the support chats, so the apps don't offer to contact support"
+                        },
                         "chatBan": {
                           "nullable": true,
                           "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -644,6 +658,7 @@
                         "anonBot",
                         "quickReactions",
                         "guest",
+                        "support",
                         "chatBan",
                         "termsAccepted",
                         "createdAt"
@@ -1067,7 +1082,7 @@
             "in": "query",
             "name": "q",
             "required": false,
-            "description": "Matches name or email, or an alias like Frite 0327"
+            "description": "Matches name or email, or an alias like #EF4535 or Frite 0327"
           },
           {
             "schema": {
@@ -4793,6 +4808,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -4834,6 +4853,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -4959,6 +4979,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -5000,6 +5024,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -5139,6 +5164,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -5180,6 +5209,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -5269,6 +5299,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -5310,6 +5344,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -5621,6 +5656,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -5662,6 +5701,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -5748,6 +5788,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -5789,6 +5833,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -6741,11 +6786,11 @@
     },
     "/v1/bot": {
       "post": {
-        "summary": "Your chat with Frite Bot",
+        "summary": "Your chat with Six Frites Game",
         "tags": [
           "chats"
         ],
-        "description": "Made the first time, with a hello in `locale`, which Frite Bot also answers in. With `open` it comes back to the chat list after you deleted it for yourself.",
+        "description": "Made the first time, with a hello in `locale`, which Six Frites Game also answers in. With `open` it comes back to the chat list after you deleted it for yourself.",
         "requestBody": {
           "required": true,
           "content": {
@@ -9901,7 +9946,7 @@
     },
     "/v1/bot/games": {
       "post": {
-        "summary": "Have Frite Bot start a game in your chat with it",
+        "summary": "Have Six Frites Game start a game in your chat with it",
         "tags": [
           "chats"
         ],
@@ -59099,6 +59144,10 @@
                                     "type": "boolean",
                                     "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                                   },
+                                  "support": {
+                                    "type": "boolean",
+                                    "description": "Answers the support chats, so the apps don't offer to contact support"
+                                  },
                                   "chatBan": {
                                     "nullable": true,
                                     "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -59140,6 +59189,7 @@
                                   "anonBot",
                                   "quickReactions",
                                   "guest",
+                                  "support",
                                   "chatBan",
                                   "termsAccepted",
                                   "createdAt"
@@ -60199,6 +60249,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -60240,6 +60294,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -60399,6 +60454,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -60440,6 +60499,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -64588,6 +64648,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -64629,6 +64693,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"
@@ -64736,6 +64801,10 @@
                       "type": "boolean",
                       "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
                     },
+                    "support": {
+                      "type": "boolean",
+                      "description": "Answers the support chats, so the apps don't offer to contact support"
+                    },
                     "chatBan": {
                       "nullable": true,
                       "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
@@ -64777,6 +64846,7 @@
                     "anonBot",
                     "quickReactions",
                     "guest",
+                    "support",
                     "chatBan",
                     "termsAccepted",
                     "createdAt"

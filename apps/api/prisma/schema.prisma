@@ -24,6 +24,8 @@ model User {
   askRenewedAt    DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  /// Shown to others as a colour code like #EF4535; people who joined before 1.5.0 keep their Frite 0327.
+  hexAlias        Boolean   @default(true)
   /// When they accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else.
   termsAcceptedAt DateTime?
   bannedAt        DateTime?
@@ -464,6 +466,8 @@ model ContactOverride {
   displayName String?
   photoKey    String?
   label       String?
+  /// The owner put back this contact's name and photo after changing them, so they see the colour code from now on.
+  hexAlias    Boolean  @default(false)
   updatedAt   DateTime @updatedAt
 
   owner   User @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)

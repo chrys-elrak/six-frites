@@ -96,9 +96,9 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
       schema: {
         tags: ["chats"],
-        summary: "Your chat with Frite Bot",
+        summary: "Your chat with Six Frites Game",
         description:
-          "Made the first time, with a hello in `locale`, which Frite Bot also answers in. With `open` it comes back to the chat list after you deleted it for yourself.",
+          "Made the first time, with a hello in `locale`, which Six Frites Game also answers in. With `open` it comes back to the chat list after you deleted it for yourself.",
         security,
         body: z.object({ locale: z.enum(LOCALES), open: z.boolean() }),
         response: { 200: ChatDTO },
@@ -113,7 +113,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
       schema: {
         tags: ["chats"],
-        summary: "Have Frite Bot start a game in your chat with it",
+        summary: "Have Six Frites Game start a game in your chat with it",
         description: "It sends the game as its own message; answer it like any game. On the boards it takes its turn right after yours.",
         security,
         body: z.object({ kind: z.enum(BOT_GAMES), locale: z.enum(LOCALES) }),

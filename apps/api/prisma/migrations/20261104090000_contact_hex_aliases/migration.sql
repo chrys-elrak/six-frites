@@ -1,0 +1,1 @@
+ALTER TABLE "ContactOverride" ADD COLUMN "hexAlias" BOOLEAN NOT NULL DEFAULT false;

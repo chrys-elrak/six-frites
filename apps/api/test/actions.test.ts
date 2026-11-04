@@ -167,7 +167,8 @@ describe("your own name and photo", () => {
   });
 
   it("stay hidden behind a different alias for each contact until shared with them", async () => {
-    expect([pairAlias("a", "b"), pairAlias("b", "a")]).toEqual(["Frite 2729", "Frite 7239"]);
+    expect([pairAlias("a", "b"), pairAlias("b", "a")]).toEqual(["#D8160C", "#7A24DB"]);
+    expect(pairAlias("a", "b", false)).toBe("Frite 2729");
     const { host, guest, chatId } = await makeFriends();
     const other = await signUp("other", { inviteCode: (await call(host, "POST", "/v1/invites", {})).json().code });
     await call(host, "PATCH", "/v1/me", { photo: PNG_1PX });
@@ -188,9 +189,24 @@ describe("your own name and photo", () => {
     const invite = (await call(host, "POST", "/v1/invites", {})).json();
     expect((await get(guest, `/v1/invites/${invite.code}`)).inviter).toEqual({
       id: host.user.id,
-      displayName: expect.stringMatching(/^Frite \d{4}$/),
+      displayName: expect.stringMatching(/^#[0-9A-F]{6}$/),
       avatarUrl: null,
     });
+
+    await prisma.user.updateMany({ where: { id: { in: [host.user.id, guest.user.id] } }, data: { hexAlias: false } });
+    const before = pairAlias(guest.user.id, host.user.id, false);
+    expect(before).toMatch(/^Frite \d{4}$/);
+    expect((await seen()).displayName).toBe(before);
+    expect((await get(guest, "/v1/contacts")).items[0].originalName).toBe(before);
+    await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { displayName: null });
+    expect((await get(host, `/v1/chats/${chatId}`)).title).toMatch(/^Frite \d{4}$/);
+    await call(guest, "PATCH", `/v1/contacts/${host.user.id}`, { displayName: "Bob" });
+    await call(guest, "PATCH", `/v1/contacts/${host.user.id}`, { displayName: null });
+    expect((await seen()).displayName).toBe(alias);
+    expect((await get(guest, "/v1/contacts")).items[0].originalName).toBe(alias);
+    expect((await get(other, "/v1/contacts")).items[0].originalName).toBe(pairAlias(other.user.id, host.user.id, false));
+    await prisma.user.updateMany({ where: { id: { in: [host.user.id, guest.user.id] } }, data: { hexAlias: true } });
+    expect(pairAlias(other.user.id, host.user.id)).not.toBe(alias);
 
     const shared = (await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: true })).json();
     expect(shared.sharingProfile).toBe(true);
@@ -264,6 +280,7 @@ describe("custom contact names and photos", () => {
       ids.push((await signUp(name, { inviteCode: invite.json().code })).user.id);
     }
     await call(host, "PATCH", `/v1/contacts/${ids[1]}`, { displayName: "aaa Brother" });
+    await call(host, "PATCH", `/v1/contacts/${ids[0]}`, { displayName: "bbb Sister" });
     const list = await get(host, "/v1/contacts");
     expect(list.items.map((c: { user: { id: string } }) => c.user.id)).toEqual([ids[1], ids[0]]);
     expect((await get(host, "/v1/contacts?q=brother")).items).toHaveLength(1);

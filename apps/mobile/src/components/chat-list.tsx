@@ -37,7 +37,7 @@ import {
   Video,
 } from "lucide-react-native";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput } from "./text";
 import { ensureBotChat, isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
@@ -310,10 +310,14 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const t = useTheme();
   const tr = useT();
   const openSupport = async () => {
-    const res = await six.api.POST("/v1/support");
-    if (res.data) router.push(`/chats/${res.data.id}`);
+    try {
+      router.push(`/chats/${unwrap(await six.api.POST("/v1/support")).id}`);
+    } catch (err) {
+      Alert.alert(tr.support.contact, (err as Error).message);
+    }
   };
   const meId = useSession((s) => s.user!.id);
+  const isSupport = useSession((s) => s.user!.support);
   const chats = useChats(archived);
   const archivedChats = useChats(true);
   const qc = useQueryClient();
@@ -385,7 +389,9 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             </View>
             {!archived && (
               <>
-                <IconButton Icon={Headset} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
+                {!isSupport && (
+                  <IconButton Icon={Headset} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
+                )}
                 <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
                 <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
               </>

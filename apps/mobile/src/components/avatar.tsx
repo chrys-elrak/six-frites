@@ -28,10 +28,16 @@ export function Avatar({
         <Image source={{ uri: user.avatarUrl }} style={box} contentFit="cover" transition={150} />
       ) : alias ? (
         <View style={[styles.initial, box, { backgroundImage: alias.gradient }]}>
-          <Text style={[styles.alias, { fontSize: side * 0.36, lineHeight: side * 0.38 }]}>F</Text>
-          <Text style={[styles.alias, styles.number, { fontSize: side * 0.22, lineHeight: side * 0.24 }]}>
-            {alias.number}
-          </Text>
+          {alias.food ? (
+            <Text style={[styles.food, { fontSize: side * 0.52, lineHeight: side * 0.66 }]}>{alias.food}</Text>
+          ) : (
+            <>
+              <Text style={[styles.alias, { fontSize: side * 0.36, lineHeight: side * 0.38 }]}>F</Text>
+              <Text style={[styles.alias, styles.number, { fontSize: side * 0.22, lineHeight: side * 0.24 }]}>
+                {alias.number}
+              </Text>
+            </>
+          )}
         </View>
       ) : (
         <View style={[styles.initial, box]}>
@@ -56,5 +62,6 @@ const styles = StyleSheet.create({
   letter: { color: brandInk, fontWeight: "600" },
   alias: { color: "#fff", fontWeight: "700" },
   number: { fontWeight: "600", opacity: 0.9, fontVariant: ["tabular-nums"] },
+  food: { textAlign: "center", includeFontPadding: false },
   dot: { position: "absolute", right: 0, bottom: 0, backgroundColor: "#22c55e" },
 });

@@ -20,7 +20,14 @@ import { unwrap } from "@six/sdk";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   CalendarClock,
+  Camera,
   Check,
+  FileText,
+  Gamepad2,
+  Image as ImageIcon,
+  ListChecks,
+  MapPin,
+  Music,
   Flame,
   Ghost,
   ImagePlus,
@@ -221,14 +228,14 @@ export function Composer({
   }
 
   const attachActions = [
-    { label: tr.composer.photoOrVideo, onSelect: () => mediaInput.current?.click() },
-    { label: tr.composer.camera, onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
-    { label: tr.summary.kinds.file, onSelect: () => fileInput.current?.click() },
-    { label: tr.composer.audio, onSelect: () => audioInput.current?.click() },
-    { label: tr.composer.location, onSelect: () => setAskLocation(true) },
-    { label: tr.composer.checklist, onSelect: () => setWritingChecklist(true) },
-    { label: tr.composer.game, onSelect: () => setStartingGame(true) },
-    { label: tr.composer.scheduleMessage, onSelect: () => setScheduling("next") },
+    { label: tr.composer.photoOrVideo, icon: ImageIcon, onSelect: () => mediaInput.current?.click() },
+    { label: tr.composer.camera, icon: Camera, onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
+    { label: tr.summary.kinds.file, icon: FileText, onSelect: () => fileInput.current?.click() },
+    { label: tr.composer.audio, icon: Music, onSelect: () => audioInput.current?.click() },
+    { label: tr.composer.location, icon: MapPin, onSelect: () => setAskLocation(true) },
+    { label: tr.composer.checklist, icon: ListChecks, onSelect: () => setWritingChecklist(true) },
+    { label: tr.composer.game, icon: Gamepad2, onSelect: () => setStartingGame(true) },
+    { label: tr.composer.scheduleMessage, icon: CalendarClock, onSelect: () => setScheduling("next") },
   ];
   const editing = mode?.kind === "edit" ? mode.message : null;
 
@@ -751,7 +758,7 @@ export function Composer({
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => setAttachMenu(true)}
+                onClick={() => (withBot ? setStartingGame(true) : setAttachMenu(true))}
                 aria-label={tr.composer.attach}
                 aria-haspopup="menu"
                 className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
@@ -991,7 +998,7 @@ export function Composer({
           onToggleSpoiler={() => setPreview({ ...preview, spoiler: !preview.spoiler })}
         />
       )}
-      {attachMenu && <Sheet title={tr.common.send} actions={attachActions} onClose={() => setAttachMenu(false)} />}
+      {attachMenu && <Sheet bar title={tr.common.send} actions={attachActions} onClose={() => setAttachMenu(false)} />}
       {askLocation && (
         <Sheet
           title={tr.composer.sendLocationTitle}

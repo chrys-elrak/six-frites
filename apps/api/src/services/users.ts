@@ -7,6 +7,7 @@ import {
   type UpdateMeInput,
   type UserDTO,
 } from "@six/shared";
+import { env } from "../env.js";
 import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
@@ -34,6 +35,7 @@ export function toUserDTO(u: User): UserDTO {
     anonBot: !u.anonBotDisabled,
     quickReactions: u.quickReactions,
     guest: u.guest,
+    support: env.ADMIN_EMAILS.includes(u.email.toLowerCase()),
     chatBan: chatBanned(u) ? { until: u.bannedUntil?.toISOString() ?? null } : null,
     termsAccepted: u.termsAcceptedAt !== null,
     createdAt: u.createdAt.toISOString(),
@@ -44,24 +46,27 @@ export function toUserDTO(u: User): UserDTO {
  * The alias `viewerId` sees for `userId`. Each pair gets its own, so two people can't tell they know the same
  * person by comparing names. Matches the pair_alias SQL function, which the contact list sorts and searches by.
  */
-export function pairAlias(viewerId: string, userId: string, word = "Frite") {
-  const n = parseInt(createHash("md5").update(`${viewerId}:${userId}`).digest("hex").slice(0, 7), 16) % 10000;
-  return `${word} ${String(n).padStart(4, "0")}`;
+export function pairAlias(viewerId: string, userId: string, hex = true) {
+  const hash = createHash("md5").update(`${viewerId}:${userId}`).digest("hex");
+  if (hex) return `#${hash.slice(0, 6).toUpperCase()}`;
+  return `Frite ${String(parseInt(hash.slice(0, 7), 16) % 10000).padStart(4, "0")}`;
 }
 
-/** Whoever asked support for help, as the desk sees them: a Potato instead of a Frite, with the same number. */
+/** Whoever asked support for help, as the desk sees them: a Potato instead of a Frite, or in front of their code. */
 export function supportCase<P extends { id: string; displayName: string }>(p: P, viewerId: string): P {
-  return p.displayName === pairAlias(viewerId, p.id) ? { ...p, displayName: pairAlias(viewerId, p.id, "Potato") } : p;
+  const aliased = [true, false].some((hex) => p.displayName === pairAlias(viewerId, p.id, hex));
+  return aliased ? { ...p, displayName: `Potato ${p.displayName.replace(/^Frite /, "")}` } : p;
 }
 
 /** Someone as `viewerId` sees them: their alias for that viewer and no photo, unless they share their profile. */
 export function toPublicUser(
-  u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey" | "deletedAt">,
+  u: Pick<User, "id" | "displayName" | "avatarUrl" | "avatarKey" | "deletedAt" | "hexAlias">,
   viewerId: string,
   shared: boolean,
+  hex = false,
 ) {
   if (shared) return { id: u.id, displayName: u.displayName, avatarUrl: avatarOf(u) };
-  return { id: u.id, displayName: u.deletedAt ? u.displayName : pairAlias(viewerId, u.id), avatarUrl: null };
+  return { id: u.id, displayName: u.deletedAt ? u.displayName : pairAlias(viewerId, u.id, u.hexAlias || hex), avatarUrl: null };
 }
 
 /** Sends everyone who shares a chat with `userId` that chat again, after their name or photo changed. */
