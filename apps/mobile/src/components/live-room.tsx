@@ -627,7 +627,6 @@ export function LiveRoom({ id }: { id: string }) {
               keepOpen: true,
               onSelect: () => setGameSound({ music: !sound.music }),
             },
-            { label: tr.live.leave, onSelect: leave },
             ...(room.status === "playing" && room.mySeat !== null
               ? [
                   { label: tr.live.giveUp, onSelect: () => setGivingUp(true) },
