@@ -609,7 +609,7 @@ export function LiveRoom({ id }: { id: string }) {
               </>
             )}
           </ScrollView>
-          <RoomChat room={room} say={say} react={react} />
+          {(room.invited.length > 0 || room.seats.some((s) => s.user && s.user.id !== meId)) && <RoomChat room={room} say={say} react={react} />}
         </View>
       )}
       {menu && (

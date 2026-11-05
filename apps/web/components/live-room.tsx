@@ -674,7 +674,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
           )}
         </div>
       </div>
-      {room && !gone && (
+      {room && !gone && (room.invited.length > 0 || room.seats.some((s) => s.user && s.user.id !== meId)) && (
         <RoomChat
           room={room}
           say={(line) => ask("live:say", line)}
