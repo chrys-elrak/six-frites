@@ -336,10 +336,11 @@ function hostRoom(userId: string, roomId: string) {
 
 /**
  * Opens a room with me in the first seat and asks my contacts to join: a banner in the app, a
- * notification, and the invite in our chat, sent silently since the notification already rang.
+ * notification, and the invite in our chat, sent silently since the notification already rang. With `bot`
+ * it starts right away, with the bot in the seats the game needs.
  */
 export async function createRoom(userId: string, input: CreateLiveInput) {
-  const invite = [...new Set(input.invite)].filter((id) => id !== userId && id !== FRITE_BOT_ID);
+  const invite = input.bot ? [] : [...new Set(input.invite)].filter((id) => id !== userId && id !== FRITE_BOT_ID);
   if (invite.length >= LIVE_SEATS[input.game].max) throw new AppError("ROOM_FULL", "Too many people for this game");
   const blocked = await blockedWith(prisma, userId);
   const chats = await prisma.chat.findMany({
@@ -373,6 +374,10 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   };
   await refresh(room);
   live.set(room.id, room);
+  if (input.bot) {
+    while (room.seats.length < LIVE_SEATS[room.game].min) room.seats.push({ userId: null, left: false, away: false, gaveUp: false });
+    startRoom(userId, room.id);
+  }
   if (!invite.length) {
     void postBotLiveGame(userId, input.locale, room.game, room.id).catch((err) =>
       console.error("could not post the live game in the bot's chat:", err.message),

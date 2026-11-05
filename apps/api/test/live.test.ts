@@ -102,6 +102,14 @@ describe("live rooms", () => {
     if (seen.game === "eights") expect(seen.state.hand).not.toEqual(view.state.hand);
   });
 
+  it("starts a game against the bot right away, inviting no one", async () => {
+    const { host, guest } = await makeFriends();
+    const a = await player(host);
+    const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "ludo", invite: [guest.user.id], locale: "en", bot: true });
+    expect(data).toMatchObject({ status: "playing", invited: [] });
+    expect(data!.seats.map((s) => s.user?.id ?? null)).toEqual([host.user.id, null]);
+  });
+
   it("posts invites in our chat, a game with the bot alone in its chat, and nothing else after", async () => {
     const { host, guest } = await makeFriends();
     const [a, b] = [await player(host), await player(guest)];

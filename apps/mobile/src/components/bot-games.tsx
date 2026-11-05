@@ -11,7 +11,7 @@ import { useRealtime } from "@/lib/realtime";
 import { six } from "@/lib/six";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { HowToPlay } from "./how-to-play";
-import { LiveInviteSheet, playHref } from "./live";
+import { playHref } from "./live";
 import { Text } from "./text";
 
 function GameCard({ game, emoji, title, onPress }: { game: BotGame | LiveGame; emoji: string; title: string; onPress: () => void }) {
@@ -36,7 +36,7 @@ function GameCard({ game, emoji, title, onPress }: { game: BotGame | LiveGame; e
 
 /**
  * What the chat with Six Frites Game shows instead of a message box: live games you're in, the games it plays with
- * you right in the chat, and live games with friends where it takes the empty seats.
+ * you right in the chat, and live games against it that open already started.
  */
 export function BotGames() {
   const t = useTheme();
@@ -44,7 +44,6 @@ export function BotGames() {
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
   const { realtime } = useRealtime();
-  const [live, setLive] = useState<LiveGame | null>(null);
   const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
 
   useEffect(() => {
@@ -60,6 +59,14 @@ export function BotGames() {
       .POST("/v1/bot/games", { body: { kind, locale: getLocale() } })
       .then((res) => insertMessage(qc, unwrap(res)))
       .catch(() => null);
+  }
+
+  async function play(game: LiveGame) {
+    const res = await realtime?.socket
+      .timeout(10_000)
+      .emitWithAck("live:create", { game, invite: [], locale: getLocale(), bot: true })
+      .catch(() => null);
+    if (res?.ok) router.push(playHref(res.data.id));
   }
 
   const heading = (text: string) => (
@@ -91,10 +98,9 @@ export function BotGames() {
         ))}
         {heading(tr.live.title)}
         {LIVE_GAMES.map((g) => (
-          <GameCard key={g} game={g} emoji={LIVE_EMOJI[g]} title={tr.live.games[g]} onPress={() => setLive(g)} />
+          <GameCard key={g} game={g} emoji={LIVE_EMOJI[g]} title={tr.live.games[g]} onPress={() => void play(g)} />
         ))}
       </ScrollView>
-      {live && <LiveInviteSheet game={live} onClose={() => setLive(null)} />}
     </View>
   );
 }

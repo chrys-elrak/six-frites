@@ -4,13 +4,13 @@ import { BOT_GAMES, type BotGame, GAME_EMOJI, LIVE_EMOJI, LIVE_GAMES, type LiveG
 import { unwrap } from "@six/sdk";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { insertMessage } from "@/lib/chats";
 import { getLocale, useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { six } from "@/lib/six";
 import { HowToPlay } from "./how-to-play";
-import { NewLiveRoom } from "./live-invites";
 
 const card =
   "relative flex w-28 shrink-0 flex-col items-center gap-1 rounded-2xl p-2.5 pt-3 text-center ring-1 transition active:scale-[0.97]";
@@ -30,13 +30,13 @@ const heading = "shrink-0 self-center px-1 text-[11px] font-semibold tracking-wi
 
 /**
  * What the chat with Six Frites Game shows instead of a message box: live games you're in, the games it plays with
- * you right in the chat, and live games with friends where it takes the empty seats.
+ * you right in the chat, and live games against it that open already started.
  */
 export function BotGames() {
   const tr = useT();
   const qc = useQueryClient();
   const { realtime } = useRealtime();
-  const [live, setLive] = useState<LiveGame | null>(null);
+  const router = useRouter();
   const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
 
   useEffect(() => {
@@ -52,6 +52,14 @@ export function BotGames() {
       .POST("/v1/bot/games", { body: { kind, locale: getLocale() } })
       .then((res) => insertMessage(qc, unwrap(res)))
       .catch(() => null);
+  }
+
+  async function play(game: LiveGame) {
+    const res = await realtime?.socket
+      .timeout(10_000)
+      .emitWithAck("live:create", { game, invite: [], locale: getLocale(), bot: true })
+      .catch(() => null);
+    if (res?.ok) router.push(`/play/${res.data.id}`);
   }
 
   return (
@@ -70,10 +78,9 @@ export function BotGames() {
         ))}
         <h3 className={heading}>{tr.live.title}</h3>
         {LIVE_GAMES.map((g) => (
-          <GameCard key={g} game={g} emoji={LIVE_EMOJI[g]} title={tr.live.games[g]} onPick={() => setLive(g)} />
+          <GameCard key={g} game={g} emoji={LIVE_EMOJI[g]} title={tr.live.games[g]} onPick={() => void play(g)} />
         ))}
       </div>
-      {live && <NewLiveRoom game={live} onClose={() => setLive(null)} />}
     </div>
   );
 }

@@ -42,6 +42,7 @@ export const CreateLiveInput = z.object({
   game: z.enum(LIVE_GAMES),
   invite: z.array(Id).max(3).describe("Contacts asked to join"),
   locale: z.enum(LOCALES).describe("The language word hunt is played in"),
+  bot: z.boolean().optional().describe("Start right away against Six Frites Game, with no one invited"),
 });
 export type CreateLiveInput = z.infer<typeof CreateLiveInput>;
 

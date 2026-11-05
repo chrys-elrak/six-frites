@@ -4,7 +4,7 @@ import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO, isFrozen } f
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useChats } from "@/lib/chats";
+import { isBotChat, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
@@ -22,7 +22,7 @@ export function NewLiveRoom({ game, onClose }: { game: LiveGame; onClose: () => 
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const friends = (useChats().data ?? [])
-    .filter((c) => !isFrozen(c) && !c.support && !c.supportDesk && !c.withSupport)
+    .filter((c) => !isFrozen(c) && !c.support && !c.supportDesk && !c.withSupport && !isBotChat(c))
     .flatMap((c) => {
       const peer = c.members.find((m) => m.user.id !== meId)?.user;
       return peer ? [{ ...peer, displayName: c.title }] : [];
