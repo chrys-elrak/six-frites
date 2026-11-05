@@ -12,7 +12,7 @@ export function Avatar({
   size = "sm",
   online = false,
 }: {
-  user: Pick<PublicUser, "displayName" | "avatarUrl">;
+  user: Pick<PublicUser, "displayName" | "avatarUrl" | "alias">;
   size?: keyof typeof sizes;
   online?: boolean;
 }) {
@@ -21,7 +21,7 @@ export function Avatar({
   const side = sizes[size];
   const box = { width: side, height: side, borderRadius: side / 2 };
   const dot = Math.round(side * 0.28);
-  const alias = aliasAvatar(user.displayName);
+  const alias = aliasAvatar(user.alias ?? user.displayName);
   return (
     <View style={{ width: side, height: side }}>
       {user.avatarUrl ? (

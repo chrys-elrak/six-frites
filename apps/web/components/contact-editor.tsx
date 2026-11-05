@@ -149,7 +149,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                   className="group relative rounded-full"
                   aria-label={tr.contacts.choosePhoto}
                 >
-                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto }} size="lg" />
+                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
                   <span className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
                     <Camera className="size-6" />
                   </span>

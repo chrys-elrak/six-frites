@@ -7,6 +7,7 @@ import {
   type ContactListQuery,
   type PublicUser,
   type UpdateContactInput,
+  aliasAvatar,
 } from "@six/shared";
 import { type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
@@ -25,7 +26,12 @@ const photoUrl = (o: Override) => (o.photoKey ? presignGet(o.photoKey) : null);
 
 function applyOverride(user: PublicUser, o: Override | undefined): PublicUser {
   if (!o) return user;
-  return { ...user, displayName: o.displayName ?? user.displayName, avatarUrl: photoUrl(o) ?? user.avatarUrl };
+  return {
+    ...user,
+    displayName: o.displayName ?? user.displayName,
+    avatarUrl: photoUrl(o) ?? user.avatarUrl,
+    ...(o.displayName && aliasAvatar(user.displayName) && { alias: user.displayName }),
+  };
 }
 
 /**

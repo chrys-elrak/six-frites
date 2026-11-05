@@ -130,7 +130,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 18 }}>
               <View style={{ alignItems: "center", gap: 10 }}>
                 <Pressable onPress={choosePhoto} accessibilityLabel={tr.contacts.choosePhoto}>
-                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto }} size="lg" />
+                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
                   <View style={styles.cameraBadge}>
                     <Camera size={22} color="#fff" />
                   </View>

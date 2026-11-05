@@ -271,6 +271,8 @@ describe("custom contact names and photos", () => {
     await call(host, "PATCH", `/v1/contacts/${ids[0]}`, { displayName: "bbb Sister" });
     const list = await get(host, "/v1/contacts");
     expect(list.items.map((c: { user: { id: string } }) => c.user.id)).toEqual([ids[1], ids[0]]);
+    expect(list.items[0].user).toMatchObject({ displayName: "aaa Brother", avatarUrl: null, alias: list.items[0].originalName });
+    expect(list.items[0].originalName).toMatch(/^#[0-9A-F]{6}$/);
     expect((await get(host, "/v1/contacts?q=brother")).items).toHaveLength(1);
     expect((await get(host, "/v1/contacts?q=noah")).items).toHaveLength(0);
   });

@@ -10,7 +10,7 @@ export function Avatar({
   size = "sm",
   online = false,
 }: {
-  user: Pick<PublicUser, "displayName" | "avatarUrl">;
+  user: Pick<PublicUser, "displayName" | "avatarUrl" | "alias">;
   size?: keyof typeof sizes;
   online?: boolean;
 }) {
@@ -29,7 +29,7 @@ export function Avatar({
   );
 }
 
-function Picture({ user, size }: { user: Pick<PublicUser, "displayName" | "avatarUrl">; size: keyof typeof sizes }) {
+function Picture({ user, size }: { user: Pick<PublicUser, "displayName" | "avatarUrl" | "alias">; size: keyof typeof sizes }) {
   if (user.avatarUrl) {
     return (
       <img
@@ -40,7 +40,7 @@ function Picture({ user, size }: { user: Pick<PublicUser, "displayName" | "avata
       />
     );
   }
-  const alias = aliasAvatar(user.displayName);
+  const alias = aliasAvatar(user.alias ?? user.displayName);
   if (alias) {
     return (
       <div

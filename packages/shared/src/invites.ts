@@ -7,6 +7,10 @@ export const PublicUser = z
     id: Id,
     displayName: z.string(),
     avatarUrl: z.string().url().nullable(),
+    alias: z
+      .string()
+      .optional()
+      .describe("Their alias, when you gave them a name of your own: without a photo, their picture still comes from it"),
   })
   .describe("Their alias and no photo, unless they share their profile with you");
 export type PublicUser = z.infer<typeof PublicUser>;
