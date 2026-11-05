@@ -44,12 +44,14 @@ import {
   wordsView,
   wordsWinners,
   dotsAuto,
+  dotsScores,
   dotsPlay,
   dotsStart,
   fanoronaAuto,
   fanoronaPlay,
   fanoronaStart,
   memoryAuto,
+  memoryScores,
   memoryPlay,
   memoryStart,
   memoryView,
@@ -129,6 +131,14 @@ setInterval(() => {
 
 const humans = (room: Room) => room.seats.flatMap((s) => (s.userId && !s.left ? [s.userId] : []));
 const playsItself = (seat: Seat) => !seat.userId || seat.left || seat.away || seat.gaveUp;
+
+/** Each seat's score, in the games that keep one. */
+function scoresOf(state: GameState) {
+  if (state.game === "dots") return dotsScores(state.s);
+  if (state.game === "memory") return memoryScores(state.s);
+  if (state.game === "words") return wordsView(state.s, null).scores;
+  return null;
+}
 
 function startState(room: Room): GameState {
   const n = room.seats.length;
@@ -271,8 +281,10 @@ function finish(room: Room, ended: number[]) {
   if (people.length === 1) {
     const me = people[0]!;
     const result = !winners.includes(me) ? "lost" : winners.length > 1 ? "draw" : "won";
+    const scores = scoresOf(room.state!);
+    const score = scores && ([scores[me]!, Math.max(...scores.filter((_, i) => i !== me))] as [number, number]);
     void Promise.resolve(room.posted)
-      .then(() => postBotLiveResult(room.seats[me]!.userId!, room.locale, room.game, result))
+      .then(() => postBotLiveResult(room.seats[me]!.userId!, room.locale, room.game, result, score ?? undefined))
       .catch((err) => console.error("could not post the live result in the bot's chat:", err.message));
   }
 }

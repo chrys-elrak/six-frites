@@ -56,7 +56,8 @@ function liveText(a: Extract<ServiceAction, { type: "live_invite" }>, t: Dict, m
 
 function resultText(a: Extract<ServiceAction, { type: "live_result" }>, t: Dict) {
   const game = t.live.games[a.game];
-  return { won: t.live.resultWon, lost: t.live.resultLost, draw: t.live.resultDraw }[a.result](game);
+  const text = { won: t.live.resultWon, lost: t.live.resultLost, draw: t.live.resultDraw }[a.result](game);
+  return a.score ? `${text} · ${a.score[0]}–${a.score[1]}` : text;
 }
 
 /** What a service message says as a sentence about its sender; `who` is null when it was you. */

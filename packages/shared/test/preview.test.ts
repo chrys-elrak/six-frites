@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { shownType } from "../src/preview.js";
+import { dict } from "../src/i18n/index.js";
+import { serviceText } from "../src/preview.js";
 
-describe("shownType", () => {
-  const image = (mime: string) => ({ type: "image" as const, attachment: { mime } as never });
+describe("live results", () => {
+  const result = (action: object) => serviceText({ action } as Parameters<typeof serviceText>[0], dict.en);
 
-  it("shows keyboard GIFs and stickers as such, and everything else as sent", () => {
-    expect(shownType(image("image/gif"))).toBe("gif");
-    expect(shownType({ ...image("image/webp"), file: { sticker: true } })).toBe("sticker");
-    expect(shownType(image("image/jpeg"))).toBe("image");
-    expect(shownType({ type: "video", attachment: null })).toBe("video");
+  it("reads with the score in the games that keep one", () => {
+    expect(result({ type: "live_result", game: "memory", result: "won", score: [5, 3] })).toBe("You won Memory 🎉 · 5–3");
+    expect(result({ type: "live_result", game: "ludo", result: "lost" })).toBe("Six Frites Game won Ludo");
   });
 });

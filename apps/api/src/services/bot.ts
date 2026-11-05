@@ -53,9 +53,15 @@ export async function postBotLiveGame(userId: string, locale: Locale, game: Live
 }
 
 /** Tells me in our chat how a live game I played alone against the bot ended. */
-export async function postBotLiveResult(userId: string, locale: Locale, game: LiveGame, result: "won" | "lost" | "draw") {
+export async function postBotLiveResult(
+  userId: string,
+  locale: Locale,
+  game: LiveGame,
+  result: "won" | "lost" | "draw",
+  score?: [number, number],
+) {
   const chatId = (await botChatId(userId)) ?? (await openBotChat(userId, locale, true)).id;
-  const action = { type: "live_result" as const, game, result };
+  const action = { type: "live_result" as const, game, result, ...(score && { score }) };
   await withEvents((tx, emit) => createMessage(tx, emit, FRITE_BOT_ID, chatId, { clientId: createId(), action, silent: true }));
 }
 
