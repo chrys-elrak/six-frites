@@ -17,7 +17,7 @@ export const CHANGELOG: Release[] = [
     date: "2026-11-05",
     notes: {
       en: [
-        "Stories: share text, a photo or a video of up to 30 seconds with your contacts, from the top of Chats. Add a GIF, the place, the date or the time, and choose how long it stays, from an hour to a week. You see who watched yours.",
+        "Stories: share text, a photo or a video of up to 30 seconds with your contacts, from the top of Chats. Add a GIF, the place, the date or the time, draw with a pen, arrows and shapes, and add text you can drag anywhere, plain, on a background or outlined. Choose how long it stays, from an hour to a day. Your contacts can reply or react, and you see who watched yours.",
         "Frite Bot is now Six Frites Game. Its chat shows the games instead of a message box: tap one and play, live games included, already started with the bot.",
         "After each live game against Six Frites Game, its chat tells you who won, with the score in Dots and Boxes, Memory and Word Hunt. Left a game? Tap Join there to go back.",
         "Live games have a ⋮ menu to turn the sound effects on or off, and some background music.",
@@ -29,7 +29,7 @@ export const CHANGELOG: Release[] = [
         "Live games come alive: stones slide, lines draw themselves, cards are dealt and won boxes and pairs pop. Pieces wear fries, burgers, hot dogs and pizza, and a win throws them in the air.",
       ],
       fr: [
-        "Stories : partagez un texte, une photo ou une vidéo de 30 secondes au plus avec vos contacts, depuis le haut des Discussions. Ajoutez un GIF, le lieu, la date ou l'heure, et choisissez combien de temps elle reste, d'une heure à une semaine. Vous voyez qui a regardé les vôtres.",
+        "Stories : partagez un texte, une photo ou une vidéo de 30 secondes au plus avec vos contacts, depuis le haut des Discussions. Ajoutez un GIF, le lieu, la date ou l'heure, dessinez au crayon, avec des flèches et des formes, et ajoutez du texte à placer où vous voulez, simple, sur un fond ou avec un contour. Choisissez combien de temps elle reste, d'une heure à un jour. Vos contacts peuvent répondre ou réagir, et vous voyez qui a regardé les vôtres.",
         "Frite Bot devient Six Frites Game. Sa discussion affiche les jeux à la place du champ de message : touchez-en un et jouez, parties en direct comprises, déjà lancées avec lui.",
         "Après chaque partie en direct contre Six Frites Game, sa discussion vous dit qui a gagné, avec le score à la pipopipette, au memory et à la chasse aux mots. Partie quittée ? Touchez Rejoindre pour y revenir.",
         "Les parties en direct ont un menu ⋮ pour activer ou couper les effets sonores, et une musique de fond.",
@@ -41,7 +41,7 @@ export const CHANGELOG: Release[] = [
         "Les parties en direct s'animent : les pions glissent, les traits se tracent, les cartes se distribuent, et les cases et paires gagnées surgissent. Les pièces portent frites, burgers, hot-dogs et pizzas, et une victoire les fait voler.",
       ],
       mg: [
-        "Tantara: mizara soratra, sary na horonantsary 30 segondra farafahabetsany amin'ireo mpifandray aminao, eo ambony amin'ny Resaka. Ampio GIF, ny toerana, ny daty na ny ora, ary safidio hoe hafiriana no hijanonany, adiny iray ka hatramin'ny herinandro. Hitanao hoe iza no nijery ny anao.",
+        "Tantara: mizara soratra, sary na horonantsary 30 segondra farafahabetsany amin'ireo mpifandray aminao, eo ambony amin'ny Resaka. Ampio GIF, ny toerana, ny daty na ny ora, manaova sary amin'ny penina, zana-tsipika sy endrika, ary ampio soratra azonao afindra na aiza na aiza, tsotra, misy loko ambadika na misy sisiny. Safidio hoe hafiriana no hijanonany, adiny iray ka hatramin'ny iray andro. Afaka mamaly na maneho fihetseham-po ireo mpifandray aminao, ary hitanao hoe iza no nijery ny anao.",
         "Lasa Six Frites Game i Frite Bot. Lalao no miseho ao amin'ny resaka aminy fa tsy toerana fanoratana: tsindrio ny iray dia milalao, ary efa manomboka miaraka aminy ny lalao mivantana.",
         "Isaky ny vita ny lalao mivantana amin'i Six Frites Game, lazainy ao amin'ny resaka hoe iza no nandresy, miaraka amin'ny isa amin'ny Teboka sy efamira, Tadidy ary Fihazana teny. Nandao lalao? Tsindrio ny Hiditra ao raha hiverina.",
         "Manana menu ⋮ ny lalao mivantana hamelomana na hamonoana ny feo, ary misy mozika ambadika.",
