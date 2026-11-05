@@ -13,19 +13,26 @@ declare global {
   }
 }
 
-export const canScanQr = () => typeof window !== "undefined" && !!window.BarcodeDetector;
+export const canScanQr = () => typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+
+/** The browser's own QR reader, or a WebAssembly one for browsers without it, like Safari and Firefox. */
+async function qrDetector(): Promise<Detector> {
+  if (window.BarcodeDetector) return new window.BarcodeDetector({ formats: ["qr_code"] });
+  const { BarcodeDetector } = await import("barcode-detector/ponyfill");
+  return new BarcodeDetector({ formats: ["qr_code"] });
+}
 
 export function QrScanner({ onScan }: { onScan: (value: string) => void }) {
   const cam = useCamera("environment", { square: true });
 
   useEffect(() => {
-    if (!cam.stream || !window.BarcodeDetector) return;
-    const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+    if (!cam.stream) return;
+    const detector = qrDetector();
     let done = false;
     const timer = setInterval(async () => {
       const video = cam.video.current;
       if (done || !video?.videoWidth) return;
-      const [code] = await detector.detect(video).catch(() => []);
+      const [code] = await detector.then((d) => d.detect(video)).catch(() => []);
       if (code && !done) {
         done = true;
         onScan(code.rawValue);
