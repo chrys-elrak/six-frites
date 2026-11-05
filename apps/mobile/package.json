@@ -9,6 +9,7 @@
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "build:android": "./scripts/build-android-release.sh",
+    "publish:android": "./scripts/publish-android-release.sh",
     "lint": "expo lint"
   },
   "dependencies": {

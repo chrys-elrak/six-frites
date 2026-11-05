@@ -8,7 +8,25 @@ on:
 concurrency: deploy
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: docker compose up -d --wait postgres redis storage
+      - run: npm ci --no-audit --no-fund
+      - run: npm run db:generate -w @six/api
+        env:
+          DATABASE_URL: postgresql://six:six@localhost:5432/six?schema=test
+      - run: npm run typecheck
+      - run: npm test
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -26,3 +44,43 @@ jobs:
           chmod 600 ~/.ssh/deploy
           echo "DEPLOY_KEY=$HOME/.ssh/deploy" >> "$GITHUB_ENV"
       - run: scripts/deploy.sh
+
+  android:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - name: New version?
+        id: check
+        run: |
+          version=$(sed -n 's/^  version: "\(.*\)",$/\1/p' apps/mobile/app.config.ts)
+          if curl -fsS https://store.koera.mg/api/apps/six-frites/releases | grep -q "\"version\":\"$version\""; then
+            echo "$version is already on Koera Store"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.check.outputs.new
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - if: steps.check.outputs.new
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - if: steps.check.outputs.new
+        run: npm ci --no-audit --no-fund
+      - if: steps.check.outputs.new
+        run: printf '%s' "$KEYSTORE" | base64 -d > apps/mobile/signing/release.p12
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      - if: steps.check.outputs.new
+        run: npm run build:android
+        env:
+          SIX_KEYSTORE_PASSWORD: ${{ secrets.SIX_KEYSTORE_PASSWORD }}
+      - if: steps.check.outputs.new
+        run: npm run publish:android
+        env:
+          STORE_ADMIN_PASSWORD: ${{ secrets.STORE_ADMIN_PASSWORD }}
