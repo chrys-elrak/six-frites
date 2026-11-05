@@ -40,7 +40,7 @@ export const CHANGELOG: Release[] = [
         "Lasa Six Frites Game i Frite Bot. Lalao no miseho ao amin'ny resaka aminy fa tsy toerana fanoratana: tsindrio ny iray dia milalao, ary efa manomboka miaraka aminy ny lalao mivantana.",
         "Isaky ny vita ny lalao mivantana amin'i Six Frites Game, lazainy ao amin'ny resaka hoe iza no nandresy, miaraka amin'ny isa amin'ny Teboka sy efamira, Tadidy ary Fihazana teny. Nandao lalao? Tsindrio ny Hiditra ao raha hiverina.",
         "Manana menu ⋮ ny lalao mivantana hamelomana na hamonoana ny feo, ary misy mozika ambadika.",
-        "Mitazona ny sarin'ny kaody lokony ny namana novanana anarana raha tsy omenao sary, ary tsy miseho ao amin'ny Namana intsony ny resaka voatahiry.",
+        "Mitazona ny sarin'ny kaody lokony ny namana novanana anarana raha tsy omenao sary, ary tsy miseho ao amin'ny Mpifandray intsony ny resaka voatahiry.",
         "Tsy tapaka intsony ny faran'ny hafatra sy ny ora amin'ny finday manana endritsoratra manokana: ny endritsoratra tsotra an'ny app no ampiasaina, raha tsy misafidy ny anao ianao ao amin'ny Paramètres.",
         "Endrika vaovao: kaody loko toy ny #EF4535 fa tsy Frite 1234 intsony no anaran'ny olona, miaraka amin'ny sarin-tsakafo haingana na legioma amin'io loko io. Tsy miova ny anarana sy sary nomenao ny namanao.",
         "Amin'ny efijery lehibe, eo akaikin'ny hafatra no misokatra ny menu rehefa tsindriana ela.",
