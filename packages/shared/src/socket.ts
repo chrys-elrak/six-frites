@@ -13,6 +13,7 @@ import type { CallSignalDTO, CallSignalInput } from "./calls.js";
 import type { ErrorBody } from "./errors.js";
 import type { CreateLiveInput, LiveInviteDTO, LiveRoomDTO } from "./live.js";
 import type { PresenceDTO } from "./presence.js";
+import type { StoryReactedDTO } from "./stories.js";
 import type { ChangeEventDTO } from "./sync.js";
 
 export type AckResult<T> = { ok: true; data: T } | ({ ok: false } & ErrorBody);
@@ -39,6 +40,10 @@ export interface ServerToClientEvents {
   "live:closed": (e: { roomId: string }) => void;
   /** Someone sent me an anonymous message; not replayed by sync, so refetch the inbox after reconnecting. */
   "ask:new": (m: AnonMessageDTO) => void;
+  /** A contact posted or removed a story, or I did on another device; refetch the stories. Not replayed by sync. */
+  "stories:changed": (e: { userId: string }) => void;
+  /** A contact reacted to one of my stories; not replayed by sync. */
+  "story:reacted": (e: StoryReactedDTO) => void;
 }
 
 export interface ClientToServerEvents {

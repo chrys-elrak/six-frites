@@ -87,6 +87,8 @@ model User {
   anonSent       AnonMessage[]      @relation("anonSender")
   anonBlocking   AnonBlock[]        @relation("anonBlocker")
   anonBlockedBy  AnonBlock[]        @relation("anonBlocked")
+  stories        Story[]
+  storyViews     StoryView[]
 
   @@index([anonBotAt])
 }
@@ -350,6 +352,8 @@ model Message {
   action            Json?
   location          Json?
   checklist         Json?
+  /// The story this answers, as it was then: { id, ownerId, kind, text, background }.
+  story             Json?
   game              Json?
   encrypted         Boolean   @default(false)
   senderDevice      String?
@@ -501,6 +505,7 @@ model Upload {
   messages  Message[]
   scheduled ScheduledMessage?
   sticker   Sticker?
+  story     Story?
 
   @@index([ownerId])
   @@index([status, createdAt])
@@ -646,4 +651,49 @@ model AnonBlock {
   blocked User @relation("anonBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
 
   @@id([blockerId, blockedId])
+}
+
+/// Text, a photo or a video the user's contacts can open until `expiresAt`; the worker deletes it then.
+model Story {
+  id         String    @id @default(cuid())
+  userId     String
+  text       String?
+  background String?
+  uploadId   String?   @unique
+  /// A GIF on top: the MP4 in shared storage that chat GIFs use too, so it is never deleted with the story.
+  gifKey     String?
+  gifWidth   Int?
+  gifHeight  Int?
+  location   Json?
+  showDate   Boolean   @default(false)
+  showTime   Boolean   @default(false)
+  /// Where the poster dragged each sticker: { ask, gif, location, date, time } of { x, y, scale }.
+  positions  Json?
+  /// What the poster drew on top: { strokes, texts }, placed as fractions of the story.
+  drawing    Json?
+  /// An anonymous message the poster shared on it, as a card: { text, prompt }.
+  ask        Json?
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  upload Upload?     @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  views  StoryView[]
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model StoryView {
+  storyId  String
+  userId   String
+  viewedAt DateTime @default(now())
+  /// The emojis they reacted with, oldest first and at most the last 30, shown to the poster only, never sent as messages.
+  reactions String[] @default([])
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([storyId, userId])
+  @@index([userId])
 }

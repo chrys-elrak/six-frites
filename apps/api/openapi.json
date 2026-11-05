@@ -7370,6 +7370,55 @@
                           ],
                           "additionalProperties": false
                         },
+                        "story": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "ownerId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Whose story it is"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video"
+                              ]
+                            },
+                            "text": {
+                              "nullable": true,
+                              "description": "The start of the story's text or caption",
+                              "type": "string"
+                            },
+                            "background": {
+                              "nullable": true,
+                              "description": "A text story's colour, or two for a gradient",
+                              "type": "string"
+                            },
+                            "imageUrl": {
+                              "nullable": true,
+                              "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "ownerId",
+                            "kind",
+                            "text",
+                            "background",
+                            "imageUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                        },
                         "action": {
                           "nullable": true,
                           "oneOf": [
@@ -8445,6 +8494,7 @@
                         "ephemeral",
                         "groupId",
                         "replyTo",
+                        "story",
                         "action",
                         "location",
                         "checklist",
@@ -8898,6 +8948,55 @@
                               "encrypted"
                             ],
                             "additionalProperties": false
+                          },
+                          "story": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "ownerId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Whose story it is"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "image",
+                                  "video"
+                                ]
+                              },
+                              "text": {
+                                "nullable": true,
+                                "description": "The start of the story's text or caption",
+                                "type": "string"
+                              },
+                              "background": {
+                                "nullable": true,
+                                "description": "A text story's colour, or two for a gradient",
+                                "type": "string"
+                              },
+                              "imageUrl": {
+                                "nullable": true,
+                                "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ownerId",
+                              "kind",
+                              "text",
+                              "background",
+                              "imageUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "The story a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -9974,6 +10073,7 @@
                           "ephemeral",
                           "groupId",
                           "replyTo",
+                          "story",
                           "action",
                           "location",
                           "checklist",
@@ -10554,6 +10654,55 @@
                         "encrypted"
                       ],
                       "additionalProperties": false
+                    },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -11630,6 +11779,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -12142,6 +12292,55 @@
                             "encrypted"
                           ],
                           "additionalProperties": false
+                        },
+                        "story": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "ownerId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Whose story it is"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video"
+                              ]
+                            },
+                            "text": {
+                              "nullable": true,
+                              "description": "The start of the story's text or caption",
+                              "type": "string"
+                            },
+                            "background": {
+                              "nullable": true,
+                              "description": "A text story's colour, or two for a gradient",
+                              "type": "string"
+                            },
+                            "imageUrl": {
+                              "nullable": true,
+                              "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "ownerId",
+                            "kind",
+                            "text",
+                            "background",
+                            "imageUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The story a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -13218,6 +13417,7 @@
                         "ephemeral",
                         "groupId",
                         "replyTo",
+                        "story",
                         "action",
                         "location",
                         "checklist",
@@ -13671,6 +13871,55 @@
                               "encrypted"
                             ],
                             "additionalProperties": false
+                          },
+                          "story": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "ownerId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Whose story it is"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "image",
+                                  "video"
+                                ]
+                              },
+                              "text": {
+                                "nullable": true,
+                                "description": "The start of the story's text or caption",
+                                "type": "string"
+                              },
+                              "background": {
+                                "nullable": true,
+                                "description": "A text story's colour, or two for a gradient",
+                                "type": "string"
+                              },
+                              "imageUrl": {
+                                "nullable": true,
+                                "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ownerId",
+                              "kind",
+                              "text",
+                              "background",
+                              "imageUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "The story a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -14747,6 +14996,7 @@
                           "ephemeral",
                           "groupId",
                           "replyTo",
+                          "story",
                           "action",
                           "location",
                           "checklist",
@@ -15385,6 +15635,55 @@
                           ],
                           "additionalProperties": false
                         },
+                        "story": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "ownerId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Whose story it is"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video"
+                              ]
+                            },
+                            "text": {
+                              "nullable": true,
+                              "description": "The start of the story's text or caption",
+                              "type": "string"
+                            },
+                            "background": {
+                              "nullable": true,
+                              "description": "A text story's colour, or two for a gradient",
+                              "type": "string"
+                            },
+                            "imageUrl": {
+                              "nullable": true,
+                              "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "ownerId",
+                            "kind",
+                            "text",
+                            "background",
+                            "imageUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                        },
                         "action": {
                           "nullable": true,
                           "oneOf": [
@@ -16460,6 +16759,7 @@
                         "ephemeral",
                         "groupId",
                         "replyTo",
+                        "story",
                         "action",
                         "location",
                         "checklist",
@@ -16913,6 +17213,55 @@
                               "encrypted"
                             ],
                             "additionalProperties": false
+                          },
+                          "story": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "ownerId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Whose story it is"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "image",
+                                  "video"
+                                ]
+                              },
+                              "text": {
+                                "nullable": true,
+                                "description": "The start of the story's text or caption",
+                                "type": "string"
+                              },
+                              "background": {
+                                "nullable": true,
+                                "description": "A text story's colour, or two for a gradient",
+                                "type": "string"
+                              },
+                              "imageUrl": {
+                                "nullable": true,
+                                "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ownerId",
+                              "kind",
+                              "text",
+                              "background",
+                              "imageUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "The story a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -17989,6 +18338,7 @@
                           "ephemeral",
                           "groupId",
                           "replyTo",
+                          "story",
                           "action",
                           "location",
                           "checklist",
@@ -18653,6 +19003,55 @@
                                   "encrypted"
                                 ],
                                 "additionalProperties": false
+                              },
+                              "story": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "ownerId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": "Whose story it is"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "text",
+                                      "image",
+                                      "video"
+                                    ]
+                                  },
+                                  "text": {
+                                    "nullable": true,
+                                    "description": "The start of the story's text or caption",
+                                    "type": "string"
+                                  },
+                                  "background": {
+                                    "nullable": true,
+                                    "description": "A text story's colour, or two for a gradient",
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "nullable": true,
+                                    "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                    "type": "string",
+                                    "format": "uri"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "ownerId",
+                                  "kind",
+                                  "text",
+                                  "background",
+                                  "imageUrl"
+                                ],
+                                "additionalProperties": false,
+                                "description": "The story a message answers, as it was when they answered: it may be gone since"
                               },
                               "action": {
                                 "nullable": true,
@@ -19729,6 +20128,7 @@
                               "ephemeral",
                               "groupId",
                               "replyTo",
+                              "story",
                               "action",
                               "location",
                               "checklist",
@@ -20182,6 +20582,55 @@
                                     "encrypted"
                                   ],
                                   "additionalProperties": false
+                                },
+                                "story": {
+                                  "nullable": true,
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "ownerId": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "description": "Whose story it is"
+                                    },
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "text",
+                                        "image",
+                                        "video"
+                                      ]
+                                    },
+                                    "text": {
+                                      "nullable": true,
+                                      "description": "The start of the story's text or caption",
+                                      "type": "string"
+                                    },
+                                    "background": {
+                                      "nullable": true,
+                                      "description": "A text story's colour, or two for a gradient",
+                                      "type": "string"
+                                    },
+                                    "imageUrl": {
+                                      "nullable": true,
+                                      "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                      "type": "string",
+                                      "format": "uri"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "ownerId",
+                                    "kind",
+                                    "text",
+                                    "background",
+                                    "imageUrl"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "The story a message answers, as it was when they answered: it may be gone since"
                                 },
                                 "action": {
                                   "nullable": true,
@@ -21258,6 +21707,7 @@
                                 "ephemeral",
                                 "groupId",
                                 "replyTo",
+                                "story",
                                 "action",
                                 "location",
                                 "checklist",
@@ -21906,6 +22356,55 @@
                             "encrypted"
                           ],
                           "additionalProperties": false
+                        },
+                        "story": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "ownerId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Whose story it is"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video"
+                              ]
+                            },
+                            "text": {
+                              "nullable": true,
+                              "description": "The start of the story's text or caption",
+                              "type": "string"
+                            },
+                            "background": {
+                              "nullable": true,
+                              "description": "A text story's colour, or two for a gradient",
+                              "type": "string"
+                            },
+                            "imageUrl": {
+                              "nullable": true,
+                              "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "ownerId",
+                            "kind",
+                            "text",
+                            "background",
+                            "imageUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The story a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -22982,6 +23481,7 @@
                         "ephemeral",
                         "groupId",
                         "replyTo",
+                        "story",
                         "action",
                         "location",
                         "checklist",
@@ -23435,6 +23935,55 @@
                               "encrypted"
                             ],
                             "additionalProperties": false
+                          },
+                          "story": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "ownerId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Whose story it is"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "image",
+                                  "video"
+                                ]
+                              },
+                              "text": {
+                                "nullable": true,
+                                "description": "The start of the story's text or caption",
+                                "type": "string"
+                              },
+                              "background": {
+                                "nullable": true,
+                                "description": "A text story's colour, or two for a gradient",
+                                "type": "string"
+                              },
+                              "imageUrl": {
+                                "nullable": true,
+                                "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ownerId",
+                              "kind",
+                              "text",
+                              "background",
+                              "imageUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "The story a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -24511,6 +25060,7 @@
                           "ephemeral",
                           "groupId",
                           "replyTo",
+                          "story",
                           "action",
                           "location",
                           "checklist",
@@ -25235,6 +25785,55 @@
                           ],
                           "additionalProperties": false
                         },
+                        "story": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "ownerId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Whose story it is"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video"
+                              ]
+                            },
+                            "text": {
+                              "nullable": true,
+                              "description": "The start of the story's text or caption",
+                              "type": "string"
+                            },
+                            "background": {
+                              "nullable": true,
+                              "description": "A text story's colour, or two for a gradient",
+                              "type": "string"
+                            },
+                            "imageUrl": {
+                              "nullable": true,
+                              "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "ownerId",
+                            "kind",
+                            "text",
+                            "background",
+                            "imageUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                        },
                         "action": {
                           "nullable": true,
                           "oneOf": [
@@ -26310,6 +26909,7 @@
                         "ephemeral",
                         "groupId",
                         "replyTo",
+                        "story",
                         "action",
                         "location",
                         "checklist",
@@ -26763,6 +27363,55 @@
                               "encrypted"
                             ],
                             "additionalProperties": false
+                          },
+                          "story": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "ownerId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Whose story it is"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "image",
+                                  "video"
+                                ]
+                              },
+                              "text": {
+                                "nullable": true,
+                                "description": "The start of the story's text or caption",
+                                "type": "string"
+                              },
+                              "background": {
+                                "nullable": true,
+                                "description": "A text story's colour, or two for a gradient",
+                                "type": "string"
+                              },
+                              "imageUrl": {
+                                "nullable": true,
+                                "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ownerId",
+                              "kind",
+                              "text",
+                              "background",
+                              "imageUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "The story a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -27839,6 +28488,7 @@
                           "ephemeral",
                           "groupId",
                           "replyTo",
+                          "story",
                           "action",
                           "location",
                           "checklist",
@@ -28695,6 +29345,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -29770,6 +30469,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -30231,6 +30931,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -31306,6 +32055,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -31757,6 +32507,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -32832,6 +33631,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -33301,6 +34101,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -34376,6 +35225,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -34988,6 +35838,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -36063,6 +36962,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -36506,6 +37406,55 @@
                             "encrypted"
                           ],
                           "additionalProperties": false
+                        },
+                        "story": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "ownerId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Whose story it is"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video"
+                              ]
+                            },
+                            "text": {
+                              "nullable": true,
+                              "description": "The start of the story's text or caption",
+                              "type": "string"
+                            },
+                            "background": {
+                              "nullable": true,
+                              "description": "A text story's colour, or two for a gradient",
+                              "type": "string"
+                            },
+                            "imageUrl": {
+                              "nullable": true,
+                              "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "ownerId",
+                            "kind",
+                            "text",
+                            "background",
+                            "imageUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The story a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -37582,6 +38531,7 @@
                         "ephemeral",
                         "groupId",
                         "replyTo",
+                        "story",
                         "action",
                         "location",
                         "checklist",
@@ -38037,6 +38987,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -39112,6 +40111,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -39553,6 +40553,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -40628,6 +41677,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -41069,6 +42119,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -42144,6 +43243,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -42704,6 +43804,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -43779,6 +44928,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -44244,6 +45394,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -45319,6 +46518,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -45884,6 +47084,55 @@
                               "encrypted"
                             ],
                             "additionalProperties": false
+                          },
+                          "story": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "ownerId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Whose story it is"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "image",
+                                  "video"
+                                ]
+                              },
+                              "text": {
+                                "nullable": true,
+                                "description": "The start of the story's text or caption",
+                                "type": "string"
+                              },
+                              "background": {
+                                "nullable": true,
+                                "description": "A text story's colour, or two for a gradient",
+                                "type": "string"
+                              },
+                              "imageUrl": {
+                                "nullable": true,
+                                "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "ownerId",
+                              "kind",
+                              "text",
+                              "background",
+                              "imageUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "The story a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -46960,6 +48209,7 @@
                           "ephemeral",
                           "groupId",
                           "replyTo",
+                          "story",
                           "action",
                           "location",
                           "checklist",
@@ -47480,6 +48730,11 @@
                     ]
                   },
                   "replyToId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "storyId": {
+                    "description": "Answer this story of the other person's: it shows above the message",
                     "type": "string",
                     "minLength": 1
                   },
@@ -48063,6 +49318,55 @@
                         "encrypted"
                       ],
                       "additionalProperties": false
+                    },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -49139,6 +50443,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -50132,6 +51437,11 @@
                     ]
                   },
                   "replyToId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "storyId": {
+                    "description": "Answer this story of the other person's: it shows above the message",
                     "type": "string",
                     "minLength": 1
                   },
@@ -51863,6 +53173,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -52938,6 +54297,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -54509,6 +55869,55 @@
                                     ],
                                     "additionalProperties": false
                                   },
+                                  "story": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "ownerId": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "description": "Whose story it is"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "image",
+                                          "video"
+                                        ]
+                                      },
+                                      "text": {
+                                        "nullable": true,
+                                        "description": "The start of the story's text or caption",
+                                        "type": "string"
+                                      },
+                                      "background": {
+                                        "nullable": true,
+                                        "description": "A text story's colour, or two for a gradient",
+                                        "type": "string"
+                                      },
+                                      "imageUrl": {
+                                        "nullable": true,
+                                        "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                        "type": "string",
+                                        "format": "uri"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "ownerId",
+                                      "kind",
+                                      "text",
+                                      "background",
+                                      "imageUrl"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                  },
                                   "action": {
                                     "nullable": true,
                                     "oneOf": [
@@ -55584,6 +56993,7 @@
                                   "ephemeral",
                                   "groupId",
                                   "replyTo",
+                                  "story",
                                   "action",
                                   "location",
                                   "checklist",
@@ -56015,6 +57425,55 @@
                                     ],
                                     "additionalProperties": false
                                   },
+                                  "story": {
+                                    "nullable": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "ownerId": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "description": "Whose story it is"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "image",
+                                          "video"
+                                        ]
+                                      },
+                                      "text": {
+                                        "nullable": true,
+                                        "description": "The start of the story's text or caption",
+                                        "type": "string"
+                                      },
+                                      "background": {
+                                        "nullable": true,
+                                        "description": "A text story's colour, or two for a gradient",
+                                        "type": "string"
+                                      },
+                                      "imageUrl": {
+                                        "nullable": true,
+                                        "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                        "type": "string",
+                                        "format": "uri"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "ownerId",
+                                      "kind",
+                                      "text",
+                                      "background",
+                                      "imageUrl"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                  },
                                   "action": {
                                     "nullable": true,
                                     "oneOf": [
@@ -57090,6 +58549,7 @@
                                   "ephemeral",
                                   "groupId",
                                   "replyTo",
+                                  "story",
                                   "action",
                                   "location",
                                   "checklist",
@@ -57714,6 +59174,55 @@
                                           "encrypted"
                                         ],
                                         "additionalProperties": false
+                                      },
+                                      "story": {
+                                        "nullable": true,
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "minLength": 1
+                                          },
+                                          "ownerId": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "description": "Whose story it is"
+                                          },
+                                          "kind": {
+                                            "type": "string",
+                                            "enum": [
+                                              "text",
+                                              "image",
+                                              "video"
+                                            ]
+                                          },
+                                          "text": {
+                                            "nullable": true,
+                                            "description": "The start of the story's text or caption",
+                                            "type": "string"
+                                          },
+                                          "background": {
+                                            "nullable": true,
+                                            "description": "A text story's colour, or two for a gradient",
+                                            "type": "string"
+                                          },
+                                          "imageUrl": {
+                                            "nullable": true,
+                                            "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                            "type": "string",
+                                            "format": "uri"
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "ownerId",
+                                          "kind",
+                                          "text",
+                                          "background",
+                                          "imageUrl"
+                                        ],
+                                        "additionalProperties": false,
+                                        "description": "The story a message answers, as it was when they answered: it may be gone since"
                                       },
                                       "action": {
                                         "nullable": true,
@@ -58790,6 +60299,7 @@
                                       "ephemeral",
                                       "groupId",
                                       "replyTo",
+                                      "story",
                                       "action",
                                       "location",
                                       "checklist",
@@ -59243,6 +60753,55 @@
                                             "encrypted"
                                           ],
                                           "additionalProperties": false
+                                        },
+                                        "story": {
+                                          "nullable": true,
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1
+                                            },
+                                            "ownerId": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "description": "Whose story it is"
+                                            },
+                                            "kind": {
+                                              "type": "string",
+                                              "enum": [
+                                                "text",
+                                                "image",
+                                                "video"
+                                              ]
+                                            },
+                                            "text": {
+                                              "nullable": true,
+                                              "description": "The start of the story's text or caption",
+                                              "type": "string"
+                                            },
+                                            "background": {
+                                              "nullable": true,
+                                              "description": "A text story's colour, or two for a gradient",
+                                              "type": "string"
+                                            },
+                                            "imageUrl": {
+                                              "nullable": true,
+                                              "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                                              "type": "string",
+                                              "format": "uri"
+                                            }
+                                          },
+                                          "required": [
+                                            "id",
+                                            "ownerId",
+                                            "kind",
+                                            "text",
+                                            "background",
+                                            "imageUrl"
+                                          ],
+                                          "additionalProperties": false,
+                                          "description": "The story a message answers, as it was when they answered: it may be gone since"
                                         },
                                         "action": {
                                           "nullable": true,
@@ -60319,6 +61878,7 @@
                                         "ephemeral",
                                         "groupId",
                                         "replyTo",
+                                        "story",
                                         "action",
                                         "location",
                                         "checklist",
@@ -62749,6 +64309,55 @@
                       ],
                       "additionalProperties": false
                     },
+                    "story": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Whose story it is"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video"
+                          ]
+                        },
+                        "text": {
+                          "nullable": true,
+                          "description": "The start of the story's text or caption",
+                          "type": "string"
+                        },
+                        "background": {
+                          "nullable": true,
+                          "description": "A text story's colour, or two for a gradient",
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "nullable": true,
+                          "description": "A photo story's picture, or a video's first frame; it stops working once the story is gone",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "ownerId",
+                        "kind",
+                        "text",
+                        "background",
+                        "imageUrl"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                    },
                     "action": {
                       "nullable": true,
                       "oneOf": [
@@ -63824,6 +65433,7 @@
                     "ephemeral",
                     "groupId",
                     "replyTo",
+                    "story",
                     "action",
                     "location",
                     "checklist",
@@ -65269,6 +66879,1785 @@
         }
       }
     },
+    "/v1/stories": {
+      "get": {
+        "summary": "Stories that are up: yours first, then your contacts', unopened ones first",
+        "tags": [
+          "stories"
+        ],
+        "description": "Listen for `stories:changed` on the socket to know when to fetch them again.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
+                          },
+                          "stories": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "image",
+                                    "video"
+                                  ]
+                                },
+                                "text": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "background": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "media": {
+                                  "nullable": true,
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "kind": {
+                                      "type": "string",
+                                      "enum": [
+                                        "image",
+                                        "video",
+                                        "video_note",
+                                        "voice",
+                                        "file",
+                                        "gif",
+                                        "sticker"
+                                      ],
+                                      "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                                    },
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "pending",
+                                        "processing",
+                                        "ready",
+                                        "failed",
+                                        "removed"
+                                      ],
+                                      "description": "`removed`: a large file a moderator deleted to free space"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "mime": {
+                                      "type": "string"
+                                    },
+                                    "size": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "url": {
+                                      "nullable": true,
+                                      "description": "Signed link to the playable or viewable file, once ready",
+                                      "type": "string",
+                                      "format": "uri"
+                                    },
+                                    "thumbUrl": {
+                                      "nullable": true,
+                                      "type": "string",
+                                      "format": "uri"
+                                    },
+                                    "width": {
+                                      "nullable": true,
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "height": {
+                                      "nullable": true,
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "durationMs": {
+                                      "nullable": true,
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "waveform": {
+                                      "nullable": true,
+                                      "type": "array",
+                                      "items": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                      }
+                                    },
+                                    "encrypted": {
+                                      "type": "boolean",
+                                      "description": "The file is encrypted; its key, name, type and preview are in the message content"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "kind",
+                                    "status",
+                                    "name",
+                                    "mime",
+                                    "size",
+                                    "url",
+                                    "thumbUrl",
+                                    "width",
+                                    "height",
+                                    "durationMs",
+                                    "waveform",
+                                    "encrypted"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "gif": {
+                                  "nullable": true,
+                                  "type": "object",
+                                  "properties": {
+                                    "url": {
+                                      "type": "string",
+                                      "format": "uri"
+                                    },
+                                    "width": {
+                                      "nullable": true,
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "height": {
+                                      "nullable": true,
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
+                                  },
+                                  "required": [
+                                    "url",
+                                    "width",
+                                    "height"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "location": {
+                                  "nullable": true,
+                                  "type": "object",
+                                  "properties": {
+                                    "lat": {
+                                      "type": "number",
+                                      "minimum": -90,
+                                      "maximum": 90
+                                    },
+                                    "lng": {
+                                      "type": "number",
+                                      "minimum": -180,
+                                      "maximum": 180
+                                    },
+                                    "accuracy": {
+                                      "description": "How far off it may be, in meters",
+                                      "nullable": true,
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 100000
+                                    },
+                                    "name": {
+                                      "description": "What the place is called, as the poster typed it",
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 80
+                                    }
+                                  },
+                                  "required": [
+                                    "lat",
+                                    "lng"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "ask": {
+                                  "nullable": true,
+                                  "description": "An anonymous message the poster received and shared, as a card",
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string",
+                                      "description": "Empty when only a photo or a GIF was sent"
+                                    },
+                                    "prompt": {
+                                      "nullable": true,
+                                      "description": "The prompt it answered; null for the app's own",
+                                      "type": "string"
+                                    },
+                                    "photoUrl": {
+                                      "nullable": true,
+                                      "type": "string",
+                                      "format": "uri"
+                                    },
+                                    "gif": {
+                                      "nullable": true,
+                                      "description": "As an MP4 to play muted on a loop",
+                                      "type": "object",
+                                      "properties": {
+                                        "url": {
+                                          "type": "string",
+                                          "format": "uri"
+                                        },
+                                        "width": {
+                                          "nullable": true,
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "height": {
+                                          "nullable": true,
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991
+                                        }
+                                      },
+                                      "required": [
+                                        "url",
+                                        "width",
+                                        "height"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "text",
+                                    "prompt",
+                                    "photoUrl",
+                                    "gif"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "showDate": {
+                                  "type": "boolean"
+                                },
+                                "showTime": {
+                                  "type": "boolean"
+                                },
+                                "positions": {
+                                  "type": "object",
+                                  "properties": {
+                                    "ask": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "gif": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "location": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "date": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "time": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "additionalProperties": false,
+                                  "description": "Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom"
+                                },
+                                "drawing": {
+                                  "type": "object",
+                                  "properties": {
+                                    "strokes": {
+                                      "default": [],
+                                      "maxItems": 80,
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "shape": {
+                                            "type": "string",
+                                            "enum": [
+                                              "pen",
+                                              "arrow",
+                                              "circle",
+                                              "rect"
+                                            ]
+                                          },
+                                          "color": {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          "size": {
+                                            "type": "number",
+                                            "minimum": 0.002,
+                                            "maximum": 0.05,
+                                            "description": "Line width, as a fraction of the story's width"
+                                          },
+                                          "points": {
+                                            "minItems": 4,
+                                            "maxItems": 1200,
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number",
+                                              "minimum": -0.25,
+                                              "maximum": 1.25
+                                            },
+                                            "description": "x, y pairs as fractions of the story; a shape or an arrow is its first and last corner, an arrow pointing at the last"
+                                          }
+                                        },
+                                        "required": [
+                                          "shape",
+                                          "color",
+                                          "size",
+                                          "points"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "texts": {
+                                      "default": [],
+                                      "maxItems": 10,
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "text": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          },
+                                          "color": {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          "font": {
+                                            "type": "string",
+                                            "enum": [
+                                              "classic",
+                                              "serif",
+                                              "marker",
+                                              "script",
+                                              "typewriter"
+                                            ]
+                                          },
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 1
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 1
+                                          },
+                                          "scale": {
+                                            "default": 1,
+                                            "type": "number",
+                                            "minimum": 0.5,
+                                            "maximum": 3
+                                          },
+                                          "look": {
+                                            "description": "plain when left out; box puts it on a pill of its colour, outline rings it",
+                                            "type": "string",
+                                            "enum": [
+                                              "plain",
+                                              "box",
+                                              "outline"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "text",
+                                          "color",
+                                          "font",
+                                          "x",
+                                          "y",
+                                          "scale"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "strokes",
+                                    "texts"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story"
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "expiresAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "seen": {
+                                  "type": "boolean",
+                                  "description": "You opened it; always true for your own"
+                                },
+                                "viewCount": {
+                                  "nullable": true,
+                                  "description": "How many people opened it; only on your own",
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "type",
+                                "text",
+                                "background",
+                                "media",
+                                "gif",
+                                "location",
+                                "ask",
+                                "showDate",
+                                "showTime",
+                                "positions",
+                                "drawing",
+                                "createdAt",
+                                "expiresAt",
+                                "seen",
+                                "viewCount"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Oldest first"
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "stories"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Post a story to your contacts",
+        "tags": [
+          "stories"
+        ],
+        "description": "Text on a colour, or a photo or video (at most 30 seconds) uploaded first with kind `image` or `video`, unencrypted. A photo or video only shows to others once it is processed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "description": "The text of a text story, or a caption on a photo or video",
+                    "type": "string",
+                    "maxLength": 700
+                  },
+                  "background": {
+                    "description": "What's behind a text story: a colour like #eb8a00, or two for a gradient, like #f59e0b,#e11d48",
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}(,#[0-9a-f]{6})?$"
+                  },
+                  "uploadId": {
+                    "description": "A completed `image` or `video` upload; videos can be at most 30 seconds",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "gifId": {
+                    "description": "A GIF from GET /v1/gifs shown on top of the story",
+                    "type": "string",
+                    "pattern": "^[\\w-]{1,128}$"
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "lat": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "lng": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "description": "How far off it may be, in meters",
+                        "nullable": true,
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100000
+                      },
+                      "name": {
+                        "description": "What the place is called, as the poster typed it",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      }
+                    },
+                    "required": [
+                      "lat",
+                      "lng"
+                    ]
+                  },
+                  "askId": {
+                    "description": "An anonymous message you received, shown on the story as a card: its text, photo or GIF",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "showDate": {
+                    "description": "Show the day it was posted on the story",
+                    "type": "boolean"
+                  },
+                  "showTime": {
+                    "description": "Show the time it was posted on the story",
+                    "type": "boolean"
+                  },
+                  "positions": {
+                    "type": "object",
+                    "properties": {
+                      "ask": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "gif": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "location": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "date": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "time": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      }
+                    },
+                    "description": "Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom"
+                  },
+                  "drawing": {
+                    "type": "object",
+                    "properties": {
+                      "strokes": {
+                        "default": [],
+                        "maxItems": 80,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "pen",
+                                "arrow",
+                                "circle",
+                                "rect"
+                              ]
+                            },
+                            "color": {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            "size": {
+                              "type": "number",
+                              "minimum": 0.002,
+                              "maximum": 0.05,
+                              "description": "Line width, as a fraction of the story's width"
+                            },
+                            "points": {
+                              "minItems": 4,
+                              "maxItems": 1200,
+                              "type": "array",
+                              "items": {
+                                "type": "number",
+                                "minimum": -0.25,
+                                "maximum": 1.25
+                              },
+                              "description": "x, y pairs as fractions of the story; a shape or an arrow is its first and last corner, an arrow pointing at the last"
+                            }
+                          },
+                          "required": [
+                            "shape",
+                            "color",
+                            "size",
+                            "points"
+                          ]
+                        }
+                      },
+                      "texts": {
+                        "default": [],
+                        "maxItems": 10,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "color": {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            "font": {
+                              "type": "string",
+                              "enum": [
+                                "classic",
+                                "serif",
+                                "marker",
+                                "script",
+                                "typewriter"
+                              ]
+                            },
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "default": 1,
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "look": {
+                              "description": "plain when left out; box puts it on a pill of its colour, outline rings it",
+                              "type": "string",
+                              "enum": [
+                                "plain",
+                                "box",
+                                "outline"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "text",
+                            "color",
+                            "font",
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "description": "Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story"
+                  },
+                  "durationSecs": {
+                    "default": 86400,
+                    "description": "How long it stays up, from one hour to a day",
+                    "type": "integer",
+                    "minimum": 3600,
+                    "maximum": 86400
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "image",
+                        "video"
+                      ]
+                    },
+                    "text": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "background": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "media": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "image",
+                            "video",
+                            "video_note",
+                            "voice",
+                            "file",
+                            "gif",
+                            "sticker"
+                          ],
+                          "description": "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "processing",
+                            "ready",
+                            "failed",
+                            "removed"
+                          ],
+                          "description": "`removed`: a large file a moderator deleted to free space"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "mime": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "url": {
+                          "nullable": true,
+                          "description": "Signed link to the playable or viewable file, once ready",
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "thumbUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "durationMs": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "waveform": {
+                          "nullable": true,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100
+                          }
+                        },
+                        "encrypted": {
+                          "type": "boolean",
+                          "description": "The file is encrypted; its key, name, type and preview are in the message content"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "status",
+                        "name",
+                        "mime",
+                        "size",
+                        "url",
+                        "thumbUrl",
+                        "width",
+                        "height",
+                        "durationMs",
+                        "waveform",
+                        "encrypted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "gif": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "width",
+                        "height"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, as the poster typed it",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "ask": {
+                      "nullable": true,
+                      "description": "An anonymous message the poster received and shared, as a card",
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "description": "Empty when only a photo or a GIF was sent"
+                        },
+                        "prompt": {
+                          "nullable": true,
+                          "description": "The prompt it answered; null for the app's own",
+                          "type": "string"
+                        },
+                        "photoUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "gif": {
+                          "nullable": true,
+                          "description": "As an MP4 to play muted on a loop",
+                          "type": "object",
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "width": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "height": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "url",
+                            "width",
+                            "height"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "text",
+                        "prompt",
+                        "photoUrl",
+                        "gif"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "showDate": {
+                      "type": "boolean"
+                    },
+                    "showTime": {
+                      "type": "boolean"
+                    },
+                    "positions": {
+                      "type": "object",
+                      "properties": {
+                        "ask": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "gif": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "date": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "time": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom"
+                    },
+                    "drawing": {
+                      "type": "object",
+                      "properties": {
+                        "strokes": {
+                          "default": [],
+                          "maxItems": 80,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "shape": {
+                                "type": "string",
+                                "enum": [
+                                  "pen",
+                                  "arrow",
+                                  "circle",
+                                  "rect"
+                                ]
+                              },
+                              "color": {
+                                "type": "string",
+                                "pattern": "^#[0-9a-f]{6}$"
+                              },
+                              "size": {
+                                "type": "number",
+                                "minimum": 0.002,
+                                "maximum": 0.05,
+                                "description": "Line width, as a fraction of the story's width"
+                              },
+                              "points": {
+                                "minItems": 4,
+                                "maxItems": 1200,
+                                "type": "array",
+                                "items": {
+                                  "type": "number",
+                                  "minimum": -0.25,
+                                  "maximum": 1.25
+                                },
+                                "description": "x, y pairs as fractions of the story; a shape or an arrow is its first and last corner, an arrow pointing at the last"
+                              }
+                            },
+                            "required": [
+                              "shape",
+                              "color",
+                              "size",
+                              "points"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "texts": {
+                          "default": [],
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "color": {
+                                "type": "string",
+                                "pattern": "^#[0-9a-f]{6}$"
+                              },
+                              "font": {
+                                "type": "string",
+                                "enum": [
+                                  "classic",
+                                  "serif",
+                                  "marker",
+                                  "script",
+                                  "typewriter"
+                                ]
+                              },
+                              "x": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "y": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "scale": {
+                                "default": 1,
+                                "type": "number",
+                                "minimum": 0.5,
+                                "maximum": 3
+                              },
+                              "look": {
+                                "description": "plain when left out; box puts it on a pill of its colour, outline rings it",
+                                "type": "string",
+                                "enum": [
+                                  "plain",
+                                  "box",
+                                  "outline"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "text",
+                              "color",
+                              "font",
+                              "x",
+                              "y",
+                              "scale"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "strokes",
+                        "texts"
+                      ],
+                      "additionalProperties": false,
+                      "description": "Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "seen": {
+                      "type": "boolean",
+                      "description": "You opened it; always true for your own"
+                    },
+                    "viewCount": {
+                      "nullable": true,
+                      "description": "How many people opened it; only on your own",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "text",
+                    "background",
+                    "media",
+                    "gif",
+                    "location",
+                    "ask",
+                    "showDate",
+                    "showTime",
+                    "positions",
+                    "drawing",
+                    "createdAt",
+                    "expiresAt",
+                    "seen",
+                    "viewCount"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stories/{id}": {
+      "delete": {
+        "summary": "Take down one of your stories",
+        "tags": [
+          "stories"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stories/{id}/view": {
+      "post": {
+        "summary": "Mark a contact's story as opened",
+        "tags": [
+          "stories"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stories/{id}/react": {
+      "post": {
+        "summary": "React to a contact's story with an emoji",
+        "tags": [
+          "stories"
+        ],
+        "description": "Only the poster sees it, in who opened the story. It is not sent as a message; reacting again replaces it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emoji": {
+                    "type": "string",
+                    "enum": [
+                      "❤️",
+                      "😂",
+                      "😮",
+                      "😢",
+                      "👏",
+                      "🔥"
+                    ]
+                  }
+                },
+                "required": [
+                  "emoji"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stories/{id}/viewers": {
+      "get": {
+        "summary": "Who opened one of your stories, latest first",
+        "tags": [
+          "stories"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
+                          },
+                          "viewedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "reactions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "❤️",
+                                "😂",
+                                "😮",
+                                "😢",
+                                "👏",
+                                "🔥"
+                              ]
+                            },
+                            "description": "Every emoji they reacted with, oldest first, at most the last 30"
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "viewedAt",
+                          "reactions"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/link-preview": {
       "get": {
         "summary": "The preview card for a link in a message",
@@ -65323,6 +68712,79 @@
                     "title",
                     "description",
                     "image"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/place-name": {
+      "get": {
+        "summary": "What a spot is called, to name the place on a story",
+        "tags": [
+          "stories"
+        ],
+        "description": "Asks OpenStreetMap on your behalf, so it never sees who you are. The neighbourhood and town in `locale`, or null when it knows nothing there or can't be reached.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "in": "query",
+            "name": "lat",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "in": "query",
+            "name": "lng",
+            "required": true
+          },
+          {
+            "schema": {
+              "default": "en",
+              "type": "string",
+              "enum": [
+                "en",
+                "fr",
+                "mg"
+              ]
+            },
+            "in": "query",
+            "name": "locale",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "nullable": true,
+                      "description": "The neighbourhood and town, like Analakely, Antananarivo; null when nothing is known there",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
                   ],
                   "additionalProperties": false
                 }

@@ -48,7 +48,7 @@ interface Writing {
 }
 
 const FONT_NAMES = Object.keys(LABEL_FONTS) as LabelFont[];
-const familyOf = (font: LabelFont | undefined) => (font && LABEL_FONTS[font]) || null;
+export const familyOf = (font: LabelFont | undefined) => (font && LABEL_FONTS[font]) || null;
 const fontsLoaded = () =>
   Promise.all(FONT_NAMES.flatMap((f) => (LABEL_FONTS[f] ? [document.fonts.load(`40px ${LABEL_FONTS[f]}`)] : [])));
 
@@ -129,7 +129,7 @@ function paint(canvas: HTMLCanvasElement, bitmap: ImageBitmap, edit: PhotoEdit, 
   return canvas;
 }
 
-function Sizes({ value, onChange }: { value: number; onChange: (i: number) => void }) {
+export function Sizes({ value, onChange }: { value: number; onChange: (i: number) => void }) {
   const tr = useT();
   return (
     <div className="flex items-center gap-1">
@@ -149,7 +149,7 @@ function Sizes({ value, onChange }: { value: number; onChange: (i: number) => vo
   );
 }
 
-function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont) => void }) {
+export function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont) => void }) {
   const tr = useT();
   return (
     <div className="flex max-w-full gap-2 overflow-x-auto px-1 py-1">
@@ -169,7 +169,7 @@ function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont)
   );
 }
 
-function Colors({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+export function Colors({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   const tr = useT();
   return (
     <div className="flex items-center gap-1.5">

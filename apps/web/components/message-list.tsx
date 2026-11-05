@@ -22,6 +22,8 @@ import {
   serviceSentence,
   splitLinks,
   isFrozen,
+  type StoryReply,
+  storyBackground,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -135,6 +137,7 @@ interface MsgRow {
   spoiler: boolean;
   effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
+  story: StoryReply | null;
   bump: boolean;
   vanish: boolean;
   createdAt: string;
@@ -224,6 +227,7 @@ function buildRows(
         spoiler: m.spoiler,
         effect: m.effect ?? null,
         replyTo: m.replyTo,
+        story: m.story ?? null,
         bump: m.bump,
         vanish: m.vanish,
         createdAt: m.createdAt,
@@ -259,6 +263,7 @@ function buildRows(
           spoiler: p.spoiler,
           effect: p.effect ?? null,
           replyTo: p.replyTo,
+          story: p.story ?? null,
           bump: p.bump ?? false,
           vanish,
           createdAt: p.createdAt,
@@ -371,6 +376,41 @@ function Ticks({ delivery, pill = false }: { delivery: Delivery; pill?: boolean 
       ) : (
         <CheckCheck className="size-3.5" strokeWidth={2.5} />
       )}
+    </span>
+  );
+}
+
+/** The story a message answers: a small copy of it, under who answered and how. */
+function StoryQuote({ story, mine, reaction }: { story: StoryReply; mine: boolean; reaction: boolean }) {
+  const tr = useT();
+  const t = tr.stories;
+  const [broken, setBroken] = useState(false);
+  const picture = story.imageUrl && !broken ? story.imageUrl : null;
+  return (
+    <span className="mb-1.5 flex flex-col gap-1">
+      <span className="text-xs opacity-75">{mine ? (reaction ? t.youReacted : t.youReplied) : reaction ? t.reactedToYours : t.repliedToYours}</span>
+      <span
+        className="relative flex h-24 w-16 items-center justify-center overflow-hidden rounded-xl p-1.5 text-center text-[10px] leading-tight font-semibold text-white"
+        style={{ background: story.kind === "text" ? storyBackground(story.background ?? "#eb8a00") : "#292524" }}
+      >
+        {story.kind === "text" ? (
+          <span className="line-clamp-6 break-words">{story.text}</span>
+        ) : picture ? (
+          <>
+            <img src={picture} alt="" onError={() => setBroken(true)} className="absolute inset-0 size-full object-cover" />
+            {story.kind === "video" && (
+              <span className="relative grid size-7 place-items-center rounded-full bg-black/45">
+                <Video className="size-4" />
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="flex flex-col items-center gap-1 opacity-90">
+            {story.kind === "video" ? <Video className="size-5" /> : <ImageIcon className="size-5" />}
+            {story.kind === "video" ? t.video : t.photo}
+          </span>
+        )}
+      </span>
     </span>
   );
 }
@@ -773,6 +813,7 @@ function Bubble({
     !row.attachment &&
     !row.spoiler &&
     !row.replyTo &&
+    !row.story &&
     row.entities.length === 0 &&
     row.text
       ? emojiOnly(row.text)
@@ -886,6 +927,7 @@ function Bubble({
                   onClick={() => onQuote(row.replyTo!.id)}
                 />
               )}
+              {row.story && !row.deleted && <StoryQuote story={row.story} mine={mine} reaction={!!row.text && !!emojiOnly(row.text)} />}
               {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} onResend={onResend} />}
               {row.album && !row.deleted && !sealed ? (
                 <AlbumGrid

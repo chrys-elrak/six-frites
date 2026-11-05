@@ -17,6 +17,7 @@ import {
   type ViewMessageResult,
   previewLink,
   splitLinks,
+  type StoryReply,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -51,6 +52,7 @@ import {
   RotateCcw,
   Timer,
   Trash2,
+  Image as ImageIcon,
 } from "lucide-react-native";
 import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
@@ -124,6 +126,7 @@ import { playHref } from "./live";
 import { EffectLayer } from "./message-effects";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
+import { storyFill } from "./stories";
 
 type Delivery = "sending" | "waiting" | "failed" | "sent" | "delivered" | "read";
 
@@ -138,6 +141,7 @@ interface MsgRow {
   spoiler: boolean;
   effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
+  story: StoryReply | null;
   bump: boolean;
   vanish: boolean;
   createdAt: string;
@@ -231,6 +235,7 @@ function buildRows(
         spoiler: m.spoiler,
         effect: m.effect ?? null,
         replyTo: m.replyTo,
+        story: m.story ?? null,
         bump: m.bump,
         vanish: m.vanish,
         createdAt: m.createdAt,
@@ -265,6 +270,7 @@ function buildRows(
           spoiler: p.spoiler,
           effect: p.effect ?? null,
           replyTo: p.replyTo,
+          story: p.story ?? null,
           bump: p.bump ?? false,
           vanish,
           createdAt: p.createdAt,
@@ -379,6 +385,41 @@ function Meta({ row, color, t }: { row: MsgRow; color: string; t: Theme }) {
       <Text style={[styles.meta, { color }]}>{clockTime(row.createdAt)}</Text>
       {row.delivery && <Ticks delivery={row.delivery} color={color} readColor={readColor} />}
     </>
+  );
+}
+
+/** The story a message answers: a small copy of it, under who answered and how. */
+function StoryQuote({ story, mine, color, reaction }: { story: StoryReply; mine: boolean; color: string; reaction: boolean }) {
+  const t = useT().stories;
+  const [broken, setBroken] = useState(false);
+  const picture = story.imageUrl && !broken ? story.imageUrl : null;
+  return (
+    <View style={styles.storyQuote}>
+      <Text style={{ color, fontSize: 12, opacity: 0.75 }}>
+        {mine ? (reaction ? t.youReacted : t.youReplied) : reaction ? t.reactedToYours : t.repliedToYours}
+      </Text>
+      <View style={[styles.storyThumb, story.kind === "text" ? storyFill(story.background ?? "#eb8a00") : { backgroundColor: "#292524" }]}>
+        {story.kind === "text" ? (
+          <Text numberOfLines={6} style={styles.storyThumbText}>
+            {story.text}
+          </Text>
+        ) : picture ? (
+          <>
+            <Image source={{ uri: picture }} onError={() => setBroken(true)} style={StyleSheet.absoluteFill} contentFit="cover" />
+            {story.kind === "video" && (
+              <View style={styles.storyPlay}>
+                <Video size={16} color="#fff" />
+              </View>
+            )}
+          </>
+        ) : (
+          <>
+            {story.kind === "video" ? <Video size={20} color="#fff" /> : <ImageIcon size={20} color="#fff" />}
+            <Text style={styles.storyThumbText}>{story.kind === "video" ? t.video : t.photo}</Text>
+          </>
+        )}
+      </View>
+    </View>
   );
 }
 
@@ -793,7 +834,7 @@ function Bubble({
   const e = row.ephemeral;
   const sealed = !!e && (mine || e.locked || e.expired);
   const jumbo =
-    !row.deleted && !row.ephemeral && !row.attachment && !row.spoiler && !row.replyTo && row.entities.length === 0 && row.text
+    !row.deleted && !row.ephemeral && !row.attachment && !row.spoiler && !row.replyTo && !row.story && row.entities.length === 0 && row.text
       ? emojiOnly(row.text)
       : null;
   const visual = !sealed && row.attachment && (row.attachment.data.kind === "image" || row.attachment.data.kind === "video");
@@ -936,6 +977,9 @@ function Bubble({
           )}
           {row.replyTo && !row.deleted && (
             <Quote reply={row.replyTo} mine={mine && !bare} name={nameOf(row.replyTo.senderId)} onPress={() => onQuote(row.replyTo!.id)} />
+          )}
+          {row.story && !row.deleted && (
+            <StoryQuote story={row.story} mine={mine} color={fg} reaction={!!row.text && !!emojiOnly(row.text)} />
           )}
           {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} color={fg} onResend={onResend} />}
           {row.album && !row.deleted && !sealed ? (
@@ -1605,6 +1649,10 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 );
 
 const styles = StyleSheet.create({
+  storyQuote: { gap: 4, marginBottom: 6 },
+  storyThumb: { width: 64, height: 96, borderRadius: 12, alignItems: "center", justifyContent: "center", gap: 4, padding: 6, overflow: "hidden" },
+  storyPlay: { width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },
+  storyThumbText: { color: "#fff", fontSize: 10, lineHeight: 13, fontWeight: "700", textAlign: "center" },
   bumped: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   empty: { flex: 1, alignItems: "center", justifyContent: "flex-end", gap: 8, paddingBottom: 32 },

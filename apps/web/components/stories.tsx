@@ -1,0 +1,733 @@
+"use client";
+
+import { unwrap } from "@six/sdk";
+import {
+  type PublicUser,
+  STORY_REACTIONS,
+  STORY_SHOW_MS,
+  STORY_STICKERS,
+  STORY_STICKER_SCALE,
+  type StoryDTO,
+  type StoryGroupDTO,
+  type StoryLocation,
+  coordsLabel,
+  countReactions,
+  mapsUrl,
+  storyBackground,
+  type StoryPositions,
+  type StoryReaction,
+  type StorySpot,
+  type StorySticker,
+} from "@six/shared";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Loader2, MapPin, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { clockTime, shortDate, timeAgo } from "@/lib/format";
+import { useChats } from "@/lib/chats";
+import { useT } from "@/lib/i18n";
+import { useRealtime } from "@/lib/realtime";
+import { queueMessage } from "@/lib/send";
+import { useSession } from "@/lib/session";
+import { six } from "@/lib/six";
+import { Avatar } from "./avatar";
+import { Portal } from "./portal";
+import { StoryDrawingLayer } from "./story-drawing";
+import { Sheet } from "./sheet";
+import { StoryComposer } from "./story-composer";
+
+export const storiesKey = ["stories"] as const;
+
+const live = (s: StoryDTO) => Date.parse(s.expiresAt) > Date.now();
+
+export function useStories() {
+  return useQuery({
+    queryKey: storiesKey,
+    queryFn: async () => unwrap(await six.api.GET("/v1/stories")).items,
+    select: (groups) =>
+      groups.map((g) => ({ ...g, stories: g.stories.filter(live) })).filter((g) => g.stories.length > 0),
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+const clamp = (v: number) => Math.min(1, Math.max(0, v));
+const clampScale = (v: number) => Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, v));
+
+/** Follows the pointer until it lets go, wherever it goes on the page. */
+function follow(move: (e: PointerEvent) => void, done?: (e: PointerEvent) => void) {
+  const end = (e: PointerEvent) => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", end);
+    window.removeEventListener("pointercancel", end);
+    done?.(e);
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", end);
+  window.addEventListener("pointercancel", end);
+}
+
+/**
+ * A story's GIF, place, date and time. With `placed` it draws the ones the poster dragged somewhere, at their spot
+ * and size (inside an `absolute inset-0` layer); without, the others in a row at the bottom. In the composer,
+ * `onMove` lets each be dragged anywhere on `frame` (the whole story card) and resized by its corner handle,
+ * `onRemove` adds a button to take it off, and `onTap` is called when it is tapped rather than dragged.
+ */
+export function StoryStickers({
+  ask,
+  gif,
+  location,
+  showDate,
+  showTime,
+  at,
+  positions,
+  placed,
+  frame,
+  onMove,
+  onRemove,
+  onTap,
+}: {
+  ask: StoryDTO["ask"];
+  gif: React.ReactNode | null;
+  location: StoryLocation | null;
+  showDate: boolean;
+  showTime: boolean;
+  at: string;
+  positions: StoryPositions;
+  placed: boolean;
+  frame?: React.RefObject<HTMLElement | null>;
+  onMove?: (sticker: StorySticker, spot: StorySpot) => void;
+  onRemove?: (sticker: StorySticker) => void;
+  onTap?: (sticker: StorySticker) => void;
+}) {
+  const tr = useT();
+  const chip = "flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-stone-900 shadow";
+  const has = { ask: !!ask, gif: !!gif, location: !!location, date: showDate, time: showTime };
+  const shown = STORY_STICKERS.filter((k) => has[k] && !!positions[k] === placed);
+  if (!shown.length) return null;
+  const editing = !!onMove && !!frame;
+
+  const centreOf = (el: HTMLElement, box: DOMRect) => {
+    const r = el.getBoundingClientRect();
+    return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, x: (r.left + r.width / 2 - box.left) / box.width, y: (r.top + r.height / 2 - box.top) / box.height };
+  };
+
+  const drag = (sticker: StorySticker) => (e: React.PointerEvent<HTMLElement>) => {
+    const box = frame?.current?.getBoundingClientRect();
+    if (!onMove || !box) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const from = centreOf(e.currentTarget, box);
+    const scale = positions[sticker]?.scale;
+    const [startX, startY] = [e.clientX, e.clientY];
+    let moved = false;
+    follow(
+      (ev) => {
+        moved ||= Math.hypot(ev.clientX - startX, ev.clientY - startY) > 4;
+        if (moved) onMove(sticker, { x: clamp(from.x + (ev.clientX - startX) / box.width), y: clamp(from.y + (ev.clientY - startY) / box.height), scale });
+      },
+      () => !moved && onTap?.(sticker),
+    );
+  };
+
+  const resize = (sticker: StorySticker) => (e: React.PointerEvent<HTMLElement>) => {
+    const box = frame?.current?.getBoundingClientRect();
+    const el = e.currentTarget.parentElement;
+    if (!onMove || !box || !el) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const { cx, cy, x, y } = centreOf(el, box);
+    const from = Math.hypot(e.clientX - cx, e.clientY - cy) || 1;
+    const scale = positions[sticker]?.scale ?? 1;
+    follow((ev) => onMove(sticker, { x, y, scale: clampScale((scale * Math.hypot(ev.clientX - cx, ev.clientY - cy)) / from) }));
+  };
+
+  const node = (k: StorySticker) =>
+    k === "ask" && ask ? (
+      <div className="w-64 overflow-hidden rounded-2xl bg-white text-left shadow-lg">
+        <p className="bg-gradient-to-r from-amber-400 via-brand to-rose-500 px-4 py-2.5 text-sm font-bold text-white">
+          {ask.prompt ?? tr.ask.prompt}
+        </p>
+        {ask.photoUrl && <img src={ask.photoUrl} alt="" draggable={false} className="max-h-72 w-full object-cover" />}
+        {ask.gif && <video src={ask.gif.url} autoPlay loop muted playsInline className="max-h-72 w-full object-cover" />}
+        {ask.text.trim() && (
+          <p className="px-4 py-3 text-base leading-snug font-semibold break-words whitespace-pre-wrap text-stone-900">{ask.text}</p>
+        )}
+      </div>
+    ) : k === "gif" ? (
+      gif
+    ) : k === "location" && location ? (
+      editing ? (
+        <span className={chip}>
+          <MapPin className="size-4 text-rose-600" />
+          <span className="max-w-48 truncate">{location.name ?? coordsLabel(location)}</span>
+        </span>
+      ) : (
+        <a href={mapsUrl(location)} target="_blank" rel="noopener noreferrer" className={chip} onPointerDown={(e) => e.stopPropagation()}>
+          <MapPin className="size-4 text-rose-600" />
+          <span className="max-w-48 truncate">{location.name ?? coordsLabel(location)}</span>
+        </a>
+      )
+    ) : k === "date" ? (
+      <span className={chip}>
+        <CalendarDays className="size-4 text-brand" />
+        {shortDate(at)}
+      </span>
+    ) : (
+      <span className={chip}>
+        <Clock className="size-4 text-brand" />
+        {clockTime(at)}
+      </span>
+    );
+
+  const handles = (k: StorySticker) => {
+    if (!editing) return null;
+    const keep = { transform: `scale(${1 / (positions[k]?.scale ?? 1)})` };
+    const handle = "absolute grid size-6 place-items-center rounded-full bg-white text-stone-900 shadow ring-1 ring-black/10 touch-none";
+    return (
+      <>
+        {onRemove && (
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onRemove(k)}
+            aria-label={tr.common.remove}
+            title={tr.common.remove}
+            style={keep}
+            className={`${handle} -top-2.5 -left-2.5`}
+          >
+            <X className="size-3.5" strokeWidth={3} />
+          </button>
+        )}
+        <span onPointerDown={resize(k)} aria-hidden style={keep} className={`${handle} -right-2.5 -bottom-2.5 cursor-nwse-resize`}>
+          <MoveDiagonal2 className="size-3.5" strokeWidth={2.5} />
+        </span>
+      </>
+    );
+  };
+  const grab = editing ? "pointer-events-auto touch-none cursor-grab select-none active:cursor-grabbing" : "pointer-events-auto";
+
+  if (placed) {
+    return shown.map((k) => (
+      <div
+        key={k}
+        onPointerDown={drag(k)}
+        className={`absolute ${grab}`}
+        style={{
+          left: `${positions[k]!.x * 100}%`,
+          top: `${positions[k]!.y * 100}%`,
+          transform: `translate(-50%, -50%) scale(${positions[k]!.scale ?? 1})`,
+        }}
+      >
+        {node(k)}
+        {handles(k)}
+      </div>
+    ));
+  }
+  const chips = shown.filter((k) => k !== "gif" && k !== "ask");
+  return (
+    <>
+      {shown.includes("ask") && (
+        <div onPointerDown={drag("ask")} className={`relative ${grab}`}>
+          {node("ask")}
+          {handles("ask")}
+        </div>
+      )}
+      {shown.includes("gif") && (
+        <div onPointerDown={drag("gif")} className={`relative ${grab}`}>
+          {gif}
+          {handles("gif")}
+        </div>
+      )}
+      {chips.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {chips.map((k) => (
+            <div key={k} onPointerDown={drag(k)} className={`relative ${grab}`}>
+              {node(k)}
+              {handles(k)}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function Ring({ unseen, children }: { unseen: boolean; children: React.ReactNode }) {
+  return (
+    <span
+      className={`grid shrink-0 place-items-center rounded-full p-[3px] ${
+        unseen ? "bg-gradient-to-tr from-amber-400 via-brand to-rose-500" : "bg-stone-300 dark:bg-stone-700"
+      }`}
+    >
+      <span className="rounded-full bg-stone-50 p-[2px] dark:bg-stone-950">{children}</span>
+    </span>
+  );
+}
+
+/**
+ * A chat's avatar, ringed while that person has stories up: orange until you've seen them all. Tapping the ring
+ * opens their stories rather than the chat around it.
+ */
+export function StoryAvatar({ userId, name, children }: { userId: string; name: string; children: React.ReactNode }) {
+  const tr = useT();
+  const groups = useStories().data ?? [];
+  const at = groups.findIndex((g) => g.user.id === userId);
+  const [open, setOpen] = useState(false);
+  if (at < 0) return children;
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const unseen = groups[at]!.stories.some((s) => !s.seen);
+  return (
+    <>
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={tr.stories.open(name)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        className={`block rounded-full ring-[2.5px] ring-offset-2 ring-offset-stone-50 dark:ring-offset-stone-950 ${unseen ? "ring-brand" : "ring-stone-300 dark:ring-stone-600"}`}
+      >
+        {children}
+      </span>
+      {open && (
+        <span className="contents" onClick={stop} onPointerDown={stop} onPointerUp={stop} onContextMenu={stop} onKeyDown={stop}>
+          <StoryViewer groups={groups} start={at} onClose={() => setOpen(false)} />
+        </span>
+      )}
+    </>
+  );
+}
+
+/** A row of contacts' stories above the chats, starting with mine and a button to add one. */
+export function StoriesBar() {
+  const tr = useT();
+  const me = useSession((s) => s.user!);
+  const stories = useStories();
+  const [open, setOpen] = useState<number | null>(null);
+  const [composing, setComposing] = useState(false);
+  const groups = stories.data ?? [];
+  const mineAt = groups.findIndex((g) => g.user.id === me.id);
+  const others = groups.map((g, i) => [g, i] as const).filter(([g]) => g.user.id !== me.id);
+
+  return (
+    <>
+      <div role="list" aria-label={tr.stories.title} className="-mx-4 flex w-[calc(100%+2rem)] gap-3 overflow-x-auto px-4 pb-1">
+        <div role="listitem" className="relative flex w-16 shrink-0 flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={() => (mineAt >= 0 ? setOpen(mineAt) : setComposing(true))}
+            aria-label={mineAt >= 0 ? tr.stories.open(tr.stories.yours) : tr.stories.add}
+          >
+            <Ring unseen={false}>
+              <Avatar user={me} size="md" />
+            </Ring>
+          </button>
+          <button
+            type="button"
+            onClick={() => setComposing(true)}
+            aria-label={tr.stories.add}
+            title={tr.stories.add}
+            className="absolute top-11 right-0 grid size-6 place-items-center rounded-full bg-brand text-brand-ink ring-2 ring-stone-50 dark:ring-stone-950"
+          >
+            <Plus className="size-4" strokeWidth={3} />
+          </button>
+          <span className="w-full truncate text-center text-xs text-stone-500">{tr.stories.yours}</span>
+        </div>
+        {others.map(([g, i]) => (
+          <button
+            key={g.user.id}
+            type="button"
+            role="listitem"
+            onClick={() => setOpen(i)}
+            aria-label={tr.stories.open(g.user.displayName)}
+            className="flex w-16 shrink-0 flex-col items-center gap-1"
+          >
+            <Ring unseen={g.stories.some((s) => !s.seen)}>
+              <Avatar user={g.user} size="md" />
+            </Ring>
+            <span className="w-full truncate text-center text-xs">{g.user.displayName}</span>
+          </button>
+        ))}
+      </div>
+      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} onClose={() => setOpen(null)} />}
+      {composing && <StoryComposer onClose={() => setComposing(false)} />}
+    </>
+  );
+}
+
+function Viewers({ storyId, onClose }: { storyId: string; onClose: () => void }) {
+  const tr = useT();
+  const viewers = useQuery({
+    queryKey: ["stories", storyId, "viewers"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/stories/{id}/viewers", { params: { path: { id: storyId } } })).items,
+  });
+  return (
+    <div className="absolute inset-x-0 bottom-0 z-10 max-h-[60%] overflow-y-auto rounded-t-3xl bg-stone-900/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="mb-2 flex items-center">
+        <h3 className="flex-1 font-semibold">{tr.stories.views(viewers.data?.length ?? 0)}</h3>
+        <button type="button" onClick={onClose} aria-label={tr.common.close} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
+          <X className="size-5" />
+        </button>
+      </div>
+      {viewers.isPending && <p className="text-sm text-white/60">{tr.common.loading}</p>}
+      {viewers.data?.length === 0 && <p className="text-sm text-white/60">{tr.stories.noViews}</p>}
+      {viewers.data?.map((v) => (
+        <div key={v.user.id} className="flex items-center gap-3 py-2">
+          <Avatar user={v.user} />
+          <span className="min-w-0 flex-1 truncate">{v.user.displayName}</span>
+          <span className="text-xs text-white/60">{timeAgo(v.viewedAt)}</span>
+          {countReactions(v.reactions).map(([emoji, n]) => (
+            <span key={emoji} className="flex items-baseline text-xl leading-none">
+              {emoji}
+              {n > 1 && <span className="text-xs font-semibold text-white/70">{n}</span>}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Opens the first story in a group the viewer hasn't seen yet, or the first one when all were seen. */
+const firstUnseen = (g: StoryGroupDTO) => Math.max(0, g.stories.findIndex((s) => !s.seen));
+
+/** Answers someone's story: a quick reaction they see in who opened it, or a few words in your chat with them. */
+function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUser; onTyping: (typing: boolean) => void }) {
+  const tr = useT();
+  const qc = useQueryClient();
+  const { realtime } = useRealtime();
+  const chats = [...(useChats().data ?? []), ...(useChats(true).data ?? [])];
+  const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === owner.id));
+  const [text, setText] = useState("");
+  const [sent, setSent] = useState(false);
+  const [popped, setPopped] = useState({ emoji: "", n: 0 });
+  if (!chat || !realtime) return null;
+
+  const done = () => {
+    setSent(true);
+    setTimeout(() => setSent(false), 1500);
+  };
+  const react = (emoji: StoryReaction) => {
+    void six.api.POST("/v1/stories/{id}/react", { params: { path: { id: story.id } }, body: { emoji } });
+    setPopped((p) => ({ emoji, n: p.n + 1 }));
+  };
+  const send = (reply: string) => {
+    if (!reply.trim()) return;
+    const reference = {
+      id: story.id,
+      ownerId: owner.id,
+      kind: story.type,
+      text: story.text?.slice(0, 120) ?? null,
+      background: story.background,
+      imageUrl: story.media?.thumbUrl ?? (story.type === "image" ? story.media?.url : null) ?? null,
+    };
+    void queueMessage(qc, realtime, chat.id, { text: reply.trim(), story: reference });
+    setText("");
+    done();
+  };
+
+  return (
+    <div className="pointer-events-auto flex w-full flex-col gap-2" onPointerDown={(e) => e.stopPropagation()}>
+      <div className="flex justify-center gap-1">
+        {sent ? (
+          <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-semibold text-stone-900">{tr.stories.sent}</span>
+        ) : (
+          STORY_REACTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => react(emoji)}
+              aria-label={emoji}
+              className="grid size-10 place-items-center rounded-full text-2xl transition hover:scale-125 active:scale-95"
+            >
+              <span key={popped.emoji === emoji ? popped.n : 0} className={popped.emoji === emoji ? "piece-pop" : undefined}>
+                {emoji}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(text);
+        }}
+        className="flex items-center gap-2"
+      >
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onFocus={() => onTyping(true)}
+          onBlur={() => onTyping(false)}
+          maxLength={4000}
+          placeholder={tr.stories.replyTo(owner.displayName)}
+          aria-label={tr.stories.replyTo(owner.displayName)}
+          className="min-w-0 flex-1 rounded-full border border-white/60 bg-black/20 px-4 py-2.5 text-[16px] text-white outline-none backdrop-blur placeholder:text-white/70 focus:border-white"
+        />
+        {text.trim() && (
+          <button type="submit" aria-label={tr.common.send} className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-brand-ink">
+            <SendHorizontal className="size-5" />
+          </button>
+        )}
+      </form>
+    </div>
+  );
+}
+
+/**
+ * Full-screen stories, one person after the other. Tap the right side for the next story, the left
+ * for the previous one, and hold to pause.
+ */
+export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[]; start: number; onClose: () => void }) {
+  const tr = useT();
+  const qc = useQueryClient();
+  const meId = useSession((s) => s.user!.id);
+  const [gi, setGi] = useState(start);
+  const [si, setSi] = useState(() => firstUnseen(groups[start]!));
+  const [elapsed, setElapsed] = useState(0);
+  const progress = useRef(0);
+  const show = useCallback((ms: number) => {
+    progress.current = ms;
+    setElapsed(ms);
+  }, []);
+  const [paused, setPaused] = useState(false);
+  const [held, setHeld] = useState(false);
+  const [showViewers, setShowViewers] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [replying, setReplying] = useState(false);
+  const [videoMs, setVideoMs] = useState<number | null>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const downAt = useRef(0);
+  const group = groups[gi];
+  const story = group?.stories[si];
+  const mine = group?.user.id === meId;
+  const stopped = paused || held || showViewers || deleting || replying;
+  const length = story?.type === "video" ? (videoMs ?? Infinity) : STORY_SHOW_MS;
+
+  const go = useCallback(
+    (step: 1 | -1) => {
+      show(0);
+      setVideoMs(null);
+      setShowViewers(false);
+      const g = groups[gi]!;
+      if (step === 1 && si < g.stories.length - 1) return setSi(si + 1);
+      if (step === -1 && si > 0) return setSi(si - 1);
+      const next = gi + step;
+      if (next < 0) return;
+      if (next >= groups.length) return onClose();
+      setGi(next);
+      setSi(step === 1 ? firstUnseen(groups[next]!) : groups[next]!.stories.length - 1);
+    },
+    [groups, gi, si, onClose, show],
+  );
+
+  useEffect(() => {
+    if (!story || story.seen || mine) return;
+    void six.api.POST("/v1/stories/{id}/view", { params: { path: { id: story.id } } });
+    qc.setQueryData<StoryGroupDTO[]>(storiesKey, (old) =>
+      old?.map((g) => ({ ...g, stories: g.stories.map((s) => (s.id === story.id ? { ...s, seen: true } : s)) })),
+    );
+  }, [story, mine, qc]);
+
+  useEffect(() => {
+    if (stopped || story?.type === "video") return;
+    let last = Date.now();
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const ms = progress.current + now - last;
+      last = now;
+      if (ms >= STORY_SHOW_MS) go(1);
+      else show(ms);
+    }, 50);
+    return () => clearInterval(timer);
+  }, [stopped, story, go, show]);
+
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    if (stopped) v.pause();
+    else void v.play().catch(() => undefined);
+  }, [stopped, story]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowRight") go(1);
+      else if (e.key === "ArrowLeft") go(-1);
+      else if (e.key === " ") {
+        e.preventDefault();
+        setPaused((p) => !p);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go, onClose]);
+
+  if (!group || !story) return null;
+
+  async function remove() {
+    await six.api.DELETE("/v1/stories/{id}", { params: { path: { id: story!.id } } });
+    void qc.invalidateQueries({ queryKey: storiesKey });
+    if (group!.stories.length === 1) onClose();
+    else go(si === group!.stories.length - 1 ? -1 : 1);
+  }
+
+  const media = story.media;
+  const stickers = {
+    ask: story.ask,
+    gif: story.gif && <video src={story.gif.url} autoPlay loop muted playsInline className="max-h-40 max-w-56 rounded-xl" />,
+    location: story.location,
+    showDate: story.showDate,
+    showTime: story.showTime,
+    at: story.createdAt,
+    positions: story.positions ?? {},
+  };
+  const tap = (e: React.PointerEvent<HTMLDivElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    go(e.clientX - box.left < box.width / 3 ? -1 : 1);
+  };
+
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black text-white" role="dialog" aria-modal aria-label={tr.stories.title}>
+        <button
+          type="button"
+          onClick={() => go(-1)}
+          aria-label={tr.stories.previous}
+          className="mr-4 hidden size-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 md:grid"
+        >
+          <ChevronLeft className="size-6" />
+        </button>
+        <div className="relative flex h-full w-full flex-col overflow-hidden md:h-[min(92vh,52rem)] md:w-auto md:aspect-[9/16] md:rounded-2xl">
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ background: media ? "#000" : storyBackground(story.background ?? "#eb8a00") }}
+            onPointerDown={(e) => {
+              downAt.current = e.timeStamp;
+              setHeld(true);
+            }}
+            onPointerUp={(e) => {
+              setHeld(false);
+              if (e.timeStamp - downAt.current < 250) tap(e);
+            }}
+            onPointerLeave={() => setHeld(false)}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            {story.type === "image" && media?.url && (
+              <img src={media.url} alt="" draggable={false} className="max-h-full max-w-full object-contain select-none" />
+            )}
+            {story.type === "video" && media?.url && (
+              <video
+                ref={video}
+                key={story.id}
+                src={media.url}
+                autoPlay
+                playsInline
+                onLoadedMetadata={(e) => setVideoMs(e.currentTarget.duration * 1000)}
+                onTimeUpdate={(e) => show(e.currentTarget.currentTime * 1000)}
+                onEnded={() => go(1)}
+                className="max-h-full max-w-full"
+              />
+            )}
+            {media && !media.url && (
+              <div className="flex flex-col items-center gap-3 text-sm text-white/80">
+                <Loader2 className="size-8 animate-spin" />
+                {tr.stories.processing}
+              </div>
+            )}
+            {!media && story.text && (
+              <p className="px-8 text-center text-2xl leading-snug font-semibold break-words whitespace-pre-wrap select-none">{story.text}</p>
+            )}
+          </div>
+
+          <div className="pointer-events-none absolute inset-0">
+            <StoryStickers {...stickers} placed />
+          </div>
+          <StoryDrawingLayer drawing={story.drawing} />
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 bg-gradient-to-t from-black/60 to-transparent px-4 pt-16 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <StoryStickers {...stickers} placed={false} />
+            {media && story.text && <p className="text-center text-base break-words whitespace-pre-wrap">{story.text}</p>}
+            {mine && (
+              <button
+                type="button"
+                onClick={() => setShowViewers(true)}
+                className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-sm font-medium"
+              >
+                <Eye className="size-4" />
+                {tr.stories.views(story.viewCount ?? 0)}
+              </button>
+            )}
+            {!mine && <ReplyBar key={story.id} story={story} owner={group.user} onTyping={setReplying} />}
+          </div>
+
+          <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/50 to-transparent px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-6">
+            <div className="flex gap-1">
+              {group.stories.map((s, i) => (
+                <span key={s.id} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/35">
+                  <span
+                    className="block h-full bg-white"
+                    style={{ width: `${i < si ? 100 : i > si ? 0 : Math.min(100, (elapsed / length) * 100)}%` }}
+                  />
+                </span>
+              ))}
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <Avatar user={group.user} />
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                {mine ? tr.stories.yours : group.user.displayName}
+                <span className="ml-2 font-normal text-white/70">{timeAgo(story.createdAt)}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setPaused((p) => !p)}
+                aria-label={paused ? tr.stories.play : tr.stories.pause}
+                className="grid size-9 place-items-center rounded-full hover:bg-white/10"
+              >
+                {paused ? <Play className="size-5" /> : <Pause className="size-5" />}
+              </button>
+              {mine && (
+                <button
+                  type="button"
+                  onClick={() => setDeleting(true)}
+                  aria-label={tr.stories.delete}
+                  title={tr.stories.delete}
+                  className="grid size-9 place-items-center rounded-full hover:bg-white/10"
+                >
+                  <Trash2 className="size-5" />
+                </button>
+              )}
+              <button type="button" onClick={onClose} aria-label={tr.common.close} className="grid size-9 place-items-center rounded-full hover:bg-white/10">
+                <X className="size-6" />
+              </button>
+            </div>
+          </div>
+          {showViewers && <Viewers storyId={story.id} onClose={() => setShowViewers(false)} />}
+          {deleting && (
+            <Sheet
+              title={tr.stories.deleteConfirm}
+              actions={[{ label: tr.stories.delete, destructive: true, onSelect: () => void remove() }]}
+              onClose={() => setDeleting(false)}
+            />
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => go(1)}
+          aria-label={tr.stories.next}
+          className="ml-4 hidden size-11 place-items-center rounded-full bg-white/10 hover:bg-white/20 md:grid"
+        >
+          <ChevronRight className="size-6" />
+        </button>
+      </div>
+    </Portal>
+  );
+}

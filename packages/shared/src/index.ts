@@ -20,6 +20,7 @@ export * from "./contacts.js";
 export * from "./sync.js";
 export * from "./uploads.js";
 export * from "./stickers.js";
+export * from "./stories.js";
 export * from "./preview.js";
 export * from "./emoticons.js";
 export * from "./commands.js";

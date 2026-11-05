@@ -4,6 +4,7 @@ import {
   type ChatDTO,
   type MessageDTO,
   type MessageReactedDTO,
+  type StoryReactedDTO,
   type Tone,
   maskSpoilers,
   previewText,
@@ -110,6 +111,12 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean) {
   if (viewing) return;
   const media = m.voice ? `🎤 ${t.summary.kinds.voice}` : m.gif ? t.summary.kinds.gif : `📷 ${t.summary.kinds.image}`;
   alert(m.id, "/inbox", t.ask.newMessage, maskSpoilers(m.text, m.entities) || media, null, ANON_SOUND);
+}
+
+/** Tells you a contact reacted to your story. */
+export function notifyStoryReaction(e: StoryReactedDTO) {
+  const t = getT();
+  alert(`story-${e.storyId}-${e.user.id}`, "/", e.user.displayName, `${e.emoji} ${t.stories.reactedToYours}`, e.user.avatarUrl);
 }
 
 function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null, sound?: number) {

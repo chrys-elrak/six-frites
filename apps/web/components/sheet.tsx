@@ -100,7 +100,7 @@ export function Sheet({
   if (bar && narrow) {
     return (
       <Portal>
-        <div key="bar" className="fixed inset-0 z-50" role="dialog" aria-modal>
+        <div key="bar" className="fixed inset-0 z-[65]" role="dialog" aria-modal>
           <button
             type="button"
             aria-label={tr.common.close}
@@ -115,7 +115,7 @@ export function Sheet({
 
   return (
     <Portal>
-      <div key="sheet" className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal>
+      <div key="sheet" className="fixed inset-0 z-[65] flex items-end justify-center md:items-center" role="dialog" aria-modal>
         <button
           type="button"
           aria-label={tr.common.close}

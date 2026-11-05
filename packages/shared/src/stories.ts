@@ -1,0 +1,263 @@
+import { z } from "zod";
+import { GeoPoint } from "./chats.js";
+import { Id, IsoDate } from "./common.js";
+import { PublicUser } from "./invites.js";
+import { AttachmentDTO } from "./uploads.js";
+import { LABEL_FONTS, type LabelFont } from "./media-edit.js";
+
+const HOUR = 60 * 60;
+
+export const STORY_LIMITS = {
+  text: 700,
+  place: 80,
+  drawnText: 200,
+  /** Longest video, with half a second of slack for how players round the length. */
+  videoMs: 30_000,
+  videoSlackMs: 500,
+  minSecs: HOUR,
+  maxSecs: 24 * HOUR,
+} as const;
+
+/** How long a story can stay up, offered as choices; the API takes any whole number of seconds in range. */
+export const STORY_DURATIONS = [HOUR, 6 * HOUR, 12 * HOUR, 24 * HOUR] as const;
+export const STORY_DEFAULT_SECS = 24 * HOUR;
+
+/** How long a photo or text story stays on screen before the next one. */
+export const STORY_SHOW_MS = 6000;
+
+export const STORY_BACKGROUNDS = [
+  "#eb8a00",
+  "#e11d48",
+  "#7c3aed",
+  "#2563eb",
+  "#0d9488",
+  "#16a34a",
+  "#1c1917",
+  "#f59e0b,#e11d48",
+  "#ec4899,#7c3aed",
+  "#7c3aed,#2563eb",
+  "#06b6d4,#16a34a",
+  "#1c1917,#57534e",
+] as const;
+
+/** CSS for a story's background: one colour, or a diagonal gradient between two. */
+export function storyBackground(background: string) {
+  const [from, to] = background.split(",");
+  return to ? `linear-gradient(160deg, ${from}, ${to})` : from!;
+}
+
+export const StoryLocation = GeoPoint.extend({
+  name: z.string().trim().min(1).max(STORY_LIMITS.place).optional().describe("What the place is called, as the poster typed it"),
+});
+export type StoryLocation = z.infer<typeof StoryLocation>;
+
+export const STORY_STICKER_SCALE = { min: 0.5, max: 3 } as const;
+
+const StorySpot = z.object({
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+  scale: z.number().min(STORY_STICKER_SCALE.min).max(STORY_STICKER_SCALE.max).optional().describe("How much bigger or smaller than usual"),
+});
+export type StorySpot = z.infer<typeof StorySpot>;
+
+export const STORY_STICKERS = ["ask", "gif", "location", "date", "time"] as const;
+export type StorySticker = (typeof STORY_STICKERS)[number];
+
+export const StoryPositions = z
+  .object({
+    ask: StorySpot.optional(),
+    gif: StorySpot.optional(),
+    location: StorySpot.optional(),
+    date: StorySpot.optional(),
+    time: StorySpot.optional(),
+  })
+  .describe(
+    "Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom",
+  );
+export type StoryPositions = z.infer<typeof StoryPositions>;
+
+export const STORY_SHAPES = ["pen", "arrow", "circle", "rect"] as const;
+export type StoryShape = (typeof STORY_SHAPES)[number];
+
+const Hex = z.string().regex(/^#[0-9a-f]{6}$/i);
+const Fraction = z.number().min(-0.25).max(1.25);
+
+export const StoryStroke = z.object({
+  shape: z.enum(STORY_SHAPES),
+  color: Hex,
+  size: z.number().min(0.002).max(0.05).describe("Line width, as a fraction of the story's width"),
+  points: z
+    .array(Fraction)
+    .min(4)
+    .max(1200)
+    .describe("x, y pairs as fractions of the story; a shape or an arrow is its first and last corner, an arrow pointing at the last"),
+});
+export type StoryStroke = z.infer<typeof StoryStroke>;
+
+export const STORY_TEXT_LOOKS = ["plain", "box", "outline"] as const;
+export type StoryTextLook = (typeof STORY_TEXT_LOOKS)[number];
+
+export const StoryText = z.object({
+  text: z.string().trim().min(1).max(STORY_LIMITS.drawnText),
+  color: Hex,
+  font: z.enum(Object.keys(LABEL_FONTS) as [LabelFont, ...LabelFont[]]),
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+  scale: z.number().min(STORY_STICKER_SCALE.min).max(STORY_STICKER_SCALE.max).default(1),
+  look: z.enum(STORY_TEXT_LOOKS).optional().describe("plain when left out; box puts it on a pill of its colour, outline rings it"),
+});
+export type StoryText = z.infer<typeof StoryText>;
+
+export const StoryDrawing = z
+  .object({ strokes: z.array(StoryStroke).max(80).default([]), texts: z.array(StoryText).max(10).default([]) })
+  .describe("Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story");
+export type StoryDrawing = z.infer<typeof StoryDrawing>;
+
+/** Text is sized from the story's width, so it looks the same on every screen: this much of it at scale 1. */
+export const STORY_TEXT_SIZE = 0.075;
+/** Black or white, whichever reads better on `hex`: the text on a box, or the ring around outlined text. */
+export function inkOn(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  return 0.299 * r! + 0.587 * g! + 0.114 * b! > 0.6 ? "#111111" : "#ffffff";
+}
+
+export const STORY_PEN_SIZES = [0.008, 0.016, 0.03] as const;
+export const EMPTY_DRAWING: StoryDrawing = { strokes: [], texts: [] };
+
+/** A stroke starting at x, y: a dot until it is dragged out. */
+export const startStroke = (shape: StoryShape, color: string, size: number, x: number, y: number): StoryStroke => ({
+  shape,
+  color,
+  size,
+  points: [x, y, x, y],
+});
+
+/** Follows the finger: a pen line grows, a shape or an arrow stretches its far corner to x, y. */
+export function extendStroke(s: StoryStroke, x: number, y: number): StoryStroke {
+  const fit = (v: number) => Math.min(1.25, Math.max(-0.25, v));
+  const [fx, fy] = [fit(x), fit(y)];
+  const p = s.points;
+  if (s.shape !== "pen") return { ...s, points: [p[0]!, p[1]!, fx, fy] };
+  if (p.length >= 1200 || Math.hypot(fx - p.at(-2)!, fy - p.at(-1)!) < 0.003) return s;
+  return { ...s, points: [...p, fx, fy] };
+}
+
+/** A shape or an arrow too small to see, from a tap rather than a drag. */
+export const strokeTooSmall = (s: StoryStroke) =>
+  s.shape !== "pen" && Math.hypot(s.points[2]! - s.points[0]!, s.points[3]! - s.points[1]!) < 0.02;
+
+/** The SVG path of a stroke on a story `w` by `h` pixels: circles fill the box between its corners. */
+export function storyStrokePath(s: StoryStroke, w: number, h: number) {
+  const p = s.points;
+  const [x0, y0, x1, y1] = [p[0]! * w, p[1]! * h, p.at(-2)! * w, p.at(-1)! * h];
+  if (s.shape === "rect") return `M${x0} ${y0}H${x1}V${y1}H${x0}Z`;
+  if (s.shape === "circle") {
+    const [rx, ry, cy] = [Math.abs(x1 - x0) / 2, Math.abs(y1 - y0) / 2, (y0 + y1) / 2];
+    return `M${x0} ${cy}A${rx} ${ry} 0 1 0 ${x1} ${cy}A${rx} ${ry} 0 1 0 ${x0} ${cy}Z`;
+  }
+  if (s.shape === "arrow") {
+    const angle = Math.atan2(y1 - y0, x1 - x0);
+    const head = Math.min(Math.hypot(x1 - x0, y1 - y0) / 2, s.size * w * 4 + w * 0.02);
+    const wing = (side: number) => `${x1 - head * Math.cos(angle + side)} ${y1 - head * Math.sin(angle + side)}`;
+    return `M${x0} ${y0}L${x1} ${y1}M${wing(0.5)}L${x1} ${y1}L${wing(-0.5)}`;
+  }
+  let d = `M${x0} ${y0}`;
+  for (let i = 2; i < p.length; i += 2) d += `L${p[i]! * w} ${p[i + 1]! * h}`;
+  return d;
+}
+
+export const CreateStoryInput = z
+  .object({
+    text: z.string().trim().max(STORY_LIMITS.text).optional().describe("The text of a text story, or a caption on a photo or video"),
+    background: z
+      .string()
+      .regex(/^#[0-9a-f]{6}(,#[0-9a-f]{6})?$/i)
+      .transform((s) => s.toLowerCase())
+      .optional()
+      .describe("What's behind a text story: a colour like #eb8a00, or two for a gradient, like #f59e0b,#e11d48"),
+    uploadId: Id.optional().describe("A completed `image` or `video` upload; videos can be at most 30 seconds"),
+    gifId: z
+      .string()
+      .regex(/^[\w-]{1,128}$/)
+      .optional()
+      .describe("A GIF from GET /v1/gifs shown on top of the story"),
+    location: StoryLocation.optional(),
+    askId: Id.optional().describe("An anonymous message you received, shown on the story as a card: its text, photo or GIF"),
+    showDate: z.boolean().optional().describe("Show the day it was posted on the story"),
+    showTime: z.boolean().optional().describe("Show the time it was posted on the story"),
+    positions: StoryPositions.optional(),
+    drawing: StoryDrawing.optional(),
+    durationSecs: z
+      .number()
+      .int()
+      .min(STORY_LIMITS.minSecs)
+      .max(STORY_LIMITS.maxSecs)
+      .default(STORY_DEFAULT_SECS)
+      .describe("How long it stays up, from one hour to a day"),
+  })
+  .refine((v) => !!v.uploadId || !!v.text || !!v.gifId || !!v.askId || !!v.drawing?.strokes.length || !!v.drawing?.texts.length, {
+    message: "A story needs text, a photo, a video, a GIF, an anonymous message or a drawing",
+  });
+export type CreateStoryInput = z.infer<typeof CreateStoryInput>;
+
+export const StoryDTO = z.object({
+  id: Id,
+  type: z.enum(["text", "image", "video"]),
+  text: z.string().nullable(),
+  background: z.string().nullable(),
+  media: AttachmentDTO.nullable(),
+  gif: z.object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() }).nullable(),
+  location: StoryLocation.nullable(),
+  ask: z
+    .object({
+      text: z.string().describe("Empty when only a photo or a GIF was sent"),
+      prompt: z.string().nullable().describe("The prompt it answered; null for the app's own"),
+      photoUrl: z.string().url().nullable(),
+      gif: z
+        .object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() })
+        .nullable()
+        .describe("As an MP4 to play muted on a loop"),
+    })
+    .nullable()
+    .describe("An anonymous message the poster received and shared, as a card"),
+  showDate: z.boolean(),
+  showTime: z.boolean(),
+  positions: StoryPositions,
+  drawing: StoryDrawing,
+  createdAt: IsoDate,
+  expiresAt: IsoDate,
+  seen: z.boolean().describe("You opened it; always true for your own"),
+  viewCount: z.number().int().nullable().describe("How many people opened it; only on your own"),
+});
+export type StoryDTO = z.infer<typeof StoryDTO>;
+
+export const StoryGroupDTO = z.object({
+  user: PublicUser,
+  stories: z.array(StoryDTO).describe("Oldest first"),
+});
+export type StoryGroupDTO = z.infer<typeof StoryGroupDTO>;
+
+export const STORY_REACTIONS = ["❤️", "😂", "😮", "😢", "👏", "🔥"] as const;
+export type StoryReaction = (typeof STORY_REACTIONS)[number];
+export const ReactStoryInput = z.object({ emoji: z.enum(STORY_REACTIONS) });
+
+/** Someone's reactions as [emoji, how many times], in the order they first used each one. */
+export function countReactions(reactions: readonly string[]) {
+  const counts = new Map<string, number>();
+  for (const r of reactions) counts.set(r, (counts.get(r) ?? 0) + 1);
+  return [...counts];
+}
+
+/** Someone reacted to one of your stories, as you see them. */
+export interface StoryReactedDTO {
+  storyId: string;
+  user: PublicUser;
+  emoji: StoryReaction;
+}
+
+export const StoryViewerDTO = z.object({
+  user: PublicUser,
+  viewedAt: IsoDate,
+  reactions: z.array(z.enum(STORY_REACTIONS)).describe("Every emoji they reacted with, oldest first, at most the last 30"),
+});
+export type StoryViewerDTO = z.infer<typeof StoryViewerDTO>;

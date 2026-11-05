@@ -66,8 +66,8 @@ interface Writing {
 }
 
 const FONT_NAMES = Object.keys(LABEL_FONTS) as LabelFont[];
-const familyOf = (font: LabelFont | undefined) => (font && LABEL_FONTS[font]) || undefined;
-const FONT_FILES = {
+export const familyOf = (font: LabelFont | undefined) => (font && LABEL_FONTS[font]) || undefined;
+export const FONT_FILES = {
   DMSerifDisplay: require("../../assets/fonts/DMSerifDisplay-Regular.ttf"),
   PermanentMarker: require("../../assets/fonts/PermanentMarker-Regular.ttf"),
   Pacifico: require("../../assets/fonts/Pacifico-Regular.ttf"),
@@ -160,7 +160,7 @@ function Scene({ src, edit, view, width, height, svg }: { src: Source; edit: Pho
   );
 }
 
-function Sizes({ value, onChange }: { value: number; onChange: (i: number) => void }) {
+export function Sizes({ value, onChange }: { value: number; onChange: (i: number) => void }) {
   const tr = useT();
   return (
     <View style={styles.row}>
@@ -179,7 +179,7 @@ function Sizes({ value, onChange }: { value: number; onChange: (i: number) => vo
   );
 }
 
-function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont) => void }) {
+export function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont) => void }) {
   const tr = useT();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={styles.row}>
@@ -199,7 +199,7 @@ function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont)
   );
 }
 
-function Colors({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+export function Colors({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   const tr = useT();
   return (
     <View style={styles.row}>

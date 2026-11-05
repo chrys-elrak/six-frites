@@ -57,6 +57,7 @@ import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
 import { NewInvite } from "./invites";
 import { FindMe, Invites } from "./settings-panel";
+import { StoriesBar, StoryAvatar } from "./stories";
 import { MediaIcon, type MediaType, mediaLabel } from "./media-label";
 import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
 import { UpdateBanner } from "./update-banner";
@@ -175,7 +176,9 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
         }}
         style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
       >
-        <Avatar user={peer} size="md" online={!!online} />
+        <StoryAvatar userId={peer.id} name={chat.title}>
+          <Avatar user={peer} size="md" online={!!online} />
+        </StoryAvatar>
         <View style={styles.rowBody}>
           <View style={styles.rowLine}>
             <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
@@ -240,7 +243,9 @@ function ContactRow({ contact }: { contact: ContactDTO }) {
       onPress={() => router.push(`/chats/${contact.chatId}`)}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
     >
-      <Avatar user={contact.user} size="md" online={!!online} />
+      <StoryAvatar userId={contact.user.id} name={contact.user.displayName}>
+        <Avatar user={contact.user} size="md" online={!!online} />
+      </StoryAvatar>
       <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
         {contact.user.displayName}
       </Text>
@@ -356,6 +361,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
     <>
       <UpdateBanner />
       <BackupPinBanner />
+      {view === "chats" && !needle && (
+        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+          <StoriesBar />
+        </View>
+      )}
       {pulled && view === "chats" && !needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}

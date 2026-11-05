@@ -203,6 +203,19 @@ export async function deliverAnonPush(userId: string, text: string, kind: "image
   }));
 }
 
+/** Tells someone a contact reacted to their story, on the devices they aren't using right now. */
+export async function deliverStoryReactionPush(userId: string, from: PublicUser, emoji: string) {
+  const targets = await targetsFor(userId);
+  return sendToAll(targets, (t) => ({
+    title: from.displayName,
+    body: `${emoji} ${t.stories.reactedToYours}`,
+    icon: from.avatarUrl,
+    chatId: null,
+    messageId: null,
+    url: "/",
+  }));
+}
+
 /** Tells every signed-in Android phone that a new version of the app is out. */
 export async function deliverReleasePush(version: string, downloadUrl: string) {
   const targets = await prisma.pushToken.findMany({

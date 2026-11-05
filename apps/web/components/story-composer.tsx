@@ -1,0 +1,476 @@
+"use client";
+
+import { kindFor, unwrap } from "@six/sdk";
+import {
+  type AnonMessageDTO,
+  EDIT_COLORS,
+  EMPTY_DRAWING,
+  STORY_PEN_SIZES,
+  type GifDTO,
+  STORY_BACKGROUNDS,
+  STORY_DEFAULT_SECS,
+  STORY_DURATIONS,
+  STORY_LIMITS,
+  type StoryLocation,
+  durationLabel,
+  storyBackground,
+  trimVideo,
+  type StoryDrawing,
+  type StoryPositions,
+  type StorySpot,
+  type StorySticker,
+} from "@six/shared";
+import { useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, Loader2, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { getLocale, useT } from "@/lib/i18n";
+import { mediaMeta } from "@/lib/media-meta";
+import { six } from "@/lib/six";
+import { GifSearch } from "./gif-picker";
+import { currentPosition } from "./location-card";
+import { Portal } from "./portal";
+import { Sheet } from "./sheet";
+import { StoryStickers, storiesKey } from "./stories";
+import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
+import { VideoTrimmer } from "./video-trimmer";
+
+const MEDIA_TYPES = "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm";
+
+const tool = (on: boolean) =>
+  `pointer-events-auto grid size-11 place-items-center rounded-full backdrop-blur transition active:scale-95 ${
+    on ? "bg-white text-stone-900" : "bg-black/35 text-white hover:bg-black/50"
+  }`;
+
+const swatchInput =
+  "size-8 cursor-pointer rounded-full border-2 border-white bg-transparent p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-0";
+
+const field =
+  "w-full rounded-full bg-black/40 px-4 py-2.5 text-[16px] text-white outline-none backdrop-blur placeholder:text-white/60 focus:ring-2 focus:ring-white/60";
+
+/**
+ * Makes a story: text on a colour, or a photo or video, with a GIF, the place, the date or the time on top. With
+ * `anon`, it starts with that anonymous message on it as a card, to answer in front of everyone.
+ */
+export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClose: () => void }) {
+  const tr = useT();
+  const qc = useQueryClient();
+  const picker = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState<string>();
+  const [videoMs, setVideoMs] = useState<number | null>(null);
+  const [text, setText] = useState("");
+  const [background, setBackground] = useState<string>(STORY_BACKGROUNDS[0]);
+  const [custom, setCustom] = useState(false);
+  const [from, to] = background.split(",") as [string, string | undefined];
+  const [gif, setGif] = useState<GifDTO | null>(null);
+  const [ask, setAsk] = useState(anon ?? null);
+  const [pickingGif, setPickingGif] = useState(false);
+  const [location, setLocation] = useState<StoryLocation | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [showDate, setShowDate] = useState(false);
+  const [showTime, setShowTime] = useState(false);
+  const [durationSecs, setDurationSecs] = useState<number>(STORY_DEFAULT_SECS);
+  const [cutting, setCutting] = useState(false);
+  const [pickingDuration, setPickingDuration] = useState(false);
+  const [positions, setPositions] = useState<StoryPositions>({});
+  const [drawing, setDrawing] = useState<StoryDrawing>(EMPTY_DRAWING);
+  const [undos, setUndos] = useState<StoryDrawing[]>([]);
+  const [pen, setPen] = useState<Pen>({ shape: "pen", color: EDIT_COLORS[0]!, size: STORY_PEN_SIZES[1] });
+  const [drawingOn, setDrawingOn] = useState(false);
+  const [writing, setWriting] = useState<Writing | null>(null);
+  const drawn = drawing.strokes.length > 0 || drawing.texts.length > 0;
+  const card = useRef<HTMLDivElement>(null);
+  const placeField = useRef<HTMLInputElement>(null);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const kind = file ? kindFor(file.type) : null;
+  const tooLong = kind === "video" && (videoMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
+  const busy = progress !== null;
+  const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong && !busy;
+
+  useEffect(() => {
+    if (!file) return setUrl(undefined);
+    const made = URL.createObjectURL(file);
+    setUrl(made);
+    return () => URL.revokeObjectURL(made);
+  }, [file]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || cutting || pickingDuration) return;
+      if (writing) setWriting(null);
+      else if (drawingOn) setDrawingOn(false);
+      else onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, cutting, pickingDuration, writing, drawingOn]);
+
+  const keep = () => setUndos((u) => [...u, drawing]);
+  function finishWriting() {
+    const w = writing!;
+    setWriting(null);
+    const words = w.text.trim();
+    if (!words && w.index < 0) return;
+    keep();
+    const old = drawing.texts[w.index];
+    const t = { text: words, color: w.color, font: w.font, look: w.look, x: old?.x ?? 0.5, y: old?.y ?? 0.4, scale: old?.scale ?? 1 };
+    setDrawing((d) => ({
+      ...d,
+      texts: !words ? d.texts.filter((_, i) => i !== w.index) : w.index < 0 ? [...d.texts, t] : d.texts.map((it, i) => (i === w.index ? t : it)),
+    }));
+  }
+
+  async function pick(picked: File | undefined) {
+    if (!picked) return;
+    const k = kindFor(picked.type);
+    if (k !== "image" && k !== "video") return;
+    setError(null);
+    setFile(picked);
+    setVideoMs(k === "video" ? ((await mediaMeta(picked, "video")).durationMs ?? null) : null);
+  }
+
+  async function cut(from: number, to: number) {
+    setCutting(false);
+    const out = file && trimVideo(new Uint8Array(await file.arrayBuffer()), from, to);
+    if (!out || !file) return setError(tr.composer.cantCut);
+    await pick(new File([out], file.name, { type: file.type }));
+  }
+
+  async function locate() {
+    if (location) return setLocation(null);
+    setLocating(true);
+    setError(null);
+    try {
+      const spot = await currentPosition();
+      setLocation(spot);
+      void six.api
+        .GET("/v1/place-name", { params: { query: { lat: spot.lat, lng: spot.lng, locale: getLocale() } } })
+        .then(({ data }) => data?.name && setLocation((l) => (l && !l.name ? { ...l, name: data.name! } : l)))
+        .catch(() => null);
+    } catch (err) {
+      setError((err as Error).message === "denied" ? tr.composer.locationDenied : tr.composer.locationFailed);
+    } finally {
+      setLocating(false);
+    }
+  }
+
+  async function share() {
+    if (!ready) return;
+    setProgress(0);
+    setError(null);
+    try {
+      const upload =
+        file && kind
+          ? await six.upload(file, { kind, name: file.name, mime: file.type, onProgress: setProgress })
+          : null;
+      unwrap(
+        await six.api.POST("/v1/stories", {
+          body: {
+            text: text.trim() || undefined,
+            background: upload ? undefined : background,
+            uploadId: upload?.id,
+            gifId: gif?.id,
+            askId: ask?.id,
+            location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
+            showDate,
+            showTime,
+            positions,
+            drawing: drawn ? drawing : undefined,
+            durationSecs,
+          },
+        }),
+      );
+      void qc.invalidateQueries({ queryKey: storiesKey });
+      onClose();
+    } catch {
+      setError(tr.stories.couldNotPost);
+      setProgress(null);
+    }
+  }
+
+  const stickers = {
+    ask: ask && { text: ask.text, prompt: ask.prompt, photoUrl: ask.photoUrl, gif: ask.gif },
+    gif: gif && <img src={gif.previewUrl} alt={gif.title} draggable={false} className="max-h-40 max-w-56 rounded-xl" />,
+    location,
+    showDate,
+    showTime,
+    at: new Date().toISOString(),
+    positions,
+    frame: card,
+    onMove: (sticker: StorySticker, spot: StorySpot) => setPositions((p) => ({ ...p, [sticker]: spot })),
+    onRemove: (sticker: StorySticker) => {
+      ({
+        ask: () => setAsk(null),
+        gif: () => setGif(null),
+        location: () => setLocation(null),
+        date: () => setShowDate(false),
+        time: () => setShowTime(false),
+      })[sticker]();
+      setPositions((p) => {
+        const next = { ...p };
+        delete next[sticker];
+        return next;
+      });
+    },
+    onTap: (sticker: StorySticker) => {
+      if (sticker === "gif") setPickingGif(true);
+      if (sticker === "location") placeField.current?.focus();
+    },
+  };
+
+  const tools = [
+    ...(file ? [{ label: tr.stories.text, icon: Type, on: false, onClick: () => setFile(null) }] : []),
+    { label: `${tr.stories.photo} / ${tr.stories.video}`, icon: ImagePlus, on: !!file, onClick: () => picker.current?.click() },
+    { label: tr.stories.gif, icon: Sticker, on: !!gif || pickingGif, onClick: () => (gif ? setGif(null) : setPickingGif(!pickingGif)) },
+    { label: tr.stories.location, icon: locating ? Loader2 : MapPin, on: !!location, onClick: () => void locate() },
+    { label: tr.stories.date, icon: CalendarDays, on: showDate, onClick: () => setShowDate(!showDate) },
+    { label: tr.stories.time, icon: Clock, on: showTime, onClick: () => setShowTime(!showTime) },
+    { label: tr.composer.editTools.draw, icon: Pencil, on: drawingOn, onClick: () => setDrawingOn(!drawingOn) },
+    {
+      label: tr.stories.addText,
+      icon: CaseSensitive,
+      on: false,
+      onClick: () => {
+        setDrawingOn(false);
+        if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
+      },
+    },
+  ];
+
+  return (
+    <Portal>
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black text-white"
+        role="dialog"
+        aria-modal
+        aria-label={tr.stories.newStory}
+      >
+        <div
+          ref={card}
+          className="relative flex h-full w-full flex-col overflow-hidden md:aspect-[9/16] md:h-[min(92dvh,52rem)] md:w-auto md:rounded-3xl"
+          style={{ background: file ? "#000" : storyBackground(background) }}
+        >
+          <div className="relative flex min-h-0 flex-1 items-center justify-center">
+            {kind === "image" && url && <img src={url} alt="" className="max-h-full max-w-full object-contain" />}
+            {kind === "video" && url && <video src={url} autoPlay loop muted playsInline className="max-h-full max-w-full" />}
+            {!file && (
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                maxLength={STORY_LIMITS.text}
+                autoFocus
+                placeholder={tr.stories.typeSomething}
+                aria-label={tr.stories.text}
+                className="w-full resize-none bg-transparent px-16 text-center text-2xl leading-snug font-semibold outline-none placeholder:text-white/60"
+                rows={4}
+              />
+            )}
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex flex-col items-center gap-3 px-16">
+              <StoryStickers {...stickers} placed={false} />
+              {file && text.trim() && <p className="text-center break-words whitespace-pre-wrap drop-shadow">{text}</p>}
+            </div>
+          </div>
+          <div className="pointer-events-none absolute inset-0">
+            <StoryStickers {...stickers} placed />
+          </div>
+          <StoryDrawingLayer
+            drawing={drawing}
+            pen={drawingOn ? pen : null}
+            onBegin={keep}
+            onChange={setDrawing}
+            onEditText={(index) => {
+              const t = drawing.texts[index]!;
+              setWriting({ index, text: t.text, color: t.color, font: t.font, look: t.look ?? "plain" });
+            }}
+          />
+
+          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <button type="button" onClick={onClose} aria-label={tr.common.close} title={tr.common.close} className={tool(false)}>
+              <X className="size-6" />
+            </button>
+            <div className="flex flex-col gap-2.5">
+              {tools.map(({ label, icon: Icon, on, onClick }) => (
+                <button key={label} type="button" onClick={onClick} aria-label={label} aria-pressed={on} title={label} className={tool(on)}>
+                  <Icon className={`size-5 ${Icon === Loader2 ? "animate-spin" : ""}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative flex flex-col gap-3 bg-gradient-to-t from-black/70 to-transparent px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            {drawingOn && (
+              <DrawBar
+                pen={pen}
+                onPen={setPen}
+                canUndo={undos.length > 0}
+                onUndo={() => {
+                  setDrawing(undos.at(-1)!);
+                  setUndos(undos.slice(0, -1));
+                }}
+                onDone={() => setDrawingOn(false)}
+              />
+            )}
+            {!file && !drawingOn && (
+              <div className="-mx-4 overflow-x-auto">
+                <div role="radiogroup" aria-label={tr.stories.background} className="mx-auto flex w-max gap-2.5 px-4 py-1">
+                  {STORY_BACKGROUNDS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      role="radio"
+                      aria-checked={background === c && !custom}
+                      aria-label={c}
+                      onClick={() => {
+                        setBackground(c);
+                        setCustom(false);
+                      }}
+                      style={{ background: storyBackground(c) }}
+                      className={`size-7 shrink-0 rounded-full ring-2 transition ${background === c && !custom ? "scale-110 ring-white" : "ring-white/40"}`}
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setCustom(!custom)}
+                    aria-label={tr.stories.customColour}
+                    aria-pressed={custom}
+                    title={tr.stories.customColour}
+                    style={{ background: "conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)" }}
+                    className={`size-7 shrink-0 rounded-full ring-2 transition ${custom ? "scale-110 ring-white" : "ring-white/40"}`}
+                  />
+                </div>
+              </div>
+            )}
+            {!file && custom && (
+              <div className="flex items-center justify-center gap-3 self-center rounded-full bg-black/40 px-4 py-2 backdrop-blur">
+                <input type="color" value={from} onChange={(e) => setBackground(to ? `${e.target.value},${to}` : e.target.value)} aria-label={tr.stories.customColour} className={swatchInput} />
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    checked={!!to}
+                    onChange={() => setBackground(to ? from : `${from},${from === "#7c3aed" ? "#e11d48" : "#7c3aed"}`)}
+                    className="size-4 accent-white"
+                  />
+                  {tr.stories.gradient}
+                </label>
+                {to && <input type="color" value={to} onChange={(e) => setBackground(`${from},${e.target.value}`)} aria-label={`${tr.stories.gradient} 2`} className={swatchInput} />}
+              </div>
+            )}
+            {location && (
+              <input
+                ref={placeField}
+                value={location.name ?? ""}
+                onChange={(e) => setLocation({ ...location, name: e.target.value })}
+                maxLength={STORY_LIMITS.place}
+                placeholder={tr.stories.placeName}
+                aria-label={tr.stories.placeName}
+                className={field}
+              />
+            )}
+            {file && (
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                maxLength={STORY_LIMITS.text}
+                placeholder={tr.stories.caption}
+                aria-label={tr.stories.caption}
+                className={field}
+              />
+            )}
+            {tooLong && (
+              <div className="flex items-center gap-3 rounded-2xl bg-red-500/25 p-3 text-sm backdrop-blur">
+                <span className="flex-1">{tr.stories.videoTooLong}</span>
+                <button type="button" onClick={() => setCutting(true)} className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 font-medium text-stone-900">
+                  <Scissors className="size-4" />
+                  {tr.composer.cut}
+                </button>
+              </div>
+            )}
+            {error && (
+              <p role="alert" className="rounded-2xl bg-red-500/25 px-3 py-2 text-sm backdrop-blur">
+                {error}
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPickingDuration(true)}
+                aria-label={`${tr.stories.lasts} ${durationLabel(durationSecs, tr)}`}
+                className="flex items-center gap-1.5 rounded-full bg-black/40 px-3.5 py-2.5 text-sm font-medium backdrop-blur hover:bg-black/55"
+              >
+                <Hourglass className="size-4" />
+                {durationLabel(durationSecs, tr)}
+                <ChevronDown className="size-4 opacity-70" />
+              </button>
+              <button
+                type="button"
+                onClick={() => void share()}
+                disabled={!ready}
+                className="ml-auto flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-semibold text-brand-ink transition active:scale-[0.97] disabled:opacity-50"
+              >
+                {busy ? `${tr.stories.posting} ${Math.round((progress ?? 0) * 100)}%` : tr.stories.post}
+                {!busy && <SendHorizontal className="size-4" />}
+              </button>
+            </div>
+          </div>
+
+          {writing && (
+            <TextWriter
+              writing={writing}
+              onChange={setWriting}
+              onDone={finishWriting}
+              onRemove={
+                writing.index >= 0
+                  ? () => {
+                      keep();
+                      setDrawing((d) => ({ ...d, texts: d.texts.filter((_, i) => i !== writing.index) }));
+                      setWriting(null);
+                    }
+                  : undefined
+              }
+            />
+          )}
+          {pickingGif && (
+            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[70%] flex-col rounded-t-3xl bg-white pt-2 text-stone-900 shadow-2xl dark:bg-stone-900 dark:text-stone-100">
+              <button
+                type="button"
+                onClick={() => setPickingGif(false)}
+                aria-label={tr.common.close}
+                className="mx-auto mb-1 h-1.5 w-10 shrink-0 rounded-full bg-stone-300 dark:bg-stone-700"
+              />
+              <div className="min-h-0 overflow-y-auto">
+                <GifSearch
+                  onPick={(g) => {
+                    setGif(g);
+                    setPickingGif(false);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        <input
+          ref={picker}
+          type="file"
+          accept={MEDIA_TYPES}
+          hidden
+          onChange={(e) => {
+            void pick(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+      </div>
+      {pickingDuration && (
+        <Sheet
+          title={tr.stories.lasts}
+          actions={STORY_DURATIONS.map((secs) => ({
+            label: `${durationLabel(secs, tr)}${secs === durationSecs ? " ✓" : ""}`,
+            onSelect: () => setDurationSecs(secs),
+          }))}
+          onClose={() => setPickingDuration(false)}
+        />
+      )}
+      {cutting && file && <VideoTrimmer file={file} onCancel={() => setCutting(false)} onDone={(from, to) => void cut(from, to)} />}
+    </Portal>
+  );
+}

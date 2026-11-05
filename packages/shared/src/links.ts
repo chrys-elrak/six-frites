@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { MessageEntity } from "./chats.js";
+import { LOCALES } from "./i18n/index.js";
 
 export const LinkPreviewQuery = z.object({
   url: z
@@ -47,3 +48,15 @@ export function messageLinks(text: string, entities: MessageEntity[] = []) {
 
 /** The first link outside code and spoilers: the one a message shows a preview card for. */
 export const previewLink = (text: string, entities: MessageEntity[] = []) => messageLinks(text, entities)[0]?.href ?? null;
+
+export const PlaceNameQuery = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  locale: z.enum(LOCALES).default("en"),
+});
+export type PlaceNameQuery = z.infer<typeof PlaceNameQuery>;
+
+export const PlaceNameDTO = z.object({
+  name: z.string().nullable().describe("The neighbourhood and town, like Analakely, Antananarivo; null when nothing is known there"),
+});
+export type PlaceNameDTO = z.infer<typeof PlaceNameDTO>;

@@ -13,6 +13,7 @@ import {
   type SendMessageInput,
   type UploadKind,
   maskSpoilers,
+  type StoryReply,
 } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
@@ -40,6 +41,7 @@ export interface Draft {
   text: string;
   entities?: MessageEntity[];
   replyTo?: MessageDTO;
+  story?: StoryReply;
   spoiler?: boolean;
   effect?: MessageEffect;
   silent?: boolean;
@@ -107,6 +109,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       clientId,
       attachmentId,
       replyToId: pending.replyTo?.id,
+      storyId: pending.story?.id,
       ephemeral: pending.ephemeral ?? undefined,
       groupId: pending.groupId,
       silent: pending.silent,
@@ -198,6 +201,7 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
           encrypted: false,
         }
       : null,
+    story: draft.story,
     spoiler: draft.spoiler ?? false,
     effect: draft.effect,
     silent: draft.silent,

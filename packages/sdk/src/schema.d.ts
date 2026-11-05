@@ -3650,6 +3650,23 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
@@ -3988,6 +4005,23 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
                                 } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
@@ -4390,6 +4424,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -4769,6 +4820,23 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
@@ -5107,6 +5175,23 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
                                 } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
@@ -5524,6 +5609,23 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
@@ -5862,6 +5964,23 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
                                 } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
@@ -6277,6 +6396,23 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
+                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    story: {
+                                        id: string;
+                                        /** @description Whose story it is */
+                                        ownerId: string;
+                                        /** @enum {string} */
+                                        kind: "text" | "image" | "video";
+                                        /** @description The start of the story's text or caption */
+                                        text: string | null;
+                                        /** @description A text story's colour, or two for a gradient */
+                                        background: string | null;
+                                        /**
+                                         * Format: uri
+                                         * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                         */
+                                        imageUrl: string | null;
+                                    } | null;
                                     /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
                                         /** @enum {string} */
@@ -6615,6 +6751,23 @@ export interface paths {
                                         deleted: boolean;
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
+                                    } | null;
+                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    story: {
+                                        id: string;
+                                        /** @description Whose story it is */
+                                        ownerId: string;
+                                        /** @enum {string} */
+                                        kind: "text" | "image" | "video";
+                                        /** @description The start of the story's text or caption */
+                                        text: string | null;
+                                        /** @description A text story's colour, or two for a gradient */
+                                        background: string | null;
+                                        /**
+                                         * Format: uri
+                                         * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                         */
+                                        imageUrl: string | null;
                                     } | null;
                                     /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
@@ -7031,6 +7184,23 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
@@ -7369,6 +7539,23 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
                                 } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
@@ -7838,6 +8025,23 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
@@ -8176,6 +8380,23 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
                                 } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
@@ -8667,6 +8888,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -9028,6 +9266,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -9388,6 +9643,23 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                            } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
                             } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
@@ -9752,6 +10024,23 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                            } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
                             } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
@@ -10140,6 +10429,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -10499,6 +10805,23 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
                                 } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
@@ -10865,6 +11188,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -11224,6 +11564,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -11582,6 +11939,23 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                            } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
                             } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
@@ -11973,6 +12347,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -12341,6 +12732,23 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                            } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
                             } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
@@ -12751,6 +13159,23 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
+                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story it is */
+                                    ownerId: string;
+                                    /** @enum {string} */
+                                    kind: "text" | "image" | "video";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
                                 /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
@@ -13082,6 +13507,8 @@ export interface paths {
                          */
                         type?: "location" | "checklist" | "game";
                         replyToId?: string;
+                        /** @description Answer this story of the other person's: it shows above the message */
+                        storyId?: string;
                         /** @description The same id on photos and videos sent together, so they show as one album */
                         groupId?: string;
                         spoiler?: boolean;
@@ -13253,6 +13680,23 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                            } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
                             } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
@@ -13725,6 +14169,8 @@ export interface paths {
                          */
                         type?: "location" | "checklist" | "game";
                         replyToId?: string;
+                        /** @description Answer this story of the other person's: it shows above the message */
+                        storyId?: string;
                         /** @description The same id on photos and videos sent together, so they show as one album */
                         groupId?: string;
                         spoiler?: boolean;
@@ -14243,6 +14689,23 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                            } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
                             } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
@@ -15262,6 +15725,23 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
+                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    story: {
+                                        id: string;
+                                        /** @description Whose story it is */
+                                        ownerId: string;
+                                        /** @enum {string} */
+                                        kind: "text" | "image" | "video";
+                                        /** @description The start of the story's text or caption */
+                                        text: string | null;
+                                        /** @description A text story's colour, or two for a gradient */
+                                        background: string | null;
+                                        /**
+                                         * Format: uri
+                                         * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                         */
+                                        imageUrl: string | null;
+                                    } | null;
                                     /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
                                         /** @enum {string} */
@@ -15585,6 +16065,23 @@ export interface paths {
                                         deleted: boolean;
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
+                                    } | null;
+                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    story: {
+                                        id: string;
+                                        /** @description Whose story it is */
+                                        ownerId: string;
+                                        /** @enum {string} */
+                                        kind: "text" | "image" | "video";
+                                        /** @description The start of the story's text or caption */
+                                        text: string | null;
+                                        /** @description A text story's colour, or two for a gradient */
+                                        background: string | null;
+                                        /**
+                                         * Format: uri
+                                         * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                         */
+                                        imageUrl: string | null;
                                     } | null;
                                     /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
@@ -15960,6 +16457,23 @@ export interface paths {
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
                                         } | null;
+                                        /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                        story: {
+                                            id: string;
+                                            /** @description Whose story it is */
+                                            ownerId: string;
+                                            /** @enum {string} */
+                                            kind: "text" | "image" | "video";
+                                            /** @description The start of the story's text or caption */
+                                            text: string | null;
+                                            /** @description A text story's colour, or two for a gradient */
+                                            background: string | null;
+                                            /**
+                                             * Format: uri
+                                             * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                             */
+                                            imageUrl: string | null;
+                                        } | null;
                                         /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                         action: ({
                                             /** @enum {string} */
@@ -16298,6 +16812,23 @@ export interface paths {
                                             deleted: boolean;
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
+                                        } | null;
+                                        /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                        story: {
+                                            id: string;
+                                            /** @description Whose story it is */
+                                            ownerId: string;
+                                            /** @enum {string} */
+                                            kind: "text" | "image" | "video";
+                                            /** @description The start of the story's text or caption */
+                                            text: string | null;
+                                            /** @description A text story's colour, or two for a gradient */
+                                            background: string | null;
+                                            /**
+                                             * Format: uri
+                                             * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                             */
+                                            imageUrl: string | null;
                                         } | null;
                                         /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                         action: ({
@@ -17628,6 +18159,23 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
+                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            story: {
+                                id: string;
+                                /** @description Whose story it is */
+                                ownerId: string;
+                                /** @enum {string} */
+                                kind: "text" | "image" | "video";
+                                /** @description The start of the story's text or caption */
+                                text: string | null;
+                                /** @description A text story's colour, or two for a gradient */
+                                background: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                 */
+                                imageUrl: string | null;
+                            } | null;
                             /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
@@ -18653,6 +19201,628 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stories that are up: yours first, then your contacts', unopened ones first
+         * @description Listen for `stories:changed` on the socket to know when to fetch them again.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
+                                };
+                                /** @description Oldest first */
+                                stories: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video";
+                                    text: string | null;
+                                    background: string | null;
+                                    media: {
+                                        id: string;
+                                        /**
+                                         * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                         * @enum {string}
+                                         */
+                                        kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                        /**
+                                         * @description `removed`: a large file a moderator deleted to free space
+                                         * @enum {string}
+                                         */
+                                        status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                        name: string;
+                                        mime: string;
+                                        size: number;
+                                        /**
+                                         * Format: uri
+                                         * @description Signed link to the playable or viewable file, once ready
+                                         */
+                                        url: string | null;
+                                        /** Format: uri */
+                                        thumbUrl: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                        durationMs: number | null;
+                                        waveform: number[] | null;
+                                        /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                        encrypted: boolean;
+                                    } | null;
+                                    gif: {
+                                        /** Format: uri */
+                                        url: string;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                    location: {
+                                        lat: number;
+                                        lng: number;
+                                        /** @description How far off it may be, in meters */
+                                        accuracy?: number | null;
+                                        /** @description What the place is called, as the poster typed it */
+                                        name?: string;
+                                    } | null;
+                                    /** @description An anonymous message the poster received and shared, as a card */
+                                    ask: {
+                                        /** @description Empty when only a photo or a GIF was sent */
+                                        text: string;
+                                        /** @description The prompt it answered; null for the app's own */
+                                        prompt: string | null;
+                                        /** Format: uri */
+                                        photoUrl: string | null;
+                                        /** @description As an MP4 to play muted on a loop */
+                                        gif: {
+                                            /** Format: uri */
+                                            url: string;
+                                            width: number | null;
+                                            height: number | null;
+                                        } | null;
+                                    } | null;
+                                    showDate: boolean;
+                                    showTime: boolean;
+                                    /** @description Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom */
+                                    positions: {
+                                        ask?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                        };
+                                        gif?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                        };
+                                        location?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                        };
+                                        date?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                        };
+                                        time?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                        };
+                                    };
+                                    /** @description Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story */
+                                    drawing: {
+                                        /** @default [] */
+                                        strokes: {
+                                            /** @enum {string} */
+                                            shape: "pen" | "arrow" | "circle" | "rect";
+                                            color: string;
+                                            /** @description Line width, as a fraction of the story's width */
+                                            size: number;
+                                            /** @description x, y pairs as fractions of the story; a shape or an arrow is its first and last corner, an arrow pointing at the last */
+                                            points: number[];
+                                        }[];
+                                        /** @default [] */
+                                        texts: {
+                                            text: string;
+                                            color: string;
+                                            /** @enum {string} */
+                                            font: "classic" | "serif" | "marker" | "script" | "typewriter";
+                                            x: number;
+                                            y: number;
+                                            /** @default 1 */
+                                            scale: number;
+                                            /**
+                                             * @description plain when left out; box puts it on a pill of its colour, outline rings it
+                                             * @enum {string}
+                                             */
+                                            look?: "plain" | "box" | "outline";
+                                        }[];
+                                    };
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    expiresAt: string;
+                                    /** @description You opened it; always true for your own */
+                                    seen: boolean;
+                                    /** @description How many people opened it; only on your own */
+                                    viewCount: number | null;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Post a story to your contacts
+         * @description Text on a colour, or a photo or video (at most 30 seconds) uploaded first with kind `image` or `video`, unencrypted. A photo or video only shows to others once it is processed.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description The text of a text story, or a caption on a photo or video */
+                        text?: string;
+                        /** @description What's behind a text story: a colour like #eb8a00, or two for a gradient, like #f59e0b,#e11d48 */
+                        background?: string;
+                        /** @description A completed `image` or `video` upload; videos can be at most 30 seconds */
+                        uploadId?: string;
+                        /** @description A GIF from GET /v1/gifs shown on top of the story */
+                        gifId?: string;
+                        location?: {
+                            lat: number;
+                            lng: number;
+                            /** @description How far off it may be, in meters */
+                            accuracy?: number | null;
+                            /** @description What the place is called, as the poster typed it */
+                            name?: string;
+                        };
+                        /** @description An anonymous message you received, shown on the story as a card: its text, photo or GIF */
+                        askId?: string;
+                        /** @description Show the day it was posted on the story */
+                        showDate?: boolean;
+                        /** @description Show the time it was posted on the story */
+                        showTime?: boolean;
+                        /** @description Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom */
+                        positions?: {
+                            ask?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                            };
+                            gif?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                            };
+                            location?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                            };
+                            date?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                            };
+                            time?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                            };
+                        };
+                        /** @description Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story */
+                        drawing?: {
+                            /** @default [] */
+                            strokes?: {
+                                /** @enum {string} */
+                                shape: "pen" | "arrow" | "circle" | "rect";
+                                color: string;
+                                /** @description Line width, as a fraction of the story's width */
+                                size: number;
+                                /** @description x, y pairs as fractions of the story; a shape or an arrow is its first and last corner, an arrow pointing at the last */
+                                points: number[];
+                            }[];
+                            /** @default [] */
+                            texts?: {
+                                text: string;
+                                color: string;
+                                /** @enum {string} */
+                                font: "classic" | "serif" | "marker" | "script" | "typewriter";
+                                x: number;
+                                y: number;
+                                /** @default 1 */
+                                scale?: number;
+                                /**
+                                 * @description plain when left out; box puts it on a pill of its colour, outline rings it
+                                 * @enum {string}
+                                 */
+                                look?: "plain" | "box" | "outline";
+                            }[];
+                        };
+                        /**
+                         * @description How long it stays up, from one hour to a day
+                         * @default 86400
+                         */
+                        durationSecs?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            type: "text" | "image" | "video";
+                            text: string | null;
+                            background: string | null;
+                            media: {
+                                id: string;
+                                /**
+                                 * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs
+                                 * @enum {string}
+                                 */
+                                kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker";
+                                /**
+                                 * @description `removed`: a large file a moderator deleted to free space
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                name: string;
+                                mime: string;
+                                size: number;
+                                /**
+                                 * Format: uri
+                                 * @description Signed link to the playable or viewable file, once ready
+                                 */
+                                url: string | null;
+                                /** Format: uri */
+                                thumbUrl: string | null;
+                                width: number | null;
+                                height: number | null;
+                                durationMs: number | null;
+                                waveform: number[] | null;
+                                /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                encrypted: boolean;
+                            } | null;
+                            gif: {
+                                /** Format: uri */
+                                url: string;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
+                            location: {
+                                lat: number;
+                                lng: number;
+                                /** @description How far off it may be, in meters */
+                                accuracy?: number | null;
+                                /** @description What the place is called, as the poster typed it */
+                                name?: string;
+                            } | null;
+                            /** @description An anonymous message the poster received and shared, as a card */
+                            ask: {
+                                /** @description Empty when only a photo or a GIF was sent */
+                                text: string;
+                                /** @description The prompt it answered; null for the app's own */
+                                prompt: string | null;
+                                /** Format: uri */
+                                photoUrl: string | null;
+                                /** @description As an MP4 to play muted on a loop */
+                                gif: {
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
+                            } | null;
+                            showDate: boolean;
+                            showTime: boolean;
+                            /** @description Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom */
+                            positions: {
+                                ask?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                };
+                                gif?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                };
+                                location?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                };
+                                date?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                };
+                                time?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                };
+                            };
+                            /** @description Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story */
+                            drawing: {
+                                /** @default [] */
+                                strokes: {
+                                    /** @enum {string} */
+                                    shape: "pen" | "arrow" | "circle" | "rect";
+                                    color: string;
+                                    /** @description Line width, as a fraction of the story's width */
+                                    size: number;
+                                    /** @description x, y pairs as fractions of the story; a shape or an arrow is its first and last corner, an arrow pointing at the last */
+                                    points: number[];
+                                }[];
+                                /** @default [] */
+                                texts: {
+                                    text: string;
+                                    color: string;
+                                    /** @enum {string} */
+                                    font: "classic" | "serif" | "marker" | "script" | "typewriter";
+                                    x: number;
+                                    y: number;
+                                    /** @default 1 */
+                                    scale: number;
+                                    /**
+                                     * @description plain when left out; box puts it on a pill of its colour, outline rings it
+                                     * @enum {string}
+                                     */
+                                    look?: "plain" | "box" | "outline";
+                                }[];
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            /** @description You opened it; always true for your own */
+                            seen: boolean;
+                            /** @description How many people opened it; only on your own */
+                            viewCount: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take down one of your stories */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stories/{id}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a contact's story as opened */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stories/{id}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * React to a contact's story with an emoji
+         * @description Only the poster sees it, in who opened the story. It is not sent as a message; reacting again replaces it.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        emoji: "❤️" | "😂" | "😮" | "😢" | "👏" | "🔥";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stories/{id}/viewers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who opened one of your stories, latest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
+                                };
+                                /** Format: date-time */
+                                viewedAt: string;
+                                /** @description Every emoji they reacted with, oldest first, at most the last 30 */
+                                reactions: ("❤️" | "😂" | "😮" | "😢" | "👏" | "🔥")[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/link-preview": {
         parameters: {
             query?: never;
@@ -18688,6 +19858,52 @@ export interface paths {
                             /** @description A small WebP of the page's picture as a data: URL, so readers never contact the site themselves */
                             image: string | null;
                         } | null;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/place-name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a spot is called, to name the place on a story
+         * @description Asks OpenStreetMap on your behalf, so it never sees who you are. The neighbourhood and town in `locale`, or null when it knows nothing there or can't be reached.
+         */
+        get: {
+            parameters: {
+                query: {
+                    lat: number;
+                    lng: number;
+                    locale?: "en" | "fr" | "mg";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description The neighbourhood and town, like Analakely, Antananarivo; null when nothing is known there */
+                            name: string | null;
+                        };
                     };
                 };
             };

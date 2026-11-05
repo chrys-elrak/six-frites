@@ -38,6 +38,7 @@ import { Logo } from "./logo";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
 import { Sheet } from "./sheet";
+import { StoryComposer } from "./story-composer";
 import { Card, PrimaryButton, Toggle } from "./ui";
 
 type Confirm = { m: AnonMessageDTO; action: "delete" | "block" };
@@ -631,6 +632,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
   const [menu, setMenu] = useState<AnonMessageDTO | null>(null);
+  const [sharing, setSharing] = useState<AnonMessageDTO | null>(null);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
   const [opening, setOpening] = useState<string | null>(null);
   const [view, setView] = useState<"received" | "sent" | "settings">("received");
@@ -881,11 +883,13 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           )}
         </div>
       </div>
+      {sharing && <StoryComposer anon={sharing} onClose={() => setSharing(null)} />}
       {menu && (
         <Sheet
           at={menuAt}
           onClose={() => setMenu(null)}
           actions={[
+            ...(menu.text.trim() || menu.photoUrl || menu.gif ? [{ label: tr.stories.shareToStory, onSelect: () => setSharing(menu) }] : []),
             ...(menu.bot
               ? []
               : [

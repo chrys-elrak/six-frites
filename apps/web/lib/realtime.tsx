@@ -11,7 +11,7 @@ import { chatKeys, findMessage, insertMessage, patchChat, upsertChat } from "./c
 import { hydrate, hydrateChat } from "./e2ee";
 import { useOutbox } from "./outbox";
 import { resendWaiting } from "./send";
-import { notifyAnon, notifyIncoming, notifyReaction } from "./notify";
+import { notifyAnon, notifyIncoming, notifyReaction, notifyStoryReaction } from "./notify";
 import { usePresenceStore } from "./presence";
 import { useTypingStore } from "./typing";
 import { useSession } from "./session";
@@ -171,7 +171,15 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     });
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
     rt.socket.on("ask:new", (m) => receiveAnon(qc, m, location.pathname === "/inbox", (href) => router.push(href)));
-    rt.socket.on("connect", () => void qc.invalidateQueries({ queryKey: ["ask"] }));
+    rt.socket.on("stories:changed", () => void qc.invalidateQueries({ queryKey: ["stories"] }));
+    rt.socket.on("story:reacted", (e) => {
+      void qc.invalidateQueries({ queryKey: ["stories", e.storyId, "viewers"] });
+      notifyStoryReaction(e, (href) => router.push(href));
+    });
+    rt.socket.on("connect", () => {
+      void qc.invalidateQueries({ queryKey: ["ask"] });
+      void qc.invalidateQueries({ queryKey: ["stories"] });
+    });
     rt.socket.on("call:signal", (dto) => me.current && receiveSignal(dto, me.current, (id) => cachedChat(qc, id)));
     rt.start();
     setRealtime(rt);

@@ -171,6 +171,21 @@ describe("push notifications", () => {
     expect(await deliverReactionPush(m.id, host.user.id, reaction)).toBe(0);
   });
 
+  it("tells the poster about a reaction to their story, once per new emoji", async () => {
+    const { host, guest } = await makeFriends();
+    const token = await subscribe(host);
+    const story = (await call(host, "POST", "/v1/stories", { text: "hello" })).json();
+    const react = (emoji: string) => call(guest, "POST", `/v1/stories/${story.id}/react`, { emoji });
+    const mine = () => sent.filter((s) => s.token === token);
+
+    await react("🔥");
+    await vi.waitFor(() => expect(mine()).toHaveLength(1));
+    expect(mine()[0]!.payload).toMatchObject({ body: "🔥 Reacted to your story", url: "/", chatId: null });
+    await react("🔥");
+    await react("❤️");
+    await vi.waitFor(() => expect(mine().map((s) => s.payload.body)).toEqual(["🔥 Reacted to your story", "❤️ Reacted to your story"]));
+  });
+
   it("writes each device's notifications in the language it registered with", async () => {
     const { host, guest, chatId } = await makeFriends();
     const res = await call(guest, "POST", "/v1/devices/push-token", { provider: "webpush", token: "fr", locale: "fr" });

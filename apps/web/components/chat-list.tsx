@@ -53,6 +53,7 @@ import { LockScreen } from "./app-lock";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
 import { Avatar } from "./avatar";
+import { StoriesBar, StoryAvatar } from "./stories";
 import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
 import { FindMe } from "./find-me";
@@ -179,7 +180,9 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
         }`}
       >
         <span className="relative shrink-0">
-          <Avatar user={peer} size="md" online={online} />
+          <StoryAvatar userId={peer.id} name={chat.title}>
+            <Avatar user={peer} size="md" online={online} />
+          </StoryAvatar>
           {rail && badge && <span className="absolute -top-1 -right-1">{badge}</span>}
         </span>
         <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
@@ -265,7 +268,9 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
         active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
       }`}
     >
-      <Avatar user={contact.user} size="md" online={online} />
+      <StoryAvatar userId={contact.user.id} name={contact.user.displayName}>
+        <Avatar user={contact.user} size="md" online={online} />
+      </StoryAvatar>
       <p className="min-w-0 flex-1 truncate font-semibold">{contact.user.displayName}</p>
     </Link>
   );
@@ -455,6 +460,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
             })}
           </div>
         )}
+        {filtering && view === "chats" && !needle && <StoriesBar />}
         <label
           className={`${rail ? "hidden" : "flex"} w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10`}
         >

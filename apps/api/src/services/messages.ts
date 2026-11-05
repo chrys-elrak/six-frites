@@ -21,6 +21,7 @@ import {
   type ReplyPreview,
   type SendMessageInput,
   type ServiceAction,
+  type StoryReply,
   type ViewMessageResult,
   ENCRYPT_MAX_BYTES,
   EPHEMERAL_RESEND,
@@ -34,6 +35,7 @@ import {
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
+import { presignGet } from "../lib/storage.js";
 import { timersQueue } from "../lib/queue.js";
 import { saveGif } from "./gifs.js";
 import { assertCanMessage } from "./blocks.js";
@@ -110,6 +112,10 @@ function encryptionFor(m: MessageRow, viewerId: string, hidden: boolean): Encryp
  * Builds a message as `viewerId` may see it. Self-destructing messages are locked for everyone but
  * the sender: no text and no file links, until POST /v1/messages/{id}/view opens them (`reveal`).
  */
+function toStoryReply({ imageKey, ...story }: StoredStoryReply): StoryReply {
+  return { ...story, imageUrl: imageKey ? presignGet(imageKey) : null };
+}
+
 export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: boolean } = {}): MessageDTO {
   const r = m.replyTo;
   const ephemeral = isEphemeral(m);
@@ -160,6 +166,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
       : null,
     groupId: m.groupId,
     replyTo: r ? toReplyPreview(r) : null,
+    story: hideContent || !m.story ? null : toStoryReply(m.story as StoredStoryReply),
     action: (m.action as ServiceAction | null) ?? null,
     location: hideContent ? null : ((m.location as GeoPoint | null) ?? null),
     checklist: hideContent ? null : ((m.checklist as Checklist | null) ?? null),
@@ -293,6 +300,23 @@ export interface CreateOptions {
   scheduled?: { senderDevice: string | null };
 }
 
+/** What a message keeps of a story it answers: the story's picture as a storage key, signed when it is read. */
+type StoredStoryReply = Omit<StoryReply, "imageUrl"> & { imageKey: string | null };
+
+/** What a message keeps of the other person's story it answers, which must be theirs and in this chat. */
+async function storyReplyFor(tx: Tx, chatId: string, userId: string, storyId: string): Promise<StoredStoryReply> {
+  const story = await tx.story.findFirst({
+    where: { id: storyId, userId: { not: userId } },
+    include: { upload: { select: { kind: true, key: true, thumbKey: true } } },
+  });
+  if (!story || !(await tx.chatMember.count({ where: { chatId, userId: story.userId } }))) {
+    throw new AppError("STORY_NOT_FOUND", "That story is gone or isn't from this chat");
+  }
+  const kind = story.upload?.kind === "video" ? "video" : story.upload ? "image" : "text";
+  const imageKey = story.upload?.thumbKey ?? (kind === "image" ? story.upload!.key : null);
+  return { id: story.id, ownerId: story.userId, kind, text: story.text?.slice(0, 120) ?? null, background: story.background, imageKey };
+}
+
 /**
  * Stores a new message, bumps the chat and tells every member. Messages get the chat's auto-delete
  * deadline, except service messages, which announce changes to it. The first encrypted message in
@@ -314,6 +338,7 @@ export async function createMessage(
     const original = await tx.message.findFirst({ where: { id: content.replyToId, chatId }, select: { id: true } });
     if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
   }
+  const story = content?.storyId ? await storyReplyFor(tx, chatId, userId, content.storyId) : null;
   const upload = content?.attachmentId ? await claimForMessage(tx, userId, content.attachmentId) : null;
   if (content?.stickerId && !(await tx.sticker.findFirst({ where: { id: content.stickerId, removedAt: null } }))) {
     throw new AppError("STICKER_NOT_FOUND");
@@ -369,6 +394,7 @@ export async function createMessage(
       maxViews: content?.ephemeral?.maxViews ?? null,
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,
+      ...(story && { story }),
       groupId: content?.groupId ?? null,
       ...("action" in input && { action: input.action }),
       ...(content?.location && { location: content.location }),

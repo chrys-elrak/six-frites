@@ -10,6 +10,7 @@ import type {
   ReplyPreview,
   StickerDTO,
   UploadKind,
+  StoryReply,
 } from "@six/shared";
 import { useMemo } from "react";
 import { create } from "zustand";
@@ -34,6 +35,7 @@ export interface PendingMessage {
   text: string;
   entities: MessageEntity[];
   replyTo: ReplyPreview | null;
+  story?: StoryReply;
   spoiler: boolean;
   effect?: MessageEffect;
   silent?: boolean;

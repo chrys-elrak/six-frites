@@ -40,6 +40,7 @@ import { Avatar } from "./avatar";
 import { DoodlePattern } from "./chat-background";
 import { Logo } from "./logo";
 import { Sheet } from "./sheet";
+import { StoryComposer } from "./story-composer";
 import { Text, TextInput } from "./text";
 import { Card, EmptyState, IconButton, Notice, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
 
@@ -640,6 +641,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const [pending, setPending] = useState<Pending | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
   const [exporting, setExporting] = useState<AnonMessageDTO | null>(null);
+  const [sharing, setSharing] = useState<AnonMessageDTO | null>(null);
   const [cardStyle, setCardStyle] = useState<CardStyle>({ colors: ASK_COLORS[0], transparent: false, doodles: true });
   const [notice, setNotice] = useState<Note | null>(null);
 
@@ -722,6 +724,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         <Sheet
           onClose={close}
           actions={[
+            ...(m.text.trim() || m.photoUrl || m.gif ? [{ label: tr.stories.shareToStory, onSelect: () => setSharing(m) }] : []),
             ...(m.bot
               ? []
               : [
@@ -936,6 +939,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         />
       )}
       {sheet}
+      {sharing && <StoryComposer anon={sharing} onClose={() => setSharing(null)} />}
       {languages && (
         <Sheet
           title={tr.common.language}

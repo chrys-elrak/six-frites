@@ -122,7 +122,7 @@ export async function completeUpload(ownerId: string, id: string) {
 export async function claimForMessage(tx: Tx, senderId: string, uploadId: string) {
   const upload = await tx.upload.findUnique({
     where: { id: uploadId },
-    include: { messages: { select: { id: true } }, scheduled: { select: { id: true } } },
+    include: { messages: { select: { id: true } }, scheduled: { select: { id: true } }, story: { select: { id: true } } },
   });
   if (!upload || upload.ownerId !== senderId) throw new AppError("UPLOAD_NOT_FOUND");
   if (upload.kind === "sticker") {
@@ -131,7 +131,7 @@ export async function claimForMessage(tx: Tx, senderId: string, uploadId: string
   if (upload.status === "pending") throw new AppError("UPLOAD_NOT_READY", "Complete the upload before sending it");
   if (upload.status === "failed") throw new AppError("UPLOAD_NOT_READY", "This file could not be processed");
   if (upload.status === "removed") throw new AppError("UPLOAD_NOT_READY", "This file was removed");
-  if (upload.messages.length || upload.scheduled) throw new AppError("UPLOAD_IN_USE");
+  if (upload.messages.length || upload.scheduled || upload.story) throw new AppError("UPLOAD_IN_USE");
   return upload;
 }
 
@@ -150,6 +150,8 @@ export async function finishUpload(uploadId: string, data: Prisma.UploadUpdateIn
     await tx.upload.update({ where: { id: uploadId }, data });
     await announceUpload(tx, emit, uploadId);
   });
+  const story = await prisma.story.findUnique({ where: { uploadId }, select: { userId: true } });
+  if (story) await (await import("./stories.js")).announceStories(story.userId);
 }
 
 /** Removes uploads and their files; used when the messages holding them are deleted for everyone. */
@@ -165,7 +167,7 @@ export async function purgeUploads(ids: string[]) {
   await prisma.upload.deleteMany({ where: { id: { in: uploads.map((u) => u.id) } } });
 }
 
-/** Deletes uploads that never made it into a message, a scheduled message or a sticker pack within a day. */
+/** Deletes uploads that never made it into a message, a scheduled message, a sticker pack or a story within a day. */
 export async function purgeAbandonedUploads(olderThanMs = 24 * 60 * 60 * 1000) {
   const stale = await prisma.upload.findMany({
     where: {
@@ -173,6 +175,7 @@ export async function purgeAbandonedUploads(olderThanMs = 24 * 60 * 60 * 1000) {
       messages: { none: {} },
       scheduled: null,
       sticker: null,
+      story: null,
     },
     select: { id: true },
   });

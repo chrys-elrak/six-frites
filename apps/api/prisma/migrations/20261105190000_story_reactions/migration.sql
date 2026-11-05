@@ -1,0 +1,1 @@
+ALTER TABLE "StoryView" ADD COLUMN "reactions" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

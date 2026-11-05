@@ -21,6 +21,7 @@ import { sendDueBotAnon } from "./services/ask.js";
 import { deleteExpiredMessages, expireMessage, purgeMessage } from "./services/messages.js";
 import { deliverPush, deliverReactionPush } from "./services/push.js";
 import { sendDueScheduled } from "./services/scheduled.js";
+import { deleteExpiredStories } from "./services/stories.js";
 import { finishUpload, purgeAbandonedUploads, purgeUploads } from "./services/uploads.js";
 
 await ensureBucket();
@@ -43,6 +44,7 @@ const timers = new Worker<TimerJob>(
         deleted: await deleteExpiredMessages(),
         unbanned: await liftExpiredBans(),
         bot: await sendDueBotAnon(),
+        stories: await deleteExpiredStories(),
       };
     }
     if ("messageId" in job.data) await expireMessage(job.data.messageId, job.data.cycle);

@@ -3,6 +3,7 @@ import {
   type ChatDTO,
   type MessageDTO,
   type MessageReactedDTO,
+  type StoryReactedDTO,
   type Tone,
   maskSpoilers,
   previewText,
@@ -191,6 +192,16 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean, open: (href: str
     "/icon.svg",
     open,
     ANON_SOUND,
+  );
+}
+
+/** Tells you a contact reacted to your story. */
+export function notifyStoryReaction(e: StoryReactedDTO, open: (href: string) => void) {
+  const t = getT();
+  alertUser(
+    { id: `story-${e.storyId}-${e.user.id}`, href: "/", title: e.user.displayName, body: `${e.emoji} ${t.stories.reactedToYours}` },
+    e.user.avatarUrl,
+    open,
   );
 }
 

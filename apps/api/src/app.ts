@@ -27,6 +27,7 @@ import presenceRoutes from "./routes/presence.js";
 import appRoutes from "./routes/releases.js";
 import pushRoutes from "./routes/push.js";
 import stickerRoutes from "./routes/stickers.js";
+import storyRoutes from "./routes/stories.js";
 import uploadRoutes from "./routes/uploads.js";
 import askRoutes from "./routes/ask.js";
 
@@ -83,6 +84,7 @@ export async function buildApp() {
       await v1.register(pushRoutes);
       await v1.register(presenceRoutes);
       await v1.register(stickerRoutes);
+      await v1.register(storyRoutes);
       await v1.register(linkRoutes);
       await v1.register(askRoutes);
     },

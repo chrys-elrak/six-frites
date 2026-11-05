@@ -131,6 +131,18 @@ export const ReplyPreview = z.object({
 });
 export type ReplyPreview = z.infer<typeof ReplyPreview>;
 
+export const StoryReply = z
+  .object({
+    id: Id,
+    ownerId: Id.describe("Whose story it is"),
+    kind: z.enum(["text", "image", "video"]),
+    text: z.string().nullable().describe("The start of the story's text or caption"),
+    background: z.string().nullable().describe("A text story's colour, or two for a gradient"),
+    imageUrl: z.string().url().nullable().describe("A photo story's picture, or a video's first frame; it stops working once the story is gone"),
+  })
+  .describe("The story a message answers, as it was when they answered: it may be gone since");
+export type StoryReply = z.infer<typeof StoryReply>;
+
 export const EphemeralInput = z
   .object({
     maxViews: z.number().int().min(1).max(10).optional().describe("Destroy after this many views by the recipient"),
@@ -274,6 +286,7 @@ export const MessageDTO = z.object({
   ephemeral: EphemeralDTO.nullable(),
   groupId: z.string().nullable().describe("Photos and videos sent together share it and show as one album"),
   replyTo: ReplyPreview.nullable(),
+  story: StoryReply.nullable(),
   action: ServiceAction.nullable(),
   location: GeoPoint.nullable(),
   checklist: Checklist.nullable(),
@@ -357,6 +370,7 @@ export const SendMessageInput = z
       .optional()
       .describe("With `encrypted`: the content is a location, a checklist or a game rather than text or a file"),
     replyToId: Id.optional(),
+    storyId: Id.optional().describe("Answer this story of the other person's: it shows above the message"),
     groupId: z
       .string()
       .regex(/^[\w-]{1,64}$/)
@@ -699,7 +713,8 @@ export const ScheduleMessageInput = SendMessageInput.safeExtend({
   sendAt: IsoDate.describe("When to send it, in the future and at most a year ahead"),
 })
   .refine((v) => !v.game && v.type !== "game", { message: "Games are played now, not scheduled", path: ["game"] })
-  .refine((v) => !v.bump, { message: "Bumps are sent now, not scheduled", path: ["bump"] });
+  .refine((v) => !v.bump, { message: "Bumps are sent now, not scheduled", path: ["bump"] })
+  .refine((v) => !v.storyId, { message: "Stories are answered now, not scheduled", path: ["storyId"] });
 export type ScheduleMessageInput = z.infer<typeof ScheduleMessageInput>;
 
 export const ScheduledMessageDTO = z.object({

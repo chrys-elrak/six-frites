@@ -27,6 +27,11 @@ export function listTime(iso: string) {
   return d.toLocaleDateString(getLocale(), { day: "numeric", month: "short" });
 }
 
+/** The date itself, short, like 5 Nov, never "Today". */
+export function shortDate(iso: string) {
+  return new Date(iso).toLocaleDateString(getLocale(), { day: "numeric", month: "short" });
+}
+
 export function dayLabel(iso: string) {
   const d = new Date(iso);
   const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 864e5);
