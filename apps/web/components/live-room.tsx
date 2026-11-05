@@ -14,7 +14,7 @@ import {
   memoryScores,
   parseCommand,
 } from "@six/shared";
-import { Bot, ChevronLeft, LogOut, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
+import { Bot, ChevronLeft, LogOut, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, Volume2, VolumeX, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -22,6 +22,7 @@ import { useT } from "@/lib/i18n";
 import { clockTime, formatDuration } from "@/lib/format";
 import { useCountdown, useLiveRoom, useMyTurn } from "@/lib/live";
 import { type Recording, useRecorder } from "@/lib/recorder";
+import { setGameSound, useGameMusic, useGameSound } from "@/lib/game-sound";
 import { useSession } from "@/lib/session";
 import { useSwipe } from "@/lib/swipe";
 import { VoicePlayer } from "./attachment";
@@ -546,7 +547,10 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   const meId = useSession((s) => s.user!.id);
   const { room, gone, socket } = useLiveRoom(roomId);
   const [menu, setMenu] = useState(false);
+  const [soundMenu, setSoundMenu] = useState(false);
   const [givingUp, setGivingUp] = useState(false);
+  const sound = useGameSound();
+  useGameMusic(!!room && !gone);
   const turn = useMyTurn(room);
   const urgent = turn.seconds !== null && turn.seconds <= 10;
 
@@ -578,6 +582,11 @@ export function LiveRoom({ roomId }: { roomId: string }) {
           {room ? `${LIVE_EMOJI[room.game]} ${tr.live.games[room.game]}` : tr.live.title}
         </h1>
         {room && <HowToPlay game={room.game} className="size-10 text-stone-600 opacity-100 dark:text-stone-300" />}
+        {room && !gone && (
+          <button type="button" onClick={() => setSoundMenu(true)} aria-label={tr.live.sound} title={tr.live.sound} className={iconButton}>
+            {sound.effects || sound.music ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
+          </button>
+        )}
         {room?.status === "playing" && room.mySeat !== null && !gone && (
           <button
             type="button"
@@ -689,6 +698,24 @@ export function LiveRoom({ roomId }: { roomId: string }) {
             { label: tr.live.giveUp, onSelect: () => setGivingUp(true) },
           ]}
           onClose={() => setMenu(false)}
+        />
+      )}
+      {soundMenu && (
+        <Sheet
+          title={tr.live.sound}
+          actions={[
+            {
+              label: `${tr.live.effects} · ${sound.effects ? tr.common.on : tr.common.off}`,
+              keepOpen: true,
+              onSelect: () => setGameSound({ effects: !sound.effects }),
+            },
+            {
+              label: `${tr.live.music} · ${sound.music ? tr.common.on : tr.common.off}`,
+              keepOpen: true,
+              onSelect: () => setGameSound({ music: !sound.music }),
+            },
+          ]}
+          onClose={() => setSoundMenu(false)}
         />
       )}
       {givingUp && (

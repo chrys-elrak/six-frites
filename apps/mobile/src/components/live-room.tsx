@@ -24,7 +24,7 @@ import {
 import { File } from "expo-file-system";
 import { Image } from "expo-image";
 import { type Href, router } from "expo-router";
-import { ArrowLeft, Gamepad2, Mic, MoreVertical, Reply, SendHorizontal, Smile, X } from "lucide-react-native";
+import { ArrowLeft, Gamepad2, Mic, MoreVertical, Reply, SendHorizontal, Smile, Volume2, VolumeX, X } from "lucide-react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { type ComponentRef, useEffect, useEffectEvent, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
@@ -34,6 +34,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { clockTime, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
+import { setGameSound, useGameMusic, useGameSound } from "@/lib/game-sound";
 import { useSession } from "@/lib/session";
 import { useSwipe } from "@/lib/swipe";
 import { six } from "@/lib/six";
@@ -475,7 +476,10 @@ export function LiveRoom({ id }: { id: string }) {
   const [room, setRoom] = useState<LiveRoomDTO | null>(null);
   const [closed, setClosed] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
+  const [soundMenu, setSoundMenu] = useState(false);
   const [givingUp, setGivingUp] = useState(false);
+  const sound = useGameSound();
+  useGameMusic(!!room && !closed);
   const turn = useMyTurn(room);
   const urgent = turn.seconds !== null && turn.seconds <= 10;
 
@@ -547,6 +551,9 @@ export function LiveRoom({ id }: { id: string }) {
           {room ? `${LIVE_EMOJI[room.game]} ${tr.live.games[room.game]}` : ""}
         </Text>
         {room && <HowToPlay game={room.game} size={22} />}
+        {room && !closed && (
+          <IconButton Icon={sound.effects || sound.music ? Volume2 : VolumeX} label={tr.live.sound} onPress={() => setSoundMenu(true)} />
+        )}
         {room?.status === "playing" && room.mySeat !== null && !closed && (
           <IconButton Icon={MoreVertical} label={tr.live.end} onPress={() => setMenu(true)} />
         )}
@@ -611,6 +618,24 @@ export function LiveRoom({ id }: { id: string }) {
           </ScrollView>
           {(room.invited.length > 0 || room.seats.some((s) => s.user && s.user.id !== meId)) && <RoomChat room={room} say={say} react={react} />}
         </View>
+      )}
+      {soundMenu && (
+        <Sheet
+          title={tr.live.sound}
+          actions={[
+            {
+              label: `${tr.live.effects} · ${sound.effects ? tr.common.on : tr.common.off}`,
+              keepOpen: true,
+              onSelect: () => setGameSound({ effects: !sound.effects }),
+            },
+            {
+              label: `${tr.live.music} · ${sound.music ? tr.common.on : tr.common.off}`,
+              keepOpen: true,
+              onSelect: () => setGameSound({ music: !sound.music }),
+            },
+          ]}
+          onClose={() => setSoundMenu(false)}
+        />
       )}
       {menu && (
         <Sheet

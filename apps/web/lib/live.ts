@@ -2,7 +2,7 @@
 
 import type { LiveRoomDTO } from "@six/shared";
 import { useEffect, useState } from "react";
-import { playSound } from "./notify";
+import { playGameSound } from "./game-sound";
 import { useRealtime } from "./realtime";
 
 /** The room as the server shows it to me, kept up to date and rejoined after a reconnect; `gone` holds why I can't be in it. */
@@ -60,10 +60,10 @@ export function useMyTurn(room: LiveRoomDTO | null) {
   const mine = !!view && room!.mySeat !== null && (view.game === "words" || view.state.turn === room!.mySeat);
   const seconds = useCountdown(mine ? room!.deadline : null);
   useEffect(() => {
-    if (mine) playSound("/sounds/turn.wav");
+    if (mine) playGameSound("/sounds/turn.wav");
   }, [mine]);
   useEffect(() => {
-    if (seconds !== null && seconds > 0 && seconds <= 10) playSound("/sounds/tick.wav");
+    if (seconds !== null && seconds > 0 && seconds <= 10) playGameSound("/sounds/tick.wav");
   }, [seconds]);
   return { mine, seconds };
 }

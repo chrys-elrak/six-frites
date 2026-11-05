@@ -8,7 +8,7 @@ import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isBotChat, isFrozen, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
-import { playSound } from "@/lib/notify";
+import { playGameSound } from "@/lib/game-sound";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, useTheme } from "@/lib/theme";
@@ -44,11 +44,11 @@ export function useMyTurn(room: LiveRoomDTO | null) {
   const seconds = useSecondsLeft(mine ? room!.deadline : null);
   useEffect(() => {
     if (!mine) return;
-    playSound(TURN_SOUND);
+    playGameSound(TURN_SOUND);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [mine]);
   useEffect(() => {
-    if (seconds !== null && seconds > 0 && seconds <= 10) playSound(TICK_SOUND);
+    if (seconds !== null && seconds > 0 && seconds <= 10) playGameSound(TICK_SOUND);
   }, [seconds]);
   return { mine, seconds };
 }

@@ -15,7 +15,7 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, { type CSSAnimationKeyframes } from "react-native-reanimated";
 import Svg, { Circle, G, Polygon, Rect, Text as SvgText } from "react-native-svg";
 import { useT } from "@/lib/i18n";
-import { playSound } from "@/lib/notify";
+import { playGameSound } from "@/lib/game-sound";
 import { brand, useTheme } from "@/lib/theme";
 import type { Play } from "./live";
 import { Text } from "./text";
@@ -113,7 +113,7 @@ function useLudoMotion(state: LudoState, mySeat: number | null) {
     setRolling(!move && state.dice !== null);
     setWalk(move && { move, pos: move.from });
     if (!move) {
-      if (state.dice !== null) playSound(SOUND.dice);
+      if (state.dice !== null) playGameSound(SOUND.dice);
       later(ROLL_MS, () => setRolling(false));
       return;
     }
@@ -129,7 +129,7 @@ function useLudoMotion(state: LudoState, mySeat: number | null) {
     path.forEach((pos, i) =>
       later((i + 1) * STEP_MS, () => {
         const done = i === path.length - 1;
-        playSound(done ? end : SOUND.step);
+        playGameSound(done ? end : SOUND.step);
         setWalk(done ? null : { move, pos });
       }),
     );

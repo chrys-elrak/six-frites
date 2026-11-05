@@ -14,7 +14,7 @@ import {
 } from "@six/shared";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
-import { playSound } from "@/lib/notify";
+import { playGameSound } from "@/lib/game-sound";
 
 const LUDO_COLORS = SEAT_COLORS;
 const CORNERS: [number, number][] = [
@@ -92,7 +92,7 @@ function useLudoMotion(state: LudoState, mySeat: number | null) {
     setRolling(!move && state.dice !== null);
     setWalk(move && { move, pos: move.from });
     if (!move) {
-      if (state.dice !== null) playSound(SOUND.dice);
+      if (state.dice !== null) playGameSound(SOUND.dice);
       later(ROLL_MS, () => setRolling(false));
       return;
     }
@@ -108,7 +108,7 @@ function useLudoMotion(state: LudoState, mySeat: number | null) {
     path.forEach((pos, i) =>
       later((i + 1) * STEP_MS, () => {
         const done = i === path.length - 1;
-        playSound(done ? end : SOUND.step);
+        playGameSound(done ? end : SOUND.step);
         setWalk(done ? null : { move, pos });
       }),
     );
