@@ -3667,7 +3667,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -4006,7 +4006,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -4407,7 +4407,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -4786,7 +4786,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -5125,7 +5125,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -5541,7 +5541,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -5880,7 +5880,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -6294,7 +6294,7 @@ export interface paths {
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                        score?: (number)[];
+                                        score?: number[];
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -6633,7 +6633,7 @@ export interface paths {
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                        score?: (number)[];
+                                        score?: number[];
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -7048,7 +7048,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -7387,7 +7387,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -7855,7 +7855,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -8194,7 +8194,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -8684,7 +8684,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -9045,7 +9045,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -9406,7 +9406,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -9770,7 +9770,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -10157,7 +10157,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -10517,7 +10517,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -10882,7 +10882,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -11241,7 +11241,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -11600,7 +11600,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -11990,7 +11990,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -12359,7 +12359,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -12768,7 +12768,7 @@ export interface paths {
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                    score?: (number)[];
+                                    score?: number[];
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -13271,7 +13271,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -14261,7 +14261,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;
@@ -15279,7 +15279,7 @@ export interface paths {
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                        score?: (number)[];
+                                        score?: number[];
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -15603,7 +15603,7 @@ export interface paths {
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                        score?: (number)[];
+                                        score?: number[];
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -15977,7 +15977,7 @@ export interface paths {
                                             /** @enum {string} */
                                             result: "won" | "lost" | "draw";
                                             /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                            score?: (number)[];
+                                            score?: number[];
                                         }) | null;
                                         location: {
                                             lat: number;
@@ -16316,7 +16316,7 @@ export interface paths {
                                             /** @enum {string} */
                                             result: "won" | "lost" | "draw";
                                             /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                            score?: (number)[];
+                                            score?: number[];
                                         }) | null;
                                         location: {
                                             lat: number;
@@ -17639,7 +17639,7 @@ export interface paths {
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
-                                score?: (number)[];
+                                score?: number[];
                             }) | null;
                             location: {
                                 lat: number;

@@ -282,7 +282,7 @@ function finish(room: Room, ended: number[]) {
     const me = people[0]!;
     const result = !winners.includes(me) ? "lost" : winners.length > 1 ? "draw" : "won";
     const scores = scoresOf(room.state!);
-    const score = scores && ([scores[me]!, Math.max(...scores.filter((_, i) => i !== me))] as [number, number]);
+    const score = scores && [scores[me]!, Math.max(...scores.filter((_, i) => i !== me))];
     void Promise.resolve(room.posted)
       .then(() => postBotLiveResult(room.seats[me]!.userId!, room.locale, room.game, result, score ?? undefined))
       .catch((err) => console.error("could not post the live result in the bot's chat:", err.message));

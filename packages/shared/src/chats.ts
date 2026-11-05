@@ -180,7 +180,8 @@ export const ServiceAction = z
       game: z.enum(LIVE_GAMES),
       result: z.enum(["won", "lost", "draw"]),
       score: z
-        .tuple([z.number().int(), z.number().int()])
+        .array(z.number().int())
+        .length(2)
         .optional()
         .describe("Your score, then the bot's best, in the games that keep one: boxes, pairs or word points"),
     }),

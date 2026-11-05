@@ -58,7 +58,7 @@ export async function postBotLiveResult(
   locale: Locale,
   game: LiveGame,
   result: "won" | "lost" | "draw",
-  score?: [number, number],
+  score?: number[],
 ) {
   const chatId = (await botChatId(userId)) ?? (await openBotChat(userId, locale, true)).id;
   const action = { type: "live_result" as const, game, result, ...(score && { score }) };

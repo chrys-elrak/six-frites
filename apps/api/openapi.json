@@ -7504,23 +7504,14 @@
                                 },
                                 "score": {
                                   "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                  "minItems": 2,
+                                  "maxItems": 2,
                                   "type": "array",
                                   "items": {
-                                    "anyOf": [
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      }
-                                    ]
-                                  },
-                                  "minItems": 2,
-                                  "maxItems": 2
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
                                 }
                               },
                               "required": [
@@ -9042,23 +9033,14 @@
                                   },
                                   "score": {
                                     "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                    "minItems": 2,
+                                    "maxItems": 2,
                                     "type": "array",
                                     "items": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        },
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        }
-                                      ]
-                                    },
-                                    "minItems": 2,
-                                    "maxItems": 2
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
                                   }
                                 },
                                 "required": [
@@ -10707,23 +10689,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -12304,23 +12277,14 @@
                                 },
                                 "score": {
                                   "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                  "minItems": 2,
+                                  "maxItems": 2,
                                   "type": "array",
                                   "items": {
-                                    "anyOf": [
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      }
-                                    ]
-                                  },
-                                  "minItems": 2,
-                                  "maxItems": 2
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
                                 }
                               },
                               "required": [
@@ -13842,23 +13806,14 @@
                                   },
                                   "score": {
                                     "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                    "minItems": 2,
+                                    "maxItems": 2,
                                     "type": "array",
                                     "items": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        },
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        }
-                                      ]
-                                    },
-                                    "minItems": 2,
-                                    "maxItems": 2
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
                                   }
                                 },
                                 "required": [
@@ -15564,23 +15519,14 @@
                                 },
                                 "score": {
                                   "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                  "minItems": 2,
+                                  "maxItems": 2,
                                   "type": "array",
                                   "items": {
-                                    "anyOf": [
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      }
-                                    ]
-                                  },
-                                  "minItems": 2,
-                                  "maxItems": 2
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
                                 }
                               },
                               "required": [
@@ -17102,23 +17048,14 @@
                                   },
                                   "score": {
                                     "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                    "minItems": 2,
+                                    "maxItems": 2,
                                     "type": "array",
                                     "items": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        },
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        }
-                                      ]
-                                    },
-                                    "minItems": 2,
-                                    "maxItems": 2
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
                                   }
                                 },
                                 "required": [
@@ -18851,23 +18788,14 @@
                                       },
                                       "score": {
                                         "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                        "minItems": 2,
+                                        "maxItems": 2,
                                         "type": "array",
                                         "items": {
-                                          "anyOf": [
-                                            {
-                                              "type": "integer",
-                                              "minimum": -9007199254740991,
-                                              "maximum": 9007199254740991
-                                            },
-                                            {
-                                              "type": "integer",
-                                              "minimum": -9007199254740991,
-                                              "maximum": 9007199254740991
-                                            }
-                                          ]
-                                        },
-                                        "minItems": 2,
-                                        "maxItems": 2
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991
+                                        }
                                       }
                                     },
                                     "required": [
@@ -20389,23 +20317,14 @@
                                         },
                                         "score": {
                                           "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                          "minItems": 2,
+                                          "maxItems": 2,
                                           "type": "array",
                                           "items": {
-                                            "anyOf": [
-                                              {
-                                                "type": "integer",
-                                                "minimum": -9007199254740991,
-                                                "maximum": 9007199254740991
-                                              },
-                                              {
-                                                "type": "integer",
-                                                "minimum": -9007199254740991,
-                                                "maximum": 9007199254740991
-                                              }
-                                            ]
-                                          },
-                                          "minItems": 2,
-                                          "maxItems": 2
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          }
                                         }
                                       },
                                       "required": [
@@ -22122,23 +22041,14 @@
                                 },
                                 "score": {
                                   "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                  "minItems": 2,
+                                  "maxItems": 2,
                                   "type": "array",
                                   "items": {
-                                    "anyOf": [
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      }
-                                    ]
-                                  },
-                                  "minItems": 2,
-                                  "maxItems": 2
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
                                 }
                               },
                               "required": [
@@ -23660,23 +23570,14 @@
                                   },
                                   "score": {
                                     "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                    "minItems": 2,
+                                    "maxItems": 2,
                                     "type": "array",
                                     "items": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        },
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        }
-                                      ]
-                                    },
-                                    "minItems": 2,
-                                    "maxItems": 2
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
                                   }
                                 },
                                 "required": [
@@ -25468,23 +25369,14 @@
                                 },
                                 "score": {
                                   "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                  "minItems": 2,
+                                  "maxItems": 2,
                                   "type": "array",
                                   "items": {
-                                    "anyOf": [
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      }
-                                    ]
-                                  },
-                                  "minItems": 2,
-                                  "maxItems": 2
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
                                 }
                               },
                               "required": [
@@ -27006,23 +26898,14 @@
                                   },
                                   "score": {
                                     "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                    "minItems": 2,
+                                    "maxItems": 2,
                                     "type": "array",
                                     "items": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        },
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        }
-                                      ]
-                                    },
-                                    "minItems": 2,
-                                    "maxItems": 2
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
                                   }
                                 },
                                 "required": [
@@ -28946,23 +28829,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -30491,23 +30365,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -32026,23 +31891,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -33579,23 +33435,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -35275,23 +35122,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -36803,23 +36641,14 @@
                                 },
                                 "score": {
                                   "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                  "minItems": 2,
+                                  "maxItems": 2,
                                   "type": "array",
                                   "items": {
-                                    "anyOf": [
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      },
-                                      {
-                                        "type": "integer",
-                                        "minimum": -9007199254740991,
-                                        "maximum": 9007199254740991
-                                      }
-                                    ]
-                                  },
-                                  "minItems": 2,
-                                  "maxItems": 2
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
                                 }
                               },
                               "required": [
@@ -38342,23 +38171,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -39867,23 +39687,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -41392,23 +41203,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -43036,23 +42838,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -44585,23 +44378,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -46235,23 +46019,14 @@
                                   },
                                   "score": {
                                     "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                    "minItems": 2,
+                                    "maxItems": 2,
                                     "type": "array",
                                     "items": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        },
-                                        {
-                                          "type": "integer",
-                                          "minimum": -9007199254740991,
-                                          "maximum": 9007199254740991
-                                        }
-                                      ]
-                                    },
-                                    "minItems": 2,
-                                    "maxItems": 2
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
                                   }
                                 },
                                 "required": [
@@ -48423,23 +48198,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -52231,23 +51997,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
@@ -54886,23 +54643,14 @@
                                           },
                                           "score": {
                                             "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                            "minItems": 2,
+                                            "maxItems": 2,
                                             "type": "array",
                                             "items": {
-                                              "anyOf": [
-                                                {
-                                                  "type": "integer",
-                                                  "minimum": -9007199254740991,
-                                                  "maximum": 9007199254740991
-                                                },
-                                                {
-                                                  "type": "integer",
-                                                  "minimum": -9007199254740991,
-                                                  "maximum": 9007199254740991
-                                                }
-                                              ]
-                                            },
-                                            "minItems": 2,
-                                            "maxItems": 2
+                                              "type": "integer",
+                                              "minimum": -9007199254740991,
+                                              "maximum": 9007199254740991
+                                            }
                                           }
                                         },
                                         "required": [
@@ -56401,23 +56149,14 @@
                                           },
                                           "score": {
                                             "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                            "minItems": 2,
+                                            "maxItems": 2,
                                             "type": "array",
                                             "items": {
-                                              "anyOf": [
-                                                {
-                                                  "type": "integer",
-                                                  "minimum": -9007199254740991,
-                                                  "maximum": 9007199254740991
-                                                },
-                                                {
-                                                  "type": "integer",
-                                                  "minimum": -9007199254740991,
-                                                  "maximum": 9007199254740991
-                                                }
-                                              ]
-                                            },
-                                            "minItems": 2,
-                                            "maxItems": 2
+                                              "type": "integer",
+                                              "minimum": -9007199254740991,
+                                              "maximum": 9007199254740991
+                                            }
                                           }
                                         },
                                         "required": [
@@ -58110,23 +57849,14 @@
                                               },
                                               "score": {
                                                 "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                                "minItems": 2,
+                                                "maxItems": 2,
                                                 "type": "array",
                                                 "items": {
-                                                  "anyOf": [
-                                                    {
-                                                      "type": "integer",
-                                                      "minimum": -9007199254740991,
-                                                      "maximum": 9007199254740991
-                                                    },
-                                                    {
-                                                      "type": "integer",
-                                                      "minimum": -9007199254740991,
-                                                      "maximum": 9007199254740991
-                                                    }
-                                                  ]
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
+                                                  "type": "integer",
+                                                  "minimum": -9007199254740991,
+                                                  "maximum": 9007199254740991
+                                                }
                                               }
                                             },
                                             "required": [
@@ -59648,23 +59378,14 @@
                                                 },
                                                 "score": {
                                                   "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                                                  "minItems": 2,
+                                                  "maxItems": 2,
                                                   "type": "array",
                                                   "items": {
-                                                    "anyOf": [
-                                                      {
-                                                        "type": "integer",
-                                                        "minimum": -9007199254740991,
-                                                        "maximum": 9007199254740991
-                                                      },
-                                                      {
-                                                        "type": "integer",
-                                                        "minimum": -9007199254740991,
-                                                        "maximum": 9007199254740991
-                                                      }
-                                                    ]
-                                                  },
-                                                  "minItems": 2,
-                                                  "maxItems": 2
+                                                    "type": "integer",
+                                                    "minimum": -9007199254740991,
+                                                    "maximum": 9007199254740991
+                                                  }
                                                 }
                                               },
                                               "required": [
@@ -63147,23 +62868,14 @@
                             },
                             "score": {
                               "description": "Your score, then the bot's best, in the games that keep one: boxes, pairs or word points",
+                              "minItems": 2,
+                              "maxItems": 2,
                               "type": "array",
                               "items": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  }
-                                ]
-                              },
-                              "minItems": 2,
-                              "maxItems": 2
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
                             }
                           },
                           "required": [
