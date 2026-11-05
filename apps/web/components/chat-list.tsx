@@ -15,6 +15,7 @@ import {
 import {
   AlertCircle,
   Archive,
+  ArchiveRestore,
   Ban,
   BellOff,
   ChevronLeft,
@@ -25,6 +26,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   Pin,
+  PinOff,
   Search,
   Headset,
   Share2,
@@ -44,6 +46,8 @@ import { useT } from "@/lib/i18n";
 import { usePresence, useWatchPresence } from "@/lib/presence";
 import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
+import { updateChatSettings } from "@/lib/actions";
+import { useSwipeRow } from "@/lib/swipe";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
@@ -149,6 +153,13 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   const router = useRouter();
   const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
   const press = useLongPress((at) => setMenu({ at }));
+  const qc = useQueryClient();
+  const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
+    void updateChatSettings(qc, chat.id, input).catch(() => null);
+  const swipe = useSwipeRow(
+    rail ? null : () => settings({ pinned: !chat.pinned }),
+    rail ? null : () => settings({ archived: !chat.archived }),
+  );
   const typing = useTyping(chat.id);
   const draft = useDrafts((s) => (active ? undefined : s.byChat[chat.id]));
   const unsent = useOutbox((s) => {
@@ -171,72 +182,84 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   );
 
   return (
-    <div className="group relative">
-      <Link
-        href={`/chats/${chat.id}`}
-        {...press}
-        title={rail ? chat.title : undefined}
-        className={`flex items-center gap-3 py-3 transition ${rail ? "justify-center" : "px-4"} [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
-          active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
-        }`}
-      >
-        <span className="relative shrink-0">
-          <StoryAvatar userId={peer.id} name={chat.title}>
-            <Avatar user={peer} size="md" online={online} />
-          </StoryAvatar>
-          {rail && badge && <span className="absolute -top-1 -right-1">{badge}</span>}
+    <div {...swipe.handlers} className="group relative touch-pan-y overflow-x-clip">
+      <div ref={swipe.right} className="pointer-events-none absolute inset-y-0 left-5 flex items-center opacity-0">
+        <span className="grid size-10 place-items-center rounded-full bg-brand text-brand-ink">
+          {chat.pinned ? <PinOff className="size-5" /> : <Pin className="size-5" />}
         </span>
-        <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
-          <div className="flex items-center gap-1.5">
-            <p className="min-w-0 truncate font-semibold">{chat.title}</p>
-            {chat.supportDesk && (
-              <span className="shrink-0 rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide text-brand uppercase">{tr.support.title}</span>
-            )}
-            <span className="flex-1" />
-            {isMuted(chat) && <BellOff aria-label={tr.common.muted} className="size-3.5 shrink-0 text-stone-400" />}
-            <span className={`shrink-0 text-xs ${unread ? "font-semibold text-brand" : "text-stone-500"}`}>
-              {listTime(chat.lastActivityAt)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <p
-              className={`min-w-0 flex-1 truncate text-sm ${
-                typing
-                  ? "font-medium text-brand"
-                  : unread
-                    ? "text-stone-900 dark:text-stone-100"
-                    : "text-stone-500 dark:text-stone-400"
-              }`}
-            >
-              {typing ? (
-                tr.chats.typing[typing]
-              ) : unsent ? (
-                <span className="inline-flex items-center gap-1">
-                  {unsent.status === "failed" ? (
-                    <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400">
-                      <AlertCircle className="size-3.5" /> {tr.messages.notSent}
-                    </span>
-                  ) : (
-                    <>
-                      <Clock className="size-3.5" /> {tr.chats.waitingForNetwork}
-                    </>
-                  )}
-                </span>
-              ) : draft ? (
-                <>
-                  <span className="text-red-600 dark:text-red-400">{tr.chats.draft}</span> {draft}
-                </>
-              ) : (
-                <Preview chat={chat} meId={meId} />
+      </div>
+      <div ref={swipe.left} className="pointer-events-none absolute inset-y-0 right-5 flex items-center opacity-0">
+        <span className="grid size-10 place-items-center rounded-full bg-stone-500 text-white">
+          {chat.archived ? <ArchiveRestore className="size-5" /> : <Archive className="size-5" />}
+        </span>
+      </div>
+      <div ref={swipe.moving}>
+        <Link
+          href={`/chats/${chat.id}`}
+          {...press}
+          title={rail ? chat.title : undefined}
+          className={`flex items-center gap-3 py-3 transition ${rail ? "justify-center" : "px-4"} [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
+            active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
+          }`}
+        >
+          <span className="relative shrink-0">
+            <StoryAvatar userId={peer.id} name={chat.title}>
+              <Avatar user={peer} size="md" online={online} />
+            </StoryAvatar>
+            {rail && badge && <span className="absolute -top-1 -right-1">{badge}</span>}
+          </span>
+          <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
+            <div className="flex items-center gap-1.5">
+              <p className="min-w-0 truncate font-semibold">{chat.title}</p>
+              {chat.supportDesk && (
+                <span className="shrink-0 rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide text-brand uppercase">{tr.support.title}</span>
               )}
-            </p>
-            {chat.pinned && !unread && (
-              <Pin aria-label={tr.chats.pinned} className="size-3.5 shrink-0 rotate-45 text-stone-400" />
-            )}
-            {badge}
+              <span className="flex-1" />
+              {isMuted(chat) && <BellOff aria-label={tr.common.muted} className="size-3.5 shrink-0 text-stone-400" />}
+              <span className={`shrink-0 text-xs ${unread ? "font-semibold text-brand" : "text-stone-500"}`}>
+                {listTime(chat.lastActivityAt)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <p
+                className={`min-w-0 flex-1 truncate text-sm ${
+                  typing
+                    ? "font-medium text-brand"
+                    : unread
+                      ? "text-stone-900 dark:text-stone-100"
+                      : "text-stone-500 dark:text-stone-400"
+                }`}
+              >
+                {typing ? (
+                  tr.chats.typing[typing]
+                ) : unsent ? (
+                  <span className="inline-flex items-center gap-1">
+                    {unsent.status === "failed" ? (
+                      <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400">
+                        <AlertCircle className="size-3.5" /> {tr.messages.notSent}
+                      </span>
+                    ) : (
+                      <>
+                        <Clock className="size-3.5" /> {tr.chats.waitingForNetwork}
+                      </>
+                    )}
+                  </span>
+                ) : draft ? (
+                  <>
+                    <span className="text-red-600 dark:text-red-400">{tr.chats.draft}</span> {draft}
+                  </>
+                ) : (
+                  <Preview chat={chat} meId={meId} />
+                )}
+              </p>
+              {chat.pinned && !unread && (
+                <Pin aria-label={tr.chats.pinned} className="size-3.5 shrink-0 rotate-45 text-stone-400" />
+              )}
+              {badge}
+            </div>
           </div>
-        </div>
-      </Link>
+        </Link>
+      </div>
       <button
         onClick={(e) => {
           const r = e.currentTarget.getBoundingClientRect();

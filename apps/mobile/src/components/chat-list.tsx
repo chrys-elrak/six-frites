@@ -14,6 +14,7 @@ import * as Haptics from "expo-haptics";
 import { router, useFocusEffect } from "expo-router";
 import {
   Archive,
+  ArchiveRestore,
   Ban,
   AlertCircle,
   BellOff,
@@ -29,6 +30,7 @@ import {
   Phone,
   PhoneMissed,
   Pin,
+  PinOff,
   Search,
   Headset,
   Share2,
@@ -38,6 +40,10 @@ import {
 } from "lucide-react-native";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
+import { updateChatSettings } from "@/lib/actions";
+import { useSwipeRow } from "@/lib/swipe";
 import { Text, TextInput } from "./text";
 import { ensureBotChat, isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
@@ -165,64 +171,87 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
   const online = usePresence(peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
+  const qc = useQueryClient();
+  const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
+    void updateChatSettings(qc, chat.id, input).catch(() => null);
+  const swipe = useSwipeRow(
+    () => settings({ pinned: !chat.pinned }),
+    () => settings({ archived: !chat.archived }),
+  );
 
   return (
     <>
-      <Pressable
-        onPress={() => router.push(`/chats/${chat.id}`)}
-        onLongPress={() => {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          setMenu(true);
-        }}
-        style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
-      >
-        <StoryAvatar userId={peer.id} name={chat.title}>
-          <Avatar user={peer} size="md" online={!!online} />
-        </StoryAvatar>
-        <View style={styles.rowBody}>
-          <View style={styles.rowLine}>
-            <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
-              {chat.title}
-            </Text>
-            {chat.supportDesk && <Text style={styles.supportTag}>{tr.support.title}</Text>}
-            <View style={{ flex: 1 }} />
-            {chat.muted && <BellOff size={14} color={t.faint} accessibilityLabel={tr.common.muted} />}
-            <Text style={[styles.time, unread ? { color: brand, fontWeight: "600" } : { color: t.muted }]}>
-              {listTime(chat.lastActivityAt)}
-            </Text>
-          </View>
-          <View style={styles.rowLine}>
-            <View style={{ flex: 1 }}>
-              {typing ? (
-                <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing[typing]}</Text>
-              ) : unsent ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  {unsent.status === "failed" ? <AlertCircle size={14} color={t.danger} /> : <Clock size={14} color={t.muted} />}
-                  <Text numberOfLines={1} style={[styles.preview, { color: unsent.status === "failed" ? t.danger : t.muted }]}>
-                    {unsent.status === "failed" ? tr.messages.notSent : tr.chats.waitingForNetwork}
+      <GestureDetector gesture={swipe.gesture}>
+        <View>
+          <Animated.View pointerEvents="none" style={[styles.swipeHint, { left: 20 }, swipe.right]}>
+            <View style={[styles.swipeIcon, { backgroundColor: brand }]}>
+              {chat.pinned ? <PinOff size={20} color={brandInk} /> : <Pin size={20} color={brandInk} />}
+            </View>
+          </Animated.View>
+          <Animated.View pointerEvents="none" style={[styles.swipeHint, { right: 20 }, swipe.left]}>
+            <View style={[styles.swipeIcon, { backgroundColor: stone[500] }]}>
+              {chat.archived ? <ArchiveRestore size={20} color="#fff" /> : <Archive size={20} color="#fff" />}
+            </View>
+          </Animated.View>
+          <Animated.View style={swipe.moving}>
+            <Pressable
+              onPress={() => router.push(`/chats/${chat.id}`)}
+              onLongPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setMenu(true);
+              }}
+              style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
+            >
+              <StoryAvatar userId={peer.id} name={chat.title}>
+                <Avatar user={peer} size="md" online={!!online} />
+              </StoryAvatar>
+              <View style={styles.rowBody}>
+                <View style={styles.rowLine}>
+                  <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
+                    {chat.title}
+                  </Text>
+                  {chat.supportDesk && <Text style={styles.supportTag}>{tr.support.title}</Text>}
+                  <View style={{ flex: 1 }} />
+                  {chat.muted && <BellOff size={14} color={t.faint} accessibilityLabel={tr.common.muted} />}
+                  <Text style={[styles.time, unread ? { color: brand, fontWeight: "600" } : { color: t.muted }]}>
+                    {listTime(chat.lastActivityAt)}
                   </Text>
                 </View>
-              ) : draft ? (
-                <Text numberOfLines={1} style={[styles.preview, { color: t.muted }]}>
-                  <Text style={{ color: t.danger }}>{tr.chats.draft}</Text> {draft.replace(/\s+/g, " ")}
-                </Text>
-              ) : (
-                <Preview chat={chat} meId={meId} color={unread ? t.text : t.muted} />
-              )}
-            </View>
-            {chat.pinned && !unread && (
-              <Pin size={14} color={t.faint} style={{ transform: [{ rotate: "45deg" }] }} accessibilityLabel={tr.chats.pinned} />
-            )}
-            {unread && (
-              <View style={[styles.badge, { backgroundColor: chat.muted ? (t.dark ? stone[700] : stone[300]) : brand }]}>
-                <Text style={[styles.badgeText, { color: chat.muted ? t.textSoft : brandInk }]}>
-                  {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-                </Text>
+                <View style={styles.rowLine}>
+                  <View style={{ flex: 1 }}>
+                    {typing ? (
+                      <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing[typing]}</Text>
+                    ) : unsent ? (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                        {unsent.status === "failed" ? <AlertCircle size={14} color={t.danger} /> : <Clock size={14} color={t.muted} />}
+                        <Text numberOfLines={1} style={[styles.preview, { color: unsent.status === "failed" ? t.danger : t.muted }]}>
+                          {unsent.status === "failed" ? tr.messages.notSent : tr.chats.waitingForNetwork}
+                        </Text>
+                      </View>
+                    ) : draft ? (
+                      <Text numberOfLines={1} style={[styles.preview, { color: t.muted }]}>
+                        <Text style={{ color: t.danger }}>{tr.chats.draft}</Text> {draft.replace(/\s+/g, " ")}
+                      </Text>
+                    ) : (
+                      <Preview chat={chat} meId={meId} color={unread ? t.text : t.muted} />
+                    )}
+                  </View>
+                  {chat.pinned && !unread && (
+                    <Pin size={14} color={t.faint} style={{ transform: [{ rotate: "45deg" }] }} accessibilityLabel={tr.chats.pinned} />
+                  )}
+                  {unread && (
+                    <View style={[styles.badge, { backgroundColor: chat.muted ? (t.dark ? stone[700] : stone[300]) : brand }]}>
+                      <Text style={[styles.badgeText, { color: chat.muted ? t.textSoft : brandInk }]}>
+                        {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
-            )}
-          </View>
+            </Pressable>
+          </Animated.View>
         </View>
-      </Pressable>
+      </GestureDetector>
       {menu && (
         <ChatMenu
           chat={chat}
@@ -546,6 +575,8 @@ const styles = StyleSheet.create({
   archiveIcon: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
   archiveText: { flex: 1, fontSize: 15, fontWeight: "500" },
   note: { padding: 16, fontSize: 14 },
+  swipeHint: { position: "absolute", top: 0, bottom: 0, justifyContent: "center", opacity: 0 },
+  swipeIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   search: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 12, paddingHorizontal: 12 },
   searchInput: { flex: 1, fontSize: 16, paddingVertical: 8 },
 });
