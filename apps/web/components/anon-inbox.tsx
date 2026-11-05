@@ -21,7 +21,7 @@ import { Camera, Check, Copy, Ellipsis, LogOut, Share, ShieldAlert, Trash2, Vene
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type CardStyle, askCardPng, saveAskCard, shareAskCard } from "@/lib/ask-card";
-import { shareAsk, timeAgo } from "@/lib/format";
+import { clockTime, shareAsk, timeAgo } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
 import { receiveAnon } from "@/lib/realtime";
 import { toAvatarDataUrl } from "@/lib/image";
@@ -841,9 +841,8 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                     )}
                     <div className="flex items-center gap-2 border-t border-stone-100 py-2.5 dark:border-white/10 pr-2.5 pl-5">
                       <span className="flex-1 text-xs text-stone-400">
-                        {timeAgo(m.createdAt)}
+                        {timeAgo(m.createdAt)} · {clockTime(m.createdAt)}
                         {m.oldLink && ` · ${tr.ask.oldLink}`}
-                        {m.bot && ` · ${tr.ask.fromBot}`}
                       </span>
                       <button
                         type="button"

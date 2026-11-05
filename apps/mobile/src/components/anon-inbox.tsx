@@ -27,7 +27,7 @@ import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { captureRef } from "react-native-view-shot";
-import { formatDuration, shareAsk, timeAgo } from "@/lib/format";
+import { clockTime, formatDuration, shareAsk, timeAgo } from "@/lib/format";
 import { segments } from "@/lib/markup";
 import { getLocale, setLocale, useLocale, useT } from "@/lib/i18n";
 import { pickAvatar } from "@/lib/media";
@@ -891,9 +891,8 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
               )}
               <View style={[styles.row, { borderColor: t.border }]}>
                 <Text style={{ flex: 1, color: "#a8a29e", fontSize: 12 }}>
-                  {timeAgo(m.createdAt)}
+                  {timeAgo(m.createdAt)} · {clockTime(m.createdAt)}
                   {m.oldLink && ` · ${tr.ask.oldLink}`}
-                  {m.bot && ` · ${tr.ask.fromBot}`}
                 </Text>
                 <Pressable
                   onPress={() => setExporting(m)}
