@@ -83,6 +83,14 @@ describe("auth", () => {
     expect(accepted.json().termsAccepted).toBe(true);
     expect((await ctx.app.inject({ url: "/v1/me", headers: bearer(accessToken) })).json().termsAccepted).toBe(true);
   });
+
+  it("shows a newcomer the quick tour until they mark it seen", async () => {
+    const { accessToken, user } = (await login(`tourist-${Date.now()}`, "web")).json();
+    expect(user.tourSeen).toBe(false);
+    const seen = await ctx.app.inject({ method: "PATCH", url: "/v1/me", headers: bearer(accessToken), payload: { tourSeen: true } });
+    expect(seen.json().tourSeen).toBe(true);
+    expect((await ctx.app.inject({ url: "/v1/me", headers: bearer(accessToken) })).json().tourSeen).toBe(true);
+  });
 });
 
 describe("sessions", () => {

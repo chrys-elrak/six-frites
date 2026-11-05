@@ -38,6 +38,7 @@ export function toUserDTO(u: User): UserDTO {
     support: env.ADMIN_EMAILS.includes(u.email.toLowerCase()),
     chatBan: chatBanned(u) ? { until: u.bannedUntil?.toISOString() ?? null } : null,
     termsAccepted: u.termsAcceptedAt !== null,
+    tourSeen: u.tourSeenAt !== null,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -86,7 +87,7 @@ export async function getMe(userId: string) {
 }
 
 export async function updateMe(userId: string, input: UpdateMeInput) {
-  const { photo, ...data } = input;
+  const { photo, tourSeen, ...data } = input;
   let avatarKey: string | null | undefined = photo === null || data.avatarUrl !== undefined ? null : undefined;
   if (photo) {
     const p = parsePhoto(photo);
@@ -98,7 +99,12 @@ export async function updateMe(userId: string, input: UpdateMeInput) {
     const before = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarKey: true } });
     const user = await tx.user.update({
       where: { id: userId },
-      data: { ...data, ...(photo !== undefined && { avatarUrl: null }), ...(avatarKey !== undefined && { avatarKey }) },
+      data: {
+        ...data,
+        ...(photo !== undefined && { avatarUrl: null }),
+        ...(avatarKey !== undefined && { avatarKey }),
+        ...(tourSeen && { tourSeenAt: new Date() }),
+      },
     });
     if (data.displayName !== undefined || avatarKey !== undefined) await announceProfile(tx, emit, userId);
     return { user, previousKey: before.avatarKey };

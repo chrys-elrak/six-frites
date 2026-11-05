@@ -40,6 +40,7 @@ import { QuickReactionsSettings } from "./reactions";
 import { Sheet } from "./sheet";
 import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
+import { TourAgain } from "./tour";
 import { WhatsNew } from "./whats-new";
 
 function ProfileCard() {
@@ -657,6 +658,7 @@ export function SettingsPanel() {
         <UpdateCard />
         <ProfileCard />
         <WhatsNew />
+        <TourAgain />
         <LanguagePicker />
         <FontPicker />
         <QuickReactionsSettings />

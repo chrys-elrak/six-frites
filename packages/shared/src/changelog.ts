@@ -22,6 +22,7 @@ export const CHANGELOG: Release[] = [
         "Messages no longer lose their end or their time on phones with their own font: the app uses its plain font unless you switch to yours in Settings.",
         "New faces: instead of Frite 1234, people show up under a colour code like #EF4535, with a fast food or vegetable picture in that colour. The names and photos you gave your contacts stay.",
         "The long-press menu opens next to the message on wide screens.",
+        "Newcomers get a quick tour of the app. Want to see it? Settings, Take the tour again.",
       ],
       fr: [
         "Frite Bot devient Six Frites Game, avec son nom et sa photo dans votre discussion. Touchez le trombone pour choisir un jeu.",
@@ -29,6 +30,7 @@ export const CHANGELOG: Release[] = [
         "Les messages ne perdent plus leur fin ni leur heure sur les téléphones à police personnalisée : l'application utilise sa police simple, sauf si vous choisissez la vôtre dans les Paramètres.",
         "Nouvelles têtes : au lieu de Frite 1234, les personnes apparaissent sous un code couleur comme #EF4535, avec un fast-food ou un légume sur fond de cette couleur. Les noms et photos que vous avez donnés à vos contacts restent.",
         "Sur grand écran, le menu de l'appui long s'ouvre à côté du message.",
+        "Les nouveaux venus ont droit à une visite rapide de l'application. Envie de la voir ? Paramètres, Refaire la visite.",
       ],
       mg: [
         "Lasa Six Frites Game i Frite Bot, miaraka amin'ny anarany sy ny sariny ao amin'ny resakao. Tsindrio ny clip ao mba hisafidianana lalao.",
@@ -36,6 +38,7 @@ export const CHANGELOG: Release[] = [
         "Tsy tapaka intsony ny faran'ny hafatra sy ny ora amin'ny finday manana endritsoratra manokana: ny endritsoratra tsotra an'ny app no ampiasaina, raha tsy misafidy ny anao ianao ao amin'ny Paramètres.",
         "Endrika vaovao: kaody loko toy ny #EF4535 fa tsy Frite 1234 intsony no anaran'ny olona, miaraka amin'ny sarin-tsakafo haingana na legioma amin'io loko io. Tsy miova ny anarana sy sary nomenao ny namanao.",
         "Amin'ny efijery lehibe, eo akaikin'ny hafatra no misokatra ny menu rehefa tsindriana ela.",
+        "Misy fitsidihana haingana ny app ho an'ireo vao tonga. Te hahita azy? Fikirana, Avereno ny fitsidihana.",
       ],
     },
   },

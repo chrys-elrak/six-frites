@@ -4,7 +4,9 @@ import { CHANGELOG, type Release, unseenReleases } from "@six/shared";
 import { ChevronRight, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 import { useLocale, useT } from "@/lib/i18n";
+import { useSession } from "@/lib/session";
 import { Dialog } from "./dialog";
+import { markTourSeen, Tour } from "./tour";
 
 const SEEN_KEY = "six:seen-release";
 
@@ -67,8 +69,12 @@ export function WhatsNew() {
   );
 }
 
-/** Shows the releases that came out since this browser last read them, or the newest one the first time. */
+/**
+ * Shows the releases that came out since this browser last read them, or the newest one the first time. Someone new
+ * gets the quick tour instead, once they've accepted the terms.
+ */
 export function WhatsNewPrompt() {
+  const user = useSession((s) => (s.status === "authed" ? s.user : null));
   const [fresh, setFresh] = useState(() => {
     try {
       return unseenReleases(localStorage.getItem(SEEN_KEY));
@@ -76,8 +82,6 @@ export function WhatsNewPrompt() {
       return [];
     }
   });
-  if (!fresh.length) return null;
-
   function close() {
     try {
       localStorage.setItem(SEEN_KEY, CHANGELOG[0]!.version);
@@ -85,5 +89,17 @@ export function WhatsNewPrompt() {
     setFresh([]);
   }
 
+  if (user && !user.guest && !user.tourSeen) {
+    if (!user.termsAccepted) return null;
+    return (
+      <Tour
+        onClose={() => {
+          close();
+          markTourSeen();
+        }}
+      />
+    );
+  }
+  if (!fresh.length) return null;
   return <ReleaseNotes releases={fresh} onClose={close} />;
 }

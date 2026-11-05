@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale, useT } from "@/lib/i18n";
+import { useSession } from "@/lib/session";
 import { brand, useTheme } from "@/lib/theme";
 import { Text } from "./text";
+import { markTourSeen, Tour } from "./tour";
 import { Card, IconButton } from "./ui";
 
 const SEEN_KEY = "six:seen-release";
@@ -70,8 +72,12 @@ export function WhatsNew() {
   );
 }
 
-/** Shows the releases that came with this update, or the newest one the first time the app opens. */
+/**
+ * Shows the releases that came with this update, or the newest one the first time the app opens. Someone new gets
+ * the quick tour instead, once they've accepted the terms.
+ */
 export function WhatsNewPrompt() {
+  const user = useSession((s) => (s.status === "authed" ? s.user : null));
   const [fresh, setFresh] = useState<Release[]>([]);
 
   useEffect(() => {
@@ -80,13 +86,23 @@ export function WhatsNewPrompt() {
       .catch(() => null);
   }, []);
 
-  if (!fresh.length) return null;
-
   function close() {
     setFresh([]);
     void AsyncStorage.setItem(SEEN_KEY, CHANGELOG[0]!.version).catch(() => null);
   }
 
+  if (user && !user.guest && !user.tourSeen) {
+    if (!user.termsAccepted) return null;
+    return (
+      <Tour
+        onClose={() => {
+          close();
+          markTourSeen();
+        }}
+      />
+    );
+  }
+  if (!fresh.length) return null;
   return <ReleaseNotes releases={fresh} onClose={close} />;
 }
 

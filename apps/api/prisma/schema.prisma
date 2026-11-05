@@ -26,6 +26,8 @@ model User {
   updatedAt       DateTime  @updatedAt
   /// When they accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else.
   termsAcceptedAt DateTime?
+  /// When they went through or skipped the quick tour; everyone who joined before it came counts as having seen it.
+  tourSeenAt      DateTime?
   bannedAt        DateTime?
   banReason       String?
   /// When a timed ban is lifted on its own; null while `bannedAt` is set means it lasts until an admin lifts it.

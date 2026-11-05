@@ -87,6 +87,8 @@ export interface paths {
                                 } | null;
                                 /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                                 termsAccepted: boolean;
+                                /** @description Went through or skipped the quick tour the apps show once to someone new */
+                                tourSeen: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -234,6 +236,8 @@ export interface paths {
                                 } | null;
                                 /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                                 termsAccepted: boolean;
+                                /** @description Went through or skipped the quick tour the apps show once to someone new */
+                                tourSeen: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -325,6 +329,8 @@ export interface paths {
                                 } | null;
                                 /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                                 termsAccepted: boolean;
+                                /** @description Went through or skipped the quick tour the apps show once to someone new */
+                                tourSeen: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -2330,6 +2336,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2393,6 +2401,11 @@ export interface paths {
                         photo?: string | null;
                         /** @description Your own quick reactions; send the defaults to go back to them */
                         quickReactions?: string[];
+                        /**
+                         * @description Marks the quick tour as seen, so no app shows it again
+                         * @enum {boolean}
+                         */
+                        tourSeen?: true;
                     };
                 };
             };
@@ -2437,6 +2450,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2508,6 +2523,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2583,6 +2600,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2799,6 +2818,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2857,6 +2878,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -16602,6 +16625,8 @@ export interface paths {
                                     } | null;
                                     /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                                     termsAccepted: boolean;
+                                    /** @description Went through or skipped the quick tour the apps show once to someone new */
+                                    tourSeen: boolean;
                                     /** Format: date-time */
                                     createdAt: string;
                                 };
@@ -17162,6 +17187,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -17290,6 +17317,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -19209,6 +19238,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -19289,6 +19320,8 @@ export interface paths {
                             } | null;
                             /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
                             termsAccepted: boolean;
+                            /** @description Went through or skipped the quick tour the apps show once to someone new */
+                            tourSeen: boolean;
                             /** Format: date-time */
                             createdAt: string;
                         };
