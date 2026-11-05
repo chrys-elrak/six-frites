@@ -2,7 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import type { AddressInfo } from "node:net";
 import { type ChatDTO, FRITE_BOT_ID, type LiveInviteDTO, type LiveRoomDTO, fanoronaOptions, ludoMovable } from "@six/shared";
 import { type Socket, io as connect } from "socket.io-client";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createSocketServer } from "../src/socket/index.js";
 import { type Auth, chatHelpers, useApp } from "./helpers.js";
 
@@ -108,9 +108,14 @@ describe("live rooms", () => {
     const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "ludo", invite: [guest.user.id], locale: "en", bot: true });
     expect(data).toMatchObject({ status: "playing", invited: [] });
     expect(data!.seats.map((s) => s.user?.id ?? null)).toEqual([host.user.id, null]);
+
+    await a.ask("live:giveup", { roomId: data!.id });
+    const latest = async () =>
+      ((await get(host, "/v1/chats")).items as ChatDTO[]).find((c) => c.lastMessage?.senderId === FRITE_BOT_ID)?.lastMessage;
+    await vi.waitFor(async () => expect((await latest())?.action).toEqual({ type: "live_result", game: "ludo", result: "lost" }));
   });
 
-  it("posts invites in our chat, a game with the bot alone in its chat, and nothing else after", async () => {
+  it("posts invites in our chat, a game with the bot alone and its result in its chat, and nothing else after", async () => {
     const { host, guest } = await makeFriends();
     const [a, b] = [await player(host), await player(guest)];
     const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "fanorona", invite: [guest.user.id], locale: "en" });
@@ -133,7 +138,7 @@ describe("live rooms", () => {
     await until(() => b.rooms.some((r) => r.id === solo.id && r.status === "over"));
     await new Promise((r) => setTimeout(r, 300));
     const [bot, ...rest] = await chats();
-    expect(bot!.lastMessage).toMatchObject({ senderId: FRITE_BOT_ID, action: { type: "live_invite", roomId: solo.id } });
+    expect(bot!.lastMessage).toMatchObject({ senderId: FRITE_BOT_ID, action: { type: "live_result", game: "fanorona", result: "lost" } });
     expect(rest.map((c) => c.id)).toEqual([direct!.id]);
   });
 

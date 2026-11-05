@@ -175,9 +175,10 @@ export const ServiceAction = z
       secs: z.number().int().nullable().describe("How long it lasted; null if it was missed or declined"),
     }),
     z.object({ type: z.literal("live_invite"), game: z.enum(LIVE_GAMES), roomId: z.string(), from: z.string() }),
+    z.object({ type: z.literal("live_result"), game: z.enum(LIVE_GAMES), result: z.enum(["won", "lost", "draw"]) }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 

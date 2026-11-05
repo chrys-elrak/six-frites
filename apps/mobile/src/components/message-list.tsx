@@ -1456,7 +1456,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                       ) : (
                         <Phone size={14} color="#fff" />
                       )
-                    ) : row.message.action?.type === "live_invite" ? (
+                    ) : row.message.action?.type === "live_invite" || row.message.action?.type === "live_result" ? (
                       <Gamepad2 size={14} color="#fff" />
                     ) : (
                       <Timer size={14} color="#fff" />

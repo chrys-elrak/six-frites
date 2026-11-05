@@ -16,7 +16,7 @@ export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
               : action.video
                 ? Video
                 : Phone
-            : action?.type === "live_invite"
+            : action?.type === "live_invite" || action?.type === "live_result"
               ? Gamepad2
               : Timer;
   return <Icon className="size-3.5 shrink-0" />;

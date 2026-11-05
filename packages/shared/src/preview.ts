@@ -45,12 +45,18 @@ export function serviceText(m: Pick<MessageDTO, "action">, t: Dict, mine = false
   if (a?.type === "pin") return t.summary.pinned;
   if (a?.type === "call") return callText(a, t);
   if (a?.type === "live_invite") return liveText(a, t, mine);
+  if (a?.type === "live_result") return resultText(a, t);
   return a?.secs ? t.summary.autoDeleteAfter(durationLabel(a.secs, t)) : t.summary.autoDeleteOff;
 }
 
 function liveText(a: Extract<ServiceAction, { type: "live_invite" }>, t: Dict, mine: boolean) {
   const game = t.live.games[a.game];
   return mine ? t.live.youInvited(game) : t.live.invites(a.from, game);
+}
+
+function resultText(a: Extract<ServiceAction, { type: "live_result" }>, t: Dict) {
+  const game = t.live.games[a.game];
+  return { won: t.live.resultWon, lost: t.live.resultLost, draw: t.live.resultDraw }[a.result](game);
 }
 
 /** What a service message says as a sentence about its sender; `who` is null when it was you. */
@@ -67,6 +73,7 @@ export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | nul
   if (a?.type === "pin") return t.summary.pinnedMessage(who);
   if (a?.type === "call") return t.summary.called(who, callText(a, t));
   if (a?.type === "live_invite") return liveText(a, t, who === null);
+  if (a?.type === "live_result") return resultText(a, t);
   return a?.secs ? t.summary.setAutoDelete(who, durationLabel(a.secs, t)) : t.summary.turnedOffAutoDelete(who);
 }
 

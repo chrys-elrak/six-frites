@@ -57,7 +57,7 @@ import {
 import type { User } from "../generated/prisma/client.js";
 import { lexicon } from "../lib/lexicon.js";
 import { withEvents } from "../lib/events.js";
-import { postBotLiveGame } from "./bot.js";
+import { postBotLiveGame, postBotLiveResult } from "./bot.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { deleteObjects, presignGet } from "../lib/storage.js";
@@ -109,6 +109,8 @@ interface Room {
   saidAt: Map<string, number>;
   voiceKeys: string[];
   touched: number;
+  /** The game being posted in the bot's chat, which its result waits for so it lands after. */
+  posted?: Promise<unknown>;
 }
 
 /**
@@ -254,7 +256,10 @@ function close(room: Room) {
   for (const id of [...seated, ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
 }
 
-/** Ends the game: who won shows in the room until the next game or everyone leaves. */
+/**
+ * Ends the game: who won shows in the room until the next game or everyone leaves. Someone who played alone
+ * against the bot also finds the result in their chat with it.
+ */
 function finish(room: Room, ended: number[]) {
   const winners = ended.filter((i) => !room.seats[i]!.gaveUp);
   clearTimers(room);
@@ -262,6 +267,14 @@ function finish(room: Room, ended: number[]) {
   room.winners = winners;
   room.deadline = null;
   broadcast(room);
+  const people = room.seats.flatMap((s, i) => (s.userId ? [i] : []));
+  if (people.length === 1) {
+    const me = people[0]!;
+    const result = !winners.includes(me) ? "lost" : winners.length > 1 ? "draw" : "won";
+    void Promise.resolve(room.posted)
+      .then(() => postBotLiveResult(room.seats[me]!.userId!, room.locale, room.game, result))
+      .catch((err) => console.error("could not post the live result in the bot's chat:", err.message));
+  }
 }
 
 /**
@@ -374,14 +387,14 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   };
   await refresh(room);
   live.set(room.id, room);
+  if (!invite.length) {
+    room.posted = postBotLiveGame(userId, input.locale, room.game, room.id).catch((err) =>
+      console.error("could not post the live game in the bot's chat:", err.message),
+    );
+  }
   if (input.bot) {
     while (room.seats.length < LIVE_SEATS[room.game].min) room.seats.push({ userId: null, left: false, away: false, gaveUp: false });
     startRoom(userId, room.id);
-  }
-  if (!invite.length) {
-    void postBotLiveGame(userId, input.locale, room.game, room.id).catch((err) =>
-      console.error("could not post the live game in the bot's chat:", err.message),
-    );
   }
   const out = broadcaster();
   for (const id of invite) {

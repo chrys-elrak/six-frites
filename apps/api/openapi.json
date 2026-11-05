@@ -5933,6 +5933,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -6163,6 +6167,10 @@
                           "nullable": true,
                           "type": "string",
                           "format": "uri"
+                        },
+                        "alias": {
+                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -6594,6 +6602,10 @@
                           "nullable": true,
                           "type": "string",
                           "format": "uri"
+                        },
+                        "alias": {
+                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -6739,6 +6751,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -6863,6 +6879,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -7453,9 +7473,45 @@
                                 "from"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "result": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "draw"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "result"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                         },
                         "location": {
                           "nullable": true,
@@ -8935,9 +8991,45 @@
                                   "from"
                                 ],
                                 "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_result"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "result": {
+                                    "type": "string",
+                                    "enum": [
+                                      "won",
+                                      "lost",
+                                      "draw"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "result"
+                                ],
+                                "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                           },
                           "location": {
                             "nullable": true,
@@ -10544,9 +10636,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -11491,6 +11619,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -12081,9 +12213,45 @@
                                 "from"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "result": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "draw"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "result"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                         },
                         "location": {
                           "nullable": true,
@@ -13563,9 +13731,45 @@
                                   "from"
                                 ],
                                 "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_result"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "result": {
+                                    "type": "string",
+                                    "enum": [
+                                      "won",
+                                      "lost",
+                                      "draw"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "result"
+                                ],
+                                "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                           },
                           "location": {
                             "nullable": true,
@@ -14635,6 +14839,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -15225,9 +15433,45 @@
                                 "from"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "result": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "draw"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "result"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                         },
                         "location": {
                           "nullable": true,
@@ -16707,9 +16951,45 @@
                                   "from"
                                 ],
                                 "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_result"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "result": {
+                                    "type": "string",
+                                    "enum": [
+                                      "won",
+                                      "lost",
+                                      "draw"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "result"
+                                ],
+                                "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                           },
                           "location": {
                             "nullable": true,
@@ -17806,6 +18086,10 @@
                                       "nullable": true,
                                       "type": "string",
                                       "format": "uri"
+                                    },
+                                    "alias": {
+                                      "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                      "type": "string"
                                     }
                                   },
                                   "required": [
@@ -18396,9 +18680,45 @@
                                       "from"
                                     ],
                                     "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "live_result"
+                                        ]
+                                      },
+                                      "game": {
+                                        "type": "string",
+                                        "enum": [
+                                          "fanorona",
+                                          "ludo",
+                                          "eights",
+                                          "words",
+                                          "dots",
+                                          "memory"
+                                        ]
+                                      },
+                                      "result": {
+                                        "type": "string",
+                                        "enum": [
+                                          "won",
+                                          "lost",
+                                          "draw"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "game",
+                                      "result"
+                                    ],
+                                    "additionalProperties": false
                                   }
                                 ],
-                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                               },
                               "location": {
                                 "nullable": true,
@@ -19878,9 +20198,45 @@
                                         "from"
                                       ],
                                       "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "live_result"
+                                          ]
+                                        },
+                                        "game": {
+                                          "type": "string",
+                                          "enum": [
+                                            "fanorona",
+                                            "ludo",
+                                            "eights",
+                                            "words",
+                                            "dots",
+                                            "memory"
+                                          ]
+                                        },
+                                        "result": {
+                                          "type": "string",
+                                          "enum": [
+                                            "won",
+                                            "lost",
+                                            "draw"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "type",
+                                        "game",
+                                        "result"
+                                      ],
+                                      "additionalProperties": false
                                     }
                                   ],
-                                  "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                                  "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                                 },
                                 "location": {
                                   "nullable": true,
@@ -20961,6 +21317,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -21551,9 +21911,45 @@
                                 "from"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "result": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "draw"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "result"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                         },
                         "location": {
                           "nullable": true,
@@ -23033,9 +23429,45 @@
                                   "from"
                                 ],
                                 "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_result"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "result": {
+                                    "type": "string",
+                                    "enum": [
+                                      "won",
+                                      "lost",
+                                      "draw"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "result"
+                                ],
+                                "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                           },
                           "location": {
                             "nullable": true,
@@ -24191,6 +24623,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -24781,9 +25217,45 @@
                                 "from"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "result": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "draw"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "result"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                         },
                         "location": {
                           "nullable": true,
@@ -26263,9 +26735,45 @@
                                   "from"
                                 ],
                                 "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_result"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "result": {
+                                    "type": "string",
+                                    "enum": [
+                                      "won",
+                                      "lost",
+                                      "draw"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "result"
+                                ],
+                                "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                           },
                           "location": {
                             "nullable": true,
@@ -28147,9 +28655,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -29636,9 +30180,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -31115,9 +31695,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -32612,9 +33228,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -34252,9 +34904,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -35724,9 +36412,45 @@
                                 "from"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "live_result"
+                                  ]
+                                },
+                                "game": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fanorona",
+                                    "ludo",
+                                    "eights",
+                                    "words",
+                                    "dots",
+                                    "memory"
+                                  ]
+                                },
+                                "result": {
+                                  "type": "string",
+                                  "enum": [
+                                    "won",
+                                    "lost",
+                                    "draw"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "game",
+                                "result"
+                              ],
+                              "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                         },
                         "location": {
                           "nullable": true,
@@ -37207,9 +37931,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -38676,9 +39436,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -40145,9 +40941,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -41733,9 +42565,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -43226,9 +44094,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -44820,9 +45724,45 @@
                                   "from"
                                 ],
                                 "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "live_result"
+                                    ]
+                                  },
+                                  "game": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fanorona",
+                                      "ludo",
+                                      "eights",
+                                      "words",
+                                      "dots",
+                                      "memory"
+                                    ]
+                                  },
+                                  "result": {
+                                    "type": "string",
+                                    "enum": [
+                                      "won",
+                                      "lost",
+                                      "draw"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "game",
+                                  "result"
+                                ],
+                                "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                           },
                           "location": {
                             "nullable": true,
@@ -46952,9 +47892,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -50704,9 +51680,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,
@@ -51877,6 +52889,10 @@
                                 "nullable": true,
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -51988,6 +53004,10 @@
                           "nullable": true,
                           "type": "string",
                           "format": "uri"
+                        },
+                        "alias": {
+                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -52081,6 +53101,10 @@
                           "nullable": true,
                           "type": "string",
                           "format": "uri"
+                        },
+                        "alias": {
+                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -52233,6 +53257,10 @@
                           "nullable": true,
                           "type": "string",
                           "format": "uri"
+                        },
+                        "alias": {
+                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -52345,6 +53373,10 @@
                           "nullable": true,
                           "type": "string",
                           "format": "uri"
+                        },
+                        "alias": {
+                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -52629,6 +53661,10 @@
                           "nullable": true,
                           "type": "string",
                           "format": "uri"
+                        },
+                        "alias": {
+                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -53279,9 +54315,45 @@
                                           "from"
                                         ],
                                         "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "live_result"
+                                            ]
+                                          },
+                                          "game": {
+                                            "type": "string",
+                                            "enum": [
+                                              "fanorona",
+                                              "ludo",
+                                              "eights",
+                                              "words",
+                                              "dots",
+                                              "memory"
+                                            ]
+                                          },
+                                          "result": {
+                                            "type": "string",
+                                            "enum": [
+                                              "won",
+                                              "lost",
+                                              "draw"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "game",
+                                          "result"
+                                        ],
+                                        "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -54738,9 +55810,45 @@
                                           "from"
                                         ],
                                         "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "live_result"
+                                            ]
+                                          },
+                                          "game": {
+                                            "type": "string",
+                                            "enum": [
+                                              "fanorona",
+                                              "ludo",
+                                              "eights",
+                                              "words",
+                                              "dots",
+                                              "memory"
+                                            ]
+                                          },
+                                          "result": {
+                                            "type": "string",
+                                            "enum": [
+                                              "won",
+                                              "lost",
+                                              "draw"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "game",
+                                          "result"
+                                        ],
+                                        "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -55797,6 +56905,10 @@
                                               "nullable": true,
                                               "type": "string",
                                               "format": "uri"
+                                            },
+                                            "alias": {
+                                              "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                              "type": "string"
                                             }
                                           },
                                           "required": [
@@ -56387,9 +57499,45 @@
                                               "from"
                                             ],
                                             "additionalProperties": false
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "live_result"
+                                                ]
+                                              },
+                                              "game": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "fanorona",
+                                                  "ludo",
+                                                  "eights",
+                                                  "words",
+                                                  "dots",
+                                                  "memory"
+                                                ]
+                                              },
+                                              "result": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "won",
+                                                  "lost",
+                                                  "draw"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "game",
+                                              "result"
+                                            ],
+                                            "additionalProperties": false
                                           }
                                         ],
-                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                                       },
                                       "location": {
                                         "nullable": true,
@@ -57869,9 +59017,45 @@
                                                 "from"
                                               ],
                                               "additionalProperties": false
+                                            },
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "type": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "live_result"
+                                                  ]
+                                                },
+                                                "game": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "fanorona",
+                                                    "ludo",
+                                                    "eights",
+                                                    "words",
+                                                    "dots",
+                                                    "memory"
+                                                  ]
+                                                },
+                                                "result": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "won",
+                                                    "lost",
+                                                    "draw"
+                                                  ]
+                                                }
+                                              },
+                                              "required": [
+                                                "type",
+                                                "game",
+                                                "result"
+                                              ],
+                                              "additionalProperties": false
                                             }
                                           ],
-                                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                                         },
                                         "location": {
                                           "nullable": true,
@@ -61312,9 +62496,45 @@
                             "from"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "live_result"
+                              ]
+                            },
+                            "game": {
+                              "type": "string",
+                              "enum": [
+                                "fanorona",
+                                "ludo",
+                                "eights",
+                                "words",
+                                "dots",
+                                "memory"
+                              ]
+                            },
+                            "result": {
+                              "type": "string",
+                              "enum": [
+                                "won",
+                                "lost",
+                                "draw"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "game",
+                            "result"
+                          ],
+                          "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you"
                     },
                     "location": {
                       "nullable": true,

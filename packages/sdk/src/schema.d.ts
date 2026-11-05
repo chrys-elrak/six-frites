@@ -2945,6 +2945,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 /**
                                  * Format: date-time
@@ -3106,6 +3108,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                alias?: string;
                             };
                             message: string | null;
                             /** @enum {string} */
@@ -3338,6 +3342,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                alias?: string;
                             };
                         };
                     };
@@ -3433,6 +3439,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 inviteCode: string;
                                 /** Format: date-time */
@@ -3500,6 +3508,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 lastDeliveredMessageId: string | null;
                                 /** Format: date-time */
@@ -3617,7 +3627,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -3649,6 +3659,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -3947,7 +3964,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -3979,6 +3996,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -4339,7 +4363,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -4371,6 +4395,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -4590,6 +4621,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 lastDeliveredMessageId: string | null;
                                 /** Format: date-time */
@@ -4707,7 +4740,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -4739,6 +4772,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -5037,7 +5077,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -5069,6 +5109,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -5325,6 +5372,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 lastDeliveredMessageId: string | null;
                                 /** Format: date-time */
@@ -5442,7 +5491,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -5474,6 +5523,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -5772,7 +5828,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -5804,6 +5860,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -6058,6 +6121,8 @@ export interface paths {
                                         displayName: string;
                                         /** Format: uri */
                                         avatarUrl: string | null;
+                                        /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                        alias?: string;
                                     };
                                     lastDeliveredMessageId: string | null;
                                     /** Format: date-time */
@@ -6175,7 +6240,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -6207,6 +6272,13 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                         roomId: string;
                                         from: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "live_result";
+                                        /** @enum {string} */
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                        /** @enum {string} */
+                                        result: "won" | "lost" | "draw";
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -6505,7 +6577,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -6537,6 +6609,13 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                         roomId: string;
                                         from: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "live_result";
+                                        /** @enum {string} */
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                        /** @enum {string} */
+                                        result: "won" | "lost" | "draw";
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -6792,6 +6871,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 lastDeliveredMessageId: string | null;
                                 /** Format: date-time */
@@ -6909,7 +6990,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -6941,6 +7022,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -7239,7 +7327,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -7271,6 +7359,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -7579,6 +7674,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 lastDeliveredMessageId: string | null;
                                 /** Format: date-time */
@@ -7696,7 +7793,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -7728,6 +7825,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -8026,7 +8130,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -8058,6 +8162,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -8507,7 +8618,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -8539,6 +8650,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -8859,7 +8977,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -8891,6 +9009,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -9211,7 +9336,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -9243,6 +9368,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -9566,7 +9698,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -9598,6 +9730,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -9944,7 +10083,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -9976,6 +10115,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -10295,7 +10441,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -10327,6 +10473,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -10651,7 +10804,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -10683,6 +10836,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -11001,7 +11161,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -11033,6 +11193,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -11351,7 +11518,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -11383,6 +11550,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -11732,7 +11906,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -11764,6 +11938,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -12092,7 +12273,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -12124,6 +12305,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -12492,7 +12680,7 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -12524,6 +12712,13 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                     roomId: string;
                                     from: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
                                 }) | null;
                                 location: {
                                     lat: number;
@@ -12986,7 +13181,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -13018,6 +13213,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -13967,7 +14169,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -13999,6 +14201,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;
@@ -14368,6 +14577,8 @@ export interface paths {
                                     displayName: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
                                 };
                                 chatId: string;
                                 /** @description Their own name, or their alias if they don't share it with you */
@@ -14417,6 +14628,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                alias?: string;
                             };
                             chatId: string;
                             /** @description Their own name, or their alias if they don't share it with you */
@@ -14472,6 +14685,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                alias?: string;
                             };
                             /** @description Your direct chat with them, if you already have one */
                             chatId: string | null;
@@ -14583,6 +14798,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                alias?: string;
                             };
                             chatId: string;
                             /** @description Their own name, or their alias if they don't share it with you */
@@ -14661,6 +14878,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                alias?: string;
                             };
                             chatId: string;
                             /** @description Their own name, or their alias if they don't share it with you */
@@ -14801,6 +15020,8 @@ export interface paths {
                                 displayName: string;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                alias?: string;
                             };
                             chatId: string;
                             /** @description Their own name, or their alias if they don't share it with you */
@@ -14964,7 +15185,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -14996,6 +15217,13 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                         roomId: string;
                                         from: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "live_result";
+                                        /** @enum {string} */
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                        /** @enum {string} */
+                                        result: "won" | "lost" | "draw";
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -15279,7 +15507,7 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -15311,6 +15539,13 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                         roomId: string;
                                         from: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "live_result";
+                                        /** @enum {string} */
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                        /** @enum {string} */
+                                        result: "won" | "lost" | "draw";
                                     }) | null;
                                     location: {
                                         lat: number;
@@ -15525,6 +15760,8 @@ export interface paths {
                                             displayName: string;
                                             /** Format: uri */
                                             avatarUrl: string | null;
+                                            /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                            alias?: string;
                                         };
                                         lastDeliveredMessageId: string | null;
                                         /** Format: date-time */
@@ -15642,7 +15879,7 @@ export interface paths {
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                         action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
@@ -15674,6 +15911,13 @@ export interface paths {
                                             game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                             roomId: string;
                                             from: string;
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "live_result";
+                                            /** @enum {string} */
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                            /** @enum {string} */
+                                            result: "won" | "lost" | "draw";
                                         }) | null;
                                         location: {
                                             lat: number;
@@ -15972,7 +16216,7 @@ export interface paths {
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                                         action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
@@ -16004,6 +16248,13 @@ export interface paths {
                                             game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                             roomId: string;
                                             from: string;
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "live_result";
+                                            /** @enum {string} */
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                            /** @enum {string} */
+                                            result: "won" | "lost" | "draw";
                                         }) | null;
                                         location: {
                                             lat: number;
@@ -17286,7 +17537,7 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -17318,6 +17569,13 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
                                 roomId: string;
                                 from: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "live_result";
+                                /** @enum {string} */
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory";
+                                /** @enum {string} */
+                                result: "won" | "lost" | "draw";
                             }) | null;
                             location: {
                                 lat: number;

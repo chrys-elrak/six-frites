@@ -94,7 +94,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         ) : (
           <Phone size={14} color={color} />
         )
-      ) : m.action?.type === "live_invite" ? (
+      ) : m.action?.type === "live_invite" || m.action?.type === "live_result" ? (
         <Gamepad2 size={14} color={color} />
       ) : (
         <Timer size={14} color={color} />
