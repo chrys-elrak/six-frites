@@ -14,7 +14,7 @@ import {
   memoryScores,
   parseCommand,
 } from "@six/shared";
-import { Bot, ChevronLeft, LogOut, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, Volume2, VolumeX, X } from "lucide-react";
+import { Bot, ChevronLeft, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -547,7 +547,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   const meId = useSession((s) => s.user!.id);
   const { room, gone, socket } = useLiveRoom(roomId);
   const [menu, setMenu] = useState(false);
-  const [soundMenu, setSoundMenu] = useState(false);
+  const [ending, setEnding] = useState(false);
   const [givingUp, setGivingUp] = useState(false);
   const sound = useGameSound();
   useGameMusic(!!room && !gone);
@@ -583,24 +583,8 @@ export function LiveRoom({ roomId }: { roomId: string }) {
         </h1>
         {room && <HowToPlay game={room.game} className="size-10 text-stone-600 opacity-100 dark:text-stone-300" />}
         {room && !gone && (
-          <button type="button" onClick={() => setSoundMenu(true)} aria-label={tr.live.sound} title={tr.live.sound} className={iconButton}>
-            {sound.effects || sound.music ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
-          </button>
-        )}
-        {room?.status === "playing" && room.mySeat !== null && !gone && (
-          <button
-            type="button"
-            onClick={() => setMenu(true)}
-            aria-label={tr.live.end}
-            title={tr.live.end}
-            className={iconButton}
-          >
+          <button type="button" onClick={() => setMenu(true)} aria-label={tr.live.options} title={tr.live.options} className={iconButton}>
             <MoreVertical className="size-5" />
-          </button>
-        )}
-        {room && !gone && (
-          <button type="button" onClick={leave} aria-label={tr.live.leave} title={tr.live.leave} className={iconButton}>
-            <LogOut className="size-5" />
           </button>
         )}
       </header>
@@ -690,19 +674,8 @@ export function LiveRoom({ roomId }: { roomId: string }) {
           react={(lineId, emoji) => void ask("live:react", { lineId, emoji })}
         />
       )}
-      {menu && (
+      {menu && room && (
         <Sheet
-          title={tr.live.endHint}
-          actions={[
-            { label: tr.live.end, destructive: true, onSelect: () => exit("live:end") },
-            { label: tr.live.giveUp, onSelect: () => setGivingUp(true) },
-          ]}
-          onClose={() => setMenu(false)}
-        />
-      )}
-      {soundMenu && (
-        <Sheet
-          title={tr.live.sound}
           actions={[
             {
               label: `${tr.live.effects} · ${sound.effects ? tr.common.on : tr.common.off}`,
@@ -714,8 +687,22 @@ export function LiveRoom({ roomId }: { roomId: string }) {
               keepOpen: true,
               onSelect: () => setGameSound({ music: !sound.music }),
             },
+            { label: tr.live.leave, onSelect: leave },
+            ...(room.status === "playing" && room.mySeat !== null
+              ? [
+                  { label: tr.live.giveUp, onSelect: () => setGivingUp(true) },
+                  { label: tr.live.end, destructive: true, onSelect: () => setEnding(true) },
+                ]
+              : []),
           ]}
-          onClose={() => setSoundMenu(false)}
+          onClose={() => setMenu(false)}
+        />
+      )}
+      {ending && (
+        <Sheet
+          title={tr.live.endHint}
+          actions={[{ label: tr.live.end, destructive: true, onSelect: () => exit("live:end") }]}
+          onClose={() => setEnding(false)}
         />
       )}
       {givingUp && (
