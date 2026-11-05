@@ -5,15 +5,12 @@ import { PublicUser } from "./invites.js";
 export const ContactDTO = z.object({
   user: PublicUser.describe("With your custom name and photo applied"),
   chatId: Id,
-  originalName: z.string().describe("Their own name, or their alias if they don't share it with you"),
+  originalName: z.string().describe("Their alias, or the name of an account like Frite Bot that shows its own"),
   customName: z.string().nullable(),
   hasCustomPhoto: z.boolean(),
-  sharingProfile: z.boolean().describe("You show them your real name and photo"),
 });
 export type ContactDTO = z.infer<typeof ContactDTO>;
 
-export const ShareProfileInput = z.object({ shared: z.boolean() });
-export type ShareProfileInput = z.infer<typeof ShareProfileInput>;
 
 export const ContactListQuery = z.object({
   q: z.string().trim().max(64).optional(),

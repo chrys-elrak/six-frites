@@ -26,7 +26,7 @@ export function AppLockSettings() {
   });
 
   return (
-    <section className="space-y-3">
+    <section id="app-lock" ref={(el) => void (location.hash === "#app-lock" && el?.scrollIntoView())} className="space-y-3">
       <SectionTitle>{tr.settings.appLock.title}</SectionTitle>
       <Card className="flex items-start gap-3 p-4">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand/15 text-brand">

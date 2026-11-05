@@ -482,9 +482,6 @@ export const ChatDTO = z.object({
   mutedUntil: IsoDate.nullable().describe("When a timed mute ends; null while muted for good or not muted"),
   pinned: z.boolean(),
   safeView: z.boolean().describe("Your setting: blur the photos and videos in the chat, yours included, until you tap them"),
-  sharingProfile: z
-    .boolean()
-    .describe("You show the other person your real name and photo; until then they only see your alias"),
   autoDeleteSecs: z
     .number()
     .int()

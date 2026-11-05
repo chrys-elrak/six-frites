@@ -1,7 +1,8 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateContact } from "@/lib/actions";
@@ -12,7 +13,7 @@ import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
-import { PrimaryButton, Toggle } from "./ui";
+import { PrimaryButton } from "./ui";
 import { Portal } from "./portal";
 import { ReportDialog } from "./report-dialog";
 import { SafetyNumber } from "./safety-number";
@@ -35,11 +36,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const hasLock = useSession((s) => s.user!.hasAppLock);
   const [askingCode, setAskingCode] = useState(false);
   const [label, setLabel] = useState<{ code: string; text: string; saved: string } | null>(null);
-  const share = useMutation({
-    mutationFn: async (shared: boolean) =>
-      unwrap(await six.api.PUT("/v1/contacts/{userId}/profile", { params: { path: { userId } }, body: { shared } })),
-    onSuccess: (dto) => qc.setQueryData(["contact", userId], dto),
-  });
 
   const shuffle = () =>
     void suggestAvatars()
@@ -232,16 +228,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 </p>
               )}
 
-              <div className="overflow-hidden rounded-xl bg-stone-50 dark:bg-stone-800/50">
-                <Toggle
-                  label={tr.contacts.shareProfile}
-                  hint={tr.contacts.shareProfileHint}
-                  checked={share.isPending ? !!share.variables : c.sharingProfile}
-                  disabled={share.isPending}
-                  onChange={(on) => share.mutate(on)}
-                />
-              </div>
-
               <div className="space-y-2 rounded-xl bg-stone-50 p-3 dark:bg-stone-800/50">
                 <p className="flex items-center gap-1.5 text-sm font-medium text-stone-600 dark:text-stone-300">
                   <Lock className="size-4" /> {tr.contacts.privateLabel}
@@ -258,10 +244,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 ) : (
                   <>
                     <p className="text-xs text-stone-500">{hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}</p>
-                    {hasLock && (
+                    {hasLock ? (
                       <button type="button" onClick={() => setAskingCode(true)} className="text-sm font-medium text-brand">
                         {tr.contacts.openLabel}
                       </button>
+                    ) : (
+                      <Link href="/settings#app-lock" className="text-sm font-medium text-brand">
+                        {tr.settings.appLock.turnOnTitle}
+                      </Link>
                     )}
                   </>
                 )}

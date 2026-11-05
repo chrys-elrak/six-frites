@@ -129,7 +129,6 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
       sealed: me.draftSealed ? me.draft : null,
       at: me.draftAt.toISOString(),
     },
-    sharingProfile: me.showProfile,
     autoDeleteSecs: chat.autoDeleteSecs,
     vanish: chat.vanish,
     theme: chat.theme,

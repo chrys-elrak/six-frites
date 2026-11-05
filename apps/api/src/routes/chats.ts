@@ -16,7 +16,6 @@ import {
   ContactDTO,
   ContactLabelDTO,
   ContactLabelInput,
-  ShareProfileInput,
   ContactListQuery,
   FindUserQuery,
   FoundUserDTO,
@@ -51,7 +50,6 @@ import {
   readLabel,
   removeContact,
   setLabel,
-  shareProfile,
   updateContact,
 } from "../services/contacts.js";
 import { blockUser, unblockUser } from "../services/blocks.js";
@@ -751,23 +749,6 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setLabel(req.auth.userId, req.params.userId, req.body),
-  );
-
-  app.put(
-    "/contacts/:userId/profile",
-    {
-      schema: {
-        tags: ["contacts"],
-        summary: "Show or hide your real name and photo to a contact",
-        description:
-          "Everyone else sees your alias and no photo. Both of you get chat.updated; adding each other again starts hidden.",
-        security,
-        params: z.object({ userId: Id }),
-        body: ShareProfileInput,
-        response: { 200: ContactDTO },
-      },
-    },
-    (req) => shareProfile(req.auth.userId, req.params.userId, req.body.shared),
   );
 
   app.delete(

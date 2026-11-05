@@ -11,7 +11,7 @@ const en = {
     },
     {
       title: "Your own disguise",
-      body: "Each person sees you under a different colour code like #EF4535, with a food picture. To show someone your real name and photo, open your chat, tap their name at the top and turn on Share my name and photo.",
+      body: "Each person sees you under a different colour code like #EF4535, with a food picture. Your real name and photo stay hidden.",
     },
     {
       title: "Bring your friends",
@@ -41,7 +41,7 @@ const fr: typeof en = {
     },
     {
       title: "Votre déguisement",
-      body: "Chaque personne vous voit sous un code couleur différent comme #EF4535, avec une image de nourriture. Pour montrer votre vrai nom et votre photo à quelqu'un, ouvrez votre discussion, touchez son nom en haut et activez Partager mon nom et ma photo.",
+      body: "Chaque personne vous voit sous un code couleur différent comme #EF4535, avec une image de nourriture. Votre vrai nom et votre photo restent cachés.",
     },
     {
       title: "Faites venir vos amis",
@@ -71,7 +71,7 @@ const mg: typeof en = {
     },
     {
       title: "Ny sarontava anao",
-      body: "Samy mahita anao amin'ny kaody loko hafa toy ny #EF4535 ny tsirairay, miaraka amin'ny sarin-tsakafo. Raha te hampiseho ny tena anaranao sy ny sarinao amin'olona ianao, sokafy ny resakao, tsindrio ny anarany eo ambony ary alefaso ny Zarao ny anarako sy ny sariko.",
+      body: "Samy mahita anao amin'ny kaody loko hafa toy ny #EF4535 ny tsirairay, miaraka amin'ny sarin-tsakafo. Miafina foana ny tena anaranao sy ny sarinao.",
     },
     {
       title: "Ento ny namanao",

@@ -315,6 +315,7 @@ model ChatMember {
   lastReadAt             DateTime?
   hidden                 Boolean   @default(false)
   clearedAt              DateTime?
+  /// Only bot accounts show their own name and photo; people always appear under an alias.
   showProfile            Boolean   @default(false)
   safeView               Boolean   @default(false)
   draft                  String?

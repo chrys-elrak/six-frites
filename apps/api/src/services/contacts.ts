@@ -75,7 +75,6 @@ interface ContactRow {
   avatarKey: string | null;
   customName: string | null;
   photoKey: string | null;
-  sharingProfile: boolean;
   name: string;
 }
 
@@ -87,7 +86,6 @@ function toContactDTO(r: ContactRow): ContactDTO {
     originalName: r.originalName,
     customName: r.customName,
     hasCustomPhoto: r.photoKey !== null,
-    sharingProfile: r.sharingProfile,
   };
 }
 
@@ -100,7 +98,7 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
              CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END AS "originalName",
              CASE WHEN cm."showProfile" THEN u."avatarUrl" END AS "avatarUrl",
              CASE WHEN cm."showProfile" THEN u."avatarKey" END AS "avatarKey",
-             o."displayName" AS "customName", o."photoKey", me."showProfile" AS "sharingProfile", me.archived,
+             o."displayName" AS "customName", o."photoKey", me.archived,
              COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END) AS name
       FROM "ChatMember" cm
       JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct' AND c."supportUserId" IS NULL
@@ -219,16 +217,6 @@ export async function setLabel(ownerId: string, contactId: string, input: Contac
     await prisma.contactOverride.delete({ where: key });
   }
   return { label: saved.label };
-}
-
-/** Shows or hides the user's real name and photo to a contact, who otherwise sees their alias. */
-export async function shareProfile(userId: string, contactId: string, shared: boolean) {
-  const { chatId } = await getContact(userId, contactId);
-  await withEvents(async (tx, emit) => {
-    await tx.chatMember.update({ where: { chatId_userId: { chatId, userId } }, data: { showProfile: shared } });
-    for (const id of [userId, contactId]) emit(id, "chat.updated", await getChat(id, chatId, tx));
-  });
-  return toContactDTO(await getContact(userId, contactId));
 }
 
 /**

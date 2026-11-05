@@ -12,7 +12,7 @@ import {
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Check, ChevronRight, LogOut, Monitor, Smartphone, Volume2 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
@@ -30,7 +30,7 @@ import { brand, brandInk, useTheme } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
 import { AppLockSettings } from "./app-lock";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { openBotChat } from "@/lib/chats";
 import { Avatar } from "./avatar";
 import { QrCode } from "./qr-code";
@@ -645,6 +645,15 @@ export function SettingsPanel() {
   const t = useTheme();
   const tr = useT();
   const link = (url: string) => () => void Linking.openURL(url);
+  const { focus } = useLocalSearchParams<{ focus?: string }>();
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  const lockY = useRef<number | null>(null);
+  const toLock = () => {
+    if (focus !== "app-lock" || lockY.current === null) return;
+    scroller.current?.scrollTo({ y: lockY.current });
+    router.setParams({ focus: undefined });
+  };
+  useEffect(toLock);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
@@ -654,7 +663,7 @@ export function SettingsPanel() {
           <Text style={{ color: t.textSoft, fontWeight: "600" }}>{tr.settings.signOut}</Text>
         </Pressable>
       </BrandBar>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scroller} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <UpdateCard />
         <ProfileCard />
         <WhatsNew />
@@ -668,7 +677,14 @@ export function SettingsPanel() {
         <Referrals />
         <Devices />
         <EncryptionSettings />
-        <AppLockSettings />
+        <View
+          onLayout={(e) => {
+            lockY.current = e.nativeEvent.layout.y;
+            toLock();
+          }}
+        >
+          <AppLockSettings />
+        </View>
         <BlockedPeople />
         <AccountCard />
         <LegalLinks />

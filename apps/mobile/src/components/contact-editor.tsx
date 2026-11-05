@@ -1,5 +1,6 @@
 import { SixApiError, unwrap } from "@six/sdk";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -18,7 +19,7 @@ import { brand, useTheme } from "@/lib/theme";
 import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { SafetyNumber } from "./encryption-settings";
-import { IconButton, Notice, PrimaryButton, Toggle } from "./ui";
+import { IconButton, Notice, PrimaryButton } from "./ui";
 
 const MAX_BYTES = 64 * 1024;
 
@@ -30,11 +31,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const contact = useQuery({
     queryKey: ["contact", userId],
     queryFn: async () => unwrap(await six.api.GET("/v1/contacts/{userId}", { params: { path: { userId } } })),
-  });
-  const share = useMutation({
-    mutationFn: async (shared: boolean) =>
-      unwrap(await six.api.PUT("/v1/contacts/{userId}/profile", { params: { path: { userId } }, body: { shared } })),
-    onSuccess: (dto) => qc.setQueryData(["contact", userId], dto),
   });
   const [name, setName] = useState<string | null>(null);
   const [photo, setPhoto] = useState<string | null | undefined>(undefined);
@@ -202,16 +198,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 </View>
               )}
 
-              <View style={{ borderRadius: 12, overflow: "hidden", backgroundColor: t.field }}>
-                <Toggle
-                  label={tr.contacts.shareProfile}
-                  hint={tr.contacts.shareProfileHint}
-                  value={share.isPending ? !!share.variables : c.sharingProfile}
-                  disabled={share.isPending}
-                  onChange={(on) => share.mutate(on)}
-                />
-              </View>
-
               <View style={[styles.reveal, { backgroundColor: t.field }]}>
                 <View style={styles.labelHead}>
                   <Lock size={14} color={t.textSoft} />
@@ -232,11 +218,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                     <Text style={{ color: t.muted, fontSize: 12 }}>
                       {hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}
                     </Text>
-                    {hasLock && (
-                      <Pressable onPress={() => setAskingCode(true)} hitSlop={6}>
-                        <Text style={{ color: brand, fontSize: 14, fontWeight: "600" }}>{tr.contacts.openLabel}</Text>
-                      </Pressable>
-                    )}
+                    <Pressable
+                      onPress={() => (hasLock ? setAskingCode(true) : router.navigate("/settings?focus=app-lock"))}
+                      hitSlop={6}
+                    >
+                      <Text style={{ color: brand, fontSize: 14, fontWeight: "600" }}>
+                        {hasLock ? tr.contacts.openLabel : tr.settings.appLock.turnOnTitle}
+                      </Text>
+                    </Pressable>
                   </>
                 )}
               </View>

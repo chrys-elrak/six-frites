@@ -129,10 +129,9 @@ describe("contacts", () => {
     for (const name of ["Zed", "adam", "Bea"]) {
       const invite = await call(host, "POST", "/v1/invites", {});
       const guest = await signUp(name, { inviteCode: invite.json().code });
-      await call(guest, "PUT", `/v1/contacts/${host.user.id}/profile`, { shared: true });
+      await call(host, "PATCH", `/v1/contacts/${guest.user.id}`, { displayName: name });
     }
-    const names = (page: { items: { user: { displayName: string } }[] }) =>
-      page.items.map((c) => c.user.displayName.split("-")[0]);
+    const names = (page: { items: { user: { displayName: string } }[] }) => page.items.map((c) => c.user.displayName);
 
     const first = await get(host, "/v1/contacts?limit=2");
     const second = await get(host, `/v1/contacts?limit=2&cursor=${first.nextCursor}`);
@@ -146,9 +145,8 @@ const PNG_1PX =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 describe("your own name and photo", () => {
-  it("reach the people you chat with, and the old photo is deleted", async () => {
+  it("stay behind your alias for the people you chat with, and the old photo is deleted", async () => {
     const { host, guest, chatId } = await makeFriends();
-    await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: true });
     const head = (await get(guest, "/v1/sync")).cursor;
 
     const me = (await call(host, "PATCH", "/v1/me", { displayName: "Chef", photo: PNG_1PX })).json();
@@ -159,21 +157,21 @@ describe("your own name and photo", () => {
 
     const { events } = await get(guest, `/v1/sync?since=${head}`);
     const chat = events.find((e: { type: string; data: { id: string } }) => e.type === "chat.updated" && e.data.id === chatId);
-    expect(chat.data.members.find((m: { user: { id: string } }) => m.user.id === host.user.id).user).toMatchObject({
-      displayName: "Chef",
-      avatarUrl: me.avatarUrl,
+    expect(chat.data.members.find((m: { user: { id: string } }) => m.user.id === host.user.id).user).toEqual({
+      id: host.user.id,
+      displayName: pairAlias(guest.user.id, host.user.id),
+      avatarUrl: null,
     });
 
     expect((await call(host, "PATCH", "/v1/me", { photo: null })).json().avatarUrl).toBeNull();
     expect((await fetch(me.avatarUrl)).status).toBe(404);
   });
 
-  it("stay hidden behind a different alias for each contact until shared with them", async () => {
+  it("stay hidden behind a different alias for each contact", async () => {
     expect([pairAlias("a", "b"), pairAlias("b", "a")]).toEqual(["#D8160C", "#7A24DB"]);
     const { host, guest, chatId } = await makeFriends();
     const other = await signUp("other", { inviteCode: (await call(host, "POST", "/v1/invites", {})).json().code });
     await call(host, "PATCH", "/v1/me", { photo: PNG_1PX });
-    const me = await get(host, "/v1/me");
     const alias = pairAlias(guest.user.id, host.user.id);
     const seen = async () =>
       (await get(guest, `/v1/chats/${chatId}`)).members.find((m: { user: { id: string } }) => m.user.id === host.user.id).user;
@@ -195,16 +193,6 @@ describe("your own name and photo", () => {
     });
 
     expect(pairAlias(other.user.id, host.user.id)).not.toBe(alias);
-
-    const shared = (await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: true })).json();
-    expect(shared.sharingProfile).toBe(true);
-    expect((await get(host, `/v1/chats/${chatId}`)).sharingProfile).toBe(true);
-    expect(await seen()).toMatchObject({ displayName: me.displayName, avatarUrl: expect.any(String) });
-    expect((await get(guest, "/v1/contacts?q=host")).items).toHaveLength(1);
-    expect((await get(guest, `/v1/chats/${chatId}`)).sharingProfile).toBe(false);
-
-    await call(host, "PUT", `/v1/contacts/${guest.user.id}/profile`, { shared: false });
-    expect(await seen()).toEqual({ id: host.user.id, displayName: alias, avatarUrl: null });
   });
 });
 
@@ -277,12 +265,11 @@ describe("custom contact names and photos", () => {
     expect((await get(host, "/v1/contacts?q=noah")).items).toHaveLength(0);
   });
 
-  it("keep showing a renamed contact's own name, and go back to it", async () => {
+  it("keep showing a renamed contact's alias, and go back to it", async () => {
     const { host, guest } = await makeFriends();
-    await call(guest, "PUT", `/v1/contacts/${host.user.id}/profile`, { shared: true });
     const url = `/v1/contacts/${guest.user.id}`;
     const renamed = (await call(host, "PATCH", url, { displayName: "Bestie" })).json();
-    expect(renamed).toMatchObject({ customName: "Bestie", originalName: expect.stringMatching(/^guest/) });
+    expect(renamed).toMatchObject({ customName: "Bestie", originalName: pairAlias(host.user.id, guest.user.id) });
 
     const back = (await call(host, "PATCH", url, { displayName: null })).json();
     expect(back).toMatchObject({ customName: null, originalName: renamed.originalName });

@@ -3891,8 +3891,6 @@ export interface paths {
                             pinned: boolean;
                             /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
-                            /** @description You show the other person your real name and photo; until then they only see your alias */
-                            sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
                             /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
@@ -5070,8 +5068,6 @@ export interface paths {
                             pinned: boolean;
                             /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
-                            /** @description You show the other person your real name and photo; until then they only see your alias */
-                            sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
                             /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
@@ -5865,8 +5861,6 @@ export interface paths {
                             pinned: boolean;
                             /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
-                            /** @description You show the other person your real name and photo; until then they only see your alias */
-                            sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
                             /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
@@ -6658,8 +6652,6 @@ export interface paths {
                                 pinned: boolean;
                                 /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                                 safeView: boolean;
-                                /** @description You show the other person your real name and photo; until then they only see your alias */
-                                sharingProfile: boolean;
                                 /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                 autoDeleteSecs: number | null;
                                 /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
@@ -7452,8 +7444,6 @@ export interface paths {
                             pinned: boolean;
                             /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
-                            /** @description You show the other person your real name and photo; until then they only see your alias */
-                            sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
                             /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
@@ -8299,8 +8289,6 @@ export interface paths {
                             pinned: boolean;
                             /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
-                            /** @description You show the other person your real name and photo; until then they only see your alias */
-                            sharingProfile: boolean;
                             /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                             autoDeleteSecs: number | null;
                             /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
@@ -15207,12 +15195,10 @@ export interface paths {
                                     alias?: string;
                                 };
                                 chatId: string;
-                                /** @description Their own name, or their alias if they don't share it with you */
+                                /** @description Their alias, or the name of an account like Frite Bot that shows its own */
                                 originalName: string;
                                 customName: string | null;
                                 hasCustomPhoto: boolean;
-                                /** @description You show them your real name and photo */
-                                sharingProfile: boolean;
                             }[];
                             nextCursor: string | null;
                         };
@@ -15258,12 +15244,10 @@ export interface paths {
                                 alias?: string;
                             };
                             chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you */
+                            /** @description Their alias, or the name of an account like Frite Bot that shows its own */
                             originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
-                            /** @description You show them your real name and photo */
-                            sharingProfile: boolean;
                         };
                     };
                 };
@@ -15428,12 +15412,10 @@ export interface paths {
                                 alias?: string;
                             };
                             chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you */
+                            /** @description Their alias, or the name of an account like Frite Bot that shows its own */
                             originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
-                            /** @description You show them your real name and photo */
-                            sharingProfile: boolean;
                         };
                     };
                 };
@@ -15508,12 +15490,10 @@ export interface paths {
                                 alias?: string;
                             };
                             chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you */
+                            /** @description Their alias, or the name of an account like Frite Bot that shows its own */
                             originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
-                            /** @description You show them your real name and photo */
-                            sharingProfile: boolean;
                         };
                     };
                 };
@@ -15598,70 +15578,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/contacts/{userId}/profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Show or hide your real name and photo to a contact
-         * @description Everyone else sees your alias and no photo. Both of you get chat.updated; adding each other again starts hidden.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        shared: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description With your custom name and photo applied */
-                            user: {
-                                id: string;
-                                displayName: string;
-                                /** Format: uri */
-                                avatarUrl: string | null;
-                                /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
-                                alias?: string;
-                            };
-                            chatId: string;
-                            /** @description Their own name, or their alias if they don't share it with you */
-                            originalName: string;
-                            customName: string | null;
-                            hasCustomPhoto: boolean;
-                            /** @description You show them your real name and photo */
-                            sharingProfile: boolean;
-                        };
-                    };
-                };
-            };
-        };
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -16790,8 +16706,6 @@ export interface paths {
                                     pinned: boolean;
                                     /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                                     safeView: boolean;
-                                    /** @description You show the other person your real name and photo; until then they only see your alias */
-                                    sharingProfile: boolean;
                                     /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
                                     autoDeleteSecs: number | null;
                                     /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */

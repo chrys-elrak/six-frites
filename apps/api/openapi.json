@@ -8540,10 +8540,6 @@
                       "type": "boolean",
                       "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show the other person your real name and photo; until then they only see your alias"
-                    },
                     "autoDeleteSecs": {
                       "nullable": true,
                       "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -10192,7 +10188,6 @@
                     "mutedUntil",
                     "pinned",
                     "safeView",
-                    "sharingProfile",
                     "autoDeleteSecs",
                     "vanish",
                     "theme",
@@ -13475,10 +13470,6 @@
                       "type": "boolean",
                       "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show the other person your real name and photo; until then they only see your alias"
-                    },
                     "autoDeleteSecs": {
                       "nullable": true,
                       "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -15127,7 +15118,6 @@
                     "mutedUntil",
                     "pinned",
                     "safeView",
-                    "sharingProfile",
                     "autoDeleteSecs",
                     "vanish",
                     "theme",
@@ -16825,10 +16815,6 @@
                       "type": "boolean",
                       "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show the other person your real name and photo; until then they only see your alias"
-                    },
                     "autoDeleteSecs": {
                       "nullable": true,
                       "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -18477,7 +18463,6 @@
                     "mutedUntil",
                     "pinned",
                     "safeView",
-                    "sharingProfile",
                     "autoDeleteSecs",
                     "vanish",
                     "theme",
@@ -20202,10 +20187,6 @@
                             "type": "boolean",
                             "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                           },
-                          "sharingProfile": {
-                            "type": "boolean",
-                            "description": "You show the other person your real name and photo; until then they only see your alias"
-                          },
                           "autoDeleteSecs": {
                             "nullable": true,
                             "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -21854,7 +21835,6 @@
                           "mutedUntil",
                           "pinned",
                           "safeView",
-                          "sharingProfile",
                           "autoDeleteSecs",
                           "vanish",
                           "theme",
@@ -23563,10 +23543,6 @@
                       "type": "boolean",
                       "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show the other person your real name and photo; until then they only see your alias"
-                    },
                     "autoDeleteSecs": {
                       "nullable": true,
                       "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -25215,7 +25191,6 @@
                     "mutedUntil",
                     "pinned",
                     "safeView",
-                    "sharingProfile",
                     "autoDeleteSecs",
                     "vanish",
                     "theme",
@@ -26999,10 +26974,6 @@
                       "type": "boolean",
                       "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show the other person your real name and photo; until then they only see your alias"
-                    },
                     "autoDeleteSecs": {
                       "nullable": true,
                       "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -28651,7 +28622,6 @@
                     "mutedUntil",
                     "pinned",
                     "safeView",
-                    "sharingProfile",
                     "autoDeleteSecs",
                     "vanish",
                     "theme",
@@ -54732,7 +54702,7 @@
                           },
                           "originalName": {
                             "type": "string",
-                            "description": "Their own name, or their alias if they don't share it with you"
+                            "description": "Their alias, or the name of an account like Frite Bot that shows its own"
                           },
                           "customName": {
                             "nullable": true,
@@ -54740,10 +54710,6 @@
                           },
                           "hasCustomPhoto": {
                             "type": "boolean"
-                          },
-                          "sharingProfile": {
-                            "type": "boolean",
-                            "description": "You show them your real name and photo"
                           }
                         },
                         "required": [
@@ -54751,8 +54717,7 @@
                           "chatId",
                           "originalName",
                           "customName",
-                          "hasCustomPhoto",
-                          "sharingProfile"
+                          "hasCustomPhoto"
                         ],
                         "additionalProperties": false
                       }
@@ -54847,7 +54812,7 @@
                     },
                     "originalName": {
                       "type": "string",
-                      "description": "Their own name, or their alias if they don't share it with you"
+                      "description": "Their alias, or the name of an account like Frite Bot that shows its own"
                     },
                     "customName": {
                       "nullable": true,
@@ -54855,10 +54820,6 @@
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
-                    },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show them your real name and photo"
                     }
                   },
                   "required": [
@@ -54866,8 +54827,7 @@
                     "chatId",
                     "originalName",
                     "customName",
-                    "hasCustomPhoto",
-                    "sharingProfile"
+                    "hasCustomPhoto"
                   ],
                   "additionalProperties": false
                 }
@@ -55100,7 +55060,7 @@
                     },
                     "originalName": {
                       "type": "string",
-                      "description": "Their own name, or their alias if they don't share it with you"
+                      "description": "Their alias, or the name of an account like Frite Bot that shows its own"
                     },
                     "customName": {
                       "nullable": true,
@@ -55108,10 +55068,6 @@
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
-                    },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show them your real name and photo"
                     }
                   },
                   "required": [
@@ -55119,8 +55075,7 @@
                     "chatId",
                     "originalName",
                     "customName",
-                    "hasCustomPhoto",
-                    "sharingProfile"
+                    "hasCustomPhoto"
                   ],
                   "additionalProperties": false
                 }
@@ -55216,7 +55171,7 @@
                     },
                     "originalName": {
                       "type": "string",
-                      "description": "Their own name, or their alias if they don't share it with you"
+                      "description": "Their alias, or the name of an account like Frite Bot that shows its own"
                     },
                     "customName": {
                       "nullable": true,
@@ -55224,10 +55179,6 @@
                     },
                     "hasCustomPhoto": {
                       "type": "boolean"
-                    },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show them your real name and photo"
                     }
                   },
                   "required": [
@@ -55235,8 +55186,7 @@
                     "chatId",
                     "originalName",
                     "customName",
-                    "hasCustomPhoto",
-                    "sharingProfile"
+                    "hasCustomPhoto"
                   ],
                   "additionalProperties": false
                 }
@@ -55412,119 +55362,6 @@
                   },
                   "required": [
                     "label"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/contacts/{userId}/profile": {
-      "put": {
-        "summary": "Show or hide your real name and photo to a contact",
-        "tags": [
-          "contacts"
-        ],
-        "description": "Everyone else sees your alias and no photo. Both of you get chat.updated; adding each other again starts hidden.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "shared": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "shared"
-                ]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            },
-            "in": "path",
-            "name": "userId",
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string",
-                          "minLength": 1
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "avatarUrl": {
-                          "nullable": true,
-                          "type": "string",
-                          "format": "uri"
-                        },
-                        "alias": {
-                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "displayName",
-                        "avatarUrl"
-                      ],
-                      "additionalProperties": false,
-                      "description": "With your custom name and photo applied"
-                    },
-                    "chatId": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "originalName": {
-                      "type": "string",
-                      "description": "Their own name, or their alias if they don't share it with you"
-                    },
-                    "customName": {
-                      "nullable": true,
-                      "type": "string"
-                    },
-                    "hasCustomPhoto": {
-                      "type": "boolean"
-                    },
-                    "sharingProfile": {
-                      "type": "boolean",
-                      "description": "You show them your real name and photo"
-                    }
-                  },
-                  "required": [
-                    "user",
-                    "chatId",
-                    "originalName",
-                    "customName",
-                    "hasCustomPhoto",
-                    "sharingProfile"
                   ],
                   "additionalProperties": false
                 }
@@ -60467,10 +60304,6 @@
                                     "type": "boolean",
                                     "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                                   },
-                                  "sharingProfile": {
-                                    "type": "boolean",
-                                    "description": "You show the other person your real name and photo; until then they only see your alias"
-                                  },
                                   "autoDeleteSecs": {
                                     "nullable": true,
                                     "description": "Shared by both people: new messages are deleted for everyone this long after they are sent",
@@ -62119,7 +61952,6 @@
                                   "mutedUntil",
                                   "pinned",
                                   "safeView",
-                                  "sharingProfile",
                                   "autoDeleteSecs",
                                   "vanish",
                                   "theme",
