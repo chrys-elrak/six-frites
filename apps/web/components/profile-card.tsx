@@ -3,10 +3,8 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import type { UpdateMeInput } from "@six/shared";
 import { useMutation } from "@tanstack/react-query";
-import { Camera } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useT } from "@/lib/i18n";
-import { toAvatarDataUrl } from "@/lib/image";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
@@ -18,7 +16,6 @@ export function ProfileCard() {
   const setUser = useSession((s) => s.setUser);
   const [name, setName] = useState(user.displayName);
   const [error, setError] = useState<string | null>(null);
-  const file = useRef<HTMLInputElement>(null);
 
   const save = useMutation({
     mutationFn: async (body: UpdateMeInput) => unwrap(await six.api.PATCH("/v1/me", { body })),
@@ -26,43 +23,12 @@ export function ProfileCard() {
     onError: (err) => setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave),
   });
 
-  async function pick(f: File | undefined) {
-    if (!f) return;
-    setError(null);
-    try {
-      save.mutate({ photo: await toAvatarDataUrl(f) });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
-    }
-  }
-
   const dirty = name.trim() !== user.displayName && name.trim().length > 0;
 
   return (
     <Card className="space-y-2 p-4">
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => file.current?.click()}
-          disabled={save.isPending}
-          className="group relative shrink-0 rounded-full"
-          aria-label={tr.settings.changePhoto}
-        >
-          <Avatar user={user} size="md" />
-          <span className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full bg-brand text-brand-ink ring-2 ring-white transition group-hover:scale-110 dark:ring-stone-900">
-            <Camera className="size-4" />
-          </span>
-        </button>
-        <input
-          ref={file}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            void pick(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
+        <Avatar user={user} size="md" />
         <form
           className="min-w-0 flex-1 space-y-1"
           onSubmit={(e) => {
@@ -91,16 +57,6 @@ export function ProfileCard() {
         </form>
       </div>
       <p className="text-sm text-stone-500 dark:text-stone-400">{tr.settings.seenAs}</p>
-      {user.avatarUrl && (
-        <button
-          type="button"
-          onClick={() => save.mutate({ photo: null })}
-          disabled={save.isPending}
-          className="text-sm font-medium text-red-600 disabled:opacity-50 dark:text-red-400"
-        >
-          {tr.settings.removePhoto}
-        </button>
-      )}
       {error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {error}

@@ -11,7 +11,7 @@ import {
   type UpdateMeInput,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Check, ChevronRight, LogOut, Monitor, Smartphone, Volume2 } from "lucide-react-native";
+import { Check, ChevronRight, LogOut, Monitor, Smartphone, Volume2 } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
@@ -22,7 +22,6 @@ import { useDataSaver } from "@/lib/data-saver";
 import { setPlainFont, usePlainFont } from "@/lib/font";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { playTone, useNotifyPrefs } from "@/lib/notify";
-import { pickAvatar } from "@/lib/media";
 import { registerPush } from "@/lib/push";
 import { logout, useSession } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
@@ -58,27 +57,12 @@ function ProfileCard() {
     onError: (err) => setError(err instanceof SixApiError ? err.message : tr.common.couldNotSave),
   });
 
-  async function choosePhoto() {
-    setError(null);
-    try {
-      const photo = await pickAvatar();
-      if (photo) save.mutate({ photo });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
-    }
-  }
-
   const dirty = name.trim() !== user.displayName && name.trim().length > 0;
 
   return (
     <Card style={{ padding: 16, gap: 10 }}>
       <View style={styles.profile}>
-        <Pressable onPress={choosePhoto} disabled={save.isPending} accessibilityLabel={tr.settings.changePhoto}>
-          <Avatar user={user} size="md" />
-          <View style={styles.cameraBadge}>
-            <Camera size={18} color="#fff" />
-          </View>
-        </Pressable>
+        <Avatar user={user} size="md" />
         <View style={{ flex: 1, gap: 2 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <TextInput
@@ -105,14 +89,6 @@ function ProfileCard() {
         </View>
       </View>
       <Text style={{ color: t.muted, fontSize: 13, lineHeight: 18 }}>{tr.settings.seenAs}</Text>
-      {user.avatarUrl && (
-        <TextButton
-          title={tr.settings.removePhoto}
-          onPress={() => save.mutate({ photo: null })}
-          disabled={save.isPending}
-          color={t.danger}
-        />
-      )}
       {error && <Notice tone="error">{error}</Notice>}
     </Card>
   );
@@ -714,17 +690,7 @@ const styles = StyleSheet.create({
   signOut: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6 },
   content: { padding: 16, gap: 24 },
   profile: { flexDirection: "row", alignItems: "center", gap: 16 },
-  cameraBadge: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.35)",
-  },
+
   nameInput: { flex: 1, fontSize: 18, fontWeight: "500", paddingVertical: 2 },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   qr: { borderRadius: 8, overflow: "hidden" },

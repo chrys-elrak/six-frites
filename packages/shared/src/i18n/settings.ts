@@ -27,7 +27,7 @@ const en = {
   displayName: "Display name",
   removePhoto: "Remove photo",
   seenAs:
-    "Each person sees you under a different alias, without your photo, unless you share your profile with them from their contact page.",
+    "Each person sees you under a different alias, without your photo.",
 
   findMe: "How people find you",
   contactCode: "Your contact code",
@@ -245,7 +245,7 @@ const fr: typeof en = {
   displayName: "Nom affiché",
   removePhoto: "Supprimer la photo",
   seenAs:
-    "Chaque personne vous voit sous un alias différent, sans photo, sauf si vous lui partagez votre profil depuis sa fiche contact.",
+    "Chaque personne vous voit sous un alias différent, sans photo.",
 
   findMe: "Comment vous trouver",
   contactCode: "Votre code de contact",
@@ -465,7 +465,7 @@ const mg: typeof en = {
   displayName: "Anarana aseho",
   removePhoto: "Esory ny sary",
   seenAs:
-    "Samy mahita solon'anarana hafa ho anao ny tsirairay, tsy misy sary, raha tsy zarainao aminy ny mombamomba anao avy amin'ny pejiny.",
+    "Samy mahita solon'anarana hafa ho anao ny tsirairay, tsy misy sary.",
 
   findMe: "Ahoana no ahitan'ny olona anao",
   contactCode: "Ny kaody mpifandray anao",
