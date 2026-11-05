@@ -22,6 +22,7 @@ import { useRef, useState } from "react";
 import { type GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { fingers } from "@/lib/fingers";
 import { useT } from "@/lib/i18n";
 import { brand, brandInk } from "@/lib/theme";
 import { Colors, FONT_FILES, Fonts, Sizes, familyOf } from "./photo-editor";
@@ -79,12 +80,12 @@ function LookText({ text, look, color, size, font }: { text: string; look?: Stor
 
 type Grab =
   | { kind: "stroke"; x: number; y: number; px: number; py: number }
-  | { kind: "move"; index: number; px: number; py: number; from: { x: number; y: number }; moved: boolean }
+  | { kind: "move"; index: number; count: number; px: number; py: number; apart: number; from: { x: number; y: number; scale: number }; moved: boolean }
   | { kind: "resize"; index: number; px: number; py: number; from: number };
 
 /**
  * What the poster drew on a story, filling its parent. In the composer, `pen` turns it into a canvas to draw on;
- * without it, `onChange` lets each text be dragged and resized by its corner, and `onEditText` is called when one is
+ * without it, `onChange` lets each text be dragged and resized by its corner or a pinch, and `onEditText` is called when one is
  * tapped. `onBegin` comes before each change, to keep it for undo.
  */
 export function StoryDrawingLayer({
@@ -114,6 +115,7 @@ export function StoryDrawingLayer({
     const g = grab.current;
     const d = latest.current;
     if (!g) return;
+    if (g.kind === "move") return moveText(g, e);
     const [dx, dy] = [e.nativeEvent.pageX - g.px, e.nativeEvent.pageY - g.py];
     if (g.kind === "stroke") {
       const strokes = d.strokes.slice();
@@ -122,15 +124,32 @@ export function StoryDrawingLayer({
     }
     const texts = d.texts.slice();
     const t = texts[g.index]!;
-    if (g.kind === "resize") {
-      const scale = g.from * (1 + (dx + dy) / (w * 0.4));
-      texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)) };
-      return set({ ...d, texts });
+    const scale = g.from * (1 + (dx + dy) / (w * 0.4));
+    texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)) };
+    set({ ...d, texts });
+  }
+
+  /** Drags a text with one finger and pinches it bigger or smaller with two, carrying on from where it is whenever a finger lands or lifts. */
+  function moveText(g: Extract<Grab, { kind: "move" }>, e: GestureResponderEvent) {
+    const d = latest.current;
+    const t = d.texts[g.index]!;
+    const f = fingers(e.nativeEvent.touches);
+    if (f.count !== g.count) {
+      Object.assign(g, { count: f.count, px: f.x, py: f.y, apart: f.apart, from: { x: t.x, y: t.y, scale: t.scale } });
+      return;
     }
-    if (!g.moved && Math.hypot(dx, dy) < 4) return;
+    const [dx, dy] = [f.x - g.px, f.y - g.py];
+    if (!g.moved && f.count < 2 && Math.hypot(dx, dy) < 4) return;
     if (!g.moved) onBegin?.();
     g.moved = true;
-    texts[g.index] = { ...t, x: clamp(g.from.x + dx / w), y: clamp(g.from.y + dy / h) };
+    const scale = f.count === 2 && g.apart ? (g.from.scale * f.apart) / g.apart : g.from.scale;
+    const texts = d.texts.slice();
+    texts[g.index] = {
+      ...t,
+      x: clamp(g.from.x + dx / w),
+      y: clamp(g.from.y + dy / h),
+      scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)),
+    };
     set({ ...d, texts });
   }
 
@@ -191,8 +210,8 @@ export function StoryDrawingLayer({
               {...follow}
               onStartShouldSetResponder={() => editing}
               onResponderGrant={(e) => {
-                const { pageX, pageY } = e.nativeEvent;
-                grab.current = { kind: "move", index: i, px: pageX, py: pageY, from: { x: t.x, y: t.y }, moved: false };
+                const f = fingers(e.nativeEvent.touches);
+                grab.current = { kind: "move", index: i, count: f.count, px: f.x, py: f.y, apart: f.apart, from: { x: t.x, y: t.y, scale: t.scale }, moved: false };
               }}
             >
               <LookText text={t.text} look={t.look} color={t.color} size={STORY_TEXT_SIZE * t.scale * w} font={t.font} />

@@ -25,6 +25,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Loader2, MapPin, M
 import { useCallback, useEffect, useRef, useState } from "react";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useChats } from "@/lib/chats";
+import { dragAndPinch } from "@/lib/drag-pinch";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
@@ -52,7 +53,6 @@ export function useStories() {
   });
 }
 
-const clamp = (v: number) => Math.min(1, Math.max(0, v));
 const clampScale = (v: number) => Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, v));
 
 /** Follows the pointer until it lets go, wherever it goes on the page. */
@@ -71,7 +71,7 @@ function follow(move: (e: PointerEvent) => void, done?: (e: PointerEvent) => voi
 /**
  * A story's GIF, place, date and time. With `placed` it draws the ones the poster dragged somewhere, at their spot
  * and size (inside an `absolute inset-0` layer); without, the others in a row at the bottom. In the composer,
- * `onMove` lets each be dragged anywhere on `frame` (the whole story card) and resized by its corner handle,
+ * `onMove` lets each be dragged anywhere on `frame` (the whole story card) and resized by its corner handle or a pinch,
  * `onRemove` adds a button to take it off, and `onTap` is called when it is tapped rather than dragged.
  */
 export function StoryStickers({
@@ -118,16 +118,13 @@ export function StoryStickers({
     if (!onMove || !box) return;
     e.preventDefault();
     e.stopPropagation();
-    const from = centreOf(e.currentTarget, box);
-    const scale = positions[sticker]?.scale;
-    const [startX, startY] = [e.clientX, e.clientY];
-    let moved = false;
-    follow(
-      (ev) => {
-        moved ||= Math.hypot(ev.clientX - startX, ev.clientY - startY) > 4;
-        if (moved) onMove(sticker, { x: clamp(from.x + (ev.clientX - startX) / box.width), y: clamp(from.y + (ev.clientY - startY) / box.height), scale });
-      },
-      () => !moved && onTap?.(sticker),
+    const { x, y } = centreOf(e.currentTarget, box);
+    dragAndPinch(
+      e,
+      box,
+      { x, y, scale: positions[sticker]?.scale ?? 1 },
+      (spot) => onMove(sticker, spot),
+      (moved) => !moved && onTap?.(sticker),
     );
   };
 

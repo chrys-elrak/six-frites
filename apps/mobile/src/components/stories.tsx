@@ -33,6 +33,7 @@ import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
+import { fingers } from "@/lib/fingers";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
@@ -77,9 +78,10 @@ interface Editing {
 }
 
 /**
- * A sticker at its size, which in the composer can be dragged anywhere on the story, resized by its corner handle,
- * removed, or tapped. It follows the finger while held and settles at its new spot or size once let go, so it
- * stays the same view for the whole gesture.
+ * A sticker at its size, which in the composer can be dragged anywhere on the story, pinched with a second finger or
+ * resized by its corner handle, removed, or tapped. It follows the fingers while held and settles at its new spot
+ * or size once let go, so it stays the same view for the whole gesture; whenever a finger lands or lifts, it carries
+ * on from where it is then.
  */
 function Sticker({ sticker, scale = 1, editing, children }: { sticker: StorySticker; scale?: number; editing?: Editing; children: React.ReactNode }) {
   const tr = useT();
@@ -88,6 +90,8 @@ function Sticker({ sticker, scale = 1, editing, children }: { sticker: StoryStic
   const [shift, setShift] = useState({ dx: 0, dy: 0 });
   const [live, setLive] = useState<number | null>(null);
   const liveRef = useRef<number | null>(null);
+  const hold = useRef({ count: 0, x: 0, y: 0, apart: 0, dx: 0, dy: 0, scale: 1, moved: false });
+  const shiftRef = useRef({ dx: 0, dy: 0 });
   const shown = live ?? scale;
   if (!editing) return <View style={{ transform: [{ scale }] }}>{children}</View>;
 
@@ -108,13 +112,36 @@ function Sticker({ sticker, scale = 1, editing, children }: { sticker: StoryStic
       onStartShouldSetResponder={() => true}
       onMoveShouldSetResponder={() => true}
       onResponderTerminationRequest={() => false}
-      onResponderGrant={(e) => measure(e.nativeEvent.pageX, e.nativeEvent.pageY)}
-      onResponderMove={(e) => start.current && setShift({ dx: e.nativeEvent.pageX - start.current.px, dy: e.nativeEvent.pageY - start.current.py })}
-      onResponderRelease={(e) => {
+      onResponderGrant={(e) => {
+        measure(e.nativeEvent.pageX, e.nativeEvent.pageY);
+        hold.current = { ...fingers(e.nativeEvent.touches), dx: 0, dy: 0, scale, moved: false };
+        shiftRef.current = { dx: 0, dy: 0 };
+      }}
+      onResponderMove={(e) => {
+        const h = hold.current;
+        const f = fingers(e.nativeEvent.touches);
+        if (f.count !== h.count) {
+          hold.current = { ...f, ...shiftRef.current, scale: liveRef.current ?? h.scale, moved: h.moved };
+          return;
+        }
+        const [dx, dy] = [h.dx + f.x - h.x, h.dy + f.y - h.y];
+        if (!h.moved && f.count < 2 && Math.hypot(dx, dy) <= 6) return;
+        h.moved = true;
+        shiftRef.current = { dx, dy };
+        setShift({ dx, dy });
+        if (f.count === 2 && h.apart) {
+          liveRef.current = clampScale((h.scale * f.apart) / h.apart);
+          setLive(liveRef.current);
+        }
+      }}
+      onResponderRelease={() => {
         const s = start.current;
-        const [dx, dy] = [e.nativeEvent.pageX - (s?.px ?? 0), e.nativeEvent.pageY - (s?.py ?? 0)];
-        if (s && Math.hypot(dx, dy) > 6) editing.onMove(sticker, { x: clamp(s.x + dx / s.w), y: clamp(s.y + dy / s.h), scale });
-        else editing.onTap?.(sticker);
+        const { dx, dy } = shiftRef.current;
+        if (s && hold.current.moved) {
+          editing.onMove(sticker, { x: clamp(s.x + dx / s.w), y: clamp(s.y + dy / s.h), scale: liveRef.current ?? scale });
+        } else editing.onTap?.(sticker);
+        liveRef.current = null;
+        setLive(null);
         setShift({ dx: 0, dy: 0 });
       }}
       style={{ transform: [{ translateX: shift.dx }, { translateY: shift.dy }, { scale: shown }] }}

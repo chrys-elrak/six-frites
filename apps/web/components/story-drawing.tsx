@@ -20,6 +20,7 @@ import {
 } from "@six/shared";
 import { Check, Circle, MoveDiagonal2, MoveUpRight, Pencil, Square, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { dragAndPinch } from "@/lib/drag-pinch";
 import { useT } from "@/lib/i18n";
 import { Colors, Fonts, Sizes, familyOf } from "./photo-editor";
 
@@ -38,7 +39,6 @@ export interface Writing {
 }
 
 const SHAPE_ICONS = { pen: Pencil, arrow: MoveUpRight, circle: Circle, rect: Square };
-const clamp = (v: number) => Math.min(1, Math.max(0, v));
 
 function lookStyle(look: StoryTextLook | undefined, color: string): React.CSSProperties {
   if (look === "box") return { color: inkOn(color), background: color, padding: "0.1em 0.4em", borderRadius: "0.3em" };
@@ -48,12 +48,11 @@ function lookStyle(look: StoryTextLook | undefined, color: string): React.CSSPro
 
 type Grab =
   | { kind: "stroke" }
-  | { kind: "move"; index: number; x: number; y: number; from: { x: number; y: number }; moved: boolean }
   | { kind: "resize"; index: number; cx: number; cy: number; r0: number; from: number };
 
 /**
  * What the poster drew on a story, filling an `absolute inset-0` layer. In the composer, `pen` turns the layer into a
- * canvas to draw on; without it, `onChange` lets each text be dragged and resized by its corner, and `onEditText` is
+ * canvas to draw on; without it, `onChange` lets each text be dragged and resized by its corner or a pinch, and `onEditText` is
  * called when one is tapped. `onBegin` comes before each change, to keep it for undo.
  */
 export function StoryDrawingLayer({
@@ -109,15 +108,8 @@ export function StoryDrawingLayer({
     }
     const texts = d.texts.slice();
     const t = texts[g.index]!;
-    if (g.kind === "resize") {
-      const scale = (g.from * Math.hypot(e.clientX - g.cx, e.clientY - g.cy)) / g.r0;
-      texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)) };
-      return set({ ...d, texts });
-    }
-    if (!g.moved && Math.hypot(e.clientX - g.x, e.clientY - g.y) < 4) return;
-    if (!g.moved) onBegin?.();
-    g.moved = true;
-    texts[g.index] = { ...t, x: clamp(g.from.x + (e.clientX - g.x) / w), y: clamp(g.from.y + (e.clientY - g.y) / h) };
+    const scale = (g.from * Math.hypot(e.clientX - g.cx, e.clientY - g.cy)) / g.r0;
+    texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)) };
     set({ ...d, texts });
   }
 
@@ -126,15 +118,26 @@ export function StoryDrawingLayer({
     grab.current = null;
     const last = latest.current.strokes.at(-1);
     if (g?.kind === "stroke" && last && strokeTooSmall(last)) set({ ...latest.current, strokes: latest.current.strokes.slice(0, -1) });
-    if (g?.kind === "move" && !g.moved) onEditText?.(g.index);
   }
 
   const grabText = (index: number) => (e: React.PointerEvent) => {
     if (pen || !onChange) return;
     e.stopPropagation();
-    e.currentTarget.setPointerCapture(e.pointerId);
     const t = latest.current.texts[index]!;
-    grab.current = { kind: "move", index, x: e.clientX, y: e.clientY, from: { x: t.x, y: t.y }, moved: false };
+    let begun = false;
+    dragAndPinch(
+      e,
+      layer.current!.getBoundingClientRect(),
+      { x: t.x, y: t.y, scale: t.scale },
+      (spot) => {
+        if (!begun) onBegin?.();
+        begun = true;
+        const texts = latest.current.texts.slice();
+        texts[index] = { ...texts[index]!, ...spot };
+        set({ ...latest.current, texts });
+      },
+      (moved) => !moved && onEditText?.(index),
+    );
   };
 
   const grabSize = (index: number) => (e: React.PointerEvent) => {
