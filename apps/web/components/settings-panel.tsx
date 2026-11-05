@@ -14,6 +14,7 @@ import { BlockedPeople, DeleteAccount } from "./account-settings";
 import { AppLockSettings } from "./app-lock";
 import { AdminLink } from "./admin/admin-link";
 import { AndroidDownload } from "./android-download";
+import { InstallCard } from "./install-card";
 import { Devices } from "./devices";
 import { EncryptionSettings, useHasRecoveryKey } from "./encryption-settings";
 import { LegalLinks } from "./legal-page";
@@ -159,6 +160,7 @@ export function SettingsPanel() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-4 lg:block lg:max-w-7xl lg:columns-2 lg:gap-6 lg:p-6 2xl:columns-3 lg:[&>*]:mb-6 lg:[&>*]:break-inside-avoid">
           <ProfileCard />
+          <InstallCard />
           <AndroidDownload />
           <WhatsNew />
           <TourAgain />

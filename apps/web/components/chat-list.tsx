@@ -56,6 +56,7 @@ import { Avatar } from "./avatar";
 import { StoriesBar, StoryAvatar } from "./stories";
 import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
+import { InstallCard } from "./install-card";
 import { FindMe } from "./find-me";
 import { Invites, NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
@@ -497,6 +498,11 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
       {!archived && !rail && <BackupPinBanner />}
+      {!archived && !rail && (
+        <div className="mx-3 mt-3 empty:hidden">
+          <InstallCard dismissible />
+        </div>
+      )}
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {view === "contacts" ? (
