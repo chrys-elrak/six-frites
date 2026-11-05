@@ -605,7 +605,10 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
   const group = groups[gi];
   const story = group?.stories[si];
   const mine = group?.user.id === meId;
-  const stopped = paused || held || showViewers || deleting || replying;
+  const [shownId, setShownId] = useState<string | null>(null);
+  const imageLoading = story?.type === "image" && !!story.media?.url && shownId !== story.id;
+  const loading = imageLoading || (story?.type === "video" && !!story.media?.url && videoMs === null);
+  const stopped = paused || held || showViewers || deleting || replying || imageLoading;
   const length = story?.type === "video" ? (videoMs ?? Infinity) : STORY_SHOW_MS;
 
   const go = useCallback(
@@ -685,11 +688,18 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
           accessibilityLabel={tr.stories.next}
         >
           {story.type === "image" && media?.url && (
-            <Image source={{ uri: media.url }} style={StyleSheet.absoluteFill} contentFit="contain" />
+            <Image
+              source={{ uri: media.url }}
+              style={StyleSheet.absoluteFill}
+              contentFit="contain"
+              onLoad={() => setShownId(story.id)}
+              onError={() => setShownId(story.id)}
+            />
           )}
           {story.type === "video" && media?.url && (
             <StoryVideo key={story.id} url={media.url} stopped={stopped} onTime={onVideoTime} onEnd={next} />
           )}
+          {loading && <ActivityIndicator size="large" color="#fff" />}
           {media && !media.url && (
             <View style={{ alignItems: "center", gap: 12 }}>
               <ActivityIndicator size="large" color="#fff" />
@@ -698,18 +708,22 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
           )}
           {!media && !!story.text && <Text style={styles.bigText}>{story.text}</Text>}
         </Pressable>
-        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-          <StoryStickers {...stickers} placed />
-        </View>
-        <StoryDrawingLayer drawing={story.drawing} />
+        {!loading && (
+          <>
+            <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+              <StoryStickers {...stickers} placed />
+            </View>
+            <StoryDrawingLayer drawing={story.drawing} />
+          </>
+        )}
 
         <KeyboardStickyView
           pointerEvents="box-none"
           offset={{ opened: Math.max(insets.bottom, 20) - 8 }}
           style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 20) }]}
         >
-          <StoryStickers {...stickers} placed={false} />
-          {!!media && !!story.text && <Text style={styles.caption}>{story.text}</Text>}
+          {!loading && <StoryStickers {...stickers} placed={false} />}
+          {!loading && !!media && !!story.text && <Text style={styles.caption}>{story.text}</Text>}
           {mine && (
             <Pressable onPress={() => setShowViewers(true)} style={styles.views}>
               <Eye size={16} color="#fff" />

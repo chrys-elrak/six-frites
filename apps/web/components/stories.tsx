@@ -540,7 +540,10 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
   const group = groups[gi];
   const story = group?.stories[si];
   const mine = group?.user.id === meId;
-  const stopped = paused || held || showViewers || deleting || replying;
+  const [shownId, setShownId] = useState<string | null>(null);
+  const imageLoading = story?.type === "image" && !!story.media?.url && shownId !== story.id;
+  const loading = imageLoading || (story?.type === "video" && !!story.media?.url && videoMs === null);
+  const stopped = paused || held || showViewers || deleting || replying || imageLoading;
   const length = story?.type === "video" ? (videoMs ?? Infinity) : STORY_SHOW_MS;
 
   const go = useCallback(
@@ -653,7 +656,14 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
             onContextMenu={(e) => e.preventDefault()}
           >
             {story.type === "image" && media?.url && (
-              <img src={media.url} alt="" draggable={false} className="max-h-full max-w-full object-contain select-none" />
+              <img
+                src={media.url}
+                alt=""
+                draggable={false}
+                onLoad={() => setShownId(story.id)}
+                onError={() => setShownId(story.id)}
+                className="max-h-full max-w-full object-contain select-none"
+              />
             )}
             {story.type === "video" && media?.url && (
               <video
@@ -668,6 +678,7 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
                 className="max-h-full max-w-full"
               />
             )}
+            {loading && <Loader2 className="absolute size-8 animate-spin text-white/80" />}
             {media && !media.url && (
               <div className="flex flex-col items-center gap-3 text-sm text-white/80">
                 <Loader2 className="size-8 animate-spin" />
@@ -679,14 +690,18 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
             )}
           </div>
 
-          <div className="pointer-events-none absolute inset-0">
-            <StoryStickers {...stickers} placed />
-          </div>
-          <StoryDrawingLayer drawing={story.drawing} />
+          {!loading && (
+            <>
+              <div className="pointer-events-none absolute inset-0">
+                <StoryStickers {...stickers} placed />
+              </div>
+              <StoryDrawingLayer drawing={story.drawing} />
+            </>
+          )}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 bg-gradient-to-t from-black/60 to-transparent px-4 pt-16 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-            <StoryStickers {...stickers} placed={false} />
-            {media && story.text && <p className="text-center text-base break-words whitespace-pre-wrap">{story.text}</p>}
+            {!loading && <StoryStickers {...stickers} placed={false} />}
+            {!loading && media && story.text && <p className="text-center text-base break-words whitespace-pre-wrap">{story.text}</p>}
             {mine && (
               <button
                 type="button"
