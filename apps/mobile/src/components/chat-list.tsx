@@ -389,6 +389,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
 
   const tools = (
     <View style={{ gap: 10, paddingHorizontal: 16, paddingVertical: 8 }}>
+      {!archived && view === "chats" && !needle && <StoriesBar />}
       <View style={[styles.search, { backgroundColor: t.chip }]}>
         <Search size={16} color={t.muted} />
         <TextInput
@@ -424,11 +425,6 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
     <>
       {!archived && <UpdateBanner />}
       {!archived && <BackupPinBanner />}
-      {!archived && view === "chats" && !needle && (
-        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-          <StoriesBar />
-        </View>
-      )}
       {pulled && view === "chats" && !needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}
@@ -445,7 +441,6 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           )}
         </Pressable>
       )}
-      {tools}
     </>
   );
 
@@ -466,12 +461,9 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
         </BrandBar>
       )}
-
+      {tools}
       {view === "contacts" ? (
-        <>
-          {tools}
-          <ContactList needle={needle} query={query.trim()} />
-        </>
+        <ContactList needle={needle} query={query.trim()} />
       ) : (
         <FlatList
           data={shown}
@@ -483,7 +475,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             <RefreshControl
               refreshing={chats.isRefetching}
               onRefresh={() => {
-                setPulled(true);
+                setPulled((p) => !p);
                 void chats.refetch();
               }}
               colors={[brand]}

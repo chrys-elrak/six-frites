@@ -38,7 +38,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { six } from "@/lib/six";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
 import { ensureBotChat, useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
@@ -341,8 +341,8 @@ type ListView = "chats" | "desk" | "contacts";
 
 /**
  * The chat list, or with `archived` the archived chats behind the app lock code. A switch at the bottom shows
- * my contacts instead, and the support chats for whoever answers support. The archived row sits just
- * above the top of the list, so it only shows when the list is pulled down.
+ * my contacts instead, and the support chats for whoever answers support. Pulling the list down past
+ * its top shows the archived row, and pulling again hides it.
  */
 export function ChatList({ archived = false, rail = false }: { archived?: boolean; rail?: boolean }) {
   const tr = useT();
@@ -390,20 +390,21 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   const shown = visible.filter((c) => inChatFilter(c, filter));
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
-  const showArchive = filtering && view === "chats" && !needle && archivedCount > 0;
-  const scroller = useRef<HTMLDivElement>(null);
-  const archiveRow = useRef<HTMLAnchorElement>(null);
+  const [pulledOn, setPulledOn] = useState<string | null>(null);
+  const pullFrom = useRef<number | null>(null);
+  const lastPull = useRef(0);
+  const showArchive = filtering && view === "chats" && !needle && archivedCount > 0 && pulledOn === pathname;
+  const togglePull = () => {
+    const fresh = Date.now() - lastPull.current > 800;
+    lastPull.current = Date.now();
+    if (fresh) setPulledOn((p) => (p === pathname ? null : pathname));
+  };
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
 
   useEffect(() => {
     if (pathname === "/") setArchiveOpen(false);
   }, [pathname]);
 
-  useLayoutEffect(() => {
-    const el = scroller.current;
-    const row = archiveRow.current;
-    if (el && row && el.scrollTop < row.offsetHeight) el.scrollTop = row.offsetHeight;
-  }, [showArchive, pathname]);
 
   if (archived && hasAppLock && !archiveOpen) {
     return (
@@ -504,17 +505,27 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
         </div>
       )}
 
-      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {top}
+      <div
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        onTouchStart={(e) => {
+          pullFrom.current = e.currentTarget.scrollTop <= 0 ? e.touches[0]!.clientY : null;
+        }}
+        onTouchMove={(e) => {
+          if (pullFrom.current === null || e.touches[0]!.clientY - pullFrom.current <= 60) return;
+          pullFrom.current = null;
+          togglePull();
+        }}
+        onWheel={(e) => {
+          if (e.deltaY < -30 && e.currentTarget.scrollTop <= 0) togglePull();
+        }}
+      >
         {view === "contacts" ? (
-          <>
-            {top}
-            <ContactRows needle={needle} query={query.trim()} />
-          </>
+          <ContactRows needle={needle} query={query.trim()} />
         ) : (
-          <div className={showArchive ? "min-h-[calc(100%+5rem)]" : undefined}>
+          <div>
             {showArchive && (
               <Link
-                ref={archiveRow}
                 href="/archived"
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-600 hover:bg-black/[0.03] dark:text-stone-300 dark:hover:bg-white/5"
               >
@@ -529,7 +540,6 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                 )}
               </Link>
             )}
-            {top}
             {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
             {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
             {chats.isSuccess && needle && visible.length === 0 && (
