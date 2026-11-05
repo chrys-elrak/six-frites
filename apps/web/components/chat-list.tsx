@@ -52,6 +52,7 @@ import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
 import { useMedia } from "@/lib/viewport";
+import { BrandActions } from "./brand-actions";
 import { AdBanner } from "./ad-banner";
 import { LockScreen } from "./app-lock";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
@@ -339,7 +340,7 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
 type ListView = "chats" | "desk" | "contacts";
 
 /**
- * The chat list, or with `archived` the archived chats behind the app lock code. A switch on top shows
+ * The chat list, or with `archived` the archived chats behind the app lock code. A switch at the bottom shows
  * my contacts instead, and the support chats for whoever answers support. The archived row sits just
  * above the top of the list, so it only shows when the list is pulled down.
  */
@@ -410,12 +411,48 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
     );
   }
 
+  const top = !rail && (
+    <div className="flex flex-col gap-2 px-4 pt-3 pb-2">
+      {filtering && view === "chats" && !needle && <StoriesBar />}
+      <label
+        className="flex w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10"
+      >
+        <Search className="size-4 shrink-0" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={tr.contacts.search}
+          aria-label={tr.contacts.search}
+          className="min-w-0 flex-1 bg-transparent text-[16px] text-stone-900 outline-none placeholder:text-stone-500 md:text-sm dark:text-stone-100"
+        />
+      </label>
+      {filtering && view !== "contacts" && (
+        <div role="tablist" className="flex w-full gap-1.5 overflow-x-auto">
+          {CHAT_FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              role="tab"
+              aria-selected={filter === f}
+              onClick={() => setPicked(f)}
+              className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium transition ${
+                filter === f
+                  ? "bg-brand text-brand-ink"
+                  : "bg-black/5 text-stone-600 hover:bg-black/10 dark:bg-white/10 dark:text-stone-300 dark:hover:bg-white/15"
+              }`}
+            >
+              {tr.chats.filters[f]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header
-        className={`${rail ? "hidden" : "flex"} flex-wrap items-center gap-2 border-b border-stone-200 px-4 pt-3 pb-3 dark:border-stone-800`}
-      >
-        {archived && (
+      {archived ? (
+        <header className="flex items-center gap-2 border-b border-stone-200 px-4 py-2 dark:border-stone-800">
           <Link
             href="/"
             aria-label={tr.common.backToChats}
@@ -423,13 +460,12 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
           >
             <ChevronLeft className="size-6" />
           </Link>
-        )}
-        <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
-          <h1 className="text-xl font-semibold tracking-tight">{archived ? tr.common.archived : tr.common.chats}</h1>
-          {statusText && <p className="text-xs text-stone-500">{statusText}</p>}
-        </div>
-        {!archived && !rail && (
-          <>
+          <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">{tr.common.archived}</h1>
+        </header>
+      ) : (
+        !rail && (
+          <BrandActions>
+            {statusText && <span className="mr-1 text-xs text-stone-500">{statusText}</span>}
             {!isSupport && (
               <button
                 onClick={() => void openSupport()}
@@ -456,68 +492,9 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
             >
               <UserPlus className="size-5" />
             </button>
-          </>
-        )}
-        {filtering && (
-          <div role="tablist" className="flex w-full rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
-            {views.map((v) => {
-              const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
-              return (
-                <button
-                  key={v}
-                  type="button"
-                  role="tab"
-                  aria-selected={view === v}
-                  onClick={() => setView(v)}
-                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-sm font-semibold transition ${
-                    view === v ? "bg-white shadow-sm dark:bg-stone-950" : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
-                  }`}
-                >
-                  {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
-                  {unread > 0 && (
-                    <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
-                      {unread > 99 ? "99+" : unread}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        {filtering && view === "chats" && !needle && <StoriesBar />}
-        <label
-          className={`${rail ? "hidden" : "flex"} w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10`}
-        >
-          <Search className="size-4 shrink-0" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={tr.contacts.search}
-            aria-label={tr.contacts.search}
-            className="min-w-0 flex-1 bg-transparent text-[16px] text-stone-900 outline-none placeholder:text-stone-500 md:text-sm dark:text-stone-100"
-          />
-        </label>
-        {filtering && view !== "contacts" && (
-          <div role="tablist" className="flex w-full gap-1.5 overflow-x-auto">
-            {CHAT_FILTERS.map((f) => (
-              <button
-                key={f}
-                type="button"
-                role="tab"
-                aria-selected={filter === f}
-                onClick={() => setPicked(f)}
-                className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium transition ${
-                  filter === f
-                    ? "bg-brand text-brand-ink"
-                    : "bg-black/5 text-stone-600 hover:bg-black/10 dark:bg-white/10 dark:text-stone-300 dark:hover:bg-white/15"
-                }`}
-              >
-                {tr.chats.filters[f]}
-              </button>
-            ))}
-          </div>
-        )}
-      </header>
+          </BrandActions>
+        )
+      )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
       {!archived && !rail && <BackupPinBanner />}
@@ -529,7 +506,10 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {view === "contacts" ? (
-          <ContactRows needle={needle} query={query.trim()} />
+          <>
+            {top}
+            <ContactRows needle={needle} query={query.trim()} />
+          </>
         ) : (
           <div className={showArchive ? "min-h-[calc(100%+5rem)]" : undefined}>
             {showArchive && (
@@ -549,6 +529,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                 )}
               </Link>
             )}
+            {top}
             {chats.isPending && <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>}
             {chats.isError && <p className="p-4 text-sm text-red-600">{tr.chats.couldNotLoad}</p>}
             {chats.isSuccess && needle && visible.length === 0 && (
@@ -589,6 +570,32 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
         )}
       </div>
       {!rail && <AdBanner />}
+      {filtering && (
+        <div role="tablist" className="mx-3 my-2 flex rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
+          {views.map((v) => {
+            const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
+            return (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-sm font-semibold transition ${
+                  view === v ? "bg-white shadow-sm dark:bg-stone-950" : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
+                }`}
+              >
+                {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
+                {unread > 0 && (
+                  <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
   replyRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   replyInput: { flex: 1, color: "#fff", fontSize: 16, borderRadius: 999, borderWidth: 1, borderColor: "rgba(255,255,255,0.6)", backgroundColor: "rgba(0,0,0,0.2)", paddingHorizontal: 16, paddingVertical: 10 },
   replySend: { width: 44, height: 44, borderRadius: 22, backgroundColor: brand, alignItems: "center", justifyContent: "center" },
-  bar: { gap: 12, paddingVertical: 4 },
+  bar: { gap: 16, paddingVertical: 4 },
   item: { width: 68, alignItems: "center", gap: 4 },
   ring: { padding: 3, borderRadius: 40 },
   ringGap: { padding: 2, borderRadius: 40 },

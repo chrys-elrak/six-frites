@@ -47,11 +47,11 @@ export function NoteBubble({ text, empty, label, onClick }: { text: string; empt
       onClick={onClick}
       aria-label={label}
       title={text}
-      className={`relative z-10 -mb-2 line-clamp-2 max-w-[5.5rem] rounded-2xl bg-white px-2 py-1 text-center text-[11px] leading-tight break-words shadow ring-1 ring-black/5 dark:bg-stone-800 dark:ring-white/10 ${
+      className={`relative z-10 -mb-2 max-w-[4.5rem] rounded-2xl bg-white px-2 py-1 text-center text-[11px] leading-tight break-words shadow ring-1 ring-black/5 dark:bg-stone-800 dark:ring-white/10 ${
         empty ? "text-stone-400" : "font-medium"
       }`}
     >
-      {text}
+      <span className="line-clamp-2">{text}</span>
     </button>
   );
 }

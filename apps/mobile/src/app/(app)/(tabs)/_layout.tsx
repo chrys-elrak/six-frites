@@ -1,7 +1,6 @@
 import { Tabs } from "expo-router/js-tabs";
 import { View } from "react-native";
 import { chatTheme } from "@six/shared";
-import { BrandBar } from "@/components/brand-bar";
 import { Wallpaper } from "@/components/chat-background";
 import { MessageCircle, Settings, VenetianMask } from "lucide-react-native";
 import { useChats } from "@/lib/chats";
@@ -19,7 +18,6 @@ export default function TabsLayout() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Wallpaper theme={chatTheme(null)} dark={t.dark} id="app" />
-      <BrandBar />
       <Tabs
         screenOptions={{
           headerShown: false,

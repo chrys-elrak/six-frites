@@ -226,7 +226,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
 }
 
 const styles = StyleSheet.create({
-  bubble: { zIndex: 1, marginBottom: -8, maxWidth: 88, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 8, paddingVertical: 4 },
+  bubble: { zIndex: 1, marginBottom: -8, maxWidth: 72, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 8, paddingVertical: 4 },
   backdrop: { backgroundColor: "rgba(0,0,0,0.4)" },
   card: { marginHorizontal: 12, borderRadius: 24, padding: 20, gap: 12 },
   field: { borderRadius: 999, fontSize: 16, paddingHorizontal: 16, paddingVertical: 11 },

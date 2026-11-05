@@ -329,7 +329,7 @@ export function StoriesBar() {
 
   return (
     <>
-      <div role="list" aria-label={tr.stories.title} className="-mx-4 flex w-[calc(100%+2rem)] gap-3 overflow-x-auto px-4 pb-1">
+      <div role="list" aria-label={tr.stories.title} className="-mx-4 flex w-[calc(100%+2rem)] gap-4 overflow-x-auto px-4 pb-1">
         <div role="listitem" className="relative flex w-16 shrink-0 flex-col items-center gap-1">
           <div className={slot}>
             <NoteBubble

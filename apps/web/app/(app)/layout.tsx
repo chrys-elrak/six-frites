@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AnonInbox } from "@/components/anon-inbox";
+import { setBrandSlot } from "@/components/brand-actions";
 import { LockScreen } from "@/components/app-lock";
 import { ChatList, useChatRail } from "@/components/chat-list";
 import { Logo } from "@/components/logo";
@@ -103,13 +104,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="pointer-events-none absolute inset-0 -z-10">
           <Wallpaper theme={appWallpaper} id="app" />
         </div>
-        <Link
-          href="/"
+        <div
           className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-3 border-b border-black/5 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:flex dark:border-white/10 ${glass}`}
         >
-          <Logo className="size-9" />
-          <span className="text-lg font-bold tracking-tight">Six Frites</span>
-        </Link>
+          <Link href="/" className="flex items-center gap-3">
+            <Logo className="size-9" />
+            <span className="text-lg font-bold tracking-tight">Six Frites</span>
+          </Link>
+          <div ref={setBrandSlot} className="-my-1 ml-auto flex items-center gap-1" />
+        </div>
         <MiniPlayer atTop={!topLevel} />
         <div className="flex min-h-0 flex-1">
           <aside

@@ -38,8 +38,9 @@ import { NewContactLink, NewInvite, quotaQuery } from "./invites";
 import { LinkComputer } from "./link-computer";
 import { QuickReactionsSettings } from "./reactions";
 import { Sheet } from "./sheet";
-import { Card, Divider, Notice, PrimaryButton, ScreenHeader, SectionTitle, TextButton, Toggle } from "./ui";
+import { Card, Divider, Notice, PrimaryButton, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
+import { BrandBar } from "./brand-bar";
 import { TourAgain } from "./tour";
 import { WhatsNew } from "./whats-new";
 
@@ -647,13 +648,12 @@ export function SettingsPanel() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
-      <ScreenHeader inset={false}>
-        <Text style={[styles.title, { color: t.text }]}>{tr.common.settings}</Text>
+      <BrandBar>
         <Pressable onPress={() => void logout()} style={styles.signOut} hitSlop={6}>
           <LogOut size={16} color={t.textSoft} />
           <Text style={{ color: t.textSoft, fontWeight: "600" }}>{tr.settings.signOut}</Text>
         </Pressable>
-      </ScreenHeader>
+      </BrandBar>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <UpdateCard />
         <ProfileCard />
@@ -695,7 +695,6 @@ const styles = StyleSheet.create({
   tones: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingBottom: 16 },
   tone: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   channelRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
-  title: { flex: 1, fontSize: 22, fontWeight: "700", letterSpacing: -0.3, paddingHorizontal: 4 },
   signOut: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6 },
   content: { padding: 16, gap: 24 },
   profile: { flexDirection: "row", alignItems: "center", gap: 16 },

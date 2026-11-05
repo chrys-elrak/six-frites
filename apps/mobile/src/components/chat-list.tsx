@@ -65,6 +65,7 @@ import { NewInvite } from "./invites";
 import { FindMe, Invites } from "./settings-panel";
 import { StoriesBar, StoryAvatar } from "./stories";
 import { MediaIcon, type MediaType, mediaLabel } from "./media-label";
+import { BrandBar } from "./brand-bar";
 import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
 import { UpdateBanner } from "./update-banner";
 
@@ -386,11 +387,44 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
 
-  const header = archived ? undefined : (
+  const tools = (
+    <View style={{ gap: 10, paddingHorizontal: 16, paddingVertical: 8 }}>
+      <View style={[styles.search, { backgroundColor: t.chip }]}>
+        <Search size={16} color={t.muted} />
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder={tr.contacts.search}
+          placeholderTextColor={t.muted}
+          accessibilityLabel={tr.contacts.search}
+          style={[styles.searchInput, { color: t.text }]}
+        />
+      </View>
+      {!archived && view !== "contacts" && (
+        <View style={styles.filters}>
+          {CHAT_FILTERS.map((f) => (
+            <Pressable
+              key={f}
+              onPress={() => setPicked(f)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: filter === f }}
+              style={[styles.filter, { backgroundColor: filter === f ? brand : t.chip }]}
+            >
+              <Text style={{ color: filter === f ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>
+                {tr.chats.filters[f]}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  const header = (
     <>
-      <UpdateBanner />
-      <BackupPinBanner />
-      {view === "chats" && !needle && (
+      {!archived && <UpdateBanner />}
+      {!archived && <BackupPinBanner />}
+      {!archived && view === "chats" && !needle && (
         <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
           <StoriesBar />
         </View>
@@ -411,89 +445,33 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           )}
         </Pressable>
       )}
+      {tools}
     </>
   );
 
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
-      <ScreenHeader inset={false}>
-        {archived && (
+      {archived ? (
+        <ScreenHeader inset={false}>
           <IconButton Icon={ChevronLeft} label={tr.common.backToChats} onPress={() => router.back()} size={26} />
-        )}
-        <View style={{ flex: 1, gap: 10, paddingHorizontal: archived ? 0 : 4 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.title, { color: t.text }]}>{archived ? tr.common.archived : tr.common.chats}</Text>
-              {statusText && <Text style={{ color: t.muted, fontSize: 12 }}>{statusText}</Text>}
-            </View>
-            {!archived && (
-              <>
-                {!isSupport && (
-                  <IconButton Icon={Headset} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
-                )}
-                <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
-                <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
-              </>
-            )}
-          </View>
-          {!archived && (
-            <View style={[styles.tabs, { backgroundColor: t.chip }]}>
-              {views.map((v) => {
-                const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
-                return (
-                  <Pressable
-                    key={v}
-                    onPress={() => setView(v)}
-                    accessibilityRole="tab"
-                    accessibilityState={{ selected: view === v }}
-                    style={[styles.tab, view === v && { backgroundColor: t.surface }]}
-                  >
-                    <Text numberOfLines={1} style={{ color: view === v ? t.text : t.muted, fontSize: 14, fontWeight: "600" }}>
-                      {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
-                    </Text>
-                    {unread > 0 && (
-                      <View style={[styles.badge, { backgroundColor: brand }]}>
-                        <Text style={[styles.badgeText, { color: brandInk }]}>{unread > 99 ? "99+" : unread}</Text>
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
+          <Text style={[styles.title, { color: t.text, flex: 1 }]}>{tr.common.archived}</Text>
+        </ScreenHeader>
+      ) : (
+        <BrandBar>
+          {statusText && <Text style={{ color: t.muted, fontSize: 12, flexShrink: 1 }} numberOfLines={1}>{statusText}</Text>}
+          {!isSupport && (
+            <IconButton Icon={Headset} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
           )}
-          <View style={[styles.search, { backgroundColor: t.chip }]}>
-            <Search size={16} color={t.muted} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={tr.contacts.search}
-              placeholderTextColor={t.muted}
-              accessibilityLabel={tr.contacts.search}
-              style={[styles.searchInput, { color: t.text }]}
-            />
-          </View>
-          {!archived && view !== "contacts" && (
-            <View style={styles.filters}>
-              {CHAT_FILTERS.map((f) => (
-                <Pressable
-                  key={f}
-                  onPress={() => setPicked(f)}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: filter === f }}
-                  style={[styles.filter, { backgroundColor: filter === f ? brand : t.chip }]}
-                >
-                  <Text style={{ color: filter === f ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>
-                    {tr.chats.filters[f]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </View>
-      </ScreenHeader>
+          <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
+          <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
+        </BrandBar>
+      )}
 
       {view === "contacts" ? (
-        <ContactList needle={needle} query={query.trim()} />
+        <>
+          {tools}
+          <ContactList needle={needle} query={query.trim()} />
+        </>
       ) : (
         <FlatList
           data={shown}
@@ -538,6 +516,31 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
             )
           }
         />
+      )}
+      {!archived && (
+        <View style={[styles.tabs, { backgroundColor: t.chip, marginHorizontal: 12, marginVertical: 8 }]}>
+          {views.map((v) => {
+            const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
+            return (
+              <Pressable
+                key={v}
+                onPress={() => setView(v)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: view === v }}
+                style={[styles.tab, view === v && { backgroundColor: t.surface }]}
+              >
+                <Text numberOfLines={1} style={{ color: view === v ? t.text : t.muted, fontSize: 14, fontWeight: "600" }}>
+                  {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
+                </Text>
+                {unread > 0 && (
+                  <View style={[styles.badge, { backgroundColor: brand }]}>
+                    <Text style={[styles.badgeText, { color: brandInk }]}>{unread > 99 ? "99+" : unread}</Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
       )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInvite onClose={() => setDialog(null)} />}

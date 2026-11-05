@@ -42,6 +42,7 @@ import { Logo } from "./logo";
 import { Sheet } from "./sheet";
 import { StoryComposer } from "./story-composer";
 import { Text, TextInput } from "./text";
+import { BrandBar } from "./brand-bar";
 import { Card, EmptyState, IconButton, Notice, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
 
 type Pending = { m: AnonMessageDTO; action: "menu" | "delete" | "block" | "report" };
@@ -761,10 +762,10 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: guest ? t.bg : t.glass }}>
-      <ScreenHeader inset={guest}>
-        {guest && <Logo size={36} />}
-        <Text style={[styles.title, { color: t.text }]}>{guest ? tr.common.appName : tr.ask.title}</Text>
-        {guest && (
+      {guest ? (
+        <ScreenHeader>
+          <Logo size={36} />
+          <Text style={[styles.title, { color: t.text }]}>{tr.common.appName}</Text>
           <Pressable
             onPress={() => setLanguages(true)}
             hitSlop={8}
@@ -774,13 +775,13 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
             <Globe size={16} color={t.textSoft} />
             <Text style={{ color: t.textSoft, fontWeight: "600" }}>{LOCALE_NAMES[locale]}</Text>
           </Pressable>
-        )}
-        {guest && (
           <Pressable onPress={() => void logout()} hitSlop={8} accessibilityLabel={tr.settings.signOut}>
             <LogOut size={20} color={t.textSoft} />
           </Pressable>
-        )}
-      </ScreenHeader>
+        </ScreenHeader>
+      ) : (
+        <BrandBar />
+      )}
       <FlatList
         data={view === "settings" ? [] : view === "sent" ? sentItems : items}
         keyExtractor={(m) => m.id}

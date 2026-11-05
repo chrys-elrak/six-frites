@@ -696,7 +696,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-3 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pt-3 dark:border-stone-800">
+      <header className={`${guest ? "flex" : "hidden"} items-center gap-3 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pt-3 dark:border-stone-800`}>
         {guest && <Logo className="size-9" />}
         <h1 className="flex-1 text-xl font-semibold tracking-tight">{guest ? tr.common.appName : tr.ask.title}</h1>
         {guest && <LanguageSelect />}
