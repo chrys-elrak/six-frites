@@ -116,6 +116,8 @@ describe("chat settings", () => {
     expect((await get(host, "/v1/chats")).items).toHaveLength(0);
     expect((await get(host, "/v1/chats?archived=true")).items[0].id).toBe(chatId);
     expect((await get(guest, `/v1/chats/${chatId}`)).archived).toBe(false);
+    expect((await get(host, "/v1/contacts")).items).toHaveLength(0);
+    expect((await get(guest, "/v1/contacts")).items).toHaveLength(1);
 
     expect((await call(host, "PATCH", `/v1/chats/${chatId}`, {})).json().error.code).toBe("VALIDATION_FAILED");
   });

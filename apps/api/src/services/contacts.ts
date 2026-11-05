@@ -94,7 +94,7 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
              CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END AS "originalName",
              CASE WHEN cm."showProfile" THEN u."avatarUrl" END AS "avatarUrl",
              CASE WHEN cm."showProfile" THEN u."avatarKey" END AS "avatarKey",
-             o."displayName" AS "customName", o."photoKey", me."showProfile" AS "sharingProfile",
+             o."displayName" AS "customName", o."photoKey", me."showProfile" AS "sharingProfile", me.archived,
              COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END) AS name
       FROM "ChatMember" cm
       JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct' AND c."supportUserId" IS NULL
@@ -110,11 +110,11 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
 
 /**
  * People the user shares a direct chat with, A to Z by the name the user sees (their custom name
- * if they set one), whether or not they have talked yet.
+ * if they set one), whether or not they have talked yet. Chats they archived stay behind the archive.
  */
 export async function listContacts(userId: string, q: ContactListQuery) {
   const after = q.cursor ? decodeCursor(q.cursor) : null;
-  const filters: Prisma.Sql[] = [Prisma.sql`TRUE`];
+  const filters: Prisma.Sql[] = [Prisma.sql`NOT archived`];
   if (q.q) {
     const like = `%${escapeLike(q.q)}%`;
     filters.push(Prisma.sql`name ILIKE ${like}`);
