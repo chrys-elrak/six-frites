@@ -238,7 +238,8 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         tags: ["messages"],
-        summary: "Edit one of your text messages",
+        summary: "Edit one of your messages",
+        description: "Changes its text or caption; a photo message can also get a new picture with attachmentId.",
         security,
         params: MessageParams,
         body: EditMessageInput,

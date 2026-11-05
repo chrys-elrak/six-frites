@@ -21,6 +21,7 @@ import {
   upsertChat,
 } from "./chats";
 import { e2eeFor } from "./e2ee";
+import { type LocalFile, uploadPhoto } from "./send";
 import { useSession } from "./session";
 import { six } from "./six";
 
@@ -136,12 +137,16 @@ export function applyChatDeleted(qc: QueryClient, chatId: string, scope: DeleteS
 }
 
 /** Saves an edit. Encrypted messages get new content for every device, keeping their quote and file. */
-export async function editMessage(qc: QueryClient, message: Hydrated, text: string, entities: MessageEntity[]) {
+/** Saves an edit, with a new photo for a photo message when `photo` is set. */
+export async function editMessage(qc: QueryClient, message: Hydrated, text: string, entities: MessageEntity[], photo?: LocalFile) {
   const params = { path: { id: message.id } };
   const meId = useSession.getState().user!.id;
   const chat = await chatFor(qc, message.chatId);
+  const encrypt = !!message.encryption || chat.encrypted;
+  const swap = photo ? await uploadPhoto(photo, encrypt) : null;
+  const attachmentId = swap?.attachmentId;
   const m =
-    message.encryption || chat.encrypted
+    encrypt
       ? await e2eeFor(meId)!.send(
           message.chatId,
           chat.members.map((x) => x.user.id),
@@ -152,11 +157,11 @@ export async function editMessage(qc: QueryClient, message: Hydrated, text: stri
             spoiler: message.spoiler || undefined,
             effect: message.effect ?? undefined,
             replyText: message.replyTo ? message.replyTo.text : undefined,
-            file: message.file,
+            file: swap?.file ?? message.file,
           },
-          async (encrypted) => unwrap(await six.api.PATCH("/v1/messages/{id}", { params, body: { encrypted } })),
+          async (encrypted) => unwrap(await six.api.PATCH("/v1/messages/{id}", { params, body: { encrypted, attachmentId } })),
         )
-      : unwrap(await six.api.PATCH("/v1/messages/{id}", { params, body: { text, entities } }));
+      : unwrap(await six.api.PATCH("/v1/messages/{id}", { params, body: { text, entities, attachmentId } }));
   applyEdited(qc, m);
   return m;
 }

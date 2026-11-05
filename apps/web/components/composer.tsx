@@ -77,10 +77,18 @@ import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
 import { useVoiceEffect } from "@/lib/voice-fx";
 import { VoiceEffectSelect } from "./voice-effect-select";
 
-function ModeBar({ label, text, onCancel }: { label: string; text: string; onCancel: () => void }) {
+function ModeBar({ label, text, photo, onCancel }: { label: string; text: string; photo?: File; onCancel: () => void }) {
   const tr = useT();
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!photo) return;
+    const next = URL.createObjectURL(photo);
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  }, [photo]);
   return (
     <div className="flex items-center gap-3 border-l-4 border-brand py-1 pr-1 pl-3">
+      {photo && url && <img src={url} alt="" className="size-10 shrink-0 rounded-md object-cover" />}
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-brand">{label}</p>
         <p className="truncate text-sm text-stone-600 dark:text-stone-300">{text}</p>
@@ -369,13 +377,14 @@ export function Composer({
   async function submit() {
     if (!canSubmit || commands.current?.submit()) return;
     if (editing) {
+      const photo = mode?.kind === "edit" ? mode.photo : undefined;
       const changed =
-        parsed.text !== editing.text || JSON.stringify(parsed.entities) !== JSON.stringify(editing.entities);
+        !!photo || parsed.text !== editing.text || JSON.stringify(parsed.entities) !== JSON.stringify(editing.entities);
       if (changed) {
         setSaving(true);
         setError(null);
         try {
-          await editMessage(qc, editing, parsed.text, parsed.entities);
+          await editMessage(qc, editing, parsed.text, parsed.entities, photo);
         } catch {
           setError(tr.composer.couldNotSaveEdit);
           return;
@@ -611,6 +620,7 @@ export function Composer({
           <ModeBar
             label={tr.composer.editingMessage}
             text={maskSpoilers(editing.text ?? "", editing.entities)}
+            photo={mode?.kind === "edit" ? mode.photo : undefined}
             onCancel={cancel}
           />
         )}

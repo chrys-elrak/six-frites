@@ -61,6 +61,19 @@ async function imageSize(blob: Blob) {
   }
 }
 
+/** Uploads a photo that replaces a sent one's; in an encrypted chat it is sealed with a key of its own. */
+export async function uploadPhoto(photo: File, encrypt: boolean) {
+  const { name, type: mime } = photo;
+  if (!encrypt || photo.size > ENCRYPT_MAX_BYTES) {
+    return { attachmentId: (await six.upload(photo, { kind: "image", name, mime, encrypted: false })).id };
+  }
+  const [bytes, meta, size] = await Promise.all([photo.arrayBuffer(), mediaMeta(photo, "image"), imageSize(photo)]);
+  const { data, key, digest } = encryptFile(new Uint8Array(bytes));
+  const file: EncryptedFile = { key, digest, name, mime, size: photo.size, ...size, ...meta };
+  const upload = await six.upload(new Blob([data as Uint8Array<ArrayBuffer>]), { kind: "image", name, mime, encrypted: true });
+  return { attachmentId: upload.id, file };
+}
+
 /** Encrypts a pending file once, so retries and re-seals reuse the same upload and key. */
 async function sealFile(pending: PendingMessage, blob: Blob) {
   const saved = sealedFiles.get(pending.clientId);

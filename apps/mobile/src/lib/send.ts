@@ -57,7 +57,7 @@ export interface Draft {
 }
 
 /** Encrypts a picked file into the cache so it can be uploaded like any other file. */
-async function sealFile(localUrl: string, a: NonNullable<PendingMessage["attachment"]>) {
+async function sealFile(localUrl: string, a: Pick<LocalFile, "name" | "mime" | "size" | "width" | "height" | "durationMs" | "sticker">) {
   const sealed = encryptFile(await new File(localUrl).bytes());
   const out = new File(Paths.cache, `sealed-${randomUUID()}`);
   out.create();
@@ -74,6 +74,15 @@ async function sealFile(localUrl: string, a: NonNullable<PendingMessage["attachm
     ...(a.sticker && { sticker: true }),
   };
   return { uri: out.uri, file };
+}
+
+/** Uploads a photo that replaces a sent one's; in an encrypted chat it is sealed with a key of its own. */
+export async function uploadPhoto(photo: LocalFile, encrypt: boolean) {
+  const sealed = encrypt && photo.size <= ENCRYPT_MAX_BYTES ? await sealFile(photo.uri, photo) : null;
+  const blob = await (await fetch(sealed?.uri ?? photo.uri)).blob();
+  const upload = await six.upload(blob, { kind: "image", name: photo.name, mime: photo.mime, encrypted: !!sealed });
+  if (sealed) new File(sealed.uri).delete();
+  return { attachmentId: upload.id, file: sealed?.file };
 }
 
 export async function deliver(qc: QueryClient, realtime: Realtime, pending: PendingMessage) {

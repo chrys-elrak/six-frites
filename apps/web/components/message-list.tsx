@@ -95,6 +95,7 @@ import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
 import { loadUntil, useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
+import { PhotoEditor } from "./photo-editor";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
 import { emojiOnly, splitEmoji } from "@/lib/emoji";
 import { useT } from "@/lib/i18n";
@@ -1128,6 +1129,7 @@ export const MessageList = forwardRef<
     const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
     const [reporting, setReporting] = useState<MessageDTO | null>(null);
     const [timingFor, setTimingFor] = useState<string | null>(null);
+    const [markingUp, setMarkingUp] = useState<{ message: MessageDTO; file: File } | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [forwarding, setForwarding] = useState<Hydrated[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
@@ -1309,6 +1311,13 @@ export const MessageList = forwardRef<
         ];
       }
       const m = row.message!;
+      const photo =
+        !frozen &&
+        !m.ephemeral &&
+        !row.album &&
+        m.type === "image" &&
+        m.attachment?.status === "ready" &&
+        (m.file?.mime ?? m.attachment.mime) !== "image/gif";
       if (row.deleted) {
         return [
           { label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) },
@@ -1376,22 +1385,31 @@ export const MessageList = forwardRef<
         !["sticker", "location", "checklist", "game"].includes(m.type) &&
         !frozen &&
         !m.undecryptable
-          ? [{ label: tr.common.edit, icon: Pencil, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
-          : []),
-        ...(row.mine &&
-        !frozen &&
-        !m.ephemeral &&
-        !row.album &&
-        m.type === "image" &&
-        m.attachment?.status === "ready" &&
-        (m.file?.mime ?? m.attachment.mime) !== "image/gif"
           ? [
               {
-                label: tr.messages.editAndResend,
+                label: tr.common.edit,
+                icon: Pencil,
+                onSelect: () =>
+                  photo
+                    ? void messageFile(m).then(
+                        (file) => setMarkingUp({ message: m, file }),
+                        () => setMode(chat.id, { kind: "edit", message: m }),
+                      )
+                    : setMode(chat.id, { kind: "edit", message: m }),
+              },
+            ]
+          : []),
+        ...(photo && !row.mine
+          ? [
+              {
+                label: tr.messages.markUpAndReply,
                 icon: ImagePlus,
                 onSelect: () =>
                   void messageFile(m).then(
-                    (file) => useComposerMode.getState().hand(chat.id, file),
+                    (file) => {
+                      setMode(chat.id, { kind: "reply", message: m });
+                      useComposerMode.getState().hand(chat.id, file);
+                    },
                     () => null,
                   ),
               },
@@ -1595,6 +1613,19 @@ export const MessageList = forwardRef<
         )}
         {packFor && <PackDialog packId={packFor} onClose={() => setPackFor(null)} />}
         {timingFor && <MessageTiming messageId={timingFor} onClose={() => setTimingFor(null)} />}
+        {markingUp && (
+          <PhotoEditor
+            file={markingUp.file}
+            onCancel={() => {
+              setMode(chat.id, { kind: "edit", message: markingUp.message });
+              setMarkingUp(null);
+            }}
+            onDone={(file) => {
+              setMode(chat.id, { kind: "edit", message: markingUp.message, photo: file });
+              setMarkingUp(null);
+            }}
+          />
+        )}
         {forwarding && (
           <ChatPicker
             title={tr.messages.forwardTo}

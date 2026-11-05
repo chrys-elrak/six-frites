@@ -310,7 +310,12 @@ export type MessageDTO = z.infer<typeof MessageDTO>;
 const MessageText = z.string().trim().min(1).max(4000);
 
 export const EditMessageInput = z
-  .object({ text: MessageText.optional(), entities: Entities.optional(), encrypted: EncryptedInput.optional() })
+  .object({
+    text: MessageText.optional(),
+    entities: Entities.optional(),
+    encrypted: EncryptedInput.optional(),
+    attachmentId: Id.optional().describe("A completed photo upload that replaces a photo message's picture"),
+  })
   .refine((v) => (v.text === undefined) !== (v.encrypted === undefined), {
     message: "Send either text or encrypted content",
     path: ["text"],

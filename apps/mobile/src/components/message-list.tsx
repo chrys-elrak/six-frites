@@ -88,6 +88,7 @@ import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { RestoreBackupDialog, useHasRecoveryKey } from "./encryption-settings";
 import { useComposerMode } from "@/lib/composer";
+import { PhotoEditor } from "./photo-editor";
 import { messageFile } from "@/lib/media";
 import { emojiOnly, splitEmoji } from "@/lib/emoji";
 import { EPHEMERAL_OPTIONS, canResend, shortRule } from "@/lib/ephemeral";
@@ -98,7 +99,7 @@ import { segments } from "@/lib/markup";
 import { six } from "@/lib/six";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
-import { deliver, forwardMessages, queueMessage } from "@/lib/send";
+import { deliver, forwardMessages, type LocalFile, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
@@ -1175,6 +1176,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const [album, setAlbum] = useState<{ items: LightboxItem[]; start: number } | null>(null);
     const [destructFor, setDestructFor] = useState<MessageDTO | null>(null);
     const [timingFor, setTimingFor] = useState<string | null>(null);
+    const [markingUp, setMarkingUp] = useState<{ message: MessageDTO; file: LocalFile } | null>(null);
     const [reactingTo, setReactingTo] = useState<MessageDTO | null>(null);
     const [viewing, setViewing] = useState<ViewMessageResult | null>(null);
     const [opening, setOpening] = useState(false);
@@ -1347,6 +1349,13 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ];
       }
       const m = row.message!;
+      const photo =
+        !frozen &&
+        !m.ephemeral &&
+        !row.album &&
+        m.type === "image" &&
+        m.attachment?.status === "ready" &&
+        m.attachment.mime !== "image/gif";
       if (row.deleted) {
         return [
           { label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) },
@@ -1404,24 +1413,33 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         ...(m.ephemeral || frozen
           ? []
           : [
-              ...(row.mine && m.text !== null
-                ? [{ label: tr.common.edit, icon: Pencil, onSelect: () => setMode(chat.id, { kind: "edit", message: m }) }]
+              ...(row.mine && (m.text !== null || photo)
+                ? [
+                    {
+                      label: tr.common.edit,
+                      icon: Pencil,
+                      onSelect: () =>
+                        photo
+                          ? void messageFile(m).then(
+                              (file) => setMarkingUp({ message: m, file }),
+                              () => setMode(chat.id, { kind: "edit", message: m }),
+                            )
+                          : setMode(chat.id, { kind: "edit", message: m }),
+                    },
+                  ]
                 : []),
             ]),
-        ...(row.mine &&
-        !frozen &&
-        !m.ephemeral &&
-        !row.album &&
-        m.type === "image" &&
-        m.attachment?.status === "ready" &&
-        m.attachment.mime !== "image/gif"
+        ...(photo && !row.mine
           ? [
               {
-                label: tr.messages.editAndResend,
+                label: tr.messages.markUpAndReply,
                 icon: ImagePlus,
                 onSelect: () =>
                   void messageFile(m).then(
-                    (file) => useComposerMode.getState().hand(chat.id, file),
+                    (file) => {
+                      setMode(chat.id, { kind: "reply", message: m });
+                      useComposerMode.getState().hand(chat.id, file);
+                    },
                     () => null,
                   ),
               },
@@ -1601,6 +1619,19 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
         {album && <AlbumViewer items={album.items} start={album.start} onClose={() => setAlbum(null)} />}
         {timingFor && <MessageTiming messageId={timingFor} onClose={() => setTimingFor(null)} />}
+        {markingUp && (
+          <PhotoEditor
+            file={markingUp.file}
+            onCancel={() => {
+              setMode(chat.id, { kind: "edit", message: markingUp.message });
+              setMarkingUp(null);
+            }}
+            onDone={(file) => {
+              setMode(chat.id, { kind: "edit", message: markingUp.message, photo: file });
+              setMarkingUp(null);
+            }}
+          />
+        )}
         {forwarding && (
           <ChatPicker
             title={tr.messages.forwardTo}

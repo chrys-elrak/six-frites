@@ -28818,10 +28818,11 @@
     },
     "/v1/messages/{id}": {
       "patch": {
-        "summary": "Edit one of your text messages",
+        "summary": "Edit one of your messages",
         "tags": [
           "messages"
         ],
+        "description": "Changes its text or caption; a photo message can also get a new picture with attachmentId.",
         "requestBody": {
           "required": true,
           "content": {
@@ -28979,6 +28980,11 @@
                       "envelopes"
                     ],
                     "description": "End-to-end encrypted content. The server rejects it with DEVICES_CHANGED if a device is missing or unknown."
+                  },
+                  "attachmentId": {
+                    "description": "A completed photo upload that replaces a photo message's picture",
+                    "type": "string",
+                    "minLength": 1
                   }
                 }
               }

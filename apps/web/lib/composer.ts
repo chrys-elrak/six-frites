@@ -1,7 +1,8 @@
 import type { MessageDTO } from "@six/shared";
 import { create } from "zustand";
 
-export type ComposerMode = { kind: "reply"; message: MessageDTO } | { kind: "edit"; message: MessageDTO };
+/** Editing a photo message can carry the marked-up photo that will replace it. */
+export type ComposerMode = { kind: "reply"; message: MessageDTO } | { kind: "edit"; message: MessageDTO; photo?: File };
 
 interface ComposerState {
   byChat: Record<string, ComposerMode | undefined>;

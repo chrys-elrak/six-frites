@@ -55,6 +55,7 @@ import {
 } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { randomUUID } from "expo-crypto";
+import { Image } from "expo-image";
 import { File, Paths } from "expo-file-system";
 import { Keyboard, Pressable, ScrollView, StyleSheet, View, findNodeHandle } from "react-native";
 import { Text, TextInput } from "./text";
@@ -101,11 +102,12 @@ interface Range {
   end: number;
 }
 
-function ModeBar({ label, text, onCancel }: { label: string; text: string; onCancel: () => void }) {
+function ModeBar({ label, text, photo, onCancel }: { label: string; text: string; photo?: LocalFile; onCancel: () => void }) {
   const t = useTheme();
   const tr = useT();
   return (
     <View style={styles.modeBar}>
+      {photo && <Image source={{ uri: photo.uri }} style={{ width: 40, height: 40, borderRadius: 6 }} contentFit="cover" />}
       <View style={{ flex: 1 }}>
         <Text style={{ color: brand, fontSize: 12, fontWeight: "700" }}>{label}</Text>
         <Text numberOfLines={1} style={{ color: t.textSoft, fontSize: 14 }}>
@@ -397,13 +399,14 @@ export function Composer({
   async function submit() {
     if (!canSubmit || commands.current?.submit()) return;
     if (editing) {
+      const photo = mode?.kind === "edit" ? mode.photo : undefined;
       const changed =
-        parsed.text !== editing.text || JSON.stringify(parsed.entities) !== JSON.stringify(editing.entities);
+        !!photo || parsed.text !== editing.text || JSON.stringify(parsed.entities) !== JSON.stringify(editing.entities);
       if (changed) {
         setSaving(true);
         setError(null);
         try {
-          await editMessage(qc, editing, parsed.text, parsed.entities);
+          await editMessage(qc, editing, parsed.text, parsed.entities, photo);
         } catch {
           setError(tr.composer.couldNotSaveEdit);
           return;
@@ -625,7 +628,12 @@ export function Composer({
           />
         )}
         {editing && (
-          <ModeBar label={tr.composer.editingMessage} text={maskSpoilers(editing.text ?? "", editing.entities)} onCancel={cancel} />
+          <ModeBar
+            label={tr.composer.editingMessage}
+            text={maskSpoilers(editing.text ?? "", editing.entities)}
+            photo={mode?.kind === "edit" ? mode.photo : undefined}
+            onCancel={cancel}
+          />
         )}
         {parked && !editing && (
           <Pressable onPress={swapDraft} style={[styles.modeBar, { borderLeftColor: t.muted, paddingRight: 8 }]}>

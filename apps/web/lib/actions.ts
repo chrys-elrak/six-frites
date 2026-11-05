@@ -21,6 +21,7 @@ import {
   upsertChat,
 } from "./chats";
 import { type Hydrated, e2ee, hydrate, hydrateChat } from "./e2ee";
+import { uploadPhoto } from "./send";
 import { useSession } from "./session";
 import { six } from "./six";
 
@@ -141,9 +142,14 @@ function chatOf(qc: QueryClient, chatId: string) {
   return { client, memberIds: chat.members.map((m) => m.user.id) };
 }
 
-/** Saves an edit. Encrypted messages are sealed again with the same clientId, keeping their quote and file. */
-export async function editMessage(qc: QueryClient, original: Hydrated, text: string, entities: MessageEntity[]) {
+/**
+ * Saves an edit, with a new photo for a photo message when `photo` is set. Encrypted messages are sealed again
+ * with the same clientId, keeping their quote and, unless it was replaced, their file.
+ */
+export async function editMessage(qc: QueryClient, original: Hydrated, text: string, entities: MessageEntity[], photo?: File) {
   const path = { id: original.id };
+  const swap = photo ? await uploadPhoto(photo, !!original.encryption) : null;
+  const attachmentId = swap?.attachmentId;
   let m: MessageDTO;
   if (original.encryption) {
     const { client, memberIds } = chatOf(qc, original.chatId);
@@ -157,12 +163,13 @@ export async function editMessage(qc: QueryClient, original: Hydrated, text: str
         spoiler: original.spoiler || undefined,
         effect: original.effect ?? undefined,
         replyText: original.replyTo ? original.replyTo.text : undefined,
-        file: original.file,
+        file: swap?.file ?? original.file,
       },
-      async (encrypted) => unwrap(await six.api.PATCH("/v1/messages/{id}", { params: { path }, body: { encrypted } })),
+      async (encrypted) =>
+        unwrap(await six.api.PATCH("/v1/messages/{id}", { params: { path }, body: { encrypted, attachmentId } })),
     );
   } else {
-    m = unwrap(await six.api.PATCH("/v1/messages/{id}", { params: { path }, body: { text, entities } }));
+    m = unwrap(await six.api.PATCH("/v1/messages/{id}", { params: { path }, body: { text, entities, attachmentId } }));
   }
   const hydrated = await hydrate(m);
   applyEdited(qc, hydrated);

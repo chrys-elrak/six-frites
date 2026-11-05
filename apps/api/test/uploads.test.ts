@@ -123,6 +123,27 @@ describe("uploads", () => {
     await (await mediaQueue().getJob(image.id))?.remove();
   });
 
+  it("swaps the photo of your own photo message, and only of a photo message", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const first = await upload(host, "image", "image/png", Buffer.from("before"), "pic.png");
+    const sent = (await send(host, chatId, "look", { attachmentId: first.id })).json();
+    const marked = await upload(host, "image", "image/png", Buffer.from("after"), "pic.png");
+    const edit = (who: Auth, attachmentId: string, text = "look here") =>
+      call(who, "PATCH", `/v1/messages/${sent.id}`, { text, attachmentId });
+
+    expect((await edit(guest, marked.id)).json().error.code).toBe("NOT_MESSAGE_SENDER");
+    const edited = await edit(host, marked.id);
+    expect(edited.json()).toMatchObject({ type: "image", text: "look here", attachment: { id: marked.id }, editedAt: expect.any(String) });
+    expect(await prisma.upload.findUnique({ where: { id: first.id } })).toBeNull();
+    expect((await edit(host, marked.id)).json().error.code).toBe("UPLOAD_IN_USE");
+
+    const text = (await send(host, chatId, "words")).json();
+    const other = await upload(host, "image", "image/png", Buffer.from("x"), "pic.png");
+    const swap = await call(host, "PATCH", `/v1/messages/${text.id}`, { text: "words", attachmentId: other.id });
+    expect(swap.json().error.code).toBe("MESSAGE_NOT_EDITABLE");
+    for (const id of [first.id, marked.id, other.id]) await (await mediaQueue().getJob(id))?.remove();
+  });
+
   it("lists a chat's shared media, files and links, without deleted or self-destructing ones", async () => {
     const { host, guest, chatId } = await makeFriends();
     const image = await upload(host, "image", "image/png", Buffer.from("not really a png"), "pic.png");

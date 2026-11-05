@@ -479,7 +479,7 @@ export async function sendMessage(
 }
 
 export async function editMessage(userId: string, messageId: string, input: EditMessageInput, sessionId?: string) {
-  return withEvents(async (tx, emit) => {
+  const { dto, replaced } = await withEvents(async (tx, emit) => {
     const message = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
     if (!message) throw new AppError("MESSAGE_NOT_FOUND");
     await assertMember(tx, message.chatId, userId).catch(() => {
@@ -495,10 +495,16 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
     const chat = await tx.chat.findUniqueOrThrow({ where: { id: message.chatId }, select: { encryptedAt: true } });
+    const photo = input.attachmentId ? await claimForMessage(tx, userId, input.attachmentId) : null;
+    if (photo && (message.type !== "image" || photo.kind !== "image")) {
+      throw new AppError("MESSAGE_NOT_EDITABLE", "Only a photo message can get a new photo");
+    }
+    const attachment = photo ?? message.attachment;
+    const swap = photo ? { attachmentId: photo.id } : {};
 
     let updated: MessageRow;
     if (input.encrypted) {
-      if (message.attachment && !fitsEncrypted(message.attachment)) {
+      if (attachment && !fitsEncrypted(attachment)) {
         throw new AppError("MESSAGE_NOT_EDITABLE", "A plain file can't get an encrypted caption");
       }
       if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
@@ -515,6 +521,7 @@ export async function editMessage(userId: string, messageId: string, input: Edit
           entities: Prisma.DbNull,
           spoiler: false,
           editedAt: new Date(),
+          ...swap,
           envelopes: { create: envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
           ...(backup && { backups: { create: { userId, sealed: backup } } }),
         },
@@ -524,19 +531,26 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       if (message.encrypted || chat.encryptedAt) {
         throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
       }
+      if (photo?.encrypted) throw new AppError("VALIDATION_FAILED", "Encrypted files go in encrypted messages");
       const entities = input.entities ?? [];
-      if (message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
-        return toMessageDTO(message, userId);
+      if (!photo && message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
+        return { dto: toMessageDTO(message, userId), replaced: null };
       }
       updated = await tx.message.update({
         where: { id: messageId },
-        data: { text: input.text, entities: storedEntities(entities), editedAt: new Date() },
+        data: { text: input.text, entities: storedEntities(entities), editedAt: new Date(), ...swap },
         include: messageInclude,
       });
     }
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
-    return toMessageDTO(updated, userId);
+    const replaced =
+      photo && message.attachmentId && !(await tx.message.count({ where: { attachmentId: message.attachmentId } }))
+        ? message.attachmentId
+        : null;
+    return { dto: toMessageDTO(updated, userId), replaced };
   });
+  if (replaced) await purgeUploads([replaced]);
+  return dto;
 }
 
 export async function messageTiming(userId: string, messageId: string): Promise<MessageTimingDTO> {

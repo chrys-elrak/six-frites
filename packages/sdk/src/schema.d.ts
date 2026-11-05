@@ -8758,7 +8758,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Edit one of your text messages */
+        /**
+         * Edit one of your messages
+         * @description Changes its text or caption; a photo message can also get a new picture with attachmentId.
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -8808,6 +8811,8 @@ export interface paths {
                             /** @description The content sealed with your backup key (@six/crypto sealBackup) */
                             backup?: string;
                         };
+                        /** @description A completed photo upload that replaces a photo message's picture */
+                        attachmentId?: string;
                     };
                 };
             };
