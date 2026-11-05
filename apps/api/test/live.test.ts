@@ -102,6 +102,20 @@ describe("live rooms", () => {
     if (seen.game === "eights") expect(seen.state.hand).not.toEqual(view.state.hand);
   });
 
+  it("plays reflex: the first to tap the item in their inventory wins the point", async () => {
+    const { host } = await makeFriends();
+    const a = await player(host);
+    const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "reflex", invite: [], locale: "en", bot: true });
+    const view = data!.view!;
+    if (view.game !== "reflex") throw new Error(`expected reflex, got ${view.game}`);
+    const { round, target, hands } = view.state;
+    expect(hands[0]).toContain(target);
+    expect((await a.ask("live:move", { roomId: data!.id, move: { round, item: target } })).ok).toBe(true);
+    await until(() => a.rooms.some((r) => r.view?.game === "reflex" && r.view.state.scores[0] === 1));
+    expect((await a.ask("live:move", { roomId: data!.id, move: { round, item: target } })).error!.code).toBe("INVALID_MOVE");
+    await a.ask("live:end", { roomId: data!.id });
+  });
+
   it("starts a game against the bot right away, inviting no one", async () => {
     const { host, guest } = await makeFriends();
     const a = await player(host);

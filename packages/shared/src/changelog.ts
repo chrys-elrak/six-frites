@@ -13,6 +13,21 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: "1.5.2",
+    date: "2026-11-06",
+    notes: {
+      en: [
+        "New live game, Reflex: something pops up, and the first to tap it in their own inventory wins the point. Inventories shuffle every round, a wrong tap puts you out until the next one, and the first to 10 wins. Play it with friends or against Six Frites Game.",
+      ],
+      fr: [
+        "Nouveau jeu en direct, Réflexe : un objet apparaît, et le premier à le toucher dans son inventaire gagne le point. Les inventaires sont mélangés à chaque manche, une erreur t'élimine jusqu'à la suivante, et le premier à 10 gagne. À jouer entre amis ou contre Six Frites Game.",
+      ],
+      mg: [
+        "Lalao mivantana vaovao, Haingana: misy zavatra miseho, ary izay voalohany manindry azy ao amin'ny entany no mahazo ny isa. Afangaro isaky ny fihodinana ny entana, miala mandra-pahatongan'ny manaraka izay diso, ary izay mahazo 10 voalohany no mandresy. Lalaovy amin'ny namana na amin'i Six Frites Game.",
+      ],
+    },
+  },
+  {
     version: "1.5.1",
     date: "2026-11-05",
     notes: {

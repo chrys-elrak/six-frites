@@ -16,6 +16,7 @@ export * from "./word-hunt.js";
 export * from "./fanorona.js";
 export * from "./dots.js";
 export * from "./memory.js";
+export * from "./reflex.js";
 export * from "./contacts.js";
 export * from "./sync.js";
 export * from "./uploads.js";

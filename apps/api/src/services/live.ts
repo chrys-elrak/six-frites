@@ -55,6 +55,16 @@ import {
   memoryPlay,
   memoryStart,
   memoryView,
+  REFLEX_PAUSE_MS,
+  REFLEX_ROUND_MS,
+  ReflexMove,
+  type ReflexState,
+  reflexAuto,
+  reflexBotDelay,
+  reflexDeal,
+  reflexPlay,
+  reflexStart,
+  reflexTimeout,
 } from "@six/shared";
 import type { User } from "../generated/prisma/client.js";
 import { lexicon } from "../lib/lexicon.js";
@@ -76,7 +86,8 @@ type GameState =
   | { game: "words"; s: WordsState }
   | { game: "fanorona"; s: FanoronaState }
   | { game: "dots"; s: DotsState }
-  | { game: "memory"; s: MemoryState };
+  | { game: "memory"; s: MemoryState }
+  | { game: "reflex"; s: ReflexState };
 
 interface Seat {
   /** null for Frite Bot. */
@@ -122,7 +133,7 @@ interface Room {
  */
 const live = new Map<string, Room>();
 
-const BOT_MS = { ludo: 900, eights: 1300, fanorona: 1200, dots: 800, memory: 1100, words: 0 };
+const BOT_MS = { ludo: 900, eights: 1300, fanorona: 1200, dots: 800, memory: 1100, words: 0, reflex: 0 };
 const IDLE_MS = 30 * 60 * 1000;
 
 setInterval(() => {
@@ -137,6 +148,7 @@ function scoresOf(state: GameState) {
   if (state.game === "dots") return dotsScores(state.s);
   if (state.game === "memory") return memoryScores(state.s);
   if (state.game === "words") return wordsView(state.s, null).scores;
+  if (state.game === "reflex") return state.s.scores;
   return null;
 }
 
@@ -147,6 +159,7 @@ function startState(room: Room): GameState {
   if (room.game === "fanorona") return { game: "fanorona", s: fanoronaStart() };
   if (room.game === "dots") return { game: "dots", s: dotsStart(n) };
   if (room.game === "memory") return { game: "memory", s: memoryStart(n, Math.random) };
+  if (room.game === "reflex") return { game: "reflex", s: reflexStart(n, Math.random) };
   return { game: "words", s: wordsStart(n, lexicon(room.locale), Math.random) };
 }
 
@@ -176,6 +189,11 @@ function apply(state: GameState, seat: number, move: unknown): GameState | null 
     const s = m.success && memoryPlay(state.s, seat, m.data);
     return s ? { game: "memory", s } : null;
   }
+  if (state.game === "reflex") {
+    const m = ReflexMove.safeParse(move);
+    const s = m.success && reflexPlay(state.s, seat, m.data);
+    return s ? { game: "reflex", s } : null;
+  }
   const m = WordsMove.safeParse(move);
   const s = m.success && wordsPlay(state.s, seat, m.data);
   return s ? { game: "words", s } : null;
@@ -187,14 +205,15 @@ function autoMove(state: GameState, seat: number) {
   if (state.game === "fanorona") return fanoronaAuto(state.s, seat);
   if (state.game === "dots") return dotsAuto(state.s, seat);
   if (state.game === "memory") return memoryAuto(state.s, seat, Math.random);
+  if (state.game === "reflex") return reflexAuto(state.s, seat, Math.random);
   return wordsAuto(state.s, seat, Math.random);
 }
 
-const turnOf = (state: GameState) => (state.game === "words" ? null : state.s.turn);
+const turnOf = (state: GameState) => (state.game === "words" || state.game === "reflex" ? null : state.s.turn);
 
 function winnersOf(state: GameState) {
   if (state.game === "words") return state.s.over ? wordsWinners(state.s) : null;
-  if (state.game === "fanorona" || state.game === "dots" || state.game === "memory") return state.s.winners;
+  if (state.game === "fanorona" || state.game === "dots" || state.game === "memory" || state.game === "reflex") return state.s.winners;
   return state.s.winner === null ? null : [state.s.winner];
 }
 
@@ -203,6 +222,7 @@ function viewOf(state: GameState, seat: number | null): LiveView {
   if (state.game === "eights") return { game: "eights", state: eightsView(state.s, seat) };
   if (state.game === "words") return { game: "words", state: wordsView(state.s, seat) };
   if (state.game === "memory") return { game: "memory", state: memoryView(state.s) };
+  if (state.game === "reflex") return { game: "reflex", state: state.s };
   return state.game === "fanorona" ? { game: "fanorona", state: state.s } : { game: "dots", state: state.s };
 }
 
@@ -321,8 +341,47 @@ function act(room: Room, seat: number, move: unknown) {
   if (!next) return false;
   room.state = next;
   if (next.game === "words") broadcast(room);
+  else if (next.game === "reflex") reflexAfter(room);
   else schedule(room);
   return true;
+}
+
+/** Reflex: an item is up until someone finds it or time runs out, bots tapping about as fast as a person. */
+function reflexRound(room: Room) {
+  clearTimers(room);
+  room.roundTimers.push(
+    setTimeout(() => {
+      if (room.state?.game !== "reflex") return;
+      room.state = { game: "reflex", s: reflexTimeout(room.state.s) };
+      reflexAfter(room);
+    }, REFLEX_ROUND_MS),
+  );
+  room.seats.forEach((seat, i) => {
+    if (!playsItself(seat)) return;
+    room.roundTimers.push(
+      setTimeout(() => {
+        if (room.status === "playing" && room.state?.game === "reflex") act(room, i, autoMove(room.state, i));
+      }, reflexBotDelay(Math.random)),
+    );
+  });
+  broadcast(room);
+}
+
+/** After a tap or a timeout: the game ends at the goal, or once the round is decided the next item comes after a pause. */
+function reflexAfter(room: Room) {
+  if (room.state?.game !== "reflex") return;
+  const { s } = room.state;
+  if (s.winners) return finish(room, s.winners);
+  broadcast(room);
+  if (s.target) return;
+  clearTimers(room);
+  room.roundTimers.push(
+    setTimeout(() => {
+      if (room.status !== "playing" || room.state?.game !== "reflex") return;
+      room.state = { game: "reflex", s: reflexDeal(room.state.s, Math.random) };
+      reflexRound(room);
+    }, REFLEX_PAUSE_MS),
+  );
 }
 
 /** Word hunt: everyone plays at once until the clock runs out, bots finding a word every few seconds. */
@@ -469,7 +528,7 @@ export function leaveRoom(userId: string, roomId: string) {
   } else room.seats[seat]!.left = true;
   if (!humans(room).length) {
     if (room.status !== "playing") return close(room);
-    if (room.state?.game !== "words") clearTimers(room);
+    if (room.state?.game !== "words" && room.state?.game !== "reflex") clearTimers(room);
     return;
   }
   if (room.status === "playing" && room.state && turnOf(room.state) === seat) return schedule(room);
@@ -510,6 +569,7 @@ export function startRoom(userId: string, roomId: string) {
   room.winners = [];
   room.state = startState(room);
   if (room.state.game === "words") startRound(room);
+  else if (room.state.game === "reflex") reflexRound(room);
   else schedule(room);
   return toDTO(room, userId);
 }

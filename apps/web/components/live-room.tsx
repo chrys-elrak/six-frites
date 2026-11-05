@@ -36,6 +36,7 @@ import { useGifs } from "./gif-picker";
 import { HowToPlay } from "./how-to-play";
 import { LudoBoard } from "./ludo-board";
 import { MemoryBoard } from "./memory-board";
+import { ReflexBoard } from "./reflex-board";
 import { ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
 import { Sheet } from "./sheet";
 import { WordHunt } from "./word-hunt";
@@ -58,7 +59,7 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
   const tr = useT();
   const seconds = useCountdown(room.deadline);
   const view = room.view;
-  const turn = view && view.game !== "words" && room.status === "playing" ? view.state.turn : null;
+  const turn = view && view.game !== "words" && view.game !== "reflex" && room.status === "playing" ? view.state.turn : null;
   return (
     <div className="flex flex-wrap justify-center gap-2">
       {room.seats.map((s, i) => {
@@ -75,7 +76,9 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
                     ? tr.live.stones(fanoronaCounts(view.state)[i]!)
                     : view?.game === "memory"
                       ? tr.live.pairs(memoryScores(view.state)[i]!)
-                      : null;
+                      : view?.game === "reflex"
+                        ? tr.live.points(view.state.scores[i]!)
+                        : null;
         return (
           <div
             key={i}
@@ -679,6 +682,13 @@ export function LiveRoom({ roomId }: { roomId: string }) {
                 />
               ) : room.view?.game === "memory" ? (
                 <MemoryBoard
+                  state={room.view.state}
+                  mySeat={room.mySeat}
+                  nameOf={nameOf}
+                  play={(move) => void ask("live:move", { move })}
+                />
+              ) : room.view?.game === "reflex" ? (
+                <ReflexBoard
                   state={room.view.state}
                   mySeat={room.mySeat}
                   nameOf={nameOf}

@@ -57,7 +57,7 @@ export function useCountdown(deadline: string | null) {
  */
 export function useMyTurn(room: LiveRoomDTO | null) {
   const view = room?.status === "playing" ? room.view : null;
-  const mine = !!view && room!.mySeat !== null && (view.game === "words" || view.state.turn === room!.mySeat);
+  const mine = !!view && room!.mySeat !== null && (view.game === "words" || view.game === "reflex" || view.state.turn === room!.mySeat);
   const seconds = useCountdown(mine ? room!.deadline : null);
   useEffect(() => {
     if (mine) playGameSound("/sounds/turn.wav");

@@ -93,6 +93,12 @@ const en = {
       "Same picture? The pair is yours and you play again. Different? They turn back over and it's the next player's turn.",
       "Remember where each card is. When every pair is found, whoever has the most wins.",
     ],
+    reflex: [
+      "Everyone gets an inventory of 6 things, and something pops up in the middle.",
+      "It's in your inventory too: find it and tap it before the others.",
+      "First to tap it wins the point. Tap a wrong one and you're out until the next round.",
+      "Inventories shuffle every round. First to 10 points wins.",
+    ],
     words: [
       "Everyone gets the same 16 letters for 2 minutes.",
       "Make words of 3 letters or more by sliding across touching letters, sideways, up, down or diagonally, each letter once.",
@@ -197,6 +203,12 @@ const fr: typeof en = {
       "Même image ? La paire est à toi et tu rejoues. Différentes ? Elles se retournent et c'est au suivant.",
       "Retiens où est chaque carte. Quand toutes les paires sont trouvées, celui qui en a le plus gagne.",
     ],
+    reflex: [
+      "Chacun a un inventaire de 6 objets, et un objet apparaît au milieu.",
+      "Il est aussi dans ton inventaire : trouve-le et touche-le avant les autres.",
+      "Le premier à le toucher gagne le point. Touche le mauvais et tu es éliminé jusqu'à la manche suivante.",
+      "Les inventaires sont mélangés à chaque manche. Le premier à 10 points gagne.",
+    ],
     words: [
       "Tout le monde a les mêmes 16 lettres pendant 2 minutes.",
       "Forme des mots de 3 lettres ou plus en glissant sur des lettres voisines, sur les côtés, en haut, en bas ou en diagonale, chaque lettre une seule fois.",
@@ -300,6 +312,12 @@ const mg: typeof en = {
       "Rehefa anjaranao, avadiho karatra roa. Hitan'ny rehetra izy ireo.",
       "Mitovy sary? Anao ilay mpivady ary milalao indray ianao. Tsy mitovy? Miverina mitodika izy ireo ary anjaran'ny manaraka.",
       "Tadidio ny toeran'ny karatra tsirairay. Rehefa hita avokoa ny mpivady rehetra, izay manana betsaka indrindra no mandresy.",
+    ],
+    reflex: [
+      "Samy manana entana 6, ary misy zavatra iray miseho eo afovoany.",
+      "Ao amin'ny entanao koa izy: tadiavo ary tsindrio alohan'ny hafa.",
+      "Izay voalohany manindry azy no mahazo ny isa. Raha diso no tsindrianao dia miala ianao mandra-pahatongan'ny fihodinana manaraka.",
+      "Afangaro isaky ny fihodinana ny entana. Izay mahazo isa 10 voalohany no mandresy.",
     ],
     words: [
       "Samy mahazo litera 16 mitovy avokoa mandritra ny 2 minitra.",

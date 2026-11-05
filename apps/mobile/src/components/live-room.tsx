@@ -50,6 +50,7 @@ import { HowToPlay } from "./how-to-play";
 import { type Play, useMyTurn, useSecondsLeft } from "./live";
 import { LudoBoard } from "./ludo-board";
 import { MemoryBoard } from "./memory-board";
+import { ReflexBoard } from "./reflex-board";
 import { ReactionChips, ReactionPopover } from "./reactions";
 import { Sheet } from "./sheet";
 import { Text, TextInput } from "./text";
@@ -96,8 +97,8 @@ function Seats({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) => 
   const t = useTheme();
   const tr = useT();
   const view = room.view;
-  const turn = room.status === "playing" && view && view.game !== "words" ? view.state.turn : null;
-  const secs = useSecondsLeft(view?.game === "words" ? null : room.deadline);
+  const turn = room.status === "playing" && view && view.game !== "words" && view.game !== "reflex" ? view.state.turn : null;
+  const secs = useSecondsLeft(view?.game === "words" || view?.game === "reflex" ? null : room.deadline);
   return (
     <View style={styles.seats}>
       {room.seats.map((seat, i) => {
@@ -112,7 +113,9 @@ function Seats({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) => 
                   ? tr.live.stones(fanoronaCounts(view.state)[i] ?? 0)
                   : view?.game === "memory"
                     ? tr.live.pairs(memoryScores(view.state)[i] ?? 0)
-                    : null;
+                    : view?.game === "reflex"
+                      ? tr.live.points(view.state.scores[i] ?? 0)
+                      : null;
         const color =
           view?.game === "ludo"
             ? SEAT_COLORS[view.state.colors[i]!]
@@ -638,6 +641,7 @@ export function LiveRoom({ id }: { id: string }) {
                 )}
                 {view?.game === "dots" && <DotsBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
                 {view?.game === "memory" && <MemoryBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
+                {view?.game === "reflex" && <ReflexBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
               </>
             )}
           </ScrollView>
