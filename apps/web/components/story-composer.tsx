@@ -344,15 +344,20 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
             {!file && custom && (
               <div className="flex items-center justify-center gap-3 self-center rounded-full bg-black/40 px-4 py-2 backdrop-blur">
                 <input type="color" value={from} onChange={(e) => setBackground(to ? `${e.target.value},${to}` : e.target.value)} aria-label={tr.stories.customColour} className={swatchInput} />
-                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                  <input
-                    type="checkbox"
-                    checked={!!to}
-                    onChange={() => setBackground(to ? from : `${from},${from === "#7c3aed" ? "#e11d48" : "#7c3aed"}`)}
-                    className="size-4 accent-white"
+                <button
+                  type="button"
+                  aria-pressed={!!to}
+                  onClick={() => setBackground(to ? from : `${from},${from === "#7c3aed" ? "#e11d48" : "#7c3aed"}`)}
+                  className={`flex items-center gap-2 rounded-full py-1.5 pr-3.5 pl-1.5 text-sm font-semibold transition active:scale-95 ${
+                    to ? "bg-white text-stone-900" : "bg-white/10 text-white ring-1 ring-white/40 hover:bg-white/20"
+                  }`}
+                >
+                  <span
+                    className="size-5 rounded-full ring-1 ring-black/10"
+                    style={{ background: `linear-gradient(135deg, ${from}, ${to ?? "#7c3aed"})`, opacity: to ? 1 : 0.6 }}
                   />
                   {tr.stories.gradient}
-                </label>
+                </button>
                 {to && <input type="color" value={to} onChange={(e) => setBackground(`${from},${e.target.value}`)} aria-label={`${tr.stories.gradient} 2`} className={swatchInput} />}
               </div>
             )}

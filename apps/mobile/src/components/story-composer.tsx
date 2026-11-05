@@ -422,10 +422,10 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
                 onPress={() => setBackground(to ? from : `${from},${from === "#7c3aed" ? "#e11d48" : "#7c3aed"}`)}
                 accessibilityRole="switch"
                 accessibilityState={{ checked: !!to }}
-                style={styles.toggle}
+                style={({ pressed }) => [styles.toggle, to ? styles.toggleOn : styles.toggleOff, pressed && { transform: [{ scale: 0.95 }] }]}
               >
-                <View style={[styles.check, to && { backgroundColor: "#fff" }]} />
-                <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>{tr.stories.gradient}</Text>
+                <View style={[styles.check, { backgroundImage: `linear-gradient(135deg, ${from}, ${to ?? "#7c3aed"})`, opacity: to ? 1 : 0.6 }]} />
+                <Text style={{ color: to ? "#1c1917" : "#fff", fontSize: 14, fontWeight: "600" }}>{tr.stories.gradient}</Text>
               </Pressable>
               {to && (
                 <View style={styles.customRow}>
@@ -568,8 +568,10 @@ const styles = StyleSheet.create({
   custom: { gap: 12, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.45)", padding: 14 },
   customRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   dot: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: "#fff" },
-  toggle: { flexDirection: "row", alignItems: "center", gap: 10, alignSelf: "flex-start" },
-  check: { width: 20, height: 20, borderRadius: 6, borderWidth: 2, borderColor: "#fff" },
+  toggle: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", borderRadius: 999, paddingVertical: 6, paddingLeft: 6, paddingRight: 14 },
+  check: { width: 20, height: 20, borderRadius: 10 },
+  toggleOn: { backgroundColor: "#fff" },
+  toggleOff: { backgroundColor: "rgba(255,255,255,0.1)", borderWidth: 1, borderColor: "rgba(255,255,255,0.4)" },
   bar: { height: 28, borderRadius: 14, justifyContent: "center" },
   knob: { position: "absolute", width: 22, height: 22, borderRadius: 11, borderWidth: 3, borderColor: "#fff", backgroundColor: "rgba(0,0,0,0.15)" },
   swatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: "rgba(255,255,255,0.4)" },
