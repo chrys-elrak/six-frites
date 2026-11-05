@@ -22,6 +22,7 @@ import { Avatar } from "./avatar";
 import { BubbleColors, ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
 import { ChatMenu } from "./chat-menu";
+import { BotGames } from "./bot-games";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
 import { MessageList, type MessageListHandle } from "./message-list";
@@ -351,7 +352,8 @@ export function Conversation({ chatId }: { chatId: string }) {
               </p>
             )}
             {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
-            {!selecting && !frozen && (
+            {!selecting && !frozen && isBotChat(c) && <BotGames />}
+            {!selecting && !frozen && !isBotChat(c) && (
               <div className="chat-colors contents">
                 <Composer
                   chatId={chatId}

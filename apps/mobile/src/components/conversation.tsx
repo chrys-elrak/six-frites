@@ -7,7 +7,7 @@ import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
-import { isFrozen, useChat, useMessages } from "@/lib/chats";
+import { isBotChat, isFrozen, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { clearChatNotifications } from "@/lib/push";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
@@ -23,6 +23,7 @@ import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
 import { ChatMenu } from "./chat-menu";
+import { BotGames } from "./bot-games";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
 import { MessageList, type MessageListHandle } from "./message-list";
@@ -283,6 +284,8 @@ export function Conversation({ chatId }: { chatId: string }) {
         {!selecting &&
           (frozen ? (
             <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />
+          ) : isBotChat(c) ? (
+            <BotGames />
           ) : (
             <Composer
               chatId={chatId}

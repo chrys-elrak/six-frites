@@ -60,7 +60,7 @@ const en = {
   bot: "Six Frites Game",
   botHint: "Always up for a game",
   botIntro:
-    "Hi! I'm Six Frites Game 🍟 Tap Game below and pick one, and I'll play with you. Type /play for a live game with friends, and I'll take the empty seats. To play with someone, open your chat with them and tap Game.",
+    "Hi! I'm Six Frites Game 🍟 Pick a game below and I'll play with you, or start a live game with friends and I'll take the empty seats. To play with someone, open your chat with them and tap Game.",
   botReply: "I only speak games 🙂 Tap Game below to pick one.",
   pickDice: "Pick a number from 1 to 6. Closest to the roll wins.",
   rolled: (n: number) => `Rolled ${n}`,
@@ -184,7 +184,7 @@ const fr: typeof en = {
   bot: "Six Frites Game",
   botHint: "Toujours partant pour jouer",
   botIntro:
-    "Salut ! Moi c'est Six Frites Game 🍟 Touchez Jeu en bas, choisissez-en un et je joue avec vous. Tapez /play pour une partie en direct avec des amis, je prends les places libres. Pour jouer avec quelqu'un, ouvrez votre discussion avec lui et touchez Jeu.",
+    "Salut ! Moi c'est Six Frites Game 🍟 Choisissez un jeu en bas et je joue avec vous, ou lancez une partie en direct avec des amis et je prends les places libres. Pour jouer avec quelqu'un, ouvrez votre discussion avec lui et touchez Jeu.",
   botReply: "Je ne parle que de jeux 🙂 Touchez Jeu en bas pour en choisir un.",
   pickDice: "Choisis un nombre de 1 à 6. Le plus proche du dé gagne.",
   rolled: (n) => `Le dé donne ${n}`,
@@ -308,7 +308,7 @@ const mg: typeof en = {
   bot: "Six Frites Game",
   botHint: "Vonona hilalao foana",
   botIntro:
-    "Salama! Izaho no Six Frites Game 🍟 Tsindrio ny Lalao eo ambany, misafidiana iray dia hiara-milalao aminao aho. Soraty /play raha hilalao mivantana miaraka amin'ny namana, izaho no hipetraka amin'ny toerana malalaka. Raha hilalao amin'olona, sokafy ny resakao aminy ary tsindrio ny Lalao.",
+    "Salama! Izaho no Six Frites Game 🍟 Misafidiana lalao eo ambany dia hiara-milalao aminao aho, na manomboka lalao mivantana miaraka amin'ny namana ka izaho no hipetraka amin'ny toerana malalaka. Raha hilalao amin'olona, sokafy ny resakao aminy ary tsindrio ny Lalao.",
   botReply: "Lalao ihany no resahiko 🙂 Tsindrio ny Lalao eo ambany hisafidianana iray.",
   pickDice: "Mifidiana isa 1 ka hatramin'ny 6. Izay akaiky indrindra no mandresy.",
   rolled: (n) => `Nivoaka ny ${n}`,
