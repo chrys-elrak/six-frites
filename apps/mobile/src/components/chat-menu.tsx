@@ -12,7 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { closeSupportChat, deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
-import { isFrozen } from "@/lib/chats";
+import { isBotChat, isFrozen } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemePicker } from "./custom-theme";
@@ -209,6 +209,20 @@ export function ChatMenu({
             destructive: true,
             onSelect: () => void remove("all"),
           },
+        ]}
+      />
+    );
+  }
+
+  if (isBotChat(chat)) {
+    return (
+      <Sheet
+        title={chat.title}
+        onClose={onClose}
+        actions={[
+          { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+          { label: chat.archived ? tr.chat.unarchive : tr.chat.archive, onSelect: () => settings({ archived: !chat.archived }) },
+          { label: tr.chat.deleteChat, destructive: true, onSelect: () => void remove("me") },
         ]}
       />
     );

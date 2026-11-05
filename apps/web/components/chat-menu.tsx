@@ -19,6 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { closeSupportChat, deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
 import { sendAtLabel, toLocalInput } from "@/lib/format";
+import { isBotChat } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { AutoDeleteCustom } from "./auto-delete-custom";
@@ -293,6 +294,21 @@ export function ChatMenu({
         title={tr.chat.blockConfirm(peerName)}
         onClose={onClose}
         actions={[{ label: tr.chat.blockName(peerName), destructive: true, onSelect: () => block(true) }]}
+      />
+    );
+  }
+
+  if (isBotChat(chat)) {
+    return (
+      <Sheet
+        title={chat.title}
+        at={at}
+        onClose={onClose}
+        actions={[
+          { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+          { label: chat.archived ? tr.chat.unarchive : tr.chat.archive, onSelect: () => settings({ archived: !chat.archived }) },
+          { label: tr.chat.deleteChat, destructive: true, onSelect: () => void remove("me") },
+        ]}
       />
     );
   }
