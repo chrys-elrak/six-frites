@@ -3,12 +3,14 @@ import {
   type FanoronaOption,
   type FanoronaState,
   type LiveRoomDTO,
+  SEAT_FOODS,
   fanoronaOptions,
   fanoronaStep,
   fanoronaStrong,
 } from "@six/shared";
 import { useState } from "react";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { StyleSheet, Text as Emoji, View, useWindowDimensions } from "react-native";
+import Animated, { type CSSAnimationKeyframes } from "react-native-reanimated";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
@@ -25,6 +27,11 @@ export const STONES = ["#fafaf9", "#292524"];
 const RIMS = ["#44403c", "#0c0a09"];
 const FRONT = "#dc2626";
 const BEHIND = "#f97316";
+
+const GONE: CSSAnimationKeyframes = {
+  from: { opacity: 1, transform: [{ scale: 1 }] },
+  to: { opacity: 0, transform: [{ scale: 0.2 }] },
+};
 
 const ROWS = Array.from({ length: H }, (_, r) => ({ x1: 0.5, y1: r + 0.5, x2: W - 0.5, y2: r + 0.5 }));
 const COLS = Array.from({ length: W }, (_, c) => ({ x1: c + 0.5, y1: 0.5, x2: c + 0.5, y2: H - 0.5 }));
@@ -58,6 +65,7 @@ export function FanoronaBoard({
   const targets = options.filter((o) => o.from === selected);
   const capturing = !!options[0] && (options[0].approach.length > 0 || options[0].withdraw.length > 0);
 
+  const unit = size / W;
   const flip = me === 1;
   const at = (p: number) => {
     const d = flip ? POINTS - 1 - p : p;
@@ -101,29 +109,6 @@ export function FanoronaBoard({
           {state.chain?.visited.map((p) => (
             <Circle key={`v${p}`} cx={at(p).x} cy={at(p).y} r={0.16} fill={brand} opacity={0.35} />
           ))}
-          {state.board.map((stone, p) =>
-            stone === null ? null : (
-              <Circle
-                key={`s${p}`}
-                cx={at(p).x}
-                cy={at(p).y}
-                r={0.34}
-                fill={STONES[stone]}
-                stroke={
-                  choice?.approach.includes(p)
-                    ? FRONT
-                    : choice?.withdraw.includes(p)
-                      ? BEHIND
-                      : p === selected
-                        ? brand
-                        : mine && froms.includes(p)
-                          ? brand
-                          : RIMS[stone]
-                }
-                strokeWidth={choice?.approach.includes(p) || choice?.withdraw.includes(p) || p === selected ? 0.1 : mine && froms.includes(p) ? 0.06 : 0.04}
-              />
-            ),
-          )}
           {targets.map((o) => (
             <Circle key={`t${o.to}`} cx={at(o.to).x} cy={at(o.to).y} r={0.14} fill={brand} />
           ))}
@@ -132,6 +117,63 @@ export function FanoronaBoard({
               <Circle key={`h${p}`} cx={at(p).x} cy={at(p).y} r={0.48} fill="#000" fillOpacity={0.01} onPress={() => tap(p)} />
             ))}
         </Svg>
+        {state.board.map((stone, p) => {
+          if (stone === null) return null;
+          const { x, y } = at(p);
+          const ring = choice?.approach.includes(p) ? FRONT : choice?.withdraw.includes(p) ? BEHIND : null;
+          const movable = mine && froms.includes(p);
+          const from = last?.to === p ? at(last.from) : null;
+          return (
+            <Animated.View
+              key={`s${p}`}
+              pointerEvents="none"
+              style={[
+                styles.stone,
+                {
+                  left: (x - 0.34) * unit,
+                  top: (y - 0.34) * unit,
+                  width: 0.68 * unit,
+                  height: 0.68 * unit,
+                  borderRadius: 0.34 * unit,
+                  backgroundColor: STONES[stone],
+                  borderColor: ring ?? (p === selected || movable ? brand : RIMS[stone]),
+                  borderWidth: (ring || p === selected ? 0.1 : movable ? 0.06 : 0.04) * unit,
+                },
+                from && {
+                  animationName: {
+                    from: { transform: [{ translateX: (from.x - x) * unit }, { translateY: (from.y - y) * unit }] },
+                    to: { transform: [{ translateX: 0 }, { translateY: 0 }] },
+                  },
+                  animationDuration: 220,
+                  animationTimingFunction: "ease-out",
+                },
+              ]}
+            >
+              <Emoji style={{ fontSize: unit * 0.34, includeFontPadding: false }}>{SEAT_FOODS[stone]}</Emoji>
+            </Animated.View>
+          );
+        })}
+        {last?.captured.map((p) => (
+          <Animated.View
+            key={`x${p}`}
+            pointerEvents="none"
+            style={[
+              styles.stone,
+              {
+                left: (at(p).x - 0.34) * unit,
+                top: (at(p).y - 0.34) * unit,
+                width: 0.68 * unit,
+                height: 0.68 * unit,
+                borderRadius: 0.34 * unit,
+                backgroundColor: STONES[1 - (state.board[last.to] ?? 0)],
+                opacity: 0,
+                animationName: GONE,
+                animationDuration: 450,
+                animationTimingFunction: "ease-in",
+              },
+            ]}
+          />
+        ))}
       </View>
       {choice ? (
         <View style={styles.choices}>
@@ -158,5 +200,6 @@ export function FanoronaBoard({
 
 const styles = StyleSheet.create({
   board: { borderRadius: 12, backgroundColor: "#e7d3b0", overflow: "hidden" },
+  stone: { position: "absolute", alignItems: "center", justifyContent: "center" },
   choices: { flexDirection: "row", gap: 8, alignSelf: "stretch" },
 });

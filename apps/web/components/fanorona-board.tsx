@@ -5,6 +5,7 @@ import {
   type FanoronaMove,
   type FanoronaOption,
   type FanoronaState,
+  SEAT_FOODS,
   fanoronaOptions,
   fanoronaStep,
   fanoronaStrong,
@@ -98,13 +99,18 @@ export function FanoronaBoard({
           const { x, y } = xy(p);
           const can = mine && !state.chain && movable.has(p);
           const ring = choice?.approach.includes(p) ? "#dc2626" : choice?.withdraw.includes(p) ? "#f59e0b" : null;
+          const moved = state.last?.to === p ? xy(state.last.from) : null;
           return (
             <g
               key={p}
               onClick={can ? () => (setSelected(p), setChoice(null)) : undefined}
-              className={can ? "cursor-pointer" : undefined}
+              className={`${can ? "cursor-pointer" : ""} ${moved ? "piece-slide" : ""}`}
+              style={moved ? ({ "--dx": `${moved.x - x}px`, "--dy": `${moved.y - y}px` } as React.CSSProperties) : undefined}
             >
               <circle cx={x} cy={y} r={34} fill={STONES[stone]} stroke={RIMS[stone]} strokeWidth={4} />
+              <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={34} className="pointer-events-none">
+                {SEAT_FOODS[stone]}
+              </text>
               {(p === from || ring) && (
                 <circle cx={x} cy={y} r={42} fill="none" stroke={ring ?? "var(--color-brand)"} strokeWidth={7} />
               )}
@@ -114,6 +120,16 @@ export function FanoronaBoard({
             </g>
           );
         })}
+        {state.last?.captured.map((p) => (
+          <circle
+            key={`x${state.last!.from}-${state.last!.to}-${p}`}
+            cx={xy(p).x}
+            cy={xy(p).y}
+            r={34}
+            fill={STONES[1 - (state.board[state.last!.to] ?? 0)]}
+            className="piece-out pointer-events-none"
+          />
+        ))}
         {!choice &&
           targets.map((o) => (
             <circle

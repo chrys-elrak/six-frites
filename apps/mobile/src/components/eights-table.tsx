@@ -1,6 +1,7 @@
 import { type EightsView, type LiveRoomDTO, RANKS, SUITS, cardRank, cardSuit, eightsFits } from "@six/shared";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import Animated, { type CSSAnimationKeyframes } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
@@ -9,6 +10,11 @@ import { Text } from "./text";
 import { TextButton } from "./ui";
 
 const red = (suit: number) => suit === 1 || suit === 2;
+const CARD_IN: CSSAnimationKeyframes = {
+  from: { opacity: 0, transform: [{ translateY: -40 }, { rotate: "-14deg" }, { scale: 1.15 }] },
+  to: { opacity: 1, transform: [{ translateY: 0 }, { rotate: "0deg" }, { scale: 1 }] },
+};
+const dealt = { animationName: CARD_IN, animationDuration: 260, animationTimingFunction: "ease-out" } as const;
 const ink = (suit: number) => (red(suit) ? "#dc2626" : "#1c1917");
 
 function CardFace({ card, raised, dim }: { card: number; raised?: boolean; dim?: boolean }) {
@@ -77,7 +83,9 @@ export function EightsTable({
             {tr.live.draw} · {state.drawCount}
           </Text>
         </Pressable>
-        <CardFace card={top} />
+        <Animated.View key={state.pile.length} style={dealt}>
+          <CardFace card={top} />
+        </Animated.View>
         {state.suit !== cardSuit(top) && (
           <View style={[styles.suit, { backgroundColor: t.surface, borderColor: t.border }]}>
             <Text style={{ color: ink(state.suit), fontSize: 34 }}>{SUITS[state.suit]}</Text>
@@ -101,7 +109,9 @@ export function EightsTable({
               accessibilityRole="button"
               accessibilityLabel={`${RANKS[cardRank(card)]} ${tr.live.suits[cardSuit(card)]}`}
             >
-              <CardFace card={card} raised={playable} dim={mine && !playable} />
+              <Animated.View style={dealt}>
+                <CardFace card={card} raised={playable} dim={mine && !playable} />
+              </Animated.View>
             </Pressable>
           );
         })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { DOTS, type DotsMove, type DotsState, SEAT_COLORS, dotsAcross, dotsDown } from "@six/shared";
+import { DOTS, type DotsMove, type DotsState, SEAT_COLORS, SEAT_FOODS, dotsAcross, dotsDown } from "@six/shared";
 import { useT } from "@/lib/i18n";
 
 const CELL = 100;
@@ -48,15 +48,26 @@ export function DotsBoard({
       >
         {state.boxes.map((owner, b) =>
           owner === null ? null : (
-            <rect
-              key={b}
-              x={point(b % DOTS.width)}
-              y={point(Math.floor(b / DOTS.width))}
-              width={CELL}
-              height={CELL}
-              fill={SEAT_COLORS[owner]}
-              opacity={0.35}
-            />
+            <g key={b}>
+              <rect
+                x={point(b % DOTS.width)}
+                y={point(Math.floor(b / DOTS.width))}
+                width={CELL}
+                height={CELL}
+                fill={SEAT_COLORS[owner]}
+                opacity={0.35}
+              />
+              <text
+                x={point(b % DOTS.width) + CELL / 2}
+                y={point(Math.floor(b / DOTS.width)) + CELL / 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={52}
+                className="piece-pop"
+              >
+                {SEAT_FOODS[owner]}
+              </text>
+            </g>
           ),
         )}
         {LINES.map((l) => {
@@ -69,6 +80,8 @@ export function DotsBoard({
                 strokeWidth={by === null ? 3 : state.last === l.n ? 14 : 10}
                 strokeDasharray={by === null ? "6 8" : undefined}
                 strokeLinecap="round"
+                pathLength={state.last === l.n ? 1 : undefined}
+                className={state.last === l.n ? "line-draw" : undefined}
               />
               {by === null && mine && (
                 <line

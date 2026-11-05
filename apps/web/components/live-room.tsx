@@ -9,6 +9,7 @@ import {
   type LiveReplyDTO,
   type LiveRoomDTO,
   SEAT_COLORS,
+  WIN_BURST,
   dotsScores,
   fanoronaCounts,
   memoryScores,
@@ -166,6 +167,30 @@ function Lobby({ room, nameOf, ask }: { room: LiveRoomDTO; nameOf: (seat: number
   );
 }
 
+/** Food thrown up from the middle of the screen when you win. */
+function WinBurst() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-40 motion-reduce:hidden">
+      {WIN_BURST.map((p, i) => (
+        <span
+          key={i}
+          className="absolute top-1/2 left-1/2 animate-[fx-fly_1.6s_ease-out_forwards] text-3xl opacity-0"
+          style={
+            {
+              animationDelay: `${p.delay}ms`,
+              "--dx": `${p.dx * 1.6}px`,
+              "--dy": `${p.dy * 1.6}px`,
+              "--rot": `${p.rot}deg`,
+            } as React.CSSProperties
+          }
+        >
+          {p.food}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Result({
   room,
   nameOf,
@@ -190,6 +215,7 @@ function Result({
           : tr.live.noWinner;
   return (
     <div className="flex flex-col items-center gap-3">
+      {room.mySeat !== null && room.winners.includes(room.mySeat) && <WinBurst />}
       <p className="reaction-pop text-2xl font-black">{text}</p>
       <div className="flex gap-2">
         {room.hostId === meId && (
@@ -605,17 +631,21 @@ export function LiveRoom({ roomId }: { roomId: string }) {
             <Lobby room={room} nameOf={nameOf} ask={ask} />
           ) : (
             <>
-              {turn.mine && room.view?.game !== "words" && (
-                <p
-                  key={room.deadline}
-                  role="status"
-                  className={`reaction-pop rounded-full px-5 py-2 text-sm font-bold shadow-lg ${
-                    urgent ? "animate-pulse bg-red-500 text-white" : "bg-brand text-brand-ink"
-                  }`}
-                >
-                  {tr.live.yourTurn}
-                  {turn.seconds !== null && ` · ${turn.seconds}s`}
-                </p>
+              {room.status === "playing" && room.view?.game !== "words" && (
+                <div className="flex h-9 items-center">
+                  {turn.mine && (
+                    <p
+                      key={room.deadline}
+                      role="status"
+                      className={`reaction-pop rounded-full px-5 py-2 text-sm font-bold shadow-lg ${
+                        urgent ? "animate-pulse bg-red-500 text-white" : "bg-brand text-brand-ink"
+                      }`}
+                    >
+                      {tr.live.yourTurn}
+                      {turn.seconds !== null && ` · ${turn.seconds}s`}
+                    </p>
+                  )}
+                </div>
               )}
               <Players room={room} nameOf={nameOf} />
               {room.status === "over" && <Result room={room} nameOf={nameOf} ask={ask} leave={leave} />}

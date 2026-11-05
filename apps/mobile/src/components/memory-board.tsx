@@ -1,6 +1,7 @@
 import { type LiveRoomDTO, type MemoryView, SEAT_COLORS } from "@six/shared";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import Animated, { BounceIn, type CSSAnimationKeyframes } from "react-native-reanimated";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 import type { Play } from "./live";
@@ -9,6 +10,10 @@ import { Text } from "./text";
 const COLUMNS = 4;
 const GAP = 8;
 const PEEK_MS = 1500;
+const FLIP: CSSAnimationKeyframes = {
+  from: { transform: [{ perspective: 400 }, { rotateY: "90deg" }] },
+  to: { transform: [{ perspective: 400 }, { rotateY: "0deg" }] },
+};
 
 export function MemoryBoard({
   room,
@@ -47,14 +52,19 @@ export function MemoryBoard({
               key={i}
               disabled={!can}
               onPress={() => void play({ card: i })}
-              style={({ pressed }) => [
-                styles.card,
-                { width: card, height: card },
-                up ? [styles.face, { borderColor: owner === null ? brand : SEAT_COLORS[owner] }] : styles.back,
-                pressed && { opacity: 0.7 },
-              ]}
+              style={({ pressed }) => [{ width: card, height: card }, pressed && { opacity: 0.7 }]}
             >
-              <Text style={{ fontSize: card * 0.48, opacity: up ? 1 : 0.4 }}>{up ? face : "🍟"}</Text>
+              <Animated.View
+                key={owner !== null ? "taken" : up ? "up" : "down"}
+                entering={owner !== null ? BounceIn.duration(320) : undefined}
+                style={[
+                  styles.card,
+                  up ? [styles.face, { borderColor: owner === null ? brand : SEAT_COLORS[owner] }] : styles.back,
+                  owner === null && { animationName: FLIP, animationDuration: 180, animationTimingFunction: "ease-out" },
+                ]}
+              >
+                <Text style={{ fontSize: card * 0.48, opacity: up ? 1 : 0.4 }}>{up ? face : "🍟"}</Text>
+              </Animated.View>
             </Pressable>
           );
         })}
@@ -71,6 +81,7 @@ export function MemoryBoard({
 const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", gap: GAP },
   card: {
+    flex: 1,
     borderRadius: 12,
     borderWidth: 3,
     alignItems: "center",

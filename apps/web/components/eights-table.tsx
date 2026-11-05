@@ -52,7 +52,13 @@ export function EightsTable({
           <div key={seat} className={`flex flex-col items-center gap-1 ${state.turn === seat ? "" : "opacity-70"}`}>
             <div className="relative h-14" style={{ width: `${2.25 + Math.min(n, 8) * 0.5}rem` }}>
               {Array.from({ length: Math.min(n, 8) }, (_, i) => (
-                <span key={i} className={`absolute top-0 h-14 w-9 ${back}`} style={{ left: `${i * 0.5}rem` }} />
+                <span
+                  key={i}
+                  className={`absolute top-0 grid h-14 w-9 place-items-center text-sm ${back}`}
+                  style={{ left: `${i * 0.5}rem` }}
+                >
+                  {i === Math.min(n, 8) - 1 && "🍟"}
+                </span>
               ))}
             </div>
             <span className="text-xs text-stone-500">{nameOf(seat)} · {tr.live.cards(n)}</span>
@@ -66,11 +72,12 @@ export function EightsTable({
           disabled={!mine || state.drawn}
           onClick={() => play({ draw: true })}
           aria-label={tr.live.draw}
-          className={`relative grid h-28 w-20 place-items-center text-sm font-bold text-white transition enabled:hover:-translate-y-1 disabled:opacity-60 ${back}`}
+          className={`relative grid h-28 w-20 place-items-center text-3xl transition enabled:hover:-translate-y-1 disabled:opacity-60 ${back}`}
         >
-          {state.drawCount}
+          🍟
+          <span className="absolute right-1.5 bottom-1 text-xs font-bold text-white">{state.drawCount}</span>
         </button>
-        <span key={state.pile.length} className="reaction-pop">
+        <span key={state.pile.length} className="card-in">
           <Card card={top} size="lg" />
         </span>
         {state.suit !== cardSuit(top) && (
@@ -126,7 +133,7 @@ export function EightsTable({
               type="button"
               disabled={!ok}
               onClick={() => (cardRank(card) === 7 ? setWild(card) : play({ play: card }))}
-              className={`shrink-0 transition ${ok ? "-translate-y-2 hover:-translate-y-3" : mine ? "opacity-50" : ""}`}
+              className={`card-in shrink-0 transition ${ok ? "-translate-y-2 hover:-translate-y-3" : mine ? "opacity-50" : ""}`}
             >
               <Card card={card} />
             </button>

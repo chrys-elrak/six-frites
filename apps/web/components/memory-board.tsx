@@ -43,7 +43,7 @@ export function MemoryBoard({
               type="button"
               disabled={!can}
               onClick={() => play({ card: i })}
-              className="group aspect-square touch-manipulation perspective-[40rem]"
+              className={`group aspect-square touch-manipulation perspective-[40rem] ${owner !== null ? "piece-pop" : ""}`}
             >
               <span
                 className={`relative block size-full transition-transform duration-300 transform-3d ${up ? "rotate-y-180" : ""}`}

@@ -1,6 +1,7 @@
-import { DOTS, type DotsState, type LiveRoomDTO, SEAT_COLORS, dotsAcross, dotsDown } from "@six/shared";
+import { DOTS, type DotsState, type LiveRoomDTO, SEAT_COLORS, SEAT_FOODS, dotsAcross, dotsDown } from "@six/shared";
 import { useState } from "react";
-import { View, useWindowDimensions } from "react-native";
+import { StyleSheet, Text as Emoji, View, useWindowDimensions } from "react-native";
+import Animated, { BounceIn } from "react-native-reanimated";
 import Svg, { Circle, Line, Rect } from "react-native-svg";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
@@ -39,6 +40,7 @@ export function DotsBoard({
   const tr = useT();
   const { width } = useWindowDimensions();
   const size = Math.min(width - 32, 400);
+  const unit = size / (W + 1);
   const [pending, setPending] = useState<number | null>(null);
   const mine = room.mySeat !== null && state.turn === room.mySeat && room.status === "playing" && !state.winners;
 
@@ -50,7 +52,8 @@ export function DotsBoard({
 
   return (
     <View style={{ alignItems: "center", gap: 14 }}>
-      <Svg width={size} height={(size * (H + 1)) / (W + 1)} viewBox={`0 0 ${W + 1} ${H + 1}`}>
+      <View>
+      <Svg width={size} height={unit * (H + 1)} viewBox={`0 0 ${W + 1} ${H + 1}`}>
         {state.boxes.map((owner, b) =>
           owner === null ? null : (
             <Rect
@@ -88,6 +91,19 @@ export function DotsBoard({
           <Circle key={i} cx={(i % (W + 1)) + 0.5} cy={Math.floor(i / (W + 1)) + 0.5} r={0.08} fill={t.text} />
         ))}
       </Svg>
+      {state.boxes.map((owner, b) =>
+        owner === null ? null : (
+          <Animated.View
+            key={b}
+            entering={BounceIn.duration(320)}
+            pointerEvents="none"
+            style={[styles.box, { left: ((b % W) + 0.5) * unit, top: (Math.floor(b / W) + 0.5) * unit, width: unit, height: unit }]}
+          >
+            <Emoji style={{ fontSize: unit * 0.5, includeFontPadding: false }}>{SEAT_FOODS[owner]}</Emoji>
+          </Animated.View>
+        ),
+      )}
+      </View>
       {!state.winners && (
         <Text style={{ color: t.text, fontSize: 16, fontWeight: "700" }}>
           {mine ? tr.live.yourTurn : tr.live.theirTurn(nameOf(state.turn))}
@@ -96,3 +112,7 @@ export function DotsBoard({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  box: { position: "absolute", alignItems: "center", justifyContent: "center" },
+});

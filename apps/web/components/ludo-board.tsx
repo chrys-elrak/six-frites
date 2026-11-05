@@ -9,6 +9,7 @@ import {
   type LudoMove,
   type LudoState,
   SEAT_COLORS,
+  SEAT_FOODS,
   ludoForced,
   ludoMovable,
 } from "@six/shared";
@@ -218,12 +219,14 @@ export function LudoBoard({
           )),
         )}
         <div
-          className="absolute"
+          className="absolute grid place-items-center text-[min(7vw,2.25rem)]"
           style={{
             ...at([6, 6], 3),
             background: `conic-gradient(from -45deg, ${LUDO_COLORS[1]} 0 25%, ${LUDO_COLORS[2]} 0 50%, ${LUDO_COLORS[3]} 0 75%, ${LUDO_COLORS[0]} 0)`,
           }}
-        />
+        >
+          <span className="drop-shadow">🍟</span>
+        </div>
         {tokens.map(({ seat, token, cell, hop }) => {
           const group = crowd(cell);
           const k = group.findIndex((t) => t.seat === seat && t.token === token);
@@ -241,9 +244,11 @@ export function LudoBoard({
             >
               <span
                 key={hop ?? "still"}
-                className={`block size-[78%] rounded-full border-[3px] border-white shadow-md ${can ? "animate-pulse ring-4 ring-stone-900/70" : ""} ${hop !== null ? "ludo-hop" : ""}`}
+                className={`grid size-[78%] place-items-center rounded-full border-[3px] border-white text-[min(2.6vw,0.85rem)] shadow-md ${can ? "animate-pulse ring-4 ring-stone-900/70" : ""} ${hop !== null ? "ludo-hop" : ""}`}
                 style={{ background: LUDO_COLORS[state.colors[seat]!] }}
-              />
+              >
+                {SEAT_FOODS[state.colors[seat]!]}
+              </span>
             </button>
           );
         })}

@@ -26,6 +26,22 @@ export const LIVE_EMOJI: Record<LiveGame, string> = {
 /** Each seat's colour, the same in every game: red, green, yellow, blue. */
 export const SEAT_COLORS = ["#e53935", "#43a047", "#fdd835", "#1e88e5"];
 
+/** Each seat's food, drawn on its pieces: the first seat, always the host, plays the fries of the logo. */
+export const SEAT_FOODS = ["🍟", "🍔", "🌭", "🍕"];
+
+/** The food thrown in the air for a win: where each piece lands from the middle, in px, how far it spins, when it goes. */
+export const WIN_BURST = Array.from({ length: 18 }, (_, i) => {
+  const angle = (i / 18) * Math.PI * 2;
+  const reach = 110 + ((i * 47) % 70);
+  return {
+    food: SEAT_FOODS[i % SEAT_FOODS.length]!,
+    dx: Math.round(Math.cos(angle) * reach),
+    dy: Math.round(Math.sin(angle) * reach - 40),
+    rot: ((i * 73) % 360) - 180,
+    delay: (i % 3) * 90,
+  };
+});
+
 export const LIVE_SEATS: Record<LiveGame, { min: number; max: number }> = {
   fanorona: { min: 2, max: 2 },
   dots: { min: 2, max: 4 },

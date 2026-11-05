@@ -2,6 +2,7 @@ import { type LiveRoomDTO, WORDS_MIN, type WordsView, neighbours, wordPoints } f
 import { Check, X } from "lucide-react-native";
 import { type ComponentRef, useEffect, useMemo, useRef, useState } from "react";
 import { PanResponder, StyleSheet, View, useWindowDimensions } from "react-native";
+import Animated, { BounceIn, ZoomIn } from "react-native-reanimated";
 import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { type Play, useSecondsLeft } from "./live";
@@ -138,9 +139,11 @@ export function WordHunt({
       )}
       {playing && (
         <View style={[styles.word, { backgroundColor: t.surface, borderColor: flash ? (flash.ok ? "#16a34a" : t.danger) : t.border }]}>
-          <Text numberOfLines={1} style={{ flex: 1, color: flash ? (flash.ok ? "#16a34a" : t.danger) : t.text, fontSize: 20, fontWeight: "800", letterSpacing: 2 }}>
-            {flash?.text ?? (word || " ")}
-          </Text>
+          <Animated.View key={flash?.text ?? "word"} entering={flash ? BounceIn.duration(320) : undefined} style={{ flex: 1 }}>
+            <Text numberOfLines={1} style={{ color: flash ? (flash.ok ? "#16a34a" : t.danger) : t.text, fontSize: 20, fontWeight: "800", letterSpacing: 2 }}>
+              {flash?.text ?? (word || "🍟")}
+            </Text>
+          </Animated.View>
           {word.length > 0 && <IconButton Icon={X} label={tr.common.close} onPress={() => set([])} />}
           {word.length >= WORDS_MIN && (
             <IconButton Icon={Check} label={tr.common.send} color={brand} onPress={() => void submit(path)} />
@@ -151,12 +154,13 @@ export function WordHunt({
         {state.grid.map((letter, i) => {
           const on = path.includes(i);
           return (
-            <View
-              key={i}
+            <Animated.View
+              key={`${state.grid.join("")}-${i}`}
+              entering={ZoomIn.delay(i * 30).duration(220)}
               style={[styles.tile, { width: tile, height: tile, backgroundColor: on ? brand : t.surface, borderColor: on ? brand : t.border }]}
             >
               <Text style={{ color: on ? brandInk : t.text, fontSize: tile * 0.45, fontWeight: "800" }}>{letter}</Text>
-            </View>
+            </Animated.View>
           );
         })}
       </View>

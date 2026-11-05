@@ -82,8 +82,11 @@ export function WordHunt({
         </p>
       )}
       <div className="flex h-11 items-center gap-2">
-        <span className={`min-w-32 text-center font-mono text-2xl font-bold tracking-widest ${note ? (note.good ? "text-green-600" : "text-red-600") : ""}`}>
-          {note && !word ? note.text : word || "·"}
+        <span
+          key={note && !word ? note.text : "word"}
+          className={`min-w-32 text-center font-mono text-2xl font-bold tracking-widest ${note ? (note.good ? "text-green-600" : "text-red-600") : ""} ${note && !word ? "piece-pop" : ""}`}
+        >
+          {note && !word ? note.text : word || "🍟"}
         </span>
         {word && (
           <>
@@ -140,8 +143,9 @@ export function WordHunt({
       >
         {state.grid.map((letter, i) => (
           <div
-            key={i}
-            className={`grid place-items-center rounded-2xl text-3xl font-black shadow-sm ring-1 transition ${
+            key={`${state.grid.join("")}-${i}`}
+            style={{ animationDelay: `${i * 30}ms` }}
+            className={`piece-pop grid place-items-center rounded-2xl text-3xl font-black shadow-sm ring-1 transition ${
               path.includes(i)
                 ? "scale-95 bg-brand text-brand-ink ring-brand"
                 : "bg-white ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"

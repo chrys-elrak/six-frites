@@ -115,6 +115,17 @@ describe("live rooms", () => {
     await vi.waitFor(async () => expect((await latest())?.action).toEqual({ type: "live_result", game: "ludo", result: "lost" }));
   });
 
+  it("posts a word hunt played alone with no score, since no one else has one", async () => {
+    const me = await signUp("solo");
+    const a = await player(me);
+    const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "words", invite: [], locale: "en" });
+    await a.ask("live:start", { roomId: data!.id });
+    await a.ask("live:giveup", { roomId: data!.id });
+    const latest = async () =>
+      ((await get(me, "/v1/chats")).items as ChatDTO[]).find((c) => c.lastMessage?.senderId === FRITE_BOT_ID)?.lastMessage;
+    await vi.waitFor(async () => expect((await latest())?.action).toEqual({ type: "live_result", game: "words", result: "lost" }));
+  });
+
   it("posts invites in our chat, a game with the bot alone and its result in its chat, and nothing else after", async () => {
     const { host, guest } = await makeFriends();
     const [a, b] = [await player(host), await player(guest)];

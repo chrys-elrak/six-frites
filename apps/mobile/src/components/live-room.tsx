@@ -8,6 +8,7 @@ import {
   type LiveReplyDTO,
   type LiveRoomDTO,
   SEAT_COLORS,
+  WIN_BURST,
   dotsScores,
   fanoronaCounts,
   memoryScores,
@@ -27,8 +28,8 @@ import { type Href, router } from "expo-router";
 import { ArrowLeft, Gamepad2, Mic, MoreVertical, Reply, SendHorizontal, Smile, X } from "lucide-react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { type ComponentRef, useEffect, useEffectEvent, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
-import Animated, { ZoomIn } from "react-native-reanimated";
+import { Pressable, ScrollView, StyleSheet, Text as Emoji, useWindowDimensions, View } from "react-native";
+import Animated, { type CSSAnimationKeyframes, ZoomIn } from "react-native-reanimated";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { clockTime, formatDuration } from "@/lib/format";
@@ -56,6 +57,31 @@ import { Card, EmptyState, IconButton, Loading, PrimaryButton, ScreenHeader, Tex
 import { WordHunt } from "./word-hunt";
 
 const noop = () => {};
+
+const FLIGHTS = WIN_BURST.map((p): CSSAnimationKeyframes => ({
+  "0%": { opacity: 1, transform: [{ translateX: 0 }, { translateY: 0 }, { scale: 0.4 }, { rotate: "0deg" }] },
+  "80%": { opacity: 1 },
+  "100%": { opacity: 0, transform: [{ translateX: p.dx * 1.4 }, { translateY: p.dy * 1.4 }, { scale: 1 }, { rotate: `${p.rot}deg` }] },
+}));
+
+/** Food thrown up from the middle of the screen when you win. */
+function WinBurst() {
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.burst]}>
+      {WIN_BURST.map((p, i) => (
+        <Animated.View
+          key={i}
+          style={[
+            styles.flying,
+            { animationName: FLIGHTS[i], animationDuration: 1600, animationDelay: p.delay, animationTimingFunction: "ease-out" },
+          ]}
+        >
+          <Emoji style={{ fontSize: 30, includeFontPadding: false }}>{p.food}</Emoji>
+        </Animated.View>
+      ))}
+    </View>
+  );
+}
 
 function BotFace({ size = 36 }: { size?: number }) {
   return (
@@ -573,18 +599,22 @@ export function LiveRoom({ id }: { id: string }) {
               <Lobby room={room} nameOf={nameOf} onBot={(add) => socket?.emit("live:bot", { roomId: id, add }, noop)} onStart={start} />
             ) : (
               <>
-                {turn.mine && view?.game !== "words" && (
-                  <Animated.View
-                    key={room.deadline}
-                    entering={ZoomIn.duration(180)}
-                    accessibilityLiveRegion="polite"
-                    style={[styles.turn, { backgroundColor: urgent ? "#ef4444" : brand }]}
-                  >
-                    <Text style={{ color: urgent ? "#fff" : brandInk, fontSize: 15, fontWeight: "800" }}>
-                      {tr.live.yourTurn}
-                      {turn.seconds !== null && ` · ${turn.seconds}s`}
-                    </Text>
-                  </Animated.View>
+                {room.status === "playing" && view?.game !== "words" && (
+                  <View style={styles.turnSlot}>
+                    {turn.mine && (
+                      <Animated.View
+                        key={room.deadline}
+                        entering={ZoomIn.duration(180)}
+                        accessibilityLiveRegion="polite"
+                        style={[styles.turn, { backgroundColor: urgent ? "#ef4444" : brand }]}
+                      >
+                        <Text style={{ color: urgent ? "#fff" : brandInk, fontSize: 15, fontWeight: "800" }}>
+                          {tr.live.yourTurn}
+                          {turn.seconds !== null && ` · ${turn.seconds}s`}
+                        </Text>
+                      </Animated.View>
+                    )}
+                  </View>
                 )}
                 <Seats room={room} nameOf={nameOf} />
                 {room.status === "over" && (
@@ -614,6 +644,7 @@ export function LiveRoom({ id }: { id: string }) {
           {(room.invited.length > 0 || room.seats.some((s) => s.user && s.user.id !== meId)) && <RoomChat room={room} say={say} react={react} />}
         </View>
       )}
+      {room?.status === "over" && room.mySeat !== null && room.winners.includes(room.mySeat) && <WinBurst />}
       {menu && room && (
         <Sheet
           actions={[
@@ -658,6 +689,8 @@ export function LiveRoom({ id }: { id: string }) {
 }
 
 const styles = StyleSheet.create({
+  burst: { alignItems: "center", justifyContent: "center" },
+  flying: { position: "absolute", opacity: 0 },
   title: { flex: 1, fontSize: 18, fontWeight: "700", paddingHorizontal: 4 },
   body: { flexGrow: 1, justifyContent: "center", padding: 16, gap: 16 },
   seats: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 },
@@ -675,6 +708,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  turnSlot: { height: 40, justifyContent: "center" },
   turn: { alignSelf: "center", borderRadius: 999, paddingHorizontal: 20, paddingVertical: 8 },
   gif: { marginTop: 4, height: 120, borderRadius: 12, overflow: "hidden", alignSelf: "flex-start" },
   gifRow: { gap: 6, paddingHorizontal: 12 },

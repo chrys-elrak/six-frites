@@ -6,12 +6,13 @@ import {
   LUDO_TRACK,
   type LiveRoomDTO,
   SEAT_COLORS,
+  SEAT_FOODS,
   type LudoState,
   ludoForced,
   ludoMovable,
 } from "@six/shared";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text as Emoji, View, useWindowDimensions } from "react-native";
 import Animated, { type CSSAnimationKeyframes } from "react-native-reanimated";
 import Svg, { Circle, G, Polygon, Rect, Text as SvgText } from "react-native-svg";
 import { useT } from "@/lib/i18n";
@@ -264,6 +265,9 @@ export function LudoBoard({
     <View style={{ alignItems: "center", gap: 14 }}>
       <View style={{ width: size, height: size }}>
         <Board />
+        <View pointerEvents="none" style={[styles.middle, { left: 6 * cell, top: 6 * cell, width: 3 * cell, height: 3 * cell }]}>
+          <Emoji style={{ fontSize: cell * 1.3, includeFontPadding: false }}>🍟</Emoji>
+        </View>
         {tokens.map(({ seat, token, color, hop, x, y, key }) => {
           const here = stacked(key);
           const k = here.findIndex((tk) => tk.seat === seat && tk.token === token);
@@ -290,7 +294,9 @@ export function LudoBoard({
                   can && styles.movable,
                   hop !== null && { animationName: HOP, animationDuration: 150 },
                 ]}
-              />
+              >
+                <Emoji style={{ fontSize: d * 0.45, includeFontPadding: false }}>{SEAT_FOODS[color]}</Emoji>
+              </Animated.View>
             </AnimatedPressable>
           );
         })}
@@ -320,8 +326,11 @@ export function LudoBoard({
 }
 
 const styles = StyleSheet.create({
+  middle: { position: "absolute", alignItems: "center", justifyContent: "center" },
   token: {
     flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: "#fff",
     elevation: 3,
