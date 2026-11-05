@@ -21,6 +21,8 @@ export const STORY_LIMITS = {
 /** How long a story can stay up, offered as choices; the API takes any whole number of seconds in range. */
 export const STORY_DURATIONS = [HOUR, 6 * HOUR, 12 * HOUR, 24 * HOUR] as const;
 export const STORY_DEFAULT_SECS = 24 * HOUR;
+/** Units for a custom story or note duration, as in `AUTO_DELETE_UNITS`. */
+export const STORY_DURATION_UNITS = [["hours", HOUR]] as const;
 
 /** How long a photo or text story stays on screen before the next one. */
 export const STORY_SHOW_MS = 6000;
@@ -236,6 +238,30 @@ export const StoryGroupDTO = z.object({
   stories: z.array(StoryDTO).describe("Oldest first"),
 });
 export type StoryGroupDTO = z.infer<typeof StoryGroupDTO>;
+
+export const NOTE_LIMIT = 60;
+/** How long a note stays up. */
+export const NOTE_SECS = 24 * HOUR;
+
+export const SetNoteInput = z.object({
+  text: z.string().trim().min(1).max(NOTE_LIMIT),
+  durationSecs: z
+    .number()
+    .int()
+    .min(STORY_LIMITS.minSecs)
+    .max(STORY_LIMITS.maxSecs)
+    .default(NOTE_SECS)
+    .describe("How long it stays up, from one hour to a day"),
+});
+
+export const NoteDTO = z.object({ id: Id, text: z.string(), createdAt: IsoDate, expiresAt: IsoDate });
+export type NoteDTO = z.infer<typeof NoteDTO>;
+
+export const NotesDTO = z.object({
+  mine: NoteDTO.nullable(),
+  items: z.array(z.object({ user: PublicUser, note: NoteDTO })).describe("Contacts' notes, newest first"),
+});
+export type NotesDTO = z.infer<typeof NotesDTO>;
 
 export const STORY_REACTIONS = ["❤️", "😂", "😮", "😢", "👏", "🔥"] as const;
 export type StoryReaction = (typeof STORY_REACTIONS)[number];

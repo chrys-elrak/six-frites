@@ -198,7 +198,7 @@ function Media({
     <>
       <div className="grid grid-cols-3 gap-0.5 sm:grid-cols-4">
         {media.map((m, i) => {
-          const safe = chat.safeView && m.senderId !== meId;
+          const safe = chat.safeView;
           return (
             <div key={m.id} className="relative aspect-square">
               <AttachmentView

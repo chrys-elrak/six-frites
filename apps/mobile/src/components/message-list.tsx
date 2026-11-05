@@ -393,6 +393,16 @@ function StoryQuote({ story, mine, color, reaction }: { story: StoryReply; mine:
   const t = useT().stories;
   const [broken, setBroken] = useState(false);
   const picture = story.imageUrl && !broken ? story.imageUrl : null;
+  if (story.kind === "note") {
+    return (
+      <View style={[styles.storyQuote, { alignItems: "flex-start" }]}>
+        <Text style={{ color, fontSize: 12, opacity: 0.75 }}>{mine ? t.youRepliedToNote : t.repliedToNote}</Text>
+        <View style={{ borderRadius: 16, backgroundColor: "rgba(0,0,0,0.1)", paddingHorizontal: 12, paddingVertical: 6 }}>
+          <Text style={{ color, fontSize: 14 }}>{story.text}</Text>
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={styles.storyQuote}>
       <Text style={{ color, fontSize: 12, opacity: 0.75 }}>
@@ -827,7 +837,7 @@ function Bubble({
   const bubble = useBubbleColors();
   const selectable = selecting && row.message !== null;
   const revealedMedia = useSpoilers((s) => s.revealed);
-  const blurred = (key: string, spoiler: boolean) => (spoiler || (safe && !row.mine)) && !revealedMedia[key];
+  const blurred = (key: string, spoiler: boolean) => (spoiler || safe) && !revealedMedia[key];
   const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
@@ -1146,6 +1156,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const { realtime } = useRealtime();
     const messages = useMessages(chat.id);
     const pending = usePending(chat.id);
+    useEffect(() => () => useSpoilers.getState().forget(), [chat.id]);
     const setMode = useComposerMode((s) => s.set);
     const selecting = useSelection((s) => s.chatId === chat.id);
     const frozen = isFrozen(chat);

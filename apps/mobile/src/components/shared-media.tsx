@@ -212,7 +212,7 @@ function Media({ chat, range, onJump }: { chat: ChatDTO; range: Range; onJump: (
         onEndReachedThreshold={0.5}
         onEndReached={more}
         renderItem={({ item: m, index: i }) => {
-          const safe = chat.safeView && m.senderId !== meId;
+          const safe = chat.safeView;
           return (
             <View style={{ width: side, height: side }}>
               <AttachmentView

@@ -8,11 +8,11 @@ import { Portal } from "./portal";
 import { PrimaryButton } from "./ui";
 
 type Unit = (typeof AUTO_DELETE_UNITS)[number][0];
+type Units = readonly (readonly [Unit, number])[];
 
-function initial(secs: number | null): { amount: string; unit: Unit } {
-  if (!secs) return { amount: "2", unit: "days" };
-  const [unit, size] = [...AUTO_DELETE_UNITS].reverse().find(([, size]) => secs % size === 0) ?? ["hours", 3600];
-  return { amount: String(secs / size), unit };
+function initial(secs: number | null, units: Units, fallback: number): { amount: string; unit: Unit } {
+  const [unit, size] = [...units].reverse().find(([, size]) => (secs ?? fallback) % size === 0) ?? units[0]!;
+  return { amount: String((secs ?? fallback) / size), unit };
 }
 
 export function AutoDeleteCustom({
@@ -27,26 +27,68 @@ export function AutoDeleteCustom({
   onClose: () => void;
 }) {
   const tr = useT();
-  const [amount, setAmount] = useState(() => initial(value).amount);
-  const [unit, setUnit] = useState<Unit>(() => initial(value).unit);
+  return (
+    <DurationPicker
+      value={value ?? 2 * 86400}
+      units={AUTO_DELETE_UNITS}
+      range={AUTO_DELETE}
+      title={tr.chat.customAutoDelete}
+      hint={(label) => tr.chat.autoDeleteHint(peerName, label)}
+      rangeHint={tr.chat.autoDeleteRange}
+      submit={tr.chat.setTimer}
+      onSave={onSave}
+      onClose={onClose}
+    />
+  );
+}
+
+/** Asks for an amount of `units` that adds up to between `range.min` and `range.max` seconds. */
+export function DurationPicker({
+  value,
+  units,
+  range,
+  title,
+  hint,
+  rangeHint,
+  submit,
+  onSave,
+  onClose,
+}: {
+  value: number | null;
+  units: Units;
+  range: { min: number; max: number };
+  title: string;
+  hint: (label: string) => string;
+  rangeHint: string;
+  submit: string;
+  onSave: (secs: number) => void;
+  onClose: () => void;
+}) {
+  const tr = useT();
+  const [amount, setAmount] = useState(() => initial(value, units, range.min).amount);
+  const [unit, setUnit] = useState<Unit>(() => initial(value, units, range.min).unit);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      onClose();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose]);
 
   const n = Number(amount);
-  const secs = Number.isInteger(n) && n > 0 ? n * AUTO_DELETE_UNITS.find(([u]) => u === unit)![1] : 0;
-  const valid = secs >= AUTO_DELETE.min && secs <= AUTO_DELETE.max;
+  const secs = Number.isInteger(n) && n > 0 ? n * units.find(([u]) => u === unit)![1] : 0;
+  const valid = secs >= range.min && secs <= range.max;
 
   return (
     <Portal>
       <div
-        className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
+        className="fixed inset-0 z-[70] flex items-end justify-center md:items-center"
         role="dialog"
         aria-modal
-        aria-label={tr.chat.customAutoDelete}
+        aria-label={title}
       >
         <button aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         <form
@@ -59,7 +101,7 @@ export function AutoDeleteCustom({
           }}
         >
           <div className="flex items-center">
-            <h2 className="flex-1 text-lg font-semibold">{tr.chat.customAutoDelete}</h2>
+            <h2 className="flex-1 text-lg font-semibold">{title}</h2>
             <button
               type="button"
               onClick={onClose}
@@ -81,26 +123,28 @@ export function AutoDeleteCustom({
               aria-label={tr.chat.amount}
               className="w-24 rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
             />
-            <select
-              value={unit}
-              onChange={(e) => setUnit(e.target.value as Unit)}
-              aria-label={tr.chat.unit}
-              className="min-w-0 flex-1 rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
-            >
-              {AUTO_DELETE_UNITS.map(([u]) => (
-                <option key={u} value={u}>
-                  {tr.chat.units[u]}
-                </option>
-              ))}
-            </select>
+            {units.length > 1 ? (
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value as Unit)}
+                aria-label={tr.chat.unit}
+                className="min-w-0 flex-1 rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
+              >
+                {units.map(([u]) => (
+                  <option key={u} value={u}>
+                    {tr.chat.units[u]}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="self-center">{tr.chat.units[unit]}</span>
+            )}
           </div>
           <p className={`text-sm ${valid ? "text-stone-500" : "text-red-600 dark:text-red-400"}`}>
-            {valid
-              ? tr.chat.autoDeleteHint(peerName, durationLabel(secs, tr))
-              : tr.chat.autoDeleteRange}
+            {valid ? hint(durationLabel(secs, tr)) : rangeHint}
           </p>
           <PrimaryButton type="submit" className="w-full" disabled={!valid}>
-            {tr.chat.setTimer}
+            {submit}
           </PrimaryButton>
         </form>
       </div>

@@ -134,13 +134,13 @@ export type ReplyPreview = z.infer<typeof ReplyPreview>;
 export const StoryReply = z
   .object({
     id: Id,
-    ownerId: Id.describe("Whose story it is"),
-    kind: z.enum(["text", "image", "video"]),
+    ownerId: Id.describe("Whose story or note it is"),
+    kind: z.enum(["text", "image", "video", "note"]).describe("note: a note they answered, its text in `text`"),
     text: z.string().nullable().describe("The start of the story's text or caption"),
     background: z.string().nullable().describe("A text story's colour, or two for a gradient"),
     imageUrl: z.string().url().nullable().describe("A photo story's picture, or a video's first frame; it stops working once the story is gone"),
   })
-  .describe("The story a message answers, as it was when they answered: it may be gone since");
+  .describe("The story or note a message answers, as it was when they answered: it may be gone since");
 export type StoryReply = z.infer<typeof StoryReply>;
 
 export const EphemeralInput = z
@@ -370,7 +370,7 @@ export const SendMessageInput = z
       .optional()
       .describe("With `encrypted`: the content is a location, a checklist or a game rather than text or a file"),
     replyToId: Id.optional(),
-    storyId: Id.optional().describe("Answer this story of the other person's: it shows above the message"),
+    storyId: Id.optional().describe("Answer this story or note of the other person's: it shows above the message"),
     groupId: z
       .string()
       .regex(/^[\w-]{1,64}$/)
@@ -476,7 +476,7 @@ export const ChatDTO = z.object({
   muted: z.boolean(),
   mutedUntil: IsoDate.nullable().describe("When a timed mute ends; null while muted for good or not muted"),
   pinned: z.boolean(),
-  safeView: z.boolean().describe("Your setting: blur the photos and videos the other person sends until you tap them"),
+  safeView: z.boolean().describe("Your setting: blur the photos and videos in the chat, yours included, until you tap them"),
   sharingProfile: z
     .boolean()
     .describe("You show the other person your real name and photo; until then they only see your alias"),

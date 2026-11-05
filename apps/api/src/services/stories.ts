@@ -2,6 +2,9 @@ import type { Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   type CreateStoryInput,
+  NOTE_SECS,
+  type NoteDTO,
+  type NotesDTO,
   STORY_LIMITS,
   type StoryDrawing,
   type StoryDTO,
@@ -251,6 +254,42 @@ export async function deleteStory(userId: string, storyId: string) {
   await prisma.story.delete({ where: { id: storyId } });
   if (story.uploadId) await purgeUploads([story.uploadId]);
   await announceStories(userId);
+}
+
+const toNoteDTO = (n: { id: string; text: string; createdAt: Date; expiresAt: Date }): NoteDTO => ({
+  id: n.id,
+  text: n.text,
+  createdAt: n.createdAt.toISOString(),
+  expiresAt: n.expiresAt.toISOString(),
+});
+
+/** My note and my contacts' notes that are still up. */
+export async function listNotes(userId: string): Promise<NotesDTO> {
+  const ids = await contactIds(prisma, userId);
+  const rows = await prisma.note.findMany({
+    where: { userId: { in: [userId, ...ids] }, expiresAt: { gt: new Date() } },
+    include: { user: true },
+    orderBy: { createdAt: "desc" },
+  });
+  const profile = await profilesFor(prisma, userId, ids);
+  const mine = rows.find((n) => n.userId === userId);
+  return {
+    mine: mine ? toNoteDTO(mine) : null,
+    items: rows.filter((n) => n !== mine).map((n) => ({ user: profile(n.user), note: toNoteDTO(n) })),
+  };
+}
+
+/** Puts up a note, for a day unless asked otherwise, in place of the one before. */
+export async function setNote(userId: string, text: string, durationSecs = NOTE_SECS): Promise<NoteDTO> {
+  await prisma.note.deleteMany({ where: { userId } });
+  const note = await prisma.note.create({ data: { userId, text, expiresAt: new Date(Date.now() + durationSecs * 1000) } });
+  await announceStories(userId);
+  return toNoteDTO(note);
+}
+
+export async function deleteNote(userId: string) {
+  const { count } = await prisma.note.deleteMany({ where: { userId } });
+  if (count) await announceStories(userId);
 }
 
 /** Deletes stories whose time is up, with their photos and videos. */

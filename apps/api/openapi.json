@@ -7381,15 +7381,17 @@
                             "ownerId": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Whose story it is"
+                              "description": "Whose story or note it is"
                             },
                             "kind": {
                               "type": "string",
                               "enum": [
                                 "text",
                                 "image",
-                                "video"
-                              ]
+                                "video",
+                                "note"
+                              ],
+                              "description": "note: a note they answered, its text in `text`"
                             },
                             "text": {
                               "nullable": true,
@@ -7417,7 +7419,7 @@
                             "imageUrl"
                           ],
                           "additionalProperties": false,
-                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                          "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -8536,7 +8538,7 @@
                     },
                     "safeView": {
                       "type": "boolean",
-                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                      "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
                     "sharingProfile": {
                       "type": "boolean",
@@ -8962,15 +8964,17 @@
                               "ownerId": {
                                 "type": "string",
                                 "minLength": 1,
-                                "description": "Whose story it is"
+                                "description": "Whose story or note it is"
                               },
                               "kind": {
                                 "type": "string",
                                 "enum": [
                                   "text",
                                   "image",
-                                  "video"
-                                ]
+                                  "video",
+                                  "note"
+                                ],
+                                "description": "note: a note they answered, its text in `text`"
                               },
                               "text": {
                                 "nullable": true,
@@ -8998,7 +9002,7 @@
                               "imageUrl"
                             ],
                             "additionalProperties": false,
-                            "description": "The story a message answers, as it was when they answered: it may be gone since"
+                            "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -10670,15 +10674,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -10706,7 +10712,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -12310,15 +12316,17 @@
                             "ownerId": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Whose story it is"
+                              "description": "Whose story or note it is"
                             },
                             "kind": {
                               "type": "string",
                               "enum": [
                                 "text",
                                 "image",
-                                "video"
-                              ]
+                                "video",
+                                "note"
+                              ],
+                              "description": "note: a note they answered, its text in `text`"
                             },
                             "text": {
                               "nullable": true,
@@ -12346,7 +12354,7 @@
                             "imageUrl"
                           ],
                           "additionalProperties": false,
-                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                          "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -13465,7 +13473,7 @@
                     },
                     "safeView": {
                       "type": "boolean",
-                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                      "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
                     "sharingProfile": {
                       "type": "boolean",
@@ -13891,15 +13899,17 @@
                               "ownerId": {
                                 "type": "string",
                                 "minLength": 1,
-                                "description": "Whose story it is"
+                                "description": "Whose story or note it is"
                               },
                               "kind": {
                                 "type": "string",
                                 "enum": [
                                   "text",
                                   "image",
-                                  "video"
-                                ]
+                                  "video",
+                                  "note"
+                                ],
+                                "description": "note: a note they answered, its text in `text`"
                               },
                               "text": {
                                 "nullable": true,
@@ -13927,7 +13937,7 @@
                               "imageUrl"
                             ],
                             "additionalProperties": false,
-                            "description": "The story a message answers, as it was when they answered: it may be gone since"
+                            "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -15656,15 +15666,17 @@
                             "ownerId": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Whose story it is"
+                              "description": "Whose story or note it is"
                             },
                             "kind": {
                               "type": "string",
                               "enum": [
                                 "text",
                                 "image",
-                                "video"
-                              ]
+                                "video",
+                                "note"
+                              ],
+                              "description": "note: a note they answered, its text in `text`"
                             },
                             "text": {
                               "nullable": true,
@@ -15692,7 +15704,7 @@
                             "imageUrl"
                           ],
                           "additionalProperties": false,
-                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                          "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -16811,7 +16823,7 @@
                     },
                     "safeView": {
                       "type": "boolean",
-                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                      "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
                     "sharingProfile": {
                       "type": "boolean",
@@ -17237,15 +17249,17 @@
                               "ownerId": {
                                 "type": "string",
                                 "minLength": 1,
-                                "description": "Whose story it is"
+                                "description": "Whose story or note it is"
                               },
                               "kind": {
                                 "type": "string",
                                 "enum": [
                                   "text",
                                   "image",
-                                  "video"
-                                ]
+                                  "video",
+                                  "note"
+                                ],
+                                "description": "note: a note they answered, its text in `text`"
                               },
                               "text": {
                                 "nullable": true,
@@ -17273,7 +17287,7 @@
                               "imageUrl"
                             ],
                             "additionalProperties": false,
-                            "description": "The story a message answers, as it was when they answered: it may be gone since"
+                            "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -19029,15 +19043,17 @@
                                   "ownerId": {
                                     "type": "string",
                                     "minLength": 1,
-                                    "description": "Whose story it is"
+                                    "description": "Whose story or note it is"
                                   },
                                   "kind": {
                                     "type": "string",
                                     "enum": [
                                       "text",
                                       "image",
-                                      "video"
-                                    ]
+                                      "video",
+                                      "note"
+                                    ],
+                                    "description": "note: a note they answered, its text in `text`"
                                   },
                                   "text": {
                                     "nullable": true,
@@ -19065,7 +19081,7 @@
                                   "imageUrl"
                                 ],
                                 "additionalProperties": false,
-                                "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                               },
                               "action": {
                                 "nullable": true,
@@ -20184,7 +20200,7 @@
                           },
                           "safeView": {
                             "type": "boolean",
-                            "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                            "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                           },
                           "sharingProfile": {
                             "type": "boolean",
@@ -20610,15 +20626,17 @@
                                     "ownerId": {
                                       "type": "string",
                                       "minLength": 1,
-                                      "description": "Whose story it is"
+                                      "description": "Whose story or note it is"
                                     },
                                     "kind": {
                                       "type": "string",
                                       "enum": [
                                         "text",
                                         "image",
-                                        "video"
-                                      ]
+                                        "video",
+                                        "note"
+                                      ],
+                                      "description": "note: a note they answered, its text in `text`"
                                     },
                                     "text": {
                                       "nullable": true,
@@ -20646,7 +20664,7 @@
                                     "imageUrl"
                                   ],
                                   "additionalProperties": false,
-                                  "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                  "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                                 },
                                 "action": {
                                   "nullable": true,
@@ -22386,15 +22404,17 @@
                             "ownerId": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Whose story it is"
+                              "description": "Whose story or note it is"
                             },
                             "kind": {
                               "type": "string",
                               "enum": [
                                 "text",
                                 "image",
-                                "video"
-                              ]
+                                "video",
+                                "note"
+                              ],
+                              "description": "note: a note they answered, its text in `text`"
                             },
                             "text": {
                               "nullable": true,
@@ -22422,7 +22442,7 @@
                             "imageUrl"
                           ],
                           "additionalProperties": false,
-                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                          "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -23541,7 +23561,7 @@
                     },
                     "safeView": {
                       "type": "boolean",
-                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                      "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
                     "sharingProfile": {
                       "type": "boolean",
@@ -23967,15 +23987,17 @@
                               "ownerId": {
                                 "type": "string",
                                 "minLength": 1,
-                                "description": "Whose story it is"
+                                "description": "Whose story or note it is"
                               },
                               "kind": {
                                 "type": "string",
                                 "enum": [
                                   "text",
                                   "image",
-                                  "video"
-                                ]
+                                  "video",
+                                  "note"
+                                ],
+                                "description": "note: a note they answered, its text in `text`"
                               },
                               "text": {
                                 "nullable": true,
@@ -24003,7 +24025,7 @@
                               "imageUrl"
                             ],
                             "additionalProperties": false,
-                            "description": "The story a message answers, as it was when they answered: it may be gone since"
+                            "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -25818,15 +25840,17 @@
                             "ownerId": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Whose story it is"
+                              "description": "Whose story or note it is"
                             },
                             "kind": {
                               "type": "string",
                               "enum": [
                                 "text",
                                 "image",
-                                "video"
-                              ]
+                                "video",
+                                "note"
+                              ],
+                              "description": "note: a note they answered, its text in `text`"
                             },
                             "text": {
                               "nullable": true,
@@ -25854,7 +25878,7 @@
                             "imageUrl"
                           ],
                           "additionalProperties": false,
-                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                          "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -26973,7 +26997,7 @@
                     },
                     "safeView": {
                       "type": "boolean",
-                      "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                      "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                     },
                     "sharingProfile": {
                       "type": "boolean",
@@ -27399,15 +27423,17 @@
                               "ownerId": {
                                 "type": "string",
                                 "minLength": 1,
-                                "description": "Whose story it is"
+                                "description": "Whose story or note it is"
                               },
                               "kind": {
                                 "type": "string",
                                 "enum": [
                                   "text",
                                   "image",
-                                  "video"
-                                ]
+                                  "video",
+                                  "note"
+                                ],
+                                "description": "note: a note they answered, its text in `text`"
                               },
                               "text": {
                                 "nullable": true,
@@ -27435,7 +27461,7 @@
                               "imageUrl"
                             ],
                             "additionalProperties": false,
-                            "description": "The story a message answers, as it was when they answered: it may be gone since"
+                            "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -29382,15 +29408,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -29418,7 +29446,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -30970,15 +30998,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -31006,7 +31036,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -32548,15 +32578,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -32584,7 +32616,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -34144,15 +34176,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -34180,7 +34214,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -35883,15 +35917,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -35919,7 +35955,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -37454,15 +37490,17 @@
                             "ownerId": {
                               "type": "string",
                               "minLength": 1,
-                              "description": "Whose story it is"
+                              "description": "Whose story or note it is"
                             },
                             "kind": {
                               "type": "string",
                               "enum": [
                                 "text",
                                 "image",
-                                "video"
-                              ]
+                                "video",
+                                "note"
+                              ],
+                              "description": "note: a note they answered, its text in `text`"
                             },
                             "text": {
                               "nullable": true,
@@ -37490,7 +37528,7 @@
                             "imageUrl"
                           ],
                           "additionalProperties": false,
-                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                          "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                         },
                         "action": {
                           "nullable": true,
@@ -39036,15 +39074,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -39072,7 +39112,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -40604,15 +40644,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -40640,7 +40682,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -42172,15 +42214,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -42208,7 +42252,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -43859,15 +43903,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -43895,7 +43941,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -45451,15 +45497,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -45487,7 +45535,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -47144,15 +47192,17 @@
                               "ownerId": {
                                 "type": "string",
                                 "minLength": 1,
-                                "description": "Whose story it is"
+                                "description": "Whose story or note it is"
                               },
                               "kind": {
                                 "type": "string",
                                 "enum": [
                                   "text",
                                   "image",
-                                  "video"
-                                ]
+                                  "video",
+                                  "note"
+                                ],
+                                "description": "note: a note they answered, its text in `text`"
                               },
                               "text": {
                                 "nullable": true,
@@ -47180,7 +47230,7 @@
                               "imageUrl"
                             ],
                             "additionalProperties": false,
-                            "description": "The story a message answers, as it was when they answered: it may be gone since"
+                            "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                           },
                           "action": {
                             "nullable": true,
@@ -48784,7 +48834,7 @@
                     "minLength": 1
                   },
                   "storyId": {
-                    "description": "Answer this story of the other person's: it shows above the message",
+                    "description": "Answer this story or note of the other person's: it shows above the message",
                     "type": "string",
                     "minLength": 1
                   },
@@ -49380,15 +49430,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -49416,7 +49468,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -51493,7 +51545,7 @@
                     "minLength": 1
                   },
                   "storyId": {
-                    "description": "Answer this story of the other person's: it shows above the message",
+                    "description": "Answer this story or note of the other person's: it shows above the message",
                     "type": "string",
                     "minLength": 1
                   },
@@ -53236,15 +53288,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -53272,7 +53326,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -55934,15 +55988,17 @@
                                       "ownerId": {
                                         "type": "string",
                                         "minLength": 1,
-                                        "description": "Whose story it is"
+                                        "description": "Whose story or note it is"
                                       },
                                       "kind": {
                                         "type": "string",
                                         "enum": [
                                           "text",
                                           "image",
-                                          "video"
-                                        ]
+                                          "video",
+                                          "note"
+                                        ],
+                                        "description": "note: a note they answered, its text in `text`"
                                       },
                                       "text": {
                                         "nullable": true,
@@ -55970,7 +56026,7 @@
                                       "imageUrl"
                                     ],
                                     "additionalProperties": false,
-                                    "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                    "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                                   },
                                   "action": {
                                     "nullable": true,
@@ -57492,15 +57548,17 @@
                                       "ownerId": {
                                         "type": "string",
                                         "minLength": 1,
-                                        "description": "Whose story it is"
+                                        "description": "Whose story or note it is"
                                       },
                                       "kind": {
                                         "type": "string",
                                         "enum": [
                                           "text",
                                           "image",
-                                          "video"
-                                        ]
+                                          "video",
+                                          "note"
+                                        ],
+                                        "description": "note: a note they answered, its text in `text`"
                                       },
                                       "text": {
                                         "nullable": true,
@@ -57528,7 +57586,7 @@
                                       "imageUrl"
                                     ],
                                     "additionalProperties": false,
-                                    "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                    "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                                   },
                                   "action": {
                                     "nullable": true,
@@ -59244,15 +59302,17 @@
                                           "ownerId": {
                                             "type": "string",
                                             "minLength": 1,
-                                            "description": "Whose story it is"
+                                            "description": "Whose story or note it is"
                                           },
                                           "kind": {
                                             "type": "string",
                                             "enum": [
                                               "text",
                                               "image",
-                                              "video"
-                                            ]
+                                              "video",
+                                              "note"
+                                            ],
+                                            "description": "note: a note they answered, its text in `text`"
                                           },
                                           "text": {
                                             "nullable": true,
@@ -59280,7 +59340,7 @@
                                           "imageUrl"
                                         ],
                                         "additionalProperties": false,
-                                        "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                        "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                                       },
                                       "action": {
                                         "nullable": true,
@@ -60399,7 +60459,7 @@
                                   },
                                   "safeView": {
                                     "type": "boolean",
-                                    "description": "Your setting: blur the photos and videos the other person sends until you tap them"
+                                    "description": "Your setting: blur the photos and videos in the chat, yours included, until you tap them"
                                   },
                                   "sharingProfile": {
                                     "type": "boolean",
@@ -60825,15 +60885,17 @@
                                             "ownerId": {
                                               "type": "string",
                                               "minLength": 1,
-                                              "description": "Whose story it is"
+                                              "description": "Whose story or note it is"
                                             },
                                             "kind": {
                                               "type": "string",
                                               "enum": [
                                                 "text",
                                                 "image",
-                                                "video"
-                                              ]
+                                                "video",
+                                                "note"
+                                              ],
+                                              "description": "note: a note they answered, its text in `text`"
                                             },
                                             "text": {
                                               "nullable": true,
@@ -60861,7 +60923,7 @@
                                             "imageUrl"
                                           ],
                                           "additionalProperties": false,
-                                          "description": "The story a message answers, as it was when they answered: it may be gone since"
+                                          "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                                         },
                                         "action": {
                                           "nullable": true,
@@ -64382,15 +64444,17 @@
                         "ownerId": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Whose story it is"
+                          "description": "Whose story or note it is"
                         },
                         "kind": {
                           "type": "string",
                           "enum": [
                             "text",
                             "image",
-                            "video"
-                          ]
+                            "video",
+                            "note"
+                          ],
+                          "description": "note: a note they answered, its text in `text`"
                         },
                         "text": {
                           "nullable": true,
@@ -64418,7 +64482,7 @@
                         "imageUrl"
                       ],
                       "additionalProperties": false,
-                      "description": "The story a message answers, as it was when they answered: it may be gone since"
+                      "description": "The story or note a message answers, as it was when they answered: it may be gone since"
                     },
                     "action": {
                       "nullable": true,
@@ -68464,6 +68528,244 @@
                     "viewCount"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notes": {
+      "get": {
+        "summary": "Your note and your contacts' notes that are up",
+        "tags": [
+          "stories"
+        ],
+        "description": "Notes change with stories: fetch them again on `stories:changed`. Answer one by sending a message with its id as `storyId`.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mine": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "text",
+                        "createdAt",
+                        "expiresAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Their alias and no photo, unless they share their profile with you"
+                          },
+                          "note": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "expiresAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "text",
+                              "createdAt",
+                              "expiresAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "user",
+                          "note"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Contacts' notes, newest first"
+                    }
+                  },
+                  "required": [
+                    "mine",
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Leave a note for your contacts",
+        "tags": [
+          "stories"
+        ],
+        "description": "It shows above your picture for a day, or as long as `durationSecs` says, and replaces the one you had.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "durationSecs": {
+                    "default": 86400,
+                    "description": "How long it stays up, from one hour to a day",
+                    "type": "integer",
+                    "minimum": 3600,
+                    "maximum": 86400
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "text",
+                    "createdAt",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Take your note down",
+        "tags": [
+          "stories"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }

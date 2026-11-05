@@ -120,6 +120,34 @@ describe("stories", () => {
     expect(elsewhere.json().error.code).toBe("STORY_NOT_FOUND");
   });
 
+  it("shows a note to contacts for a day, replaces it with the next, and lets them answer it in the chat", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const stranger = await signUp("stranger");
+    expect((await call(host, "PUT", "/v1/notes", { text: "x".repeat(61) })).statusCode).toBe(400);
+    await call(host, "PUT", "/v1/notes", { text: "Coffee?" });
+    const note = (await call(host, "PUT", "/v1/notes", { text: "  Beach at 5  " })).json();
+    expect(note.text).toBe("Beach at 5");
+
+    expect((await get(host, "/v1/notes")).mine).toMatchObject({ text: "Beach at 5" });
+    const seen = await get(guest, "/v1/notes");
+    expect(seen.mine).toBeNull();
+    expect(seen.items).toMatchObject([{ user: { id: host.user.id }, note: { id: note.id, text: "Beach at 5" } }]);
+    expect((await get(stranger, "/v1/notes")).items).toEqual([]);
+
+    const reply = await call(guest, "POST", `/v1/chats/${chatId}/messages`, { clientId: "note-reply", text: "I'm in", storyId: note.id });
+    expect(reply.json().story).toEqual({ id: note.id, ownerId: host.user.id, kind: "note", text: "Beach at 5", background: null, imageUrl: null });
+
+    await call(host, "DELETE", "/v1/notes");
+    expect((await get(guest, "/v1/notes")).items).toEqual([]);
+    const later = (await call(guest, "PUT", "/v1/notes", { text: "Gone tomorrow" })).json();
+    expect(Date.parse(later.expiresAt) - Date.parse(later.createdAt)).toBeCloseTo(24 * 3600 * 1000, -3);
+    const short = (await call(guest, "PUT", "/v1/notes", { text: "Quick one", durationSecs: 3 * 3600 })).json();
+    expect(Date.parse(short.expiresAt) - Date.parse(short.createdAt)).toBeCloseTo(3 * 3600 * 1000, -3);
+    expect((await call(guest, "PUT", "/v1/notes", { text: "Too long", durationSecs: 25 * 3600 })).statusCode).toBe(400);
+    await prisma.note.update({ where: { id: short.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    expect((await get(host, "/v1/notes")).items).toEqual([]);
+  });
+
   it("names the place on a story from OpenStreetMap, asking once per spot", async () => {
     const { host } = await makeFriends();
     const answer = { address: { suburb: "Analakely", city: "Antananarivo" } };

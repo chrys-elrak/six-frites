@@ -386,6 +386,14 @@ function StoryQuote({ story, mine, reaction }: { story: StoryReply; mine: boolea
   const t = tr.stories;
   const [broken, setBroken] = useState(false);
   const picture = story.imageUrl && !broken ? story.imageUrl : null;
+  if (story.kind === "note") {
+    return (
+      <span className="mb-1.5 flex flex-col items-start gap-1">
+        <span className="text-xs opacity-75">{mine ? t.youRepliedToNote : t.repliedToNote}</span>
+        <span className="rounded-2xl bg-black/10 px-3 py-1.5 text-sm break-words dark:bg-white/10">{story.text}</span>
+      </span>
+    );
+  }
   return (
     <span className="mb-1.5 flex flex-col gap-1">
       <span className="text-xs opacity-75">{mine ? (reaction ? t.youReacted : t.youReplied) : reaction ? t.reactedToYours : t.repliedToYours}</span>
@@ -777,7 +785,7 @@ function Bubble({
   onPlay: (move: GameMove) => void;
   onSendGame: (game: ChatGame) => void;
   onOpenAlbum: (items: ShownAttachment[], start: number) => void;
-  /** Safe view is on: their photos and videos stay blurred until tapped. */
+  /** Safe view is on: the photos and videos in the chat, yours too, stay blurred until tapped. */
   safe: boolean;
   frozen: boolean;
   autoPlay: boolean;
@@ -819,7 +827,7 @@ function Bubble({
       ? emojiOnly(row.text)
       : null;
   const visual = !sealed && row.attachment && ["image", "video", "gif"].includes(row.attachment.data.kind);
-  const blurred = (key: string, spoiler: boolean) => (spoiler || (safe && !mine)) && !revealedMedia[key];
+  const blurred = (key: string, spoiler: boolean) => (spoiler || safe) && !revealedMedia[key];
   const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const sticker = !sealed && !row.deleted ? row.sticker : null;
@@ -1105,6 +1113,7 @@ export const MessageList = forwardRef<
     const messages = useMessages(chat.id);
     const pending = usePending(chat.id);
     const setMode = useComposerMode((s) => s.set);
+    useEffect(() => () => useSpoilers.getState().forget(), [chat.id]);
     const selecting = useSelection((s) => s.chatId === chat.id);
     const selectedIds = useSelection((s) => s.ids);
     const startSelection = useSelection((s) => s.start);

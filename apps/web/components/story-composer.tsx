@@ -31,6 +31,7 @@ import { currentPosition } from "./location-card";
 import { Portal } from "./portal";
 import { Sheet } from "./sheet";
 import { StoryStickers, storiesKey } from "./stories";
+import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
 import { VideoTrimmer } from "./video-trimmer";
 
@@ -72,6 +73,7 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const [durationSecs, setDurationSecs] = useState<number>(STORY_DEFAULT_SECS);
   const [cutting, setCutting] = useState(false);
   const [pickingDuration, setPickingDuration] = useState(false);
+  const [customDuration, setCustomDuration] = useState(false);
   const [positions, setPositions] = useState<StoryPositions>({});
   const [drawing, setDrawing] = useState<StoryDrawing>(EMPTY_DRAWING);
   const [undos, setUndos] = useState<StoryDrawing[]>([]);
@@ -97,14 +99,14 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || cutting || pickingDuration) return;
+      if (e.key !== "Escape" || cutting || pickingDuration || customDuration) return;
       if (writing) setWriting(null);
       else if (drawingOn) setDrawingOn(false);
       else onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, cutting, pickingDuration, writing, drawingOn]);
+  }, [onClose, cutting, pickingDuration, customDuration, writing, drawingOn]);
 
   const keep = () => setUndos((u) => [...u, drawing]);
   function finishWriting() {
@@ -468,13 +470,20 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
       {pickingDuration && (
         <Sheet
           title={tr.stories.lasts}
-          actions={STORY_DURATIONS.map((secs) => ({
-            label: `${durationLabel(secs, tr)}${secs === durationSecs ? " ✓" : ""}`,
-            onSelect: () => setDurationSecs(secs),
-          }))}
+          actions={[
+            ...STORY_DURATIONS.map((secs) => ({
+              label: `${durationLabel(secs, tr)}${secs === durationSecs ? " ✓" : ""}`,
+              onSelect: () => setDurationSecs(secs),
+            })),
+            {
+              label: (STORY_DURATIONS as readonly number[]).includes(durationSecs) ? tr.stories.custom : `${durationLabel(durationSecs, tr)} ✓`,
+              onSelect: () => setCustomDuration(true),
+            },
+          ]}
           onClose={() => setPickingDuration(false)}
         />
       )}
+      {customDuration && <LastsPicker value={durationSecs} onSave={setDurationSecs} onClose={() => setCustomDuration(false)} />}
       {cutting && file && <VideoTrimmer file={file} onCancel={() => setCutting(false)} onDone={(from, to) => void cut(from, to)} />}
     </Portal>
   );

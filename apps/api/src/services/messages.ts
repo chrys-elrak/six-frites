@@ -303,12 +303,18 @@ export interface CreateOptions {
 /** What a message keeps of a story it answers: the story's picture as a storage key, signed when it is read. */
 type StoredStoryReply = Omit<StoryReply, "imageUrl"> & { imageKey: string | null };
 
-/** What a message keeps of the other person's story it answers, which must be theirs and in this chat. */
+/** What a message keeps of the other person's story or note it answers, which must be theirs and in this chat. */
 async function storyReplyFor(tx: Tx, chatId: string, userId: string, storyId: string): Promise<StoredStoryReply> {
   const story = await tx.story.findFirst({
     where: { id: storyId, userId: { not: userId } },
     include: { upload: { select: { kind: true, key: true, thumbKey: true } } },
   });
+  if (!story) {
+    const note = await tx.note.findFirst({ where: { id: storyId, userId: { not: userId } } });
+    if (note && (await tx.chatMember.count({ where: { chatId, userId: note.userId } }))) {
+      return { id: note.id, ownerId: note.userId, kind: "note", text: note.text, background: null, imageKey: null };
+    }
+  }
   if (!story || !(await tx.chatMember.count({ where: { chatId, userId: story.userId } }))) {
     throw new AppError("STORY_NOT_FOUND", "That story is gone or isn't from this chat");
   }

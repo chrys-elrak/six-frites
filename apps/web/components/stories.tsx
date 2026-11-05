@@ -2,6 +2,7 @@
 
 import { unwrap } from "@six/sdk";
 import {
+  type NoteDTO,
   type PublicUser,
   STORY_REACTIONS,
   STORY_SHOW_MS,
@@ -30,6 +31,7 @@ import { queueMessage } from "@/lib/send";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
+import { NoteBubble, NoteEditor, NoteReader, useNotes } from "./notes";
 import { Portal } from "./portal";
 import { StoryDrawingLayer } from "./story-drawing";
 import { Sheet } from "./sheet";
@@ -306,21 +308,40 @@ export function StoryAvatar({ userId, name, children }: { userId: string; name: 
   );
 }
 
-/** A row of contacts' stories above the chats, starting with mine and a button to add one. */
+/**
+ * A row of contacts' stories and notes above the chats, starting with mine, a button to add a story and my note.
+ * Tapping a picture opens that person's stories, or their note when they only have a note.
+ */
 export function StoriesBar() {
   const tr = useT();
   const me = useSession((s) => s.user!);
   const stories = useStories();
+  const notes = useNotes().data;
   const [open, setOpen] = useState<number | null>(null);
   const [composing, setComposing] = useState(false);
+  const [writingNote, setWritingNote] = useState(false);
+  const [reading, setReading] = useState<{ user: PublicUser; note: NoteDTO } | null>(null);
   const groups = stories.data ?? [];
   const mineAt = groups.findIndex((g) => g.user.id === me.id);
-  const others = groups.map((g, i) => [g, i] as const).filter(([g]) => g.user.id !== me.id);
+  const noteOf = new Map(notes?.items.map((n) => [n.user.id, n]));
+  const people = [
+    ...groups.flatMap((g, i) => (g.user.id === me.id ? [] : [{ user: g.user, at: i as number | null, unseen: g.stories.some((s) => !s.seen) }])),
+    ...(notes?.items ?? []).filter((n) => !groups.some((g) => g.user.id === n.user.id)).map((n) => ({ user: n.user, at: null, unseen: false })),
+  ];
+  const slot = "flex h-9 items-end justify-center";
 
   return (
     <>
       <div role="list" aria-label={tr.stories.title} className="-mx-4 flex w-[calc(100%+2rem)] gap-3 overflow-x-auto px-4 pb-1">
         <div role="listitem" className="relative flex w-16 shrink-0 flex-col items-center gap-1">
+          <div className={slot}>
+            <NoteBubble
+              text={notes?.mine?.text ?? tr.stories.leaveNote}
+              empty={!notes?.mine}
+              label={notes?.mine ? tr.stories.yourNote : tr.stories.leaveNote}
+              onClick={() => setWritingNote(true)}
+            />
+          </div>
           <button
             type="button"
             onClick={() => (mineAt >= 0 ? setOpen(mineAt) : setComposing(true))}
@@ -335,30 +356,43 @@ export function StoriesBar() {
             onClick={() => setComposing(true)}
             aria-label={tr.stories.add}
             title={tr.stories.add}
-            className="absolute top-11 right-0 grid size-6 place-items-center rounded-full bg-brand text-brand-ink ring-2 ring-stone-50 dark:ring-stone-950"
+            className="absolute top-[5.25rem] right-0 grid size-6 place-items-center rounded-full bg-brand text-brand-ink ring-2 ring-stone-50 dark:ring-stone-950"
           >
             <Plus className="size-4" strokeWidth={3} />
           </button>
           <span className="w-full truncate text-center text-xs text-stone-500">{tr.stories.yours}</span>
         </div>
-        {others.map(([g, i]) => (
-          <button
-            key={g.user.id}
-            type="button"
-            role="listitem"
-            onClick={() => setOpen(i)}
-            aria-label={tr.stories.open(g.user.displayName)}
-            className="flex w-16 shrink-0 flex-col items-center gap-1"
-          >
-            <Ring unseen={g.stories.some((s) => !s.seen)}>
-              <Avatar user={g.user} size="md" />
-            </Ring>
-            <span className="w-full truncate text-center text-xs">{g.user.displayName}</span>
-          </button>
-        ))}
+        {people.map(({ user, at, unseen }) => {
+          const note = noteOf.get(user.id);
+          return (
+            <div key={user.id} role="listitem" className="flex w-16 shrink-0 flex-col items-center gap-1">
+              <div className={slot}>
+                {note && <NoteBubble text={note.note.text} label={tr.stories.noteBy(user.displayName)} onClick={() => setReading(note)} />}
+              </div>
+              <button
+                type="button"
+                onClick={() => (at !== null ? setOpen(at) : note && setReading(note))}
+                aria-label={at !== null ? tr.stories.open(user.displayName) : tr.stories.noteBy(user.displayName)}
+              >
+                {at !== null ? (
+                  <Ring unseen={unseen}>
+                    <Avatar user={user} size="md" />
+                  </Ring>
+                ) : (
+                  <span className="block p-[5px]">
+                    <Avatar user={user} size="md" />
+                  </span>
+                )}
+              </button>
+              <span className="w-full truncate text-center text-xs">{user.displayName}</span>
+            </div>
+          );
+        })}
       </div>
       {open !== null && groups[open] && <StoryViewer groups={groups} start={open} onClose={() => setOpen(null)} />}
       {composing && <StoryComposer onClose={() => setComposing(false)} />}
+      {writingNote && <NoteEditor note={notes?.mine ?? null} onClose={() => setWritingNote(false)} />}
+      {reading && <NoteReader user={reading.user} note={reading.note} onClose={() => setReading(null)} />}
     </>
   );
 }

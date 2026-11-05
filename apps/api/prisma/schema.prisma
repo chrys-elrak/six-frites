@@ -89,6 +89,7 @@ model User {
   anonBlockedBy  AnonBlock[]        @relation("anonBlocked")
   stories        Story[]
   storyViews     StoryView[]
+  note           Note?
 
   @@index([anonBotAt])
 }
@@ -682,6 +683,17 @@ model Story {
 
   @@index([userId, expiresAt])
   @@index([expiresAt])
+}
+
+/// A short line someone shows above their picture to their contacts for a day; a new one replaces it.
+model Note {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  text      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model StoryView {

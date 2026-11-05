@@ -1,5 +1,6 @@
 import { unwrap } from "@six/sdk";
 import {
+  type NoteDTO,
   STORY_REACTIONS,
   STORY_SHOW_MS,
   type StoryDTO,
@@ -36,6 +37,7 @@ import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { NoteBubble, NoteEditor, NoteReader, useNotes } from "./notes";
 import { Sheet } from "./sheet";
 import { StoryComposer } from "./story-composer";
 import { StoryDrawingLayer } from "./story-drawing";
@@ -311,22 +313,40 @@ function Ring({ unseen, children }: { unseen: boolean; children: React.ReactNode
   );
 }
 
-/** A row of contacts' stories above the chats, starting with mine and a button to add one. */
+/**
+ * A row of contacts' stories and notes above the chats, starting with mine, a button to add a story and my note.
+ * Tapping a picture opens that person's stories, or their note when they only have a note.
+ */
 export function StoriesBar() {
   const t = useTheme();
   const tr = useT();
   const me = useSession((s) => s.user!);
   const stories = useStories();
+  const notes = useNotes().data;
   const [open, setOpen] = useState<number | null>(null);
   const [composing, setComposing] = useState(false);
+  const [writingNote, setWritingNote] = useState(false);
+  const [reading, setReading] = useState<{ user: PublicUser; note: NoteDTO } | null>(null);
   const groups = stories.data ?? [];
   const mineAt = groups.findIndex((g) => g.user.id === me.id);
-  const others = groups.map((g, i) => [g, i] as const).filter(([g]) => g.user.id !== me.id);
+  const noteOf = new Map(notes?.items.map((n) => [n.user.id, n]));
+  const people = [
+    ...groups.flatMap((g, i) => (g.user.id === me.id ? [] : [{ user: g.user, at: i as number | null, unseen: g.stories.some((s) => !s.seen) }])),
+    ...(notes?.items ?? []).filter((n) => !groups.some((g) => g.user.id === n.user.id)).map((n) => ({ user: n.user, at: null, unseen: false })),
+  ];
 
   return (
     <>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bar}>
         <View style={styles.item}>
+          <View style={styles.noteSlot}>
+            <NoteBubble
+              text={notes?.mine?.text ?? tr.stories.leaveNote}
+              empty={!notes?.mine}
+              label={notes?.mine ? tr.stories.yourNote : tr.stories.leaveNote}
+              onPress={() => setWritingNote(true)}
+            />
+          </View>
           <Pressable
             onPress={() => (mineAt >= 0 ? setOpen(mineAt) : setComposing(true))}
             accessibilityLabel={mineAt >= 0 ? tr.stories.open(tr.stories.yours) : tr.stories.add}
@@ -347,19 +367,38 @@ export function StoriesBar() {
             {tr.stories.yours}
           </Text>
         </View>
-        {others.map(([g, i]) => (
-          <Pressable key={g.user.id} onPress={() => setOpen(i)} accessibilityLabel={tr.stories.open(g.user.displayName)} style={styles.item}>
-            <Ring unseen={g.stories.some((s) => !s.seen)}>
-              <Avatar user={g.user} size="md" />
-            </Ring>
-            <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
-              {g.user.displayName}
-            </Text>
-          </Pressable>
-        ))}
+        {people.map(({ user, at, unseen }) => {
+          const note = noteOf.get(user.id);
+          return (
+            <View key={user.id} style={styles.item}>
+              <View style={styles.noteSlot}>
+                {note && <NoteBubble text={note.note.text} label={tr.stories.noteBy(user.displayName)} onPress={() => setReading(note)} />}
+              </View>
+              <Pressable
+                onPress={() => (at !== null ? setOpen(at) : note && setReading(note))}
+                accessibilityLabel={at !== null ? tr.stories.open(user.displayName) : tr.stories.noteBy(user.displayName)}
+              >
+                {at !== null ? (
+                  <Ring unseen={unseen}>
+                    <Avatar user={user} size="md" />
+                  </Ring>
+                ) : (
+                  <View style={{ padding: 5 }}>
+                    <Avatar user={user} size="md" />
+                  </View>
+                )}
+              </Pressable>
+              <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
+                {user.displayName}
+              </Text>
+            </View>
+          );
+        })}
       </ScrollView>
       {open !== null && groups[open] && <StoryViewer groups={groups} start={open} onClose={() => setOpen(null)} />}
       {composing && <StoryComposer onClose={() => setComposing(false)} />}
+      {writingNote && <NoteEditor note={notes?.mine ?? null} onClose={() => setWritingNote(false)} />}
+      {reading && <NoteReader user={reading.user} note={reading.note} onClose={() => setReading(null)} />}
     </>
   );
 }
@@ -747,7 +786,7 @@ const styles = StyleSheet.create({
   ringGap: { padding: 2, borderRadius: 40 },
   plus: {
     position: "absolute",
-    top: 44,
+    top: 84,
     right: 0,
     width: 24,
     height: 24,
@@ -758,6 +797,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   name: { fontSize: 12, maxWidth: 68 },
+  noteSlot: { height: 36, justifyContent: "flex-end", alignItems: "center" },
   screen: { flex: 1, backgroundColor: "#000" },
   center: { alignItems: "center", justifyContent: "center" },
   bigText: { color: "#fff", fontSize: 26, lineHeight: 34, fontWeight: "700", textAlign: "center", paddingHorizontal: 32 },

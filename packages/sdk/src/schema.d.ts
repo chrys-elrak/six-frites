@@ -3650,13 +3650,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -3886,7 +3889,7 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
-                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
                             /** @description You show the other person your real name and photo; until then they only see your alias */
                             sharingProfile: boolean;
@@ -4006,13 +4009,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -4424,13 +4430,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -4820,13 +4829,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -5056,7 +5068,7 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
-                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
                             /** @description You show the other person your real name and photo; until then they only see your alias */
                             sharingProfile: boolean;
@@ -5176,13 +5188,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -5609,13 +5624,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -5845,7 +5863,7 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
-                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
                             /** @description You show the other person your real name and photo; until then they only see your alias */
                             sharingProfile: boolean;
@@ -5965,13 +5983,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -6396,13 +6417,16 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
                                         id: string;
-                                        /** @description Whose story it is */
+                                        /** @description Whose story or note it is */
                                         ownerId: string;
-                                        /** @enum {string} */
-                                        kind: "text" | "image" | "video";
+                                        /**
+                                         * @description note: a note they answered, its text in `text`
+                                         * @enum {string}
+                                         */
+                                        kind: "text" | "image" | "video" | "note";
                                         /** @description The start of the story's text or caption */
                                         text: string | null;
                                         /** @description A text story's colour, or two for a gradient */
@@ -6632,7 +6656,7 @@ export interface paths {
                                  */
                                 mutedUntil: string | null;
                                 pinned: boolean;
-                                /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                                /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                                 safeView: boolean;
                                 /** @description You show the other person your real name and photo; until then they only see your alias */
                                 sharingProfile: boolean;
@@ -6752,13 +6776,16 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
                                         id: string;
-                                        /** @description Whose story it is */
+                                        /** @description Whose story or note it is */
                                         ownerId: string;
-                                        /** @enum {string} */
-                                        kind: "text" | "image" | "video";
+                                        /**
+                                         * @description note: a note they answered, its text in `text`
+                                         * @enum {string}
+                                         */
+                                        kind: "text" | "image" | "video" | "note";
                                         /** @description The start of the story's text or caption */
                                         text: string | null;
                                         /** @description A text story's colour, or two for a gradient */
@@ -7184,13 +7211,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -7420,7 +7450,7 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
-                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
                             /** @description You show the other person your real name and photo; until then they only see your alias */
                             sharingProfile: boolean;
@@ -7540,13 +7570,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -8025,13 +8058,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -8261,7 +8297,7 @@ export interface paths {
                              */
                             mutedUntil: string | null;
                             pinned: boolean;
-                            /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                            /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                             safeView: boolean;
                             /** @description You show the other person your real name and photo; until then they only see your alias */
                             sharingProfile: boolean;
@@ -8381,13 +8417,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -8888,13 +8927,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -9266,13 +9308,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -9644,13 +9689,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -10025,13 +10073,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -10429,13 +10480,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -10806,13 +10860,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -11188,13 +11245,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -11564,13 +11624,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -11940,13 +12003,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -12347,13 +12413,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -12733,13 +12802,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -13159,13 +13231,16 @@ export interface paths {
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
                                 } | null;
-                                /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
                                     id: string;
-                                    /** @description Whose story it is */
+                                    /** @description Whose story or note it is */
                                     ownerId: string;
-                                    /** @enum {string} */
-                                    kind: "text" | "image" | "video";
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
                                     /** @description The start of the story's text or caption */
                                     text: string | null;
                                     /** @description A text story's colour, or two for a gradient */
@@ -13507,7 +13582,7 @@ export interface paths {
                          */
                         type?: "location" | "checklist" | "game";
                         replyToId?: string;
-                        /** @description Answer this story of the other person's: it shows above the message */
+                        /** @description Answer this story or note of the other person's: it shows above the message */
                         storyId?: string;
                         /** @description The same id on photos and videos sent together, so they show as one album */
                         groupId?: string;
@@ -13681,13 +13756,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -14169,7 +14247,7 @@ export interface paths {
                          */
                         type?: "location" | "checklist" | "game";
                         replyToId?: string;
-                        /** @description Answer this story of the other person's: it shows above the message */
+                        /** @description Answer this story or note of the other person's: it shows above the message */
                         storyId?: string;
                         /** @description The same id on photos and videos sent together, so they show as one album */
                         groupId?: string;
@@ -14690,13 +14768,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -15725,13 +15806,16 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
                                         id: string;
-                                        /** @description Whose story it is */
+                                        /** @description Whose story or note it is */
                                         ownerId: string;
-                                        /** @enum {string} */
-                                        kind: "text" | "image" | "video";
+                                        /**
+                                         * @description note: a note they answered, its text in `text`
+                                         * @enum {string}
+                                         */
+                                        kind: "text" | "image" | "video" | "note";
                                         /** @description The start of the story's text or caption */
                                         text: string | null;
                                         /** @description A text story's colour, or two for a gradient */
@@ -16066,13 +16150,16 @@ export interface paths {
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
                                     } | null;
-                                    /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                    /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
                                         id: string;
-                                        /** @description Whose story it is */
+                                        /** @description Whose story or note it is */
                                         ownerId: string;
-                                        /** @enum {string} */
-                                        kind: "text" | "image" | "video";
+                                        /**
+                                         * @description note: a note they answered, its text in `text`
+                                         * @enum {string}
+                                         */
+                                        kind: "text" | "image" | "video" | "note";
                                         /** @description The start of the story's text or caption */
                                         text: string | null;
                                         /** @description A text story's colour, or two for a gradient */
@@ -16457,13 +16544,16 @@ export interface paths {
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
                                         } | null;
-                                        /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                        /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                         story: {
                                             id: string;
-                                            /** @description Whose story it is */
+                                            /** @description Whose story or note it is */
                                             ownerId: string;
-                                            /** @enum {string} */
-                                            kind: "text" | "image" | "video";
+                                            /**
+                                             * @description note: a note they answered, its text in `text`
+                                             * @enum {string}
+                                             */
+                                            kind: "text" | "image" | "video" | "note";
                                             /** @description The start of the story's text or caption */
                                             text: string | null;
                                             /** @description A text story's colour, or two for a gradient */
@@ -16693,7 +16783,7 @@ export interface paths {
                                      */
                                     mutedUntil: string | null;
                                     pinned: boolean;
-                                    /** @description Your setting: blur the photos and videos the other person sends until you tap them */
+                                    /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
                                     safeView: boolean;
                                     /** @description You show the other person your real name and photo; until then they only see your alias */
                                     sharingProfile: boolean;
@@ -16813,13 +16903,16 @@ export interface paths {
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
                                         } | null;
-                                        /** @description The story a message answers, as it was when they answered: it may be gone since */
+                                        /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                         story: {
                                             id: string;
-                                            /** @description Whose story it is */
+                                            /** @description Whose story or note it is */
                                             ownerId: string;
-                                            /** @enum {string} */
-                                            kind: "text" | "image" | "video";
+                                            /**
+                                             * @description note: a note they answered, its text in `text`
+                                             * @enum {string}
+                                             */
+                                            kind: "text" | "image" | "video" | "note";
                                             /** @description The start of the story's text or caption */
                                             text: string | null;
                                             /** @description A text story's colour, or two for a gradient */
@@ -18159,13 +18252,16 @@ export interface paths {
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
                             } | null;
-                            /** @description The story a message answers, as it was when they answered: it may be gone since */
+                            /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
                                 id: string;
-                                /** @description Whose story it is */
+                                /** @description Whose story or note it is */
                                 ownerId: string;
-                                /** @enum {string} */
-                                kind: "text" | "image" | "video";
+                                /**
+                                 * @description note: a note they answered, its text in `text`
+                                 * @enum {string}
+                                 */
+                                kind: "text" | "image" | "video" | "note";
                                 /** @description The start of the story's text or caption */
                                 text: string | null;
                                 /** @description A text story's colour, or two for a gradient */
@@ -19640,6 +19736,135 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Your note and your contacts' notes that are up
+         * @description Notes change with stories: fetch them again on `stories:changed`. Answer one by sending a message with its id as `storyId`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            mine: {
+                                id: string;
+                                text: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                expiresAt: string;
+                            } | null;
+                            /** @description Contacts' notes, newest first */
+                            items: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
+                                };
+                                note: {
+                                    id: string;
+                                    text: string;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    expiresAt: string;
+                                };
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        /**
+         * Leave a note for your contacts
+         * @description It shows above your picture for a day, or as long as `durationSecs` says, and replaces the one you had.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        text: string;
+                        /**
+                         * @description How long it stays up, from one hour to a day
+                         * @default 86400
+                         */
+                        durationSecs?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            text: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Take your note down */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;

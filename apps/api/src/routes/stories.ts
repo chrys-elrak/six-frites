@@ -1,7 +1,17 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { CreateStoryInput, Id, ReactStoryInput, StoryDTO, StoryGroupDTO, StoryViewerDTO } from "@six/shared";
-import { createStory, deleteStory, listStories, listStoryViewers, markStoryViewed, reactToStory } from "../services/stories.js";
+import { CreateStoryInput, Id, NoteDTO, NotesDTO, ReactStoryInput, SetNoteInput, StoryDTO, StoryGroupDTO, StoryViewerDTO } from "@six/shared";
+import {
+  createStory,
+  deleteNote,
+  deleteStory,
+  listNotes,
+  listStories,
+  listStoryViewers,
+  markStoryViewed,
+  reactToStory,
+  setNote,
+} from "../services/stories.js";
 
 const security = [{ bearer: [] }];
 const Params = z.object({ id: Id });
@@ -21,6 +31,45 @@ const storyRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => listStories(req.auth.userId),
+  );
+
+  app.get(
+    "/notes",
+    {
+      schema: {
+        tags: ["stories"],
+        summary: "Your note and your contacts' notes that are up",
+        description: "Notes change with stories: fetch them again on `stories:changed`. Answer one by sending a message with its id as `storyId`.",
+        security,
+        response: { 200: NotesDTO },
+      },
+    },
+    (req) => listNotes(req.auth.userId),
+  );
+
+  app.put(
+    "/notes",
+    {
+      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["stories"],
+        summary: "Leave a note for your contacts",
+        description: "It shows above your picture for a day, or as long as `durationSecs` says, and replaces the one you had.",
+        security,
+        body: SetNoteInput,
+        response: { 200: NoteDTO },
+      },
+    },
+    (req) => setNote(req.auth.userId, req.body.text, req.body.durationSecs),
+  );
+
+  app.delete(
+    "/notes",
+    { schema: { tags: ["stories"], summary: "Take your note down", security, response: { 204: z.null() } } },
+    async (req, reply) => {
+      await deleteNote(req.auth.userId);
+      return reply.status(204).send(null);
+    },
   );
 
   app.post(
