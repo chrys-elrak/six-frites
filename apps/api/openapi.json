@@ -70608,7 +70608,8 @@
                             "description": "For missed_call: whether it was a video call"
                           },
                           "unread": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "description": "New since you last looked, or marked unread"
                           },
                           "createdAt": {
                             "type": "string",
@@ -70632,7 +70633,8 @@
                     "unread": {
                       "type": "integer",
                       "minimum": -9007199254740991,
-                      "maximum": 9007199254740991
+                      "maximum": 9007199254740991,
+                      "description": "How many came since you last looked; the ones marked unread don't count"
                     }
                   },
                   "required": [
@@ -70652,6 +70654,103 @@
         "summary": "Mark every notification as seen",
         "tags": [
           "notifications"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications/{id}": {
+      "patch": {
+        "summary": "Mark a notification unread again, or read",
+        "tags": [
+          "notifications"
+        ],
+        "description": "One marked unread stays unread until it is marked read, but doesn't count in `unread`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "unread": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "unread"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a notification",
+        "tags": [
+          "notifications"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
         ],
         "security": [
           {

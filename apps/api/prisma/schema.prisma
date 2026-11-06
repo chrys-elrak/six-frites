@@ -743,6 +743,8 @@ model Notification {
   chatId    String?
   emoji     String?
   video     Boolean  @default(false)
+  /// Set when they marked it unread again; it stays unread until they open it or mark it read.
+  markedUnread Boolean @default(false)
   createdAt DateTime @default(now())
 
   user  User @relation("notified", fields: [userId], references: [id], onDelete: Cascade)

@@ -20956,10 +20956,12 @@ export interface paths {
                                 emoji: string | null;
                                 /** @description For missed_call: whether it was a video call */
                                 video: boolean;
+                                /** @description New since you last looked, or marked unread */
                                 unread: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
                             }[];
+                            /** @description How many came since you last looked; the ones marked unread don't count */
                             unread: number;
                         };
                     };
@@ -21008,6 +21010,75 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a notification */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Mark a notification unread again, or read
+         * @description One marked unread stays unread until it is marked read, but doesn't count in `unread`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        unread: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         trace?: never;
     };
 }

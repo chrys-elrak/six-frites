@@ -39,6 +39,28 @@ describe("notifications", () => {
     expect((await get(guest, "/v1/notifications")).items).toEqual([]);
   });
 
+  it("marks one unread again or read, and deletes one, only for its owner", async () => {
+    const { host, guest } = await makeFriends();
+    const stranger = await signUp("stranger");
+    const { contactCode } = await get(host, "/v1/me");
+    await call(stranger, "POST", "/v1/contacts", { q: contactCode });
+    await call(host, "POST", "/v1/notifications/seen");
+    const [added, joined] = (await get(host, "/v1/notifications")).items;
+
+    expect((await call(host, "PATCH", `/v1/notifications/${joined.id}`, { unread: true })).statusCode).toBe(204);
+    let list = await get(host, "/v1/notifications");
+    expect(list.items.map((n: { unread: boolean }) => n.unread)).toEqual([false, true]);
+    expect(list.unread).toBe(0);
+    await call(host, "PATCH", `/v1/notifications/${joined.id}`, { unread: false });
+    expect((await get(host, "/v1/notifications")).items[1].unread).toBe(false);
+
+    expect((await call(guest, "DELETE", `/v1/notifications/${added.id}`)).statusCode).toBe(404);
+    expect((await call(guest, "PATCH", `/v1/notifications/${added.id}`, { unread: true })).statusCode).toBe(404);
+    expect((await call(host, "DELETE", `/v1/notifications/${added.id}`)).statusCode).toBe(204);
+    list = await get(host, "/v1/notifications");
+    expect(list.items.map((n: { id: string }) => n.id)).toEqual([joined.id]);
+  });
+
   it("hides people I blocked", async () => {
     const { host, guest } = await makeFriends();
     expect((await call(host, "POST", `/v1/users/${guest.user.id}/block`)).statusCode).toBe(204);

@@ -14,3 +14,14 @@ export async function markNotificationsSeen(qc: QueryClient) {
   qc.setQueryData<NotificationsDTO>(notificationsKey, (d) => d && { ...d, unread: 0 });
   await six.api.POST("/v1/notifications/seen").catch(() => null);
 }
+
+/** Marks one notification unread again, or read, here at once and then on the server. */
+export async function markNotification(qc: QueryClient, id: string, unread: boolean) {
+  qc.setQueryData<NotificationsDTO>(notificationsKey, (d) => d && { ...d, items: d.items.map((n) => (n.id === id ? { ...n, unread } : n)) });
+  await six.api.PATCH("/v1/notifications/{id}", { params: { path: { id } }, body: { unread } }).catch(() => null);
+}
+
+export async function deleteNotification(qc: QueryClient, id: string) {
+  qc.setQueryData<NotificationsDTO>(notificationsKey, (d) => d && { ...d, items: d.items.filter((n) => n.id !== id) });
+  await six.api.DELETE("/v1/notifications/{id}", { params: { path: { id } } }).catch(() => null);
+}

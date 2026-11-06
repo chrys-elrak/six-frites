@@ -1,4 +1,4 @@
-import type { NotificationKind, NotificationsDTO } from "@six/shared";
+import { AppError, type NotificationKind, type NotificationsDTO } from "@six/shared";
 import type { Emit, Tx } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
@@ -45,10 +45,25 @@ export async function listNotifications(userId: string): Promise<NotificationsDT
     chatId: n.chatId,
     emoji: n.emoji,
     video: n.video,
-    unread: !seen || n.createdAt > seen,
+    unread: n.markedUnread || !seen || n.createdAt > seen,
     createdAt: n.createdAt.toISOString(),
   }));
-  return { items, unread: items.filter((n) => n.unread).length };
+  return { items, unread: shown.filter((n) => !seen || n.createdAt > seen).length };
+}
+
+const changed = (userId: string) => broadcaster().to(rooms.user(userId)).emit("notifications:changed");
+
+/** Marks one notification unread again, or read. */
+export async function markNotification(userId: string, id: string, unread: boolean) {
+  const { count } = await prisma.notification.updateMany({ where: { id, userId }, data: { markedUnread: unread } });
+  if (!count) throw new AppError("NOT_FOUND");
+  changed(userId);
+}
+
+export async function deleteNotification(userId: string, id: string) {
+  const { count } = await prisma.notification.deleteMany({ where: { id, userId } });
+  if (!count) throw new AppError("NOT_FOUND");
+  changed(userId);
 }
 
 export async function markNotificationsSeen(userId: string) {

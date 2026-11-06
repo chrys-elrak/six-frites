@@ -13,16 +13,18 @@ export const NotificationDTO = z.object({
   chatId: z.string().nullable().describe("The direct chat with them, to open on tap"),
   emoji: z.string().nullable().describe("For story_reaction"),
   video: z.boolean().describe("For missed_call: whether it was a video call"),
-  unread: z.boolean(),
+  unread: z.boolean().describe("New since you last looked, or marked unread"),
   createdAt: IsoDate,
 });
 export type NotificationDTO = z.infer<typeof NotificationDTO>;
 
 export const NotificationsDTO = z.object({
   items: z.array(NotificationDTO),
-  unread: z.number().int(),
+  unread: z.number().int().describe("How many came since you last looked; the ones marked unread don't count"),
 });
 export type NotificationsDTO = z.infer<typeof NotificationsDTO>;
+
+export const UpdateNotificationInput = z.object({ unread: z.boolean() });
 
 /** The line a notification shows, in the app's language. */
 export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
