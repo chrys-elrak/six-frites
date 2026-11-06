@@ -92,6 +92,7 @@ model User {
   stories        Story[]
   storyViews     StoryView[]
   note           Note?
+  noteViews      NoteView[]
   notifications  Notification[]     @relation("notified")
   notified       Notification[]     @relation("notifier")
 
@@ -702,7 +703,20 @@ model Note {
   createdAt  DateTime @default(now())
   expiresAt  DateTime
 
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views NoteView[]
+}
+
+model NoteView {
+  noteId   String
+  userId   String
+  viewedAt DateTime @default(now())
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, userId])
+  @@index([userId])
 }
 
 model StoryView {

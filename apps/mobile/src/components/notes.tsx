@@ -14,8 +14,8 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { Ban, SendHorizontal, X } from "lucide-react-native";
-import { useState } from "react";
+import { Ban, Eye, SendHorizontal, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -113,6 +113,41 @@ export function LastsPicker({ value, onSet, onClose }: { value: number; onSet: (
       onSet={onSet}
       onClose={onClose}
     />
+  );
+}
+
+/** How many contacts opened my note, and who, once asked. */
+function NoteViewers({ count }: { count: number }) {
+  const t = useTheme();
+  const tr = useT();
+  const [open, setOpen] = useState(false);
+  const viewers = useQuery({
+    queryKey: [...notesKey, "viewers"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/notes/viewers")).items,
+    enabled: open,
+  });
+  return (
+    <View style={{ gap: 4 }}>
+      <Pressable onPress={() => setOpen(!open)} accessibilityRole="button" accessibilityState={{ expanded: open }} hitSlop={6} style={styles.actions}>
+        <Eye size={16} color={t.muted} />
+        <Text style={{ color: t.muted, fontSize: 14, fontWeight: "600" }}>{tr.stories.views(viewers.data?.length ?? count)}</Text>
+      </Pressable>
+      {open && (
+        <ScrollView style={{ maxHeight: 192 }} keyboardShouldPersistTaps="always">
+          {viewers.isPending && <Text style={{ color: t.muted, fontSize: 14 }}>{tr.common.loading}</Text>}
+          {viewers.data?.length === 0 && <Text style={{ color: t.muted, fontSize: 14 }}>{tr.stories.noViews}</Text>}
+          {viewers.data?.map((v) => (
+            <View key={v.user.id} style={[styles.actions, { gap: 12, paddingVertical: 6 }]}>
+              <Avatar user={v.user} />
+              <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 15 }}>
+                {v.user.displayName}
+              </Text>
+              <Text style={{ color: t.muted, fontSize: 12 }}>{timeAgo(v.viewedAt)}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
@@ -231,6 +266,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
         {chip(!preset, preset ? tr.stories.custom : durationLabel(durationSecs, tr), () => setCustom(true))}
       </ScrollView>
       <Text style={{ color: t.muted, fontSize: 14 }}>{tr.stories.noteHint}</Text>
+      {note && <NoteViewers count={note.viewCount ?? 0} />}
       {custom && <LastsPicker value={durationSecs} onSet={setDurationSecs} onClose={() => setCustom(false)} />}
       {failed && <Text style={{ color: "#dc2626", fontSize: 14 }}>{tr.common.somethingWrongRetry}</Text>}
       <View style={styles.actions}>
@@ -254,6 +290,9 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   const chats = [...(useChats().data ?? []), ...(useChats(true).data ?? [])];
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === user.id));
   const [text, setText] = useState("");
+  useEffect(() => {
+    void six.api.POST("/v1/notes/{id}/view", { params: { path: { id: note.id } } });
+  }, [note.id]);
 
   function send() {
     if (!text.trim() || !chat || !realtime) return;

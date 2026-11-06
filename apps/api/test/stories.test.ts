@@ -148,6 +148,23 @@ describe("stories", () => {
     expect((await get(host, "/v1/notes")).items).toEqual([]);
   });
 
+  it("tells the author which contacts opened their note, and starts over with a new note", async () => {
+    const { host, guest } = await makeFriends();
+    const stranger = await signUp("stranger");
+    const note = (await call(host, "PUT", "/v1/notes", { text: "Who's up?" })).json();
+    expect(note.viewCount).toBe(0);
+    expect((await call(stranger, "POST", `/v1/notes/${note.id}/view`)).statusCode).toBe(404);
+    expect((await call(host, "POST", `/v1/notes/${note.id}/view`)).statusCode).toBe(204);
+    expect((await call(guest, "POST", `/v1/notes/${note.id}/view`)).statusCode).toBe(204);
+    expect((await call(guest, "POST", `/v1/notes/${note.id}/view`)).statusCode).toBe(204);
+    expect((await get(host, "/v1/notes")).mine.viewCount).toBe(1);
+    expect((await get(guest, "/v1/notes")).items[0].note.viewCount).toBeNull();
+    expect((await get(host, "/v1/notes/viewers")).items).toMatchObject([{ user: { id: guest.user.id } }]);
+    expect((await get(guest, "/v1/notes/viewers")).items).toEqual([]);
+    await call(host, "PUT", "/v1/notes", { text: "Anyone?" });
+    expect((await get(host, "/v1/notes/viewers")).items).toEqual([]);
+  });
+
   it("colours a note for everyone, and refuses one with neither text nor a GIF", async () => {
     const { host, guest, chatId } = await makeFriends();
     expect((await call(host, "PUT", "/v1/notes", { text: "  " })).statusCode).toBe(400);

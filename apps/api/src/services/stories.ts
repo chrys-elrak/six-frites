@@ -4,6 +4,7 @@ import {
   type CreateStoryInput,
   NOTE_SECS,
   type NoteDTO,
+  type NoteViewerDTO,
   type NotesDTO,
   STORY_LIMITS,
   type StoryDrawing,
@@ -272,13 +273,14 @@ type NoteRow = {
   expiresAt: Date;
 };
 
-const toNoteDTO = (n: NoteRow): NoteDTO => ({
+const toNoteDTO = (n: NoteRow, viewCount: number | null = null): NoteDTO => ({
   id: n.id,
   text: n.text,
   background: n.background,
   gif: n.gifKey
     ? { id: n.gifKey.slice(SHARED_PREFIX.length, -".mp4".length), url: presignGet(n.gifKey), width: n.gifWidth, height: n.gifHeight }
     : null,
+  viewCount,
   createdAt: n.createdAt.toISOString(),
   expiresAt: n.expiresAt.toISOString(),
 });
@@ -288,13 +290,13 @@ export async function listNotes(userId: string): Promise<NotesDTO> {
   const ids = await contactIds(prisma, userId);
   const rows = await prisma.note.findMany({
     where: { userId: { in: [userId, ...ids] }, expiresAt: { gt: new Date() } },
-    include: { user: true },
+    include: { user: true, _count: { select: { views: true } } },
     orderBy: { createdAt: "desc" },
   });
   const profile = await profilesFor(prisma, userId, ids);
   const mine = rows.find((n) => n.userId === userId);
   return {
-    mine: mine ? toNoteDTO(mine) : null,
+    mine: mine ? toNoteDTO(mine, mine._count.views) : null,
     items: rows.filter((n) => n !== mine).map((n) => ({ user: profile(n.user), note: toNoteDTO(n) })),
   };
 }
@@ -318,7 +320,31 @@ export async function setNote(
     },
   });
   await announceStories(userId);
-  return toNoteDTO(note);
+  return toNoteDTO(note, 0);
+}
+
+/** Counts a contact opening a note; opening your own doesn't count. */
+export async function markNoteViewed(viewerId: string, noteId: string) {
+  const note = await prisma.note.findUnique({ where: { id: noteId } });
+  if (!note || note.expiresAt <= new Date()) throw new AppError("STORY_NOT_FOUND");
+  if (note.userId === viewerId) return;
+  if (!(await contactIds(prisma, viewerId)).includes(note.userId)) throw new AppError("STORY_NOT_FOUND");
+  await prisma.noteView.upsert({
+    where: { noteId_userId: { noteId, userId: viewerId } },
+    create: { noteId, userId: viewerId },
+    update: {},
+  });
+}
+
+/** Who opened the note I have up, latest first. */
+export async function listNoteViewers(userId: string): Promise<{ items: NoteViewerDTO[] }> {
+  const views = await prisma.noteView.findMany({
+    where: { note: { userId, expiresAt: { gt: new Date() } } },
+    include: { user: true },
+    orderBy: { viewedAt: "desc" },
+  });
+  const profile = await profilesFor(prisma, userId, views.map((v) => v.userId));
+  return { items: views.map((v) => ({ user: profile(v.user), viewedAt: v.viewedAt.toISOString() })) };
 }
 
 export async function deleteNote(userId: string) {

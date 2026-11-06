@@ -19701,6 +19701,8 @@ export interface paths {
                                     width: number | null;
                                     height: number | null;
                                 } | null;
+                                /** @description How many contacts opened it; only on yours */
+                                viewCount: number | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -19731,6 +19733,8 @@ export interface paths {
                                         width: number | null;
                                         height: number | null;
                                     } | null;
+                                    /** @description How many contacts opened it; only on yours */
+                                    viewCount: number | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -19791,6 +19795,8 @@ export interface paths {
                                 width: number | null;
                                 height: number | null;
                             } | null;
+                            /** @description How many contacts opened it; only on yours */
+                            viewCount: number | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -19822,6 +19828,94 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notes/{id}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a contact's note as opened */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notes/viewers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who opened the note you have up, latest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @description Their alias and no photo, unless they share their profile with you */
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
+                                };
+                                /** Format: date-time */
+                                viewedAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

@@ -283,6 +283,7 @@ export const NoteDTO = z.object({
     })
     .nullable()
     .describe("As an MP4 to play muted on a loop"),
+  viewCount: z.number().int().nullable().describe("How many contacts opened it; only on yours"),
   createdAt: IsoDate,
   expiresAt: IsoDate,
 });
@@ -318,3 +319,6 @@ export const StoryViewerDTO = z.object({
   reactions: z.array(z.enum(STORY_REACTIONS)).describe("Every emoji they reacted with, oldest first, at most the last 30"),
 });
 export type StoryViewerDTO = z.infer<typeof StoryViewerDTO>;
+
+export const NoteViewerDTO = StoryViewerDTO.omit({ reactions: true });
+export type NoteViewerDTO = z.infer<typeof NoteViewerDTO>;

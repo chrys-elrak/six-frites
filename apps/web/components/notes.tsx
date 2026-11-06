@@ -14,8 +14,8 @@ import {
   inkOn,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, SendHorizontal, X } from "lucide-react";
-import { useState } from "react";
+import { Ban, Eye, SendHorizontal, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useChats } from "@/lib/chats";
 import { timeAgo } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -79,6 +79,43 @@ export function LastsPicker({ value, onSave, onClose }: { value: number; onSave:
       onSave={onSave}
       onClose={onClose}
     />
+  );
+}
+
+/** How many contacts opened my note, and who, once asked. */
+function NoteViewers({ count }: { count: number }) {
+  const tr = useT();
+  const [open, setOpen] = useState(false);
+  const viewers = useQuery({
+    queryKey: [...notesKey, "viewers"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/notes/viewers")).items,
+    enabled: open,
+  });
+  return (
+    <div>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-sm font-medium text-stone-600 hover:underline dark:text-stone-300"
+      >
+        <Eye className="size-4" />
+        {tr.stories.views(viewers.data?.length ?? count)}
+      </button>
+      {open && (
+        <div className="mt-2 max-h-48 overflow-y-auto">
+          {viewers.isPending && <p className="text-sm text-stone-500">{tr.common.loading}</p>}
+          {viewers.data?.length === 0 && <p className="text-sm text-stone-500">{tr.stories.noViews}</p>}
+          {viewers.data?.map((v) => (
+            <div key={v.user.id} className="flex items-center gap-3 py-1.5">
+              <Avatar user={v.user} />
+              <span className="min-w-0 flex-1 truncate">{v.user.displayName}</span>
+              <span className="text-xs text-stone-500">{timeAgo(v.viewedAt)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -214,6 +251,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           </button>
         </div>
         <p className="text-sm text-stone-500">{tr.stories.noteHint}</p>
+        {note && <NoteViewers count={note.viewCount ?? 0} />}
         {failed && (
           <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {tr.common.somethingWrongRetry}
@@ -248,6 +286,9 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   const chats = [...(useChats().data ?? []), ...(useChats(true).data ?? [])];
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === user.id));
   const [text, setText] = useState("");
+  useEffect(() => {
+    void six.api.POST("/v1/notes/{id}/view", { params: { path: { id: note.id } } });
+  }, [note.id]);
 
   function send() {
     if (!text.trim() || !chat || !realtime) return;

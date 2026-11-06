@@ -1,13 +1,15 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { CreateStoryInput, Id, NoteDTO, NotesDTO, ReactStoryInput, SetNoteInput, StoryDTO, StoryGroupDTO, StoryViewerDTO } from "@six/shared";
+import { CreateStoryInput, Id, NoteDTO, NoteViewerDTO, NotesDTO, ReactStoryInput, SetNoteInput, StoryDTO, StoryGroupDTO, StoryViewerDTO } from "@six/shared";
 import {
   createStory,
   deleteNote,
   deleteStory,
+  listNoteViewers,
   listNotes,
   listStories,
   listStoryViewers,
+  markNoteViewed,
   markStoryViewed,
   reactToStory,
   setNote,
@@ -61,6 +63,30 @@ const storyRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setNote(req.auth.userId, req.body),
+  );
+
+  app.post(
+    "/notes/:id/view",
+    {
+      schema: { tags: ["stories"], summary: "Mark a contact's note as opened", security, params: Params, response: { 204: z.null() } },
+    },
+    async (req, reply) => {
+      await markNoteViewed(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.get(
+    "/notes/viewers",
+    {
+      schema: {
+        tags: ["stories"],
+        summary: "Who opened the note you have up, latest first",
+        security,
+        response: { 200: z.object({ items: z.array(NoteViewerDTO) }) },
+      },
+    },
+    (req) => listNoteViewers(req.auth.userId),
   );
 
   app.delete(
