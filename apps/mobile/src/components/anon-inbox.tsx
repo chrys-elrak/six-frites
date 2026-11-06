@@ -21,7 +21,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import * as Clipboard from "expo-clipboard";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
 import * as Sharing from "expo-sharing";
-import { Camera, Check, Copy, Ellipsis, Globe, LogOut, Play, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
+import { Camera, Check, Copy, Ellipsis, Globe, Link2, LogOut, Play, Settings2, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -43,7 +43,7 @@ import { Sheet } from "./sheet";
 import { StoryComposer } from "./story-composer";
 import { Text, TextInput } from "./text";
 import { BrandBar } from "./brand-bar";
-import { Card, EmptyState, IconButton, Notice, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
+import { Card, EmptyState, IconButton, Notice, Popup, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
 
 type Pending = { m: AnonMessageDTO; action: "menu" | "delete" | "block" | "report" };
 type Note = { tone: "error" | "success"; text: string };
@@ -655,7 +655,9 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
     refetchOnMount: "always",
   });
   const items = messages.data?.pages.flatMap((p) => p.items) ?? [];
-  const [view, setView] = useState<"received" | "sent" | "settings">("received");
+  const [view, setView] = useState<"received" | "sent">("received");
+  const [settings, setSettings] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [removing, setRemoving] = useState<SentAnonDTO | null>(null);
   const sent = useInfiniteQuery({
     queryKey: ["ask-sent"],
@@ -775,15 +777,59 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
             <Globe size={16} color={t.textSoft} />
             <Text style={{ color: t.textSoft, fontWeight: "600" }}>{LOCALE_NAMES[locale]}</Text>
           </Pressable>
+          <Pressable onPress={() => setLinkOpen(true)} hitSlop={8} accessibilityLabel={tr.ask.yourLink}>
+            <Link2 size={20} color={t.textSoft} />
+          </Pressable>
+          <Pressable onPress={() => setSettings(true)} hitSlop={8} accessibilityLabel={tr.common.settings}>
+            <Settings2 size={20} color={t.textSoft} />
+          </Pressable>
           <Pressable onPress={() => void logout()} hitSlop={8} accessibilityLabel={tr.settings.signOut}>
             <LogOut size={20} color={t.textSoft} />
           </Pressable>
         </ScreenHeader>
       ) : (
-        <BrandBar />
+        <BrandBar>
+          <IconButton Icon={Link2} color={brand} label={tr.ask.yourLink} onPress={() => setLinkOpen(true)} />
+          <IconButton Icon={Settings2} color={brand} label={tr.common.settings} onPress={() => setSettings(true)} />
+        </BrandBar>
+      )}
+      {linkOpen && (
+        <Popup onClose={() => setLinkOpen(false)} gap={8}>
+          <Text style={[styles.label, { color: t.muted }]}>{tr.ask.yourLink}</Text>
+          <Text style={{ color: t.text, fontFamily: "monospace" }} numberOfLines={1} selectable>
+            {link.replace(/^https?:\/\//, "")}
+          </Text>
+          <PromptField code={code} />
+          <Text style={{ color: t.muted, fontSize: 14 }}>{tr.ask.linkHint}</Text>
+          <PrimaryButton
+            title={tr.common.shareLink}
+            onPress={() => void shareAsk(code, qc.getQueryData<AskProfileDTO>(["ask-profile", code])?.prompt)}
+          />
+          <View style={{ alignItems: "center" }}>
+            <TextButton title={copied ? tr.settings.linkCopied : tr.common.copyLink} color={brand} onPress={() => void copyLink()} />
+          </View>
+        </Popup>
+      )}
+      {settings && (
+        <Popup onClose={() => setSettings(false)} gap={8}>
+              <PublicProfile code={code} />
+              <TempLinks code={code} />
+              <View style={[styles.divided, { borderColor: t.border, marginHorizontal: -16, paddingTop: 0 }]}>
+                <Toggle label={tr.ask.bot} hint={tr.ask.botHint} value={anonBot} onChange={(on) => void toggleBot(on)} />
+              </View>
+              <View style={[styles.divided, { alignItems: "center", borderColor: t.border }]}>
+                <TextButton
+                  title={tr.ask.newLink}
+                  onPress={() => {
+                    setSettings(false);
+                    setRenewing(true);
+                  }}
+                />
+              </View>
+        </Popup>
       )}
       <FlatList
-        data={view === "settings" ? [] : view === "sent" ? sentItems : items}
+        data={view === "sent" ? sentItems : items}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.content}
         onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && void list.fetchNextPage()}
@@ -792,21 +838,6 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         ListHeaderComponent={
           <View style={{ gap: 12 }}>
             {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
-            <Card style={{ padding: 16, gap: 8 }}>
-              <PromptField code={code} />
-              <Text style={[styles.label, styles.divided, { color: t.muted, borderColor: t.border }]}>{tr.ask.yourLink}</Text>
-              <Text style={{ color: t.text, fontFamily: "monospace" }} numberOfLines={1} selectable>
-                {link.replace(/^https?:\/\//, "")}
-              </Text>
-              <Text style={{ color: t.muted, fontSize: 14 }}>{tr.ask.linkHint}</Text>
-              <PrimaryButton
-                title={tr.common.shareLink}
-                onPress={() => void shareAsk(code, qc.getQueryData<AskProfileDTO>(["ask-profile", code])?.prompt)}
-              />
-              <View style={{ alignItems: "center" }}>
-                <TextButton title={copied ? tr.settings.linkCopied : tr.common.copyLink} color={brand} onPress={() => void copyLink()} />
-              </View>
-            </Card>
             {guest && (
               <Text style={{ color: t.muted, fontSize: 14 }}>
                 {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
@@ -816,7 +847,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
               </Text>
             )}
             <View style={[styles.tabs, { backgroundColor: t.chip }]}>
-              {(["received", "sent", "settings"] as const).map((v) => (
+              {(["received", "sent"] as const).map((v) => (
                 <Pressable
                   key={v}
                   onPress={() => setView(v)}
@@ -825,23 +856,11 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   style={[styles.tab, view === v && { backgroundColor: t.surface }]}
                 >
                   <Text style={{ color: view === v ? t.text : t.muted, fontSize: 14, fontWeight: "600" }}>
-                    {{ received: tr.ask.received, sent: tr.ask.sentTab, settings: tr.common.settings }[v]}
+                    {v === "received" ? tr.ask.received : tr.ask.sentTab}
                   </Text>
                 </Pressable>
               ))}
             </View>
-            {view === "settings" && (
-              <Card style={{ padding: 16, gap: 8 }}>
-                <PublicProfile code={code} />
-                <TempLinks code={code} />
-                <View style={[styles.divided, { borderColor: t.border, marginHorizontal: -16, paddingTop: 0 }]}>
-                  <Toggle label={tr.ask.bot} hint={tr.ask.botHint} value={anonBot} onChange={(on) => void toggleBot(on)} />
-                </View>
-                <View style={[styles.divided, { alignItems: "center", borderColor: t.border }]}>
-                  <TextButton title={tr.ask.newLink} onPress={() => setRenewing(true)} />
-                </View>
-              </Card>
-            )}
             {view === "received" && messages.isSuccess && !items.length && (
               <EmptyState Icon={VenetianMask}>{tr.ask.empty}</EmptyState>
             )}

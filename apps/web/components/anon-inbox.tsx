@@ -17,7 +17,7 @@ import {
   splitLinks,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Check, Copy, Ellipsis, LogOut, Share, ShieldAlert, Trash2, VenetianMask, X } from "lucide-react";
+import { Camera, Check, Copy, Ellipsis, Link2, LogOut, Settings2, Share, ShieldAlert, Trash2, VenetianMask, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type CardStyle, askCardPng, saveAskCard, shareAskCard } from "@/lib/ask-card";
@@ -31,6 +31,7 @@ import { six } from "@/lib/six";
 import { useMedia } from "@/lib/viewport";
 import { VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
+import { BrandActions } from "./brand-actions";
 import { Dialog } from "./dialog";
 import { LanguageSelect } from "./language-select";
 import { LegalLinks } from "./legal-page";
@@ -635,7 +636,9 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const [sharing, setSharing] = useState<AnonMessageDTO | null>(null);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number }>();
   const [opening, setOpening] = useState<string | null>(null);
-  const [view, setView] = useState<"received" | "sent" | "settings">("received");
+  const [view, setView] = useState<"received" | "sent">("received");
+  const [settings, setSettings] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [reporting, setReporting] = useState<AnonMessageDTO | null>(null);
   const [exporting, setExporting] = useState<AnonMessageDTO | null>(null);
@@ -694,12 +697,79 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
     if (res.data) setUser(res.data);
   }
 
+  const headerButton = `grid place-items-center rounded-full hover:bg-stone-200 dark:hover:bg-stone-800 ${guest ? "size-10 text-stone-500" : "size-9 text-brand"}`;
+  const linkButton = (
+    <button type="button" onClick={() => setLinkOpen(true)} aria-label={tr.ask.yourLink} title={tr.ask.yourLink} className={headerButton}>
+      <Link2 className="size-5" />
+    </button>
+  );
+  const gear = (
+    <button
+      type="button"
+      onClick={() => setSettings(true)}
+      aria-label={tr.common.settings}
+      title={tr.common.settings}
+      className={headerButton}
+    >
+      <Settings2 className="size-5" />
+    </button>
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {!guest && (
+        <BrandActions>
+          {linkButton}
+          {gear}
+        </BrandActions>
+      )}
+      {linkOpen && (
+        <Dialog onClose={() => setLinkOpen(false)}>
+          <div className="space-y-3 p-4">
+            <p className="text-sm font-semibold tracking-wide text-stone-500 uppercase dark:text-stone-400">{tr.ask.yourLink}</p>
+            <p className="truncate font-mono text-sm select-text">{link.replace(/^https?:\/\//, "")}</p>
+            <PromptField code={code} />
+            <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.linkHint}</p>
+            <PrimaryButton type="button" onClick={() => void shareLink()} className="w-full">
+              {tr.common.shareLink}
+            </PrimaryButton>
+            <button
+              type="button"
+              onClick={() => void copyLink()}
+              className="w-full text-center text-sm font-semibold text-brand hover:underline"
+            >
+              {copied ? tr.settings.linkCopied : tr.common.copyLink}
+            </button>
+          </div>
+        </Dialog>
+      )}
+      {settings && (
+        <Dialog onClose={() => setSettings(false)}>
+          <div className="space-y-3 p-4">
+            <PublicProfile code={code} />
+            <TempLinks code={code} />
+            <div className="-mx-4 border-t border-stone-200 dark:border-stone-800">
+              <Toggle label={tr.ask.bot} hint={tr.ask.botHint} checked={anonBot} onChange={(on) => void toggleBot(on)} />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSettings(false);
+                setRenewing(true);
+              }}
+              className="w-full border-t border-stone-200 pt-3 text-center text-sm font-medium text-stone-500 hover:text-stone-800 dark:border-stone-800 dark:hover:text-stone-200"
+            >
+              {tr.ask.newLink}
+            </button>
+          </div>
+        </Dialog>
+      )}
       <header className={`${guest ? "flex" : "hidden"} items-center gap-3 border-b border-stone-200 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:pt-3 dark:border-stone-800`}>
         {guest && <Logo className="size-9" />}
         <h1 className="flex-1 text-xl font-semibold tracking-tight">{guest ? tr.common.appName : tr.ask.title}</h1>
         {guest && <LanguageSelect />}
+        {guest && linkButton}
+        {guest && gear}
         {guest && (
           <button
             type="button"
@@ -714,24 +784,6 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-lg space-y-4 p-4 lg:max-w-5xl lg:p-6">
-          <Card className="space-y-3 p-4">
-            <PromptField code={code} />
-            <p className="border-t border-stone-200 pt-3 text-sm font-semibold tracking-wide text-stone-500 uppercase dark:border-stone-800 dark:text-stone-400">
-              {tr.ask.yourLink}
-            </p>
-            <p className="truncate font-mono text-sm select-text">{link.replace(/^https?:\/\//, "")}</p>
-            <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.linkHint}</p>
-            <PrimaryButton type="button" onClick={() => void shareLink()} className="w-full">
-              {tr.common.shareLink}
-            </PrimaryButton>
-            <button
-              type="button"
-              onClick={() => void copyLink()}
-              className="w-full text-center text-sm font-semibold text-brand hover:underline"
-            >
-              {copied ? tr.settings.linkCopied : tr.common.copyLink}
-            </button>
-          </Card>
           {guest && (
             <p className="px-1 text-sm text-stone-500 dark:text-stone-400">
               {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
@@ -742,7 +794,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           )}
           {guest && <LegalLinks />}
           <div role="tablist" className="flex rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
-            {(["received", "sent", "settings"] as const).map((v) => (
+            {(["received", "sent"] as const).map((v) => (
               <button
                 key={v}
                 type="button"
@@ -753,26 +805,11 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   view === v ? "bg-white shadow-sm dark:bg-stone-950" : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
                 }`}
               >
-                {{ received: tr.ask.received, sent: tr.ask.sentTab, settings: tr.common.settings }[v]}
+                {v === "received" ? tr.ask.received : tr.ask.sentTab}
               </button>
             ))}
           </div>
-          {view === "settings" ? (
-            <Card className="mx-auto w-full max-w-lg space-y-3 p-4">
-              <PublicProfile code={code} />
-              <TempLinks code={code} />
-              <div className="-mx-4 border-t border-stone-200 dark:border-stone-800">
-                <Toggle label={tr.ask.bot} hint={tr.ask.botHint} checked={anonBot} onChange={(on) => void toggleBot(on)} />
-              </div>
-              <button
-                type="button"
-                onClick={() => setRenewing(true)}
-                className="w-full border-t border-stone-200 pt-3 text-center text-sm font-medium text-stone-500 hover:text-stone-800 dark:border-stone-800 dark:hover:text-stone-200"
-              >
-                {tr.ask.newLink}
-              </button>
-            </Card>
-          ) : view === "sent" ? (
+          {view === "sent" ? (
             <SentList />
           ) : (
             <>
