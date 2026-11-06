@@ -380,7 +380,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
   const desk = view === "desk";
   const unreadIn = (d: boolean) => chats.data?.filter((c) => c.supportDesk === d && c.unreadCount > 0).length ?? 0;
   const visible =
-    chats.data?.filter((c) => (!hasDesk || c.supportDesk === desk) && c.title.toLowerCase().includes(needle)) ?? [];
+    chats.data?.filter((c) => c.lastMessage && (!hasDesk || c.supportDesk === desk) && c.title.toLowerCase().includes(needle)) ?? [];
   const filter = archived ? "all" : picked;
   const shown = visible.filter((c) => inChatFilter(c, filter));
   useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
