@@ -828,7 +828,7 @@ function Bubble({
       ? emojiOnly(row.text)
       : null;
   const visual = !sealed && row.attachment && ["image", "video", "gif"].includes(row.attachment.data.kind);
-  const blurred = (key: string, spoiler: boolean) => (spoiler || safe) && !revealedMedia[key];
+  const blurred = (key: string, spoiler: boolean, safeToo = true) => (spoiler || (safe && safeToo)) && !revealedMedia[key];
   const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const sticker = !sealed && !row.deleted ? row.sticker : null;
@@ -955,7 +955,7 @@ function Bubble({
                     attachment={row.attachment}
                     mine={mine}
                     onOpen={onOpen}
-                    hidden={visual || (note && row.spoiler) ? blurred(row.key, row.spoiler) : false}
+                    hidden={visual || (note && row.spoiler) ? blurred(row.key, row.spoiler, !loose && row.attachment.data.kind !== "gif") : false}
                     hiddenLabel={chip(row.spoiler)}
                     onReveal={() => revealMedia(row.key)}
                     autoPlay={autoPlay}

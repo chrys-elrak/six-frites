@@ -838,7 +838,7 @@ function Bubble({
   const bubble = useBubbleColors();
   const selectable = selecting && row.message !== null;
   const revealedMedia = useSpoilers((s) => s.revealed);
-  const blurred = (key: string, spoiler: boolean) => (spoiler || safe) && !revealedMedia[key];
+  const blurred = (key: string, spoiler: boolean, safeToo = true) => (spoiler || (safe && safeToo)) && !revealedMedia[key];
   const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
@@ -1011,7 +1011,7 @@ function Bubble({
                 attachment={row.attachment}
                 mine={mine}
                 onOpen={onOpen}
-                hidden={(["image", "video", "gif"].includes(row.attachment.data.kind) || (note && row.spoiler)) && blurred(row.key, row.spoiler)}
+                hidden={(["image", "video", "gif"].includes(row.attachment.data.kind) || (note && row.spoiler)) && blurred(row.key, row.spoiler, !loose && row.attachment.data.kind !== "gif")}
                 hiddenLabel={chip(row.spoiler)}
                 onReveal={() => revealMedia(row.key)}
                 maxWidth={maxWidth - 8}
