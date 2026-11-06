@@ -30,6 +30,7 @@ import stickerRoutes from "./routes/stickers.js";
 import storyRoutes from "./routes/stories.js";
 import uploadRoutes from "./routes/uploads.js";
 import askRoutes from "./routes/ask.js";
+import notificationRoutes from "./routes/notifications.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -87,6 +88,7 @@ export async function buildApp() {
       await v1.register(storyRoutes);
       await v1.register(linkRoutes);
       await v1.register(askRoutes);
+      await v1.register(notificationRoutes);
     },
     { prefix: "/v1" },
   );

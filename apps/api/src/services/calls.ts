@@ -7,6 +7,7 @@ import { broadcaster, rooms } from "../lib/realtime.js";
 import { assertCanMessage } from "./blocks.js";
 import { activeDevices } from "./devices.js";
 import { assertMember, createMessage, messageInclude, toMessageDTO } from "./messages.js";
+import { notify } from "./notifications.js";
 
 const CREDENTIAL_SECONDS = 12 * 60 * 60;
 
@@ -61,12 +62,18 @@ export async function logCall(userId: string, chatId: string, input: LogCallInpu
   const existing = await find();
   if (existing) return toMessageDTO(existing, userId);
   try {
-    const { message } = await withEvents((tx, emit) =>
-      createMessage(tx, emit, userId, chatId, {
+    const { message } = await withEvents(async (tx, emit) => {
+      const logged = await createMessage(tx, emit, userId, chatId, {
         clientId,
         action: { type: "call", video: input.video, secs: input.durationSecs },
-      }),
-    );
+      });
+      if (input.durationSecs === null) {
+        for (const to of logged.recipients) {
+          await notify(tx, emit, { userId: to, actorId: userId, kind: "missed_call", chatId, video: input.video });
+        }
+      }
+      return logged;
+    });
     return toMessageDTO(message, userId);
   } catch (err) {
     const raced = (err as { code?: string }).code === "P2002" ? await find() : null;

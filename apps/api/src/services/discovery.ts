@@ -75,7 +75,7 @@ export async function addContact(userId: string, q: string) {
         WHERE code = ${code} AND "expiresAt" > now() AND ("maxUses" IS NULL OR uses < "maxUses")`;
       if (!claimed) throw new AppError("USER_NOT_FOUND", "That contact link was just used up");
     }
-    const chatId = await ensureDirectChat(tx, emit, userId, user.id);
+    const chatId = await ensureDirectChat(tx, emit, userId, user.id, { to: user.id, kind: "added" });
     const unhidden = await tx.chatMember.updateMany({ where: { chatId, userId, hidden: true }, data: { hidden: false } });
     if (unhidden.count) emit(userId, "chat.updated", await getChat(userId, chatId, tx));
   });

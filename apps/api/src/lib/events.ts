@@ -4,7 +4,10 @@ import { prisma } from "./prisma.js";
 import { broadcaster, rooms } from "./realtime.js";
 
 export type Tx = Prisma.TransactionClient;
-export type Emit = <T extends ChangeEventType>(userId: string, type: T, data: ChangeEventData<T>) => void;
+export type Emit = (<T extends ChangeEventType>(userId: string, type: T, data: ChangeEventData<T>) => void) & {
+  /** Runs `fn` once the transaction has committed, for socket pings that aren't stored events. */
+  after: (fn: () => void) => void;
+};
 
 interface PendingEvent {
   userId: string;
@@ -31,7 +34,11 @@ export function toChangeEventDTO(row: ChangeEvent): ChangeEventDTO {
  */
 export async function withEvents<R>(fn: (tx: Tx, emit: Emit) => Promise<R>): Promise<R> {
   const pending: PendingEvent[] = [];
-  const emit: Emit = (userId, type, data) => void pending.push({ userId, type, data });
+  const later: (() => void)[] = [];
+  const emit: Emit = Object.assign(
+    <T extends ChangeEventType>(userId: string, type: T, data: ChangeEventData<T>) => void pending.push({ userId, type, data }),
+    { after: (fn: () => void) => void later.push(fn) },
+  );
 
   const { result, rows } = await prisma.$transaction(async (tx) => {
     const result = await fn(tx, emit);
@@ -49,5 +56,6 @@ export async function withEvents<R>(fn: (tx: Tx, emit: Emit) => Promise<R>): Pro
     const out = broadcaster();
     for (const row of rows) out.to(rooms.user(row.userId)).emit("change", toChangeEventDTO(row));
   }
+  for (const fn of later) fn();
   return result;
 }

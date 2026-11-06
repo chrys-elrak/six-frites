@@ -161,7 +161,7 @@ export async function applyInvite(tx: Tx, emit: Emit, referee: User, code: strin
   const room = await roomLeft(tx, invite.creator);
   await tx.referral.create({ data: { inviteId: invite.id, referrerId: invite.creatorId, refereeId: referee.id } });
   if (room <= 0) return tx.user.update({ where: { id: referee.id }, data: { queuedAt: new Date() } });
-  await ensureDirectChat(tx, emit, invite.creatorId, referee.id);
+  await ensureDirectChat(tx, emit, invite.creatorId, referee.id, { to: invite.creatorId, kind: "joined" });
   return referee.guest ? welcomeGuest(tx, emit, referee.id) : referee;
 }
 
@@ -191,7 +191,7 @@ export async function admitQueued(referrerId: string) {
     });
     for (const r of waiting) {
       const admitted = await tx.user.update({ where: { id: r.refereeId }, data: { queuedAt: null } });
-      await ensureDirectChat(tx, emit, referrerId, r.refereeId);
+      await ensureDirectChat(tx, emit, referrerId, r.refereeId, { to: referrerId, kind: "joined" });
       if (admitted.guest) await welcomeGuest(tx, emit, r.refereeId);
     }
   });
@@ -214,7 +214,7 @@ export async function acceptInvite(userId: string, code: string) {
     const invite = await usableInvite(tx, code, userId);
     const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
     if (user.guest && !user.queuedAt) await applyInvite(tx, emit, user, code);
-    else await ensureDirectChat(tx, emit, invite.creatorId, userId);
+    else await ensureDirectChat(tx, emit, invite.creatorId, userId, { to: invite.creatorId, kind: "added" });
     return { referrer: (await profilesFor(tx, userId, [invite.creatorId]))(invite.creator) };
   });
 }

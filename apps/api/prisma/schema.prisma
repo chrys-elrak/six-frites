@@ -56,6 +56,8 @@ model User {
   /// When the bot next writes to them; null until the worker picks a time.
   anonBotAt       DateTime?
   quickReactions  String[]  @default([])
+  /// When they last opened their notifications; anything newer counts as unread.
+  notificationsSeenAt DateTime?
 
   sessions       Session[]
   deviceLinks    DeviceLink[]
@@ -90,6 +92,8 @@ model User {
   stories        Story[]
   storyViews     StoryView[]
   note           Note?
+  notifications  Notification[]     @relation("notified")
+  notified       Notification[]     @relation("notifier")
 
   @@index([anonBotAt])
 }
@@ -709,4 +713,23 @@ model StoryView {
 
   @@id([storyId, userId])
   @@index([userId])
+}
+
+/// Something someone did that concerns the user, for their notifications tab. The worker drops them after 30 days.
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  actorId   String
+  /// joined, added, story_reaction, story_reply or missed_call.
+  kind      String
+  chatId    String?
+  emoji     String?
+  video     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User @relation("notified", fields: [userId], references: [id], onDelete: Cascade)
+  actor User @relation("notifier", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }

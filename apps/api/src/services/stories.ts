@@ -14,13 +14,14 @@ import {
   type StoryReaction,
   type StoryViewerDTO,
 } from "@six/shared";
-import type { Tx } from "../lib/events.js";
+import { type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { presignGet } from "../lib/storage.js";
 import { blockedWith } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
 import { deliverStoryReactionPush } from "./push.js";
+import { notify } from "./notifications.js";
 import { sharedGif } from "./gifs.js";
 import { purgeUploads, toAttachmentDTO } from "./uploads.js";
 
@@ -228,6 +229,10 @@ export async function reactToStory(viewerId: string, storyId: string, emoji: Sto
   const user = (await profilesFor(prisma, story.userId, [viewerId]))(viewer);
   broadcaster().to(rooms.user(story.userId)).emit("story:reacted", { storyId, user, emoji });
   void deliverStoryReactionPush(story.userId, user, emoji).catch(() => null);
+  const chat = await prisma.chat.findUnique({ where: { directKey: [viewerId, story.userId].sort().join(":") }, select: { id: true } });
+  await withEvents((tx, emit) =>
+    notify(tx, emit, { userId: story.userId, actorId: viewerId, kind: "story_reaction", chatId: chat?.id, emoji }),
+  );
 }
 
 export async function listStoryViewers(userId: string, storyId: string): Promise<{ items: StoryViewerDTO[] }> {

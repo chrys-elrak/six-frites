@@ -70255,6 +70255,155 @@
           }
         }
       }
+    },
+    "/v1/notifications": {
+      "get": {
+        "summary": "My latest notifications, newest first",
+        "tags": [
+          "notifications"
+        ],
+        "description": "Listen for `notifications:changed` on the socket to know when to fetch them again.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "joined",
+                              "added",
+                              "story_reaction",
+                              "story_reply",
+                              "missed_call"
+                            ]
+                          },
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "alias": {
+                                "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Who did it"
+                          },
+                          "chatId": {
+                            "nullable": true,
+                            "description": "The direct chat with them, to open on tap",
+                            "type": "string"
+                          },
+                          "emoji": {
+                            "nullable": true,
+                            "description": "For story_reaction",
+                            "type": "string"
+                          },
+                          "video": {
+                            "type": "boolean",
+                            "description": "For missed_call: whether it was a video call"
+                          },
+                          "unread": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "user",
+                          "chatId",
+                          "emoji",
+                          "video",
+                          "unread",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "unread": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "unread"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications/seen": {
+      "post": {
+        "summary": "Mark every notification as seen",
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "servers": [

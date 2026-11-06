@@ -43,6 +43,7 @@ import { activeDevices, checkEnvelopes } from "./devices.js";
 import { deliverResealPush, queuePush, queueReactionPush } from "./push.js";
 import { toStickerDTO } from "./stickers.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
+import { notify } from "./notifications.js";
 
 export const messageInclude = {
   replyTo: true,
@@ -430,6 +431,9 @@ export async function createMessage(
     },
   });
 
+  if (story && story.kind !== "note") {
+    await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "story_reply", chatId });
+  }
   const members = await memberIds(tx, chatId);
   for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
   if (started) {

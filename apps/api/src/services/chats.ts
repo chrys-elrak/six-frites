@@ -30,6 +30,7 @@ import { blockState } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
 import { supportCase } from "./users.js";
 import { purgeUploads } from "./uploads.js";
+import { notify } from "./notifications.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
 
@@ -187,7 +188,14 @@ export async function listChats(userId: string, q: ChatListQuery) {
   };
 }
 
-export async function ensureDirectChat(tx: Tx, emit: Emit, a: string, b: string) {
+/** The direct chat between `a` and `b`, created if need be; a new one notifies `news.to` that the other person came. */
+export async function ensureDirectChat(
+  tx: Tx,
+  emit: Emit,
+  a: string,
+  b: string,
+  news?: { to: string; kind: "joined" | "added" },
+) {
   const directKey = [a, b].sort().join(":");
   const existing = await tx.chat.findUnique({ where: { directKey } });
   if (existing) return existing.id;
@@ -197,6 +205,7 @@ export async function ensureDirectChat(tx: Tx, emit: Emit, a: string, b: string)
     include: chatInclude,
   });
   for (const userId of [a, b]) emit(userId, "chat.updated", await toChatDTO(tx, chat, userId));
+  if (news) await notify(tx, emit, { userId: news.to, actorId: news.to === a ? b : a, kind: news.kind, chatId: chat.id });
   return chat.id;
 }
 

@@ -44,6 +44,8 @@ export interface ServerToClientEvents {
   "stories:changed": (e: { userId: string }) => void;
   /** A contact reacted to one of my stories; not replayed by sync. */
   "story:reacted": (e: StoryReactedDTO) => void;
+  /** Something new in my notifications; not replayed by sync, so refetch them after reconnecting. */
+  "notifications:changed": () => void;
 }
 
 export interface ClientToServerEvents {
