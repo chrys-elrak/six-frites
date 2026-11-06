@@ -11,7 +11,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Minus, Plus, X } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -107,45 +107,47 @@ export function NewInvite({ onClose }: { onClose: () => void }) {
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
       <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
-          <View style={styles.head}>
-            <Text style={[styles.title, { color: t.text }]}>{tr.settings.newLink}</Text>
-            <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
-          </View>
-          <View style={{ gap: 6 }}>
-            <TextInput
-              value={message}
-              onChangeText={setMessage}
-              maxLength={MAX_INVITE_MESSAGE}
-              multiline
-              placeholder={tr.settings.inviteMessagePlaceholder}
-              placeholderTextColor={t.muted}
-              accessibilityLabel={tr.settings.inviteMessage}
-              style={[styles.message, { backgroundColor: t.field, color: t.text }]}
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 16 }}>
+            <View style={styles.head}>
+              <Text style={[styles.title, { color: t.text }]}>{tr.settings.newLink}</Text>
+              <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
+            </View>
+            <View style={{ gap: 6 }}>
+              <TextInput
+                value={message}
+                onChangeText={setMessage}
+                maxLength={MAX_INVITE_MESSAGE}
+                multiline
+                placeholder={tr.settings.inviteMessagePlaceholder}
+                placeholderTextColor={t.muted}
+                accessibilityLabel={tr.settings.inviteMessage}
+                style={[styles.message, { backgroundColor: t.field, color: t.text }]}
+              />
+              <Text style={{ color: t.muted, fontSize: 12 }}>{tr.settings.inviteMessageHint}</Text>
+            </View>
+            {left > 0 && (
+              <Stepper label={tr.settings.invitePeople} options={range(left)} value={people} onChange={setMaxUses} />
+            )}
+            <Stepper
+              label={tr.settings.inviteValidFor}
+              options={DAYS}
+              value={days}
+              format={(n) => tr.time.duration(n, "day")}
+              onChange={setDays}
             />
-            <Text style={{ color: t.muted, fontSize: 12 }}>{tr.settings.inviteMessageHint}</Text>
-          </View>
-          {left > 0 && (
-            <Stepper label={tr.settings.invitePeople} options={range(left)} value={people} onChange={setMaxUses} />
-          )}
-          <Stepper
-            label={tr.settings.inviteValidFor}
-            options={DAYS}
-            value={days}
-            format={(n) => tr.time.duration(n, "day")}
-            onChange={setDays}
-          />
-          {note && <Text style={{ color: t.textSoft, fontSize: 14 }}>{note}</Text>}
-          {create.isError && (
-            <Notice tone="error">
-              {create.error instanceof SixApiError ? create.error.message : tr.common.somethingWrong}
-            </Notice>
-          )}
-          <PrimaryButton
-            title={tr.settings.createLink}
-            onPress={() => create.mutate()}
-            busy={create.isPending}
-            disabled={create.isPending || !left}
-          />
+            {note && <Text style={{ color: t.textSoft, fontSize: 14 }}>{note}</Text>}
+            {create.isError && (
+              <Notice tone="error">
+                {create.error instanceof SixApiError ? create.error.message : tr.common.somethingWrong}
+              </Notice>
+            )}
+            <PrimaryButton
+              title={tr.settings.createLink}
+              onPress={() => create.mutate()}
+              busy={create.isPending}
+              disabled={create.isPending || !left}
+            />
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -179,35 +181,37 @@ export function NewContactLink({ onClose }: { onClose: () => void }) {
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
       <View style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
-          <View style={styles.head}>
-            <Text style={[styles.title, { color: t.text }]}>{tr.settings.newReusableCode}</Text>
-            <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
-          </View>
-          <Stepper
-            label={tr.settings.linkPeople}
-            options={[...range(MAX_CONTACT_LINK_USES), 0]}
-            value={people}
-            format={(n) => (n ? String(n) : tr.settings.noLimit)}
-            onChange={setPeople}
-          />
-          <Stepper
-            label={tr.settings.inviteValidFor}
-            options={range(CONTACT_LINK_DAYS)}
-            value={days}
-            format={(n) => tr.time.duration(n, "day")}
-            onChange={setDays}
-          />
-          {create.isError && (
-            <Notice tone="error">
-              {create.error instanceof SixApiError ? create.error.message : tr.common.somethingWrong}
-            </Notice>
-          )}
-          <PrimaryButton
-            title={tr.settings.create}
-            onPress={() => create.mutate()}
-            busy={create.isPending}
-            disabled={create.isPending}
-          />
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 16 }}>
+            <View style={styles.head}>
+              <Text style={[styles.title, { color: t.text }]}>{tr.settings.newReusableCode}</Text>
+              <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
+            </View>
+            <Stepper
+              label={tr.settings.linkPeople}
+              options={[...range(MAX_CONTACT_LINK_USES), 0]}
+              value={people}
+              format={(n) => (n ? String(n) : tr.settings.noLimit)}
+              onChange={setPeople}
+            />
+            <Stepper
+              label={tr.settings.inviteValidFor}
+              options={range(CONTACT_LINK_DAYS)}
+              value={days}
+              format={(n) => tr.time.duration(n, "day")}
+              onChange={setDays}
+            />
+            {create.isError && (
+              <Notice tone="error">
+                {create.error instanceof SixApiError ? create.error.message : tr.common.somethingWrong}
+              </Notice>
+            )}
+            <PrimaryButton
+              title={tr.settings.create}
+              onPress={() => create.mutate()}
+              busy={create.isPending}
+              disabled={create.isPending}
+            />
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -238,7 +242,7 @@ export function InviteCard({ invite }: { invite: InvitePreview }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: "flex-end" },
-  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, gap: 16 },
+  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, maxHeight: "92%" },
   head: { flexDirection: "row", alignItems: "center", gap: 4 },
   title: { flex: 1, fontSize: 18, fontWeight: "700" },
   message: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, minHeight: 72, textAlignVertical: "top" },

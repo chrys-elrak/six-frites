@@ -156,7 +156,7 @@ export function ReactionPicker({ onPick, onClose }: { onPick: (emoji: string) =>
     <Portal>
       <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal aria-label={tr.messages.pickReaction}>
         <button aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-        <div className="relative flex h-[420px] w-full max-w-sm flex-col overflow-hidden rounded-t-3xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 pb-[env(safe-area-inset-bottom)] shadow-xl md:rounded-3xl dark:bg-stone-900/70">
+        <div className="relative flex h-[min(420px,92dvh)] w-full max-w-sm flex-col overflow-hidden rounded-t-3xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 pb-[env(safe-area-inset-bottom)] shadow-xl md:rounded-3xl dark:bg-stone-900/70">
           <div className="flex items-center px-4 pt-3">
             <h2 className="flex-1 font-semibold">{tr.messages.react}</h2>
             <button

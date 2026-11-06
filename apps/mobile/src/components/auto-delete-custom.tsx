@@ -1,6 +1,6 @@
 import { AUTO_DELETE, AUTO_DELETE_UNITS, durationLabel } from "@six/shared";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -80,47 +80,49 @@ export function DurationPicker({
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
       <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, marginBottom: Math.max(insets.bottom, 12) }]}>
-          <Text style={[styles.title, { color: t.text }]}>{title}</Text>
-          <TextInput
-            value={amount}
-            onChangeText={(v) => setAmount(v.replace(/\D/g, ""))}
-            keyboardType="number-pad"
-            autoFocus
-            maxLength={4}
-            accessibilityLabel={tr.chat.amount}
-            style={[styles.input, { backgroundColor: t.field, color: t.text }]}
-          />
-          <View style={styles.units}>
-            {units.map(([label, size]) => (
-              <Pressable
-                key={label}
-                onPress={() => setUnit(size)}
-                accessibilityState={{ selected: unit === size }}
-                style={[styles.unit, { backgroundColor: unit === size ? brand : t.field }]}
-              >
-                <Text style={{ color: unit === size ? brandInk : t.text, fontWeight: "600", fontSize: 14 }}>
-                  {tr.chat.units[label]}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          <Text style={{ color: valid ? t.muted : t.danger, fontSize: 13, textAlign: "center" }}>
-            {valid ? hint(durationLabel(secs, tr)) : rangeHint}
-          </Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-              <TextButton title={tr.common.cancel} onPress={onClose} />
-            </View>
-            <PrimaryButton
-              title={submit}
-              disabled={!valid}
-              style={{ flex: 1 }}
-              onPress={() => {
-                onSet(secs);
-                onClose();
-              }}
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 14 }}>
+            <Text style={[styles.title, { color: t.text }]}>{title}</Text>
+            <TextInput
+              value={amount}
+              onChangeText={(v) => setAmount(v.replace(/\D/g, ""))}
+              keyboardType="number-pad"
+              autoFocus
+              maxLength={4}
+              accessibilityLabel={tr.chat.amount}
+              style={[styles.input, { backgroundColor: t.field, color: t.text }]}
             />
-          </View>
+            <View style={styles.units}>
+              {units.map(([label, size]) => (
+                <Pressable
+                  key={label}
+                  onPress={() => setUnit(size)}
+                  accessibilityState={{ selected: unit === size }}
+                  style={[styles.unit, { backgroundColor: unit === size ? brand : t.field }]}
+                >
+                  <Text style={{ color: unit === size ? brandInk : t.text, fontWeight: "600", fontSize: 14 }}>
+                    {tr.chat.units[label]}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <Text style={{ color: valid ? t.muted : t.danger, fontSize: 13, textAlign: "center" }}>
+              {valid ? hint(durationLabel(secs, tr)) : rangeHint}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <TextButton title={tr.common.cancel} onPress={onClose} />
+              </View>
+              <PrimaryButton
+                title={submit}
+                disabled={!valid}
+                style={{ flex: 1 }}
+                onPress={() => {
+                  onSet(secs);
+                  onClose();
+                }}
+              />
+            </View>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -129,7 +131,7 @@ export function DurationPicker({
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 12 },
-  panel: { borderRadius: 20, padding: 16, gap: 14 },
+  panel: { borderRadius: 20, padding: 16, maxHeight: "92%" },
   title: { fontSize: 17, fontWeight: "700", textAlign: "center" },
   input: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontSize: 20, textAlign: "center" },
   units: { flexDirection: "row", gap: 6 },

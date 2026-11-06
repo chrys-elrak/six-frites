@@ -4,7 +4,7 @@ import type { LinkPreview } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { Monitor, X } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { e2eeFor } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
@@ -80,42 +80,44 @@ export function LinkComputer({ onClose }: { onClose: () => void }) {
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
       <View style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
-          <View style={styles.head}>
-            <Text style={[styles.title, { color: t.text }]}>
-              {status === "approving" ? tr.settings.linkConfirm : tr.settings.linkComputer}
-            </Text>
-            <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
-          </View>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 8 }}>
+            <View style={styles.head}>
+              <Text style={[styles.title, { color: t.text }]}>
+                {status === "approving" ? tr.settings.linkConfirm : tr.settings.linkComputer}
+              </Text>
+              <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
+            </View>
 
-          {status === "scanning" && (
-            <View style={{ alignItems: "center", gap: 12 }}>
-              <QrScanner onScan={(v) => void onScan(v)} />
-              <Text style={[styles.hint, { color: t.muted }]}>{tr.settings.linkScanHint}</Text>
-            </View>
-          )}
-          {status === "checking" && <Text style={[styles.hint, { color: t.muted }]}>{tr.common.loading}</Text>}
-          {status === "approving" && (
-            <View style={{ gap: 16 }}>
-              <View style={[styles.device, { backgroundColor: t.surfaceAlt }]}>
-                <Monitor size={22} color={t.muted} />
-                <Text style={{ color: t.text, fontSize: 16, fontWeight: "600", flex: 1 }}>{device}</Text>
+            {status === "scanning" && (
+              <View style={{ alignItems: "center", gap: 12 }}>
+                <QrScanner onScan={(v) => void onScan(v)} />
+                <Text style={[styles.hint, { color: t.muted }]}>{tr.settings.linkScanHint}</Text>
               </View>
-              <Text style={[styles.hint, { color: t.textSoft }]}>{tr.settings.linkWarning(device)}</Text>
-              <PrimaryButton title={tr.settings.linkApprove} onPress={() => void approve()} />
-            </View>
-          )}
-          {status === "done" && (
-            <View style={{ gap: 16 }}>
-              <Text style={[styles.hint, { color: t.text }]}>{tr.settings.linkDone}</Text>
-              <PrimaryButton title={tr.common.close} onPress={onClose} />
-            </View>
-          )}
-          {status === "bad" && (
-            <View style={{ gap: 16 }}>
-              <Text style={[styles.hint, { color: t.danger }]}>{tr.settings.linkBadCode}</Text>
-              <PrimaryButton title={tr.common.retry} onPress={() => setStatus("scanning")} />
-            </View>
-          )}
+            )}
+            {status === "checking" && <Text style={[styles.hint, { color: t.muted }]}>{tr.common.loading}</Text>}
+            {status === "approving" && (
+              <View style={{ gap: 16 }}>
+                <View style={[styles.device, { backgroundColor: t.surfaceAlt }]}>
+                  <Monitor size={22} color={t.muted} />
+                  <Text style={{ color: t.text, fontSize: 16, fontWeight: "600", flex: 1 }}>{device}</Text>
+                </View>
+                <Text style={[styles.hint, { color: t.textSoft }]}>{tr.settings.linkWarning(device)}</Text>
+                <PrimaryButton title={tr.settings.linkApprove} onPress={() => void approve()} />
+              </View>
+            )}
+            {status === "done" && (
+              <View style={{ gap: 16 }}>
+                <Text style={[styles.hint, { color: t.text }]}>{tr.settings.linkDone}</Text>
+                <PrimaryButton title={tr.common.close} onPress={onClose} />
+              </View>
+            )}
+            {status === "bad" && (
+              <View style={{ gap: 16 }}>
+                <Text style={[styles.hint, { color: t.danger }]}>{tr.settings.linkBadCode}</Text>
+                <PrimaryButton title={tr.common.retry} onPress={() => setStatus("scanning")} />
+              </View>
+            )}
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -124,7 +126,7 @@ export function LinkComputer({ onClose }: { onClose: () => void }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: "flex-end" },
-  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, gap: 8 },
+  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, maxHeight: "92%" },
   head: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 },
   title: { flex: 1, fontSize: 18, fontWeight: "700" },
   hint: { fontSize: 14, textAlign: "center", lineHeight: 20 },

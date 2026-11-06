@@ -23,7 +23,7 @@ import { Asset, requestPermissionsAsync } from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import { Camera, Check, Copy, Ellipsis, Globe, Link2, LogOut, Play, Settings2, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
-import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View } from "react-native";
+import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { captureRef } from "react-native-view-shot";
@@ -570,55 +570,57 @@ function CardExport({
       </View>
       <View style={[styles.exportWrap, { paddingBottom: Math.max(insets.bottom, 12) }]} pointerEvents="box-none">
         <View style={[styles.exportPanel, { backgroundColor: t.surface }]}>
-          <View style={[styles.preview, { backgroundColor: t.surfaceAlt }]}>
-            {uri && <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="contain" />}
-          </View>
-          <View style={styles.swatches}>
-            {ASK_COLORS.map((c, i) => (
-              <Pressable
-                key={c.join()}
-                onPress={() => onStyle({ ...style, colors: c })}
-                accessibilityRole="button"
-                accessibilityLabel={tr.ask.color(i + 1)}
-                accessibilityState={{ selected: style.colors === c }}
-                style={[styles.swatch, { borderColor: style.colors === c ? t.text : "transparent" }]}
-              >
-                <Svg width={32} height={32}>
-                  <Defs>
-                    <LinearGradient id={`swatch-${i}`} x1="0" y1="0" x2="1" y2="1">
-                      <Stop offset="0" stopColor={c[0]} />
-                      <Stop offset="1" stopColor={c[1]} />
-                    </LinearGradient>
-                  </Defs>
-                  <Circle cx={16} cy={16} r={16} fill={`url(#swatch-${i})`} />
-                </Svg>
-              </Pressable>
-            ))}
-          </View>
-          <Toggle
-            label={tr.ask.transparent}
-            hint={tr.ask.transparentHint}
-            value={style.transparent}
-            onChange={(transparent) => onStyle({ ...style, transparent })}
-          />
-          {!style.transparent && (
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>
+            <View style={[styles.preview, { backgroundColor: t.surfaceAlt }]}>
+              {uri && <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="contain" />}
+            </View>
+            <View style={styles.swatches}>
+              {ASK_COLORS.map((c, i) => (
+                <Pressable
+                  key={c.join()}
+                  onPress={() => onStyle({ ...style, colors: c })}
+                  accessibilityRole="button"
+                  accessibilityLabel={tr.ask.color(i + 1)}
+                  accessibilityState={{ selected: style.colors === c }}
+                  style={[styles.swatch, { borderColor: style.colors === c ? t.text : "transparent" }]}
+                >
+                  <Svg width={32} height={32}>
+                    <Defs>
+                      <LinearGradient id={`swatch-${i}`} x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor={c[0]} />
+                        <Stop offset="1" stopColor={c[1]} />
+                      </LinearGradient>
+                    </Defs>
+                    <Circle cx={16} cy={16} r={16} fill={`url(#swatch-${i})`} />
+                  </Svg>
+                </Pressable>
+              ))}
+            </View>
             <Toggle
-              label={tr.ask.doodles}
-              hint={tr.ask.doodlesHint}
-              value={style.doodles}
-              onChange={(doodles) => onStyle({ ...style, doodles })}
+              label={tr.ask.transparent}
+              hint={tr.ask.transparentHint}
+              value={style.transparent}
+              onChange={(transparent) => onStyle({ ...style, transparent })}
             />
-          )}
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Pressable
-              onPress={() => void save()}
-              disabled={!uri}
-              style={({ pressed }) => [styles.secondary, { borderColor: t.border, opacity: !uri ? 0.5 : pressed ? 0.7 : 1 }]}
-            >
-              <Text style={{ color: t.text, fontWeight: "600" }}>{tr.ask.saveImage}</Text>
-            </Pressable>
-            <PrimaryButton title={tr.common.share} onPress={() => void share()} disabled={!uri} style={{ flex: 1 }} />
-          </View>
+            {!style.transparent && (
+              <Toggle
+                label={tr.ask.doodles}
+                hint={tr.ask.doodlesHint}
+                value={style.doodles}
+                onChange={(doodles) => onStyle({ ...style, doodles })}
+              />
+            )}
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Pressable
+                onPress={() => void save()}
+                disabled={!uri}
+                style={({ pressed }) => [styles.secondary, { borderColor: t.border, opacity: !uri ? 0.5 : pressed ? 0.7 : 1 }]}
+              >
+                <Text style={{ color: t.text, fontWeight: "600" }}>{tr.ask.saveImage}</Text>
+              </Pressable>
+              <PrimaryButton title={tr.common.share} onPress={() => void share()} disabled={!uri} style={{ flex: 1 }} />
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -1083,7 +1085,7 @@ const styles = StyleSheet.create({
   storyBrand: { color: "#1c1917", fontSize: 16, fontWeight: "800", marginTop: 24 },
   storyLink: { color: "#57534e", fontSize: 11, marginTop: 4 },
   exportWrap: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 12 },
-  exportPanel: { borderRadius: 16, padding: 12, gap: 12 },
+  exportPanel: { borderRadius: 16, padding: 12, maxHeight: "92%" },
   preview: { height: 300, borderRadius: 12, overflow: "hidden" },
   swatches: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6 },
   swatch: { borderWidth: 2, borderRadius: 999, padding: 2 },

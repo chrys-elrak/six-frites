@@ -3,7 +3,7 @@ import type { Dict } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, ShieldAlert, ShieldCheck, X } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -231,8 +231,10 @@ export function Dialog({ title, children, onClose }: { title: string; children: 
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
       <KeyboardAvoidingView behavior="padding" style={styles.wrap} pointerEvents="box-none">
         <View style={[styles.panel, { backgroundColor: t.surface, marginBottom: Math.max(insets.bottom, 12) }]}>
-          <Text style={[styles.title, { color: t.text }]}>{title}</Text>
-          {children}
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 14 }}>
+            <Text style={[styles.title, { color: t.text }]}>{title}</Text>
+            {children}
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -317,7 +319,7 @@ export function SafetyNumber({ userId }: { userId: string }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: "flex-end", paddingHorizontal: 12 },
-  panel: { borderRadius: 20, padding: 16, gap: 14 },
+  panel: { borderRadius: 20, padding: 16, maxHeight: "92%" },
   title: { fontSize: 17, fontWeight: "700", textAlign: "center" },
   input: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, minHeight: 110, textAlignVertical: "top" },
   groups: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" },
