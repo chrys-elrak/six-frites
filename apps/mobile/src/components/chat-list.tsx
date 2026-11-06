@@ -31,6 +31,7 @@ import {
   PhoneMissed,
   Pin,
   PinOff,
+  QrCode,
   Search,
   Headset,
   Share2,
@@ -66,7 +67,7 @@ import { FindMe, Invites } from "./settings-panel";
 import { StoriesBar, StoryAvatar } from "./stories";
 import { MediaIcon, type MediaType, mediaLabel } from "./media-label";
 import { BrandBar } from "./brand-bar";
-import { EmptyState, IconButton, PrimaryButton, ScreenHeader } from "./ui";
+import { EmptyState, IconButton, Popup, PrimaryButton, ScreenHeader } from "./ui";
 import { UpdateBanner } from "./update-banner";
 
 function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: string }) {
@@ -306,8 +307,7 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
       renderItem={({ item }) => <ContactRow contact={item} />}
       ListFooterComponent={
         needle ? undefined : (
-          <View style={{ padding: 16, gap: 24 }}>
-            <FindMe />
+          <View style={{ padding: 16 }}>
             <Invites />
           </View>
         )
@@ -338,10 +338,10 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
 type ListView = "chats" | "desk" | "contacts";
 
 /**
- * The chat list, or with `archived` the archived chats. A switch on top shows my contacts instead, and
- * the support chats for whoever answers support.
+ * The chat list, or with `archived` the archived chats, or with `contacts` my contacts. Whoever answers
+ * support gets a switch at the bottom for the support chats.
  */
-export function ChatList({ archived = false }: { archived?: boolean }) {
+export function ChatList({ archived = false, contacts = false }: { archived?: boolean; contacts?: boolean }) {
   const t = useTheme();
   const tr = useT();
   const openSupport = async () => {
@@ -368,15 +368,15 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
   }[status];
 
   const [query, setQuery] = useState("");
-  const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
+  const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | null>(null);
   const [pulled, setPulled] = useState(false);
   useFocusEffect(useCallback(() => () => setPulled(false), []));
   const needle = query.trim().toLowerCase();
   const [picked, setPicked] = useState<ChatFilter>("all");
   const [viewPicked, setView] = useState<ListView>("chats");
   const hasDesk = !archived && !!chats.data?.some((c) => c.supportDesk);
-  const views: ListView[] = hasDesk ? ["chats", "desk", "contacts"] : ["chats", "contacts"];
-  const view = !archived && views.includes(viewPicked) ? viewPicked : "chats";
+  const views: ListView[] = hasDesk ? ["chats", "desk"] : ["chats"];
+  const view = contacts ? "contacts" : !archived && views.includes(viewPicked) ? viewPicked : "chats";
   const desk = view === "desk";
   const unreadIn = (d: boolean) => chats.data?.filter((c) => c.supportDesk === d && c.unreadCount > 0).length ?? 0;
   const visible =
@@ -457,6 +457,9 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           {!isSupport && (
             <IconButton Icon={Headset} color={brand} label={tr.support.contact} onPress={() => void openSupport()} />
           )}
+          {view === "contacts" && (
+            <IconButton Icon={QrCode} color={brand} label={tr.settings.findMe} onPress={() => setDialog("findMe")} />
+          )}
           <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
           <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
         </BrandBar>
@@ -509,10 +512,10 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
           }
         />
       )}
-      {!archived && (
+      {!archived && view !== "contacts" && views.length > 1 && (
         <View style={[styles.tabs, { backgroundColor: t.chip, marginHorizontal: 12, marginVertical: 8 }]}>
           {views.map((v) => {
-            const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
+            const unread = unreadIn(v === "desk");
             return (
               <Pressable
                 key={v}
@@ -522,7 +525,7 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
                 style={[styles.tab, view === v && { backgroundColor: t.surface }]}
               >
                 <Text numberOfLines={1} style={{ color: view === v ? t.text : t.muted, fontSize: 14, fontWeight: "600" }}>
-                  {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
+                  {v === "desk" ? tr.support.title : tr.common.chats}
                 </Text>
                 {unread > 0 && (
                   <View style={[styles.badge, { backgroundColor: brand }]}>
@@ -536,6 +539,11 @@ export function ChatList({ archived = false }: { archived?: boolean }) {
       )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInvite onClose={() => setDialog(null)} />}
+      {dialog === "findMe" && (
+        <Popup onClose={() => setDialog(null)}>
+          <FindMe />
+        </Popup>
+      )}
     </View>
   );
 }

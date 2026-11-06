@@ -14,6 +14,7 @@ import {
 } from "@six/shared";
 import {
   AlertCircle,
+  QrCode,
   Archive,
   ArchiveRestore,
   Ban,
@@ -57,6 +58,7 @@ import { AdBanner } from "./ad-banner";
 import { LockScreen } from "./app-lock";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
+import { Dialog } from "./dialog";
 import { Avatar } from "./avatar";
 import { StoriesBar, StoryAvatar } from "./stories";
 import { ChatMenu } from "./chat-menu";
@@ -199,13 +201,13 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
           href={`/chats/${chat.id}`}
           {...press}
           title={rail ? chat.title : undefined}
-          className={`flex items-center gap-3 py-3 transition ${rail ? "justify-center" : "px-4"} [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
+          className={`flex items-center gap-3 transition ${rail ? "justify-center py-2" : "px-4 py-3"} [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
             active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
           }`}
         >
           <span className="relative shrink-0">
             <StoryAvatar userId={peer.id} name={chat.title}>
-              <Avatar user={peer} size="md" online={online} />
+              <Avatar user={peer} size={rail ? "sm" : "md"} online={online} />
             </StoryAvatar>
             {rail && badge && <span className="absolute -top-1 -right-1">{badge}</span>}
           </span>
@@ -328,8 +330,7 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
         shown.map((c) => <ContactRow key={c.user.id} contact={c} active={pathname === `/chats/${c.chatId}`} />)
       )}
       {!needle && (
-        <div className="flex flex-col gap-6 p-4">
-          <FindMe />
+        <div className="p-4">
           <Invites />
         </div>
       )}
@@ -340,11 +341,19 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
 type ListView = "chats" | "desk" | "contacts";
 
 /**
- * The chat list, or with `archived` the archived chats behind the app lock code. A switch at the bottom shows
- * my contacts instead, and the support chats for whoever answers support. Pulling the list down past
+ * The chat list, or with `archived` the archived chats behind the app lock code, or with `contacts` my contacts.
+ * Whoever answers support gets a switch at the bottom for the support chats. Pulling the list down past
  * its top shows the archived row, and pulling again hides it.
  */
-export function ChatList({ archived = false, rail = false }: { archived?: boolean; rail?: boolean }) {
+export function ChatList({
+  archived = false,
+  rail = false,
+  contacts = false,
+}: {
+  archived?: boolean;
+  rail?: boolean;
+  contacts?: boolean;
+}) {
   const tr = useT();
   const router = useRouter();
   const openSupport = async () => {
@@ -374,14 +383,14 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   }[status];
 
   const [query, setQuery] = useState("");
-  const [dialog, setDialog] = useState<"add" | "invite" | null>(null);
+  const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | null>(null);
   const needle = rail ? "" : query.trim().toLowerCase();
   const [picked, setPicked] = useState<ChatFilter>("all");
   const [viewPicked, setView] = useState<ListView>("chats");
   const filtering = !archived && !rail;
   const hasDesk = filtering && !!chats.data?.some((c) => c.supportDesk);
-  const views: ListView[] = hasDesk ? ["chats", "desk", "contacts"] : ["chats", "contacts"];
-  const view = filtering && views.includes(viewPicked) ? viewPicked : "chats";
+  const views: ListView[] = hasDesk ? ["chats", "desk"] : ["chats"];
+  const view = contacts ? "contacts" : filtering && views.includes(viewPicked) ? viewPicked : "chats";
   const desk = view === "desk";
   const unreadIn = (d: boolean) => chats.data?.filter((c) => c.supportDesk === d && c.unreadCount > 0).length ?? 0;
   const visible =
@@ -413,7 +422,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
   }
 
   const top = !rail && (
-    <div className="flex flex-col gap-2 px-4 pt-3 pb-2">
+    <div className="flex flex-col gap-2 px-4 pb-2">
       {filtering && view === "chats" && !needle && <StoriesBar />}
       <label
         className="flex w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10"
@@ -477,6 +486,16 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                 <Headset className="size-5" />
               </button>
             )}
+            {view === "contacts" && (
+              <button
+                onClick={() => setDialog("findMe")}
+                aria-label={tr.settings.findMe}
+                title={tr.settings.findMe}
+                className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+              >
+                <QrCode className="size-5" />
+              </button>
+            )}
             <button
               onClick={() => setDialog("invite")}
               aria-label={tr.contacts.inviteFriend}
@@ -498,6 +517,13 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
       )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
+      {dialog === "findMe" && (
+        <Dialog onClose={() => setDialog(null)}>
+          <div className="p-4">
+            <FindMe />
+          </div>
+        </Dialog>
+      )}
       {!archived && !rail && <BackupPinBanner />}
       {!archived && !rail && (
         <div className="mx-3 mt-3 empty:hidden">
@@ -580,10 +606,10 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
         )}
       </div>
       {!rail && <AdBanner />}
-      {filtering && (
+      {filtering && view !== "contacts" && views.length > 1 && (
         <div role="tablist" className="mx-3 my-2 flex rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
           {views.map((v) => {
-            const unread = v === "contacts" ? 0 : unreadIn(v === "desk");
+            const unread = unreadIn(v === "desk");
             return (
               <button
                 key={v}
@@ -595,7 +621,7 @@ export function ChatList({ archived = false, rail = false }: { archived?: boolea
                   view === v ? "bg-white shadow-sm dark:bg-stone-950" : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
                 }`}
               >
-                {{ chats: tr.common.chats, desk: tr.support.title, contacts: tr.contacts.title }[v]}
+                {v === "desk" ? tr.support.title : tr.common.chats}
                 {unread > 0 && (
                   <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
                     {unread > 99 ? "99+" : unread}

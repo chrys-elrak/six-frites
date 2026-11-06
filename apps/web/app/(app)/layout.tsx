@@ -10,6 +10,7 @@ import { LockScreen } from "@/components/app-lock";
 import { ChatList, useChatRail } from "@/components/chat-list";
 import { Logo } from "@/components/logo";
 import { SettingsPanel } from "@/components/settings-panel";
+import { Notifications } from "@/components/notifications";
 import { type Tab, TabBar } from "@/components/tab-bar";
 import { useAppLock, useAutoLock } from "@/lib/app-lock";
 import { RealtimeProvider } from "@/lib/realtime";
@@ -35,6 +36,8 @@ const appWallpaper = chatTheme(null);
 const tabRoutes: Record<string, Tab> = {
   "/": "chats",
   "/archived": "chats",
+  "/contacts": "contacts",
+  "/notifications": "notifications",
   "/inbox": "inbox",
   "/settings": "settings",
 };
@@ -121,6 +124,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {!rail && (
               <div className="min-h-0 min-w-0 flex-1">
                 {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
+                {tab === "contacts" && <ChatList contacts />}
+                {tab === "notifications" && <Notifications />}
                 {tab === "inbox" && <AnonInbox />}
                 {tab === "settings" && <SettingsPanel />}
               </div>

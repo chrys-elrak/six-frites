@@ -3,7 +3,9 @@ import type { Dict } from "@six/shared";
 import type { LucideIcon } from "lucide-react-native";
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
+  ScrollView,
   type PressableProps,
   type StyleProp,
   StyleSheet,
@@ -277,7 +279,37 @@ export function Toggle({
   );
 }
 
+/** A panel that slides up from the bottom over a dimmed backdrop, scrolling when its content is tall. */
+export function Popup({
+  onClose,
+  children,
+  gap = 0,
+}: {
+  onClose: () => void;
+  children: React.ReactNode;
+  gap?: number;
+}) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+      <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]} onPress={onClose} />
+      <View style={styles.popupWrap} pointerEvents="box-none">
+        <ScrollView
+          style={[styles.popup, { backgroundColor: t.surface }]}
+          contentContainerStyle={{ padding: 16, gap, paddingBottom: Math.max(insets.bottom, 16) + 4 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {children}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
+  popupWrap: { flex: 1, justifyContent: "flex-end" },
+  popup: { flexGrow: 0, maxHeight: "85%", borderTopLeftRadius: 24, borderTopRightRadius: 24 },
   toggle: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   codeInput: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 18, letterSpacing: 6 },
   card: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },

@@ -192,7 +192,6 @@ function InviteRow({ invite, onRevoke, onDelete }: { invite: InviteDTO; onRevoke
 export function Invites() {
   const tr = useT();
   const qc = useQueryClient();
-  const [creating, setCreating] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
 
   const invites = useInfiniteQuery({
@@ -233,9 +232,6 @@ export function Invites() {
             {used && <p className="text-xs text-stone-500 dark:text-stone-400">{used}</p>}
             {note && <p className="text-xs text-amber-700 dark:text-amber-400">{note}</p>}
           </div>
-          <PrimaryButton onClick={() => setCreating(true)} disabled={!!note}>
-            {tr.settings.newLink}
-          </PrimaryButton>
         </div>
         {items.length > 0 && (
           <div className="divide-y divide-stone-200 lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
@@ -254,7 +250,6 @@ export function Invites() {
           </div>
         )}
       </Card>
-      {creating && <NewInviteDialog onClose={() => setCreating(false)} />}
       {revoking && (
         <Sheet
           title={tr.settings.revokeWarning}

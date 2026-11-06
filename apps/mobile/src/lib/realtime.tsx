@@ -170,6 +170,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     rt.socket.on("presence", (p) => usePresenceStore.getState().set([p]));
     rt.socket.on("ask:new", (m) => receiveAnon(qc, m, path.current === "/inbox"));
     rt.socket.on("stories:changed", () => void qc.invalidateQueries({ queryKey: ["stories"] }));
+    rt.socket.on("notifications:changed", () => void qc.invalidateQueries({ queryKey: ["notifications"] }));
     rt.socket.on("story:reacted", (e) => {
       void qc.invalidateQueries({ queryKey: ["stories", e.storyId, "viewers"] });
       notifyStoryReaction(e);
@@ -177,6 +178,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     rt.socket.on("connect", () => {
       void qc.invalidateQueries({ queryKey: ["ask"] });
       void qc.invalidateQueries({ queryKey: ["stories"] });
+      void qc.invalidateQueries({ queryKey: ["notifications"] });
     });
     rt.socket.on("call:signal", (dto) => void onCallSignal(dto, (chatId) => cachedChat(qc, chatId)).catch(() => null));
     attachCalls(meId, rt);

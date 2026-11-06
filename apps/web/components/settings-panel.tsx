@@ -19,7 +19,6 @@ import { Devices } from "./devices";
 import { EncryptionSettings, useHasRecoveryKey } from "./encryption-settings";
 import { LegalLinks } from "./legal-page";
 import { Referrals } from "./invites";
-import { NotificationSettings } from "./notification-settings";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
 import { QuickReactionsSettings } from "./reactions";
@@ -167,7 +166,6 @@ export function SettingsPanel() {
           <LanguagePicker />
           <FontPicker />
           <QuickReactionsSettings />
-          <NotificationSettings />
           <DataSaverSettings />
           <FriteBotSettings />
           <Referrals />

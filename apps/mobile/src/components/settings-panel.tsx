@@ -33,11 +33,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import { openBotChat } from "@/lib/chats";
 import { Avatar } from "./avatar";
 import { QrCode } from "./qr-code";
-import { NewContactLink, NewInvite, quotaQuery } from "./invites";
+import { NewContactLink, quotaQuery } from "./invites";
 import { LinkComputer } from "./link-computer";
 import { QuickReactionsSettings } from "./reactions";
 import { Sheet } from "./sheet";
-import { Card, Divider, Notice, PrimaryButton, SectionTitle, TextButton, Toggle } from "./ui";
+import { Card, Divider, Notice, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
 import { BrandBar } from "./brand-bar";
 import { TourAgain } from "./tour";
@@ -104,7 +104,7 @@ function openChannelSettings() {
   ]).catch(() => Linking.openSettings());
 }
 
-function NotificationSettings() {
+export function NotificationSettings() {
   const t = useTheme();
   const tr = useT();
   const prefs = useNotifyPrefs();
@@ -391,7 +391,6 @@ export function Invites() {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
-  const [creating, setCreating] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
   const invites = useInfiniteQuery({
     queryKey: ["invites"],
@@ -431,7 +430,6 @@ export function Invites() {
             {used && <Text style={{ color: t.muted, fontSize: 12 }}>{used}</Text>}
             {note && <Text style={{ color: t.text, fontSize: 12 }}>{note}</Text>}
           </View>
-          <PrimaryButton title={tr.settings.newLink} onPress={() => setCreating(true)} disabled={!!note} />
         </View>
         {items.map((i) => {
           const dead = i.status !== "valid" || (i.expiresAt !== null && Date.parse(i.expiresAt) < now);
@@ -468,7 +466,6 @@ export function Invites() {
           </>
         )}
       </Card>
-      {creating && <NewInvite onClose={() => setCreating(false)} />}
       {revoking && (
         <Sheet
           title={tr.settings.revokeWarning}
@@ -647,7 +644,6 @@ export function SettingsPanel() {
         <LanguagePicker />
         <FontPicker />
         <QuickReactionsSettings />
-        <NotificationSettings />
         <DataSaverSettings />
         <FriteBotSettings />
         <Referrals />
