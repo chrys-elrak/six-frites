@@ -694,9 +694,13 @@ model Story {
 model Note {
   id        String   @id @default(cuid())
   userId    String   @unique
-  text      String
-  createdAt DateTime @default(now())
-  expiresAt DateTime
+  text       String
+  background String?
+  gifKey     String?
+  gifWidth   Int?
+  gifHeight  Int?
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

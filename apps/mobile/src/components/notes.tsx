@@ -1,5 +1,6 @@
 import { unwrap } from "@six/sdk";
 import {
+  NOTE_BACKGROUNDS,
   NOTE_LIMIT,
   NOTE_SECS,
   type NoteDTO,
@@ -8,9 +9,12 @@ import {
   STORY_DURATION_UNITS,
   STORY_LIMITS,
   durationLabel,
+  inkOn,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { SendHorizontal } from "lucide-react-native";
+import { Image } from "expo-image";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { Ban, SendHorizontal, X } from "lucide-react-native";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -24,6 +28,7 @@ import { six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
 import { DurationPicker } from "./auto-delete-custom";
 import { Avatar } from "./avatar";
+import { GifSearch } from "./story-composer";
 import { Text, TextInput } from "./text";
 import { PrimaryButton } from "./ui";
 
@@ -41,20 +46,39 @@ export function useNotes() {
   });
 }
 
-/** The thought bubble above someone's picture in the stories row; `empty` shows the text greyed, as an invitation. */
-export function NoteBubble({ text, empty, label, onPress }: { text: string; empty?: boolean; label: string; onPress: () => void }) {
+/** A GIF playing muted on a loop, `height` tall and as wide as it needs, up to `maxWidth`. */
+function Loop({ gif, height, maxWidth, radius }: { gif: NonNullable<NoteDTO["gif"]>; height: number; maxWidth: number; radius: number }) {
+  const player = useVideoPlayer(gif.url, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+  const width = Math.min(maxWidth, gif.width && gif.height ? (height * gif.width) / gif.height : height);
+  return <VideoView player={player} style={{ width, height, borderRadius: radius, overflow: "hidden" }} contentFit="cover" nativeControls={false} />;
+}
+
+/** The thought bubble above someone's picture in the stories row: their GIF, or their words, on their colour. Without a note it shows `placeholder` greyed, as an invitation. */
+export function NoteBubble({ note, placeholder, label, onPress }: { note: NoteDTO | null; placeholder?: string; label: string; onPress: () => void }) {
   const t = useTheme();
+  const bg = note?.background;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={4}
-      style={[styles.bubble, { backgroundColor: t.surface, borderColor: t.border }]}
+      style={[styles.bubble, { backgroundColor: bg ?? t.surface, borderColor: bg ?? t.border }, note?.gif && { padding: 2 }]}
     >
-      <Text numberOfLines={2} style={{ fontSize: 11, lineHeight: 13, textAlign: "center", color: empty ? stone[400] : t.text, fontWeight: empty ? "400" : "500" }}>
-        {text}
-      </Text>
+      {note?.gif ? (
+        <Loop gif={note.gif} height={32} maxWidth={80} radius={14} />
+      ) : (
+        <Text
+          numberOfLines={2}
+          style={{ fontSize: 11, lineHeight: 13, textAlign: "center", color: bg ? inkOn(bg) : note ? t.text : stone[400], fontWeight: note ? "500" : "400" }}
+        >
+          {note?.text ?? placeholder}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -98,6 +122,11 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
   const tr = useT();
   const qc = useQueryClient();
   const [text, setText] = useState(note?.text ?? "");
+  const [background, setBackground] = useState(note?.background ?? null);
+  const [gif, setGif] = useState<{ id: string; video: NoteDTO["gif"]; preview: string | null } | null>(
+    note?.gif ? { id: note.gif.id, video: note.gif, preview: null } : null,
+  );
+  const [pickingGif, setPickingGif] = useState(false);
   const [durationSecs, setDurationSecs] = useState(NOTE_SECS);
   const [custom, setCustom] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -127,11 +156,28 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
       setBusy(false);
     }
   }
-  const share = () => text.trim() && void run(async () => unwrap(await six.api.PUT("/v1/notes", { body: { text: text.trim(), durationSecs } })));
+  const share = () =>
+    (text.trim() || gif) &&
+    void run(async () =>
+      unwrap(await six.api.PUT("/v1/notes", { body: { text: text.trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
+    );
+  const ink = background ? inkOn(background) : t.text;
 
   return (
     <Popup onClose={onClose}>
       <Text style={{ color: t.text, fontSize: 18, fontWeight: "700" }}>{tr.stories.yourNote}</Text>
+      {gif && (
+        <View style={{ alignSelf: "center" }}>
+          {gif.preview ? (
+            <Image source={{ uri: gif.preview }} style={{ height: 128, aspectRatio: 1.33, borderRadius: 16 }} contentFit="cover" />
+          ) : (
+            gif.video && <Loop gif={gif.video} height={128} maxWidth={240} radius={16} />
+          )}
+          <Pressable onPress={() => setGif(null)} accessibilityRole="button" accessibilityLabel={tr.common.remove} hitSlop={6} style={styles.removeGif}>
+            <X size={16} color="#fff" />
+          </Pressable>
+        </View>
+      )}
       <View>
         <TextInput
           autoFocus
@@ -143,10 +189,42 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           accessibilityLabel={tr.stories.note}
           returnKeyType="done"
           onSubmitEditing={share}
-          style={[styles.field, { color: t.text, backgroundColor: t.field, paddingRight: 48 }]}
+          style={[styles.field, { color: ink, backgroundColor: background ?? t.field, paddingRight: 48 }]}
         />
-        <Text style={[styles.count, { color: t.muted }]}>{NOTE_LIMIT - text.length}</Text>
+        <Text style={[styles.count, { color: background ? ink : t.muted, opacity: background ? 0.7 : 1 }]}>{NOTE_LIMIT - text.length}</Text>
       </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={[styles.actions, { padding: 3 }]}>
+        <Pressable
+          onPress={() => setBackground(null)}
+          accessibilityRole="radio"
+          accessibilityState={{ checked: !background }}
+          accessibilityLabel={tr.stories.noColour}
+          style={[styles.swatch, { backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, alignItems: "center", justifyContent: "center" }, !background && styles.picked]}
+        >
+          <Ban size={16} color={stone[400]} />
+        </Pressable>
+        {NOTE_BACKGROUNDS.map((c) => (
+          <Pressable
+            key={c}
+            onPress={() => setBackground(c)}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: background === c }}
+            accessibilityLabel={c}
+            style={[styles.swatch, { backgroundColor: c }, background === c && styles.picked]}
+          />
+        ))}
+        {chip(pickingGif, tr.stories.gif, () => setPickingGif(!pickingGif))}
+      </ScrollView>
+      {pickingGif && (
+        <View style={styles.gifs}>
+          <GifSearch
+            onPick={(g) => {
+              setGif({ id: g.id, video: null, preview: g.previewUrl });
+              setPickingGif(false);
+            }}
+          />
+        </View>
+      )}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={styles.actions}>
         <Text style={{ color: t.muted, fontSize: 14 }}>{tr.stories.lasts}</Text>
         {STORY_DURATIONS.map((secs) => chip(durationSecs === secs, durationLabel(secs, tr), () => setDurationSecs(secs)))}
@@ -161,7 +239,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             <Text style={{ color: "#dc2626", fontSize: 15, fontWeight: "600" }}>{tr.stories.deleteNote}</Text>
           </Pressable>
         )}
-        <PrimaryButton title={tr.stories.post} onPress={share} disabled={busy || !text.trim()} busy={busy} style={{ marginLeft: "auto" }} />
+        <PrimaryButton title={tr.stories.post} onPress={share} disabled={busy || (!text.trim() && !gif)} busy={busy} style={{ marginLeft: "auto" }} />
       </View>
     </Popup>
   );
@@ -179,7 +257,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
 
   function send() {
     if (!text.trim() || !chat || !realtime) return;
-    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text, background: null, imageUrl: null };
+    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || null, background: note.background, imageUrl: null };
     void queueMessage(qc, realtime, chat.id, { text: text.trim(), story });
     onClose();
   }
@@ -187,8 +265,13 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   return (
     <Popup onClose={onClose}>
       <View style={{ alignItems: "center", gap: 12 }}>
-        <View style={[styles.bigBubble, { backgroundColor: t.surfaceAlt }]}>
-          <Text style={{ color: t.text, fontSize: 16, fontWeight: "500", textAlign: "center" }}>{note.text}</Text>
+        <View style={[styles.bigBubble, { backgroundColor: note.background ?? t.surfaceAlt }, note.gif && { padding: 6 }]}>
+          {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
+          {!!note.text && (
+            <Text style={[{ color: note.background ? inkOn(note.background) : t.text, fontSize: 16, fontWeight: "500", textAlign: "center" }, note.gif && { padding: 6 }]}>
+              {note.text}
+            </Text>
+          )}
         </View>
         <Avatar user={user} size="lg" />
         <Text style={{ color: t.text, fontSize: 15 }}>
@@ -234,5 +317,19 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", alignItems: "center", gap: 8 },
   chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   send: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: brand },
-  bigBubble: { borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, maxWidth: "90%" },
+  bigBubble: { borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, maxWidth: "90%", alignItems: "center", gap: 4 },
+  swatch: { width: 28, height: 28, borderRadius: 14 },
+  picked: { outlineWidth: 2, outlineOffset: 2, outlineColor: brand, outlineStyle: "solid" },
+  gifs: { borderRadius: 16, backgroundColor: "rgba(0,0,0,0.75)", padding: 10 },
+  removeGif: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: stone[900],
+  },
 });

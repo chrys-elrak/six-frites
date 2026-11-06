@@ -23,7 +23,7 @@ import { profilesFor } from "./contacts.js";
 import { deliverStoryReactionPush } from "./push.js";
 import { notify } from "./notifications.js";
 import { sharedGif } from "./gifs.js";
-import { purgeUploads, toAttachmentDTO } from "./uploads.js";
+import { SHARED_PREFIX, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
 /** Most stories one person can have up at once. */
 const MAX_ACTIVE = 50;
@@ -261,9 +261,24 @@ export async function deleteStory(userId: string, storyId: string) {
   await announceStories(userId);
 }
 
-const toNoteDTO = (n: { id: string; text: string; createdAt: Date; expiresAt: Date }): NoteDTO => ({
+type NoteRow = {
+  id: string;
+  text: string;
+  background: string | null;
+  gifKey: string | null;
+  gifWidth: number | null;
+  gifHeight: number | null;
+  createdAt: Date;
+  expiresAt: Date;
+};
+
+const toNoteDTO = (n: NoteRow): NoteDTO => ({
   id: n.id,
   text: n.text,
+  background: n.background,
+  gif: n.gifKey
+    ? { id: n.gifKey.slice(SHARED_PREFIX.length, -".mp4".length), url: presignGet(n.gifKey), width: n.gifWidth, height: n.gifHeight }
+    : null,
   createdAt: n.createdAt.toISOString(),
   expiresAt: n.expiresAt.toISOString(),
 });
@@ -285,9 +300,23 @@ export async function listNotes(userId: string): Promise<NotesDTO> {
 }
 
 /** Puts up a note, for a day unless asked otherwise, in place of the one before. */
-export async function setNote(userId: string, text: string, durationSecs = NOTE_SECS): Promise<NoteDTO> {
+export async function setNote(
+  userId: string,
+  { text, gifId, background, durationSecs = NOTE_SECS }: { text: string; gifId?: string; background?: string; durationSecs?: number },
+): Promise<NoteDTO> {
+  const gif = gifId ? await sharedGif(gifId) : null;
   await prisma.note.deleteMany({ where: { userId } });
-  const note = await prisma.note.create({ data: { userId, text, expiresAt: new Date(Date.now() + durationSecs * 1000) } });
+  const note = await prisma.note.create({
+    data: {
+      userId,
+      text,
+      background,
+      gifKey: gif?.key,
+      gifWidth: gif?.width,
+      gifHeight: gif?.height,
+      expiresAt: new Date(Date.now() + durationSecs * 1000),
+    },
+  });
   await announceStories(userId);
   return toNoteDTO(note);
 }

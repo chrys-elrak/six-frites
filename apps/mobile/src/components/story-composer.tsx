@@ -119,7 +119,7 @@ function PreviewVideo({ uri }: { uri: string }) {
   return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="contain" nativeControls={false} />;
 }
 
-function GifSearch({ onPick }: { onPick: (gif: GifDTO) => void }) {
+export function GifSearch({ onPick }: { onPick: (gif: GifDTO) => void }) {
   const tr = useT();
   const [input, setInput] = useState("");
   const [q, setQ] = useState("");

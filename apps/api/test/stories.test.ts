@@ -148,6 +148,17 @@ describe("stories", () => {
     expect((await get(host, "/v1/notes")).items).toEqual([]);
   });
 
+  it("colours a note for everyone, and refuses one with neither text nor a GIF", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    expect((await call(host, "PUT", "/v1/notes", { text: "  " })).statusCode).toBe(400);
+    expect((await call(host, "PUT", "/v1/notes", { text: "Hi", background: "red" })).statusCode).toBe(400);
+    const note = (await call(host, "PUT", "/v1/notes", { text: "Hi", background: "#E11D48" })).json();
+    expect(note).toMatchObject({ background: "#e11d48", gif: null });
+    expect((await get(guest, "/v1/notes")).items[0].note).toMatchObject({ background: "#e11d48" });
+    const reply = await call(guest, "POST", `/v1/chats/${chatId}/messages`, { clientId: "note-colour", text: "Hey", storyId: note.id });
+    expect(reply.json().story).toMatchObject({ kind: "note", text: "Hi", background: "#e11d48" });
+  });
+
   it("names the place on a story from OpenStreetMap, asking once per spot", async () => {
     const { host } = await makeFriends();
     const answer = { address: { suburb: "Analakely", city: "Antananarivo" } };

@@ -24,6 +24,7 @@ import {
   isFrozen,
   type StoryReply,
   storyBackground,
+  inkOn,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -391,7 +392,12 @@ function StoryQuote({ story, mine, reaction }: { story: StoryReply; mine: boolea
     return (
       <span className="mb-1.5 flex flex-col items-start gap-1">
         <span className="text-xs opacity-75">{mine ? t.youRepliedToNote : t.repliedToNote}</span>
-        <span className="rounded-2xl bg-black/10 px-3 py-1.5 text-sm break-words dark:bg-white/10">{story.text}</span>
+        <span
+          style={story.background ? { background: story.background, color: inkOn(story.background) } : undefined}
+          className={`rounded-2xl px-3 py-1.5 text-sm break-words ${story.background ? "" : "bg-black/10 dark:bg-white/10"}`}
+        >
+          {story.text ?? t.gif}
+        </span>
       </span>
     );
   }

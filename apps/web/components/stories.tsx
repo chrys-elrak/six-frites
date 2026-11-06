@@ -333,8 +333,8 @@ export function StoriesBar() {
         <div role="listitem" className="relative flex w-16 shrink-0 flex-col items-center gap-1">
           <div className={slot}>
             <NoteBubble
-              text={notes?.mine?.text ?? tr.stories.leaveNote}
-              empty={!notes?.mine}
+              note={notes?.mine ?? null}
+              placeholder={tr.stories.leaveNote}
               label={notes?.mine ? tr.stories.yourNote : tr.stories.leaveNote}
               onClick={() => setWritingNote(true)}
             />
@@ -364,7 +364,7 @@ export function StoriesBar() {
           return (
             <div key={user.id} role="listitem" className="flex w-16 shrink-0 flex-col items-center gap-1">
               <div className={slot}>
-                {note && <NoteBubble text={note.note.text} label={tr.stories.noteBy(user.displayName)} onClick={() => setReading(note)} />}
+                {note && <NoteBubble note={note.note} label={tr.stories.noteBy(user.displayName)} onClick={() => setReading(note)} />}
               </div>
               <button
                 type="button"

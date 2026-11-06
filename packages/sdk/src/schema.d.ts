@@ -19689,7 +19689,18 @@ export interface paths {
                         "application/json": {
                             mine: {
                                 id: string;
+                                /** @description Empty when the note is only a GIF */
                                 text: string;
+                                background: string | null;
+                                /** @description As an MP4 to play muted on a loop */
+                                gif: {
+                                    /** @description Send it again with `gifId` */
+                                    id: string;
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -19708,7 +19719,18 @@ export interface paths {
                                 };
                                 note: {
                                     id: string;
+                                    /** @description Empty when the note is only a GIF */
                                     text: string;
+                                    background: string | null;
+                                    /** @description As an MP4 to play muted on a loop */
+                                    gif: {
+                                        /** @description Send it again with `gifId` */
+                                        id: string;
+                                        /** Format: uri */
+                                        url: string;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                     /** Format: date-time */
@@ -19734,7 +19756,12 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        text: string;
+                        /** @default  */
+                        text?: string;
+                        /** @description A GIF from GET /v1/gifs shown in the note */
+                        gifId?: string;
+                        /** @description The bubble's colour, like #e11d48; without it the bubble follows the reader's theme */
+                        background?: string;
                         /**
                          * @description How long it stays up, from one hour to a day
                          * @default 86400
@@ -19752,7 +19779,18 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
+                            /** @description Empty when the note is only a GIF */
                             text: string;
+                            background: string | null;
+                            /** @description As an MP4 to play muted on a loop */
+                            gif: {
+                                /** @description Send it again with `gifId` */
+                                id: string;
+                                /** Format: uri */
+                                url: string;
+                                width: number | null;
+                                height: number | null;
+                            } | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */

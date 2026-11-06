@@ -60,7 +60,7 @@ const storyRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: NoteDTO },
       },
     },
-    (req) => setNote(req.auth.userId, req.body.text, req.body.durationSecs),
+    (req) => setNote(req.auth.userId, req.body),
   );
 
   app.delete(

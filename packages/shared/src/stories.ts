@@ -243,18 +243,49 @@ export const NOTE_LIMIT = 60;
 /** How long a note stays up. */
 export const NOTE_SECS = 24 * HOUR;
 
-export const SetNoteInput = z.object({
-  text: z.string().trim().min(1).max(NOTE_LIMIT),
-  durationSecs: z
-    .number()
-    .int()
-    .min(STORY_LIMITS.minSecs)
-    .max(STORY_LIMITS.maxSecs)
-    .default(NOTE_SECS)
-    .describe("How long it stays up, from one hour to a day"),
-});
+/** The colours a note's bubble can take; without one it follows the theme. */
+export const NOTE_BACKGROUNDS = STORY_BACKGROUNDS.filter((b) => !b.includes(","));
 
-export const NoteDTO = z.object({ id: Id, text: z.string(), createdAt: IsoDate, expiresAt: IsoDate });
+export const SetNoteInput = z
+  .object({
+    text: z.string().trim().max(NOTE_LIMIT).default(""),
+    gifId: z
+      .string()
+      .regex(/^[\w-]{1,128}$/)
+      .optional()
+      .describe("A GIF from GET /v1/gifs shown in the note"),
+    background: z
+      .string()
+      .regex(/^#[0-9a-f]{6}$/i)
+      .transform((s) => s.toLowerCase())
+      .optional()
+      .describe("The bubble's colour, like #e11d48; without it the bubble follows the reader's theme"),
+    durationSecs: z
+      .number()
+      .int()
+      .min(STORY_LIMITS.minSecs)
+      .max(STORY_LIMITS.maxSecs)
+      .default(NOTE_SECS)
+      .describe("How long it stays up, from one hour to a day"),
+  })
+  .refine((v) => !!v.text || !!v.gifId, { message: "A note needs text or a GIF", path: ["text"] });
+
+export const NoteDTO = z.object({
+  id: Id,
+  text: z.string().describe("Empty when the note is only a GIF"),
+  background: z.string().nullable(),
+  gif: z
+    .object({
+      id: z.string().describe("Send it again with `gifId`"),
+      url: z.string().url(),
+      width: z.number().int().nullable(),
+      height: z.number().int().nullable(),
+    })
+    .nullable()
+    .describe("As an MP4 to play muted on a loop"),
+  createdAt: IsoDate,
+  expiresAt: IsoDate,
+});
 export type NoteDTO = z.infer<typeof NoteDTO>;
 
 export const NotesDTO = z.object({

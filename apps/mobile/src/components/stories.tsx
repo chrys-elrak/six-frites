@@ -368,8 +368,8 @@ export function StoriesBar() {
         <View style={styles.item}>
           <View style={styles.noteSlot}>
             <NoteBubble
-              text={notes?.mine?.text ?? tr.stories.leaveNote}
-              empty={!notes?.mine}
+              note={notes?.mine ?? null}
+              placeholder={tr.stories.leaveNote}
               label={notes?.mine ? tr.stories.yourNote : tr.stories.leaveNote}
               onPress={() => setWritingNote(true)}
             />
@@ -399,7 +399,7 @@ export function StoriesBar() {
           return (
             <View key={user.id} style={styles.item}>
               <View style={styles.noteSlot}>
-                {note && <NoteBubble text={note.note.text} label={tr.stories.noteBy(user.displayName)} onPress={() => setReading(note)} />}
+                {note && <NoteBubble note={note.note} label={tr.stories.noteBy(user.displayName)} onPress={() => setReading(note)} />}
               </View>
               <Pressable
                 onPress={() => (at !== null ? setOpen(at) : note && setReading(note))}

@@ -18,6 +18,7 @@ import {
   previewLink,
   splitLinks,
   type StoryReply,
+  inkOn,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -398,8 +399,8 @@ function StoryQuote({ story, mine, color, reaction }: { story: StoryReply; mine:
     return (
       <View style={[styles.storyQuote, { alignItems: "flex-start" }]}>
         <Text style={{ color, fontSize: 12, opacity: 0.75 }}>{mine ? t.youRepliedToNote : t.repliedToNote}</Text>
-        <View style={{ borderRadius: 16, backgroundColor: "rgba(0,0,0,0.1)", paddingHorizontal: 12, paddingVertical: 6 }}>
-          <Text style={{ color, fontSize: 14 }}>{story.text}</Text>
+        <View style={{ borderRadius: 16, backgroundColor: story.background ?? "rgba(0,0,0,0.1)", paddingHorizontal: 12, paddingVertical: 6 }}>
+          <Text style={{ color: story.background ? inkOn(story.background) : color, fontSize: 14 }}>{story.text ?? t.gif}</Text>
         </View>
       </View>
     );

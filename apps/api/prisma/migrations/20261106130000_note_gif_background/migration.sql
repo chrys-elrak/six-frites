@@ -1,0 +1,4 @@
+ALTER TABLE "Note" ADD COLUMN "background" TEXT,
+ADD COLUMN "gifHeight" INTEGER,
+ADD COLUMN "gifKey" TEXT,
+ADD COLUMN "gifWidth" INTEGER;

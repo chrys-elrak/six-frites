@@ -313,7 +313,7 @@ async function storyReplyFor(tx: Tx, chatId: string, userId: string, storyId: st
   if (!story) {
     const note = await tx.note.findFirst({ where: { id: storyId, userId: { not: userId } } });
     if (note && (await tx.chatMember.count({ where: { chatId, userId: note.userId } }))) {
-      return { id: note.id, ownerId: note.userId, kind: "note", text: note.text, background: null, imageKey: null };
+      return { id: note.id, ownerId: note.userId, kind: "note", text: note.text || null, background: note.background, imageKey: null };
     }
   }
   if (!story || !(await tx.chatMember.count({ where: { chatId, userId: story.userId } }))) {

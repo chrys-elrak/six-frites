@@ -68402,7 +68402,46 @@
                           "minLength": 1
                         },
                         "text": {
+                          "type": "string",
+                          "description": "Empty when the note is only a GIF"
+                        },
+                        "background": {
+                          "nullable": true,
                           "type": "string"
+                        },
+                        "gif": {
+                          "nullable": true,
+                          "description": "As an MP4 to play muted on a loop",
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "Send it again with `gifId`"
+                            },
+                            "url": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "width": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "height": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "url",
+                            "width",
+                            "height"
+                          ],
+                          "additionalProperties": false
                         },
                         "createdAt": {
                           "type": "string",
@@ -68418,6 +68457,8 @@
                       "required": [
                         "id",
                         "text",
+                        "background",
+                        "gif",
                         "createdAt",
                         "expiresAt"
                       ],
@@ -68464,7 +68505,46 @@
                                 "minLength": 1
                               },
                               "text": {
+                                "type": "string",
+                                "description": "Empty when the note is only a GIF"
+                              },
+                              "background": {
+                                "nullable": true,
                                 "type": "string"
+                              },
+                              "gif": {
+                                "nullable": true,
+                                "description": "As an MP4 to play muted on a loop",
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "description": "Send it again with `gifId`"
+                                  },
+                                  "url": {
+                                    "type": "string",
+                                    "format": "uri"
+                                  },
+                                  "width": {
+                                    "nullable": true,
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "height": {
+                                    "nullable": true,
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "url",
+                                  "width",
+                                  "height"
+                                ],
+                                "additionalProperties": false
                               },
                               "createdAt": {
                                 "type": "string",
@@ -68480,6 +68560,8 @@
                             "required": [
                               "id",
                               "text",
+                              "background",
+                              "gif",
                               "createdAt",
                               "expiresAt"
                             ],
@@ -68520,9 +68602,19 @@
                 "type": "object",
                 "properties": {
                   "text": {
+                    "default": "",
                     "type": "string",
-                    "minLength": 1,
                     "maxLength": 60
+                  },
+                  "gifId": {
+                    "description": "A GIF from GET /v1/gifs shown in the note",
+                    "type": "string",
+                    "pattern": "^[\\w-]{1,128}$"
+                  },
+                  "background": {
+                    "description": "The bubble's colour, like #e11d48; without it the bubble follows the reader's theme",
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
                   },
                   "durationSecs": {
                     "default": 86400,
@@ -68531,10 +68623,7 @@
                     "minimum": 3600,
                     "maximum": 86400
                   }
-                },
-                "required": [
-                  "text"
-                ]
+                }
               }
             }
           }
@@ -68557,7 +68646,46 @@
                       "minLength": 1
                     },
                     "text": {
+                      "type": "string",
+                      "description": "Empty when the note is only a GIF"
+                    },
+                    "background": {
+                      "nullable": true,
                       "type": "string"
+                    },
+                    "gif": {
+                      "nullable": true,
+                      "description": "As an MP4 to play muted on a loop",
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Send it again with `gifId`"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "width": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "height": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "url",
+                        "width",
+                        "height"
+                      ],
+                      "additionalProperties": false
                     },
                     "createdAt": {
                       "type": "string",
@@ -68573,6 +68701,8 @@
                   "required": [
                     "id",
                     "text",
+                    "background",
+                    "gif",
                     "createdAt",
                     "expiresAt"
                   ],

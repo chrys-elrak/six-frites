@@ -2,6 +2,7 @@
 
 import { unwrap } from "@six/sdk";
 import {
+  NOTE_BACKGROUNDS,
   NOTE_LIMIT,
   NOTE_SECS,
   type NoteDTO,
@@ -10,9 +11,10 @@ import {
   STORY_DURATION_UNITS,
   STORY_LIMITS,
   durationLabel,
+  inkOn,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { SendHorizontal } from "lucide-react";
+import { Ban, SendHorizontal, X } from "lucide-react";
 import { useState } from "react";
 import { useChats } from "@/lib/chats";
 import { timeAgo } from "@/lib/format";
@@ -23,6 +25,7 @@ import { six } from "@/lib/six";
 import { DurationPicker } from "./auto-delete-custom";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
+import { GifSearch } from "./gif-picker";
 import { PrimaryButton } from "./ui";
 
 /** Under the stories key, so `stories:changed` refreshes notes too. */
@@ -39,19 +42,24 @@ export function useNotes() {
   });
 }
 
-/** The thought bubble above someone's picture in the stories row; `empty` shows the text greyed, as an invitation. */
-export function NoteBubble({ text, empty, label, onClick }: { text: string; empty?: boolean; label: string; onClick: () => void }) {
+const tint = (background: string | null | undefined) => (background ? { background, color: inkOn(background) } : undefined);
+const plain = "bg-white ring-1 ring-black/5 dark:bg-stone-800 dark:ring-white/10";
+const Loop = ({ src, className }: { src: string; className: string }) => <video src={src} autoPlay loop muted playsInline className={className} />;
+
+/** The thought bubble above someone's picture in the stories row: their GIF, or their words, on their colour. Without a note it shows `placeholder` greyed, as an invitation. */
+export function NoteBubble({ note, placeholder, label, onClick }: { note: NoteDTO | null; placeholder?: string; label: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      title={text}
-      className={`relative z-10 -mb-2 max-w-[4.5rem] rounded-2xl bg-white px-2 py-1 text-center text-[11px] leading-tight break-words shadow ring-1 ring-black/5 dark:bg-stone-800 dark:ring-white/10 ${
-        empty ? "text-stone-400" : "font-medium"
+      title={note?.text || undefined}
+      style={tint(note?.background)}
+      className={`relative z-10 -mb-2 max-w-[4.5rem] overflow-hidden rounded-2xl shadow ${note?.background ? "" : plain} ${
+        note?.gif ? "p-0.5" : `px-2 py-1 text-center text-[11px] leading-tight break-words ${note ? "font-medium" : "text-stone-400"}`
       }`}
     >
-      <span className="line-clamp-2">{text}</span>
+      {note?.gif ? <Loop src={note.gif.url} className="h-8 rounded-[14px] object-cover" /> : <span className="line-clamp-2">{note?.text ?? placeholder}</span>}
     </button>
   );
 }
@@ -79,6 +87,9 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
   const tr = useT();
   const qc = useQueryClient();
   const [text, setText] = useState(note?.text ?? "");
+  const [background, setBackground] = useState(note?.background ?? null);
+  const [gif, setGif] = useState(note?.gif ? { id: note.gif.id, src: note.gif.url, video: true } : null);
+  const [pickingGif, setPickingGif] = useState(false);
   const [durationSecs, setDurationSecs] = useState(NOTE_SECS);
   const [custom, setCustom] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -105,11 +116,31 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (text.trim()) void run(async () => unwrap(await six.api.PUT("/v1/notes", { body: { text: text.trim(), durationSecs } })));
+          if (text.trim() || gif)
+            void run(async () =>
+              unwrap(await six.api.PUT("/v1/notes", { body: { text: text.trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
+            );
         }}
         className="flex flex-col gap-3 p-5"
       >
         <h2 className="text-lg font-semibold">{tr.stories.yourNote}</h2>
+        {gif && (
+          <div className="relative self-center">
+            {gif.video ? (
+              <Loop src={gif.src} className="max-h-32 rounded-2xl" />
+            ) : (
+              <img src={gif.src} alt="" draggable={false} className="max-h-32 rounded-2xl" />
+            )}
+            <button
+              type="button"
+              onClick={() => setGif(null)}
+              aria-label={tr.common.remove}
+              className="absolute -top-2 -right-2 grid size-7 place-items-center rounded-full bg-stone-900 text-white shadow"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
         <div className="relative">
           <input
             autoFocus
@@ -118,10 +149,59 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             maxLength={NOTE_LIMIT}
             placeholder={tr.stories.notePlaceholder}
             aria-label={tr.stories.note}
-            className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 pr-14 text-[16px] outline-none focus:border-brand dark:border-stone-700 dark:bg-stone-900"
+            style={tint(background)}
+            className={`w-full rounded-2xl border px-4 py-3 pr-14 text-[16px] outline-none ${
+              background ? "border-transparent placeholder:text-current placeholder:opacity-60" : "border-stone-200 bg-white focus:border-brand dark:border-stone-700 dark:bg-stone-900"
+            }`}
           />
-          <span className="absolute top-1/2 right-4 -translate-y-1/2 text-xs text-stone-400">{NOTE_LIMIT - text.length}</span>
+          <span className="absolute top-1/2 right-4 -translate-y-1/2 text-xs opacity-60" style={background ? { color: inkOn(background) } : undefined}>
+            {NOTE_LIMIT - text.length}
+          </span>
         </div>
+        <div className="flex items-center gap-2 overflow-x-auto p-1">
+          <div role="radiogroup" aria-label={tr.stories.background} className="flex items-center gap-2">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!background}
+              aria-label={tr.stories.noColour}
+              onClick={() => setBackground(null)}
+              className={`grid size-7 shrink-0 place-items-center rounded-full bg-white text-stone-400 ring-1 ring-stone-300 dark:bg-stone-800 dark:ring-stone-600 ${!background ? "outline-2 outline-offset-2 outline-brand" : ""}`}
+            >
+              <Ban className="size-4" />
+            </button>
+            {NOTE_BACKGROUNDS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                role="radio"
+                aria-checked={background === c}
+                aria-label={c}
+                onClick={() => setBackground(c)}
+                style={{ background: c }}
+                className={`size-7 shrink-0 rounded-full ${background === c ? "outline-2 outline-offset-2 outline-brand" : ""}`}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-pressed={pickingGif}
+            onClick={() => setPickingGif(!pickingGif)}
+            className={`ml-auto shrink-0 rounded-full px-3 py-1 text-sm font-bold ${pickingGif ? "bg-brand text-brand-ink" : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"}`}
+          >
+            {tr.stories.gif}
+          </button>
+        </div>
+        {pickingGif && (
+          <div className="-mx-3">
+            <GifSearch
+              onPick={(g) => {
+                setGif({ id: g.id, src: g.previewUrl, video: false });
+                setPickingGif(false);
+              }}
+            />
+          </div>
+        )}
         <div role="radiogroup" aria-label={tr.stories.lasts} className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-stone-500">{tr.stories.lasts}</span>
           {STORY_DURATIONS.map((secs) => (
@@ -150,7 +230,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
               {tr.stories.deleteNote}
             </button>
           )}
-          <PrimaryButton type="submit" disabled={busy || !text.trim()} className="ml-auto">
+          <PrimaryButton type="submit" disabled={busy || (!text.trim() && !gif)} className="ml-auto">
             {tr.stories.post}
           </PrimaryButton>
         </div>
@@ -171,7 +251,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
 
   function send() {
     if (!text.trim() || !chat || !realtime) return;
-    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text, background: null, imageUrl: null };
+    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || null, background: note.background, imageUrl: null };
     void queueMessage(qc, realtime, chat.id, { text: text.trim(), story });
     onClose();
   }
@@ -179,8 +259,12 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   return (
     <Dialog onClose={onClose}>
       <div className="flex flex-col items-center gap-3 p-5">
-        <span className="rounded-3xl bg-white px-4 py-2.5 text-center text-base font-medium break-words shadow ring-1 ring-black/5 dark:bg-stone-800 dark:ring-white/10">
-          {note.text}
+        <span
+          style={tint(note.background)}
+          className={`flex max-w-full flex-col items-center gap-2 rounded-3xl text-center text-base font-medium break-words shadow ${note.background ? "" : plain} ${note.gif ? "p-1.5" : "px-4 py-2.5"}`}
+        >
+          {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
+          {note.text && <span className={note.gif ? "px-2.5 pb-1" : ""}>{note.text}</span>}
         </span>
         <Avatar user={user} size="lg" />
         <p className="text-center">
