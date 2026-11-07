@@ -24,6 +24,14 @@ export default function AdminPage() {
   const status = useSession((s) => s.status);
   const admin = useIsAdmin();
   const [tab, setTab] = useState<Tab>("overview");
+  useEffect(() => {
+    const saved = new URLSearchParams(location.search).get("tab");
+    if (saved) setTab(saved as Tab);
+  }, []);
+  const pick = (t: Tab) => {
+    setTab(t);
+    history.replaceState(history.state, "", `?tab=${t}`);
+  };
   const stats = useQuery({
     queryKey: adminKeys.stats,
     queryFn: async () => unwrap(await six.api.GET("/v1/admin/stats")),
@@ -79,7 +87,7 @@ export default function AdminPage() {
           <button
             key={t.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => pick(t.id)}
             aria-current={tab === t.id ? "page" : undefined}
             className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-medium ${
               tab === t.id
