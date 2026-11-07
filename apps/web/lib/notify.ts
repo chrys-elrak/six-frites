@@ -127,6 +127,9 @@ export function playTone(tone = useNotifyPrefs.getState().tone) {
 
 const FRESH_MS = 60_000;
 
+/** Whether the user is looking at the app: a window that is visible but behind another app doesn't count. */
+export const looking = () => document.visibilityState === "visible" && document.hasFocus();
+
 /**
  * Sounds and shows a new message from someone else, unless it was sent silently, its chat is muted or
  * archived, it is the chat on screen, or it is an old message caught up after being offline.
@@ -216,7 +219,7 @@ function alertUser(
 
   if (prefs.sound) playSound(sound ?? toneUrl(prefs.tone));
   if (hidden && prefs.push) return;
-  if (hidden && prefs.system && "Notification" in window && Notification.permission === "granted") {
+  if (!looking() && (prefs.system || prefs.push) && "Notification" in window && Notification.permission === "granted") {
     const notification = new Notification(n.title, { body: n.body, icon: avatarUrl ?? "/icon.svg", tag: n.href });
     notification.onclick = () => {
       window.focus();

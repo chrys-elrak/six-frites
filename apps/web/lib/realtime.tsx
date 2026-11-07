@@ -11,7 +11,7 @@ import { chatKeys, findMessage, insertMessage, patchChat, upsertChat } from "./c
 import { hydrate, hydrateChat } from "./e2ee";
 import { useOutbox } from "./outbox";
 import { resendWaiting } from "./send";
-import { notifyAnon, notifyIncoming, notifyReaction, notifyStoryReaction } from "./notify";
+import { looking, notifyAnon, notifyIncoming, notifyReaction, notifyStoryReaction } from "./notify";
 import { usePresenceStore } from "./presence";
 import { useTypingStore } from "./typing";
 import { useSession } from "./session";
@@ -56,7 +56,7 @@ async function hydrateEvent(e: ChangeEventDTO): Promise<ChangeEventDTO> {
 /** Refreshes the inbox for an anonymous message that just came in, and tells the user unless `onInbox` and looking. */
 export function receiveAnon(qc: QueryClient, m: AnonMessageDTO, onInbox: boolean, open: (href: string) => void) {
   void qc.invalidateQueries({ queryKey: ["ask"] });
-  notifyAnon(m, onInbox && document.visibilityState === "visible", open);
+  notifyAnon(m, onInbox && looking(), open);
 }
 
 function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (href: string) => void) {
@@ -66,7 +66,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (hre
       insertMessage(qc, m);
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
       else useTypingStore.getState().set(m.chatId, m.senderId, null);
-      const viewing = activeChatId === m.chatId && document.visibilityState === "visible";
+      const viewing = activeChatId === m.chatId && looking();
       const found = patchChat(qc, m.chatId, (c) => ({
         ...c,
         lastMessage: m,
@@ -82,7 +82,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (hre
       break;
     case "message.reacted": {
       const r = e.data;
-      const viewing = activeChatId === r.chatId && document.visibilityState === "visible";
+      const viewing = activeChatId === r.chatId && looking();
       const message = findMessage(qc, r.chatId, r.messageId) ?? cachedChat(qc, r.chatId)?.lastMessage ?? undefined;
       notifyReaction(r, e.createdAt, message?.id === r.messageId ? message : undefined, cachedChat(qc, r.chatId), viewing, open);
       break;

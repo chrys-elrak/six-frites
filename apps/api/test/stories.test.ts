@@ -165,6 +165,16 @@ describe("stories", () => {
     expect((await get(host, "/v1/notes/viewers")).items).toEqual([]);
   });
 
+  it("leaves the chat unread when someone answers a story without opening it, but not when they write in it", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: "before-story", text: "You there?" });
+    const story = (await call(host, "POST", "/v1/stories", { text: "Sunset" })).json();
+    await call(guest, "POST", `/v1/chats/${chatId}/messages`, { clientId: "story-answer", text: "Wow", storyId: story.id });
+    expect((await get(guest, `/v1/chats/${chatId}`)).unreadCount).toBeGreaterThan(0);
+    await call(guest, "POST", `/v1/chats/${chatId}/messages`, { clientId: "typed", text: "Yes!" });
+    expect((await get(guest, `/v1/chats/${chatId}`)).unreadCount).toBe(0);
+  });
+
   it("colours a note for everyone, and refuses one with neither text nor a GIF", async () => {
     const { host, guest, chatId } = await makeFriends();
     expect((await call(host, "PUT", "/v1/notes", { text: "  " })).statusCode).toBe(400);

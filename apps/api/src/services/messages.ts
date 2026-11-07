@@ -421,11 +421,11 @@ export async function createMessage(
   });
   await tx.chat.update({ where: { id: chatId }, data: { lastMessageAt: message.createdAt } });
   await tx.chatMember.updateMany({ where: { chatId, hidden: true }, data: { hidden: false } });
+  const fromTheChat = content && !story && !opts.scheduled;
   await tx.chatMember.update({
     where: { chatId_userId: { chatId, userId } },
     data: {
-      lastReadMessageId: message.id,
-      lastReadAt: message.createdAt,
+      ...(fromTheChat && { lastReadMessageId: message.id, lastReadAt: message.createdAt }),
       lastDeliveredMessageId: message.id,
       lastDeliveredAt: message.createdAt,
     },

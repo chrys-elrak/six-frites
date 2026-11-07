@@ -1,6 +1,6 @@
 import { type MessageDTO, chatTheme, durationLabel, previewText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
@@ -99,12 +99,22 @@ export function Conversation({ chatId }: { chatId: string }) {
     if (encryptedFor) void e2eeFor(meId)?.warmDevices(encryptedFor.split(",")).catch(() => null);
   }, [encryptedFor, meId]);
 
+  const focused = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      focused.current = true;
+      setActiveChat(chatId);
+      return () => {
+        focused.current = false;
+        setActiveChat(null);
+      };
+    }, [chatId]),
+  );
+
   useEffect(() => {
-    setActiveChat(chatId);
     closeChat(chatId);
     clearChatNotifications(chatId);
     return () => {
-      setActiveChat(null);
       closeChat(chatId);
       useSelection.getState().clear();
     };
@@ -121,7 +131,7 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   const unread = chat.data?.unreadCount ?? 0;
   const onSeen = useCallback(() => {
-    if (unread > 0 && realtime && AppState.currentState === "active") {
+    if (unread > 0 && realtime && focused.current && AppState.currentState === "active") {
       void realtime.markRead(chatId).catch(() => null);
     }
   }, [unread, realtime, chatId]);
@@ -130,6 +140,7 @@ export function Conversation({ chatId }: { chatId: string }) {
     const sub = AppState.addEventListener("change", (state) => state === "active" && onSeen());
     return () => sub.remove();
   }, [onSeen]);
+  useFocusEffect(onSeen);
 
   const members = chat.data?.members;
   const nameOf = useMemo(() => {

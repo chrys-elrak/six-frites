@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { startCall, useCall } from "@/lib/call";
+import { looking } from "@/lib/notify";
 import { e2ee, useIdentityChanges } from "@/lib/e2ee";
 import { isBotChat, useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
@@ -112,15 +113,18 @@ export function Conversation({ chatId }: { chatId: string }) {
 
   const unread = chat.data?.unreadCount ?? 0;
   const onSeen = useCallback(() => {
-    if (unread > 0 && realtime && document.visibilityState === "visible") {
+    if (unread > 0 && realtime && looking()) {
       void realtime.markRead(chatId).catch(() => null);
     }
   }, [unread, realtime, chatId]);
 
   useEffect(() => {
-    const onVisible = () => document.visibilityState === "visible" && onSeen();
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    document.addEventListener("visibilitychange", onSeen);
+    window.addEventListener("focus", onSeen);
+    return () => {
+      document.removeEventListener("visibilitychange", onSeen);
+      window.removeEventListener("focus", onSeen);
+    };
   }, [onSeen]);
 
   const members = chat.data?.members;
