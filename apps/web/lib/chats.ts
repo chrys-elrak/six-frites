@@ -1,6 +1,6 @@
 import { unwrap } from "@six/sdk";
 import { type ChatDTO, FRITE_BOT_ID, type MessageDTO } from "@six/shared";
-import { type InfiniteData, type QueryClient, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { type InfiniteData, type QueryClient, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type Hydrated, hydrateAll, hydrateChat } from "./e2ee";
 import { getLocale } from "./i18n";
 import { six } from "./six";
@@ -47,14 +47,30 @@ export function sortChats(chats: ChatDTO[]) {
   );
 }
 
+/**
+ * A refreshed chat list can know of a message an open conversation never got, when its live event was lost or is
+ * still stuck decrypting behind another one. Fetch that conversation again then, instead of leaving it behind.
+ */
+function catchUp(qc: QueryClient, chats: ChatDTO[]) {
+  for (const { id, lastMessage: last } of chats) {
+    const data = qc.getQueryData<Messages>(chatKeys.messages(id));
+    const newest = data?.pages[0]?.items[0];
+    if (!last || !newest || Date.parse(last.createdAt) <= Date.parse(newest.createdAt)) continue;
+    if (!data.pages.some((p) => p.items.some((m) => m.id === last.id))) void qc.invalidateQueries({ queryKey: chatKeys.messages(id) });
+  }
+}
+
 export function useChats(archived = false) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: chatKeys.list(archived),
     queryFn: async () => {
       const { items } = unwrap(
         await six.api.GET("/v1/chats", { params: { query: { archived: archived ? "true" : "false", limit: 100 } } }),
       );
-      return sortChats(await Promise.all(items.map(hydrateChat)));
+      const chats = sortChats(await Promise.all(items.map(hydrateChat)));
+      catchUp(qc, chats);
+      return chats;
     },
   });
 }
