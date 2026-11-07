@@ -77,6 +77,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { VList, type VListHandle } from "virtua";
+import { dragSelect } from "@/lib/drag-select";
 import {
   applyEdited,
   check,
@@ -756,6 +757,7 @@ function Bubble({
   onReply,
   onQuote,
   onToggle,
+  onDragPick,
   onOpen,
   onOpenEphemeral,
   onResend,
@@ -781,6 +783,8 @@ function Bubble({
   onReply: () => void;
   onQuote: (id: string) => void;
   onToggle: () => void;
+  /** Starts picking a run of messages from this one: after a long press, or on a mouse press. */
+  onDragPick: (mouse: boolean) => void;
   onOpen: (item: LightboxItem) => void;
   onOpenEphemeral: () => void;
   onResend: () => void;
@@ -803,7 +807,7 @@ function Bubble({
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
   const anchor = () => bubble.current!.getBoundingClientRect();
-  const press = useLongPress(selectable ? onToggle : (at) => onMenu(at, anchor()));
+  const press = useLongPress(selectable ? (at) => (at ? onToggle() : onDragPick(false)) : (at) => onMenu(at, anchor()));
   const reactable = !selecting && !frozen && canReact(row);
   const swipe = useSwipe(
     !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
@@ -885,6 +889,11 @@ function Bubble({
   return (
     <div
       {...swipe.handlers}
+      data-pick={selectable ? (row.id ?? undefined) : undefined}
+      onPointerDown={(e) => {
+        swipe.handlers.onPointerDown(e);
+        if (selectable && e.pointerType === "mouse" && e.button === 0) onDragPick(true);
+      }}
       onClickCapture={
         selectable
           ? (e) => {
@@ -1126,6 +1135,8 @@ export const MessageList = forwardRef<
     const startSelection = useSelection((s) => s.start);
     const toggleSelected = useSelection((s) => s.toggle);
     const list = useRef<VListHandle>(null);
+    const listFrame = useRef<HTMLDivElement>(null);
+    const pickOrder = useRef<string[]>([]);
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
     const viewportSize = useRef(0);
@@ -1213,6 +1224,9 @@ export const MessageList = forwardRef<
       () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish),
       [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish],
     );
+    useEffect(() => {
+      pickOrder.current = rows.flatMap((r) => (r.kind === "msg" && r.message && r.id ? [r.id] : []));
+    }, [rows]);
     const firstKey = useRef<string | undefined>(undefined);
     const lastKey = useRef<string | undefined>(undefined);
     const shift = firstKey.current !== undefined && rows[0]?.key !== firstKey.current;
@@ -1447,7 +1461,7 @@ export const MessageList = forwardRef<
     }
 
     return (
-      <div className="flex min-h-0 flex-1 flex-col justify-end">
+      <div ref={listFrame} className="flex min-h-0 flex-1 flex-col justify-end">
         {rows.length === 0 && (
           <div className="flex flex-col items-center pb-8 text-center text-sm">
             <span className="rounded-full bg-black/25 px-4 py-1.5 text-white backdrop-blur-sm">
@@ -1528,6 +1542,17 @@ export const MessageList = forwardRef<
                 onReply={() => row.message && setMode(chat.id, { kind: "reply", message: row.message })}
                 onQuote={jumpTo}
                 onToggle={() => row.id && toggleSelected(row.id)}
+                onDragPick={(mouse) =>
+                  row.id &&
+                  listFrame.current &&
+                  dragSelect({
+                    anchor: row.id,
+                    mouse,
+                    order: () => pickOrder.current,
+                    frame: listFrame.current,
+                    scrollBy: (dy) => list.current?.scrollBy(dy),
+                  })
+                }
                 onOpen={setLightbox}
                 onOpenEphemeral={() => void openEphemeral(row)}
                 onResend={() => row.message && void resendEphemeral(row.message)}

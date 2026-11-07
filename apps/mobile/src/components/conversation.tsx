@@ -11,7 +11,7 @@ import { isBotChat, isFrozen, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { clearChatNotifications } from "@/lib/push";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
-import { useSelection } from "@/lib/selection";
+import { MAX_SELECTED, useSelection } from "@/lib/selection";
 import { useSession } from "@/lib/session";
 import { brand, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
@@ -193,7 +193,9 @@ export function Conversation({ chatId }: { chatId: string }) {
       {selecting ? (
         <ScreenHeader background={t.bar}>
           <IconButton Icon={X} label={tr.chat.cancelSelection} onPress={clearSelection} />
-          <Text style={[styles.title, { color: t.text }]}>{tr.chat.selected(count)}</Text>
+          <Text style={[styles.title, { color: t.text }]}>{tr.chat.selected(count)}
+            {count >= MAX_SELECTED && " · max"}
+          </Text>
           {count >= 2 && <IconButton Icon={ChevronsUpDown} label={tr.chat.selectBetween} onPress={selectBetween} />}
           <IconButton
             Icon={Trash2}

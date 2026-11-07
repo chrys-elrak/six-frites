@@ -24,7 +24,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { Link, router } from "expo-router";
 import { Image } from "expo-image";
-import { GestureDetector, useLongPressGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
+import { GestureDetector, useLongPressGesture, usePanGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
+import { useDragSelect } from "@/lib/drag-select";
 import {
   ArrowUp,
   Ban,
@@ -795,6 +796,7 @@ function Bubble({
   onReply,
   onQuote,
   onToggle,
+  pick,
   onOpen,
   onOpenEphemeral,
   onResend,
@@ -819,6 +821,8 @@ function Bubble({
   onReply: () => void;
   onQuote: (id: string) => void;
   onToggle: () => void;
+  /** Picking a run of messages by long-pressing one and sliding. */
+  pick: { attach: (id: string | null, node: ComponentRef<typeof View> | null) => void; start: () => void; move: (y: number) => void; end: () => void };
   onOpen: (item: LightboxItem) => void;
   onOpenEphemeral: () => void;
   onResend: () => void;
@@ -907,13 +911,14 @@ function Bubble({
   const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
   const [fxBox, setFxBox] = useState<LayoutRectangle | null>(null);
   const canReact = !frozen && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
-  const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact });
+  const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact, pick });
   const openMenu = () => {
     const node = bubbleRef.current;
     if (!node) return latest.current.onMenu();
     node.measureInWindow((x, y, width, height) => latest.current.onMenu({ x, y, width, height }));
   };
   const hold = useLongPressGesture({
+    enabled: !selectable,
     minDuration: 350,
     runOnJS: true,
     onActivate: () => {
@@ -936,11 +941,25 @@ function Bubble({
     !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
     row.mine ? -1 : 1,
   );
-  const gestures = useSimultaneousGestures(hold, doubleTap, swipe.gesture);
+  const slide = usePanGesture({
+    enabled: selectable,
+    activateAfterLongPress: 350,
+    runOnJS: true,
+    onActivate: () => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      latest.current.pick.start();
+    },
+    onUpdate: (e) => latest.current.pick.move(e.absoluteY),
+    onFinalize: () => latest.current.pick.end(),
+  });
+  const gestures = useSimultaneousGestures(hold, doubleTap, swipe.gesture, slide);
+  const pickId = row.message ? row.id : null;
+  const attach = (node: ComponentRef<typeof View> | null) => pick.attach(pickId, node);
 
   return (
     <GestureDetector gesture={gestures}>
     <Pressable
+      ref={attach}
       onPress={selectable ? onToggle : undefined}
       style={[
         styles.line,
@@ -1166,6 +1185,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const startSelection = useSelection((s) => s.start);
     const toggleSelected = useSelection((s) => s.toggle);
     const list = useRef<FlatList<Row>>(null);
+    const listFrame = useRef<ComponentRef<typeof View>>(null);
+    const pickOrder = useRef<string[]>([]);
+    const picker = useDragSelect(list, listFrame, () => pickOrder.current);
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
@@ -1254,6 +1276,9 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish).reverse(),
       [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish],
     );
+    useEffect(() => {
+      pickOrder.current = rows.flatMap((r) => (r.kind === "msg" && r.message && r.id ? [r.id] : []));
+    }, [rows]);
     const scrollToBottom = () => list.current?.scrollToOffset({ offset: 0, animated: true });
 
     /** After a voice message plays to the end, starts the next one if it's a voice message too. Rows run newest first. */
@@ -1291,6 +1316,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     }, [highlight]);
 
     function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+      picker.onScroll(e.nativeEvent.contentOffset.y);
       const wasAtBottom = atBottom.current;
       atBottom.current = e.nativeEvent.contentOffset.y < 80;
       if (atBottom.current && !wasAtBottom) onSeen();
@@ -1473,7 +1499,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const maxWidth = Math.round(width * (selecting ? 0.72 : 0.8));
 
     return (
-      <View style={{ flex: 1 }}>
+      <View ref={listFrame} style={{ flex: 1 }}>
         {rows.length === 0 ? (
           <View style={styles.empty}>
             <Text style={[styles.onWallpaper, styles.emptyChip]}>
@@ -1575,6 +1601,12 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                   onReply={() => row.message && setMode(chat.id, { kind: "reply", message: row.message })}
                   onQuote={jumpTo}
                   onToggle={() => row.id && toggleSelected(row.id)}
+                  pick={{
+                    attach: picker.register,
+                    start: () => row.id && picker.start(row.id),
+                    move: picker.move,
+                    end: picker.end,
+                  }}
                   onOpen={setLightbox}
                   onOpenEphemeral={() => void openEphemeral(row)}
                   onResend={() => row.message && void resendEphemeral(row.message)}

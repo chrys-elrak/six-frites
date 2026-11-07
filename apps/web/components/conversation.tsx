@@ -12,7 +12,7 @@ import { looking } from "@/lib/notify";
 import { e2ee, useIdentityChanges } from "@/lib/e2ee";
 import { isBotChat, useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
-import { useSelection } from "@/lib/selection";
+import { MAX_SELECTED, useSelection } from "@/lib/selection";
 import { presenceLabel, usePresence, useWatchPresence } from "@/lib/presence";
 import { sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -199,7 +199,9 @@ export function Conversation({ chatId }: { chatId: string }) {
                 <button onClick={clearSelection} aria-label={tr.chat.cancelSelection} className={iconButton}>
                   <X className="size-5" />
                 </button>
-                <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}</p>
+                <p className="min-w-0 flex-1 font-semibold">{tr.chat.selected(count)}
+                  {count >= MAX_SELECTED && " · max"}
+                </p>
                 {count >= 2 && (
                   <button onClick={selectBetween} aria-label={tr.chat.selectBetween} title={tr.chat.selectBetween} className={iconButton}>
                     <ChevronsUpDown className="size-5" />
