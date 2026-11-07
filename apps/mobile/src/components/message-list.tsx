@@ -24,6 +24,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { Link, router } from "expo-router";
 import { Image } from "expo-image";
+import * as Clipboard from "expo-clipboard";
 import { GestureDetector, useLongPressGesture, usePanGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
 import { useDragSelect } from "@/lib/drag-select";
 import {
@@ -52,6 +53,7 @@ import {
   Reply,
   Video,
   RotateCcw,
+  Copy,
   Timer,
   Trash2,
   Image as ImageIcon,
@@ -1372,6 +1374,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           ...(p.status === "failed" && realtime
             ? [{ label: tr.common.retry, icon: RotateCcw, onSelect: () => void deliver(qc, realtime, p) }]
             : []),
+          ...(p.text ? [{ label: tr.common.copy, icon: Copy, onSelect: () => void Clipboard.setStringAsync(p.text) }] : []),
           { label: tr.messages.discard, icon: Trash2, destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
         ];
       }

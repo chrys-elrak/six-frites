@@ -59,6 +59,7 @@ import {
   SmilePlus,
   Paperclip,
   RotateCcw,
+  Copy,
   Sticker as StickerIcon,
   Trash2,
   Video,
@@ -1334,6 +1335,7 @@ export const MessageList = forwardRef<
           ...(p.status === "failed" && realtime
             ? [{ label: tr.common.retry, icon: RotateCcw, onSelect: () => void deliver(qc, realtime, p) }]
             : []),
+          ...(p.text ? [{ label: tr.common.copy, icon: Copy, onSelect: () => void navigator.clipboard.writeText(p.text).catch(() => null) }] : []),
           { label: tr.messages.discard, icon: Trash2, destructive: true, onSelect: () => useOutbox.getState().remove(p.chatId, p.clientId) },
         ];
       }
