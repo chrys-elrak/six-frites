@@ -29267,8 +29267,8 @@
                 "type": "object",
                 "properties": {
                   "text": {
+                    "description": "Empty drops the caption of a photo or file message",
                     "type": "string",
-                    "minLength": 1,
                     "maxLength": 4000
                   },
                   "entities": {

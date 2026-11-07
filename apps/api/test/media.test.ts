@@ -19,7 +19,7 @@ const hasFfmpeg = (() => {
 })();
 
 const ctx = useApp();
-const { get, send, makeFriends } = chatHelpers(ctx);
+const { get, call, send, makeFriends } = chatHelpers(ctx);
 const dir = mkdtempSync(join(tmpdir(), "six-fixtures-"));
 
 function fixture(name: string, args: string[]) {
@@ -132,5 +132,20 @@ describe.skipIf(!hasFfmpeg)("media processing", () => {
     const { host } = await makeFriends();
     const upload = await stage(host.user.id, "video", "video/mp4", Buffer.from("definitely not a video"));
     await expect(processUpload(upload.id)).rejects.toThrow();
+  });
+});
+
+describe("editing a photo message", () => {
+  it("drops a photo's caption on edit, but never empties a text message", async () => {
+    const { host, chatId } = await makeFriends();
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==", "base64");
+    const upload = await stage(host.user.id, "image", "image/png", png);
+    const pic = (await send(host, chatId, "pic", { attachmentId: upload.id })).json();
+    const plain = (await send(host, chatId, "words")).json();
+
+    const edited = await call(host, "PATCH", `/v1/messages/${pic.id}`, { text: "" });
+    expect(edited.statusCode, edited.body).toBe(200);
+    expect(edited.json()).toMatchObject({ text: null, attachment: { kind: "image" } });
+    expect((await call(host, "PATCH", `/v1/messages/${plain.id}`, { text: " " })).json().error.code).toBe("VALIDATION_FAILED");
   });
 });

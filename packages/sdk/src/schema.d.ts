@@ -8979,6 +8979,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @description Empty drops the caption of a photo or file message */
                         text?: string;
                         /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
                         entities?: {

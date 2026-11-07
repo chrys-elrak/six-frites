@@ -311,7 +311,7 @@ const MessageText = z.string().trim().min(1).max(4000);
 
 export const EditMessageInput = z
   .object({
-    text: MessageText.optional(),
+    text: z.string().trim().max(4000).optional().describe("Empty drops the caption of a photo or file message"),
     entities: Entities.optional(),
     encrypted: EncryptedInput.optional(),
     attachmentId: Id.optional().describe("A completed photo upload that replaces a photo message's picture"),

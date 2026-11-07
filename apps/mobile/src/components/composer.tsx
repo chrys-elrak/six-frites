@@ -331,7 +331,8 @@ export function Composer({
   const silent = editing ? null : silentMessage(text);
   const commanding = silent === null && parseCommand(text) !== null;
   const parsed = parseMarkup(emojifyEnd(silent ?? text));
-  const canSubmit = parsed.text.length > 0 && realtime !== null && !saving;
+  const captionOnly = !!editing && (!!editing.attachment || (mode?.kind === "edit" && !!mode.photo));
+  const canSubmit = (parsed.text.length > 0 || captionOnly) && realtime !== null && !saving;
 
   function cancel() {
     setError(null);

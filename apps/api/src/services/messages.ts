@@ -537,12 +537,13 @@ export async function editMessage(userId: string, messageId: string, input: Edit
       }
       if (photo?.encrypted) throw new AppError("VALIDATION_FAILED", "Encrypted files go in encrypted messages");
       const entities = input.entities ?? [];
+      if (!input.text && !attachment) throw new AppError("VALIDATION_FAILED", "A message without a file needs text");
       if (!photo && message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
         return { dto: toMessageDTO(message, userId), replaced: null };
       }
       updated = await tx.message.update({
         where: { id: messageId },
-        data: { text: input.text, entities: storedEntities(entities), editedAt: new Date(), ...swap },
+        data: { text: input.text || null, entities: storedEntities(entities), editedAt: new Date(), ...swap },
         include: messageInclude,
       });
     }
