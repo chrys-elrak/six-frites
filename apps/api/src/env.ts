@@ -38,6 +38,11 @@ const Env = z.object({
     .string()
     .default("")
     .transform((s) => s.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean)),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  MAIL_FROM_NAME: z.string().default("Six Frites"),
   INVITE_ONLY: z
     .enum(["true", "false"])
     .default("true")
