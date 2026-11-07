@@ -1,6 +1,8 @@
 import { unwrap } from "@six/sdk";
 import {
   NOTE_BACKGROUNDS,
+  emojifyEnd,
+  emojifyTyped,
   NOTE_LIMIT,
   NOTE_SECS,
   type NoteDTO,
@@ -204,7 +206,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
   const share = () =>
     (text.trim() || gif) &&
     void run(async () =>
-      unwrap(await six.api.PUT("/v1/notes", { body: { text: text.trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
+      unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
     );
   const ink = background ? inkOn(background) : t.text;
 
@@ -227,7 +229,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
         <TextInput
           autoFocus
           value={text}
-          onChangeText={setText}
+          onChangeText={(v) => setText(emojifyTyped(text, v)?.text ?? v)}
           maxLength={NOTE_LIMIT}
           placeholder={tr.stories.notePlaceholder}
           placeholderTextColor={t.muted}
@@ -313,7 +315,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   function send() {
     if (!text.trim() || !chat || !realtime) return;
     const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || null, background: note.background, imageUrl: null };
-    void queueMessage(qc, realtime, chat.id, { text: text.trim(), story });
+    void queueMessage(qc, realtime, chat.id, { text: emojifyEnd(text).trim(), story });
     onClose();
   }
 
@@ -348,7 +350,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           <TextInput
             autoFocus
             value={text}
-            onChangeText={setText}
+            onChangeText={(v) => setText(emojifyTyped(text, v)?.text ?? v)}
             maxLength={4000}
             placeholder={tr.stories.replyTo(user.displayName)}
             placeholderTextColor={t.muted}

@@ -3,6 +3,8 @@
 import { unwrap } from "@six/sdk";
 import {
   NOTE_BACKGROUNDS,
+  emojifyEnd,
+  emojifyTyped,
   NOTE_LIMIT,
   NOTE_SECS,
   type NoteDTO,
@@ -164,7 +166,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           e.preventDefault();
           if (text.trim() || gif)
             void run(async () =>
-              unwrap(await six.api.PUT("/v1/notes", { body: { text: text.trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
+              unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
             );
         }}
         className="flex flex-col gap-3 p-5"
@@ -191,7 +193,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           <input
             autoFocus
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => setText(emojifyTyped(text, e.target.value)?.text ?? e.target.value)}
             maxLength={NOTE_LIMIT}
             placeholder={tr.stories.notePlaceholder}
             aria-label={tr.stories.note}
@@ -308,7 +310,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   function send() {
     if (!text.trim() || !chat || !realtime) return;
     const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || null, background: note.background, imageUrl: null };
-    void queueMessage(qc, realtime, chat.id, { text: text.trim(), story });
+    void queueMessage(qc, realtime, chat.id, { text: emojifyEnd(text).trim(), story });
     onClose();
   }
 
@@ -353,7 +355,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
             <input
               autoFocus
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => setText(emojifyTyped(text, e.target.value)?.text ?? e.target.value)}
               maxLength={4000}
               placeholder={tr.stories.replyTo(user.displayName)}
               aria-label={tr.stories.replyTo(user.displayName)}
