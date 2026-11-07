@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TermsGate } from "@/components/terms-gate";
+import { LocaleSync } from "@/lib/locale-sync";
 import { EmptyState, PrimaryButton } from "@/components/ui";
 import { useLocale, useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -93,6 +94,7 @@ export default function RootLayout() {
                 </Stack>
               )}
               <TermsGate />
+              <LocaleSync />
             </ThemeProvider>
           </QueryClientProvider>
         </KeyboardProvider>

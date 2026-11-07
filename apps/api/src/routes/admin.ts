@@ -25,6 +25,9 @@ import {
   SetAdsInput,
   StickerDTO,
   page,
+  AdminMailDTO,
+  AdminMailQuery,
+  AdminMailStats,
 } from "@six/shared";
 import {
   addOfficialSticker,
@@ -48,6 +51,7 @@ import {
 import { adminTwoFactor } from "../plugins/auth.js";
 import { listAnonForAdmin } from "../services/ask.js";
 import { createReport, listReports, resolveReport } from "../services/reports.js";
+import { listMailLog, mailStats } from "../services/emails.js";
 
 const Params = z.object({ id: Id });
 const security = [{ bearer: [] }];
@@ -241,6 +245,27 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => listAnonForAdmin(req.query),
+  );
+
+  app.get(
+    "/admin/emails",
+    {
+      schema: {
+        tags,
+        summary: "Emails the app sent or tried to send, newest first",
+        description: "Pokes, reminders to people who went quiet, and nudges for guests to share their link. Kept 90 days.",
+        security,
+        querystring: AdminMailQuery,
+        response: { 200: page(AdminMailDTO) },
+      },
+    },
+    (req) => listMailLog(req.query),
+  );
+
+  app.get(
+    "/admin/emails/stats",
+    { schema: { tags, summary: "Emails sent, failed and skipped in the last day", security, response: { 200: AdminMailStats } } },
+    () => mailStats(),
   );
 
   app.get(

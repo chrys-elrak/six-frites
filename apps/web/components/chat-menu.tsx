@@ -1,10 +1,12 @@
 "use client";
 
+import { unwrap } from "@six/sdk";
 import {
   AUTO_DELETE_PRESETS,
   CHAT_THEMES,
   DELETE_RANGE_PRESETS,
   MUTE_PRESETS,
+  POKE_LIMITS,
   type ChatDTO,
   type DeleteScope,
   customThemeColor,
@@ -22,11 +24,12 @@ import { sendAtLabel, toLocalInput } from "@/lib/format";
 import { isBotChat } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
+import { six } from "@/lib/six";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemeDialog } from "./chat-background";
 import { Dialog } from "./dialog";
 import { Sheet } from "./sheet";
-import { PrimaryButton } from "./ui";
+import { PrimaryButton, codeError } from "./ui";
 
 type Range = { from?: string; to?: string };
 
@@ -120,6 +123,7 @@ export function ChatMenu({
     | "customTheme"
     | "block"
     | "removeContact"
+    | "poke"
   >("menu");
   const [range, setRange] = useState<Range | undefined>(undefined);
   const meId = useSession((s) => s.user?.id);
@@ -147,6 +151,8 @@ export function ChatMenu({
       void qc.invalidateQueries({ queryKey: ["chats"] });
     }
   }
+
+  if (view === "poke" && peerId) return <PokeDialog peerId={peerId} peerName={peerName} onClose={onClose} />;
 
   if (view === "removeContact") {
     return (
@@ -360,6 +366,9 @@ export function ChatMenu({
                       onSelect: () => setView("theme"),
                     },
                   ]),
+              ...(chat.type !== "direct" || chat.peerDeleted || frozen
+                ? []
+                : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),
               ...(chat.type !== "direct" || chat.peerDeleted
                 ? []
                 : chat.blockedByMe
@@ -379,5 +388,81 @@ export function ChatMenu({
             ]),
       ]}
     />
+  );
+}
+
+/** Asks before poking someone by email, with room for a few words, then says how many pokes are left today. */
+export function PokeDialog({ peerId, peerName, onClose }: { peerId: string; peerName: string; onClose: () => void }) {
+  const tr = useT();
+  const t = tr.chat.poke;
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [left, setLeft] = useState<number | null>(null);
+
+  async function poke(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const body = { message: message.trim() || undefined };
+      setLeft(unwrap(await six.api.POST("/v1/users/{id}/poke", { params: { path: { id: peerId } }, body })).remaining);
+    } catch (err) {
+      setError(codeError(err, tr, t.errors));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog onClose={onClose}>
+      {left !== null ? (
+        <div className="flex flex-col items-center gap-3 p-6 text-center">
+          <span className="text-5xl" aria-hidden>
+            👋
+          </span>
+          <p>{t.sent(peerName, left)}</p>
+          <PrimaryButton autoFocus onClick={onClose}>
+            {tr.common.done}
+          </PrimaryButton>
+        </div>
+      ) : (
+        <form onSubmit={poke} className="flex flex-col gap-3 p-5">
+          <div className="flex items-center gap-3">
+            <span className="text-4xl" aria-hidden>
+              👋
+            </span>
+            <h2 className="text-lg font-semibold">{t.title(peerName)}</h2>
+          </div>
+          <p className="text-sm text-stone-500">{t.hint(peerName)}</p>
+          <div className="relative">
+            <textarea
+              autoFocus
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              maxLength={POKE_LIMITS.message}
+              rows={3}
+              placeholder={t.placeholder}
+              aria-label={t.placeholder}
+              className="block w-full resize-none rounded-2xl border border-stone-200 bg-white px-4 py-3 text-[16px] outline-none focus:border-brand dark:border-stone-700 dark:bg-stone-900"
+            />
+            <span className="absolute right-3 bottom-2 text-xs text-stone-400">{POKE_LIMITS.message - message.length}</span>
+          </div>
+          {error && (
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800">
+              {tr.common.cancel}
+            </button>
+            <PrimaryButton type="submit" disabled={busy}>
+              {t.send}
+            </PrimaryButton>
+          </div>
+        </form>
+      )}
+    </Dialog>
   );
 }

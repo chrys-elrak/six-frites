@@ -88,7 +88,7 @@ export function NoteBubble({ note, placeholder, label, onPress }: { note: NoteDT
 }
 
 /** A card at the bottom of the screen, over a dimmed backdrop that closes it, which rises with the keyboard. */
-function Popup({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+export function Popup({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();

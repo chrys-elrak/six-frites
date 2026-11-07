@@ -1,7 +1,9 @@
+import { SixApiError, unwrap } from "@six/sdk";
 import {
   AUTO_DELETE_PRESETS,
   CHAT_THEMES,
   DELETE_RANGE_PRESETS,
+  POKE_LIMITS,
   type ChatDTO,
   type DeleteScope,
   customThemeColor,
@@ -11,9 +13,15 @@ import {
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { View } from "react-native";
 import { closeSupportChat, deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
 import { isBotChat, isFrozen } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
+import { six } from "@/lib/six";
+import { useTheme } from "@/lib/theme";
+import { Popup } from "./notes";
+import { Text, TextInput } from "./text";
+import { PrimaryButton } from "./ui";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemePicker } from "./custom-theme";
 import { DateRangeDialog } from "./scheduled";
@@ -51,6 +59,7 @@ export function ChatMenu({
     | "theme"
     | "customTheme"
     | "removeContact"
+    | "poke"
   >("menu");
   const [range, setRange] = useState<Range | undefined>(undefined);
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
@@ -73,6 +82,8 @@ export function ChatMenu({
       void qc.invalidateQueries({ queryKey: ["chats"] });
     }
   }
+
+  if (view === "poke") return <PokeSheet peerId={peerId} peerName={peerName} onClose={onClose} />;
 
   if (view === "removeContact") {
     return (
@@ -269,6 +280,9 @@ export function ChatMenu({
                       onSelect: () => setView("theme"),
                     },
                   ]),
+              ...(chat.type !== "direct" || chat.peerDeleted || isFrozen(chat)
+                ? []
+                : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),
               ...(chat.type !== "direct" || chat.peerDeleted
                 ? []
                 : chat.blockedByMe
@@ -293,5 +307,65 @@ export function ChatMenu({
             ]),
       ]}
     />
+  );
+}
+
+/** Asks before poking someone by email, with room for a few words, then says how many pokes are left today. */
+export function PokeSheet({ peerId, peerName, onClose }: { peerId: string; peerName: string; onClose: () => void }) {
+  const tr = useT();
+  const th = useTheme();
+  const t = tr.chat.poke;
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [left, setLeft] = useState<number | null>(null);
+
+  async function poke() {
+    setBusy(true);
+    setError(null);
+    try {
+      const body = { message: message.trim() || undefined };
+      setLeft(unwrap(await six.api.POST("/v1/users/{id}/poke", { params: { path: { id: peerId } }, body })).remaining);
+    } catch (err) {
+      setError((err instanceof SixApiError && t.errors[err.code]) || tr.common.somethingWrongRetry);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Popup onClose={onClose}>
+      {left !== null ? (
+        <View style={{ alignItems: "center", gap: 12 }}>
+          <Text style={{ fontSize: 48 }}>👋</Text>
+          <Text style={{ color: th.text, fontSize: 16, textAlign: "center" }}>{t.sent(peerName, left)}</Text>
+          <PrimaryButton title={tr.common.done} onPress={onClose} style={{ alignSelf: "stretch" }} />
+        </View>
+      ) : (
+        <>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Text style={{ fontSize: 36 }}>👋</Text>
+            <Text style={{ flex: 1, color: th.text, fontSize: 18, fontWeight: "700" }}>{t.title(peerName)}</Text>
+          </View>
+          <Text style={{ color: th.muted, fontSize: 14 }}>{t.hint(peerName)}</Text>
+          <View>
+            <TextInput
+              autoFocus
+              multiline
+              value={message}
+              onChangeText={setMessage}
+              maxLength={POKE_LIMITS.message}
+              placeholder={t.placeholder}
+              placeholderTextColor={th.muted}
+              accessibilityLabel={t.placeholder}
+              style={{ minHeight: 88, borderRadius: 18, padding: 14, paddingBottom: 24, fontSize: 16, textAlignVertical: "top", color: th.text, backgroundColor: th.field }}
+            />
+            <Text style={{ position: "absolute", right: 12, bottom: 6, fontSize: 12, color: th.muted }}>{POKE_LIMITS.message - message.length}</Text>
+          </View>
+          {error && <Text style={{ color: th.danger, fontSize: 14 }}>{error}</Text>}
+          <PrimaryButton title={t.send} onPress={() => void poke()} disabled={busy} busy={busy} />
+        </>
+      )}
+    </Popup>
   );
 }

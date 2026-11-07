@@ -11,6 +11,17 @@ export const ContactDTO = z.object({
 });
 export type ContactDTO = z.infer<typeof ContactDTO>;
 
+/** How many pokes someone can send a day in all and to one person, and how long between two to the same person. */
+export const POKE_LIMITS = { perDay: 10, perPersonPerDay: 5, gapMinutes: 60, message: 200 } as const;
+
+export const PokeInput = z.object({
+  message: z.string().trim().max(POKE_LIMITS.message).optional().describe("A few words added to the email"),
+});
+export type PokeInput = z.infer<typeof PokeInput>;
+
+export const PokeResult = z.object({ remaining: z.number().int().describe("Pokes left today") });
+export type PokeResult = z.infer<typeof PokeResult>;
+
 
 export const ContactListQuery = z.object({
   q: z.string().trim().max(64).optional(),

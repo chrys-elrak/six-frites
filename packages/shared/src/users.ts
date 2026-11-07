@@ -29,6 +29,7 @@ export const UserDTO = z.object({
     .describe("Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good"),
   termsAccepted: z.boolean().describe("Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"),
   tourSeen: z.boolean().describe("Went through or skipped the quick tour the apps show once to someone new"),
+  locale: z.enum(["en", "fr", "mg"]).nullable().describe("The account's language, which every app follows; null until one is picked"),
   createdAt: IsoDate,
 });
 export type UserDTO = z.infer<typeof UserDTO>;
@@ -54,6 +55,7 @@ export const UpdateMeInput = z.object({
     .optional()
     .describe("Your own quick reactions; send the defaults to go back to them"),
   tourSeen: z.literal(true).optional().describe("Marks the quick tour as seen, so no app shows it again"),
+  locale: z.enum(["en", "fr", "mg"]).optional().describe("The language for every app on the account, and for pushes and emails"),
 });
 export type UpdateMeInput = z.infer<typeof UpdateMeInput>;
 

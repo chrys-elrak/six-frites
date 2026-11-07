@@ -89,6 +89,11 @@ export interface paths {
                                 termsAccepted: boolean;
                                 /** @description Went through or skipped the quick tour the apps show once to someone new */
                                 tourSeen: boolean;
+                                /**
+                                 * @description The account's language, which every app follows; null until one is picked
+                                 * @enum {string|null}
+                                 */
+                                locale: "en" | "fr" | "mg" | null;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -238,6 +243,11 @@ export interface paths {
                                 termsAccepted: boolean;
                                 /** @description Went through or skipped the quick tour the apps show once to someone new */
                                 tourSeen: boolean;
+                                /**
+                                 * @description The account's language, which every app follows; null until one is picked
+                                 * @enum {string|null}
+                                 */
+                                locale: "en" | "fr" | "mg" | null;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -331,6 +341,11 @@ export interface paths {
                                 termsAccepted: boolean;
                                 /** @description Went through or skipped the quick tour the apps show once to someone new */
                                 tourSeen: boolean;
+                                /**
+                                 * @description The account's language, which every app follows; null until one is picked
+                                 * @enum {string|null}
+                                 */
+                                locale: "en" | "fr" | "mg" | null;
                                 /** Format: date-time */
                                 createdAt: string;
                             };
@@ -1385,6 +1400,155 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/emails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Emails the app sent or tried to send, newest first
+         * @description Pokes, reminders to people who went quiet, and nudges for guests to share their link. Kept 90 days.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                    kind?: "poke" | "inactive" | "anon";
+                    status?: "sent" | "failed" | "skipped";
+                    /** @description Part of the recipient's name or address */
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                /**
+                                 * @description poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link
+                                 * @enum {string}
+                                 */
+                                kind: "poke" | "inactive" | "anon";
+                                /**
+                                 * @description skipped: mail isn't set up here, or no redirect address outside production
+                                 * @enum {string}
+                                 */
+                                status: "sent" | "failed" | "skipped";
+                                subject: string;
+                                /** @description The person's address */
+                                to: string;
+                                /** @description Where it actually went, when that isn't `to`: the redirect outside production */
+                                sentTo: string | null;
+                                error: string | null;
+                                /** @description Null once the account is gone */
+                                recipient: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
+                                } | null;
+                                /** @description Who poked, for pokes */
+                                sender: {
+                                    id: string;
+                                    displayName: string;
+                                    email: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** Format: date-time */
+                                    bannedAt: string | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                     */
+                                    bannedUntil: string | null;
+                                    /**
+                                     * @description What the ban takes away, while bannedAt is set
+                                     * @enum {string}
+                                     */
+                                    banScope: "full" | "chat";
+                                } | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/emails/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Emails sent, failed and skipped in the last day */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The last 24 hours */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sent: number;
+                            failed: number;
+                            skipped: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/reports": {
         parameters: {
             query?: never;
@@ -2338,6 +2502,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2406,6 +2575,11 @@ export interface paths {
                          * @enum {boolean}
                          */
                         tourSeen?: true;
+                        /**
+                         * @description The language for every app on the account, and for pushes and emails
+                         * @enum {string}
+                         */
+                        locale?: "en" | "fr" | "mg";
                     };
                 };
             };
@@ -2452,6 +2626,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2525,6 +2704,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2602,6 +2786,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2820,6 +3009,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -2880,6 +3074,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -17170,6 +17369,11 @@ export interface paths {
                                     termsAccepted: boolean;
                                     /** @description Went through or skipped the quick tour the apps show once to someone new */
                                     tourSeen: boolean;
+                                    /**
+                                     * @description The account's language, which every app follows; null until one is picked
+                                     * @enum {string|null}
+                                     */
+                                    locale: "en" | "fr" | "mg" | null;
                                     /** Format: date-time */
                                     createdAt: string;
                                 };
@@ -17732,6 +17936,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -17862,6 +18071,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -20782,6 +20996,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -20864,6 +21083,11 @@ export interface paths {
                             termsAccepted: boolean;
                             /** @description Went through or skipped the quick tour the apps show once to someone new */
                             tourSeen: boolean;
+                            /**
+                             * @description The account's language, which every app follows; null until one is picked
+                             * @enum {string|null}
+                             */
+                            locale: "en" | "fr" | "mg" | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -21129,6 +21353,57 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/users/{id}/poke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Poke a contact by email to come and talk
+         * @description Sends them an email with a link to your chat and, if given, your few words. 10 pokes a day (POKE_LIMIT_REACHED), 5 of them to the same person (POKE_PERSON_LIMIT_REACHED), an hour apart (ALREADY_POKED). POKE_UNAVAILABLE when they can't get one: blocked, gone, or emails turned off.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description A few words added to the email */
+                        message?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Pokes left today */
+                            remaining: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }

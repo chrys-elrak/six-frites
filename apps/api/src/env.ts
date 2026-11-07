@@ -43,6 +43,10 @@ const Env = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM_NAME: z.string().default("Six Frites"),
+  /** Outside production every email goes here instead, and none is sent without it. */
+  MAIL_REDIRECT_TO: z.string().email().optional(),
+  /** Where emails load the logo from; defaults to the web app. */
+  MAIL_ASSETS_URL: z.string().url().optional(),
   INVITE_ONLY: z
     .enum(["true", "false"])
     .default("true")

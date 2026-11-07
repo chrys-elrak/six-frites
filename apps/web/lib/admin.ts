@@ -11,6 +11,8 @@ export const adminKeys = {
   reports: (status: "open" | "resolved") => ["admin", "reports", status] as const,
   largeFiles: ["admin", "large-files"] as const,
   anon: (q: string) => ["admin", "anon", q] as const,
+  emails: (kind: string, status: string, q: string) => ["admin", "emails", kind, status, q] as const,
+  emailStats: ["admin", "emails", "stats"] as const,
 };
 
 export const REPORT_REASONS: { value: ReportReason; label: string }[] = [

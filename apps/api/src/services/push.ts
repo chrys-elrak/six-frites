@@ -75,10 +75,12 @@ async function seenIn(chatId: string, userId: string, person: Parameters<Awaited
 async function targetsFor(userId: string) {
   const sessions = await prisma.session.findMany({
     where: { userId, revokedAt: null, expiresAt: { gt: new Date() }, pushTokens: { some: {} } },
-    include: { pushTokens: true },
+    include: { pushTokens: true, user: { select: { locale: true } } },
   });
   const active = await activeSessions(sessions.map((s) => s.id));
-  return sessions.filter((s) => !active.has(s.id)).flatMap((s) => s.pushTokens);
+  return sessions
+    .filter((s) => !active.has(s.id))
+    .flatMap((s) => s.pushTokens.map((t) => ({ ...t, locale: s.user.locale ?? t.locale })));
 }
 
 async function sendToAll(targets: Awaited<ReturnType<typeof targetsFor>>, payload: (t: Dict) => PushPayload) {

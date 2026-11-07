@@ -26,7 +26,8 @@ export type TimerJob =
   | { messageId: string; cycle: number }
   | { purgeMessageId: string; cycle: number }
   | { uploadIds: string[] }
-  | { sweep: true };
+  | { sweep: true }
+  | { mailSweep: true };
 
 export const TIMERS_QUEUE = "timers";
 

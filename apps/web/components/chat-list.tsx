@@ -63,7 +63,7 @@ import { AddContact } from "./add-contact";
 import { Dialog } from "./dialog";
 import { Avatar } from "./avatar";
 import { StoriesBar, StoryAvatar } from "./stories";
-import { ChatMenu } from "./chat-menu";
+import { ChatMenu, PokeDialog } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
 import { InstallCard } from "./install-card";
 import { FindMe } from "./find-me";
@@ -294,6 +294,7 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
   const online = usePresence(contact.user.id)?.online;
   const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [poking, setPoking] = useState(false);
   const press = useLongPress((at) => setMenu({ at }));
   return (
     <>
@@ -317,10 +318,12 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
           actions={[
             { label: tr.contacts.openChat, onSelect: () => router.push(`/chats/${contact.chatId}`) },
             { label: tr.contacts.editContact, onSelect: () => setEditing(true) },
+            { label: tr.chat.poke.action(contact.user.displayName), onSelect: () => setPoking(true) },
           ]}
         />
       )}
       {editing && <ContactEditor userId={contact.user.id} onClose={() => setEditing(false)} />}
+      {poking && <PokeDialog peerId={contact.user.id} peerName={contact.user.displayName} onClose={() => setPoking(false)} />}
     </>
   );
 }

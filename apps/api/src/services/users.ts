@@ -6,6 +6,7 @@ import {
   type AppLockInput,
   type UpdateMeInput,
   type UserDTO,
+  isLocale,
 } from "@six/shared";
 import { env } from "../env.js";
 import { generateCode, isUniqueViolation } from "../lib/codes.js";
@@ -39,6 +40,7 @@ export function toUserDTO(u: User): UserDTO {
     chatBan: chatBanned(u) ? { until: u.bannedUntil?.toISOString() ?? null } : null,
     termsAccepted: u.termsAcceptedAt !== null,
     tourSeen: u.tourSeenAt !== null,
+    locale: isLocale(u.locale) ? u.locale : null,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -107,6 +109,7 @@ export async function updateMe(userId: string, input: UpdateMeInput) {
       },
     });
     if (data.displayName !== undefined || avatarKey !== undefined) await announceProfile(tx, emit, userId);
+    emit(userId, "me.updated", toUserDTO(user));
     return { user, previousKey: before.avatarKey };
   });
   if (previousKey && previousKey !== user.avatarKey) await deleteObjects([previousKey]).catch(() => null);

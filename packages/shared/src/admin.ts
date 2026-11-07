@@ -223,3 +223,34 @@ export const AdminLargeFileDTO = z.object({
   status: UploadStatus,
 });
 export type AdminLargeFileDTO = z.infer<typeof AdminLargeFileDTO>;
+
+export const MAIL_KINDS = ["poke", "inactive", "anon"] as const;
+export const MAIL_STATUSES = ["sent", "failed", "skipped"] as const;
+
+export const AdminMailDTO = z.object({
+  id: Id,
+  kind: z.enum(MAIL_KINDS).describe("poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link"),
+  status: z.enum(MAIL_STATUSES).describe("skipped: mail isn't set up here, or no redirect address outside production"),
+  subject: z.string(),
+  to: z.string().describe("The person's address"),
+  sentTo: z.string().nullable().describe("Where it actually went, when that isn't `to`: the redirect outside production"),
+  error: z.string().nullable(),
+  recipient: AdminUserRef.nullable().describe("Null once the account is gone"),
+  sender: AdminUserRef.nullable().describe("Who poked, for pokes"),
+  createdAt: IsoDate,
+});
+export type AdminMailDTO = z.infer<typeof AdminMailDTO>;
+
+export const AdminMailQuery = PageQuery.extend({
+  kind: z.enum(MAIL_KINDS).optional(),
+  status: z.enum(MAIL_STATUSES).optional(),
+  q: z.string().trim().max(100).optional().describe("Part of the recipient's name or address"),
+});
+export type AdminMailQuery = z.infer<typeof AdminMailQuery>;
+
+export const AdminMailStats = z.object({
+  sent: z.number().int(),
+  failed: z.number().int(),
+  skipped: z.number().int(),
+}).describe("The last 24 hours");
+export type AdminMailStats = z.infer<typeof AdminMailStats>;

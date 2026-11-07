@@ -63,6 +63,20 @@ const en = {
   blockConfirm: (name: string) =>
     `Block ${name}? Neither of you will be able to send messages here, and ${name} will see that you blocked them.`,
   removeContact: (name: string) => `Remove ${name} from contacts`,
+  poke: {
+    action: (name: string) => `Poke ${name}…`,
+    title: (name: string) => `Poke ${name}?`,
+    hint: (name: string) => `${name} gets an email asking them to come and talk to you.`,
+    placeholder: "Add a few words (optional)",
+    send: "Poke",
+    sent: (name: string, left: number) => `${name} got your poke. ${left} left today.`,
+    errors: {
+      POKE_LIMIT_REACHED: "You've used your 10 pokes for today. Try again tomorrow.",
+      ALREADY_POKED: "You poked them less than an hour ago. Give them a moment.",
+      POKE_PERSON_LIMIT_REACHED: "You've poked them 5 times today. Try again tomorrow.",
+      POKE_UNAVAILABLE: "They can't get pokes by email.",
+    } as Record<string, string>,
+  },
   removeContactConfirm: (name: string) =>
     `Remove ${name}? You'll disappear from each other's contacts, and this chat and its messages will be deleted for both of you.`,
   muteFor: "Mute notifications for",
@@ -203,6 +217,20 @@ const fr: typeof en = {
   blockConfirm: (name) =>
     `Bloquer ${name} ? Aucun de vous deux ne pourra envoyer de messages ici, et ${name} verra que vous l'avez bloqué(e).`,
   removeContact: (name) => `Retirer ${name} des contacts`,
+  poke: {
+    action: (name) => `Faire coucou à ${name}…`,
+    title: (name) => `Faire coucou à ${name} ?`,
+    hint: (name) => `${name} recevra un e-mail l'invitant à venir vous parler.`,
+    placeholder: "Ajouter quelques mots (facultatif)",
+    send: "Faire coucou",
+    sent: (name, left) => `${name} a reçu votre coucou. Encore ${left} aujourd'hui.`,
+    errors: {
+      POKE_LIMIT_REACHED: "Vous avez utilisé vos 10 coucous du jour. Réessayez demain.",
+      ALREADY_POKED: "Vous lui avez fait coucou il y a moins d'une heure. Laissez-lui un moment.",
+      POKE_PERSON_LIMIT_REACHED: "Vous lui avez fait coucou 5 fois aujourd'hui. Réessayez demain.",
+      POKE_UNAVAILABLE: "Cette personne ne peut pas recevoir de coucou par e-mail.",
+    },
+  },
   removeContactConfirm: (name) =>
     `Retirer ${name} ? Vous disparaîtrez de vos contacts respectifs, et cette discussion et ses messages seront supprimés pour vous deux.`,
   muteFor: "Mettre les notifications en sourdine pendant",
@@ -343,6 +371,20 @@ const mg: typeof en = {
   blockConfirm: (name) =>
     `Hosakanana ve i ${name}? Samy tsy afaka handefa hafatra eto intsony ianareo roa, ary ho hitan'i ${name} fa nosakananao izy.`,
   removeContact: (name) => `Esory amin'ny mpifandray i ${name}`,
+  poke: {
+    action: (name) => `Antsoy i ${name}…`,
+    title: (name) => `Hiantso an'i ${name}?`,
+    hint: (name) => `Hahazo mailaka i ${name} manasa azy hiresaka aminao.`,
+    placeholder: "Manampia teny vitsivitsy (raha tianao)",
+    send: "Antsoy",
+    sent: (name, left) => `Tonga any amin'i ${name} ny antsonao. ${left} sisa anio.`,
+    errors: {
+      POKE_LIMIT_REACHED: "Lany ny antso 10 anio. Andramo rahampitso.",
+      ALREADY_POKED: "Tsy mbola ampy adiny iray izay niantsoanao azy. Omeo fotoana kely izy.",
+      POKE_PERSON_LIMIT_REACHED: "Efa in-5 ianao niantso azy anio. Andramo rahampitso.",
+      POKE_UNAVAILABLE: "Tsy afaka mahazo antso amin'ny mailaka izy.",
+    },
+  },
   removeContactConfirm: (name) =>
     `Hesorina ve i ${name}? Samy tsy ho hita ao amin'ny mpifandray intsony ianareo roa, ary hofafana ho anareo roa ity resaka ity sy ny hafatra rehetra ao aminy.`,
   muteFor: "Ampangino ny fampandrenesana mandritra ny",

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnonMessages } from "@/components/admin/anon";
+import { Emails } from "@/components/admin/emails";
 import { LargeFiles } from "@/components/admin/large-files";
 import { Overview } from "@/components/admin/overview";
 import { Reports } from "@/components/admin/reports";
@@ -16,7 +17,7 @@ import { adminKeys, useIsAdmin } from "@/lib/admin";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
-type Tab = "overview" | "reports" | "anon" | "users" | "files";
+type Tab = "overview" | "reports" | "anon" | "users" | "emails" | "files";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function AdminPage() {
     { id: "reports", label: open ? `Reports (${open})` : "Reports" },
     { id: "anon", label: "Anonymous" },
     { id: "users", label: "People" },
+    { id: "emails", label: "Emails" },
     { id: "files", label: "Large files" },
   ];
 
@@ -93,6 +95,7 @@ export default function AdminPage() {
       {tab === "reports" && <Reports />}
       {tab === "anon" && <AnonMessages />}
       {tab === "users" && <Users />}
+      {tab === "emails" && <Emails />}
       {tab === "files" && <LargeFiles />}
     </main>
   );

@@ -23,6 +23,7 @@ import { deliverPush, deliverReactionPush } from "./services/push.js";
 import { sendDueScheduled } from "./services/scheduled.js";
 import { deleteExpiredStories } from "./services/stories.js";
 import { deleteOldNotifications } from "./services/notifications.js";
+import { sendDueEmails } from "./services/emails.js";
 import { finishUpload, purgeAbandonedUploads, purgeUploads } from "./services/uploads.js";
 
 await ensureBucket();
@@ -49,6 +50,7 @@ const timers = new Worker<TimerJob>(
         notifications: await deleteOldNotifications(),
       };
     }
+    if ("mailSweep" in job.data) return sendDueEmails();
     if ("messageId" in job.data) await expireMessage(job.data.messageId, job.data.cycle);
     else if ("purgeMessageId" in job.data) await purgeMessage(job.data.purgeMessageId, job.data.cycle);
     else await purgeUploads(job.data.uploadIds);
@@ -88,6 +90,11 @@ await timersQueue().upsertJobScheduler(
   "sweep",
   { every: SWEEP_EVERY_MS },
   { name: "sweep", data: { sweep: true }, opts: { attempts: 1, removeOnComplete: 100, removeOnFail: 100 } },
+);
+await timersQueue().upsertJobScheduler(
+  "mail-sweep",
+  { every: 60 * 60 * 1000 },
+  { name: "mail-sweep", data: { mailSweep: true }, opts: { attempts: 1, removeOnComplete: 100, removeOnFail: 100 } },
 );
 console.log("media worker ready");
 

@@ -55,6 +55,12 @@ model User {
   anonBotDisabled Boolean   @default(false)
   /// When the bot next writes to them; null until the worker picks a time.
   anonBotAt       DateTime?
+  /// Asked not to get emails from the app, from the link at the bottom of one.
+  mailOptOut      Boolean   @default(false)
+  /// When the app last emailed them that their account has been quiet.
+  inactiveMailAt  DateTime?
+  /// When the app last emailed a guest to share their anonymous link.
+  anonMailAt      DateTime?
   quickReactions  String[]  @default([])
   /// When they last opened their notifications; anything newer counts as unread.
   notificationsSeenAt DateTime?
@@ -95,6 +101,10 @@ model User {
   noteViews      NoteView[]
   notifications  Notification[]     @relation("notified")
   notified       Notification[]     @relation("notifier")
+  pokesSent      Poke[]             @relation("poker")
+  pokesReceived  Poke[]             @relation("poked")
+  mailsReceived  MailLog[]          @relation("mailed")
+  mailsCaused    MailLog[]          @relation("mailCause")
 
   @@index([anonBotAt])
 }
@@ -754,4 +764,43 @@ model Notification {
 
   @@index([userId, createdAt])
   @@index([createdAt])
+}
+
+/// Someone nudging a contact by email to come back to Six Frites.
+model Poke {
+  id        String   @id @default(cuid())
+  fromId    String
+  toId      String
+  message   String?
+  createdAt DateTime @default(now())
+
+  from User @relation("poker", fields: [fromId], references: [id], onDelete: Cascade)
+  to   User @relation("poked", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@index([fromId, createdAt])
+  @@index([toId, createdAt])
+}
+
+/// Every email the app tried to send, for the admin page; kept 90 days.
+model MailLog {
+  id        String   @id @default(cuid())
+  /// poke, inactive or anon.
+  kind      String
+  /// sent, failed, or skipped when mail isn't set up.
+  status    String
+  subject   String
+  to        String
+  /// Where it really went, when redirected outside production.
+  sentTo    String?
+  error     String?
+  userId    String?
+  /// Who caused it, such as whoever poked.
+  fromId    String?
+  createdAt DateTime @default(now())
+
+  user User? @relation("mailed", fields: [userId], references: [id], onDelete: SetNull)
+  from User? @relation("mailCause", fields: [fromId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([kind, createdAt])
 }

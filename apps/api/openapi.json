@@ -183,6 +183,16 @@
                           "type": "boolean",
                           "description": "Went through or skipped the quick tour the apps show once to someone new"
                         },
+                        "locale": {
+                          "nullable": true,
+                          "description": "The account's language, which every app follows; null until one is picked",
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "fr",
+                            "mg"
+                          ]
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -207,6 +217,7 @@
                         "chatBan",
                         "termsAccepted",
                         "tourSeen",
+                        "locale",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -463,6 +474,16 @@
                               "type": "boolean",
                               "description": "Went through or skipped the quick tour the apps show once to someone new"
                             },
+                            "locale": {
+                              "nullable": true,
+                              "description": "The account's language, which every app follows; null until one is picked",
+                              "type": "string",
+                              "enum": [
+                                "en",
+                                "fr",
+                                "mg"
+                              ]
+                            },
                             "createdAt": {
                               "type": "string",
                               "format": "date-time",
@@ -487,6 +508,7 @@
                             "chatBan",
                             "termsAccepted",
                             "tourSeen",
+                            "locale",
                             "createdAt"
                           ],
                           "additionalProperties": false
@@ -652,6 +674,16 @@
                           "type": "boolean",
                           "description": "Went through or skipped the quick tour the apps show once to someone new"
                         },
+                        "locale": {
+                          "nullable": true,
+                          "description": "The account's language, which every app follows; null until one is picked",
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "fr",
+                            "mg"
+                          ]
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -676,6 +708,7 @@
                         "chatBan",
                         "termsAccepted",
                         "tourSeen",
+                        "locale",
                         "createdAt"
                       ],
                       "additionalProperties": false
@@ -2831,6 +2864,319 @@
         }
       }
     },
+    "/v1/admin/emails": {
+      "get": {
+        "summary": "Emails the app sent or tried to send, newest first",
+        "tags": [
+          "admin"
+        ],
+        "description": "Pokes, reminders to people who went quiet, and nudges for guests to share their link. Kept 90 days.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 30,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "poke",
+                "inactive",
+                "anon"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sent",
+                "failed",
+                "skipped"
+              ]
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "description": "Part of the recipient's name or address"
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "poke",
+                              "inactive",
+                              "anon"
+                            ],
+                            "description": "poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "sent",
+                              "failed",
+                              "skipped"
+                            ],
+                            "description": "skipped: mail isn't set up here, or no redirect address outside production"
+                          },
+                          "subject": {
+                            "type": "string"
+                          },
+                          "to": {
+                            "type": "string",
+                            "description": "The person's address"
+                          },
+                          "sentTo": {
+                            "nullable": true,
+                            "description": "Where it actually went, when that isn't `to`: the redirect outside production",
+                            "type": "string"
+                          },
+                          "error": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recipient": {
+                            "nullable": true,
+                            "description": "Null once the account is gone",
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "bannedAt": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "bannedUntil": {
+                                "nullable": true,
+                                "description": "When the ban is lifted on its own; null when it lasts until an admin lifts it",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "email",
+                              "avatarUrl",
+                              "bannedAt",
+                              "bannedUntil",
+                              "banScope"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "sender": {
+                            "nullable": true,
+                            "description": "Who poked, for pokes",
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "bannedAt": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "bannedUntil": {
+                                "nullable": true,
+                                "description": "When the ban is lifted on its own; null when it lasts until an admin lifts it",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "banScope": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "chat"
+                                ],
+                                "description": "What the ban takes away, while bannedAt is set"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "displayName",
+                              "email",
+                              "avatarUrl",
+                              "bannedAt",
+                              "bannedUntil",
+                              "banScope"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "status",
+                          "subject",
+                          "to",
+                          "sentTo",
+                          "error",
+                          "recipient",
+                          "sender",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/emails/stats": {
+      "get": {
+        "summary": "Emails sent, failed and skipped in the last day",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The last 24 hours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sent": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "failed": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "sent",
+                    "failed",
+                    "skipped"
+                  ],
+                  "additionalProperties": false,
+                  "description": "The last 24 hours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/reports": {
       "get": {
         "summary": "Reports, newest first",
@@ -4852,6 +5198,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4876,6 +5232,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4929,6 +5286,15 @@
                     "type": "boolean",
                     "enum": [
                       true
+                    ]
+                  },
+                  "locale": {
+                    "description": "The language for every app on the account, and for pushes and emails",
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "fr",
+                      "mg"
                     ]
                   }
                 }
@@ -5035,6 +5401,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -5059,6 +5435,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -5225,6 +5602,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -5249,6 +5636,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -5365,6 +5753,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -5389,6 +5787,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -5727,6 +6126,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -5751,6 +6160,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -5864,6 +6274,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -5888,6 +6308,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -62272,6 +62693,16 @@
                                     "type": "boolean",
                                     "description": "Went through or skipped the quick tour the apps show once to someone new"
                                   },
+                                  "locale": {
+                                    "nullable": true,
+                                    "description": "The account's language, which every app follows; null until one is picked",
+                                    "type": "string",
+                                    "enum": [
+                                      "en",
+                                      "fr",
+                                      "mg"
+                                    ]
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -62296,6 +62727,7 @@
                                   "chatBan",
                                   "termsAccepted",
                                   "tourSeen",
+                                  "locale",
                                   "createdAt"
                                 ],
                                 "additionalProperties": false
@@ -63382,6 +63814,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -63406,6 +63848,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -63592,6 +64035,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -63616,6 +64069,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -70336,6 +70790,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -70360,6 +70824,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -70494,6 +70959,16 @@
                       "type": "boolean",
                       "description": "Went through or skipped the quick tour the apps show once to someone new"
                     },
+                    "locale": {
+                      "nullable": true,
+                      "description": "The account's language, which every app follows; null until one is picked",
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "fr",
+                        "mg"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -70518,6 +70993,7 @@
                     "chatBan",
                     "termsAccepted",
                     "tourSeen",
+                    "locale",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -70852,6 +71328,72 @@
                   "enum": [
                     null
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/users/{id}/poke": {
+      "post": {
+        "summary": "Poke a contact by email to come and talk",
+        "tags": [
+          "contacts"
+        ],
+        "description": "Sends them an email with a link to your chat and, if given, your few words. 10 pokes a day (POKE_LIMIT_REACHED), 5 of them to the same person (POKE_PERSON_LIMIT_REACHED), an hour apart (ALREADY_POKED). POKE_UNAVAILABLE when they can't get one: blocked, gone, or emails turned off.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "description": "A few words added to the email",
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "remaining": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Pokes left today"
+                    }
+                  },
+                  "required": [
+                    "remaining"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
