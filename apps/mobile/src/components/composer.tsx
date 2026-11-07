@@ -52,6 +52,7 @@ import {
   ImagePlus,
   Trash2,
   X,
+  RotateCcw,
 } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { randomUUID } from "expo-crypto";
@@ -528,17 +529,17 @@ export function Composer({
     };
   }
 
-  function startCapture() {
+  function startCapture(kind: RecordMode = recMode) {
     setError(null);
     setNoteMs(0);
-    if (recMode === "video") Keyboard.dismiss();
+    if (kind === "video") Keyboard.dismiss();
     else {
       void startRecording().then((ok) => {
         if (!ok) setCapture(null);
         else if (!captureNow.current) void stopRecording();
       });
     }
-    setCapture({ kind: recMode });
+    setCapture({ kind });
   }
 
   async function finishCapture() {
@@ -870,6 +871,18 @@ export function Composer({
                   </Text>
                 )}
               </View>
+              <Pressable
+                onPress={() => {
+                  const kind = preview.kind;
+                  closePreview(false);
+                  startCapture(kind);
+                }}
+                accessibilityLabel={tr.composer.recordAgain}
+                hitSlop={6}
+                style={{ padding: 4 }}
+              >
+                <RotateCcw size={20} color={t.muted} />
+              </Pressable>
               <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
             </View>
           )}
@@ -879,7 +892,7 @@ export function Composer({
               active={!!(capture || preview)}
               disabled={!realtime}
               onToggle={() => setRecMode((m) => (m === "voice" ? "video" : "voice"))}
-              onStart={startCapture}
+              onStart={() => startCapture()}
               onSend={() => (preview ? closePreview(true) : void finishCapture())}
             />
           ) : (

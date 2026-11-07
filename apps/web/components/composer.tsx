@@ -40,6 +40,7 @@ import {
   Trash2,
   VenetianMask,
   X,
+  RotateCcw,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage, updateChatSettings } from "@/lib/actions";
@@ -502,10 +503,10 @@ export function Composer({
     }
   }
 
-  function startCapture() {
+  function startCapture(kind: RecordMode = recMode) {
     setError(null);
     setNoteMs(0);
-    if (recMode === "video") {
+    if (kind === "video") {
       setNoteBottom(window.innerHeight - (form.current?.getBoundingClientRect().top ?? window.innerHeight));
     } else {
       void recorder.start().then((ok) => {
@@ -513,7 +514,7 @@ export function Composer({
         else if (!captureNow.current) recorder.cancel();
       });
     }
-    setCapture({ kind: recMode });
+    setCapture({ kind });
   }
 
   async function finishCapture() {
@@ -965,6 +966,19 @@ export function Composer({
                   {effect !== "none" && tr.composer.voiceEffects[effect]}
                 </VoiceEffectSelect>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  const kind = preview.kind;
+                  closePreview(false);
+                  startCapture(kind);
+                }}
+                aria-label={tr.composer.recordAgain}
+                title={tr.composer.recordAgain}
+                className="grid size-8 shrink-0 place-items-center rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+              >
+                <RotateCcw className="size-5" />
+              </button>
               <span className="ml-auto shrink-0">
                 <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
               </span>
@@ -976,7 +990,7 @@ export function Composer({
               active={!!(capture || preview)}
               disabled={!realtime}
               onToggle={() => setRecMode((m) => (m === "voice" ? "video" : "voice"))}
-              onStart={startCapture}
+              onStart={() => startCapture()}
               onSend={() => (preview ? closePreview(true) : void finishCapture())}
             />
           ) : (
