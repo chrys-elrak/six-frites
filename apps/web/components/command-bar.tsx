@@ -273,7 +273,7 @@ export function CommandBar({
               {...option(i)}
               ref={i === active ? (el) => el?.scrollIntoView({ block: "nearest" }) : undefined}
               className={`flex w-full items-baseline gap-2 rounded-lg px-3 py-2 text-left text-sm ${
-                i === active ? "bg-stone-100 dark:bg-stone-800" : ""
+                i === active ? "bg-brand/20" : ""
               }`}
             >
               <span className="font-medium">/{name}</span>
@@ -293,7 +293,7 @@ export function CommandBar({
               title={c.title}
               aria-current={c.current || undefined}
               className={`shrink-0 rounded-lg ${c.emoji ? "grid size-10 place-items-center text-2xl" : "px-3 py-2 text-sm"} ${
-                i === active ? "bg-stone-100 dark:bg-stone-800" : ""
+                i === active ? "bg-brand/20" : ""
               } ${c.current ? "font-semibold text-brand" : ""}`}
             >
               {c.label}

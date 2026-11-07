@@ -82,7 +82,7 @@ export function EmojiSuggestions({
           onMouseEnter={() => setActive(i)}
           onClick={() => pick(x.e)}
           className={`grid size-10 shrink-0 place-items-center rounded-lg text-2xl ${
-            i === active ? "bg-stone-100 dark:bg-stone-800" : ""
+            i === active ? "bg-brand/20" : ""
           }`}
         >
           {x.e}

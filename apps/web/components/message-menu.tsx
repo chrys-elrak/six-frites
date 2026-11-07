@@ -104,7 +104,7 @@ export function MessageMenu({
                 type="button"
                 autoFocus={i === 0}
                 onClick={() => select(a)}
-                className={`px-4 py-2.5 text-left text-[15px] font-medium whitespace-nowrap hover:bg-black/5 focus:outline-none focus-visible:bg-black/5 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 ${
+                className={`px-4 py-2.5 text-left text-[15px] font-medium whitespace-nowrap hover:bg-brand/20 focus:outline-none focus-visible:bg-brand/20 ${
                   a.destructive ? "text-red-600 dark:text-red-400" : "text-(--bubble-their-ink)"
                 }`}
               >

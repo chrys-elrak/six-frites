@@ -82,7 +82,7 @@ export function Sheet({
                   key={a.label}
                   autoFocus={a.checked ?? i === 0}
                   onClick={() => select(a)}
-                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm hover:bg-black/5 focus:outline-none focus-visible:bg-black/5 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 ${
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm hover:bg-brand/20 focus:outline-none focus-visible:bg-brand/20 ${
                     a.destructive ? "text-red-600 dark:text-red-400" : "text-(--bubble-their-ink)"
                   } ${a.checked ? "font-semibold" : ""}`}
                 >
