@@ -891,16 +891,6 @@ export function Composer({
                 <NotebookPen className="size-5" />
               </button>
             )}
-            {!editing && !limited && !text.trim() && (
-              <VoiceEffectSelect
-                className={`flex h-10 shrink-0 items-center gap-1 rounded-full px-2.5 text-sm font-medium ${
-                  effect === "none" ? "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200" : "text-brand"
-                }`}
-              >
-                <VenetianMask className="size-5" />
-                {effect !== "none" && tr.composer.voiceEffects[effect]}
-              </VoiceEffectSelect>
-            )}
             {!editing && scheduledCount > 0 && (
               <button
                 type="button"
