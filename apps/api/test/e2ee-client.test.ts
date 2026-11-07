@@ -241,6 +241,23 @@ describe("E2EE client", () => {
     expect(await textOf(computer, await latest(computer, chatId))).toBe("before the computer");
   });
 
+  it("uses the backup PIN as the app lock code, counting the lock's tries against it", async () => {
+    const { phone } = await setup();
+    await phone.e2ee.setBackupPin("123456");
+    const lock = (method: "PUT" | "POST", code: string) =>
+      call(phone.auth, method, method === "PUT" ? "/v1/me/app-lock" : "/v1/me/app-lock/unlock", { code });
+
+    expect((await lock("PUT", "1234")).json()).toMatchObject({ error: { code: "WRONG_BACKUP_PIN", details: { triesLeft: 9 } } });
+    expect((await lock("PUT", "123456")).json()).toMatchObject({ hasAppLock: true, appLockIsPin: true });
+    expect((await lock("POST", "000000")).json()).toMatchObject({ error: { code: "WRONG_BACKUP_PIN", details: { triesLeft: 9 } } });
+    expect((await lock("POST", "123456")).statusCode).toBe(204);
+
+    await phone.e2ee.setBackupPin("654321");
+    expect((await lock("POST", "123456")).json().error.code).toBe("WRONG_BACKUP_PIN");
+    expect((await lock("POST", "654321")).statusCode).toBe(204);
+    expect(await get(phone.auth, "/v1/me")).toMatchObject({ appLockIsPin: true });
+  });
+
   it("keeps the backup when the PIN changes and deletes it after 10 wrong PINs", async () => {
     const { sub, phone, guest, chatId, members } = await setup();
     await phone.e2ee.setBackupPin("111111");

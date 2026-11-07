@@ -66,10 +66,12 @@ export interface paths {
                                 askCode: string;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
-                                /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                /** @description Whether a new device can restore your backup with your PIN */
                                 hasBackupPin: boolean;
                                 /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
+                                /** @description Whether your app lock code is your backup PIN, so one code does both */
+                                appLockIsPin: boolean;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
                                 /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -220,10 +222,12 @@ export interface paths {
                                 askCode: string;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
-                                /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                /** @description Whether a new device can restore your backup with your PIN */
                                 hasBackupPin: boolean;
                                 /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
+                                /** @description Whether your app lock code is your backup PIN, so one code does both */
+                                appLockIsPin: boolean;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
                                 /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -318,10 +322,12 @@ export interface paths {
                                 askCode: string;
                                 /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                 backupKeyId: string | null;
-                                /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                /** @description Whether a new device can restore your backup with your PIN */
                                 hasBackupPin: boolean;
                                 /** @description Whether the apps ask for your app lock code when they open */
                                 hasAppLock: boolean;
+                                /** @description Whether your app lock code is your backup PIN, so one code does both */
+                                appLockIsPin: boolean;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
                                 /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -2479,7 +2485,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -2487,6 +2493,8 @@ export interface paths {
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
                             anonBot: boolean;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2603,7 +2611,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -2611,6 +2619,8 @@ export interface paths {
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
                             anonBot: boolean;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2681,7 +2691,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -2689,6 +2699,8 @@ export interface paths {
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
                             anonBot: boolean;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2763,7 +2775,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -2771,6 +2783,8 @@ export interface paths {
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
                             anonBot: boolean;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -2986,7 +3000,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -2994,6 +3008,8 @@ export interface paths {
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
                             anonBot: boolean;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -3051,7 +3067,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -3059,6 +3075,8 @@ export interface paths {
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
                             anonBot: boolean;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                             /** @description The emojis offered first when you react, in order; empty means the defaults */
                             quickReactions: string[];
                             /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
@@ -17346,7 +17364,7 @@ export interface paths {
                                     askCode: string;
                                     /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                                     backupKeyId: string | null;
-                                    /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                                    /** @description Whether a new device can restore your backup with your PIN */
                                     hasBackupPin: boolean;
                                     /** @description Whether the apps ask for your app lock code when they open */
                                     hasAppLock: boolean;
@@ -17913,7 +17931,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -18021,7 +18039,7 @@ export interface paths {
                     "application/json": {
                         /** @description @six/crypto backupKeyId of the key derived from your recovery key */
                         backupKeyId: string;
-                        /** @description 6 digits */
+                        /** @description 4 to 8 digits, 6 for a new one, like your app lock code */
                         pin: string;
                         /** @description Your backup key sealed with the PIN and your backup secret (@six/crypto wrapBackupKey) */
                         wrapped: string;
@@ -18048,7 +18066,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -18113,7 +18131,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @description 6 digits */
+                        /** @description 4 to 8 digits, 6 for a new one, like your app lock code */
                         pin: string;
                     };
                 };
@@ -18248,6 +18266,8 @@ export interface paths {
         put?: never;
         /**
          * Log a call in the chat
+                                    /** @description Whether your app lock code is your backup PIN, so one code does both */
+                                    appLockIsPin: boolean;
          * @description The caller posts this when a call ends, answered or not. Idempotent per callId.
          */
         post: {
@@ -18815,6 +18835,8 @@ export interface paths {
                 200: {
                     headers: {
                         [name: string]: unknown;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                     };
                     content: {
                         "application/json": {
@@ -18950,6 +18972,8 @@ export interface paths {
                 query: {
                     provider: "webpush" | "fcm" | "apns";
                 };
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -20973,7 +20997,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -21060,7 +21084,7 @@ export interface paths {
                             askCode: string;
                             /** @description Identifies the key from your recovery key; null until you set up a recovery key */
                             backupKeyId: string | null;
-                            /** @description Whether a new device can restore your backup with your 6-digit PIN */
+                            /** @description Whether a new device can restore your backup with your PIN */
                             hasBackupPin: boolean;
                             /** @description Whether the apps ask for your app lock code when they open */
                             hasAppLock: boolean;
@@ -21418,3 +21442,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;
+                            /** @description Whether your app lock code is your backup PIN, so one code does both */
+                            appLockIsPin: boolean;

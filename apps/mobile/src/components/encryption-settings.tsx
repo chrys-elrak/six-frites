@@ -7,6 +7,7 @@ import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { setCodeLength } from "@/lib/app-lock";
 import { e2eeFor, retryUndecryptable } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -156,7 +157,7 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ready = pin.length === 6 && (restoring || again === pin);
+  const ready = restoring ? pin.length >= 4 : pin.length === 6 && again === pin;
   const mismatch = !restoring && again.length === 6 && again !== pin;
   const title = restoring ? bp.restoreTitle : onPhone && user.hasBackupPin ? bp.changeTitle : bp.createTitle;
 
@@ -167,7 +168,10 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
     const e = e2eeFor(user.id)!;
     try {
       if (restoring) await e.unlockWithPin(pin);
-      else setUser(await e.setBackupPin(pin));
+      else {
+        setUser(await e.setBackupPin(pin));
+        if (user.hasAppLock) setCodeLength(pin.length);
+      }
       void qc.invalidateQueries({ queryKey: ["recovery-key"] });
       retryUndecryptable();
       onClose();
@@ -188,13 +192,16 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
 
   return (
     <Dialog title={title} onClose={onClose}>
-      <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{restoring ? bp.restoreHint : bp.createHint}</Text>
+      <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>
+        {restoring ? (user.appLockIsPin ? bp.restoreHintLock : bp.restoreHint) : bp.createHint}
+        {!restoring && user.hasAppLock && ` ${bp.alsoLock}`}
+      </Text>
       {!restoring && !onPhone && user.backupKeyId && <Notice tone="error">{bp.newBackupWarning}</Notice>}
       <CodeInput
         key={String(restoring)}
         label={bp.pin}
         value={pin}
-        onChange={(v) => setPin(v.slice(0, 6))}
+        onChange={(v) => setPin(v.slice(0, restoring ? 8 : 6))}
         autoFocus
         onSubmit={restoring ? () => void save() : undefined}
       />

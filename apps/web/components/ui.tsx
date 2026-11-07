@@ -66,6 +66,7 @@ export function Toggle({
 
 export function codeError(err: unknown, tr: Dict, errors: Record<string, string | undefined>) {
   const code = err instanceof SixApiError ? err.code : undefined;
+  if (code === "WRONG_BACKUP_PIN") return tr.settings.backupPin.wrong(((err as SixApiError).details as { triesLeft?: number } | undefined)?.triesLeft ?? 0);
   return (code && errors[code]) ?? tr.common.somethingWrongRetry;
 }
 

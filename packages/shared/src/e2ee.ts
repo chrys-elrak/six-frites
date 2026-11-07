@@ -154,7 +154,7 @@ export const SetBackupKeyInput = z.object({
 });
 export type SetBackupKeyInput = z.infer<typeof SetBackupKeyInput>;
 
-const BackupPin = z.string().regex(/^\d{6}$/).describe("6 digits");
+const BackupPin = z.string().regex(/^\d{4,8}$/).describe("4 to 8 digits, 6 for a new one, like your app lock code");
 
 export const SetBackupPinInput = SetBackupKeyInput.extend({
   pin: BackupPin,

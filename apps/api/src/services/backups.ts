@@ -61,7 +61,10 @@ const PIN_TRIES = 10;
 export const backupSecret = (userId: string) =>
   createHmac("sha256", env.BACKUP_PIN_SECRET).update(userId).digest("base64url");
 
-/** Stores the backup key sealed with a new PIN. A different key starts a new backup and drops the old one. */
+/**
+ * Stores the backup key sealed with a new PIN. A different key starts a new backup and drops the old one. With the
+ * app lock on, the PIN becomes its code too, so one code does both.
+ */
 export async function setBackupPin(userId: string, input: SetBackupPinInput) {
   const backupPinHash = await hashPin(input.pin);
   return prisma.$transaction(async (tx) => {
@@ -69,16 +72,22 @@ export async function setBackupPin(userId: string, input: SetBackupPinInput) {
     if (user.backupKeyId && user.backupKeyId !== input.backupKeyId) {
       await tx.messageBackup.deleteMany({ where: { userId } });
     }
-    const data = { backupKeyId: input.backupKeyId, backupPinHash, backupWrapped: input.wrapped, backupPinTries: 0 };
+    const data = {
+      backupKeyId: input.backupKeyId,
+      backupPinHash,
+      backupWrapped: input.wrapped,
+      backupPinTries: 0,
+      ...(user.appLockHash && { appLockHash: backupPinHash }),
+    };
     return toUserDTO(await tx.user.update({ where: { id: userId }, data }));
   });
 }
 
 /**
- * Hands back the PIN-sealed backup key when the PIN matches. Each try is counted before the PIN is
- * checked, so parallel guesses count too, and after PIN_TRIES wrong ones the whole backup is deleted.
+ * Checks the backup PIN. Each try is counted before the PIN is checked, so parallel guesses count too, and after
+ * PIN_TRIES wrong ones the whole backup is deleted.
  */
-export async function unlockBackup(userId: string, pin: string) {
+export async function checkBackupPin(userId: string, pin: string) {
   const reserved = await prisma.user.updateMany({
     where: { id: userId, backupPinHash: { not: null }, backupPinTries: { lt: PIN_TRIES } },
     data: { backupPinTries: { increment: 1 } },
@@ -87,7 +96,7 @@ export async function unlockBackup(userId: string, pin: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   if (user.backupPinHash && user.backupWrapped && (await pinMatches(user.backupPinHash, pin))) {
     await prisma.user.update({ where: { id: userId }, data: { backupPinTries: 0 } });
-    return { wrapped: user.backupWrapped, secret: backupSecret(userId) };
+    return user;
   }
   const triesLeft = Math.max(0, PIN_TRIES - user.backupPinTries);
   if (!triesLeft) {
@@ -100,4 +109,10 @@ export async function unlockBackup(userId: string, pin: string) {
     ]);
   }
   throw new AppError("WRONG_BACKUP_PIN", "That's not your backup PIN", { triesLeft });
+}
+
+/** Hands back the PIN-sealed backup key when the PIN matches. */
+export async function unlockBackup(userId: string, pin: string) {
+  const { backupWrapped } = await checkBackupPin(userId, pin);
+  return { wrapped: backupWrapped!, secret: backupSecret(userId) };
 }

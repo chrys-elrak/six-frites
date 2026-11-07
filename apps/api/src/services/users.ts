@@ -13,6 +13,7 @@ import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
+import { checkBackupPin } from "./backups.js";
 import { getChat } from "./chats.js";
 import { parsePhoto } from "./contacts.js";
 import { chatBanned, revokeSession } from "./sessions.js";
@@ -32,6 +33,7 @@ export function toUserDTO(u: User): UserDTO {
     backupKeyId: u.backupKeyId,
     hasBackupPin: u.backupPinHash !== null,
     hasAppLock: u.appLockHash !== null,
+    appLockIsPin: u.appLockHash !== null && u.appLockHash === u.backupPinHash,
     ads: !u.adsDisabled,
     anonBot: !u.anonBotDisabled,
     quickReactions: u.quickReactions,
@@ -197,23 +199,37 @@ export async function pinMatches(stored: string, pin: string) {
   return timingSafeEqual(actual, expected);
 }
 
-/** Turns the app lock on with `code`, replacing any earlier one. Turning it off needs no code: only an unlocked app gets there. */
+/**
+ * Turns the app lock on. With a backup PIN, `code` has to be that PIN, a counted try, and becomes the lock code too;
+ * without one it's a code of its own. Turning it off needs no code: only an unlocked app gets there.
+ */
 export async function setAppLock(userId: string, input: AppLockInput) {
-  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: await hashPin(input.code) } }));
+  const { backupPinHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { backupPinHash: true } });
+  const appLockHash = backupPinHash ? (await checkBackupPin(userId, input.code)).backupPinHash! : await hashPin(input.code);
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash } }));
 }
 
 export async function removeAppLock(userId: string) {
   return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: null } }));
 }
 
+/**
+ * Checks `code` against the app lock. When it's the backup PIN, the try counts against the PIN's, so the lock can't
+ * be used to guess it.
+ */
+async function checkAppLock(userId: string, code: string) {
+  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true, backupPinHash: true } });
+  if (!u.appLockHash) return false;
+  if (u.appLockHash === u.backupPinHash) await checkBackupPin(userId, code);
+  else if (!(await pinMatches(u.appLockHash, code))) throw new AppError("WRONG_APP_LOCK_CODE");
+  return true;
+}
+
 /** Checks `code` against the app lock, which has to be on. */
 export async function requireAppLock(userId: string, code: string) {
-  const { appLockHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true } });
-  if (!appLockHash) throw new AppError("APP_LOCK_REQUIRED");
-  if (!(await pinMatches(appLockHash, code))) throw new AppError("WRONG_APP_LOCK_CODE");
+  if (!(await checkAppLock(userId, code))) throw new AppError("APP_LOCK_REQUIRED");
 }
 
 export async function unlockApp(userId: string, input: AppLockInput) {
-  const { appLockHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true } });
-  if (appLockHash && !(await pinMatches(appLockHash, input.code))) throw new AppError("WRONG_APP_LOCK_CODE");
+  await checkAppLock(userId, input.code);
 }

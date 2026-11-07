@@ -5,6 +5,7 @@ import type { Dict } from "@six/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
+import { setCodeLength } from "@/lib/app-lock";
 import { e2ee } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -176,7 +177,10 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
       const client = e2ee();
       if (!client) throw new Error("Encryption is not ready");
       if (restoring) await client.unlockWithPin(pin);
-      else setUser(await client.setBackupPin(pin));
+      else {
+        setUser(await client.setBackupPin(pin));
+        if (user.hasAppLock) setCodeLength(pin.length);
+      }
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: recoveryKeyQuery });
@@ -195,7 +199,7 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
       if (data) setUser(data);
     },
   });
-  const ready = pin.length === 6 && (restoring || again === pin);
+  const ready = restoring ? pin.length >= 4 : pin.length === 6 && again === pin;
   const mismatch = !restoring && again.length === 6 && again !== pin;
   const title = restoring ? bp.restoreTitle : hasKey && user.hasBackupPin ? bp.changeTitle : bp.createTitle;
 
@@ -209,11 +213,14 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
         }}
       >
         <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="text-sm text-stone-600 dark:text-stone-300">{restoring ? bp.restoreHint : bp.createHint}</p>
+        <p className="text-sm text-stone-600 dark:text-stone-300">
+          {restoring ? (user.appLockIsPin ? bp.restoreHintLock : bp.restoreHint) : bp.createHint}
+          {!restoring && user.hasAppLock && ` ${bp.alsoLock}`}
+        </p>
         {!restoring && !hasKey && user.backupKeyId && (
           <p className="text-sm text-red-600 dark:text-red-400">{bp.newBackupWarning}</p>
         )}
-        <CodeInput key={String(restoring)} label={bp.pin} value={pin} onChange={(v) => setPin(v.slice(0, 6))} autoFocus />
+        <CodeInput key={String(restoring)} label={bp.pin} value={pin} onChange={(v) => setPin(v.slice(0, restoring ? 8 : 6))} autoFocus />
         {!restoring && <CodeInput label={bp.again} value={again} onChange={(v) => setAgain(v.slice(0, 6))} />}
         {(save.isError || mismatch) && (
           <p className="text-sm text-red-600 dark:text-red-400">{save.isError ? pinError(save.error, tr) : bp.mismatch}</p>

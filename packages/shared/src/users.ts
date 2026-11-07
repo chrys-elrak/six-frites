@@ -14,8 +14,9 @@ export const UserDTO = z.object({
     .string()
     .nullable()
     .describe("Identifies the key from your recovery key; null until you set up a recovery key"),
-  hasBackupPin: z.boolean().describe("Whether a new device can restore your backup with your 6-digit PIN"),
+  hasBackupPin: z.boolean().describe("Whether a new device can restore your backup with your PIN"),
   hasAppLock: z.boolean().describe("Whether the apps ask for your app lock code when they open"),
+  appLockIsPin: z.boolean().describe("Whether your app lock code is your backup PIN, so one code does both"),
   ads: z.boolean().describe("Whether the apps show you ads; admins can turn them off for you"),
   anonBot: z.boolean().describe("Whether the Six Frites bot sends you a question in your anonymous inbox now and then"),
   quickReactions: z.array(z.string()).describe("The emojis offered first when you react, in order; empty means the defaults"),

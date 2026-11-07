@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Delete, Lock } from "lucide-react";
 import { useState } from "react";
 import { codeLength, setCodeLength, unlock } from "@/lib/app-lock";
-import { signOut } from "@/lib/e2ee";
+import { e2ee, signOut } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -53,13 +53,25 @@ export function AppLockSettings() {
   );
 }
 
+/**
+ * Turns the lock on with the backup PIN, so one code does both. Without a PIN yet, the new code becomes it, unless
+ * this device can't make one without dropping an older backup: then the lock gets a code of its own.
+ */
 function TurnOnDialog({ onClose }: { onClose: () => void }) {
   const tr = useT();
+  const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
+  const hasKey = useHasRecoveryKey().data === true;
+  const usePin = user.hasBackupPin;
+  const makePin = !usePin && (hasKey || !user.backupKeyId);
+  const max = makePin ? 6 : 8;
   const [code, setCode] = useState("");
   const [again, setAgain] = useState("");
   const save = useMutation({
-    mutationFn: async () => unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } })),
+    mutationFn: async () => {
+      if (makePin) await e2ee()!.setBackupPin(code);
+      return unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } }));
+    },
     onSuccess: (u) => {
       setCodeLength(code.length);
       unlock();
@@ -67,8 +79,8 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
       onClose();
     },
   });
-  const mismatch = again.length >= code.length && again.length > 0 && again !== code;
-  const ready = code.length >= 4 && again === code;
+  const mismatch = !usePin && again.length >= code.length && again.length > 0 && again !== code;
+  const ready = code.length >= (makePin ? 6 : 4) && (usePin || again === code);
 
   return (
     <Dialog onClose={onClose}>
@@ -80,9 +92,16 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
         }}
       >
         <h2 className="text-lg font-semibold">{tr.settings.appLock.turnOnTitle}</h2>
-        <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.appLock.newCode}</p>
-        <CodeInput label={tr.settings.appLock.code} value={code} onChange={setCode} autoFocus />
-        <CodeInput label={tr.settings.appLock.again} value={again} onChange={setAgain} />
+        <p className="text-sm text-stone-600 dark:text-stone-300">
+          {usePin ? tr.settings.appLock.usePin : makePin ? tr.settings.appLock.newPin : tr.settings.appLock.newCode}
+        </p>
+        <CodeInput
+          label={usePin ? tr.settings.backupPin.pin : tr.settings.appLock.code}
+          value={code}
+          onChange={(v) => setCode(v.slice(0, max))}
+          autoFocus
+        />
+        {!usePin && <CodeInput label={tr.settings.appLock.again} value={again} onChange={(v) => setAgain(v.slice(0, max))} />}
         {(save.isError || mismatch) && (
           <p className="text-sm text-red-600 dark:text-red-400">
             {save.isError ? codeError(save.error, tr, tr.settings.appLock.errors) : tr.settings.appLock.mismatch}
@@ -168,6 +187,10 @@ export function LockScreen({
     onSuccess: (_, value) => {
       setCodeLength(value.length);
       onUnlock();
+      const { user, setUser } = useSession.getState();
+      if (!verify && hasKey.data && user?.hasAppLock && !user.appLockIsPin) {
+        void e2ee()?.setBackupPin(value).then(setUser).catch(() => null);
+      }
     },
     onError: () => {
       setCode("");

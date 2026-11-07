@@ -18,7 +18,8 @@ import { useT } from "@/lib/i18n";
 import { logout, useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
-import { Dialog } from "./encryption-settings";
+import { e2eeFor } from "@/lib/e2ee";
+import { Dialog, useHasRecoveryKey } from "./encryption-settings";
 import { Logo } from "./logo";
 import { Card, CodeInput, IconButton, Notice, PrimaryButton, SectionTitle, TextButton, Toggle, codeError } from "./ui";
 
@@ -83,27 +84,37 @@ export function AppLockSettings() {
   );
 }
 
+/**
+ * Turns the lock on with the backup PIN, so one code does both. Without a PIN yet, the new code becomes it, unless
+ * this phone can't make one without dropping an older backup: then the lock gets a code of its own.
+ */
 function TurnOnDialog({ onClose }: { onClose: () => void }) {
   const t = useTheme();
   const tr = useT();
+  const user = useSession((s) => s.user)!;
   const setUser = useSession((s) => s.setUser);
+  const hasKey = useHasRecoveryKey().data === true;
+  const usePin = user.hasBackupPin;
+  const makePin = !usePin && (hasKey || !user.backupKeyId);
+  const max = makePin ? 6 : 8;
   const [code, setCode] = useState("");
   const [again, setAgain] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const mismatch = again.length >= code.length && again.length > 0 && again !== code;
-  const ready = code.length >= 4 && again === code;
+  const mismatch = !usePin && again.length >= code.length && again.length > 0 && again !== code;
+  const ready = code.length >= (makePin ? 6 : 4) && (usePin || again === code);
 
   async function save() {
     if (!ready || busy) return;
     setBusy(true);
     setError(null);
     try {
-      const user = unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } }));
+      if (makePin) await e2eeFor(user.id)!.setBackupPin(code);
+      const updated = unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } }));
       setCodeLength(code.length);
       unlock();
-      setUser(user);
+      setUser(updated);
       onClose();
     } catch (err) {
       setError(codeError(err, tr, tr.settings.appLock.errors));
@@ -114,9 +125,19 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <Dialog title={tr.settings.appLock.turnOnTitle} onClose={onClose}>
-      <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{tr.settings.appLock.newCode}</Text>
-      <CodeInput label={tr.settings.appLock.code} value={code} onChange={setCode} autoFocus />
-      <CodeInput label={tr.settings.appLock.again} value={again} onChange={setAgain} onSubmit={() => void save()} />
+      <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>
+        {usePin ? tr.settings.appLock.usePin : makePin ? tr.settings.appLock.newPin : tr.settings.appLock.newCode}
+      </Text>
+      <CodeInput
+        label={usePin ? tr.settings.backupPin.pin : tr.settings.appLock.code}
+        value={code}
+        onChange={(v) => setCode(v.slice(0, max))}
+        autoFocus
+        onSubmit={usePin ? () => void save() : undefined}
+      />
+      {!usePin && (
+        <CodeInput label={tr.settings.appLock.again} value={again} onChange={(v) => setAgain(v.slice(0, max))} onSubmit={() => void save()} />
+      )}
       {(error || mismatch) && <Notice tone="error">{error ?? tr.settings.appLock.mismatch}</Notice>}
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
         <View style={{ flex: 1 }}>
@@ -160,6 +181,7 @@ export function LockScreen({
   const [auto, setAuto] = useState(true);
   const length = useCodeLength((s) => s.length);
   const biometric = useBiometricUnlock((s) => s.on) && !verify;
+  const hasKey = useHasRecoveryKey().data === true;
 
   function askFingerprint() {
     void checkBiometrics(tr.settings.appLock.fingerprintPrompt, tr.settings.appLock.useCode).then((ok) => ok && onUnlock());
@@ -179,6 +201,10 @@ export function LockScreen({
       else unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code: value } }));
       setCodeLength(value.length);
       onUnlock();
+      const { user, setUser } = useSession.getState();
+      if (!verify && hasKey && user?.hasAppLock && !user.appLockIsPin) {
+        void e2eeFor(user.id)?.setBackupPin(value).then(setUser).catch(() => null);
+      }
     } catch (err) {
       setCode("");
       setAuto(false);

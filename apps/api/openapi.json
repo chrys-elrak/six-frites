@@ -129,11 +129,15 @@
                         },
                         "hasBackupPin": {
                           "type": "boolean",
-                          "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                          "description": "Whether a new device can restore your backup with your PIN"
                         },
                         "hasAppLock": {
                           "type": "boolean",
                           "description": "Whether the apps ask for your app lock code when they open"
+                        },
+                        "appLockIsPin": {
+                          "type": "boolean",
+                          "description": "Whether your app lock code is your backup PIN, so one code does both"
                         },
                         "ads": {
                           "type": "boolean",
@@ -209,6 +213,7 @@
                         "backupKeyId",
                         "hasBackupPin",
                         "hasAppLock",
+                        "appLockIsPin",
                         "ads",
                         "anonBot",
                         "quickReactions",
@@ -420,11 +425,15 @@
                             },
                             "hasBackupPin": {
                               "type": "boolean",
-                              "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                              "description": "Whether a new device can restore your backup with your PIN"
                             },
                             "hasAppLock": {
                               "type": "boolean",
                               "description": "Whether the apps ask for your app lock code when they open"
+                            },
+                            "appLockIsPin": {
+                              "type": "boolean",
+                              "description": "Whether your app lock code is your backup PIN, so one code does both"
                             },
                             "ads": {
                               "type": "boolean",
@@ -500,6 +509,7 @@
                             "backupKeyId",
                             "hasBackupPin",
                             "hasAppLock",
+                            "appLockIsPin",
                             "ads",
                             "anonBot",
                             "quickReactions",
@@ -620,11 +630,15 @@
                         },
                         "hasBackupPin": {
                           "type": "boolean",
-                          "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                          "description": "Whether a new device can restore your backup with your PIN"
                         },
                         "hasAppLock": {
                           "type": "boolean",
                           "description": "Whether the apps ask for your app lock code when they open"
+                        },
+                        "appLockIsPin": {
+                          "type": "boolean",
+                          "description": "Whether your app lock code is your backup PIN, so one code does both"
                         },
                         "ads": {
                           "type": "boolean",
@@ -700,6 +714,7 @@
                         "backupKeyId",
                         "hasBackupPin",
                         "hasAppLock",
+                        "appLockIsPin",
                         "ads",
                         "anonBot",
                         "quickReactions",
@@ -5144,11 +5159,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -5224,6 +5243,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -5347,11 +5367,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -5427,6 +5451,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -5548,11 +5573,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -5628,6 +5657,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -5699,11 +5729,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -5779,6 +5813,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -6072,11 +6107,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -6152,6 +6191,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -6220,11 +6260,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -6300,6 +6344,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -62639,11 +62684,15 @@
                                   },
                                   "hasBackupPin": {
                                     "type": "boolean",
-                                    "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                                    "description": "Whether a new device can restore your backup with your PIN"
                                   },
                                   "hasAppLock": {
                                     "type": "boolean",
                                     "description": "Whether the apps ask for your app lock code when they open"
+                                  },
+                                  "appLockIsPin": {
+                                    "type": "boolean",
+                                    "description": "Whether your app lock code is your backup PIN, so one code does both"
                                   },
                                   "ads": {
                                     "type": "boolean",
@@ -62719,6 +62768,7 @@
                                   "backupKeyId",
                                   "hasBackupPin",
                                   "hasAppLock",
+                                  "appLockIsPin",
                                   "ads",
                                   "anonBot",
                                   "quickReactions",
@@ -63760,11 +63810,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -63840,6 +63894,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -63917,8 +63972,8 @@
                   },
                   "pin": {
                     "type": "string",
-                    "pattern": "^\\d{6}$",
-                    "description": "6 digits"
+                    "pattern": "^\\d{4,8}$",
+                    "description": "4 to 8 digits, 6 for a new one, like your app lock code"
                   },
                   "wrapped": {
                     "type": "string",
@@ -63981,11 +64036,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -64061,6 +64120,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -64096,8 +64156,8 @@
                 "properties": {
                   "pin": {
                     "type": "string",
-                    "pattern": "^\\d{6}$",
-                    "description": "6 digits"
+                    "pattern": "^\\d{4,8}$",
+                    "description": "4 to 8 digits, 6 for a new one, like your app lock code"
                   }
                 },
                 "required": [
@@ -70736,11 +70796,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -70816,6 +70880,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -70905,11 +70970,15 @@
                     },
                     "hasBackupPin": {
                       "type": "boolean",
-                      "description": "Whether a new device can restore your backup with your 6-digit PIN"
+                      "description": "Whether a new device can restore your backup with your PIN"
                     },
                     "hasAppLock": {
                       "type": "boolean",
                       "description": "Whether the apps ask for your app lock code when they open"
+                    },
+                    "appLockIsPin": {
+                      "type": "boolean",
+                      "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
                     "ads": {
                       "type": "boolean",
@@ -70985,6 +71054,7 @@
                     "backupKeyId",
                     "hasBackupPin",
                     "hasAppLock",
+                    "appLockIsPin",
                     "ads",
                     "anonBot",
                     "quickReactions",

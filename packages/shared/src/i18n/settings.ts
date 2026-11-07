@@ -147,9 +147,9 @@ const en = {
   checking: "Checking…",
   backupPin: {
     title: "Message backup",
-    on: "Your messages are backed up. On a new device, your 6-digit PIN brings them back.",
+    on: "Your messages are backed up. On a new device, your PIN brings them back.",
     noPin: "Create a 6-digit PIN to read your messages again after signing out or on a new device.",
-    locked: "Enter your 6-digit PIN to read your earlier messages on this device.",
+    locked: "Enter your PIN to read your earlier messages on this device.",
     create: "Create a PIN",
     change: "Change PIN",
     enter: "Enter PIN",
@@ -159,7 +159,9 @@ const en = {
       "Choose 6 digits you'll remember. You'll enter them when you sign in on a new device. Six Frites can't recover your PIN for you.",
     changeTitle: "Change your backup PIN",
     restoreTitle: "Restore your messages",
-    restoreHint: "This device can't read your earlier messages yet. Enter your 6-digit backup PIN to restore them.",
+    restoreHint: "This device can't read your earlier messages yet. Enter your backup PIN to restore them.",
+    restoreHintLock: "This device can't read your earlier messages yet. Enter your app lock code to restore them.",
+    alsoLock: "It's also your app lock code.",
     pin: "PIN",
     again: "Same PIN again",
     mismatch: "The PINs don't match.",
@@ -196,6 +198,9 @@ const en = {
     turnOff: "Turn off",
     turnOnTitle: "Lock the app",
     newCode: "Choose a code of 4 to 8 digits to unlock Six Frites. If you forget it, sign out, sign in again and turn the lock off here.",
+    newPin:
+      "Choose 6 digits to unlock Six Frites. They're also your backup PIN, which brings your messages back on a new device. Six Frites can't recover it for you.",
+    usePin: "Six Frites will unlock with your backup PIN, so you only have one code. Enter it to turn the lock on.",
     code: "New code",
     again: "New code again",
     mismatch: "The codes don't match.",
@@ -366,9 +371,9 @@ const fr: typeof en = {
   checking: "Vérification…",
   backupPin: {
     title: "Sauvegarde des messages",
-    on: "Vos messages sont sauvegardés. Sur un nouvel appareil, votre code PIN à 6 chiffres les restaure.",
+    on: "Vos messages sont sauvegardés. Sur un nouvel appareil, votre code PIN les restaure.",
     noPin: "Créez un code PIN à 6 chiffres pour relire vos messages après une déconnexion ou sur un nouvel appareil.",
-    locked: "Saisissez votre code PIN à 6 chiffres pour lire vos anciens messages sur cet appareil.",
+    locked: "Saisissez votre code PIN pour lire vos anciens messages sur cet appareil.",
     create: "Créer un code PIN",
     change: "Modifier le code PIN",
     enter: "Saisir le code PIN",
@@ -379,7 +384,10 @@ const fr: typeof en = {
     changeTitle: "Modifier votre code PIN de sauvegarde",
     restoreTitle: "Restaurez vos messages",
     restoreHint:
-      "Cet appareil ne peut pas encore lire vos anciens messages. Saisissez votre code PIN de sauvegarde à 6 chiffres pour les restaurer.",
+      "Cet appareil ne peut pas encore lire vos anciens messages. Saisissez votre code PIN de sauvegarde pour les restaurer.",
+    restoreHintLock:
+      "Cet appareil ne peut pas encore lire vos anciens messages. Saisissez votre code de verrouillage pour les restaurer.",
+    alsoLock: "C'est aussi votre code de verrouillage.",
     pin: "Code PIN",
     again: "Le même code PIN",
     mismatch: "Les codes PIN ne correspondent pas.",
@@ -416,6 +424,10 @@ const fr: typeof en = {
     turnOff: "Désactiver",
     turnOnTitle: "Verrouiller l'app",
     newCode: "Choisissez un code de 4 à 8 chiffres pour déverrouiller Six Frites. Si vous l'oubliez, déconnectez-vous, reconnectez-vous et désactivez le verrouillage ici.",
+    newPin:
+      "Choisissez 6 chiffres pour déverrouiller Six Frites. C'est aussi votre code PIN de sauvegarde, qui restaure vos messages sur un nouvel appareil. Six Frites ne peut pas le récupérer pour vous.",
+    usePin:
+      "Six Frites se déverrouillera avec votre code PIN de sauvegarde : un seul code pour tout. Saisissez-le pour activer le verrouillage.",
     code: "Nouveau code",
     again: "Confirmez le nouveau code",
     mismatch: "Les codes ne correspondent pas.",
@@ -586,9 +598,9 @@ const mg: typeof en = {
   checking: "Manamarina…",
   backupPin: {
     title: "Tahirin'ny hafatra",
-    on: "Voatahiry ny hafatrao. Amin'ny fitaovana vaovao, ny kaody PIN misy isa 6 no mamerina azy ireo.",
+    on: "Voatahiry ny hafatrao. Amin'ny fitaovana vaovao, ny kaody PIN-nao no mamerina azy ireo.",
     noPin: "Mamorona kaody PIN misy isa 6 mba hahafahanao mamaky indray ny hafatrao rehefa avy nivoaka na amin'ny fitaovana vaovao.",
-    locked: "Ampidiro ny kaody PIN misy isa 6 mba hamakiana ireo hafatrao taloha amin'ity fitaovana ity.",
+    locked: "Ampidiro ny kaody PIN-nao mba hamakiana ireo hafatrao taloha amin'ity fitaovana ity.",
     create: "Mamorona kaody PIN",
     change: "Ovay ny kaody PIN",
     enter: "Ampidiro ny kaody PIN",
@@ -599,7 +611,10 @@ const mg: typeof en = {
     changeTitle: "Ovay ny kaody PIN fitahirizanao",
     restoreTitle: "Avereno ny hafatrao",
     restoreHint:
-      "Mbola tsy mahavaky ireo hafatrao taloha ity fitaovana ity. Ampidiro ny kaody PIN fitahirizanao misy isa 6 mba hamerenana azy ireo.",
+      "Mbola tsy mahavaky ireo hafatrao taloha ity fitaovana ity. Ampidiro ny kaody PIN fitahirizanao mba hamerenana azy ireo.",
+    restoreHintLock:
+      "Mbola tsy mahavaky ireo hafatrao taloha ity fitaovana ity. Ampidiro ny kaodin'ny hidinao mba hamerenana azy ireo.",
+    alsoLock: "Io koa no kaodin'ny hidinao.",
     pin: "Kaody PIN",
     again: "Averina ny kaody PIN",
     mismatch: "Tsy mitovy ireo kaody PIN.",
@@ -634,6 +649,9 @@ const mg: typeof en = {
     turnOff: "Vonoy",
     turnOnTitle: "Hidio ny fampiharana",
     newCode: "Mifidiana kaody misy isa 4 ka hatramin'ny 8 hanokafana ny Six Frites. Raha hadinonao izy, mivoaha, midira indray ary vonoy eto ny hidy.",
+    newPin:
+      "Mifidiana isa 6 hanokafana ny Six Frites. Izy koa no kaody PIN fitahirizanao, izay mamerina ny hafatrao amin'ny fitaovana vaovao. Tsy afaka mamerina azy ho anao ny Six Frites.",
+    usePin: "Hosokafana amin'ny kaody PIN fitahirizanao ny Six Frites, ka kaody iray ihany no ilainao. Ampidiro izy hanalefahana ny hidy.",
     code: "Kaody vaovao",
     again: "Avereno ny kaody vaovao",
     mismatch: "Tsy mitovy ireo kaody.",
