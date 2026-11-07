@@ -92,17 +92,31 @@ export function useChat(qc: QueryClient, chatId: string) {
   });
 }
 
+/** Messages that came in live, kept a minute so a page fetched while they arrived doesn't drop them. */
+const arrived = new Map<string, { at: number; m: MessageDTO }[]>();
+
+/**
+ * Adds the messages that came in live after `started` to a freshly fetched first page. The fetch saw the chat
+ * as it was when it left, and the live copy went into the cache it then replaces, or nowhere on a first load.
+ */
+function withArrived<P extends { items: MessageDTO[] }>(chatId: string, page: P, started: number): P {
+  const late = (arrived.get(chatId) ?? []).filter((x) => x.at >= started && !page.items.some((m) => m.id === x.m.id));
+  return late.length ? { ...page, items: [...late.map((x) => x.m).reverse(), ...page.items] } : page;
+}
+
 export function useMessages(chatId: string) {
   return useInfiniteQuery({
     queryKey: chatKeys.messages(chatId),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
+      const started = Date.now();
       const page = unwrap(
         await six.api.GET("/v1/chats/{id}/messages", {
           params: { path: { id: chatId }, query: { limit: 50, cursor: pageParam } },
         }),
       );
-      return { ...page, items: await hydrateAll(page.items) };
+      const hydrated = { ...page, items: await hydrateAll(page.items) };
+      return pageParam ? hydrated : withArrived(chatId, hydrated, started);
     },
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: Infinity,
@@ -139,6 +153,8 @@ export async function loadUntil(qc: QueryClient, chatId: string, messageId: stri
 }
 
 export function insertMessage(qc: QueryClient, m: MessageDTO) {
+  const now = Date.now();
+  arrived.set(m.chatId, [...(arrived.get(m.chatId) ?? []).filter((x) => now - x.at < 60_000), { at: now, m }]);
   qc.setQueryData<Messages>(chatKeys.messages(m.chatId), (data) => {
     if (!data) return data;
     if (data.pages.some((p) => p.items.some((x) => x.id === m.id))) return data;
