@@ -131,6 +131,9 @@ export function useChat(qc: QueryClient, chatId: string) {
   });
 }
 
+/** About a phone screen of messages: more load as the list scrolls up. */
+const PAGE = 20;
+
 /** Messages that came in live, kept a minute so a page fetched while they arrived doesn't drop them. */
 const arrived = new Map<string, { at: number; m: MessageDTO }[]>();
 
@@ -151,7 +154,7 @@ export function useMessages(chatId: string) {
       const started = Date.now();
       const page = unwrap(
         await six.api.GET("/v1/chats/{id}/messages", {
-          params: { path: { id: chatId }, query: { limit: 50, cursor: pageParam } },
+          params: { path: { id: chatId }, query: { limit: PAGE, cursor: pageParam } },
         }),
       );
       return pageParam ? page : withArrived(chatId, page, started);

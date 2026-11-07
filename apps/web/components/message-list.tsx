@@ -1263,6 +1263,13 @@ export const MessageList = forwardRef<
       return () => clearTimeout(t);
     }, [highlight]);
 
+    useEffect(() => {
+      const h = list.current;
+      if (h && h.viewportSize > 0 && h.scrollSize - h.viewportSize < 300 && messages.hasNextPage && !messages.isFetchingNextPage) {
+        void messages.fetchNextPage();
+      }
+    }, [messages]);
+
     function onScroll(offset: number) {
       const h = list.current;
       if (!h) return;
