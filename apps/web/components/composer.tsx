@@ -74,7 +74,7 @@ import { type Draft, queueMessage } from "@/lib/send";
 import { six } from "@/lib/six";
 import { looksLikeSticker } from "@/lib/image";
 import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
-import { useVoiceEffect } from "@/lib/voice-fx";
+import { disguiseVoice, useVoiceEffect } from "@/lib/voice-fx";
 import { VoiceEffectSelect } from "./voice-effect-select";
 
 function ModeBar({ label, text, photo, onCancel }: { label: string; text: string; photo?: File; onCancel: () => void }) {
@@ -149,7 +149,7 @@ export function Composer({
   const [writingChecklist, setWritingChecklist] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
   const [camera, setCamera] = useState(false);
-  const recorder = useRecorder();
+  const recorder = useRecorder({ raw: true });
   const [recMode, setRecMode] = useState<RecordMode>("voice");
   const [capture, setCapture] = useState<{ kind: RecordMode; muted?: boolean; spoiler?: boolean } | null>(null);
   const captureNow = useRef(capture);
@@ -487,15 +487,19 @@ export function Composer({
     onSent();
   }
 
-  function sendVoice(rec: Recording) {
-    const ext = rec.mime.includes("mp4") ? "m4a" : rec.mime.includes("ogg") ? "ogg" : "webm";
-    send({
-      blob: rec.blob,
-      kind: "voice",
-      name: `voice-${new Date().toISOString().slice(0, 19)}.${ext}`,
-      mime: rec.mime,
-      disguised: rec.disguised,
-    });
+  /** Sends a recording, through the voice effect picked by then: it's recorded plain so the preview can still change it. */
+  async function sendVoice(rec: Recording) {
+    const name = `voice-${new Date().toISOString().slice(0, 19)}`;
+    if (effect === "none") {
+      const ext = rec.mime.includes("mp4") ? "m4a" : rec.mime.includes("ogg") ? "ogg" : "webm";
+      return send({ blob: rec.blob, kind: "voice", name: `${name}.${ext}`, mime: rec.mime });
+    }
+    try {
+      const blob = await disguiseVoice(rec.blob, effect);
+      send({ blob, kind: "voice", name: `${name}.wav`, mime: "audio/wav", disguised: true });
+    } catch {
+      setError(tr.common.somethingWrongRetry);
+    }
   }
 
   function startCapture() {
@@ -519,7 +523,7 @@ export function Composer({
     setCapture(null);
     if (c.kind === "voice") {
       const rec = await recorder.stop();
-      if (rec && rec.durationMs >= 500) sendVoice(rec);
+      if (rec && rec.durationMs >= 500) void sendVoice(rec);
       return;
     }
     const file = await clip;
@@ -583,7 +587,7 @@ export function Composer({
     setPreview(null);
     URL.revokeObjectURL(p.url);
     if (!send) return;
-    if (p.kind === "voice") sendVoice(p.rec);
+    if (p.kind === "voice") void sendVoice(p.rec);
     else sendVideoNote(p.muted ?? p.file, ephemeral, p.spoiler);
   }
 
@@ -943,12 +947,23 @@ export function Composer({
                   waveform={preview.waveform}
                   mine={false}
                   label={tr.composer.playPreview}
+                  effect={effect}
                   compact
                 />
               ) : (
                 <span className="truncate px-1 text-sm">
                   {tr.summary.kinds.video_note} · {formatDuration(preview.durationMs)}
                 </span>
+              )}
+              {preview.kind === "voice" && (
+                <VoiceEffectSelect
+                  className={`flex h-8 shrink-0 items-center gap-1 rounded-full px-2 text-sm font-medium ${
+                    effect === "none" ? "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200" : "bg-brand/15 text-brand"
+                  }`}
+                >
+                  <VenetianMask className="size-5" />
+                  {effect !== "none" && tr.composer.voiceEffects[effect]}
+                </VoiceEffectSelect>
               )}
               <span className="ml-auto shrink-0">
                 <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />
