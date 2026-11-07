@@ -8,11 +8,13 @@ import { useEffect, useState } from "react";
 import { listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { deleteNotification, markNotification, markNotificationsSeen, useNotifications } from "@/lib/notifications";
+import { useLongPress } from "@/lib/long-press";
 import { useSwipeRow } from "@/lib/swipe";
 import { Avatar } from "./avatar";
 import { BrandActions } from "./brand-actions";
 import { Dialog } from "./dialog";
 import { NotificationSettings } from "./notification-settings";
+import { Sheet } from "./sheet";
 
 export function Notifications() {
   const tr = useT();
@@ -73,6 +75,8 @@ function Row({ n }: { n: NotificationDTO }) {
   const swipe = useSwipeRow(remove, toggle);
   const Read = n.unread ? MailOpen : Mail;
   const readLabel = n.unread ? tr.notifications.markRead : tr.notifications.markUnread;
+  const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
+  const press = useLongPress((at) => setMenu({ at }));
 
   return (
     <div {...swipe.handlers} className="group relative touch-pan-y overflow-x-clip">
@@ -90,7 +94,8 @@ function Row({ n }: { n: NotificationDTO }) {
         <Link
           href={n.chatId ? `/chats/${n.chatId}` : "/notifications"}
           onClick={() => n.unread && void markNotification(qc, n.id, false)}
-          className={`flex items-center gap-3 px-4 py-3 transition hover:bg-black/[0.03] active:bg-black/5 dark:hover:bg-white/5 dark:active:bg-white/10 ${
+          {...press}
+          className={`flex items-center gap-3 px-4 py-3 transition [-webkit-touch-callout:none] pointer-coarse:select-none hover:bg-black/[0.03] active:bg-black/5 dark:hover:bg-white/5 dark:active:bg-white/10 ${
             n.unread ? "bg-brand/10" : ""
           }`}
         >
@@ -121,6 +126,16 @@ function Row({ n }: { n: NotificationDTO }) {
           </button>
         </div>
       </div>
+      {menu && (
+        <Sheet
+          at={menu.at}
+          onClose={() => setMenu(null)}
+          actions={[
+            { label: readLabel, onSelect: toggle },
+            { label: tr.common.delete, onSelect: remove, destructive: true },
+          ]}
+        />
+      )}
     </div>
   );
 }

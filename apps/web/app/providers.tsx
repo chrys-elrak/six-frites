@@ -17,6 +17,14 @@ export function Providers({ locale, children }: { locale: Locale; children: Reac
     void bootstrap();
   }, [bootstrap]);
 
+  useEffect(() => {
+    const block = (e: MouseEvent) => {
+      if (!(e.target as Element).closest?.("input, textarea, [contenteditable]")) e.preventDefault();
+    };
+    document.addEventListener("contextmenu", block);
+    return () => document.removeEventListener("contextmenu", block);
+  }, []);
+
   return (
     <LocaleProvider initial={locale}>
       <QueryClientProvider client={client}>

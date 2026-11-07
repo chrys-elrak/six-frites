@@ -47,6 +47,8 @@ import { useT } from "@/lib/i18n";
 import { usePresence, useWatchPresence } from "@/lib/presence";
 import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
+import { ContactEditor } from "./contact-editor";
+import { Sheet } from "./sheet";
 import { updateChatSettings } from "@/lib/actions";
 import { useSwipeRow } from "@/lib/swipe";
 import { useRealtime } from "@/lib/realtime";
@@ -287,19 +289,39 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
 }
 
 function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean }) {
+  const tr = useT();
+  const router = useRouter();
   const online = usePresence(contact.user.id)?.online;
+  const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
+  const [editing, setEditing] = useState(false);
+  const press = useLongPress((at) => setMenu({ at }));
   return (
-    <Link
-      href={`/chats/${contact.chatId}`}
-      className={`flex items-center gap-3 px-4 py-3 transition active:bg-black/5 dark:active:bg-white/10 ${
-        active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
-      }`}
-    >
-      <StoryAvatar userId={contact.user.id} name={contact.user.displayName}>
-        <Avatar user={contact.user} size="md" online={online} />
-      </StoryAvatar>
-      <p className="min-w-0 flex-1 truncate font-semibold">{contact.user.displayName}</p>
-    </Link>
+    <>
+      <Link
+        href={`/chats/${contact.chatId}`}
+        {...press}
+        className={`flex items-center gap-3 px-4 py-3 transition [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
+          active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
+        }`}
+      >
+        <StoryAvatar userId={contact.user.id} name={contact.user.displayName}>
+          <Avatar user={contact.user} size="md" online={online} />
+        </StoryAvatar>
+        <p className="min-w-0 flex-1 truncate font-semibold">{contact.user.displayName}</p>
+      </Link>
+      {menu && (
+        <Sheet
+          title={contact.user.displayName}
+          at={menu.at}
+          onClose={() => setMenu(null)}
+          actions={[
+            { label: tr.contacts.openChat, onSelect: () => router.push(`/chats/${contact.chatId}`) },
+            { label: tr.contacts.editContact, onSelect: () => setEditing(true) },
+          ]}
+        />
+      )}
+      {editing && <ContactEditor userId={contact.user.id} onClose={() => setEditing(false)} />}
+    </>
   );
 }
 
