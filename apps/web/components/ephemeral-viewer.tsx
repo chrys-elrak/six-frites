@@ -1,5 +1,6 @@
 "use client";
 
+import { previewLink } from "@six/shared";
 import { Flame, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Hydrated } from "@/lib/e2ee";
@@ -7,6 +8,7 @@ import { shortRule } from "@/lib/ephemeral";
 import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
 import { AttachmentView, type ShownAttachment, useAttachmentUrl } from "./attachment";
+import { LinkCard, Linked } from "./message-list";
 import { Portal } from "./portal";
 import { ProtectedImage, noSave } from "./protected-image";
 import { Styled } from "./rich-text";
@@ -110,6 +112,7 @@ export function EphemeralViewer({
   const a = message?.attachment;
   const viewsLeft = e?.maxViews ? e.maxViews - e.views : null;
   const text = message?.text ?? "";
+  const link = message && !a && text ? previewLink(text, message.entities) : null;
 
   return (
     <Portal>
@@ -145,11 +148,16 @@ export function EphemeralViewer({
                 {message.entities.length
                   ? segments(text, message.entities).map((seg, i) => (
                       <Styled key={i} styles={seg.styles}>
-                        {seg.text}
+                        {seg.styles.has("code") ? seg.text : <Linked text={seg.text} />}
                       </Styled>
                     ))
-                  : text}
+                  : <Linked text={text} />}
               </p>
+            )}
+            {link && (
+              <div className="rounded-lg bg-white/10">
+                <LinkCard url={link} mine={false} />
+              </div>
             )}
           </div>
         </div>

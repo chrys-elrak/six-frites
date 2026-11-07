@@ -540,7 +540,7 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
   );
 }
 
-function Linked({ text }: { text: string }) {
+export function Linked({ text }: { text: string }) {
   return (
     <>
       {splitLinks(text).map((part, i) =>
@@ -598,7 +598,7 @@ function AlbumGrid({
   );
 }
 
-function LinkCard({ url, mine }: { url: string; mine: boolean }) {
+export function LinkCard({ url, mine }: { url: string; mine: boolean }) {
   const { data } = useQuery({
     queryKey: ["link-preview", url],
     queryFn: async () => unwrap(await six.api.GET("/v1/link-preview", { params: { query: { url } } })),

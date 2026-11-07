@@ -1,4 +1,4 @@
-import type { MessageDTO } from "@six/shared";
+import { type MessageDTO, previewLink } from "@six/shared";
 import { Image } from "expo-image";
 import { Flame, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -11,6 +11,7 @@ import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
 import { brand, brandInk, flame, stone } from "@/lib/theme";
 import { AttachmentView, LightboxVideo } from "./attachment";
+import { LinkCard, Linked } from "./message-list";
 import { styleFor } from "./rich-text";
 
 const ON_DARK: BubbleColors = { bg: brand, ink: brandInk, theirBg: null, theirInk: "#ffffff" };
@@ -52,6 +53,7 @@ export function EphemeralViewer({
 
   const mediaHeight = Math.round(height * 0.6);
   const text = message?.text ?? "";
+  const link = message && !a && text ? previewLink(text, message.entities) : null;
 
   return (
     <Modal animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
@@ -95,11 +97,16 @@ export function EphemeralViewer({
               {message.entities.length
                 ? segments(text, message.entities).map((seg, i) => (
                     <Text key={i} style={styleFor(seg.styles, "rgba(255,255,255,0.15)")}>
-                      {seg.text}
+                      {seg.styles.has("code") ? seg.text : <Linked text={seg.text} selecting={false} />}
                     </Text>
                   ))
-                : text}
+                : <Linked text={text} selecting={false} />}
             </Text>
+          )}
+          {link && (
+            <BubbleColorsContext.Provider value={ON_DARK}>
+              <LinkCard url={link} mine={false} width={Math.min(width - 64, 320)} />
+            </BubbleColorsContext.Provider>
           )}
         </ScrollView>
 

@@ -529,7 +529,7 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
   );
 }
 
-function Linked({ text, selecting }: { text: string; selecting: boolean }) {
+export function Linked({ text, selecting }: { text: string; selecting: boolean }) {
   return (
     <>
       {splitLinks(text).map((part, i) =>
@@ -549,7 +549,7 @@ function Linked({ text, selecting }: { text: string; selecting: boolean }) {
   );
 }
 
-function LinkCard({ url, mine, width }: { url: string; mine: boolean; width: number }) {
+export function LinkCard({ url, mine, width }: { url: string; mine: boolean; width: number }) {
   const t = useTheme();
   const bubble = useBubbleColors();
   const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
