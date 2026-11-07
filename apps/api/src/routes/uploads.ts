@@ -12,7 +12,14 @@ const uploadRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/uploads/presign",
     {
-      config: { guest: true, rateLimit: { max: 60, timeWindow: "1 minute" } },
+      config: {
+        guest: true,
+        rateLimit: {
+          hook: "preHandler",
+          max: (req) => ((req.body as { kind?: string } | undefined)?.kind === "sticker" ? 600 : 60),
+          timeWindow: "1 minute",
+        },
+      },
       schema: {
         tags: ["uploads"],
         summary: "Start an upload (max 1 GB; encrypted files max 100 MB; guests: photos up to 100 MB)",
@@ -29,7 +36,7 @@ const uploadRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/uploads/:id/complete",
     {
-      config: { guest: true },
+      config: { guest: true, rateLimit: { max: 600, timeWindow: "1 minute" } },
       schema: {
         tags: ["uploads"],
         summary: "Confirm the file was uploaded and start processing it",

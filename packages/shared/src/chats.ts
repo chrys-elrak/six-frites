@@ -74,13 +74,89 @@ export const ChecklistMark = z.object({
 });
 export type ChecklistMark = z.infer<typeof ChecklistMark>;
 
-export const EntityType = z.enum(["bold", "italic", "strike", "code", "spoiler"]);
+export const EntityType = z.enum(["bold", "italic", "underline", "strike", "code", "spoiler", "color", "font", "size", "highlight", "outline"]);
 export type EntityType = z.infer<typeof EntityType>;
+
+/** Colours text, its background and its outline can take; white and black read on only one kind of bubble. */
+export const TEXT_COLORS = {
+  red: "#ef4444",
+  orange: "#f97316",
+  yellow: "#eab308",
+  green: "#22c55e",
+  blue: "#3b82f6",
+  purple: "#a855f7",
+  pink: "#ec4899",
+  white: "#ffffff",
+  black: "#000000",
+} as const;
+export type TextColor = keyof typeof TEXT_COLORS;
+
+/** Ready-made two-colour gradients for text. */
+export const TEXT_GRADIENTS = {
+  sunset: ["#f59e0b", "#e11d48"],
+  ocean: ["#06b6d4", "#6366f1"],
+  candy: ["#ec4899", "#a855f7"],
+  forest: ["#84cc16", "#0d9488"],
+} as const;
+export type TextGradient = keyof typeof TEXT_GRADIENTS;
+
+const HEX = /^#[0-9a-f]{6}$/;
+
+/**
+ * What a colour range's value paints: a named colour or gradient, any colour as #rrggbb, or a gradient between
+ * two as #rrggbb-#rrggbb. Null when it's none of these.
+ */
+export function textColor(value: string | undefined): { solid: string } | { gradient: readonly [string, string] } | null {
+  if (!value) return null;
+  if (value in TEXT_COLORS) return { solid: TEXT_COLORS[value as TextColor] };
+  if (value in TEXT_GRADIENTS) return { gradient: TEXT_GRADIENTS[value as TextGradient] };
+  if (HEX.test(value)) return { solid: value };
+  const [a, b, ...rest] = value.split("-");
+  return !rest.length && a && b && HEX.test(a) && HEX.test(b) ? { gradient: [a, b] } : null;
+}
+
+/** The colour a fraction `t` of the way along a gradient. */
+export function mixColor([a, b]: readonly [string, string], t: number) {
+  const ch = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  return `#${[0, 1, 2].map((i) => Math.round(ch(a, i) + (ch(b, i) - ch(a, i)) * t).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** The colour at `hue` (0 to 360) and `light` (0 black, 0.5 the pure colour, 1 white), as #rrggbb. */
+export function hslHex(hue: number, light: number) {
+  const a = Math.min(light, 1 - light);
+  const part = (n: number) => {
+    const k = (n + hue / 30) % 12;
+    return Math.round((light - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))) * 255)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${part(0)}${part(8)}${part(4)}`;
+}
+
+/** Text sizes in points the format bar offers; any whole size in MESSAGE_TEXT_SIZE_RANGE works. */
+export const MESSAGE_TEXT_SIZES = [10, 12, 14, 18, 22, 28, 36] as const;
+export const MESSAGE_TEXT_SIZE_RANGE = { min: 8, max: 48 } as const;
+
+/** The size in points a size range's value asks for, or null when it isn't a whole size in range. */
+export function textSize(value: string | undefined) {
+  if (!value || !/^\d{1,2}$/.test(value)) return null;
+  const n = Number(value);
+  return n >= MESSAGE_TEXT_SIZE_RANGE.min && n <= MESSAGE_TEXT_SIZE_RANGE.max ? n : null;
+}
+
+/** Fonts text can take; the apps load them under the family names in LABEL_FONTS. */
+export const TEXT_FONTS = ["serif", "marker", "script", "typewriter", "handwriting", "lobster", "tall", "rounded", "pixel", "elegant"] as const;
+export type TextFont = (typeof TEXT_FONTS)[number];
 
 export const MessageEntity = z.object({
   type: EntityType,
   offset: z.number().int().min(0),
   length: z.number().int().min(1),
+  value: z
+    .string()
+    .max(16)
+    .optional()
+    .describe("For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48"),
 });
 export type MessageEntity = z.infer<typeof MessageEntity>;
 
@@ -91,11 +167,23 @@ export const Entities = z
     "Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not.",
   );
 
-/** Checks that every range sits inside the text and that ranges of the same type never overlap. */
+const valueFits = (e: MessageEntity) =>
+  e.type === "color" || e.type === "highlight" || e.type === "outline"
+    ? textColor(e.value) !== null
+    : e.type === "font"
+      ? (TEXT_FONTS as readonly string[]).includes(e.value ?? "")
+      : e.type === "size"
+        ? textSize(e.value) !== null
+        : e.value === undefined;
+
+/**
+ * Checks that every range sits inside the text, that ranges of the same type never overlap, and that colour and
+ * font ranges name one the apps know.
+ */
 export function entitiesFit(text: string, entities: MessageEntity[] = []) {
   const byType = new Map<EntityType, MessageEntity[]>();
   for (const e of entities) {
-    if (e.offset + e.length > text.length) return false;
+    if (e.offset + e.length > text.length || !valueFits(e)) return false;
     byType.set(e.type, [...(byType.get(e.type) ?? []), e]);
   }
   for (const ranges of byType.values()) {
@@ -181,6 +269,12 @@ export const ServiceAction = z
     z.object({ type: z.literal("e2ee") }),
     z.object({ type: z.literal("vanish"), on: z.boolean() }),
     z.object({ type: z.literal("pin") }),
+    z.object({ type: z.literal("group_created"), title: z.string() }),
+    z.object({ type: z.literal("joined"), name: z.string() }),
+    z.object({ type: z.literal("left"), name: z.string() }),
+    z.object({ type: z.literal("removed"), name: z.string() }),
+    z.object({ type: z.literal("renamed"), title: z.string() }),
+    z.object({ type: z.literal("group_photo") }),
     z.object({
       type: z.literal("call"),
       video: z.boolean(),
@@ -199,7 +293,7 @@ export const ServiceAction = z
     }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 
@@ -268,6 +362,13 @@ export const MessageEffect = z
   .describe("How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives");
 export type MessageEffect = z.infer<typeof MessageEffect>;
 
+export const ReactionGif = z.object({
+  url: z.string().url(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+});
+export type ReactionGif = z.infer<typeof ReactionGif>;
+
 export const MessageDTO = z.object({
   id: Id,
   chatId: Id,
@@ -299,8 +400,15 @@ export const MessageDTO = z.object({
   deletedBy: Id.nullable().describe("Who deleted it for everyone: the sender, or the other person in a direct chat"),
   expiresAt: IsoDate.nullable().describe("When the chat's auto-delete timer removes it for everyone"),
   reactions: z
-    .array(z.object({ emoji: z.string(), userIds: z.array(Id) }))
-    .describe("One entry per emoji, oldest first; a person can add several different emoji"),
+    .array(
+      z.object({
+        emoji: z.string().describe("The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it"),
+        userIds: z.array(Id),
+        sticker: StickerDTO.nullish().describe("For a sticker reaction; null once the sticker is gone"),
+        gif: ReactionGif.nullish().describe("For a GIF reaction, as an MP4 to play muted on a loop"),
+      }),
+    )
+    .describe("One entry per emoji, sticker or GIF, oldest first; a person can add several different ones"),
   encryption: EncryptionDTO.nullable().describe(
     "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
   ),
@@ -461,8 +569,15 @@ export const SendMessageInput = z
   });
 export type SendMessageInput = z.infer<typeof SendMessageInput>;
 
+/** Places in a group, whoever created it included. */
+export const GROUP_MIN_PLACES = 3;
+export const GROUP_MAX_PLACES = 50;
+export const GROUP_ROLES = ["owner", "admin", "member"] as const;
+export type GroupRole = (typeof GROUP_ROLES)[number];
+
 export const ChatMemberDTO = z.object({
-  user: PublicUser,
+  user: PublicUser.describe("In a group, their nickname and photo there, unless you gave them a name of your own"),
+  role: z.enum(GROUP_ROLES).nullable().describe("In a group; null in a direct chat"),
   lastDeliveredMessageId: Id.nullable(),
   lastDeliveredAt: IsoDate.nullable(),
   lastReadMessageId: Id.nullable(),
@@ -472,8 +587,23 @@ export type ChatMemberDTO = z.infer<typeof ChatMemberDTO>;
 
 export const ChatDTO = z.object({
   id: Id,
-  type: z.enum(["direct"]),
+  type: z.enum(["direct", "group"]),
   title: z.string(),
+  group: z
+    .object({
+      photoUrl: z.string().nullable(),
+      description: z.string().nullable(),
+      inviteCode: z
+        .string()
+        .nullable()
+        .describe("The code in the group's link, the only way in; null for members when only admins may share it"),
+      maxMembers: z.number().int(),
+      membersCanWrite: z.boolean().describe("Off: only the owner and admins send messages; members read and react"),
+      membersCanInvite: z.boolean().describe("Off: only the owner and admins see the group's link"),
+      myRole: z.enum(GROUP_ROLES),
+    })
+    .nullable()
+    .describe("Set on a group"),
   members: z.array(ChatMemberDTO),
   lastMessage: MessageDTO.nullable(),
   unreadCount: z.number().int(),
@@ -689,15 +819,37 @@ export const MessageReactedDTO = z.object({
   chatId: Id,
   messageId: Id,
   userId: Id.describe("Who reacted"),
-  emoji: z.string(),
+  emoji: z.string().describe("What to show: the emoji, a sticker's emoji, or GIF"),
 });
 export type MessageReactedDTO = z.infer<typeof MessageReactedDTO>;
 
 /** How many different emoji one person can put on one message. */
 export const MAX_REACTIONS_PER_USER = 10;
 
-export const ReactInput = z.object({ emoji: ReactionEmoji });
+/** What removes a sticker or GIF reaction: `sticker:<id>` or `gif:<id>`. */
+export const ReactionKey = z.string().regex(/^(?:sticker|gif):[\w-]{1,128}$/, "Expected sticker:<id> or gif:<id>");
+
+export const ReactInput = z
+  .object({
+    emoji: ReactionEmoji.optional(),
+    stickerId: Id.optional().describe("React with this sticker"),
+    gifId: z
+      .string()
+      .regex(/^[\w-]{1,128}$/)
+      .optional()
+      .describe("React with this GIF from GET /v1/gifs"),
+  })
+  .refine((v) => [v.emoji, v.stickerId, v.gifId].filter((x) => x !== undefined).length === 1, {
+    message: "React with one emoji, sticker or GIF",
+  });
 export type ReactInput = z.infer<typeof ReactInput>;
+
+/** How a reaction reads in a notification: its emoji, a sticker's emoji, or GIF. */
+export function reactionGlyph(r: { emoji: string; sticker?: { emoji: string } | null; gif?: unknown }) {
+  if (r.emoji.startsWith("sticker:")) return r.sticker?.emoji ?? "🖼️";
+  if (r.emoji.startsWith("gif:")) return "GIF";
+  return r.emoji;
+}
 
 export const CheckItemInput = z.object({ done: z.boolean() });
 export type CheckItemInput = z.infer<typeof CheckItemInput>;

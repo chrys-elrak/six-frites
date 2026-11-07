@@ -73,6 +73,7 @@ model User {
   referredBy     Referral?          @relation("referee")
   referrals      Referral[]         @relation("referrer")
   memberships    ChatMember[]
+  chatBans       ChatBan[]
   messages       Message[]
   hiddenMessages MessageHidden[]
   uploads        Upload[]
@@ -310,10 +311,36 @@ model Chat {
   supportUserId   String?
   /// Support closed the conversation; the next message opens it again.
   supportClosedAt DateTime?
+  /// A group's name; groups have type "group" and no directKey.
+  title           String?
+  description     String?
+  photoKey        String?
+  /// The code in the group's link, the only way in; resetting it makes the old link stop working.
+  inviteCode      String?   @unique
+  /// How many members a group can have.
+  maxMembers      Int?
+  /// Off: only a group's owner and admins send messages; members read and react.
+  membersCanWrite Boolean   @default(true)
+  /// Off: only a group's owner and admins see its link, so only they can bring people in.
+  membersCanInvite Boolean  @default(true)
 
   members   ChatMember[]
   messages  Message[]
   scheduled ScheduledMessage[]
+  bans      ChatBan[]
+}
+
+/// Someone removed from a group, who can't come back through its link.
+model ChatBan {
+  chatId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+  @@index([userId])
 }
 
 model ChatMember {
@@ -336,6 +363,11 @@ model ChatMember {
   draft                  String?
   draftSealed            Boolean   @default(false)
   draftAt                DateTime?
+  /// In a group: owner, admin or member.
+  role                   String    @default("member")
+  /// In a group: the name and photo this member shows there instead of their alias.
+  nickname               String?
+  photoKey               String?
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -547,6 +579,8 @@ model Sticker {
   id        String    @id @default(cuid())
   packId    String
   emoji     String
+  /// What it's called, from its file name (or the emoji's name for the Noto ones), for finding it with /sticker.
+  name      String?
   uploadId  String?   @unique
   lottieUrl String?
   position  Int       @default(0)
@@ -555,8 +589,9 @@ model Sticker {
   createdAt DateTime  @default(now())
 
   pack     StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)
-  upload   Upload?     @relation(fields: [uploadId], references: [id], onDelete: SetNull)
-  messages Message[]
+  upload    Upload?           @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  messages  Message[]
+  reactions MessageReaction[]
 
   @@index([packId, position])
 }
@@ -587,11 +622,17 @@ model MessageView {
 model MessageReaction {
   messageId String
   userId    String
+  /// The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF reaction.
   emoji     String
+  stickerId String?
+  gifKey    String?
+  gifWidth  Int?
+  gifHeight Int?
   createdAt DateTime @default(now())
 
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sticker Sticker? @relation(fields: [stickerId], references: [id], onDelete: SetNull)
 
   @@id([messageId, userId, emoji])
 }

@@ -76,6 +76,10 @@ export const shareInvite = (code: string) => shareLink(getT().common.joinMe, inv
 
 export const shareContact = (code: string) => shareLink(getT().common.addMe, contactUrl(code));
 
+export const groupUrl = (code: string) => `${window.location.origin}/g/${code}`;
+
+export const shareGroup = (title: string, code: string) => shareLink(title, groupUrl(code));
+
 export const shareAsk = (code: string, prompt?: string | null) =>
   shareLink(prompt ?? getT().ask.prompt, askUrl(window.location.origin, code));
 

@@ -91,3 +91,30 @@ export function suggestEmoji(list: EmojiEntry[], query: string, limit = 8) {
     .slice(0, limit)
     .map((s) => s.x);
 }
+
+const LEADING_EMOJI = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:\p{Emoji_Modifier}|‍|️|\p{Extended_Pictographic})*/u;
+const SKIN_TONES: Record<string, string> = {
+  light: "\u{1F3FB}",
+  "medium light": "\u{1F3FC}",
+  medium: "\u{1F3FD}",
+  "medium dark": "\u{1F3FE}",
+  dark: "\u{1F3FF}",
+};
+
+/**
+ * The emoji a sticker file stands for: one at the start of its name ("😢 sad.png"), or the emoji whose name it is
+ * ("Crying Face.png"), with its skin tone when the name ends in one ("Man Construction Worker Medium Skin Tone.png");
+ * ⭐ when nothing fits. `byName` finds an emoji by its lowercase English name.
+ */
+export function emojiForFileName(fileName: string, byName: (name: string) => string | undefined) {
+  const base = fileName.replace(/\.[^.]+$/, "");
+  const lead = LEADING_EMOJI.exec(base)?.[0];
+  if (lead) return lead;
+  const name = base.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  const toned = /^(.*?)[\s,:]+(light|medium light|medium|medium dark|dark) skin tone$/.exec(name);
+  const emoji = byName(toned ? toned[1]! : name);
+  if (!emoji) return "⭐";
+  if (!toned) return emoji;
+  const [first = "", ...rest] = [...emoji];
+  return first + SKIN_TONES[toned[2]!]! + (rest[0] === "\ufe0f" ? rest.slice(1) : rest).join("");
+}

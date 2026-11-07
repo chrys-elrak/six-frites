@@ -1,34 +1,35 @@
 "use client";
 
-import { SixApiError } from "@six/sdk";
+import { SixApiError, unwrap } from "@six/sdk";
 import {
-  AUTO_DELETE_PRESETS,
+  COMMANDS,
   type EmojiEntry,
-  type EphemeralInput,
   type GifDTO,
   LIVE_EMOJI,
   LIVE_GAMES,
   type LiveGame,
   MessageEffect,
   type MenuCommand,
-  durationLabel,
+  type StickerDTO,
+  groupCommands,
   isMenuCommand,
   parseCommand,
   silentMessage,
   suggestEmoji,
 } from "@six/shared";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
 import { emojiList } from "@/lib/emoji";
 import { updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
-import { EPHEMERAL_OPTIONS } from "@/lib/ephemeral";
 import { useLocale, useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
+import { six } from "@/lib/six";
 import { VOICE_EFFECTS, useVoiceEffect } from "@/lib/voice-fx";
 import { useGifs } from "./gif-picker";
+import { StickerView } from "./sticker";
 
 interface Choice {
   key: string;
@@ -60,11 +61,10 @@ export function CommandBar({
   onComplete,
   onGif,
   onSticker,
+  onPackSticker,
   onMenu,
-  onDestruct,
   onLocation,
   onEffect,
-  onSearch,
 }: {
   ref: Ref<CommandBarHandle>;
   chatId: string;
@@ -72,11 +72,10 @@ export function CommandBar({
   onComplete: (text: string) => void;
   onGif: (gif: GifDTO) => void;
   onSticker: (sticker: GifDTO) => void;
+  onPackSticker: (sticker: StickerDTO) => void;
   onMenu: (name: MenuCommand) => void;
-  onDestruct: (value: EphemeralInput) => void;
   onLocation: () => void;
   onEffect: (effect: MessageEffect) => void;
-  onSearch: (q: string) => void;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -87,7 +86,7 @@ export function CommandBar({
   const chat = useChat(qc, chatId).data;
   const voice = useVoiceEffect((s) => s.effect);
   const setVoice = useVoiceEffect((s) => s.set);
-  const command = silentMessage(text) === null ? parseCommand(text) : null;
+  const command = silentMessage(text) === null ? parseCommand(text, chat?.group ? groupCommands(COMMANDS) : COMMANDS) : null;
   const run = command?.kind === "run" ? command : null;
   const search = run?.name === "giphy" || run?.name === "sticker" ? run.args : null;
   const kind = run?.name === "sticker" ? "sticker" : "gif";
@@ -148,32 +147,8 @@ export function CommandBar({
           label: tr.messages.effectNames[e],
           pick: () => onEffect(e),
         })).filter(match);
-      case "destruct":
-        return EPHEMERAL_OPTIONS.map((o) => ({ key: o.label, label: o.label, pick: () => onDestruct(o.value) })).filter(
-          match,
-        );
       case "location":
         return [{ key: "here", label: tr.composer.sendLocation, pick: onLocation }].filter(match);
-      case "autodelete":
-        return [
-          ...AUTO_DELETE_PRESETS.map((secs) => ({
-            key: String(secs),
-            label: durationLabel(secs, tr),
-            current: chat?.autoDeleteSecs === secs,
-            pick: () => chatSetting({ autoDeleteSecs: secs }),
-          })),
-          ...(chat?.autoDeleteSecs
-            ? [{ key: "off", label: tr.chat.turnOff, pick: () => chatSetting({ autoDeleteSecs: null }) }]
-            : []),
-        ].filter(match);
-      case "blur":
-        return [
-          {
-            key: "blur",
-            label: chat?.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
-            pick: () => chatSetting({ safeView: !chat?.safeView }),
-          },
-        ].filter(match);
       case "vanish":
         return [
           {
@@ -182,8 +157,6 @@ export function CommandBar({
             pick: () => chatSetting({ vanish: !chat?.vanish }),
           },
         ].filter(match);
-      case "search":
-        return [{ key: "search", label: args ? tr.composer.searchFor(args) : tr.chat.search, pick: () => onSearch(args) }];
       case "play":
         return LIVE_GAMES.map((g) => ({ key: g, label: `${LIVE_EMOJI[g]} ${tr.live.games[g]}`, pick: () => play(g) })).filter(match);
       default:
@@ -192,11 +165,18 @@ export function CommandBar({
   }
 
   const gifs = useGifs(q ?? "", search !== null && q !== null, kind);
+  const packs = useQuery({
+    queryKey: ["sticker-search", q],
+    queryFn: async () => unwrap(await six.api.GET("/v1/stickers/search", { params: { query: { q: q ?? "" } } })),
+    enabled: kind === "sticker" && search !== null && !!q,
+    staleTime: 60_000,
+  });
   const names = command?.kind === "names" ? command.names : [];
+  const own = kind === "sticker" && search !== null && q ? (packs.data?.items ?? []) : [];
   const items = search !== null ? (gifs.data?.pages[0]?.items ?? []) : [];
   const choices = run ? choicesFor(run.name, run.args) : null;
   const waiting = run?.name === "emoji" && !emojis;
-  const count = names.length || items.length || (choices?.length ?? 0);
+  const count = names.length || own.length + items.length || (choices?.length ?? 0);
   const shown = command !== null && dismissed !== text && (!choices || waiting || choices.length > 0);
 
   useEffect(() => setActive(0), [q, command?.kind]);
@@ -206,7 +186,8 @@ export function CommandBar({
     if (name && isMenuCommand(name)) onMenu(name);
     else if (name) onComplete(`/${name} `);
     else if (choices) choices[i]?.pick();
-    else if (items[i]) (kind === "sticker" ? onSticker : onGif)(items[i]);
+    else if (own[i]) onPackSticker(own[i]);
+    else if (items[i - own.length]) (kind === "sticker" ? onSticker : onGif)(items[i - own.length]!);
   }
 
   useImperativeHandle(ref, () => ({
@@ -231,7 +212,7 @@ export function CommandBar({
 
   if (!shown) return null;
   const unavailable = gifs.error instanceof SixApiError && gifs.error.code === "GIFS_UNAVAILABLE";
-  const notice = names.length
+  const notice = names.length || own.length
     ? null
     : choices
       ? waiting
@@ -303,7 +284,21 @@ export function CommandBar({
       ) : (
         <>
           <div role="listbox" aria-label={tr.composer.pickerTabs[kind]} className="flex gap-1 overflow-x-auto p-1">
-            {items.map((g, i) => (
+            {own.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                {...option(i)}
+                ref={i === active ? (el) => el?.scrollIntoView({ block: "nearest", inline: "nearest" }) : undefined}
+                title={s.emoji}
+                className={`grid size-24 shrink-0 place-items-center rounded-lg ${i === active ? "ring-2 ring-brand ring-inset" : ""}`}
+              >
+                <StickerView sticker={s} size={88} />
+              </button>
+            ))}
+            {items.map((g, j) => {
+              const i = own.length + j;
+              return (
               <button
                 key={g.id}
                 type="button"
@@ -322,7 +317,8 @@ export function CommandBar({
                   className={`size-full ${kind === "sticker" ? "object-contain" : "object-cover"}`}
                 />
               </button>
-            ))}
+              );
+            })}
           </div>
           <p className="px-3 pb-1 text-[11px] text-stone-400">{tr.composer.poweredByGiphy}</p>
         </>

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { deleteExpiredMessages } from "../src/services/messages.js";
 import { sendDueScheduled } from "../src/services/scheduled.js";
 import { purgeAbandonedUploads } from "../src/services/uploads.js";
-import { chatHelpers, prisma, useApp } from "./helpers.js";
+import { chatHelpers, makeAdmin, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, send, makeFriends } = chatHelpers(ctx);
@@ -160,6 +160,7 @@ describe("scheduled messages", () => {
 
   it("sends stickers, locations and checklists too", async () => {
     const { host, guest, chatId } = await makeFriends();
+    makeAdmin(host);
     const pack = (await call(host, "POST", "/v1/sticker-packs", { title: "Later" })).json();
     const sticker = await prisma.sticker.create({
       data: { packId: pack.id, emoji: "⏰", lottieUrl: "https://example.com/later.json" },

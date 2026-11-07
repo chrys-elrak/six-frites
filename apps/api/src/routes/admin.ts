@@ -28,12 +28,15 @@ import {
   AdminMailDTO,
   AdminMailQuery,
   AdminMailStats,
+  ImportStickersInput,
+  StickerImportDTO,
 } from "@six/shared";
 import {
   addOfficialSticker,
   adminStats,
   banSticker,
   banStickerPack,
+  deleteOfficialPack,
   banUser,
   createOfficialPack,
   removeLargeFile,
@@ -50,6 +53,7 @@ import {
 } from "../services/admin.js";
 import { adminTwoFactor } from "../plugins/auth.js";
 import { listAnonForAdmin } from "../services/ask.js";
+import { cancelStickerImport, latestStickerImport, startStickerImport, stickerImportProgress } from "../services/sticker-import.js";
 import { createReport, listReports, resolveReport } from "../services/reports.js";
 import { listMailLog, mailStats } from "../services/emails.js";
 
@@ -328,8 +332,84 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.post(
+    "/admin/sticker-packs/import",
+    {
+      schema: {
+        tags,
+        summary: "Import a zip of stickers into official packs",
+        description:
+          "Upload the zip first (kind `sticker_zip`). The server unpacks it in the background: each folder becomes an official pack named after it, loose files a pack named after the zip, more than 120 stickers several packs. Follow it with GET /v1/admin/sticker-packs/import/{uploadId}.",
+        security,
+        body: ImportStickersInput,
+        response: { 202: StickerImportDTO },
+      },
+    },
+    async (req, reply) => reply.status(202).send(await startStickerImport(req.auth.userId, req.body.uploadId)),
+  );
+
+  app.get(
+    "/admin/sticker-packs/import",
+    {
+      schema: {
+        tags,
+        summary: "Your latest sticker zip import, running or finished in the last day",
+        security,
+        response: { 200: z.object({ import: StickerImportDTO.nullable() }) },
+      },
+    },
+    (req) => latestStickerImport(req.auth.userId),
+  );
+
+  app.post(
+    "/admin/sticker-packs/import/:uploadId/cancel",
+    {
+      schema: {
+        tags,
+        summary: "Stop a sticker zip import; the packs it made so far stay",
+        security,
+        params: z.object({ uploadId: Id }),
+        response: { 200: StickerImportDTO },
+      },
+    },
+    (req) => cancelStickerImport(req.auth.userId, req.params.uploadId),
+  );
+
+  app.delete(
+    "/admin/sticker-packs/:id/forever",
+    {
+      schema: {
+        tags,
+        summary: "Delete an official pack for good",
+        description: "Removes the pack, its stickers and their files. Refused when any of its stickers was sent; take it down instead.",
+        security,
+        params: Params,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await deleteOfficialPack(req.params.id);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.get(
+    "/admin/sticker-packs/import/:uploadId",
+    {
+      schema: {
+        tags,
+        summary: "How a sticker zip import is going",
+        security,
+        params: z.object({ uploadId: Id }),
+        response: { 200: StickerImportDTO },
+      },
+    },
+    (req) => stickerImportProgress(req.auth.userId, req.params.uploadId),
+  );
+
+  app.post(
     "/admin/sticker-packs/:id/stickers",
     {
+      config: { rateLimit: { max: 600, timeWindow: "1 minute" } },
       schema: {
         tags,
         summary: "Add a sticker to an official pack",

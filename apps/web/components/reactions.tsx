@@ -1,12 +1,15 @@
 "use client";
 
-import { type MessageDTO, QUICK_REACTIONS } from "@six/shared";
+import { type MessageDTO, QUICK_REACTIONS, type ReactionGif, type StickerDTO, reactionGlyph } from "@six/shared";
 import { Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Emojis } from "./emoji-picker";
+import { ExpressionPanel } from "./expression-panel";
+import { AnimatedEmoji } from "./animated-emoji";
+import { StickerView } from "./sticker";
 import { Portal } from "./portal";
 import { Card, SectionTitle } from "./ui";
 
@@ -144,7 +147,38 @@ export function ReactionPopover({
   );
 }
 
-export function ReactionPicker({ onPick, onClose }: { onPick: (emoji: string) => void; onClose: () => void }) {
+/** What a sticker or GIF reaction shows, so it appears before the server answers. */
+export type ReactionMedia = { sticker?: StickerDTO; gif?: ReactionGif };
+
+const isImage = (url: string) => /\.(webp|gif|png)(\?|$)/i.test(url);
+
+/** A reaction as it shows: the emoji, the sticker, or the GIF playing on a loop. */
+export function ReactionFace({ r, size }: { r: Pick<Reaction, "emoji" | "sticker" | "gif">; size: number }) {
+  if (r.sticker?.url) return <StickerView sticker={r.sticker} size={size} />;
+  if (r.gif) {
+    const style = { width: size, height: size };
+    return isImage(r.gif.url) ? (
+      <img src={r.gif.url} alt="GIF" style={style} className="rounded object-cover" />
+    ) : (
+      <video src={r.gif.url} autoPlay loop muted playsInline aria-label="GIF" style={style} className="rounded object-cover" />
+    );
+  }
+  return <span>{reactionGlyph(r)}</span>;
+}
+
+/**
+ * Picks a reaction from every emoji or, with `media`, from stickers and GIFs too, in the same tabs as the
+ * composer. A sticker or GIF comes back as its key with what it shows.
+ */
+export function ReactionPicker({
+  onPick,
+  onClose,
+  media = false,
+}: {
+  onPick: (emoji: string, media?: ReactionMedia) => void;
+  onClose: () => void;
+  media?: boolean;
+}) {
   const tr = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -167,12 +201,35 @@ export function ReactionPicker({ onPick, onClose }: { onPick: (emoji: string) =>
               <X className="size-5" />
             </button>
           </div>
-          <Emojis
-            onPick={(emoji) => {
-              onPick(emoji);
-              onClose();
-            }}
-          />
+          {media ? (
+            <ExpressionPanel
+              docked
+              onEmoji={(emoji) => {
+                onPick(emoji);
+                onClose();
+              }}
+              onSticker={(sticker) => {
+                onPick(`sticker:${sticker.id}`, { sticker });
+                onClose();
+              }}
+              onGif={(gif) => {
+                onPick(`gif:${gif.id}`, { gif: { url: gif.previewUrl, width: gif.width, height: gif.height } });
+                onClose();
+              }}
+              onFoundSticker={(found) => {
+                onPick(`gif:${found.id}`, { gif: { url: found.previewUrl, width: found.width, height: found.height } });
+                onClose();
+              }}
+              onClose={onClose}
+            />
+          ) : (
+            <Emojis
+              onPick={(emoji) => {
+                onPick(emoji);
+                onClose();
+              }}
+            />
+          )}
         </div>
       </div>
     </Portal>
@@ -185,7 +242,57 @@ const LIST_ROW = 44;
 
 type Reaction = MessageDTO["reactions"][number];
 
-function Chip({ r, own, label, onClick }: { r: Reaction; own: boolean; label: string; onClick: () => void }) {
+/** A reaction shown big (an emoji plays its animation), with who used it and a button to add or take off yours. */
+function MediaPreview({
+  r,
+  anchor,
+  alignEnd,
+  own,
+  names,
+  onToggle,
+  onClose,
+}: {
+  r: Reaction;
+  anchor: DOMRect;
+  alignEnd: boolean;
+  own: boolean;
+  names: string;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const tr = useT();
+  const root = useRef<HTMLDivElement>(null);
+  useDismiss(root, onClose);
+  const { top, left, width } = placeNear(anchor, 240, 300, alignEnd, "above");
+  return (
+    <Portal>
+      <div
+        ref={root}
+        role="dialog"
+        aria-label={reactionGlyph(r)}
+        style={{ top, left, width }}
+        className="reaction-pop chat-colors fixed z-[60] flex flex-col gap-2 rounded-2xl bg-white/80 p-2 shadow-xl ring-1 ring-stone-200 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/80 dark:ring-stone-800"
+      >
+        <div className="grid h-52 place-items-center overflow-hidden rounded-xl bg-black/5 dark:bg-white/5">
+          {r.gif || r.sticker ? <ReactionFace r={r} size={208} /> : <AnimatedEmoji emoji={r.emoji} size={160} />}
+        </div>
+        <p className="truncate px-1 text-sm">{names}</p>
+        <button
+          type="button"
+          onClick={() => {
+            onToggle();
+            onClose();
+          }}
+          className={`rounded-xl px-3 py-2 text-sm font-semibold ${own ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40" : "bg-brand/20 hover:bg-brand/30"}`}
+        >
+          {own ? tr.messages.removeMine : tr.messages.reactWithThis}
+        </button>
+      </div>
+    </Portal>
+  );
+}
+
+function Chip({ r, own, label, onClick }: { r: Reaction; own: boolean; label: string; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
   return (
     <button
       type="button"
@@ -197,7 +304,8 @@ function Chip({ r, own, label, onClick }: { r: Reaction; own: boolean; label: st
         own ? "bg-brand/15 ring-brand/60 dark:bg-brand/25" : "bg-white ring-stone-200 dark:bg-stone-800 dark:ring-stone-700"
       }`}
     >
-      <span>{r.emoji}</span>
+      <ReactionFace r={r} size={18} />
+      {r.gif && <span className="text-[10px] font-bold tracking-wide text-stone-500 dark:text-stone-300">GIF</span>}
       {r.userIds.length > 1 && (
         <span className="text-xs font-medium text-stone-600 dark:text-stone-300">{r.userIds.length}</span>
       )}
@@ -221,6 +329,8 @@ export function ReactionChips({
   const tr = useT();
   const [listAt, setListAt] = useState<DOMRect | null>(null);
   const closeList = useCallback(() => setListAt(null), []);
+  const [gifAt, setGifAt] = useState<{ key: string; anchor: DOMRect } | null>(null);
+  const closeGif = useCallback(() => setGifAt(null), []);
   if (!message.reactions?.length) return null;
 
   const names = (r: Reaction) => r.userIds.map((id) => (id === meId ? tr.common.you : nameOf(id))).join(", ");
@@ -229,7 +339,9 @@ export function ReactionChips({
   const hidden = ranked.length - shown.length;
 
   return (
-    <div className={`relative z-10 -mt-2.5 flex flex-wrap gap-1 self-stretch px-1.5 ${mine ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`relative z-10 mt-0.5 flex w-0 min-w-full flex-wrap items-center gap-1 self-stretch px-1.5 ${mine ? "justify-end" : "justify-start"}`}
+    >
       {shown.map((r) => {
         const own = r.userIds.includes(meId);
         return (
@@ -237,8 +349,8 @@ export function ReactionChips({
             key={r.emoji}
             r={r}
             own={own}
-            label={`${r.emoji} ${names(r)}${own ? ` ${tr.messages.tapToRemoveYours}` : ""}`}
-            onClick={() => onReact(r.emoji)}
+            label={`${reactionGlyph(r)} ${names(r)}`}
+            onClick={(e) => setGifAt({ key: r.emoji, anchor: e.currentTarget.getBoundingClientRect() })}
           />
         );
       })}
@@ -253,6 +365,23 @@ export function ReactionChips({
           +{hidden}
         </button>
       )}
+      {gifAt &&
+        (() => {
+          const r = message.reactions!.find((x) => x.emoji === gifAt.key);
+          return (
+            r && (
+              <MediaPreview
+                r={r}
+                anchor={gifAt.anchor}
+                alignEnd={mine}
+                own={r.userIds.includes(meId)}
+                names={names(r)}
+                onToggle={() => onReact(r.emoji)}
+                onClose={closeGif}
+              />
+            )
+          );
+        })()}
       {listAt && hidden > 0 && (
         <ReactionList
           anchor={listAt}
@@ -313,7 +442,9 @@ function ReactionList({
                 own ? "bg-brand/10" : ""
               }`}
             >
-              <span className="text-xl">{r.emoji}</span>
+              <span className="grid w-7 place-items-center text-xl">
+                <ReactionFace r={r} size={26} />
+              </span>
               <span className="min-w-0 flex-1 truncate text-sm">{names(r)}</span>
               {r.userIds.length > 1 && <span className="text-xs font-medium text-stone-500">{r.userIds.length}</span>}
             </button>

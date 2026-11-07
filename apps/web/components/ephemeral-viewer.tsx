@@ -147,7 +147,7 @@ export function EphemeralViewer({
               <p className="max-w-lg text-center text-lg leading-relaxed break-words whitespace-pre-wrap select-none">
                 {message.entities.length
                   ? segments(text, message.entities).map((seg, i) => (
-                      <Styled key={i} styles={seg.styles}>
+                      <Styled key={i} styles={seg.styles} color={seg.color} font={seg.font} size={seg.size} highlight={seg.highlight} outline={seg.outline}>
                         {seg.styles.has("code") ? seg.text : <Linked text={seg.text} />}
                       </Styled>
                     ))

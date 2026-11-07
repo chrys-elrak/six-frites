@@ -32,9 +32,18 @@ export async function blockedWith(db: Tx, userId: string) {
 
 /**
  * Refuses to post into a chat where either person blocked the other or the other person deleted
- * their account. Covers sending, scheduled sends, edits, reactions and timer or theme changes.
+ * their account. Covers sending, scheduled sends, edits, reactions and timer or theme changes. In a group
+ * that only admins write in, refuses members `writing` a message, but not their reactions or what the group
+ * announces for them.
  */
-export async function assertCanMessage(db: Tx, chatId: string, userId: string) {
+export async function assertCanMessage(db: Tx, chatId: string, userId: string, writing = true) {
+  const chat = await db.chat.findUnique({ where: { id: chatId }, select: { type: true, membersCanWrite: true } });
+  if (chat?.type === "group") {
+    if (!writing || chat.membersCanWrite) return;
+    const me = await db.chatMember.findUnique({ where: { chatId_userId: { chatId, userId } }, select: { role: true } });
+    if (me?.role === "member") throw new AppError("GROUP_ADMINS_ONLY", "Only admins can send messages in this group");
+    return;
+  }
   const others = await db.chatMember.findMany({
     where: { chatId, userId: { not: userId } },
     select: { user: { select: { id: true, deletedAt: true } } },
@@ -45,6 +54,12 @@ export async function assertCanMessage(db: Tx, chatId: string, userId: string) {
     if (state.byMe) throw new AppError("CHAT_BLOCKED", "You blocked this person. Unblock them to send messages.");
     if (state.byThem) throw new AppError("CHAT_BLOCKED", "This person blocked you");
   }
+}
+
+/** Refuses what only makes sense between two people, like calls or vanish mode, in a group. */
+export async function assertDirect(db: Tx, chatId: string) {
+  const chat = await db.chat.findUnique({ where: { id: chatId }, select: { type: true } });
+  if (chat?.type === "group") throw new AppError("NOT_IN_GROUPS", "This isn't available in groups");
 }
 
 async function directChatWith(db: Tx, userId: string, otherId: string) {

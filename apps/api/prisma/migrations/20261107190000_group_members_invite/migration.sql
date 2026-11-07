@@ -1,0 +1,1 @@
+ALTER TABLE "Chat" ADD COLUMN "membersCanInvite" BOOLEAN NOT NULL DEFAULT true;

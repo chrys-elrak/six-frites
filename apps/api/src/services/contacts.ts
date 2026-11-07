@@ -15,7 +15,7 @@ import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
 import { scrubMessageEvents } from "./messages.js";
 import { purgeUploads } from "./uploads.js";
-import { avatarOf, requireAppLock, toPublicUser } from "./users.js";
+import { avatarOf, pairAlias, requireAppLock, toPublicUser } from "./users.js";
 
 interface Override {
   displayName: string | null;
@@ -34,11 +34,18 @@ function applyOverride(user: PublicUser, o: Override | undefined): PublicUser {
   };
 }
 
+/** The name and photo someone shows in a group. */
+export interface GroupFace {
+  nickname: string | null;
+  photoKey: string | null;
+}
+
 /**
  * How `viewerId` sees these users: their alias and no photo unless they share their profile with
- * the viewer, and the name and photo the viewer gave them on top of that.
+ * the viewer, or in a group the face they show there (`faces`), and the name and photo the viewer
+ * gave them on top of that.
  */
-export async function profilesFor(db: Tx, viewerId: string, userIds: string[]) {
+export async function profilesFor(db: Tx, viewerId: string, userIds: string[], faces?: Map<string, GroupFace>) {
   const others = userIds.filter((id) => id !== viewerId);
   const overrides = others.length
     ? await db.contactOverride.findMany({ where: { ownerId: viewerId, contactId: { in: others } } })
@@ -51,8 +58,17 @@ export async function profilesFor(db: Tx, viewerId: string, userIds: string[]) {
     : [];
   const byId = new Map<string, Override>(overrides.map((o) => [o.contactId, o]));
   const shared = new Set(sharing.map((m) => m.userId));
-  return (u: Parameters<typeof toPublicUser>[0]) =>
-    applyOverride(toPublicUser(u, viewerId, u.id === viewerId || shared.has(u.id)), byId.get(u.id));
+  return (u: Parameters<typeof toPublicUser>[0]) => {
+    const face = faces?.get(u.id);
+    const base = face
+      ? {
+          id: u.id,
+          displayName: face.nickname ?? pairAlias(viewerId, u.id),
+          avatarUrl: face.photoKey ? presignGet(face.photoKey) : null,
+        }
+      : toPublicUser(u, viewerId, u.id === viewerId || shared.has(u.id));
+    return applyOverride(base, byId.get(u.id));
+  };
 }
 
 function encodeCursor(name: string, id: string) {

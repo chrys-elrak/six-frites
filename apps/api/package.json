@@ -45,6 +45,7 @@
     "@types/node": "^24.9.1",
     "@types/nodemailer": "^8.0.2",
     "@types/web-push": "^3.6.4",
+    "fflate": "^0.8.3",
     "prisma": "^7.10.1",
     "socket.io-client": "^4.8.4",
     "tsx": "^4.20.6",

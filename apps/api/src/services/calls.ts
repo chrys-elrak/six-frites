@@ -4,7 +4,7 @@ import { env } from "../env.js";
 import { withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
-import { assertCanMessage } from "./blocks.js";
+import { assertCanMessage, assertDirect } from "./blocks.js";
 import { activeDevices } from "./devices.js";
 import { assertMember, createMessage, messageInclude, toMessageDTO } from "./messages.js";
 import { notify } from "./notifications.js";
@@ -33,6 +33,7 @@ export async function relaySignal(userId: string, sessionId: string, input: Call
   const sender = await prisma.device.findUnique({ where: { sessionId } });
   if (!sender) throw new AppError("DEVICE_NOT_REGISTERED");
   await assertMember(prisma, input.chatId, userId);
+  await assertDirect(prisma, input.chatId);
   await assertCanMessage(prisma, input.chatId, userId);
   const members = await prisma.chatMember.findMany({ where: { chatId: input.chatId }, select: { userId: true } });
   const devices = new Map((await activeDevices(prisma, members.map((m) => m.userId))).map((d) => [d.id, d]));
@@ -61,6 +62,7 @@ export async function logCall(userId: string, chatId: string, input: LogCallInpu
     prisma.message.findUnique({ where: { senderId_clientId: { senderId: userId, clientId } }, include: messageInclude });
   const existing = await find();
   if (existing) return toMessageDTO(existing, userId);
+  await assertDirect(prisma, chatId);
   try {
     const { message } = await withEvents(async (tx, emit) => {
       const logged = await createMessage(tx, emit, userId, chatId, {

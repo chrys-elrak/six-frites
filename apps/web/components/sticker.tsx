@@ -9,12 +9,14 @@ export function LottieView({
   url,
   size,
   autoplay = true,
+  loop = false,
   fallback,
   onReady,
 }: {
   url: string | null;
   size: number;
   autoplay?: boolean;
+  loop?: boolean;
   fallback?: React.ReactNode;
   onReady?: (anim: AnimationItem) => void;
 }) {
@@ -33,7 +35,7 @@ export function LottieView({
       item = lottie.loadAnimation({
         container: box.current,
         renderer: "svg",
-        loop: false,
+        loop,
         autoplay,
         path: url,
         rendererSettings: { preserveAspectRatio: "xMidYMid meet" },
@@ -51,7 +53,7 @@ export function LottieView({
       item?.destroy();
       setReady(false);
     };
-  }, [url, autoplay]);
+  }, [url, autoplay, loop]);
 
   return (
     <span className="relative inline-grid place-items-center" style={{ width: size, height: size }}>

@@ -1,7 +1,10 @@
-import { QUICK_REACTIONS, type MessageDTO } from "@six/shared";
+import { QUICK_REACTIONS, type MessageDTO, type ReactionGif, type StickerDTO, reactionGlyph } from "@six/shared";
+import { Image } from "expo-image";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Plus } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { AnimatedEmoji } from "./animated-emoji";
 import { Text } from "./text";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,9 +13,62 @@ import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { EmojiPicker } from "./emoji-picker";
+import { ExpressionPanel } from "./expression-panel";
+import { StickerView } from "./sticker";
 import { Card, SectionTitle, TextButton } from "./ui";
 
 type Reaction = MessageDTO["reactions"][number];
+
+/** What a sticker or GIF reaction shows, so it appears before the server answers. */
+export type ReactionMedia = { sticker?: StickerDTO; gif?: ReactionGif };
+
+function LoopingGif({ url, size }: { url: string; size: number }) {
+  const player = useVideoPlayer(url, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+  return <VideoView player={player} style={{ width: size, height: size, borderRadius: 4 }} contentFit="cover" nativeControls={false} />;
+}
+
+/** A reaction as it shows: the emoji, the sticker, or the GIF playing on a loop. */
+export function ReactionFace({ r, size }: { r: Pick<Reaction, "emoji" | "sticker" | "gif">; size: number }) {
+  if (r.sticker?.url) return <StickerView sticker={r.sticker} size={size} />;
+  if (r.gif) {
+    return /\.(webp|gif|png)(\?|$)/i.test(r.gif.url) ? (
+      <Image source={{ uri: r.gif.url }} style={{ width: size, height: size, borderRadius: 4 }} contentFit="cover" />
+    ) : (
+      <LoopingGif url={r.gif.url} size={size} />
+    );
+  }
+  return <Text style={{ fontSize: size * 0.8 }}>{reactionGlyph(r)}</Text>;
+}
+
+/** Every emoji, sticker and GIF to react with, in the composer's tabs, in a sheet over the chat. */
+export function ReactionPicker({
+  open,
+  onClose,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onPick: (emoji: string, media?: ReactionMedia) => void;
+}) {
+  const insets = useSafeAreaInsets();
+  if (!open) return null;
+  const gif = (g: { id: string; previewUrl: string; width: number; height: number }) =>
+    onPick(`gif:${g.id}`, { gif: { url: g.previewUrl, width: g.width, height: g.height } });
+  return (
+    <Modal transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+      <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.3)" }]} onPress={onClose} />
+      <View style={{ flex: 1, justifyContent: "flex-end" }} pointerEvents="box-none">
+        <View style={{ height: 380, paddingBottom: insets.bottom, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden" }}>
+          <ExpressionPanel onEmoji={(e) => onPick(e)} onSticker={(s) => onPick(`sticker:${s.id}`, { sticker: s })} onGif={gif} onFoundSticker={gif} />
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 /** Your own quick reactions, or the app's when you haven't picked any. */
 export function useQuickReactions(): readonly string[] {
@@ -57,6 +113,49 @@ export function ReactionBar({
   );
 }
 
+/** A reaction shown big (an emoji plays its animation), with who used it and a button to add or take off yours. */
+function MediaPreview({
+  r,
+  own,
+  names,
+  onToggle,
+  onClose,
+}: {
+  r: Reaction;
+  own: boolean;
+  names: string;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const t = useTheme();
+  const tr = useT();
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+      <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.4)" }]} onPress={onClose} />
+      <View style={{ flex: 1, justifyContent: "flex-end", padding: 12, paddingBottom: Math.max(insets.bottom, 12) }} pointerEvents="box-none">
+        <View style={{ backgroundColor: t.surface, borderRadius: 24, padding: 12, gap: 10, alignItems: "center" }}>
+          {r.gif || r.sticker ? <ReactionFace r={r} size={240} /> : <AnimatedEmoji emoji={r.emoji} size={180} />}
+          <Text numberOfLines={2} style={{ color: t.textSoft, fontSize: 14, textAlign: "center" }}>
+            {names}
+          </Text>
+          <Pressable
+            onPress={() => {
+              onToggle();
+              onClose();
+            }}
+            style={{ alignSelf: "stretch", borderRadius: 14, paddingVertical: 12, alignItems: "center", backgroundColor: own ? t.dangerBg : "rgba(235,138,0,0.18)" }}
+          >
+            <Text style={{ color: own ? t.danger : t.text, fontSize: 15, fontWeight: "700" }}>
+              {own ? tr.messages.removeMine : tr.messages.reactWithThis}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function Chip({ r, own, onPress }: { r: Reaction; own: boolean; onPress: () => void }) {
   const t = useTheme();
   return (
@@ -68,7 +167,8 @@ function Chip({ r, own, onPress }: { r: Reaction; own: boolean; onPress: () => v
         own && { backgroundColor: t.dark ? "#3b2a12" : "#fdebd0", borderColor: brand },
       ]}
     >
-      <Text style={{ fontSize: 14 }}>{r.emoji}</Text>
+      <ReactionFace r={r} size={18} />
+      {!!r.gif && <Text style={{ color: t.textSoft, fontSize: 10, fontWeight: "800" }}>GIF</Text>}
       {r.userIds.length > 1 && (
         <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: "600" }}>{r.userIds.length}</Text>
       )}
@@ -122,7 +222,7 @@ function ReactionList({
                   pressed && { backgroundColor: t.pressed },
                 ]}
               >
-                <Text style={{ fontSize: 20 }}>{r.emoji}</Text>
+                <ReactionFace r={r} size={24} />
                 <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 14 }}>
                   {r.userIds.map(nameOf).join(", ")}
                 </Text>
@@ -159,6 +259,7 @@ export function ReactionChips({
   const tr = useT();
   const more = useRef<ComponentRef<typeof Pressable>>(null);
   const [listAt, setListAt] = useState<Anchor | null>(null);
+  const [gifFor, setGifFor] = useState<string | null>(null);
   if (!reactions.length) return null;
 
   const sorted = reactions
@@ -170,9 +271,14 @@ export function ReactionChips({
   if (listAt && hidden === 0) setListAt(null);
 
   return (
-    <View style={[styles.chips, { justifyContent: mine ? "flex-end" : "flex-start" }]}>
+    <View
+      style={[
+        styles.chips,
+        { justifyContent: mine ? "flex-end" : "flex-start", width: 0, minWidth: "100%", alignSelf: "stretch" },
+      ]}
+    >
       {shown.map((r) => (
-        <Chip key={r.emoji} r={r} own={r.userIds.includes(meId)} onPress={() => onReact(r.emoji)} />
+        <Chip key={r.emoji} r={r} own={r.userIds.includes(meId)} onPress={() => setGifFor(r.emoji)} />
       ))}
       {hidden > 0 && (
         <Pressable
@@ -186,6 +292,21 @@ export function ReactionChips({
           <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: "700" }}>+{hidden}</Text>
         </Pressable>
       )}
+      {gifFor &&
+        (() => {
+          const r = reactions.find((x) => x.emoji === gifFor);
+          return (
+            r && (
+              <MediaPreview
+                r={r}
+                own={r.userIds.includes(meId)}
+                names={r.userIds.map(nameOf).join(", ")}
+                onToggle={() => onReact(r.emoji)}
+                onClose={() => setGifFor(null)}
+              />
+            )
+          );
+        })()}
       {listAt && hidden > 0 && (
         <ReactionList
           anchor={listAt}
@@ -310,7 +431,7 @@ export function QuickReactionsSettings() {
 const styles = StyleSheet.create({
   bar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 2 },
   quick: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: -10, marginBottom: 6, paddingHorizontal: 6 },
+  chips: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, marginTop: 2, marginBottom: 6, paddingHorizontal: 6 },
   chip: {
     flexDirection: "row",
     alignItems: "center",

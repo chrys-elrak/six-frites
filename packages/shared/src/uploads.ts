@@ -2,6 +2,8 @@ import { z } from "zod";
 import { Id } from "./common.js";
 
 export const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
+/** A zip of stickers an admin imports: the server reads it as a stream, so it may be bigger than any other upload, up to what an upload's size column holds. */
+export const STICKER_ZIP_MAX_BYTES = 2 ** 31 - 1;
 
 /** Bigger files are uploaded as they are: encrypting means holding the whole file in memory. */
 export const ENCRYPT_MAX_BYTES = 100 * 1024 * 1024;
@@ -20,12 +22,14 @@ export function fitWaveform(bars: number[], count = 48) {
 }
 
 export const UploadKind = z
-  .enum(["image", "video", "video_note", "voice", "file", "gif", "sticker"])
-  .describe("`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs");
+  .enum(["image", "video", "video_note", "voice", "file", "gif", "sticker", "sticker_zip"])
+  .describe(
+    "`gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs; a `sticker_zip` (admins only) is imported into official packs",
+  );
 export type UploadKind = z.infer<typeof UploadKind>;
 
-/** Stickers are small: a Lottie animation (.tgs or .json) or a static WebP/PNG. */
-export const STICKER_MAX_BYTES = 512 * 1024;
+/** Stickers are small: a Lottie animation (.tgs or .json), or a WebP or PNG, still or animated. */
+export const STICKER_MAX_BYTES = 6 * 1024 * 1024;
 
 export const UploadStatus = z
   .enum(["pending", "processing", "ready", "failed", "removed"])
@@ -42,6 +46,7 @@ export const ACCEPTED_TYPES: Record<Exclude<UploadKind, "file">, string[]> = {
   voice: ["audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/aac", "audio/x-m4a", "audio/wav"],
   gif: [],
   sticker: ["application/x-tgsticker", "application/json", "image/webp", "image/png"],
+  sticker_zip: ["application/zip", "application/x-zip-compressed"],
 };
 
 const MimeType = z
@@ -55,7 +60,7 @@ export const PresignUploadInput = z
     kind: UploadKind,
     name: z.string().trim().min(1).max(200),
     mime: z.preprocess((v) => (typeof v === "string" ? v.split(";")[0] : v), MimeType),
-    size: z.number().int().min(1).max(MAX_UPLOAD_BYTES),
+    size: z.number().int().min(1).max(STICKER_ZIP_MAX_BYTES),
     encrypted: z
       .boolean()
       .optional()
@@ -75,7 +80,7 @@ export const PresignUploadInput = z
     message: "Files over 100 MB are sent unencrypted",
     path: ["size"],
   })
-  .refine((v) => !v.encrypted || (v.kind !== "gif" && v.kind !== "sticker"), {
+  .refine((v) => !v.encrypted || (v.kind !== "gif" && v.kind !== "sticker" && v.kind !== "sticker_zip"), {
     message: "GIFs and stickers are not encrypted",
     path: ["kind"],
   })
@@ -83,8 +88,12 @@ export const PresignUploadInput = z
     message: "This file type is not supported for that kind of upload",
     path: ["mime"],
   })
+  .refine((v) => v.kind === "sticker_zip" || v.size <= MAX_UPLOAD_BYTES, {
+    message: "Files can be at most 1 GB",
+    path: ["size"],
+  })
   .refine((v) => v.kind !== "sticker" || v.size <= STICKER_MAX_BYTES, {
-    message: "Stickers can be at most 512 KB",
+    message: "Stickers can be at most 6 MB",
     path: ["size"],
   });
 export type PresignUploadInput = z.infer<typeof PresignUploadInput>;

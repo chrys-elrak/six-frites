@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
+import { useHiddenByArchive } from "@/lib/archive-lock";
 import { listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { deleteNotification, markNotification, markNotificationsSeen, useNotifications } from "@/lib/notifications";
@@ -22,6 +23,7 @@ export function Notifications() {
   const tr = useT();
   const qc = useQueryClient();
   const list = useNotifications();
+  const hidden = useHiddenByArchive();
   const unread = list.data?.unread ?? 0;
   const [settings, setSettings] = useState(false);
 
@@ -47,7 +49,7 @@ export function Notifications() {
         </Popup>
       )}
       <FlatList
-        data={list.data?.items ?? []}
+        data={list.data?.items.filter((n) => !(n.user && hidden.userIds.has(n.user.id)) && !(n.chatId && hidden.chatIds.has(n.chatId))) ?? []}
         keyExtractor={(n) => n.id}
         contentContainerStyle={{ flexGrow: 1 }}
         refreshControl={

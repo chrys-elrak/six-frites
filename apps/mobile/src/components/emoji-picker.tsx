@@ -20,20 +20,11 @@ const COLUMNS = 8;
 
 const all = (categories as { title: string; data: Emoji[] }[]).flatMap((c) => c.data);
 
-/** Slides up over the screen to pick a reaction. */
-export function EmojiPicker({
-  open,
-  onClose,
-  onPick,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onPick: (emoji: string) => void;
-}) {
+/** Search, category tabs and the grid of emoji, remembering the recent ones; with `onClose`, a close button too. */
+export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: string) => void; onClose?: () => void; height?: number }) {
   const t = useTheme();
   const tr = useT();
   const labels: Record<string, string> = tr.composer.emojiCategories;
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [tab, setTab] = useState<string>("recent");
   const [query, setQuery] = useState("");
@@ -69,8 +60,8 @@ export function EmojiPicker({
     ...(categories as { title: string; data: Emoji[] }[]).map((c) => ({ id: c.title, icon: c.data[0]?.e ?? "" })),
   ];
 
-  const panel = (
-    <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 8) }]}>
+  return (
+    <View>
       <View style={styles.head}>
         <View style={[styles.search, { backgroundColor: t.field }]}>
           <Search size={16} color={t.muted} />
@@ -84,7 +75,7 @@ export function EmojiPicker({
             style={[styles.searchInput, { color: t.text }]}
           />
         </View>
-        <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
+        {onClose && <IconButton Icon={X} label={tr.common.close} onPress={onClose} />}
       </View>
 
       {!query && (
@@ -114,7 +105,7 @@ export function EmojiPicker({
         keyExtractor={(e, i) => `${e}:${i}`}
         keyboardShouldPersistTaps="handled"
         initialNumToRender={64}
-        style={{ height: 300 }}
+        style={{ height }}
         contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
         ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
         renderItem={({ item }) => (
@@ -129,6 +120,25 @@ export function EmojiPicker({
           </Pressable>
         )}
       />
+    </View>
+  );
+}
+
+/** Slides up over the screen to pick a reaction. */
+export function EmojiPicker({
+  open,
+  onClose,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onPick: (emoji: string) => void;
+}) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const panel = (
+    <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 8) }]}>
+      <EmojiGrid onPick={onPick} onClose={onClose} />
     </View>
   );
 

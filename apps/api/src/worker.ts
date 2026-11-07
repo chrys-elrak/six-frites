@@ -16,6 +16,7 @@ import {
 } from "./lib/queue.js";
 import { ensureBucket } from "./lib/storage.js";
 import { processUpload } from "./media/process.js";
+import { runStickerImport } from "./services/sticker-import.js";
 import { liftExpiredBans } from "./services/admin.js";
 import { sendDueBotAnon } from "./services/ask.js";
 import { deleteExpiredMessages, expireMessage, purgeMessage } from "./services/messages.js";
@@ -32,6 +33,7 @@ const worker = new Worker<MediaJob>(
   MEDIA_QUEUE,
   async (job) => {
     if (job.name === "purge-abandoned") return { purged: await purgeAbandonedUploads() };
+    if (job.name === "import-stickers") return runStickerImport(job.data.uploadId);
     await processUpload(job.data.uploadId);
   },
   { connection: redisConnection(), concurrency: 2, prefix: env.QUEUE_PREFIX },

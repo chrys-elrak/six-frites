@@ -15,8 +15,10 @@ import {
   type MessageEffect,
   type MessageEntity,
   type MessageType,
+  type PublicUser,
   type ReplyPreview,
   type StickerDTO,
+  textSize,
   type ViewMessageResult,
   previewLink,
   serviceSentence,
@@ -26,6 +28,7 @@ import {
   storyBackground,
   inkOn,
 } from "@six/shared";
+import { Avatar } from "./avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUp,
@@ -517,7 +520,7 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
       {segments(text, entities).map((seg, i) => {
         const hidden = seg.styles.has("spoiler") && !revealed;
         const styled = (
-          <Styled styles={seg.styles}>{hidden || seg.styles.has("code") ? seg.text : <Linked text={seg.text} />}</Styled>
+          <Styled styles={seg.styles} color={seg.color} font={seg.font} size={seg.size} highlight={seg.highlight} outline={seg.outline}>{hidden || seg.styles.has("code") ? seg.text : <Linked text={seg.text} size={seg.size} />}</Styled>
         );
         if (!hidden) return <span key={i}>{styled}</span>;
         return (
@@ -542,7 +545,9 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
   );
 }
 
-export function Linked({ text }: { text: string }) {
+/** Text with its links and animated emoji; the emoji grow with the text's size when it has one. */
+export function Linked({ text, size }: { text: string; size?: string }) {
+  const emoji = Math.round((textSize(size) ?? 16) * 1.25);
   return (
     <>
       {splitLinks(text).map((part, i) =>
@@ -551,7 +556,7 @@ export function Linked({ text }: { text: string }) {
             {part.text}
           </a>
         ) : (
-          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={20} /> : s))
+          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={emoji} /> : s))
         ),
       )}
     </>
@@ -774,8 +779,11 @@ function Bubble({
   frozen,
   autoPlay,
   onVoiceStop,
+  sender,
 }: {
   row: MsgRow;
+  /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
+  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias">;
   highlighted: boolean;
   selecting: boolean;
   selected: boolean;
@@ -927,7 +935,11 @@ function Bubble({
       </div>
       <div ref={swipe.moving} className={`flex min-w-0 flex-1 ${mine ? "justify-end" : "justify-start"}`}>
         <div className={`flex max-w-[80%] items-center gap-1 md:max-w-[65%] ${mine ? "flex-row-reverse" : ""}`}>
+          {sender && <span className="w-9 shrink-0 self-end">{groupEnd && <Avatar user={sender} />}</span>}
           <div className="flex min-w-0 flex-col items-end gap-1">
+            {sender && groupStart && (
+              <span className="self-start px-1 text-xs font-semibold text-brand">{sender.displayName}</span>
+            )}
             <div
               ref={bubble}
               {...press}
@@ -970,7 +982,7 @@ function Bubble({
                   <AttachmentView
                     attachment={row.attachment}
                     mine={mine}
-                    onOpen={onOpen}
+                    onOpen={loose ? () => {} : onOpen}
                     hidden={visual || (note && row.spoiler) ? blurred(row.key, row.spoiler, !loose && row.attachment.data.kind !== "gif") : false}
                     hiddenLabel={chip(row.spoiler)}
                     onReveal={() => revealMedia(row.key)}
@@ -1203,7 +1215,11 @@ export const MessageList = forwardRef<
     }
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
-    const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
+    const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? (chat.group ? tr.groups.formerMember : tr.common.someone)));
+    const senderOf = (row: MsgRow) =>
+      chat.group && !row.mine && row.message
+        ? (chat.members.find((m) => m.user.id === row.message!.senderId)?.user ?? { displayName: tr.groups.formerMember, avatarUrl: null })
+        : undefined;
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {
       const peers = chat.members.filter((m) => m.user.id !== meId);
@@ -1532,6 +1548,7 @@ export const MessageList = forwardRef<
               <Bubble
                 key={row.key}
                 row={row}
+                sender={senderOf(row)}
                 highlighted={row.id !== null && row.id === highlight}
                 selecting={selecting}
                 selected={row.id !== null && selecting && selectedIds.includes(row.id)}
@@ -1620,7 +1637,8 @@ export const MessageList = forwardRef<
         )}
         {reactFor && (
           <ReactionPicker
-            onPick={(emoji) => void react(qc, reactFor, meId, emoji)}
+            media
+            onPick={(emoji, media) => void react(qc, reactFor, meId, emoji, media)}
             onClose={() => setReactFor(null)}
           />
         )}

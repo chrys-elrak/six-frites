@@ -1,12 +1,13 @@
-import { type MessageDTO, chatTheme, durationLabel, previewText } from "@six/shared";
+import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
+import { useArchiveShut } from "@/lib/archive-lock";
 import { isBotChat, isFrozen, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { clearChatNotifications } from "@/lib/push";
@@ -19,6 +20,7 @@ import { BubbleColorsContext } from "@/lib/bubble-colors";
 import { startCall, useCall } from "@/lib/calls";
 import { e2eeFor, useHydratedMessage, useKeyChanges } from "@/lib/e2ee";
 import { useTyping } from "@/lib/typing";
+import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
@@ -26,6 +28,7 @@ import { ChatMenu } from "./chat-menu";
 import { BotGames } from "./bot-games";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
+import { GroupInfo } from "./groups";
 import { MessageList, type MessageListHandle } from "./message-list";
 import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
@@ -60,7 +63,30 @@ function PinnedBar({
   );
 }
 
+/**
+ * A chat, or the app lock code first when it's archived and the archive is shut, however it was opened: from a
+ * notification, a link or search. A chat archived from inside stays open until it's left.
+ */
 export function Conversation({ chatId }: { chatId: string }) {
+  const tr = useT();
+  const chat = useChat(useQueryClient(), chatId);
+  const shut = useArchiveShut() && !!chat.data?.archived;
+  const [unlocked, setUnlocked] = useState(false);
+  const shown = useRef(false);
+  if (!shut && chat.data) shown.current = true;
+  if (shut && !unlocked && !shown.current) {
+    return (
+      <LockScreen
+        title={tr.common.archived}
+        onUnlock={() => setUnlocked(true)}
+        onCancel={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+      />
+    );
+  }
+  return <OpenConversation chatId={chatId} />;
+}
+
+function OpenConversation({ chatId }: { chatId: string }) {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
@@ -70,7 +96,8 @@ export function Conversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const { info } = useLocalSearchParams<{ info?: string }>();
+  const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
   const [searchFor, setSearchFor] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -79,9 +106,9 @@ export function Conversation({ chatId }: { chatId: string }) {
   const inCall = useCall((s) => s.call !== null);
   const keyChanges = useKeyChanges((s) => s.userIds);
   const dismissKeyChange = useKeyChanges((s) => s.dismiss);
-  const peerId = chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
+  const peerId = chat.data?.group ? undefined : chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
   const frozen = !!chat.data && isFrozen(chat.data);
-  const hidePresence = frozen || !!chat.data?.withSupport;
+  const hidePresence = frozen || !!chat.data?.withSupport || !!chat.data?.group;
   useWatchPresence(peerId && !hidePresence ? [peerId] : []);
   const presence = usePresence(hidePresence ? undefined : peerId);
   const theme = chatTheme(chat.data?.theme);
@@ -145,8 +172,9 @@ export function Conversation({ chatId }: { chatId: string }) {
   const members = chat.data?.members;
   const nameOf = useMemo(() => {
     const names = new Map(members?.map((m) => [m.user.id, m.user.displayName]));
-    return (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
-  }, [members, meId, tr]);
+    const gone = chat.data?.group ? tr.groups.formerMember : tr.common.someone;
+    return (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? gone));
+  }, [members, meId, tr, chat.data?.group]);
 
   if (chat.isPending) return <Loading />;
   if (!chat.data) {
@@ -159,7 +187,7 @@ export function Conversation({ chatId }: { chatId: string }) {
   }
 
   const c = chat.data;
-  const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
+  const peer = chatFace(c, meId);
   const app = c.withSupport;
   const count = selecting ? selectedIds.length : 0;
   const pins = c.pinnedMessages;
@@ -211,7 +239,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           <Pressable
             onPress={() => !app && setEditing(true)}
             disabled={app}
-            accessibilityLabel={app ? c.title : tr.chat.editContact(c.title)}
+            accessibilityLabel={app || c.group ? c.title : tr.chat.editContact(c.title)}
             style={({ pressed }) => [styles.peer, pressed && { backgroundColor: t.pressed }]}
           >
             <Avatar user={peer} online={!!presence?.online} />
@@ -229,9 +257,10 @@ export function Conversation({ chatId }: { chatId: string }) {
               ) : typing ? (
                 <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
               ) : (
-                (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support || c.withSupport) && (
+                (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support || c.withSupport || c.group) && (
                   <Text numberOfLines={2} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>
                     {[
+                      c.group && tr.groups.members(c.members.length),
                       c.support && tr.support.title,
                       c.withSupport && tr.support.team,
                       presenceLabel(presence),
@@ -246,7 +275,7 @@ export function Conversation({ chatId }: { chatId: string }) {
               )}
             </View>
           </Pressable>
-          {c.encrypted && !frozen && !c.withSupport && (
+          {c.encrypted && !frozen && !c.withSupport && !c.group && (
             <>
               <IconButton Icon={Phone} label={tr.chat.voiceCall} disabled={inCall} onPress={() => void startCall(c, false)} />
               <IconButton Icon={Video} label={tr.chat.videoCall} disabled={inCall} onPress={() => void startCall(c, true)} />
@@ -268,7 +297,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           onUnpin={frozen ? undefined : () => void updateChatSettings(qc, chatId, { unpin: pin.id }).catch(() => null)}
         />
       )}
-      {keyChanges.includes(peer.id) && !selecting && !c.withSupport && (
+      {!c.group && keyChanges.includes(peer.id) && !selecting && !c.withSupport && (
         <Pressable
           onPress={() => {
             dismissKeyChange(peer.id);
@@ -295,7 +324,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           </Text>
         )}
         {!selecting &&
-          (frozen ? (
+          (frozen || readOnlyGroup(c) ? (
             <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />
           ) : isBotChat(c) ? (
             <BotGames />
@@ -320,6 +349,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           peerName={peer.displayName}
           peerId={peer.id}
           onClose={() => setMenu(false)}
+          onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
           onSharedMedia={(tab) => {
@@ -340,7 +370,12 @@ export function Conversation({ chatId }: { chatId: string }) {
           onClose={() => setShared(null)}
         />
       )}
-      {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}
+      {editing &&
+        (c.group ? (
+          <GroupInfo chat={c} onClose={() => setEditing(false)} />
+        ) : (
+          <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />
+        ))}
       {confirmDelete && (
         <Sheet
           title={tr.chat.deleteMessages(count)}

@@ -328,8 +328,14 @@ describe("partial spoilers", () => {
     ];
     const m = await send(host, chatId, "very bold npm", { entities });
     expect(m.json().entities).toEqual(entities);
-    const bad = await send(host, chatId, "nope", { entities: [{ type: "underline", offset: 0, length: 2 }] });
+    const bad = await send(host, chatId, "nope", { entities: [{ type: "color", value: "teal", offset: 0, length: 2 }] });
     expect(bad.json().error.code).toBe("VALIDATION_FAILED");
+    const fancy = [
+      { type: "underline", offset: 0, length: 4 },
+      { type: "color", value: "red", offset: 0, length: 4 },
+      { type: "font", value: "script", offset: 5, length: 4 },
+    ];
+    expect((await send(host, chatId, "warm wind", { entities: fancy })).json().entities).toEqual(fancy);
   });
 
   it("rejects ranges outside the text or overlapping", async () => {

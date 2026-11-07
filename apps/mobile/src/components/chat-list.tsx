@@ -4,7 +4,11 @@ import {
   type ContactDTO,
   type ChatFilter,
   inChatFilter,
+  chatFace,
+  isGroupAction,
   maskSpoilers,
+  senderName,
+  serviceSentence,
   serviceText,
   shownType,
 } from "@six/shared";
@@ -37,6 +41,7 @@ import {
   Share2,
   Timer,
   UserPlus,
+  Users,
   Video,
 } from "lucide-react-native";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
@@ -51,6 +56,7 @@ import { useHydratedMessage } from "@/lib/e2ee";
 import { formatDuration, listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
+import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { usePresence, useWatchPresence } from "@/lib/presence";
@@ -59,6 +65,7 @@ import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { useOutbox } from "@/lib/outbox";
 import { six } from "@/lib/six";
 import { AddContact } from "./add-contact";
+import { NewGroup } from "./groups";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
@@ -83,7 +90,8 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
       </Text>
     </View>
   );
-  const you = m?.senderId === meId ? tr.chats.youPrefix : "";
+  const you =
+    m?.senderId === meId ? tr.chats.youPrefix : chat.group && m ? `${senderName(chat, m.senderId, tr)}: ` : "";
 
   if (!m) return line(null, tr.chats.noMessages);
   if (m.deletedAt) return line(<Ban size={14} color={color} />, tr.summary.messageDeleted, true);
@@ -105,10 +113,16 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         )
       ) : m.action?.type === "live_invite" || m.action?.type === "live_result" ? (
         <Gamepad2 size={14} color={color} />
+      ) : isGroupAction(m.action) ? (
+        <Users size={14} color={color} />
       ) : (
         <Timer size={14} color={color} />
       );
-    return line(icon, serviceText(m, tr, m.senderId === meId));
+    const mine = m.senderId === meId;
+    return line(
+      icon,
+      chat.group ? serviceSentence(m, mine ? null : senderName(chat, m.senderId, tr), tr) : serviceText(m, tr, mine),
+    );
   }
   if (m.undecryptable || m.decrypting) {
     return line(<Lock size={14} color={color} />, m.decrypting ? tr.chats.decrypting : tr.chats.encryptedMessage, true);
@@ -170,8 +184,8 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   });
   const pullDraft = useEffectEvent(() => void receiveDraft(chat));
   useEffect(() => pullDraft(), [chat.id, chat.encrypted, chat.draft?.at]);
-  const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
-  const online = usePresence(peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
+  const peer = chatFace(chat, meId);
+  const online = usePresence(chat.group || peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
   const qc = useQueryClient();
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
@@ -204,9 +218,13 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
               }}
               style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
             >
-              <StoryAvatar userId={peer.id} name={chat.title}>
-                <Avatar user={peer} size="md" online={!!online} />
-              </StoryAvatar>
+              {chat.group ? (
+                <Avatar user={peer} size="md" />
+              ) : (
+                <StoryAvatar userId={peer.id} name={chat.title}>
+                  <Avatar user={peer} size="md" online={!!online} />
+                </StoryAvatar>
+              )}
               <View style={styles.rowBody}>
                 <View style={styles.rowLine}>
                   <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
@@ -296,7 +314,8 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
     staleTime: 0,
     queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
   });
-  const shown = contacts.data?.filter((c) => c.user.displayName.toLowerCase().includes(needle)) ?? [];
+  const hidden = useHiddenByArchive().chatIds;
+  const shown = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
   useWatchPresence(shown.map((c) => c.user.id));
 
   return (
@@ -368,7 +387,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
   }[status];
 
   const [query, setQuery] = useState("");
-  const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | null>(null);
+  const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | "group" | null>(null);
   const [pulled, setPulled] = useState(false);
   useFocusEffect(useCallback(() => () => setPulled(false), []));
   const needle = query.trim().toLowerCase();
@@ -383,7 +402,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
     chats.data?.filter((c) => c.lastMessage && (!hasDesk || c.supportDesk === desk) && c.title.toLowerCase().includes(needle)) ?? [];
   const filter = archived ? "all" : picked;
   const shown = visible.filter((c) => inChatFilter(c, filter));
-  useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
+  useWatchPresence(visible.filter((c) => !c.group).flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
   const archivedCount = archivedChats.data?.length ?? 0;
   const archivedUnread = archivedChats.data?.reduce((n, c) => n + c.unreadCount, 0) ?? 0;
 
@@ -459,6 +478,9 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
           )}
           {view === "contacts" && (
             <IconButton Icon={QrCode} color={brand} label={tr.settings.findMe} onPress={() => setDialog("findMe")} />
+          )}
+          {view !== "contacts" && !isSupport && (
+            <IconButton Icon={Users} color={brand} label={tr.groups.newGroup} onPress={() => setDialog("group")} />
           )}
           <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
           <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
@@ -538,6 +560,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
         </View>
       )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
+      {dialog === "group" && <NewGroup onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInvite onClose={() => setDialog(null)} />}
       {dialog === "findMe" && (
         <Popup onClose={() => setDialog(null)}>

@@ -2,10 +2,11 @@
 
 import { STICKER_LIMITS, type StickerDTO } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { X } from "lucide-react";
-import { useState } from "react";
+import { Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { useIsAdmin } from "@/lib/admin";
 import { useT } from "@/lib/i18n";
-import { STICKER_ACCEPT, addStickers, removeSticker, setPackSaved, useStickerPack } from "@/lib/stickers";
+import { STICKER_ACCEPT, STICKER_EXTENSIONS, addStickers, droppedFiles, removeSticker, setPackSaved, useStickerPack } from "@/lib/stickers";
 import { Dialog } from "./dialog";
 import { StickerView } from "./sticker";
 import { PrimaryButton } from "./ui";
@@ -24,9 +25,18 @@ export function UploadForm({
   const tr = useT();
   const [title, setTitle] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [emoji, setEmoji] = useState("🙂");
+  const [emoji, setEmoji] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [over, setOver] = useState(false);
+  const folder = useRef<HTMLInputElement>(null);
+  const named = (folder: string | undefined) => folder && withTitle && setTitle((t) => t || folder.slice(0, 64));
+  const pick = (list: Iterable<File> | null) =>
+    setFiles(
+      [...(list ?? [])]
+        .filter((f) => STICKER_EXTENSIONS.test(f.name) && !f.name.startsWith("."))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
+    );
 
   return (
     <form
@@ -56,24 +66,65 @@ export function UploadForm({
           className={field}
         />
       )}
-      <input
-        type="file"
-        accept={STICKER_ACCEPT}
-        multiple
-        onChange={(e) => setFiles([...(e.target.files ?? [])])}
-        aria-label={tr.composer.stickerFiles}
-        className="block w-full text-sm"
-      />
-      <p className="text-xs text-stone-500">{tr.composer.stickerFormats}</p>
-      <div className="flex gap-2">
+      <label
+        onDragOver={(e) => {
+          e.preventDefault();
+          setOver(true);
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setOver(false);
+          const entries = [...e.dataTransfer.items].flatMap((i) => i.webkitGetAsEntry() ?? []);
+          const dir = entries.find((x) => x.isDirectory);
+          named(dir?.name);
+          if (dir) void droppedFiles(entries).then(pick);
+          else pick(e.dataTransfer.files);
+        }}
+        className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed px-3 py-5 text-center text-sm transition ${
+          over ? "border-brand bg-brand/10" : "border-stone-300 hover:border-brand dark:border-stone-700"
+        }`}
+      >
+        <Upload className="size-5 text-stone-400" />
+        <span className="font-medium">{files.length ? tr.composer.stickersChosen(files.length) : tr.composer.dropStickers}</span>
         <input
-          value={emoji}
-          onChange={(e) => setEmoji(e.target.value)}
-          aria-label={tr.composer.stickerEmoji}
-          maxLength={16}
-          required
-          className={`${field} w-20 text-center`}
+          type="file"
+          accept={STICKER_ACCEPT}
+          multiple
+          onChange={(e) => pick(e.target.files)}
+          aria-label={tr.composer.stickerFiles}
+          className="sr-only"
         />
+      </label>
+      <button type="button" onClick={() => folder.current?.click()} className="text-sm font-medium text-brand hover:underline">
+        {tr.composer.chooseFolder}
+      </button>
+      <input
+        ref={folder}
+        type="file"
+        multiple
+        {...{ webkitdirectory: "" }}
+        onChange={(e) => {
+          named(e.target.files?.[0]?.webkitRelativePath.split("/")[0]);
+          pick(e.target.files);
+        }}
+        aria-label={tr.composer.chooseFolder}
+        className="hidden"
+      />
+      <p className="text-xs text-stone-500">
+        {tr.composer.stickerFormats} {tr.composer.stickerEmojiHint}
+      </p>
+      <div className="flex gap-2">
+        <div className="w-24 shrink-0">
+          <input
+            value={emoji}
+            onChange={(e) => setEmoji(e.target.value)}
+            placeholder={tr.composer.emojiAuto}
+            aria-label={tr.composer.stickerEmoji}
+            maxLength={16}
+            className={`${field} text-center`}
+          />
+        </div>
         <PrimaryButton type="submit" disabled={busy || (!withTitle && files.length === 0)} className="flex-1">
           {busy ? tr.composer.uploading : label}
         </PrimaryButton>
@@ -118,6 +169,7 @@ export function PackDialog({
   const pack = useStickerPack(packId);
   const p = pack.data;
   const full = !!p && p.stickers.length >= STICKER_LIMITS.perPack;
+  const admin = !!useIsAdmin().data;
 
   return (
     <Dialog onClose={onClose}>
@@ -158,25 +210,24 @@ export function PackDialog({
               <p className="col-span-4 py-6 text-center text-sm text-stone-500">{tr.composer.noStickers}</p>
             )}
           </div>
-          {p.mine
-            ? !full && (
-                <UploadForm
-                  withTitle={false}
-                  label={tr.composer.addStickers}
-                  onSubmit={(_, files, emoji) => addStickers(qc, p.id, files, emoji)}
-                />
-              )
-            : !p.builtin && (
-                <div className="p-4 pt-0">
-                  <PrimaryButton
-                    type="button"
-                    onClick={() => void setPackSaved(qc, p.id, !p.saved).catch(() => null)}
-                    className="w-full"
-                  >
-                    {p.saved ? tr.composer.removeFromMine : tr.composer.addToMine}
-                  </PrimaryButton>
-                </div>
-              )}
+          {admin && !full && !p.id.startsWith("noto-") && (
+            <UploadForm
+              withTitle={false}
+              label={tr.composer.addStickers}
+              onSubmit={(_, files, emoji) => addStickers(qc, p.id, files, emoji)}
+            />
+          )}
+          {!p.mine && !p.builtin && (
+            <div className="p-4 pt-0">
+              <PrimaryButton
+                type="button"
+                onClick={() => void setPackSaved(qc, p.id, !p.saved).catch(() => null)}
+                className="w-full"
+              >
+                {p.saved ? tr.composer.removeFromMine : tr.composer.addToMine}
+              </PrimaryButton>
+            </div>
+          )}
         </>
       )}
     </Dialog>

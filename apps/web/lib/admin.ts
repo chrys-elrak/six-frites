@@ -10,6 +10,7 @@ export const adminKeys = {
   users: (q: string, banned: boolean) => ["admin", "users", q, banned] as const,
   reports: (status: "open" | "resolved") => ["admin", "reports", status] as const,
   largeFiles: ["admin", "large-files"] as const,
+  officialPacks: ["admin", "official-packs"] as const,
   anon: (q: string) => ["admin", "anon", q] as const,
   emails: (kind: string, status: string, q: string) => ["admin", "emails", kind, status, q] as const,
   emailStats: ["admin", "emails", "stats"] as const,

@@ -85,7 +85,7 @@ function Bar({ fill, at, onPick }: { fill: string; at: number; onPick: (x: numbe
 }
 
 /** Picks any colour: a hue, then how dark or light, by tapping or dragging along two bars. */
-function ColorPicker({ onChange }: { onChange: (hex: string) => void }) {
+export function ColorPicker({ onChange }: { onChange: (hex: string) => void }) {
   const [hue, setHue] = useState(30);
   const [light, setLight] = useState(0.5);
   return (

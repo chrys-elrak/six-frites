@@ -1,12 +1,14 @@
 "use client";
 
-import { type MessageDTO, durationLabel, isFrozen, isMuted, previewText } from "@six/shared";
+import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
+import { setArchiveOpen } from "@/lib/app-lock";
+import { useChatShut } from "@/lib/archive-lock";
 import { startCall, useCall } from "@/lib/call";
 import { looking } from "@/lib/notify";
 import { e2ee, useIdentityChanges } from "@/lib/e2ee";
@@ -19,6 +21,7 @@ import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { useTyping } from "@/lib/typing";
 import { AdBanner } from "./ad-banner";
+import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { BubbleColors, ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
@@ -26,6 +29,7 @@ import { ChatMenu } from "./chat-menu";
 import { BotGames } from "./bot-games";
 import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
+import { GroupInfo } from "./groups";
 import { MessageList, type MessageListHandle } from "./message-list";
 import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
@@ -66,7 +70,18 @@ function useEscapeBack(href: string, skip: boolean) {
   }, [href, skip, router]);
 }
 
+/** A chat, or the app lock code first when it's archived and the archive is shut, however it was opened. */
 export function Conversation({ chatId }: { chatId: string }) {
+  const tr = useT();
+  const router = useRouter();
+  const chat = useChat(useQueryClient(), chatId);
+  if (useChatShut(chatId, chat.data)) {
+    return <LockScreen title={tr.common.archived} onUnlock={() => setArchiveOpen(true)} onCancel={() => router.push("/")} />;
+  }
+  return <OpenConversation chatId={chatId} />;
+}
+
+function OpenConversation({ chatId }: { chatId: string }) {
   const tr = useT();
   const qc = useQueryClient();
   const router = useRouter();
@@ -77,6 +92,11 @@ export function Conversation({ chatId }: { chatId: string }) {
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState(false);
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("info")) return;
+    setEditing(true);
+    router.replace(`/chats/${chatId}`);
+  }, [chatId, router]);
   const [shared, setShared] = useState<SharedTab | null>(null);
   const [searchFor, setSearchFor] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -130,9 +150,10 @@ export function Conversation({ chatId }: { chatId: string }) {
   const members = chat.data?.members;
   const nameOf = useMemo(() => {
     const names = new Map(members?.map((m) => [m.user.id, m.user.displayName]));
-    return (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
-  }, [members, meId, tr]);
-  const peerId = members?.find((m) => m.user.id !== meId)?.user.id;
+    const gone = chat.data?.group ? tr.groups.formerMember : tr.common.someone;
+    return (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? gone));
+  }, [members, meId, tr, chat.data?.group]);
+  const peerId = chat.data?.group ? undefined : members?.find((m) => m.user.id !== meId)?.user.id;
   const presence = usePresence(peerId);
   const inCall = useCall((s) => s.call !== null);
   const keysChanged = useIdentityChanges((s) => !!peerId && !!s.changed[peerId]);
@@ -156,11 +177,11 @@ export function Conversation({ chatId }: { chatId: string }) {
   }
 
   const c = chat.data;
-  const peer = c.members.find((m) => m.user.id !== meId)?.user ?? c.members[0]!.user;
+  const peer = chatFace(c, meId);
   const muted = isMuted(c);
   const frozen = isFrozen(c);
   const app = c.withSupport;
-  const shownPresence = frozen || c.withSupport ? undefined : presence;
+  const shownPresence = frozen || c.withSupport || c.group ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
   const pins = c.pinnedMessages;
   const pin = pins[pinIndex % (pins.length || 1)];
@@ -228,7 +249,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                 <button
                   onClick={() => !app && setEditing(true)}
                   className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${app ? "cursor-default" : "cursor-pointer"}`}
-                  aria-label={app ? c.title : tr.chat.editContact(c.title)}
+                  aria-label={app || c.group ? c.title : tr.chat.editContact(c.title)}
                 >
                   <Avatar user={peer} online={shownPresence?.online} />
                   <span className="min-w-0 flex-1">
@@ -246,11 +267,12 @@ export function Conversation({ chatId }: { chatId: string }) {
                     ) : typing ? (
                       <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
                     ) : (
-                      (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport) && (
+                      (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport || c.group) && (
                         <span className="line-clamp-2 text-xs text-stone-500">
                           {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
                           {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs || c.support) && " · "}
                           {[
+                            c.group && tr.groups.members(c.members.length),
                             c.support && tr.support.title,
                             c.withSupport && tr.support.team,
                             !shownPresence?.online && presenceLabel(shownPresence),
@@ -265,7 +287,7 @@ export function Conversation({ chatId }: { chatId: string }) {
                     )}
                   </span>
                 </button>
-                {!frozen && !c.support && !c.withSupport && !isBotChat(c) && (
+                {!frozen && !c.group && !c.support && !c.withSupport && !isBotChat(c) && (
                   <>
                     <button
                       onClick={() => void startCall(c, meId, false)}
@@ -357,9 +379,9 @@ export function Conversation({ chatId }: { chatId: string }) {
                 {c.supportDesk ? tr.support.closedDesk : tr.support.closed}
               </p>
             )}
-            {!selecting && frozen && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
+            {!selecting && (frozen || readOnlyGroup(c)) && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
             {!selecting && !frozen && isBotChat(c) && <BotGames />}
-            {!selecting && !frozen && !isBotChat(c) && (
+            {!selecting && !frozen && !readOnlyGroup(c) && !isBotChat(c) && (
               <div className="chat-colors contents">
                 <Composer
                   chatId={chatId}
@@ -383,6 +405,7 @@ export function Conversation({ chatId }: { chatId: string }) {
           chat={c}
           peerName={peer.displayName}
           onClose={() => setMenu(false)}
+          onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
           onSharedMedia={(tab) => {
@@ -403,7 +426,12 @@ export function Conversation({ chatId }: { chatId: string }) {
           onClose={() => setShared(null)}
         />
       )}
-      {editing && <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />}
+      {editing &&
+        (c.group ? (
+          <GroupInfo chat={c} onClose={() => setEditing(false)} />
+        ) : (
+          <ContactEditor userId={peer.id} onClose={() => setEditing(false)} />
+        ))}
       {confirmDelete && (
         <Sheet
           title={tr.chat.deleteMessages(count)}

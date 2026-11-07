@@ -42,7 +42,7 @@ export function useAutoLock() {
     let hiddenAt = 0;
     const onChange = () => {
       if (document.hidden) hiddenAt = Date.now();
-      else if (hiddenAt && Date.now() - hiddenAt > AWAY_MS) useAppLock.setState({ locked: true });
+      else if (hiddenAt && Date.now() - hiddenAt > AWAY_MS) useAppLock.setState({ locked: true, archiveOpen: false });
     };
     document.addEventListener("visibilitychange", onChange);
     return () => document.removeEventListener("visibilitychange", onChange);

@@ -1,17 +1,16 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import {
-  AUTO_DELETE_PRESETS,
   COMMANDS,
+  groupCommands,
   type CommandName,
   type EmojiEntry,
-  type EphemeralInput,
   type GifDTO,
   LIVE_EMOJI,
   LIVE_GAMES,
   type LiveGame,
   MessageEffect,
   type MenuCommand,
-  durationLabel,
+  type StickerDTO,
   isMenuCommand,
   parseCommand,
   silentMessage,
@@ -24,10 +23,10 @@ import { router } from "expo-router";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { playHref } from "./live";
+import { StickerView } from "./sticker";
 import { Text } from "./text";
 import { updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
-import { EPHEMERAL_OPTIONS } from "@/lib/ephemeral";
 import { useLocale, useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
@@ -66,11 +65,10 @@ export function CommandBar({
   onComplete,
   onGif,
   onSticker,
+  onPackSticker,
   onMenu,
-  onDestruct,
   onLocation,
   onEffect,
-  onSearch,
 }: {
   ref: Ref<CommandBarHandle>;
   chatId: string;
@@ -78,11 +76,10 @@ export function CommandBar({
   onComplete: (text: string) => void;
   onGif: (gif: GifDTO) => void;
   onSticker: (sticker: GifDTO) => void;
+  onPackSticker: (sticker: StickerDTO) => void;
   onMenu: (name: MenuCommand) => void;
-  onDestruct: (value: EphemeralInput) => void;
   onLocation: () => void;
   onEffect: (effect: MessageEffect) => void;
-  onSearch: (q: string) => void;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -90,7 +87,7 @@ export function CommandBar({
   const socket = useRealtime().realtime?.socket;
   const meId = useSession((s) => s.user!.id);
   const chat = useChat(qc, chatId).data;
-  const command = silentMessage(text) === null ? parseCommand(text, ANDROID_COMMANDS) : null;
+  const command = silentMessage(text) === null ? parseCommand(text, chat?.group ? groupCommands(ANDROID_COMMANDS) : ANDROID_COMMANDS) : null;
   const run = command?.kind === "run" ? command : null;
   const search = run?.name === "giphy" || run?.name === "sticker" ? run.args : null;
   const kind = run?.name === "sticker" ? "sticker" : "gif";
@@ -109,7 +106,14 @@ export function CommandBar({
     staleTime: 30 * 60_000,
     retry: false,
   });
+  const packs = useQuery({
+    queryKey: ["sticker-search", q],
+    queryFn: async () => unwrap(await six.api.GET("/v1/stickers/search", { params: { query: { q: q ?? "" } } })),
+    enabled: kind === "sticker" && search !== null && !!q,
+    staleTime: 60_000,
+  });
   const names = command?.kind === "names" ? command.names : [];
+  const own = kind === "sticker" && search !== null && q ? (packs.data?.items ?? []) : [];
   const items = search !== null ? (gifs.data?.items ?? []) : [];
   const choose = (name: CommandName) => (isMenuCommand(name) ? onMenu(name) : onComplete(`/${name} `));
 
@@ -146,32 +150,8 @@ export function CommandBar({
           label: tr.messages.effectNames[e],
           pick: () => onEffect(e),
         })).filter(match);
-      case "destruct":
-        return EPHEMERAL_OPTIONS.map((o) => ({ key: o.label, label: o.label, pick: () => onDestruct(o.value) })).filter(
-          match,
-        );
       case "location":
         return [{ key: "here", label: tr.composer.sendLocation, pick: onLocation }].filter(match);
-      case "autodelete":
-        return [
-          ...AUTO_DELETE_PRESETS.map((secs) => ({
-            key: String(secs),
-            label: durationLabel(secs, tr),
-            current: chat?.autoDeleteSecs === secs,
-            pick: () => chatSetting({ autoDeleteSecs: secs }),
-          })),
-          ...(chat?.autoDeleteSecs
-            ? [{ key: "off", label: tr.chat.turnOff, pick: () => chatSetting({ autoDeleteSecs: null }) }]
-            : []),
-        ].filter(match);
-      case "blur":
-        return [
-          {
-            key: "blur",
-            label: chat?.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
-            pick: () => chatSetting({ safeView: !chat?.safeView }),
-          },
-        ].filter(match);
       case "vanish":
         return [
           {
@@ -180,8 +160,6 @@ export function CommandBar({
             pick: () => chatSetting({ vanish: !chat?.vanish }),
           },
         ].filter(match);
-      case "search":
-        return [{ key: "search", label: args ? tr.composer.searchFor(args) : tr.chat.search, pick: () => onSearch(args) }];
       case "play":
         return LIVE_GAMES.map((g) => ({ key: g, label: `${LIVE_EMOJI[g]} ${tr.live.games[g]}`, pick: () => play(g) })).filter(match);
       default:
@@ -253,7 +231,9 @@ export function CommandBar({
   }
 
   const unavailable = gifs.error instanceof SixApiError && gifs.error.code === "GIFS_UNAVAILABLE";
-  const notice = unavailable
+  const notice = own.length
+    ? null
+    : unavailable
     ? tr.composer.gifsUnavailable
     : gifs.isError
       ? kind === "sticker"
@@ -276,6 +256,11 @@ export function CommandBar({
         accessibilityLabel={tr.composer.pickerTabs[kind]}
         contentContainerStyle={styles.gifs}
       >
+        {own.map((s) => (
+          <Pressable key={s.id} onPress={() => onPackSticker(s)} accessibilityLabel={tr.messages.sticker(s.emoji)}>
+            <StickerView sticker={s} size={96} />
+          </Pressable>
+        ))}
         {items.map((g) => (
           <Pressable
             key={g.id}

@@ -18,6 +18,8 @@ export * from "./dots.js";
 export * from "./memory.js";
 export * from "./reflex.js";
 export * from "./contacts.js";
+export * from "./groups.js";
+export * from "./avatars.js";
 export * from "./sync.js";
 export * from "./uploads.js";
 export * from "./stickers.js";

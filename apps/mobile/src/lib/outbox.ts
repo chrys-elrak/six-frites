@@ -5,6 +5,7 @@ import type {
   EphemeralInput,
   GeoPoint,
   GifDTO,
+  StickerDTO,
   MessageEffect,
   MessageEntity,
   ReplyPreview,
@@ -44,6 +45,7 @@ export interface PendingMessage {
   ephemeral: EphemeralInput | null;
   attachment: PendingAttachment | null;
   gif?: GifDTO;
+  sticker?: StickerDTO;
   location?: GeoPoint;
   checklist?: Checklist;
   game?: ChatGame;

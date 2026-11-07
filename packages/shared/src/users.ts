@@ -71,6 +71,8 @@ export type ContactLabelDTO = z.infer<typeof ContactLabelDTO>;
 
 const ALIAS_FOODS = ["🍟", "🍔", "🌭", "🍕", "🌮", "🌯", "🥙", "🥪", "🍗", "🍿", "🥨", "🥕", "🥦", "🌽", "🍅", "🥑", "🍆", "🥒", "🧅", "🧄", "🥬", "🍄", "🍠", "🥜"];
 
+export const randomAlias = () => `#${Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, "0").toUpperCase()}`;
+
 /** The picture behind an alias like `#EF4535`: that colour, with a food picked from it. Support sees a potato. */
 export function aliasAvatar(name: string): { gradient: string; food: string } | null {
   const hex = /^(Potato )?(#[0-9A-F]{6})$/.exec(name);

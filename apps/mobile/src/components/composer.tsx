@@ -3,6 +3,7 @@ import {
   type EntityType,
   type EphemeralInput,
   type GifDTO,
+  LABEL_FONTS,
   type MenuCommand,
   type MessageEffect,
   type TypingKind,
@@ -11,9 +12,18 @@ import {
   emojifyEnd,
   emojifyTyped,
   maskSpoilers,
+  attachCommands,
+  type CommandName,
+  type StickerDTO,
   parseCommand,
   silentMessage,
   suggestEmoji,
+  MESSAGE_TEXT_SIZES,
+  TEXT_COLORS,
+  TEXT_FONTS,
+  TEXT_GRADIENTS,
+  type TextColor,
+  type TextGradient,
 } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
 import { unwrap } from "@six/sdk";
@@ -26,33 +36,46 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import {
+  ALargeSmall,
+  AudioLines,
+  BellOff,
   Bold,
   CalendarClock,
   Camera,
   Check,
   Code,
+  Dices,
+  EyeOff,
   FileText,
+  Film,
+  Flame,
   Gamepad2,
+  Ghost,
   Image as ImageIcon,
+  ImagePlus,
+  Italic,
   ListChecks,
   MapPin,
   Music,
-  EyeOff,
-  Flame,
-  Ghost,
-  Italic,
-  type LucideIcon,
   NotebookPen,
+  Palette,
+  Highlighter,
+  TypeOutline,
   Paperclip,
+  Plus,
+  RotateCcw,
   SendHorizontal,
+  Smile,
   Sparkles,
   Square,
+  Sticker,
   Strikethrough,
   TicketPlus,
-  ImagePlus,
   Trash2,
+  Type,
+  type LucideIcon,
+  Underline,
   X,
-  RotateCcw,
 } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { randomUUID } from "expo-crypto";
@@ -60,6 +83,8 @@ import { Image } from "expo-image";
 import { File, Paths } from "expo-file-system";
 import { Keyboard, Pressable, ScrollView, StyleSheet, View, findNodeHandle } from "react-native";
 import { Text, TextInput } from "./text";
+import { DraftText, RichTextInput } from "./rich-input";
+import { ColorPicker } from "./story-composer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { editMessage, updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
@@ -68,7 +93,7 @@ import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { shortRule } from "@/lib/ephemeral";
 import { formatDuration, inviteUrl, sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
+import { markupMap, parseMarkup, parseRaw, plainAt, toMarkup, toggleFormat } from "@/lib/markup";
 import { muteVideo, pickFiles, pickMedia, receivedImage, takePhoto } from "@/lib/media";
 import { useRealtime } from "@/lib/realtime";
 import { type Draft, type LocalFile, queueMessage } from "@/lib/send";
@@ -81,6 +106,7 @@ import { NewGame } from "./game";
 import { currentPosition } from "./location-card";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { EphemeralPicker } from "./ephemeral-picker";
+import { ExpressionPanel } from "./expression-panel";
 import { ScheduleDialog, ScheduledPanel } from "./scheduled";
 import { Sheet } from "./sheet";
 import { RecordButton, type RecordMode } from "./record-button";
@@ -93,6 +119,7 @@ const allEmoji = (emojis as { data: EmojiEntry[] }[]).flatMap((c) => c.data);
 const formats: { type: EntityType; Icon: LucideIcon }[] = [
   { type: "bold", Icon: Bold },
   { type: "italic", Icon: Italic },
+  { type: "underline", Icon: Underline },
   { type: "strike", Icon: Strikethrough },
   { type: "code", Icon: Code },
   { type: "spoiler", Icon: EyeOff },
@@ -122,6 +149,20 @@ function ModeBar({ label, text, photo, onCancel }: { label: string; text: string
   );
 }
 
+
+const COMMAND_ICONS: Record<CommandName, LucideIcon> = {
+  giphy: Film,
+  sticker: Sticker,
+  silent: BellOff,
+  effect: Sparkles,
+  emoji: Smile,
+  game: Gamepad2,
+  play: Dices,
+  location: MapPin,
+  schedule: CalendarClock,
+  voice: AudioLines,
+  vanish: Ghost,
+};
 export function Composer({
   chatId,
   nameOf,
@@ -165,7 +206,12 @@ export function Composer({
   const [error, setError] = useState<string | null>(null);
   const selection = useRef<Range>({ start: 0, end: 0 });
   const [forced, setForced] = useState<Range | undefined>(undefined);
+  const [expressions, setExpressions] = useState(false);
   const [hasSelection, setHasSelection] = useState(false);
+  const [panel, setPanel] = useState<"color" | "highlight" | "outline" | "custom" | "font" | "size" | null>(null);
+  const [paint, setPaint] = useState<"color" | "highlight" | "outline">("color");
+  const [stops, setStops] = useState<[string, string]>(["#ec4899", "#3b82f6"]);
+  const [stop, setStop] = useState<0 | 1 | null>(null);
   const [caret, setCaret] = useState(0);
   const input = useRef<ComponentRef<typeof TextInput>>(null);
   const commands = useRef<CommandBarHandle>(null);
@@ -307,12 +353,16 @@ export function Composer({
     setForced({ start: swapped.caret, end: swapped.caret });
   }
 
-  function wrap(type: EntityType) {
-    const { start, end } = selection.current;
+  function wrap(type: EntityType, value?: string) {
+    const model = parseRaw(text);
+    const before = markupMap(model.text, model.entities).at;
+    const start = plainAt(before, selection.current.start);
+    const end = plainAt(before, selection.current.end);
     if (end <= start) return false;
-    const marker = MARKERS[type];
-    change(`${text.slice(0, start)}${marker}${text.slice(start, end)}${marker}${text.slice(end)}`);
-    setForced({ start: start + marker.length, end: end + marker.length });
+    const after = markupMap(model.text, toggleFormat(model.entities, start, end, type, value));
+    change(after.markup);
+    setForced({ start: after.at[start]!, end: after.at[end]! });
+    setPanel(null);
     return true;
   }
 
@@ -345,6 +395,15 @@ export function Composer({
     else setScheduling("next");
   }
 
+  /** Puts an emoji where the caret is, replacing any selection, and leaves the caret after it. */
+  function insertEmoji(e: string) {
+    const { start, end } = selection.current;
+    const value = text.slice(0, start) + e + text.slice(end);
+    change(value);
+    setForced({ start: start + e.length, end: start + e.length });
+    setCaret(start + e.length);
+  }
+
   function completeCommand(value: string) {
     change(value);
     setForced({ start: value.length, end: value.length });
@@ -371,14 +430,14 @@ export function Composer({
     reset();
   }
 
-  function sendGif(gif: GifDTO) {
+  function sendGif(pick: { gif: GifDTO } | { sticker: StickerDTO }) {
     if (!realtime) return;
     realtime.setTyping(chatId, false);
     queue({
       text: "",
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral,
-      gif,
+      ...pick,
     });
     reset();
   }
@@ -642,7 +701,7 @@ export function Composer({
             <View style={{ flex: 1 }}>
               <Text style={{ color: t.muted, fontSize: 12, fontWeight: "700" }}>{tr.composer.parkedDraft}</Text>
               <Text numberOfLines={1} style={{ color: t.textSoft, fontSize: 14 }}>
-                {maskSpoilers(parked.text, parked.entities)}
+                <DraftText markup={parkedMarkup!} codeBg={t.dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.08)"} />
               </Text>
             </View>
             <NotebookPen size={16} color={t.muted} />
@@ -704,13 +763,10 @@ export function Composer({
             chatId={chatId}
             text={text}
             onComplete={completeCommand}
-            onGif={sendGif}
+            onGif={(gif) => sendGif({ gif })}
             onSticker={(found) => void sendFoundSticker(found)}
+            onPackSticker={(sticker) => sendGif({ sticker })}
             onMenu={runCommand}
-            onDestruct={(value) => {
-              change("");
-              setEphemeral(value);
-            }}
             onLocation={() => {
               change("");
               void sendLocation();
@@ -718,10 +774,6 @@ export function Composer({
             onEffect={(chosen) => {
               change("");
               setMessageEffect(chosen);
-            }}
-            onSearch={(q) => {
-              change("");
-              onSearch(q);
             }}
           />}
 
@@ -746,19 +798,116 @@ export function Composer({
           </ScrollView>
         )}
 
-        {hasSelection && (
-          <View style={styles.toolbar} accessibilityRole="toolbar">
-            {formats.map(({ type, Icon }) => (
-              <Pressable
-                key={type}
-                onPress={() => wrap(type)}
-                accessibilityLabel={tr.composer.formats[type]}
-                style={[styles.format, { backgroundColor: t.surface, borderColor: t.border }]}
-              >
-                <Icon size={16} color={t.textSoft} />
+        {hasSelection && (panel === "color" || panel === "highlight" || panel === "outline") && (
+          <ScrollView horizontal keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.glass, { backgroundColor: t.surface, borderColor: t.border }]}>
+            {(Object.keys(TEXT_COLORS) as TextColor[]).map((c) => (
+              <Pressable key={c} onPress={() => wrap(paint, c)} accessibilityLabel={tr.composer.textColors[c]} style={styles.glassItem}>
+                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: TEXT_COLORS[c], borderWidth: 1, borderColor: "rgba(120,113,108,0.6)" }} />
               </Pressable>
             ))}
+            <View style={{ width: StyleSheet.hairlineWidth, height: 22, marginHorizontal: 4, backgroundColor: t.border }} />
+            {(Object.keys(TEXT_GRADIENTS) as TextGradient[]).map((g) => (
+              <Pressable key={g} onPress={() => wrap(paint, g)} accessibilityLabel={tr.composer.textGradients[g]} style={styles.glassItem}>
+                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundImage: `linear-gradient(135deg, ${TEXT_GRADIENTS[g][0]}, ${TEXT_GRADIENTS[g][1]})` }} />
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setPanel("custom")} accessibilityLabel={tr.composer.customColor} style={styles.glassItem}>
+              <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundImage: "linear-gradient(135deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" }}>
+                <Plus size={14} color="#fff" strokeWidth={3} />
+              </View>
+            </Pressable>
+          </ScrollView>
+        )}
+        {hasSelection && panel === "custom" && (
+          <View style={[styles.glass, { flexDirection: "column", alignItems: "stretch", gap: 10, padding: 12, backgroundColor: t.surface, borderColor: t.border }]}>
+            <ColorPicker key={stop ?? 0} onChange={(hex) => setStops((s) => (stop === 1 ? [s[0], hex] : [hex, s[1]]))} />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              {(stop === null ? [0] : [0, 1]).map((i) => (
+                <Pressable
+                  key={i}
+                  onPress={() => stop !== null && setStop(i as 0 | 1)}
+                  accessibilityLabel={`${tr.composer.customColor} ${i + 1}`}
+                  style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: stops[i], borderWidth: 2, borderColor: (stop ?? 0) === i ? brand : "transparent" }}
+                />
+              ))}
+              <Pressable
+                onPress={() => setStop(stop === null ? 1 : null)}
+                accessibilityState={{ checked: stop !== null }}
+                style={{ borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: stop !== null ? brand : t.field }}
+              >
+                <Text style={{ color: stop !== null ? brandInk : t.text, fontSize: 13, fontWeight: "600" }}>{tr.composer.gradient}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => wrap(paint, stop !== null ? `${stops[0]}-${stops[1]}` : stops[0])}
+                style={{
+                  marginLeft: "auto",
+                  borderRadius: 999,
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  backgroundColor: stops[0],
+                  ...(stop !== null && { backgroundImage: `linear-gradient(135deg, ${stops[0]}, ${stops[1]})` }),
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>{tr.composer.apply}</Text>
+              </Pressable>
+            </View>
           </View>
+        )}
+        {hasSelection && panel === "size" && (
+          <ScrollView horizontal keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.glass, { backgroundColor: t.surface, borderColor: t.border }]}>
+            {MESSAGE_TEXT_SIZES.map((n) => (
+              <Pressable key={n} onPress={() => wrap("size", String(n))} accessibilityLabel={`${tr.composer.formats.size} ${n} px`} style={[styles.glassItem, { minWidth: 50 }]}>
+                <Text style={{ color: t.text, fontSize: 15, fontWeight: "600", fontVariant: ["tabular-nums"] }}>
+                  {n}
+                  <Text style={{ fontSize: 10, fontWeight: "500", color: t.muted }}>px</Text>
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
+        {hasSelection && panel === "font" && (
+          <ScrollView horizontal keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.glass, { backgroundColor: t.surface, borderColor: t.border }]}>
+            {TEXT_FONTS.map((f) => (
+              <Pressable key={f} onPress={() => wrap("font", f)} style={[styles.glassItem, { paddingHorizontal: 12 }]}>
+                <Text style={{ color: t.text, fontSize: 16, fontFamily: LABEL_FONTS[f] }}>{tr.composer.fonts[f]}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
+        {hasSelection && (
+          <ScrollView
+            horizontal
+            keyboardShouldPersistTaps="always"
+            showsHorizontalScrollIndicator={false}
+            accessibilityRole="toolbar"
+            accessibilityLabel={tr.composer.formatting}
+            contentContainerStyle={[styles.glass, { backgroundColor: t.surface, borderColor: t.border }]}
+          >
+            {formats.map(({ type, Icon }) => (
+              <Pressable key={type} onPress={() => wrap(type)} accessibilityLabel={tr.composer.formats[type]} style={styles.glassItem}>
+                <Icon size={18} color={t.textSoft} />
+              </Pressable>
+            ))}
+            <View style={{ width: StyleSheet.hairlineWidth, height: 22, marginHorizontal: 4, backgroundColor: t.border }} />
+            {(["color", "highlight", "outline", "font", "size"] as const).map((p) => {
+              const on = panel === p || (panel === "custom" && p === paint);
+              const Icon = { color: Palette, highlight: Highlighter, outline: TypeOutline, font: Type, size: ALargeSmall }[p];
+              return (
+                <Pressable
+                  key={p}
+                  onPress={() => {
+                    if (p === "color" || p === "highlight" || p === "outline") setPaint(p);
+                    setPanel(on ? null : p);
+                  }}
+                  accessibilityLabel={tr.composer.formats[p]}
+                  accessibilityState={{ expanded: on }}
+                  style={[styles.glassItem, on && { backgroundColor: "rgba(235,138,0,0.18)" }]}
+                >
+                  <Icon size={18} color={t.textSoft} />
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         )}
 
         <View style={styles.row}>
@@ -809,18 +958,20 @@ export function Composer({
               (capture || preview) && styles.gone,
             ]}
           >
-            <TextInput
+            <RichTextInput
               ref={input}
               value={text}
               onChangeText={typeText}
               selection={forced}
-              onSelectionChange={(e) => {
-                selection.current = e.nativeEvent.selection;
-                setCaret(e.nativeEvent.selection.end);
-                setHasSelection(e.nativeEvent.selection.end > e.nativeEvent.selection.start);
+              codeBg={t.dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.08)"}
+              onSelectionChange={(sel) => {
+                selection.current = sel;
+                setCaret(sel.end);
+                setHasSelection(sel.end > sel.start);
                 if (forced) setForced(undefined);
               }}
               multiline
+              onFocus={() => setExpressions(false)}
               maxLength={4000}
               placeholder={tr.common.message}
               placeholderTextColor={t.muted}
@@ -830,6 +981,24 @@ export function Composer({
             {!editing && !parked && !!text.trim() && !commanding && (
               <Pressable onPress={swapDraft} accessibilityLabel={tr.composer.parkDraft} style={styles.round40}>
                 <NotebookPen size={20} color={t.faint} />
+              </Pressable>
+            )}
+            {!editing && !limited && (
+              <Pressable
+                onPress={() => {
+                  if (expressions) {
+                    setExpressions(false);
+                    input.current?.focus();
+                  } else {
+                    Keyboard.dismiss();
+                    setExpressions(true);
+                  }
+                }}
+                accessibilityLabel={tr.composer.expressions}
+                accessibilityState={{ expanded: expressions }}
+                style={styles.round40}
+              >
+                <Smile size={22} color={expressions ? brand : t.faint} />
               </Pressable>
             )}
             {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
@@ -913,6 +1082,14 @@ export function Composer({
             </Pressable>
           )}
         </View>
+        {expressions && !editing && !limited && (
+          <ExpressionPanel
+            onEmoji={insertEmoji}
+            onSticker={(sticker) => sendGif({ sticker })}
+            onFoundSticker={(found) => void sendFoundSticker(found)}
+            onGif={(gif) => sendGif({ gif })}
+          />
+        )}
       </View>
 
       {attachMenu && (
@@ -928,6 +1105,14 @@ export function Composer({
             { label: tr.composer.checklist, icon: ListChecks, onSelect: () => setWritingChecklist(true) },
             { label: tr.composer.game, icon: Gamepad2, onSelect: () => setStartingGame(true) },
             { label: tr.composer.scheduleMessage, icon: CalendarClock, onSelect: () => setScheduling("next") },
+            ...attachCommands(!!chat?.group).map((name) => ({
+              label: `/${name}`,
+              icon: COMMAND_ICONS[name],
+              onSelect: () => {
+                completeCommand(`/${name} `);
+                setTimeout(() => input.current?.focus(), 50);
+              },
+            })),
           ]}
         />
       )}
@@ -970,6 +1155,8 @@ const styles = StyleSheet.create({
   modeBar: { flexDirection: "row", alignItems: "center", gap: 12, borderLeftWidth: 4, borderLeftColor: brand, paddingLeft: 12 },
   ephemeralBar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 },
   toolbar: { flexDirection: "row", gap: 6 },
+  glass: { flexDirection: "row", alignItems: "center", gap: 2, padding: 4, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth },
+  glassItem: { minWidth: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   suggestion: { fontSize: 22 },
   format: {
     width: 36,

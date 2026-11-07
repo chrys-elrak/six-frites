@@ -9,6 +9,7 @@ import { listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { deleteNotification, markNotification, markNotificationsSeen, useNotifications } from "@/lib/notifications";
 import { useLongPress } from "@/lib/long-press";
+import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSwipeRow } from "@/lib/swipe";
 import { Avatar } from "./avatar";
 import { BrandActions } from "./brand-actions";
@@ -21,6 +22,8 @@ export function Notifications() {
   const qc = useQueryClient();
   const list = useNotifications();
   const unread = list.data?.unread ?? 0;
+  const hidden = useHiddenByArchive();
+  const items = list.data?.items.filter((n) => !(n.user && hidden.userIds.has(n.user.id)) && !(n.chatId && hidden.chatIds.has(n.chatId))) ?? [];
   const [settings, setSettings] = useState(false);
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export function Notifications() {
           <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>
         ) : list.isError ? (
           <p className="p-4 text-sm text-red-600">{tr.common.somethingWrong}</p>
-        ) : list.data.items.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
             <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
               <Bell className="size-8" strokeWidth={1.6} />
@@ -59,7 +62,7 @@ export function Notifications() {
             <p className="text-sm text-stone-500">{tr.notifications.empty}</p>
           </div>
         ) : (
-          list.data.items.map((n) => <Row key={n.id} n={n} />)
+          items.map((n) => <Row key={n.id} n={n} />)
         )}
       </div>
     </div>

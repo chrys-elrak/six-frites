@@ -1,9 +1,11 @@
+import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
+import { runStickerImport } from "../src/services/sticker-import.js";
 import { headObject, putObject } from "../src/lib/storage.js";
 import { liftExpiredBans } from "../src/services/admin.js";
 import { pairAlias } from "../src/services/users.js";
 import { totp, totpStep } from "../src/lib/totp.js";
-import { ADMIN_SECRET, type Auth, asAdmin, bearer, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
+import { ADMIN_SECRET, type Auth, asAdmin, bearer, chatHelpers, loginAs, makeAdmin, prisma, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { signUp, get, call, send, makeFriends } = chatHelpers(ctx);
@@ -208,6 +210,7 @@ describe("user moderation", () => {
 describe("sticker moderation", () => {
   it("takes a pack down everywhere, including messages that already show it", async () => {
     const { host, guest, chatId } = await makeFriends();
+    makeAdmin(host);
     const pack = (await call(host, "POST", "/v1/sticker-packs", { title: "Edgy" })).json();
     const sticker = await prisma.sticker.create({
       data: { packId: pack.id, emoji: "😈", lottieUrl: "https://example.com/edgy.json" },
@@ -361,5 +364,70 @@ describe("large files", () => {
     expect(seen.attachment).toMatchObject({ id, status: "removed", url: null });
     expect((await get(boss, "/v1/admin/large-files")).items.find((f: { id: string }) => f.id === id).status).toBe("removed");
     expect((await get(guest, `/v1/chats/${chatId}/messages?only=files`)).items).toEqual([]);
+  });
+});
+
+describe("sticker zip import", () => {
+  it("unpacks an uploaded zip on the server into an official pack per folder", async () => {
+    const boss = await admin();
+    const lottie = (w: number) => strToU8(JSON.stringify({ v: "5.7.4", fr: 30, ip: 0, op: 30, w, h: w, layers: [] }));
+    const zip = zipSync({
+      "Activities/Party Popper.json": lottie(64),
+      "Activities/ball.json": lottie(64),
+      "Smileys/😂 laugh.json": lottie(64),
+      "Smileys/notes.txt": strToU8("not a sticker"),
+      "Smileys/huge.png": new Uint8Array(7 * 1024 * 1024),
+      "__MACOSX/Smileys/._x.json": strToU8("junk"),
+    });
+    const presign = await call(boss, "POST", "/v1/uploads/presign", {
+      kind: "sticker_zip",
+      mime: "application/zip",
+      size: zip.length,
+      name: "Emojis.zip",
+    });
+    expect(presign.statusCode, presign.body).toBe(201);
+    const { url, headers, upload } = presign.json();
+    expect((await fetch(url, { method: "PUT", body: zip, headers })).status).toBe(200);
+    expect((await call(boss, "POST", `/v1/uploads/${upload.id}/complete`)).json().status).toBe("ready");
+
+    const started = await call(boss, "POST", "/v1/admin/sticker-packs/import", { uploadId: upload.id });
+    expect(started.statusCode, started.body).toBe(202);
+    await runStickerImport(upload.id);
+    const progress = await get(boss, `/v1/admin/sticker-packs/import/${upload.id}`);
+    expect(progress).toMatchObject({ total: 4, done: 4, skipped: 1, finished: true, error: null, packs: ["Activities", "Smileys"] });
+
+    const packs = (await get(boss, "/v1/admin/sticker-packs?official=true")).items as { title: string; stickers: { emoji: string }[] }[];
+    expect(packs.find((p) => p.title === "Activities")?.stickers.map((s) => s.emoji).sort()).toEqual(["⭐", "🎉"].sort());
+    expect(packs.find((p) => p.title === "Smileys")?.stickers.map((s) => s.emoji)).toEqual(["😂"]);
+
+    const someone = await signUp("someone");
+    const refused = await call(someone, "POST", "/v1/uploads/presign", { kind: "sticker_zip", mime: "application/zip", size: 10, name: "x.zip" });
+    expect(refused.json().error.code).toBe("FORBIDDEN");
+
+    const smileys = packs.find((p) => p.title === "Smileys") as unknown as { id: string };
+    expect((await call(boss, "DELETE", `/v1/admin/sticker-packs/${smileys.id}/forever`)).statusCode).toBe(204);
+    const left = (await get(boss, "/v1/admin/sticker-packs?official=true")).items as { id: string }[];
+    expect(left.some((p) => p.id === smileys.id)).toBe(false);
+  });
+
+  it("runs one import at a time per admin, and can cancel one", async () => {
+    const boss = await admin();
+    const upload = async () => {
+      const zip = zipSync({ "A/x.json": strToU8(JSON.stringify({ v: "5.7.4", fr: 30, ip: 0, op: 30, w: 8, h: 8, layers: [] })) });
+      const presign = (await call(boss, "POST", "/v1/uploads/presign", { kind: "sticker_zip", mime: "application/zip", size: zip.length, name: "a.zip" })).json();
+      await fetch(presign.url, { method: "PUT", body: zip, headers: presign.headers });
+      await call(boss, "POST", `/v1/uploads/${presign.upload.id}/complete`);
+      return presign.upload.id as string;
+    };
+    const first = await upload();
+    const second = await upload();
+    expect((await call(boss, "POST", "/v1/admin/sticker-packs/import", { uploadId: first })).statusCode).toBe(202);
+    expect((await get(boss, "/v1/admin/sticker-packs/import")).import).toMatchObject({ uploadId: first, finished: false });
+    expect((await call(boss, "POST", "/v1/admin/sticker-packs/import", { uploadId: second })).json().error.code).toBe("STICKER_IMPORT_RUNNING");
+
+    const cancelled = (await call(boss, "POST", `/v1/admin/sticker-packs/import/${first}/cancel`)).json();
+    expect(cancelled).toMatchObject({ finished: true, error: "Cancelled" });
+    expect((await call(boss, "POST", "/v1/admin/sticker-packs/import", { uploadId: second })).statusCode).toBe(202);
+    await call(boss, "POST", `/v1/admin/sticker-packs/import/${second}/cancel`);
   });
 });

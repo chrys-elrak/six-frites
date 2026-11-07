@@ -81,7 +81,7 @@ function AnonText({ m, onLink }: { m: Pick<AnonMessageDTO, "text" | "entities">;
       {segments(m.text, m.entities).map((seg, i) => {
         const hidden = seg.styles.has("spoiler") && !revealed;
         const styled = (
-          <Styled styles={seg.styles}>
+          <Styled styles={seg.styles} color={seg.color} font={seg.font} size={seg.size} highlight={seg.highlight} outline={seg.outline}>
             {hidden || seg.styles.has("code") || !onLink
               ? seg.text
               : splitLinks(seg.text).map((part, j) =>

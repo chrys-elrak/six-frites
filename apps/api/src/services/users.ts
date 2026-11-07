@@ -138,7 +138,7 @@ export async function resetContactCode(userId: string) {
  * later starts a new, empty account.
  */
 export async function deleteAccount(userId: string) {
-  const { sessionIds, photoKeys } = await withEvents(async (tx, emit) => {
+  const { sessionIds, photoKeys, attachments } = await withEvents(async (tx, emit) => {
     const user = await tx.user.findUnique({ where: { id: userId } });
     if (!user || user.deletedAt) throw new AppError("USER_NOT_FOUND");
 
@@ -150,6 +150,8 @@ export async function deleteAccount(userId: string) {
     await tx.block.deleteMany({ where: { OR: [{ blockerId: userId }, { blockedId: userId }] } });
     await tx.invite.deleteMany({ where: { creatorId: userId } });
     await tx.contactLink.deleteMany({ where: { userId } });
+    const { leaveAllGroups } = await import("./groups.js");
+    const groups = await leaveAllGroups(tx, emit, userId);
     await tx.scheduledMessage.deleteMany({ where: { senderId: userId } });
     await tx.pushToken.deleteMany({ where: { session: { userId } } });
     await tx.messageBackup.deleteMany({ where: { userId } });
@@ -177,12 +179,16 @@ export async function deleteAccount(userId: string) {
     const sessions = await tx.session.findMany({ where: { userId, revokedAt: null }, select: { id: true } });
     return {
       sessionIds: sessions.map((s) => s.id),
-      photoKeys: [user.avatarKey, user.askAvatarKey, ...overrides.map((o) => o.photoKey)].filter((k): k is string => !!k),
+      photoKeys: [user.avatarKey, user.askAvatarKey, ...overrides.map((o) => o.photoKey), ...groups.photos].filter(
+        (k): k is string => !!k,
+      ),
+      attachments: groups.attachments,
     };
   });
 
   await Promise.all(sessionIds.map(revokeSession));
   if (photoKeys.length) await deleteObjects(photoKeys).catch(() => null);
+  if (attachments.length) await (await import("./uploads.js")).purgeUploads(attachments);
 }
 
 const scryptAsync = promisify(scrypt) as (pin: string, salt: Buffer, len: number) => Promise<Buffer>;

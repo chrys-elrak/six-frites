@@ -24,6 +24,7 @@ const presenceRoutes: FastifyPluginAsyncZod = async (app) => {
         where: {
           userId: { in: req.query.ids },
           chat: {
+            type: "direct",
             members: { some: { userId: req.auth.userId } },
             OR: [{ supportUserId: null }, { supportUserId: { not: req.auth.userId } }],
           },

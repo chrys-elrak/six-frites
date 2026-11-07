@@ -91,6 +91,7 @@ export default function RootLayout() {
                   </Stack.Protected>
                   <Stack.Screen name="invite/[code]" />
                   <Stack.Screen name="add/[code]" />
+                  <Stack.Screen name="g/[code]" />
                 </Stack>
               )}
               <TermsGate />

@@ -40,14 +40,27 @@ export function applyEdited(qc: QueryClient, m: MessageDTO) {
   }));
 }
 
-/** Adds or removes one of my reactions, showing the change before the server answers. */
-export async function react(qc: QueryClient, m: MessageDTO, meId: string, emoji: string) {
+/** What adds a reaction: an emoji, or the sticker or GIF behind a `sticker:<id>` / `gif:<id>` key. */
+const reactionBody = (key: string) =>
+  key.startsWith("sticker:") ? { stickerId: key.slice(8) } : key.startsWith("gif:") ? { gifId: key.slice(4) } : { emoji: key };
+
+/**
+ * Adds or removes one of my reactions, showing the change before the server answers. `emoji` is the emoji or a
+ * sticker's or GIF's key; `media` is what a new sticker or GIF shows until then.
+ */
+export async function react(
+  qc: QueryClient,
+  m: MessageDTO,
+  meId: string,
+  emoji: string,
+  media?: { sticker?: MessageDTO["reactions"][number]["sticker"]; gif?: MessageDTO["reactions"][number]["gif"] },
+) {
   const current = m.reactions ?? [];
   const on = !current.some((r) => r.emoji === emoji && r.userIds.includes(meId));
   const reactions = on
     ? current.some((r) => r.emoji === emoji)
       ? current.map((r) => (r.emoji === emoji ? { ...r, userIds: [...r.userIds, meId] } : r))
-      : [...current, { emoji, userIds: [meId] }]
+      : [...current, { emoji, userIds: [meId], sticker: media?.sticker ?? null, gif: media?.gif ?? null }]
     : current
         .map((r) => (r.emoji === emoji ? { ...r, userIds: r.userIds.filter((id) => id !== meId) } : r))
         .filter((r) => r.userIds.length);
@@ -56,7 +69,7 @@ export async function react(qc: QueryClient, m: MessageDTO, meId: string, emoji:
     const params = { path: { id: m.id } };
     const updated = unwrap(
       on
-        ? await six.api.POST("/v1/messages/{id}/reactions", { params, body: { emoji } })
+        ? await six.api.POST("/v1/messages/{id}/reactions", { params, body: reactionBody(emoji) })
         : await six.api.DELETE("/v1/messages/{id}/reactions/{emoji}", { params: { path: { id: m.id, emoji } } }),
     );
     applyEdited(qc, await hydrate(updated));

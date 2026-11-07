@@ -32,7 +32,7 @@ export function AnimatedEmoji({ emoji, size, inline = false }: { emoji: string; 
           ref={anim}
           source={{ uri: url }}
           autoPlay
-          loop={false}
+          loop
           onAnimationLoaded={() => setReady(true)}
           onAnimationFailure={() => setFailed(true)}
           style={{ position: "absolute", width: size, height: size, opacity: ready ? 1 : 0 }}

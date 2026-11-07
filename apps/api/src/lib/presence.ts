@@ -37,7 +37,7 @@ async function audience(userId: string) {
   const rows = await prisma.chatMember.findMany({
     where: {
       userId: { not: userId },
-      chat: { members: { some: { userId } }, OR: [{ supportUserId: null }, { supportUserId: userId }] },
+      chat: { type: "direct", members: { some: { userId } }, OR: [{ supportUserId: null }, { supportUserId: userId }] },
     },
     select: { userId: true },
     distinct: ["userId"],

@@ -140,6 +140,13 @@ export async function downloadObject(key: string, path: string) {
   await pipeline(res.Body as Readable, createWriteStream(path));
 }
 
+/** The object's bytes as a stream, for files too big to hold in memory. */
+/** An object's bytes as a stream, or just the bytes from `start` to `end` inclusive. */
+export async function objectStream(key: string, range?: { start: number; end: number }) {
+  const res = await s3.send(new GetObjectCommand({ Bucket, Key: key, ...(range && { Range: `bytes=${range.start}-${range.end}` }) }));
+  return res.Body as Readable;
+}
+
 export async function putObject(key: string, body: Buffer, contentType: string) {
   await s3.send(new PutObjectCommand({ Bucket, Key: key, Body: body, ContentType: contentType }));
 }

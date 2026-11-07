@@ -11,6 +11,8 @@ import {
   serviceSentence,
   type EphemeralDTO,
   type MessageDTO,
+  type StickerDTO,
+  textSize,
   type MessageEffect,
   type MessageEntity,
   type ReplyPreview,
@@ -19,11 +21,14 @@ import {
   splitLinks,
   type StoryReply,
   inkOn,
+  isGroupAction,
+  type PublicUser,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { Link, router } from "expo-router";
 import { Image } from "expo-image";
+import { useFonts } from "expo-font";
 import * as Clipboard from "expo-clipboard";
 import { GestureDetector, useLongPressGesture, usePanGesture, useSimultaneousGestures, useTapGesture } from "react-native-gesture-handler";
 import { useDragSelect } from "@/lib/drag-select";
@@ -57,6 +62,7 @@ import {
   Timer,
   Trash2,
   Image as ImageIcon,
+  Users,
 } from "lucide-react-native";
 import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
@@ -72,6 +78,8 @@ import {
   type LayoutRectangle,
   type ListViewToken,
 } from "react-native";
+import { Avatar } from "./avatar";
+import { StickerView } from "./sticker";
 import { Text } from "./text";
 import Animated from "react-native-reanimated";
 import {
@@ -92,7 +100,7 @@ import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { RestoreBackupDialog, useHasRecoveryKey } from "./encryption-settings";
 import { useComposerMode } from "@/lib/composer";
-import { PhotoEditor } from "./photo-editor";
+import { FONT_FILES, PhotoEditor } from "./photo-editor";
 import { messageFile } from "@/lib/media";
 import { emojiOnly, splitEmoji } from "@/lib/emoji";
 import { EPHEMERAL_OPTIONS, canResend, shortRule } from "@/lib/ephemeral";
@@ -121,12 +129,11 @@ import { ChatPicker } from "./chat-picker";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
-import { EmojiPicker } from "./emoji-picker";
 import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { MessageMenu } from "./message-menu";
-import { type Anchor, ReactionBar, ReactionChips } from "./reactions";
-import { styleFor } from "./rich-text";
+import { ReactionBar, ReactionChips, ReactionPicker, type Anchor } from "./reactions";
+import { GradientText, styleFor } from "./rich-text";
 import { playHref } from "./live";
 import { EffectLayer } from "./message-effects";
 import { MessageTiming } from "./message-timing";
@@ -154,6 +161,7 @@ interface MsgRow {
   deleted: boolean;
   edited: boolean;
   attachment: ShownAttachment | null;
+  sticker: StickerDTO | null;
   groupId: string | null;
   album: AlbumItem[] | null;
   location: GeoPoint | null;
@@ -248,6 +256,7 @@ function buildRows(
         deleted: m.deletedAt !== null,
         edited: m.editedAt !== null,
         attachment: m.attachment ? { source: "server" as const, data: m.attachment } : null,
+        sticker: m.sticker ?? null,
         groupId: m.groupId ?? null,
         album: null,
         location: m.location ?? null,
@@ -285,6 +294,7 @@ function buildRows(
           attachment: p.attachment
             ? { source: "local" as const, data: p.attachment, failed: p.status === "failed" }
             : null,
+          sticker: p.sticker ?? null,
           groupId: p.groupId ?? null,
           album: null,
           location: p.location ?? null,
@@ -292,7 +302,9 @@ function buildRows(
           checks: [],
           game: p.game ?? null,
           moves: [],
-          type: (p.location
+          type: (p.sticker
+            ? "sticker"
+            : p.location
             ? "location"
             : p.checklist
               ? "checklist"
@@ -509,11 +521,11 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
   return (
     <>
       {segments(text, entities).map((seg, i) => {
-        const style = styleFor(seg.styles, codeBg);
+        const style = styleFor(seg, codeBg);
         if (!seg.styles.has("spoiler") || revealed) {
           return (
             <Text key={i} style={style}>
-              {seg.styles.has("code") ? seg.text : <Linked text={seg.text} selecting={selecting} />}
+              {GradientText({ seg }) ?? (seg.styles.has("code") ? seg.text : <Linked text={seg.text} selecting={selecting} size={seg.size} />)}
             </Text>
           );
         }
@@ -532,7 +544,9 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
   );
 }
 
-export function Linked({ text, selecting }: { text: string; selecting: boolean }) {
+/** Text with its links and animated emoji; the emoji grow with the text's size when it has one. */
+export function Linked({ text, selecting, size }: { text: string; selecting: boolean; size?: string }) {
+  const emoji = Math.round((textSize(size) ?? 16) * 1.25);
   return (
     <>
       {splitLinks(text).map((part, i) =>
@@ -545,7 +559,7 @@ export function Linked({ text, selecting }: { text: string; selecting: boolean }
             {part.text}
           </Text>
         ) : (
-          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={20} inline /> : s))
+          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={emoji} inline /> : s))
         ),
       )}
     </>
@@ -812,8 +826,11 @@ function Bubble({
   frozen,
   autoPlay,
   onVoiceStop,
+  sender,
 }: {
   row: MsgRow;
+  /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
+  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias">;
   highlighted: boolean;
   selecting: boolean;
   selected: boolean;
@@ -892,7 +909,8 @@ function Bubble({
         borderBottomLeftRadius: groupEnd ? big : small,
       };
   const loose = !sealed && !row.deleted && !!(row.message as { file?: { sticker?: boolean } } | null)?.file?.sticker;
-  const bare = jumbo || note || loose;
+  const sticker = !sealed && !row.deleted ? row.sticker : null;
+  const bare = jumbo || note || loose || sticker;
   const tone = bare
     ? null
     : row.deleted
@@ -984,7 +1002,13 @@ function Bubble({
           <Reply size={16} color="#fff" />
         </View>
       </Animated.View>
+      {sender && <View style={{ width: 36, alignSelf: "flex-end" }}>{groupEnd && <Avatar user={sender} />}</View>}
       <Animated.View style={[styles.side, { alignItems: mine ? "flex-end" : "flex-start" }, swipe.moving]}>
+        {sender && groupStart && (
+          <Text style={{ color: brand, fontSize: 12, fontWeight: "700", marginBottom: 2, marginHorizontal: 4 }}>
+            {sender.displayName}
+          </Text>
+        )}
         <View
           ref={bubbleRef}
           collapsable={false}
@@ -1015,6 +1039,7 @@ function Bubble({
             <StoryQuote story={row.story} mine={mine} color={fg} reaction={!!row.text && !!emojiOnly(row.text)} />
           )}
           {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} color={fg} onResend={onResend} />}
+          {sticker && <StickerView sticker={sticker} size={160} />}
           {row.album && !row.deleted && !sealed ? (
             <AlbumGrid
               items={row.album}
@@ -1032,7 +1057,7 @@ function Bubble({
               <AttachmentView
                 attachment={row.attachment}
                 mine={mine}
-                onOpen={onOpen}
+                onOpen={loose ? () => {} : onOpen}
                 hidden={(["image", "video", "gif"].includes(row.attachment.data.kind) || (note && row.spoiler)) && blurred(row.key, row.spoiler, !loose && row.attachment.data.kind !== "gif")}
                 hiddenLabel={chip(row.spoiler)}
                 onReveal={() => revealMedia(row.key)}
@@ -1172,6 +1197,7 @@ function OlderLoader() {
 
 export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: string; onSeen: () => void }>(
   function MessageList({ chat, meId, onSeen }, handle) {
+    useFonts(FONT_FILES);
     const t = useTheme();
     const tr = useT();
     const qc = useQueryClient();
@@ -1249,7 +1275,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     }
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
-    const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? tr.common.someone));
+    const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? (chat.group ? tr.groups.formerMember : tr.common.someone)));
+    const senderOf = (row: MsgRow) =>
+      chat.group && !row.mine && row.message
+        ? (chat.members.find((m) => m.user.id === row.message!.senderId)?.user ?? { displayName: tr.groups.formerMember, avatarUrl: null })
+        : undefined;
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {
       const peers = chat.members.filter((m) => m.user.id !== meId);
@@ -1561,6 +1591,8 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
                       )
                     ) : row.message.action?.type === "live_invite" || row.message.action?.type === "live_result" ? (
                       <Gamepad2 size={14} color="#fff" />
+                    ) : isGroupAction(row.message.action) ? (
+                      <Users size={14} color="#fff" />
                     ) : (
                       <Timer size={14} color="#fff" />
                     )}
@@ -1592,6 +1624,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
               ) : (
                 <Bubble
                   row={row}
+                  sender={senderOf(row)}
                   highlighted={row.id !== null && row.id === highlight}
                   selecting={selecting}
                   selected={row.id !== null && selecting && selectedIds.includes(row.id)}
@@ -1644,11 +1677,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
           ) : (
             <Sheet actions={actionsFor(menuFor)} onClose={() => setMenuFor(null)} />
           ))}
-        <EmojiPicker
+        <ReactionPicker
           open={reactingTo !== null}
           onClose={() => setReactingTo(null)}
-          onPick={(emoji) => {
-            if (reactingTo) void react(qc, reactingTo, meId, emoji);
+          onPick={(emoji, media) => {
+            if (reactingTo) void react(qc, reactingTo, meId, emoji, media);
             setReactingTo(null);
           }}
         />

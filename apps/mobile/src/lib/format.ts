@@ -59,6 +59,12 @@ export function contactUrl(code: string) {
 
 export const formatCode = (code: string) => `${code.slice(0, 4)}-${code.slice(4)}`;
 
+export const groupUrl = (code: string) => `${WEB_URL}/g/${code}`;
+
+export async function shareGroup(title: string, code: string) {
+  await Share.share({ message: getT().groups.shareText(title, groupUrl(code)) }).catch(() => null);
+}
+
 export async function shareContact(code: string) {
   await Share.share({ message: `${getT().common.addMe}: ${contactUrl(code)}` }).catch(() => null);
 }

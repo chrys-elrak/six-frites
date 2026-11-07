@@ -11,13 +11,14 @@ import { Emails } from "@/components/admin/emails";
 import { LargeFiles } from "@/components/admin/large-files";
 import { Overview } from "@/components/admin/overview";
 import { Reports } from "@/components/admin/reports";
+import { OfficialStickers } from "@/components/admin/stickers";
 import { TwoFactor } from "@/components/admin/two-factor";
 import { Users } from "@/components/admin/users";
 import { adminKeys, useIsAdmin } from "@/lib/admin";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
-type Tab = "overview" | "reports" | "anon" | "users" | "emails" | "files";
+type Tab = "overview" | "reports" | "anon" | "users" | "emails" | "files" | "stickers";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -67,6 +68,7 @@ export default function AdminPage() {
     { id: "users", label: "People" },
     { id: "emails", label: "Emails" },
     { id: "files", label: "Large files" },
+    { id: "stickers", label: "Stickers" },
   ];
 
   return (
@@ -105,6 +107,7 @@ export default function AdminPage() {
       {tab === "users" && <Users />}
       {tab === "emails" && <Emails />}
       {tab === "files" && <LargeFiles />}
+      {tab === "stickers" && <OfficialStickers />}
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -90,14 +90,39 @@ async function voice(upload: Upload, dir: string, input: string) {
 }
 
 const STICKER_SIZE = 512;
+/** Animated stickers stay smaller: every frame counts, and they show at sticker size anyway. */
+const ANIMATED_SIZE = 256;
 const LOTTIE_MAX_BYTES = 2 * 1024 * 1024;
 
 /**
- * Stickers: images become a WebP of at most 512px; Lottie (.tgs is gzipped) becomes plain JSON,
+ * Stickers: images become a WebP of at most 512px, an animated PNG an animated WebP of at most 256px, and an
+ * animated WebP stays as it is (ffmpeg can't read those); Lottie (.tgs is gzipped) becomes plain JSON,
  * without image assets that point outside the file, so a sticker can't load a tracking pixel.
  */
 async function sticker(upload: Upload, dir: string, input: string) {
   if (upload.mime.startsWith("image/")) {
+    const head = (await readFile(input)).subarray(0, 4096);
+    if (upload.mime === "image/webp" && head.includes("ANIM")) {
+      await copyFile(input, join(dir, "main.webp"));
+      return {
+        mainKey: await store(upload, dir, "main.webp", "main.webp", "image/webp"),
+        mainMime: "image/webp",
+        width: head.readUIntLE(24, 3) + 1,
+        height: head.readUIntLE(27, 3) + 1,
+      };
+    }
+    if (upload.mime === "image/png" && head.includes("acTL")) {
+      const { width, height } = await probe(input);
+      const fit = `scale='min(${ANIMATED_SIZE},iw)':'min(${ANIMATED_SIZE},ih)':force_original_aspect_ratio=decrease`;
+      await ffmpeg(["-i", input, "-vf", fit, "-c:v", "libwebp_anim", "-loop", "0", "-quality", "50", join(dir, "main.webp")]);
+      const k = Math.min(1, ANIMATED_SIZE / (width ?? 1), ANIMATED_SIZE / (height ?? 1));
+      return {
+        mainKey: await store(upload, dir, "main.webp", "main.webp", "image/webp"),
+        mainMime: "image/webp",
+        width: width && Math.round(width * k),
+        height: height && Math.round(height * k),
+      };
+    }
     const fit = `scale='min(${STICKER_SIZE},iw)':'min(${STICKER_SIZE},ih)':force_original_aspect_ratio=decrease`;
     await ffmpeg(["-i", input, "-frames:v", "1", "-vf", fit, "-c:v", "libwebp", "-quality", "90", join(dir, "main.webp")]);
     const info = await probe(join(dir, "main.webp"));

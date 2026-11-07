@@ -99,11 +99,13 @@ export function ChatMenu({
   onDeleted,
   onChooseMessages,
   onSharedMedia,
+  onGroupInfo,
   at,
 }: {
   chat: ChatDTO;
   peerName: string;
   onClose: () => void;
+  onGroupInfo?: () => void;
   onDeleted?: (scope: DeleteScope) => void;
   onChooseMessages?: () => void;
   onSharedMedia?: (tab: "search" | "media") => void;
@@ -197,11 +199,15 @@ export function ChatMenu({
         onClose={onClose}
         actions={[
           { label: tr.chat.deleteForMe, destructive: true, onSelect: () => void remove("me") },
-          {
-            label: range ? tr.chat.deleteThisFor(peerName) : tr.chat.deleteAllFor(peerName),
-            destructive: true,
-            onSelect: () => void remove("all"),
-          },
+          ...(chat.group && chat.group.myRole !== "owner"
+            ? []
+            : [
+                {
+                  label: range ? tr.chat.deleteThisFor(peerName) : tr.chat.deleteAllFor(peerName),
+                  destructive: true,
+                  onSelect: () => void remove("all"),
+                },
+              ]),
         ]}
       />
     );
@@ -325,6 +331,7 @@ export function ChatMenu({
       at={at}
       onClose={onClose}
       actions={[
+        ...(chat.group && onGroupInfo ? [{ label: tr.groups.info, onSelect: onGroupInfo }] : []),
         ...(onSharedMedia
           ? [
               { label: tr.chat.search, onSelect: () => onSharedMedia("search") },

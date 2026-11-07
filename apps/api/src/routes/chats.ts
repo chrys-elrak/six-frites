@@ -33,6 +33,7 @@ import {
   MessageListQuery,
   MessageTimingDTO,
   ReactInput,
+  ReactionKey,
   ReactionEmoji,
   ScheduleMessageInput,
   ScheduledMessageDTO,
@@ -199,7 +200,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["chats"],
         summary: "Delete a chat",
         description:
-          "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people. " +
+          "`scope=me` clears your history and hides the chat until a new message arrives. `scope=all` deletes every message for both people; in a group only its owner can. " +
           "With `from` and/or `to`, only the messages sent in that range are deleted, as with DELETE /messages, and the chat stays.",
         security,
         params: ChatParams,
@@ -255,14 +256,17 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["messages"],
         summary: "Add a reaction to a message",
         description:
-          "You can add several different emoji, up to 10 (REACTION_LIMIT_REACHED). Adding one you already have changes nothing. Both people get message.edited with the new `reactions`. REACTION_NOT_ALLOWED on deleted, destroyed or service messages.",
+          "React with an emoji, a sticker (`stickerId`) or a GIF (`gifId`). You can add several different ones, up to 10 (REACTION_LIMIT_REACHED). Adding one you already have changes nothing. Both people get message.edited with the new `reactions`. REACTION_NOT_ALLOWED on deleted, destroyed or service messages.",
         security,
         params: MessageParams,
         body: ReactInput,
         response: { 200: MessageDTO },
       },
     },
-    (req) => setReaction(req.auth.userId, req.params.id, req.body.emoji, true),
+    (req) => {
+      const { emoji, stickerId, gifId } = req.body;
+      return setReaction(req.auth.userId, req.params.id, emoji ?? (stickerId ? { stickerId } : { gifId: gifId! }), true);
+    },
   );
 
   app.delete(
@@ -272,9 +276,9 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["messages"],
         summary: "Remove one of your reactions",
-        description: "`emoji` is URL-encoded. Removing one you don't have changes nothing.",
+        description: "`emoji` is URL-encoded: the emoji, or `sticker:<id>` / `gif:<id>` as in `reactions`. Removing one you don't have changes nothing.",
         security,
-        params: z.object({ id: Id, emoji: ReactionEmoji }),
+        params: z.object({ id: Id, emoji: z.union([ReactionEmoji, ReactionKey]) }),
         response: { 200: MessageDTO },
       },
     },
@@ -422,7 +426,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["messages"],
         summary: "Delete messages",
         description:
-          "`ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes them for everyone. In direct chats either person can delete any message for everyone.",
+          "`ids` is a comma-separated list (max 100). `scope=me` hides them for you; `scope=all` deletes them for everyone. In direct chats either person can delete any message for everyone; in a group, its owner and admins can.",
         security,
         querystring: DeleteMessagesQuery,
         response: { 204: z.null() },

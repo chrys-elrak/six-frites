@@ -13,6 +13,7 @@ import {
 import { env } from "../env.js";
 import { activeSessions } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
+import { presignGet } from "../lib/storage.js";
 import { pushQueue } from "../lib/queue.js";
 import { pushProviders } from "../push/providers.js";
 import { profilesFor } from "./contacts.js";
@@ -66,9 +67,16 @@ export async function queueReactionPush(messageId: string, authorId: string, rea
 /** Whether `userId` is the person being helped in this chat with support, who sees the other side as Six Frites. */
 /** Someone as `userId` sees them in a chat: support is Six Frites to whoever it helps, and they are a Potato to support. */
 async function seenIn(chatId: string, userId: string, person: Parameters<Awaited<ReturnType<typeof profilesFor>>>[0]) {
-  const chat = await prisma.chat.findUnique({ where: { id: chatId }, select: { supportUserId: true } });
+  const chat = await prisma.chat.findUnique({ where: { id: chatId }, select: { supportUserId: true, type: true } });
   if (chat?.supportUserId === userId) return supportProfile(person.id);
-  const shown = (await profilesFor(prisma, userId, [person.id]))(person);
+  const face =
+    chat?.type === "group"
+      ? await prisma.chatMember.findUnique({
+          where: { chatId_userId: { chatId, userId: person.id } },
+          select: { nickname: true, photoKey: true },
+        })
+      : null;
+  const shown = (await profilesFor(prisma, userId, [person.id], face ? new Map([[person.id, face]]) : undefined))(person);
   return chat?.supportUserId === person.id ? supportCase(shown, userId) : shown;
 }
 
@@ -113,10 +121,13 @@ export async function deliverPush(messageId: string, userId: string) {
 
   const sender = await seenIn(m.chatId, userId, m.sender);
   const dto = toMessageDTO(m, userId);
+  const group = await prisma.chat.findFirst({ where: { id: m.chatId, type: "group" }, select: { title: true, photoKey: true } });
   return sendToAll(targets, (t) => ({
-    title: sender.displayName,
-    body: previewText(dto, t) || t.summary.newMessage,
-    icon: sender.avatarUrl,
+    title: group?.title ?? sender.displayName,
+    body: group
+      ? `${sender.displayName}: ${previewText(dto, t) || t.summary.newMessage}`
+      : previewText(dto, t) || t.summary.newMessage,
+    icon: group ? (group.photoKey ? presignGet(group.photoKey) : null) : sender.avatarUrl,
     chatId: m.chatId,
     messageId: m.id,
     url: `/chats/${m.chatId}`,
@@ -156,8 +167,18 @@ export async function deliverReactionPush(
   }));
 }
 
-/** Asks a contact to join a live game, on the devices they aren't using right now. */
+/** Whether `userId` archived their chat with `otherId`: nothing from them should buzz the phone then. */
+async function archivedWith(userId: string, otherId: string) {
+  const member = await prisma.chatMember.findFirst({
+    where: { userId, chat: { directKey: [userId, otherId].sort().join(":") } },
+    select: { archived: true },
+  });
+  return !!member?.archived;
+}
+
+/** Asks a contact to join a live game, on the devices they aren't using right now, unless their chat is archived. */
 export async function deliverLiveInvitePush(userId: string, from: PublicUser, game: LiveGame, roomId: string) {
+  if (await archivedWith(userId, from.id)) return 0;
   const targets = await targetsFor(userId);
   return sendToAll(targets, (t) => ({
     title: t.live.invites(from.displayName, t.live.games[game]),
@@ -205,8 +226,9 @@ export async function deliverAnonPush(userId: string, text: string, kind: "image
   }));
 }
 
-/** Tells someone a contact reacted to their story, on the devices they aren't using right now. */
+/** Tells someone a contact reacted to their story, on the devices they aren't using right now, unless their chat is archived. */
 export async function deliverStoryReactionPush(userId: string, from: PublicUser, emoji: string, note = false) {
+  if (await archivedWith(userId, from.id)) return 0;
   const targets = await targetsFor(userId);
   return sendToAll(targets, (t) => ({
     title: from.displayName,

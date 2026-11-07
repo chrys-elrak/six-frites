@@ -1,3 +1,4 @@
+import { env } from "../src/env.js";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll } from "vitest";
 import { buildApp } from "../src/app.js";
@@ -34,7 +35,12 @@ export function loginAs(app: FastifyInstance, sub: string, platform = "ios", ext
 
 export interface Auth {
   accessToken: string;
-  user: { id: string };
+  user: { id: string; email: string };
+}
+
+/** Lets this person use what's for admins outside moderation, like making sticker packs, as if listed in ADMIN_EMAILS. */
+export function makeAdmin(who: Auth) {
+  env.ADMIN_EMAILS.push(who.user.email.toLowerCase());
 }
 
 /** The test admin's authenticator secret: the first sign-in sets it up, later ones reuse it. */

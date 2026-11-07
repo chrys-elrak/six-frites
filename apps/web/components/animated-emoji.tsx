@@ -27,6 +27,7 @@ export function AnimatedEmoji({ emoji, size }: { emoji: string; size: number }) 
       <LottieView
         url={url}
         size={size}
+        loop
         onReady={(a) => (anim.current = a)}
         fallback={
           <span aria-hidden style={{ fontSize: size * 0.78, lineHeight: 1 }}>

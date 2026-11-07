@@ -36,9 +36,22 @@ export function callText(a: { video: boolean; secs: number | null }, t: Dict) {
   return a.secs === null ? t.summary.missedCall(a.video) : t.summary.call(a.video, clock(a.secs));
 }
 
+/** What a group service message says, with `who` as its sender (null when it was you). */
+function groupText(a: ServiceAction | null | undefined, who: string | null, t: Dict) {
+  if (a?.type === "group_created") return t.groups.created(who, a.title);
+  if (a?.type === "joined") return t.groups.joined(a.name);
+  if (a?.type === "left") return t.groups.left(a.name);
+  if (a?.type === "removed") return t.groups.removed(a.name);
+  if (a?.type === "renamed") return t.groups.renamed(who, a.title);
+  if (a?.type === "group_photo") return t.groups.photoChanged(who);
+  return null;
+}
+
 /** What a service message says, without the sender's name. */
 export function serviceText(m: Pick<MessageDTO, "action">, t: Dict, mine = false) {
   const a = m.action;
+  const group = groupText(a, mine ? null : t.common.someone, t);
+  if (group) return group;
   if (a?.type === "theme") return a.theme ? t.summary.background(themeName(a.theme, t)) : t.summary.backgroundReset;
   if (a?.type === "e2ee") return t.summary.encrypted;
   if (a?.type === "vanish") return a.on ? t.summary.vanishOn : t.summary.vanishOff;
@@ -46,7 +59,7 @@ export function serviceText(m: Pick<MessageDTO, "action">, t: Dict, mine = false
   if (a?.type === "call") return callText(a, t);
   if (a?.type === "live_invite") return liveText(a, t, mine);
   if (a?.type === "live_result") return resultText(a, t);
-  return a?.secs ? t.summary.autoDeleteAfter(durationLabel(a.secs, t)) : t.summary.autoDeleteOff;
+  return a?.type === "auto_delete" && a.secs ? t.summary.autoDeleteAfter(durationLabel(a.secs, t)) : t.summary.autoDeleteOff;
 }
 
 function liveText(a: Extract<ServiceAction, { type: "live_invite" }>, t: Dict, mine: boolean) {
@@ -63,6 +76,8 @@ function resultText(a: Extract<ServiceAction, { type: "live_result" }>, t: Dict)
 /** What a service message says as a sentence about its sender; `who` is null when it was you. */
 export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | null, t: Dict) {
   const a = m.action;
+  const group = groupText(a, who, t);
+  if (group) return group;
   if (a?.type === "theme") {
     if (!a.theme) return t.summary.resetBackground(who);
     return customThemeColor(a.theme)
@@ -75,7 +90,9 @@ export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | nul
   if (a?.type === "call") return t.summary.called(who, callText(a, t));
   if (a?.type === "live_invite") return liveText(a, t, who === null);
   if (a?.type === "live_result") return resultText(a, t);
-  return a?.secs ? t.summary.setAutoDelete(who, durationLabel(a.secs, t)) : t.summary.turnedOffAutoDelete(who);
+  return a?.type === "auto_delete" && a.secs
+    ? t.summary.setAutoDelete(who, durationLabel(a.secs, t))
+    : t.summary.turnedOffAutoDelete(who);
 }
 
 /** What a message shows as: GIFs and stickers sent from the keyboard travel as images. */

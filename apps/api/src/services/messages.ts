@@ -37,7 +37,7 @@ import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
 import { presignGet } from "../lib/storage.js";
 import { timersQueue } from "../lib/queue.js";
-import { saveGif } from "./gifs.js";
+import { saveGif, sharedGif } from "./gifs.js";
 import { assertCanMessage } from "./blocks.js";
 import { activeDevices, checkEnvelopes } from "./devices.js";
 import { deliverResealPush, queuePush, queueReactionPush } from "./push.js";
@@ -50,7 +50,7 @@ export const messageInclude = {
   attachment: true,
   views: true,
   sticker: { include: { upload: true } },
-  reactions: { orderBy: { createdAt: "asc" } },
+  reactions: { orderBy: { createdAt: "asc" }, include: { sticker: { include: { upload: true } } } },
   envelopes: { include: { device: { select: { userId: true } } } },
   backups: true,
   marks: { orderBy: { item: "asc" } },
@@ -70,10 +70,20 @@ const isEphemeral = (m: { maxViews: number | null; ttlSeconds: number | null }) 
 /** How long download links for opened self-destructing media stay valid. */
 export const EPHEMERAL_LINK_SECONDS = 5 * 60;
 
+/** One entry per emoji, sticker or GIF, with whoever used it and, for stickers and GIFs, what to show. */
 function groupReactions(reactions: MessageRow["reactions"]) {
-  const byEmoji = new Map<string, string[]>();
-  for (const r of reactions) byEmoji.set(r.emoji, [...(byEmoji.get(r.emoji) ?? []), r.userId]);
-  return [...byEmoji].map(([emoji, userIds]) => ({ emoji, userIds }));
+  const byEmoji = new Map<string, { first: MessageRow["reactions"][number]; userIds: string[] }>();
+  for (const r of reactions) {
+    const seen = byEmoji.get(r.emoji);
+    if (seen) seen.userIds.push(r.userId);
+    else byEmoji.set(r.emoji, { first: r, userIds: [r.userId] });
+  }
+  return [...byEmoji].map(([emoji, { first, userIds }]) => ({
+    emoji,
+    userIds,
+    ...(first.stickerId && { sticker: first.sticker && !first.sticker.removedAt ? toStickerDTO(first.sticker) : null }),
+    ...(first.gifKey && { gif: { url: presignGet(first.gifKey), width: first.gifWidth, height: first.gifHeight } }),
+  }));
 }
 
 export function toReplyPreview(r: Message): ReplyPreview {
@@ -339,7 +349,7 @@ export async function createMessage(
   opts: CreateOptions = {},
 ) {
   await assertMember(tx, chatId, userId);
-  await assertCanMessage(tx, chatId, userId);
+  await assertCanMessage(tx, chatId, userId, !("action" in input));
   const content = "action" in input ? null : input;
   if (content?.replyToId) {
     const original = await tx.message.findFirst({ where: { id: content.replyToId, chatId }, select: { id: true } });
@@ -351,6 +361,7 @@ export async function createMessage(
     throw new AppError("STICKER_NOT_FOUND");
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
+  if ((content?.game || content?.type === "game") && chat.type === "group") throw new AppError("NOT_IN_GROUPS", "Games aren't available in groups");
   if (content) checkEncryption(chat, content, upload);
   if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content, upload);
 
@@ -576,12 +587,40 @@ async function reactableMessage(tx: Tx, userId: string, messageId: string) {
   const visible = member && (await tx.message.count({ where: { id: messageId, ...visibleTo(userId, member.clearedAt) } }));
   if (!message || !visible) throw new AppError("MESSAGE_NOT_FOUND");
   if (message.deletedAt || message.purgedAt || message.type === "service") throw new AppError("REACTION_NOT_ALLOWED");
-  await assertCanMessage(tx, message.chatId, userId);
+  await assertCanMessage(tx, message.chatId, userId, false);
   return message;
 }
 
 /** Adds (`on`) or removes one of the user's reactions, and tells both people if anything changed. */
-export async function setReaction(userId: string, messageId: string, emoji: string, on: boolean) {
+/**
+ * Adds or removes one of someone's reactions. `with` is the emoji, a key like `sticker:<id>` when removing, or a
+ * sticker or GIF to add; a GIF is copied to our storage the first time anyone uses it, as for messages.
+ */
+export async function setReaction(
+  userId: string,
+  messageId: string,
+  with_: string | { stickerId: string } | { gifId: string },
+  on: boolean,
+) {
+  let emoji: string;
+  let media: { stickerId?: string; gifKey?: string; gifWidth?: number | null; gifHeight?: number | null } = {};
+  let glyph: string;
+  if (typeof with_ === "string") {
+    emoji = with_;
+    glyph = with_;
+  } else if ("stickerId" in with_) {
+    const sticker = await prisma.sticker.findFirst({ where: { id: with_.stickerId, removedAt: null, bannedAt: null } });
+    if (!sticker) throw new AppError("STICKER_NOT_FOUND");
+    emoji = `sticker:${sticker.id}`;
+    media = { stickerId: sticker.id };
+    glyph = sticker.emoji;
+  } else {
+    const gif = await sharedGif(with_.gifId);
+    emoji = `gif:${with_.gifId}`;
+    media = { gifKey: gif.key, gifWidth: gif.width, gifHeight: gif.height };
+    glyph = "GIF";
+  }
+
   const result = await withEvents(async (tx, emit) => {
     const message = await reactableMessage(tx, userId, messageId);
     const mine = message.reactions.filter((r) => r.userId === userId).map((r) => r.emoji);
@@ -589,17 +628,17 @@ export async function setReaction(userId: string, messageId: string, emoji: stri
     if (on && mine.length >= MAX_REACTIONS_PER_USER) throw new AppError("REACTION_LIMIT_REACHED");
 
     const key = { messageId_userId_emoji: { messageId, userId, emoji } };
-    if (on) await tx.messageReaction.create({ data: key.messageId_userId_emoji });
+    if (on) await tx.messageReaction.create({ data: { ...key.messageId_userId_emoji, ...media } });
     else await tx.messageReaction.delete({ where: key });
 
     const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
     if (on && message.senderId !== userId) {
-      emit(message.senderId, "message.reacted", { chatId: message.chatId, messageId, userId, emoji });
+      emit(message.senderId, "message.reacted", { chatId: message.chatId, messageId, userId, emoji: glyph });
     }
     return { dto: toMessageDTO(updated, userId), authorId: on ? message.senderId : null };
   });
-  if (result.authorId) await queueReactionPush(messageId, result.authorId, userId, emoji).catch(() => null);
+  if (result.authorId) await queueReactionPush(messageId, result.authorId, userId, glyph).catch(() => null);
   return result.dto;
 }
 
@@ -681,12 +720,17 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
     if (messages.length !== ids.length || memberships !== chatIds.length) throw new AppError("MESSAGE_NOT_FOUND");
 
     if (scope === "all") {
-      const direct = new Set(
+      const canDeleteAny = new Set(
         (await tx.chat.findMany({ where: { id: { in: chatIds }, type: "direct" }, select: { id: true } })).map(
           (c) => c.id,
         ),
       );
-      if (messages.some((m) => m.senderId !== userId && !direct.has(m.chatId))) {
+      const moderated = await tx.chatMember.findMany({
+        where: { userId, chatId: { in: chatIds }, role: { in: ["owner", "admin"] }, chat: { type: "group" } },
+        select: { chatId: true },
+      });
+      for (const m of moderated) canDeleteAny.add(m.chatId);
+      if (messages.some((m) => m.senderId !== userId && !canDeleteAny.has(m.chatId))) {
         throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can delete this message for everyone");
       }
       const live = messages.filter((m) => !m.deletedAt);

@@ -34,6 +34,7 @@ import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
 import { fingers } from "@/lib/fingers";
+import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
@@ -354,12 +355,14 @@ export function StoriesBar() {
   const [composing, setComposing] = useState(false);
   const [writingNote, setWritingNote] = useState(false);
   const [reading, setReading] = useState<{ user: PublicUser; note: NoteDTO } | null>(null);
-  const groups = stories.data ?? [];
+  const hidden = useHiddenByArchive().userIds;
+  const groups = (stories.data ?? []).filter((g) => !hidden.has(g.user.id));
+  const noteItems = (notes?.items ?? []).filter((n) => !hidden.has(n.user.id));
   const mineAt = groups.findIndex((g) => g.user.id === me.id);
-  const noteOf = new Map(notes?.items.map((n) => [n.user.id, n]));
+  const noteOf = new Map(noteItems.map((n) => [n.user.id, n]));
   const people = [
     ...groups.flatMap((g, i) => (g.user.id === me.id ? [] : [{ user: g.user, at: i as number | null, unseen: g.stories.some((s) => !s.seen) }])),
-    ...(notes?.items ?? []).filter((n) => !groups.some((g) => g.user.id === n.user.id)).map((n) => ({ user: n.user, at: null, unseen: false })),
+    ...noteItems.filter((n) => !groups.some((g) => g.user.id === n.user.id)).map((n) => ({ user: n.user, at: null, unseen: false })),
   ];
 
   return (

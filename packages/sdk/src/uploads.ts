@@ -66,16 +66,22 @@ async function putParts(urls: string[], partSize: number, body: Blob, headers: R
 
 /** Uploads a file straight to storage and confirms it, returning the attachment to send with a message. */
 export async function uploadFile(api: RestClient, body: Blob, opts: UploadOptions): Promise<AttachmentDTO> {
-  const presigned = unwrap(
-    await api.POST("/v1/uploads/presign", {
+  const presign = () =>
+    api.POST("/v1/uploads/presign", {
       body: {
         ...(opts.encrypted
           ? { kind: opts.kind, name: "encrypted", mime: ENCRYPTED_MIME, size: body.size, encrypted: true }
           : { kind: opts.kind, name: opts.name, mime: opts.mime, size: body.size }),
         multipart: true,
       },
-    }),
-  );
+    });
+  let res = await presign();
+  for (let attempt = 0; res.response.status === 429 && attempt < 3; attempt++) {
+    const wait = Number(res.response.headers.get("retry-after")) || 10;
+    await new Promise((resolve) => setTimeout(resolve, Math.min(wait, 60) * 1000));
+    res = await presign();
+  }
+  const presigned = unwrap(res);
   if (presigned.parts) await putParts(presigned.parts, presigned.partSize!, body, presigned.headers, opts);
   else await put(presigned.url!, body, presigned.headers, opts);
   opts.onProgress?.(1);

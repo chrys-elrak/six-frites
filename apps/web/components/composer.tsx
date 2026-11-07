@@ -5,6 +5,7 @@ import {
   type EphemeralInput,
   type GifDTO,
   type MenuCommand,
+  type StickerDTO,
   type MessageEffect,
   type TypingKind,
   MAX_UPLOAD_BYTES,
@@ -12,6 +13,8 @@ import {
   emojifyEnd,
   emojifyTyped,
   maskSpoilers,
+  attachCommands,
+  type CommandName,
   parseCommand,
   silentMessage,
   stripAudio,
@@ -19,28 +22,35 @@ import {
 import { unwrap } from "@six/sdk";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  AudioLines,
+  BellOff,
   CalendarClock,
   Camera,
   Check,
+  Dices,
   FileText,
+  Film,
+  Flame,
   Gamepad2,
+  Ghost,
   Image as ImageIcon,
+  ImagePlus,
   ListChecks,
   MapPin,
   Music,
-  Flame,
-  Ghost,
-  ImagePlus,
   NotebookPen,
   Paperclip,
+  RotateCcw,
   SendHorizontal,
+  Smile,
   Sparkles,
   Square,
+  Sticker,
   TicketPlus,
   Trash2,
+  type LucideIcon,
   VenetianMask,
   X,
-  RotateCcw,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage, updateChatSettings } from "@/lib/actions";
@@ -51,6 +61,8 @@ import { useComposerMode } from "@/lib/composer";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { isTouch } from "@/lib/camera";
 import { shortRule } from "@/lib/ephemeral";
+import { ExpressionPanel } from "./expression-panel";
+import { AttachPanel, type PanelItem } from "./attach-panel";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { ChecklistDialog } from "./checklist";
 import { GameDialog } from "./game";
@@ -58,6 +70,7 @@ import { currentPosition } from "./location-card";
 import { EmojiSuggestions, useEmojiSuggestions } from "./emoji-suggestions";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { FormatBar, formatShortcut, keepSelection } from "./format-bar";
+import { DraftText, RichInput, type RichInputHandle } from "./rich-input";
 import { CameraDialog } from "./camera-dialog";
 import { ScheduleDialog, ScheduledPanel } from "./scheduled";
 import { Sheet } from "./sheet";
@@ -67,6 +80,7 @@ import { VideoNoteCapture, type VideoNoteHandle, VideoNotePreview } from "./vide
 import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { useRealtime } from "@/lib/realtime";
 import { formatDuration, inviteUrl, sendAtLabel } from "@/lib/format";
+import { useMedia } from "@/lib/viewport";
 import { useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
 import { type Recording, useRecorder } from "@/lib/recorder";
@@ -74,7 +88,7 @@ import { useSession } from "@/lib/session";
 import { type Draft, queueMessage } from "@/lib/send";
 import { six } from "@/lib/six";
 import { looksLikeSticker } from "@/lib/image";
-import { MARKERS, parseMarkup, toMarkup } from "@/lib/markup";
+import { parseMarkup, toMarkup } from "@/lib/markup";
 import { disguiseVoice, useVoiceEffect } from "@/lib/voice-fx";
 import { VoiceEffectSelect } from "./voice-effect-select";
 
@@ -106,6 +120,20 @@ function ModeBar({ label, text, photo, onCancel }: { label: string; text: string
   );
 }
 
+
+const COMMAND_ICONS: Record<CommandName, LucideIcon> = {
+  giphy: Film,
+  sticker: Sticker,
+  silent: BellOff,
+  effect: Sparkles,
+  emoji: Smile,
+  game: Gamepad2,
+  play: Dices,
+  location: MapPin,
+  schedule: CalendarClock,
+  voice: AudioLines,
+  vanish: Ghost,
+};
 export function Composer({
   chatId,
   nameOf,
@@ -139,7 +167,9 @@ export function Composer({
   const [error, setError] = useState<string | null>(null);
   const [hasSelection, setHasSelection] = useState(false);
   const [caret, setCaret] = useState(0);
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const [expressions, setExpressions] = useState(false);
+  const narrow = useMedia("(width < 48rem)");
+  const ref = useRef<RichInputHandle>(null);
   const commands = useRef<CommandBarHandle>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const mediaInput = useRef<HTMLInputElement>(null);
@@ -234,16 +264,30 @@ export function Composer({
     }
   }
 
-  const attachActions = [
-    { label: tr.composer.photoOrVideo, icon: ImageIcon, onSelect: () => mediaInput.current?.click() },
-    { label: tr.composer.camera, icon: Camera, onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
-    { label: tr.summary.kinds.file, icon: FileText, onSelect: () => fileInput.current?.click() },
-    { label: tr.composer.audio, icon: Music, onSelect: () => audioInput.current?.click() },
-    { label: tr.composer.location, icon: MapPin, onSelect: () => setAskLocation(true) },
-    { label: tr.composer.checklist, icon: ListChecks, onSelect: () => setWritingChecklist(true) },
-    { label: tr.composer.game, icon: Gamepad2, onSelect: () => setStartingGame(true) },
-    { label: tr.composer.scheduleMessage, icon: CalendarClock, onSelect: () => setScheduling("next") },
+  const attachActions: PanelItem[] = [
+    { label: tr.composer.photoOrVideo, icon: ImageIcon, color: "#3b82f6", onSelect: () => mediaInput.current?.click() },
+    {
+      label: tr.composer.camera,
+      icon: Camera,
+      color: "#ec4899",
+      onSelect: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)),
+    },
+    { label: tr.summary.kinds.file, icon: FileText, color: "#6366f1", onSelect: () => fileInput.current?.click() },
+    { label: tr.composer.audio, icon: Music, color: "#f97316", onSelect: () => audioInput.current?.click() },
+    { label: tr.composer.location, icon: MapPin, color: "#22c55e", onSelect: () => setAskLocation(true) },
+    { label: tr.composer.checklist, icon: ListChecks, color: "#14b8a6", onSelect: () => setWritingChecklist(true) },
+    { label: tr.composer.game, icon: Gamepad2, color: "#a855f7", onSelect: () => setStartingGame(true) },
+    { label: tr.composer.scheduleMessage, icon: CalendarClock, color: "#eab308", onSelect: () => setScheduling("next") },
   ];
+  const commandActions: PanelItem[] = attachCommands(!!chat?.group).map((name) => ({
+    label: `/${name}`,
+    icon: COMMAND_ICONS[name],
+    hint: tr.composer.commandHints[name],
+    onSelect: () => {
+      ref.current?.focus();
+      completeCommand(`/${name} `);
+    },
+  }));
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
@@ -282,18 +326,8 @@ export function Composer({
     requestAnimationFrame(() => ref.current?.setSelectionRange(swapped.caret, swapped.caret));
   }
 
-  function wrap(type: EntityType) {
-    const el = ref.current;
-    if (!el || el.selectionEnd <= el.selectionStart) return false;
-    const { selectionStart: start, selectionEnd: end } = el;
-    const marker = MARKERS[type];
-    change(`${text.slice(0, start)}${marker}${text.slice(start, end)}${marker}${text.slice(end)}`);
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(start + marker.length, end + marker.length);
-      setHasSelection(true);
-    });
-    return true;
+  function wrap(type: EntityType, value?: string) {
+    return ref.current?.format(type, value) ?? false;
   }
 
   const emoji = useEmojiSuggestions(
@@ -307,6 +341,16 @@ export function Composer({
     !(parseCommand(text) && silentMessage(text) === null),
   );
 
+  /** Puts an emoji where the caret is, replacing any selection, and leaves the caret after it. */
+  function insertEmoji(e: string) {
+    const start = ref.current?.selectionStart ?? text.length;
+    const end = ref.current?.selectionEnd ?? start;
+    const value = text.slice(0, start) + e + text.slice(end);
+    change(value);
+    setCaret(start + e.length);
+    if (!narrow) requestAnimationFrame(() => ref.current?.setSelectionRange(start + e.length, start + e.length));
+  }
+
   function completeCommand(value: string) {
     change(value);
     setCaret(value.length);
@@ -318,6 +362,11 @@ export function Composer({
     if (name === "game") setStartingGame(true);
     else setScheduling("next");
   }
+
+  const onSelectionChange = useCallback((start: number, end: number) => {
+    setHasSelection(end > start);
+    setCaret(end);
+  }, []);
 
   function shortcut(e: React.KeyboardEvent) {
     const type = formatShortcut(e);
@@ -352,13 +401,6 @@ export function Composer({
       realtime.setTyping(chatId, false);
     };
   }, [realtime, chatId, busyWith]);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
-  }, [text]);
 
   useEffect(() => {
     if (window.matchMedia("(pointer: fine)").matches) ref.current?.focus();
@@ -427,7 +469,7 @@ export function Composer({
     else setSendAt(at);
   }
 
-  function sendGifOrSticker(extra: { gif?: GifDTO; file?: Draft["file"] }) {
+  function sendGifOrSticker(extra: { gif?: GifDTO; file?: Draft["file"]; sticker?: StickerDTO }) {
     if (!realtime || editing) return;
     queue({
       text: "",
@@ -639,7 +681,7 @@ export function Composer({
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-semibold text-stone-500">{tr.composer.parkedDraft}</span>
               <span className="block truncate text-sm text-stone-600 dark:text-stone-300">
-                {maskSpoilers(parked.text, parked.entities)}
+                <DraftText markup={parkedMarkup!} />
               </span>
             </span>
             <NotebookPen className="size-4 shrink-0 text-stone-400" />
@@ -804,6 +846,7 @@ export function Composer({
             </>
           )}
           <div
+            onFocus={() => narrow && setExpressions(false)}
             className={`relative min-h-10 min-w-0 flex-1 items-end rounded-2xl bg-white dark:bg-stone-900 ${
               chat?.vanish
                 ? "outline-2 outline-dashed outline-brand"
@@ -821,11 +864,11 @@ export function Composer({
                   sendGifOrSticker({ gif });
                 }}
                 onSticker={(found) => void sendFoundSticker(found)}
-                onMenu={runCommand}
-                onDestruct={(value) => {
+                onPackSticker={(sticker) => {
                   change("");
-                  setEphemeral(value);
+                  sendGifOrSticker({ sticker });
                 }}
+                onMenu={runCommand}
                 onLocation={() => {
                   change("");
                   void sendLocation();
@@ -834,24 +877,27 @@ export function Composer({
                   change("");
                   setMessageEffect(chosen);
                 }}
-                onSearch={(q) => {
-                  change("");
-                  onSearch(q);
-                }}
               />
             )}
             <EmojiSuggestions {...emoji} className="absolute bottom-full left-0 z-30 mb-2" />
-            <textarea
+            {expressions && !narrow && !editing && !limited && (
+              <ExpressionPanel
+                onEmoji={insertEmoji}
+                onSticker={(sticker) => sendGifOrSticker({ sticker })}
+                onFoundSticker={(found) => void sendFoundSticker(found)}
+                onGif={(gif) => sendGifOrSticker({ gif })}
+                onClose={() => setExpressions(false)}
+                docked={false}
+              />
+            )}
+            <RichInput
               ref={ref}
               value={text}
-              onChange={(e) => {
-                setCaret(e.target.selectionEnd);
-                typeText(e.target.value);
+              onChange={(value, at) => {
+                setCaret(at);
+                typeText(value);
               }}
-              onSelect={(e) => {
-                setHasSelection(e.currentTarget.selectionEnd > e.currentTarget.selectionStart);
-                setCaret(e.currentTarget.selectionEnd);
-              }}
+              onSelectionChange={onSelectionChange}
               onBlur={() => {
                 setHasSelection(false);
                 emoji.close();
@@ -875,11 +921,10 @@ export function Composer({
                   void submit();
                 }
               }}
-              rows={1}
               maxLength={4000}
               placeholder={tr.common.message}
               aria-label={tr.common.message}
-              className="max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 pl-4 text-[16px] leading-6 outline-none [-webkit-user-modify:read-write]"
+              className="max-h-40 min-h-10 bg-transparent py-2 pl-4 text-[16px] leading-6"
             />
             {!editing && !parked && !!text.trim() && !commanding && (
               <button
@@ -902,6 +947,22 @@ export function Composer({
                 className="grid size-10 shrink-0 place-items-center rounded-full text-brand"
               >
                 <CalendarClock className="size-5" />
+              </button>
+            )}
+            {!editing && !limited && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  if (!expressions && narrow) (document.activeElement as HTMLElement | null)?.blur();
+                  setExpressions(!expressions);
+                }}
+                aria-label={tr.composer.expressions}
+                aria-expanded={expressions}
+                title={tr.composer.expressions}
+                className={`grid size-10 shrink-0 place-items-center rounded-full ${expressions ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"}`}
+              >
+                <Smile className="size-5" />
               </button>
             )}
             {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
@@ -1003,6 +1064,16 @@ export function Composer({
           )}
         </div>
       </form>
+      {expressions && narrow && !editing && !limited && (
+        <ExpressionPanel
+          onEmoji={insertEmoji}
+          onSticker={(sticker) => sendGifOrSticker({ sticker })}
+          onFoundSticker={(found) => void sendFoundSticker(found)}
+          onGif={(gif) => sendGifOrSticker({ gif })}
+          onClose={() => setExpressions(false)}
+          docked
+        />
+      )}
       {capture?.kind === "video" && (
         <VideoNoteCapture
           ref={note}
@@ -1026,7 +1097,7 @@ export function Composer({
           onToggleSpoiler={() => setPreview({ ...preview, spoiler: !preview.spoiler })}
         />
       )}
-      {attachMenu && <Sheet bar title={tr.common.send} actions={attachActions} onClose={() => setAttachMenu(false)} />}
+      {attachMenu && <AttachPanel attach={attachActions} commands={commandActions} onClose={() => setAttachMenu(false)} />}
       {askLocation && (
         <Sheet
           title={tr.composer.sendLocationTitle}

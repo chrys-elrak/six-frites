@@ -266,6 +266,25 @@ async function takeDownStickers(where: Prisma.StickerWhereInput, ban: boolean) {
   if (ban) await prisma.sticker.updateMany({ where: { ...where, bannedAt: null }, data: { bannedAt: now } });
 }
 
+/**
+ * Deletes an official pack for good, with its stickers and their files, when none of them was ever sent; one that
+ * shows in a chat can only be taken down, so the message keeps its sticker.
+ */
+export async function deleteOfficialPack(packId: string) {
+  const pack = await prisma.stickerPack.findUnique({
+    where: { id: packId },
+    include: { stickers: { include: { upload: true, _count: { select: { messages: true } } } } },
+  });
+  if (!pack || !pack.builtin || isSeededPack(pack.id)) throw new AppError("STICKER_PACK_NOT_FOUND");
+  if (pack.stickers.some((s) => s._count.messages > 0)) {
+    throw new AppError("STICKER_PACK_IN_USE", "Some of its stickers were sent in chats; take the pack down instead");
+  }
+  const uploads = pack.stickers.flatMap((s) => (s.upload ? [s.upload] : []));
+  await prisma.stickerPack.delete({ where: { id: packId } });
+  await prisma.upload.deleteMany({ where: { id: { in: uploads.map((u) => u.id) } } });
+  await deleteObjects(uploads.flatMap(uploadKeys)).catch(() => null);
+}
+
 export async function banStickerPack(packId: string) {
   const pack = await prisma.stickerPack.findUnique({ where: { id: packId } });
   if (!pack || isSeededPack(pack.id)) throw new AppError("STICKER_PACK_NOT_FOUND");

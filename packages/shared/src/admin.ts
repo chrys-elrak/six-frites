@@ -254,3 +254,19 @@ export const AdminMailStats = z.object({
   skipped: z.number().int(),
 }).describe("The last 24 hours");
 export type AdminMailStats = z.infer<typeof AdminMailStats>;
+
+export const ImportStickersInput = z.object({ uploadId: Id.describe("A completed upload of kind `sticker_zip`") });
+export type ImportStickersInput = z.infer<typeof ImportStickersInput>;
+
+export const StickerImportDTO = z.object({
+  uploadId: Id.describe("The zip's upload, which names the import"),
+  updatedAt: IsoDate.describe("When the worker last reported; an import that stops moving has likely lost its worker"),
+  done: z.number().int().describe("Files handled so far, added or skipped"),
+  total: z.number().int(),
+  current: z.string().nullable().describe("The pack being filled"),
+  packs: z.array(z.string()).describe("Names of the packs made so far"),
+  skipped: z.number().int().describe("Files that weren't stickers or couldn't be processed"),
+  finished: z.boolean(),
+  error: z.string().nullable(),
+});
+export type StickerImportDTO = z.infer<typeof StickerImportDTO>;

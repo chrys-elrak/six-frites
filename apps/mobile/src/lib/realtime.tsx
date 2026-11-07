@@ -173,6 +173,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     rt.socket.on("notifications:changed", () => void qc.invalidateQueries({ queryKey: ["notifications"] }));
     rt.socket.on("story:reacted", (e) => {
       void qc.invalidateQueries({ queryKey: ["stories", e.note ? "notes" : e.storyId, "viewers"] });
+      const archived = qc.getQueryData<ChatDTO[]>(chatKeys.list(true));
+      if (archived?.some((c) => c.type === "direct" && c.members.some((m) => m.user.id === e.user.id))) return;
       notifyStoryReaction(e);
     });
     rt.socket.on("connect", () => {

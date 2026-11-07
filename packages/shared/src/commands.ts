@@ -9,18 +9,25 @@ export const COMMANDS = [
   "play",
   "location",
   "schedule",
-  "destruct",
   "voice",
-  "autodelete",
-  "blur",
   "vanish",
-  "search",
 ] as const;
 export type CommandName = (typeof COMMANDS)[number];
 /** Commands that open one of the composer's dialogs rather than taking what follows them. */
 export type MenuCommand = "game" | "schedule";
 
 export const isMenuCommand = (name: CommandName): name is MenuCommand => name === "game" || name === "schedule";
+
+const ONE_TO_ONE: readonly CommandName[] = ["game", "play", "vanish"];
+
+/** The commands that still make sense in a group: no games, live games or vanish mode. */
+export const groupCommands = (commands: readonly CommandName[]) => commands.filter((c) => !ONE_TO_ONE.includes(c));
+
+const HAVE_BUTTONS: readonly CommandName[] = ["location", "game", "schedule"];
+
+/** The commands to offer in the attach menu, leaving out the ones it already has as its own buttons. */
+export const attachCommands = (group: boolean) =>
+  (group ? groupCommands(COMMANDS) : COMMANDS).filter((c) => !HAVE_BUTTONS.includes(c));
 
 export type ParsedCommand =
   | { kind: "names"; names: CommandName[] }

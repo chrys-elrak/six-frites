@@ -32,6 +32,8 @@ import uploadRoutes from "./routes/uploads.js";
 import askRoutes from "./routes/ask.js";
 import notificationRoutes from "./routes/notifications.js";
 import mailRoutes from "./routes/mail.js";
+import emojiRoutes from "./routes/emoji.js";
+import groupRoutes from "./routes/groups.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -52,6 +54,7 @@ export async function buildApp() {
   await app.register(rateLimit, {
     max: 300,
     timeWindow: "1 minute",
+    keyGenerator: (req) => req.headers.authorization?.slice(-32) ?? req.ip,
     allowList: () => env.NODE_ENV === "test",
   });
 
@@ -91,6 +94,8 @@ export async function buildApp() {
       await v1.register(askRoutes);
       await v1.register(notificationRoutes);
       await v1.register(mailRoutes);
+      await v1.register(groupRoutes);
+      await v1.register(emojiRoutes);
     },
     { prefix: "/v1" },
   );

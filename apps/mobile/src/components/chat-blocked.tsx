@@ -1,6 +1,6 @@
 import type { ChatDTO } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Ban, UserX } from "lucide-react-native";
+import { Ban, Megaphone, UserX } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -23,12 +23,14 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
     setBusy(false);
   }
 
-  const Icon = chat.peerDeleted ? UserX : Ban;
-  const message = chat.peerDeleted
-    ? tr.chat.peerDeleted
-    : chat.blockedByMe
-      ? tr.chat.youBlocked(peerName)
-      : tr.chat.blockedYou(peerName);
+  const Icon = chat.group ? Megaphone : chat.peerDeleted ? UserX : Ban;
+  const message = chat.group
+    ? tr.groups.adminsOnly
+    : chat.peerDeleted
+      ? tr.chat.peerDeleted
+      : chat.blockedByMe
+        ? tr.chat.youBlocked(peerName)
+        : tr.chat.blockedYou(peerName);
 
   return (
     <View

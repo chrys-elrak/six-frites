@@ -42,6 +42,7 @@ import { Logo } from "./logo";
 import { Sheet } from "./sheet";
 import { StoryComposer } from "./story-composer";
 import { Text, TextInput } from "./text";
+import { GradientText, styleFor } from "./rich-text";
 import { BrandBar } from "./brand-bar";
 import { Card, EmptyState, IconButton, Notice, Popup, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
 
@@ -405,13 +406,8 @@ function AnonText({
       {segments(m.text, m.entities).map((seg, i) => {
         const hidden = seg.styles.has("spoiler") && (sealed || !revealed);
         const style = {
+          ...styleFor(seg, t.dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"),
           ...(seg.styles.has("bold") && { fontWeight: "900" as const }),
-          ...(seg.styles.has("italic") && { fontStyle: "italic" as const }),
-          ...(seg.styles.has("strike") && { textDecorationLine: "line-through" as const }),
-          ...(seg.styles.has("code") && {
-            fontFamily: "monospace",
-            backgroundColor: t.dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
-          }),
           ...(hidden && { color: spoilerInk, backgroundColor: spoilerInk }),
         };
         if (hidden) {
@@ -428,17 +424,18 @@ function AnonText({
         }
         return (
           <Text key={i} style={style}>
-            {seg.styles.has("code") || !onLink
-              ? seg.text
-              : splitLinks(seg.text).map((part, j) =>
-                  part.href ? (
-                    <Text key={j} style={[styles.inlineLink, { color: t.read }]} onPress={() => onLink(part.href!)}>
-                      {part.text}
-                    </Text>
-                  ) : (
-                    part.text
-                  ),
-                )}
+            {GradientText({ seg }) ??
+              (seg.styles.has("code") || !onLink
+                ? seg.text
+                : splitLinks(seg.text).map((part, j) =>
+                    part.href ? (
+                      <Text key={j} style={[styles.inlineLink, { color: t.read }]} onPress={() => onLink(part.href!)}>
+                        {part.text}
+                      </Text>
+                    ) : (
+                      part.text
+                    ),
+                  ))}
           </Text>
         );
       })}

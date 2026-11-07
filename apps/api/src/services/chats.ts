@@ -9,6 +9,7 @@ import {
   type ChatDeliveredDTO,
   type ChatReadDTO,
   type DeleteScope,
+  type GroupRole,
   type MarkDeliveredInput,
   type MarkReadInput,
   type ServiceAction,
@@ -17,6 +18,7 @@ import {
 import { env } from "../env.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
+import { presignGet } from "../lib/storage.js";
 import {
   assertMember,
   createMessage,
@@ -71,7 +73,13 @@ export const supportProfile = (id: string) => ({
 async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Promise<ChatDTO> {
   const me = chat.members.find((m) => m.userId === viewerId);
   if (!me) throw new AppError("CHAT_NOT_FOUND");
-  const shown = await profilesFor(db, viewerId, chat.members.map((m) => m.userId));
+  const group = chat.type === "group";
+  const shown = await profilesFor(
+    db,
+    viewerId,
+    chat.members.map((m) => m.userId),
+    group ? new Map(chat.members.map((m) => [m.userId, m])) : undefined,
+  );
   const helped = chat.supportUserId === viewerId;
   const members = chat.members.map((m) => ({
     ...m,
@@ -85,7 +93,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
             : shown(m.user),
   }));
   const others = members.filter((m) => m.userId !== viewerId);
-  const peer = others[0];
+  const peer = group ? undefined : others[0];
   const blocks = peer ? await blockState(db, viewerId, peer.userId) : { byMe: false, byThem: false };
 
   const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
@@ -110,10 +118,23 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
 
   return {
     id: chat.id,
-    type: "direct",
-    title: others.map((m) => m.shown.displayName).join(", ") || "Just you",
+    type: group ? "group" : "direct",
+    title: group ? (chat.title ?? "") : others.map((m) => m.shown.displayName).join(", ") || "Just you",
+    group:
+      group && chat.inviteCode
+        ? {
+            photoUrl: chat.photoKey ? presignGet(chat.photoKey) : null,
+            description: chat.description,
+            inviteCode: me.role === "member" && !chat.membersCanInvite ? null : chat.inviteCode,
+            maxMembers: chat.maxMembers ?? 0,
+            membersCanWrite: chat.membersCanWrite,
+            membersCanInvite: chat.membersCanInvite,
+            myRole: me.role as GroupRole,
+          }
+        : null,
     members: members.map((m) => ({
       user: m.shown,
+      role: group ? (m.role as GroupRole) : null,
       lastDeliveredMessageId: m.lastDeliveredMessageId,
       lastDeliveredAt: m.lastDeliveredAt?.toISOString() ?? null,
       lastReadMessageId: m.lastReadMessageId,
@@ -137,7 +158,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     scheduledCount,
     blockedByMe: blocks.byMe,
     blockedByThem: blocks.byThem,
-    peerDeleted: others.some((m) => m.user.deletedAt !== null),
+    peerDeleted: !group && others.some((m) => m.user.deletedAt !== null),
     encrypted: chat.encryptedAt !== null,
     support: chat.members.some((m) => m.user.guest),
     supportDesk: chat.supportUserId !== null && !helped,
@@ -313,6 +334,7 @@ export async function updateChat(
     }
 
     const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
+    if (vanish && chat.type === "group") throw new AppError("NOT_IN_GROUPS", "Vanish mode isn't available in groups");
     const actions: ServiceAction[] = [];
     if (autoDeleteSecs !== undefined && autoDeleteSecs !== chat.autoDeleteSecs) {
       actions.push({ type: "auto_delete", secs: autoDeleteSecs });
@@ -393,7 +415,10 @@ export async function closeChat(userId: string, chatId: string) {
  */
 export async function deleteChat(userId: string, chatId: string, scope: DeleteScope) {
   const detached = await withEvents(async (tx, emit): Promise<string[]> => {
-    await assertMember(tx, chatId, userId);
+    const me = await assertMember(tx, chatId, userId);
+    if (scope === "all" && me.role !== "owner" && (await tx.chat.findUnique({ where: { id: chatId } }))?.type === "group") {
+      throw new AppError("NOT_GROUP_ADMIN", "Only the owner can clear a group for everyone");
+    }
 
     if (scope === "me") {
       await tx.chatMember.update({

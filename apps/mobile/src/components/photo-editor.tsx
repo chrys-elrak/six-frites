@@ -72,6 +72,12 @@ export const FONT_FILES = {
   PermanentMarker: require("../../assets/fonts/PermanentMarker-Regular.ttf"),
   Pacifico: require("../../assets/fonts/Pacifico-Regular.ttf"),
   SpecialElite: require("../../assets/fonts/SpecialElite-Regular.ttf"),
+  Caveat: require("../../assets/fonts/Caveat-SemiBold.ttf"),
+  Lobster: require("../../assets/fonts/Lobster-Regular.ttf"),
+  BebasNeue: require("../../assets/fonts/BebasNeue-Regular.ttf"),
+  Comfortaa: require("../../assets/fonts/Comfortaa-SemiBold.ttf"),
+  PressStart2P: require("../../assets/fonts/PressStart2P-Regular.ttf"),
+  PlayfairDisplay: require("../../assets/fonts/PlayfairDisplay-SemiBoldItalic.ttf"),
 };
 
 const WORK_EDGE = 3072;

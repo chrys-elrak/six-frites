@@ -1,3 +1,4 @@
+import { API_URL } from "./six";
 import animated from "./noto-animated.json";
 
 const segmenter =
@@ -45,10 +46,10 @@ export function emojiOnly(text: string, max = 3): string[] | null {
 const known = new Set(animated as string[]);
 const toKey = (emoji: string) => [...emoji].map((c) => c.codePointAt(0)!.toString(16)).join("_");
 
-/** The Noto Animated Emoji Lottie URL for this emoji, or null when Google has no animation for it. */
+/** The Noto Animated Emoji Lottie URL for this emoji, served by our API, or null when there is no animation for it. */
 export function animatedEmojiUrl(emoji: string): string | null {
   const key = toKey(emoji);
   const bare = key.replace(/_fe0f/g, "");
   const hit = [key, bare, bare.replace(/^([0-9a-f]+)/, "$1_fe0f")].find((k) => known.has(k));
-  return hit ? `https://fonts.gstatic.com/s/e/notoemoji/latest/${hit}/lottie.json` : null;
+  return hit ? `${API_URL}/v1/emoji/${hit}/lottie.json` : null;
 }

@@ -59,7 +59,7 @@ function wrap(ctx: CanvasRenderingContext2D, segs: Segment[], size: number, widt
         newLine();
         continue;
       }
-      const run = { text: piece, styles: seg.styles };
+      const run = { ...seg, text: piece };
       const w = measure(ctx, run, size);
       if (!piece.trim()) {
         if (used) add(run, w);
@@ -70,7 +70,7 @@ function wrap(ctx: CanvasRenderingContext2D, segs: Segment[], size: number, widt
         add(run, w);
       } else {
         for (const ch of Array.from(piece)) {
-          const c = { text: ch, styles: seg.styles };
+          const c = { ...seg, text: ch };
           const cw = measure(ctx, c, size);
           if (used && used + cw > width) newLine();
           add(c, cw);

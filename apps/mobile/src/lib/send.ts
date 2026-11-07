@@ -7,6 +7,7 @@ import {
   type EphemeralInput,
   type GeoPoint,
   type GifDTO,
+  type StickerDTO,
   type MessageDTO,
   type MessageEffect,
   type MessageEntity,
@@ -49,6 +50,7 @@ export interface Draft {
   ephemeral?: EphemeralInput | null;
   file?: LocalFile;
   gif?: GifDTO;
+  sticker?: StickerDTO;
   location?: GeoPoint;
   checklist?: Checklist;
   game?: ChatGame;
@@ -92,7 +94,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
   try {
     const meId = useSession.getState().user!.id;
     const chat = await chatFor(qc, chatId);
-    const encrypt = !pending.gif && (await shouldEncrypt(meId, chat));
+    const encrypt = !pending.gif && !pending.sticker && (await shouldEncrypt(meId, chat));
 
     let attachmentId = pending.attachment?.uploadId ?? undefined;
     let file = pending.attachment?.file;
@@ -161,6 +163,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           text: pending.text || undefined,
           entities: pending.entities.length ? pending.entities : undefined,
           gifId: pending.gif?.id,
+          stickerId: pending.sticker?.id,
           spoiler: pending.spoiler || undefined,
           effect: pending.effect,
           location: pending.location,
@@ -245,6 +248,7 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
           }
         : null,
     gif,
+    sticker: draft.sticker,
     location: draft.location,
     checklist: draft.checklist,
     game: draft.game,

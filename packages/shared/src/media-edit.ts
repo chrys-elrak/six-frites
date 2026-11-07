@@ -56,6 +56,12 @@ export const LABEL_FONTS = {
   marker: "PermanentMarker",
   script: "Pacifico",
   typewriter: "SpecialElite",
+  handwriting: "Caveat",
+  lobster: "Lobster",
+  tall: "BebasNeue",
+  rounded: "Comfortaa",
+  pixel: "PressStart2P",
+  elegant: "PlayfairDisplay",
 } as const;
 export type LabelFont = keyof typeof LABEL_FONTS;
 

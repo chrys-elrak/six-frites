@@ -1,10 +1,23 @@
+import { execFileSync } from "node:child_process";
+import { readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { redisConnection } from "../src/lib/queue.js";
 import { processUpload } from "../src/media/process.js";
 import { ensureBuiltinStickers } from "../src/services/stickers.js";
 import { env } from "../src/env.js";
-import { type Auth, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
+import { type Auth, chatHelpers, loginAs, makeAdmin, prisma, uniqueSub, useApp } from "./helpers.js";
+
+const hasFfmpeg = (() => {
+  try {
+    execFileSync("ffprobe", ["-version"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+})();
 
 const ctx = useApp();
 const { get, call, send, makeFriends } = chatHelpers(ctx);
@@ -22,8 +35,23 @@ async function uploadSticker(who: Auth, body: Buffer, mime = "application/x-tgst
 }
 
 describe("sticker packs", () => {
+  it.skipIf(!hasFfmpeg)("keeps an animated PNG moving, as an animated WebP", async () => {
+    const { host } = await makeFriends();
+    const file = join(tmpdir(), `apng-${Date.now()}.png`);
+    execFileSync("ffmpeg", ["-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x320:rate=5", "-t", "1", "-plays", "0", "-f", "apng", file]);
+    const uploadId = await uploadSticker(host, readFileSync(file), "image/png", "wave.png");
+    rmSync(file);
+    await processUpload(uploadId);
+    makeAdmin(host);
+    const pack = (await call(host, "POST", "/v1/sticker-packs", { title: "Moving" })).json();
+    const sticker = (await call(host, "POST", `/v1/sticker-packs/${pack.id}/stickers`, { uploadId, emoji: "👋" })).json();
+    expect(sticker).toMatchObject({ format: "image", width: 256, height: 256 });
+    expect(Buffer.from(await (await fetch(sticker.url)).arrayBuffer()).includes("ANIM")).toBe(true);
+  });
+
   it("are made from uploaded Lottie stickers that others can receive and save", async () => {
     const { host, guest, chatId } = await makeFriends();
+    makeAdmin(host);
     const pack = (await call(host, "POST", "/v1/sticker-packs", { title: "Party" })).json();
     expect(pack).toMatchObject({ title: "Party", mine: true, saved: true, builtin: false, stickers: [] });
 
@@ -64,12 +92,27 @@ describe("sticker packs", () => {
     );
   });
 
+  it("lets only admins make packs and add stickers", async () => {
+    const { host } = await makeFriends();
+    expect((await call(host, "POST", "/v1/sticker-packs", { title: "Nope" })).json().error.code).toBe("FORBIDDEN");
+    makeAdmin(host);
+    const pack = (await call(host, "POST", "/v1/sticker-packs", { title: "Fine" })).json();
+    const { guest } = await makeFriends();
+    expect((await call(guest, "POST", `/v1/sticker-packs/${pack.id}/stickers`, { uploadId: "x", emoji: "🙂" })).json().error.code).toBe(
+      "FORBIDDEN",
+    );
+    makeAdmin(guest);
+    const uploadId = await uploadSticker(guest, gzipSync(lottie()));
+    await processUpload(uploadId);
+    expect((await call(guest, "POST", `/v1/sticker-packs/${pack.id}/stickers`, { uploadId, emoji: "🙂" })).statusCode).toBe(201);
+  });
+
   it("turns down files that are not stickers", async () => {
     const { host } = await makeFriends();
     const big = await call(host, "POST", "/v1/uploads/presign", {
       kind: "sticker",
       mime: "application/json",
-      size: 600 * 1024,
+      size: 7 * 1024 * 1024,
       name: "big.json",
     });
     expect(big.json().error.code).toBe("VALIDATION_FAILED");
@@ -78,16 +121,33 @@ describe("sticker packs", () => {
     await expect(processUpload(uploadId)).rejects.toThrow(/Lottie/);
   });
 
-  it("includes the built-in Noto packs for everyone", async () => {
+  it("finds stickers by name or emoji, the ones you have first", async () => {
+    await ensureBuiltinStickers();
+    const { host, guest } = await makeFriends();
+    makeAdmin(host);
+    const pack = (await call(host, "POST", "/v1/sticker-packs", { title: "Mine" })).json();
+    const uploadId = await uploadSticker(host, gzipSync(lottie()), "application/x-tgsticker", "Beach Wave.tgs");
+    await processUpload(uploadId);
+    await call(host, "POST", `/v1/sticker-packs/${pack.id}/stickers`, { uploadId, emoji: "😂" });
+
+    const byName = (await get(host, "/v1/stickers/search?q=beach")).items;
+    expect(byName[0]).toMatchObject({ packId: pack.id, emoji: "😂" });
+    const byEmoji = (await get(host, "/v1/stickers/search?q=joy")).items.map((s: { id: string }) => s.id);
+    expect(byEmoji[0]).not.toBe("noto-1f602");
+    expect(byEmoji).not.toContain("noto-1f602");
+    expect((await get(guest, "/v1/stickers/search?q=beach")).items.some((s: { packId: string }) => s.packId === pack.id)).toBe(false);
+  });
+
+  it("no longer offers the Noto packs, but messages that used them still show the sticker", async () => {
     await ensureBuiltinStickers();
     const { host, chatId } = await makeFriends();
-    const faces = (await get(host, "/v1/sticker-packs")).items.find((p: { id: string }) => p.id === "noto-faces");
-    expect(faces).toMatchObject({ id: "noto-faces", builtin: true, saved: true, mine: false });
+    expect((await get(host, "/v1/sticker-packs")).items.some((p: { id: string }) => p.id === "noto-faces")).toBe(false);
+    const faces = await get(host, "/v1/sticker-packs/noto-faces");
     expect(faces.stickers[0]).toMatchObject({
       id: "noto-1f602",
       emoji: "😂",
       format: "lottie",
-      url: "https://fonts.gstatic.com/s/e/notoemoji/latest/1f602/lottie.json",
+      url: expect.stringMatching(/\/v1\/emoji\/1f602\/lottie\.json$/),
     });
     const sent = (await send(host, chatId, "", { text: undefined, stickerId: "noto-1f602" })).json();
     expect(sent).toMatchObject({ type: "sticker", sticker: { emoji: "😂" } });

@@ -38,7 +38,7 @@ import { isTouch } from "@/lib/camera";
 import { formatDuration } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
 import { toPhotoDataUrl } from "@/lib/image";
-import { MARKERS, parseMarkup } from "@/lib/markup";
+import { markersOf, parseMarkup } from "@/lib/markup";
 import { mediaMeta } from "@/lib/media-meta";
 import { type Recording, useRecorder } from "@/lib/recorder";
 import { deviceId, deviceName, useSession } from "@/lib/session";
@@ -129,15 +129,15 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     requestAnimationFrame(() => box.current?.setSelectionRange(swapped.caret, swapped.caret));
   }
 
-  function wrap(format: EntityType) {
+  function wrap(format: EntityType, value?: string) {
     const el = box.current;
     if (!el || el.selectionEnd <= el.selectionStart) return;
     const { selectionStart: start, selectionEnd: end } = el;
-    const marker = MARKERS[format];
-    setText(`${text.slice(0, start)}${marker}${text.slice(start, end)}${marker}${text.slice(end)}`);
+    const [open, close] = markersOf({ type: format, value });
+    setText(`${text.slice(0, start)}${open}${text.slice(start, end)}${close}${text.slice(end)}`);
     requestAnimationFrame(() => {
       el.focus();
-      el.setSelectionRange(start + marker.length, end + marker.length);
+      el.setSelectionRange(start + open.length, end + open.length);
       setHasSelection(true);
     });
   }

@@ -1,4 +1,5 @@
 import type { EmojiEntry } from "@six/shared";
+import { API_URL } from "./six";
 
 const segmenter =
   typeof Intl !== "undefined" && "Segmenter" in Intl
@@ -34,14 +35,14 @@ function animatedSet() {
 
 const toKey = (emoji: string) => [...emoji].map((c) => c.codePointAt(0)!.toString(16)).join("_");
 
-/** The Noto Animated Emoji Lottie URL for this emoji, or null when Google has no animation for it. */
+/** The Noto Animated Emoji Lottie URL for this emoji, served by our API, or null when there is no animation for it. */
 export async function animatedEmojiUrl(emoji: string): Promise<string | null> {
   const set = await animatedSet();
   const key = toKey(emoji);
   const bare = key.replace(/_fe0f/g, "");
   const candidates = [key, bare, bare.replace(/^([0-9a-f]+)/, "$1_fe0f")];
   const hit = candidates.find((k) => set.has(k));
-  return hit ? `https://fonts.gstatic.com/s/e/notoemoji/latest/${hit}/lottie.json` : null;
+  return hit ? `${API_URL}/v1/emoji/${hit}/lottie.json` : null;
 }
 
 let list: Promise<EmojiEntry[]> | null = null;

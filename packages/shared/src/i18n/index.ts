@@ -17,6 +17,7 @@ import time from "./time.js";
 import stories from "./stories.js";
 import tour from "./tour.js";
 import notifications from "./notifications.js";
+import groups from "./groups.js";
 
 export const LOCALES = ["en", "fr", "mg"] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -38,7 +39,7 @@ export function pickLocale(tags: Iterable<string | null | undefined>): Locale {
   return "en";
 }
 
-const namespaces = { common, time, summary, auth, contacts, chats, chat, composer, messages, calls, settings, support, live, howTo, ask, legal, tour, stories, notifications };
+const namespaces = { common, time, summary, auth, contacts, chats, chat, composer, messages, calls, settings, support, live, howTo, ask, legal, tour, stories, notifications, groups };
 type Namespaces = typeof namespaces;
 
 /** Every string the apps show, in one language. Values are strings, or functions for text with parts. */

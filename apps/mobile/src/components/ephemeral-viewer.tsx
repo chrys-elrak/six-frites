@@ -12,7 +12,7 @@ import { segments } from "@/lib/markup";
 import { brand, brandInk, flame, stone } from "@/lib/theme";
 import { AttachmentView, LightboxVideo } from "./attachment";
 import { LinkCard, Linked } from "./message-list";
-import { styleFor } from "./rich-text";
+import { GradientText, styleFor } from "./rich-text";
 
 const ON_DARK: BubbleColors = { bg: brand, ink: brandInk, theirBg: null, theirInk: "#ffffff" };
 
@@ -96,8 +96,8 @@ export function EphemeralViewer({
             <Text style={styles.text}>
               {message.entities.length
                 ? segments(text, message.entities).map((seg, i) => (
-                    <Text key={i} style={styleFor(seg.styles, "rgba(255,255,255,0.15)")}>
-                      {seg.styles.has("code") ? seg.text : <Linked text={seg.text} selecting={false} />}
+                    <Text key={i} style={styleFor(seg, "rgba(255,255,255,0.15)")}>
+                      {GradientText({ seg }) ?? (seg.styles.has("code") ? seg.text : <Linked text={seg.text} selecting={false} />)}
                     </Text>
                   ))
                 : <Linked text={text} selecting={false} />}

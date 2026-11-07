@@ -8,7 +8,10 @@ import {
   inChatFilter,
   isFrozen,
   isMuted,
+  chatFace,
   maskSpoilers,
+  senderName,
+  serviceSentence,
   serviceText,
   shownType,
 } from "@six/shared";
@@ -32,6 +35,7 @@ import {
   Headset,
   Share2,
   UserPlus,
+  Users,
 } from "lucide-react";
 import { unwrap } from "@six/sdk";
 import { useOutbox } from "@/lib/outbox";
@@ -41,6 +45,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { six } from "@/lib/six";
 import { useEffect, useRef, useState } from "react";
 import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
+import { useHiddenByArchive } from "@/lib/archive-lock";
 import { ensureBotChat, useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
@@ -60,6 +65,7 @@ import { AdBanner } from "./ad-banner";
 import { LockScreen } from "./app-lock";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { AddContact } from "./add-contact";
+import { NewGroupDialog } from "./groups";
 import { Dialog } from "./dialog";
 import { Avatar } from "./avatar";
 import { StoriesBar, StoryAvatar } from "./stories";
@@ -82,6 +88,8 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const tr = useT();
   const m = chat.lastMessage;
   if (!m) return <>{tr.chats.noMessages}</>;
+  const mine = m.senderId === meId;
+  const who = mine ? tr.chats.youPrefix : chat.group ? `${senderName(chat, m.senderId, tr)}: ` : null;
   if (m.deletedAt) {
     return (
       <span className="inline-flex items-center gap-1 italic">
@@ -92,7 +100,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   if (m.ephemeral) {
     return (
       <span className="inline-flex items-center gap-1">
-        {m.senderId === meId && tr.chats.youPrefix}
+        {who}
         <Flame className="size-3.5 shrink-0 text-orange-500" />
         {m.ephemeral.expired ? tr.chats.opened : tr.chats.selfDestructing[m.type]}
       </span>
@@ -102,14 +110,18 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
     return (
       <span className="inline-flex items-center gap-1">
         <ServiceIcon action={m.action} />{" "}
-        {m.action?.type === "call" ? callLabel(m.action, m.senderId === meId, tr) : serviceText(m, tr, m.senderId === meId)}
+        {m.action?.type === "call"
+          ? callLabel(m.action, mine, tr)
+          : chat.group
+            ? serviceSentence(m, mine ? null : senderName(chat, m.senderId, tr), tr)
+            : serviceText(m, tr, mine)}
       </span>
     );
   }
   if ((m as Hydrated).undecryptable && m.type === "text") {
     return (
       <span className="inline-flex items-center gap-1 italic">
-        {m.senderId === meId && tr.chats.youPrefix}
+        {who}
         <Lock className="size-3.5" /> {tr.chats.encryptedMessage}
       </span>
     );
@@ -117,7 +129,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   if (m.bump) {
     return (
       <span className="inline-flex max-w-full items-center gap-1">
-        {m.senderId === meId && tr.chats.youPrefix}
+        {who}
         {tr.messages.bumped}
         {m.replyTo?.text && <span className="truncate">· {m.replyTo.text}</span>}
       </span>
@@ -128,7 +140,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
       m.type === "voice" && m.attachment?.durationMs ? ` (${formatDuration(m.attachment.durationMs)})` : "";
     return (
       <span className="inline-flex max-w-full items-center gap-1">
-        {m.senderId === meId && tr.chats.youPrefix}
+        {who}
         {m.sticker?.emoji}
         <MediaLabel type={shownType(m as Hydrated)} />
         {voiceLength}
@@ -141,7 +153,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
   }
   return (
     <>
-      {m.senderId === meId && tr.chats.youPrefix}
+      {who}
       {m.spoiler ? (
         <span className="inline-flex items-center gap-1 italic">
           <EyeOff className="size-3.5" /> {tr.summary.spoiler}
@@ -172,9 +184,9 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
     return pending?.find((m) => m.status === "failed") ?? pending?.find((m) => m.status === "waiting");
   });
   useEffect(() => void receiveDraft(chat), [chat.id, chat.encrypted, chat.draft?.at]);
-  const peer = chat.members.find((m) => m.user.id !== meId)?.user ?? chat.members[0]!.user;
+  const peer = chatFace(chat, meId);
   const frozen = isFrozen(chat);
-  const online = usePresence(peer.id === meId || frozen ? undefined : peer.id)?.online;
+  const online = usePresence(chat.group || peer.id === meId || frozen ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
   const badge = unread && (
     <span
@@ -208,9 +220,13 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
           }`}
         >
           <span className="relative shrink-0">
-            <StoryAvatar userId={peer.id} name={chat.title}>
-              <Avatar user={peer} size={rail ? "sm" : "md"} online={online} />
-            </StoryAvatar>
+            {chat.group ? (
+              <Avatar user={peer} size={rail ? "sm" : "md"} />
+            ) : (
+              <StoryAvatar userId={peer.id} name={chat.title}>
+                <Avatar user={peer} size={rail ? "sm" : "md"} online={online} />
+              </StoryAvatar>
+            )}
             {rail && badge && <span className="absolute -top-1 -right-1">{badge}</span>}
           </span>
           <div className={`min-w-0 flex-1 ${rail ? "hidden" : ""}`}>
@@ -340,7 +356,8 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
     staleTime: 0,
     queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
   });
-  const shown = contacts.data?.filter((c) => c.user.displayName.toLowerCase().includes(needle)) ?? [];
+  const hidden = useHiddenByArchive().chatIds;
+  const shown = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
   useWatchPresence(shown.map((c) => c.user.id));
 
   return (
@@ -408,7 +425,7 @@ export function ChatList({
   }[status];
 
   const [query, setQuery] = useState("");
-  const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | null>(null);
+  const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | "group" | null>(null);
   const needle = rail ? "" : query.trim().toLowerCase();
   const [picked, setPicked] = useState<ChatFilter>("all");
   const [viewPicked, setView] = useState<ListView>("chats");
@@ -433,7 +450,7 @@ export function ChatList({
     lastPull.current = Date.now();
     if (fresh) setPulledOn((p) => (p === pathname ? null : pathname));
   };
-  useWatchPresence(visible.flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
+  useWatchPresence(visible.filter((c) => !c.group).flatMap((c) => c.members.map((m) => m.user.id)).filter((id) => id !== meId));
 
   useEffect(() => {
     if (pathname === "/") setArchiveOpen(false);
@@ -521,6 +538,16 @@ export function ChatList({
                 <QrCode className="size-5" />
               </button>
             )}
+            {view !== "contacts" && !isSupport && (
+              <button
+                onClick={() => setDialog("group")}
+                aria-label={tr.groups.newGroup}
+                title={tr.groups.newGroup}
+                className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+              >
+                <Users className="size-5" />
+              </button>
+            )}
             <button
               onClick={() => setDialog("invite")}
               aria-label={tr.contacts.inviteFriend}
@@ -541,6 +568,7 @@ export function ChatList({
         )
       )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
+      {dialog === "group" && <NewGroupDialog onClose={() => setDialog(null)} />}
       {dialog === "invite" && <NewInviteDialog onClose={() => setDialog(null)} />}
       {dialog === "findMe" && (
         <Dialog onClose={() => setDialog(null)}>

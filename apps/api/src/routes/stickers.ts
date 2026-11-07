@@ -11,13 +11,29 @@ import {
   page,
 } from "@six/shared";
 import { listGifs } from "../services/gifs.js";
-import { addSticker, createPack, getPack, listPacks, removeSticker, setPackSaved } from "../services/stickers.js";
+import { addSticker, createPack, getPack, listPacks, removeSticker, searchStickers, setPackSaved } from "../services/stickers.js";
 
 const PackParams = z.object({ id: Id });
 const security = [{ bearer: [] }];
 
 const stickerRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook("onRequest", app.requireAuth);
+
+  app.get(
+    "/stickers/search",
+    {
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["stickers"],
+        summary: "Stickers from your packs, by name or by the emoji they stand for",
+        description: "Searches the built-in and official packs and the ones you made or saved; yours come first.",
+        security,
+        querystring: z.object({ q: z.string().max(64).default("") }),
+        response: { 200: z.object({ items: z.array(StickerDTO) }) },
+      },
+    },
+    (req) => searchStickers(req.auth.userId, req.query.q),
+  );
 
   app.get(
     "/sticker-packs",
@@ -36,9 +52,10 @@ const stickerRoutes: FastifyPluginAsyncZod = async (app) => {
     "/sticker-packs",
     {
       config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+      preHandler: app.requireAdminSignIn,
       schema: {
         tags: ["stickers"],
-        summary: "Create a sticker pack",
+        summary: "Create a sticker pack (admins only)",
         security,
         body: CreateStickerPackInput,
         response: { 201: StickerPackDTO },
@@ -64,11 +81,13 @@ const stickerRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/sticker-packs/:id/stickers",
     {
+      config: { rateLimit: { max: 600, timeWindow: "1 minute" } },
+      preHandler: app.requireAdminSignIn,
       schema: {
         tags: ["stickers"],
-        summary: "Add a sticker to your pack",
+        summary: "Add a sticker to a pack (admins only, to any pack)",
         description:
-          "Upload the file first with kind `sticker` (.tgs, Lottie .json, .webp or .png, at most 512 KB). Its `url` stays null until processing finishes.",
+          "Upload the file first with kind `sticker` (.tgs, Lottie .json, .webp or .png, still or animated, at most 6 MB). Its `url` stays null until processing finishes.",
         security,
         params: PackParams,
         body: AddStickerInput,

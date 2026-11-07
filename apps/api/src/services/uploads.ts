@@ -1,9 +1,11 @@
+import { isAdminEmail } from "../plugins/auth.js";
 import { createId } from "@paralleldrive/cuid2";
 import type { Prisma, Upload } from "../generated/prisma/client.js";
 import {
   type AttachmentDTO,
   AppError,
   MAX_UPLOAD_BYTES,
+  STICKER_ZIP_MAX_BYTES,
   type PresignUploadInput,
   type UploadKind,
 } from "@six/shared";
@@ -56,7 +58,8 @@ export const uploadKeys = (u: Pick<Upload, "key" | "mainKey" | "thumbKey">) =>
 export const GUEST_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 export async function presignUpload(ownerId: string, input: PresignUploadInput) {
-  const owner = await prisma.user.findUniqueOrThrow({ where: { id: ownerId }, select: { guest: true } });
+  const owner = await prisma.user.findUniqueOrThrow({ where: { id: ownerId }, select: { guest: true, email: true } });
+  if (input.kind === "sticker_zip" && !isAdminEmail(owner.email)) throw new AppError("FORBIDDEN", "Admins only");
   if (owner.guest && (input.kind !== "image" || input.encrypted || input.size > GUEST_UPLOAD_BYTES)) {
     throw new AppError("FORBIDDEN", "Guests can only send photos up to 100 MB");
   }
@@ -105,12 +108,12 @@ export async function completeUpload(ownerId: string, id: string) {
   }
   const stored = await headObject(upload.key);
   if (!stored) throw new AppError("UPLOAD_MISSING", "The file has not been uploaded yet");
-  if (stored.size !== upload.size || stored.size > MAX_UPLOAD_BYTES) {
+  if (stored.size !== upload.size || stored.size > (upload.kind === "sticker_zip" ? STICKER_ZIP_MAX_BYTES : MAX_UPLOAD_BYTES)) {
     await deleteObjects([upload.key]);
     throw new AppError("UPLOAD_MISSING", "The uploaded file does not match what was announced");
   }
 
-  if (upload.kind === "file" || upload.encrypted) {
+  if (upload.kind === "file" || upload.kind === "sticker_zip" || upload.encrypted) {
     return toAttachmentDTO(await prisma.upload.update({ where: { id }, data: { status: "ready" } }));
   }
   const updated = await prisma.upload.update({ where: { id }, data: { status: "processing" } });
