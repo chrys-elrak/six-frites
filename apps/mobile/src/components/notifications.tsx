@@ -1,7 +1,7 @@
 import { type NotificationDTO, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect } from "expo-router";
-import { Bell, Mail, MailOpen, Settings2, Trash2 } from "lucide-react-native";
+import { Bell, Mail, MailOpen, Settings2, Trash2, VenetianMask } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -101,7 +101,8 @@ function Row({ n }: { n: NotificationDTO }) {
           <Pressable
             onPress={() => {
               if (n.unread) void markNotification(qc, n.id, false);
-              if (n.chatId) router.push(`/chats/${n.chatId}`);
+              if (n.kind === "anon_message") router.push("/inbox");
+              else if (n.chatId) router.push(`/chats/${n.chatId}`);
             }}
             accessibilityActions={[
               { name: "delete", label: tr.common.delete },
@@ -114,7 +115,13 @@ function Row({ n }: { n: NotificationDTO }) {
               pressed && { backgroundColor: t.pressed },
             ]}
           >
-            <Avatar user={n.user} size="md" />
+            {n.user ? (
+              <Avatar user={n.user} size="md" />
+            ) : (
+              <View style={[styles.anonIcon, { backgroundColor: "rgba(235,138,0,0.15)" }]}>
+                <VenetianMask size={24} color={brand} />
+              </View>
+            )}
             <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
               <Text style={{ color: t.text, fontSize: 15, lineHeight: 20 }}>{notificationText(tr.notifications, n)}</Text>
               <Text style={{ color: n.unread ? brand : t.muted, fontSize: 12, fontWeight: n.unread ? "600" : "400" }}>
@@ -129,6 +136,7 @@ function Row({ n }: { n: NotificationDTO }) {
 }
 
 const styles = StyleSheet.create({
+  anonIcon: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
   swipeHint: { position: "absolute", top: 0, bottom: 0, justifyContent: "center", opacity: 0 },
   swipeIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },

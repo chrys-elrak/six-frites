@@ -71192,10 +71192,13 @@
                               "story_reaction",
                               "note_reaction",
                               "story_reply",
-                              "missed_call"
+                              "missed_call",
+                              "anon_message"
                             ]
                           },
                           "user": {
+                            "nullable": true,
+                            "description": "Who did it; null for anon_message, which never says who sent it",
                             "type": "object",
                             "properties": {
                               "id": {
@@ -71220,8 +71223,7 @@
                               "displayName",
                               "avatarUrl"
                             ],
-                            "additionalProperties": false,
-                            "description": "Who did it"
+                            "additionalProperties": false
                           },
                           "chatId": {
                             "nullable": true,

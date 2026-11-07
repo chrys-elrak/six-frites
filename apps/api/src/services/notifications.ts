@@ -7,7 +7,7 @@ import { profilesFor } from "./contacts.js";
 
 interface NewNotification {
   userId: string;
-  actorId: string;
+  actorId: string | null;
   kind: NotificationKind;
   chatId?: string | null;
   emoji?: string;
@@ -21,6 +21,12 @@ export async function notify(tx: Tx, emit: Emit, n: NewNotification) {
   emit.after(() => broadcaster().to(rooms.user(n.userId)).emit("notifications:changed"));
 }
 
+/** Tells me an anonymous message came in, without saying who sent it. */
+export async function notifyAnon(userId: string) {
+  await prisma.notification.create({ data: { userId, kind: "anon_message" } });
+  broadcaster().to(rooms.user(userId)).emit("notifications:changed");
+}
+
 const LIMIT = 50;
 
 /** The latest notifications, leaving out people since blocked or gone, and how many came since I last looked. */
@@ -28,20 +34,20 @@ export async function listNotifications(userId: string): Promise<NotificationsDT
   const [me, rows, blocked] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { notificationsSeenAt: true } }),
     prisma.notification.findMany({
-      where: { userId, actor: { deletedAt: null } },
+      where: { userId, OR: [{ actorId: null }, { actor: { deletedAt: null } }] },
       include: { actor: true },
       orderBy: { createdAt: "desc" },
       take: LIMIT,
     }),
     blockedWith(prisma, userId),
   ]);
-  const shown = rows.filter((n) => !blocked.has(n.actorId));
-  const profile = await profilesFor(prisma, userId, shown.map((n) => n.actorId));
+  const shown = rows.filter((n) => !n.actorId || !blocked.has(n.actorId));
+  const profile = await profilesFor(prisma, userId, shown.flatMap((n) => n.actorId ?? []));
   const seen = me.notificationsSeenAt;
   const items = shown.map((n) => ({
     id: n.id,
     kind: n.kind as NotificationKind,
-    user: profile(n.actor),
+    user: n.actor && profile(n.actor),
     chatId: n.chatId,
     emoji: n.emoji,
     video: n.video,

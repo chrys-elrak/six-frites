@@ -3,13 +3,13 @@ import { IsoDate } from "./common.js";
 import { PublicUser } from "./invites.js";
 import type { Dict } from "./i18n/index.js";
 
-export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "missed_call"] as const;
+export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "missed_call", "anon_message"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 export const NotificationDTO = z.object({
   id: z.string(),
   kind: z.enum(NOTIFICATION_KINDS),
-  user: PublicUser.describe("Who did it"),
+  user: PublicUser.nullable().describe("Who did it; null for anon_message, which never says who sent it"),
   chatId: z.string().nullable().describe("The direct chat with them, to open on tap"),
   emoji: z.string().nullable().describe("For story_reaction and note_reaction"),
   video: z.boolean().describe("For missed_call: whether it was a video call"),
@@ -28,7 +28,7 @@ export const UpdateNotificationInput = z.object({ unread: z.boolean() });
 
 /** The line a notification shows, in the app's language. */
 export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
-  const name = n.user.displayName;
+  const name = n.user?.displayName ?? "";
   switch (n.kind) {
     case "joined":
       return t.joined(name);
@@ -42,5 +42,7 @@ export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
       return t.storyReply(name);
     case "missed_call":
       return n.video ? t.missedVideoCall(name) : t.missedCall(name);
+    case "anon_message":
+      return t.anonMessage;
   }
 }

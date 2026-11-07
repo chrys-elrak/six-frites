@@ -2,7 +2,7 @@
 
 import { type NotificationDTO, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, Mail, MailOpen, Settings2, Trash2 } from "lucide-react";
+import { Bell, Mail, MailOpen, Settings2, Trash2, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { listTime } from "@/lib/format";
@@ -92,14 +92,20 @@ function Row({ n }: { n: NotificationDTO }) {
       </div>
       <div ref={swipe.moving} className="relative">
         <Link
-          href={n.chatId ? `/chats/${n.chatId}` : "/notifications"}
+          href={n.kind === "anon_message" ? "/inbox" : n.chatId ? `/chats/${n.chatId}` : "/notifications"}
           onClick={() => n.unread && void markNotification(qc, n.id, false)}
           {...press}
           className={`flex items-center gap-3 px-4 py-3 transition [-webkit-touch-callout:none] pointer-coarse:select-none hover:bg-black/[0.03] active:bg-black/5 dark:hover:bg-white/5 dark:active:bg-white/10 ${
             n.unread ? "bg-brand/10" : ""
           }`}
         >
-          <Avatar user={n.user} size="md" />
+          {n.user ? (
+            <Avatar user={n.user} size="md" />
+          ) : (
+            <span className="grid size-14 shrink-0 place-items-center rounded-full bg-brand/15 text-brand">
+              <VenetianMask className="size-6" />
+            </span>
+          )}
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] leading-snug">{notificationText(tr.notifications, n)}</span>
             <span className={`text-xs ${n.unread ? "font-semibold text-brand" : "text-stone-500"}`}>{listTime(n.createdAt)}</span>

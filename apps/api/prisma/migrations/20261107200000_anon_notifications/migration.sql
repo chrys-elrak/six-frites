@@ -1,0 +1,1 @@
+ALTER TABLE "Notification" ALTER COLUMN "actorId" DROP NOT NULL;

@@ -30,6 +30,7 @@ import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { parsePhoto } from "./contacts.js";
 import { sharedGif } from "./gifs.js";
 import { EPHEMERAL_LINK_SECONDS, entitiesOf, storedEntities } from "./messages.js";
+import { notifyAnon } from "./notifications.js";
 import { deliverAnonPush } from "./push.js";
 import { toUserRef } from "./reports.js";
 import { toUserDTO } from "./users.js";
@@ -260,6 +261,7 @@ export async function sendAnon(senderId: string, code: string, { text, entities,
     },
   });
   broadcaster().to(rooms.user(recipient.id)).emit("ask:new", toAnonDTO(m));
+  await notifyAnon(recipient.id).catch(() => null);
   void deliverAnonPush(recipient.id, maskSpoilers(text, entities), sound ? "voice" : gif ? "gif" : "image").catch(() => null);
 }
 
@@ -385,6 +387,7 @@ async function sendBotLine(userId: string) {
   const botLine = left[Math.floor(Math.random() * left.length)]!;
   const m = await prisma.anonMessage.create({ data: { recipientId: userId, text: lines[botLine]!, botLine } });
   broadcaster().to(rooms.user(userId)).emit("ask:new", toAnonDTO(m));
+  await notifyAnon(userId).catch(() => null);
   await deliverAnonPush(userId, m.text, "image").catch(() => null);
   return true;
 }

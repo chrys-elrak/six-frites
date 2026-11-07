@@ -7,6 +7,16 @@ const { signUp, get, call, send, makeFriends } = chatHelpers(ctx);
 const kinds = (list: { items: { kind: string; user: { id: string } }[] }) => list.items.map((n) => `${n.kind}:${n.user.id}`);
 
 describe("notifications", () => {
+  it("tells me about an anonymous message without saying who sent it", async () => {
+    const [me, fan] = await Promise.all([signUp("me"), signUp("fan")]);
+    const { askCode } = await get(me, "/v1/me");
+    expect((await call(fan, "POST", `/v1/ask/${askCode}`, { text: "guess who" })).statusCode).toBe(204);
+
+    const list = await get(me, "/v1/notifications");
+    expect(list.items).toMatchObject([{ kind: "anon_message", user: null, chatId: null, unread: true }]);
+    expect(JSON.stringify(list)).not.toContain(fan.user.id);
+  });
+
   it("lists who joined, added me, reacted to or answered my story and called me, until I've seen them", async () => {
     const { host, guest, chatId } = await makeFriends();
     const stranger = await signUp("stranger");

@@ -10,6 +10,7 @@ const en = {
   storyReply: (name: string) => `${name} replied to your story.`,
   missedCall: (name: string) => `You missed a call from ${name}.`,
   missedVideoCall: (name: string) => `You missed a video call from ${name}.`,
+  anonMessage: "You got an anonymous message.",
 };
 
 const fr: typeof en = {
@@ -24,6 +25,7 @@ const fr: typeof en = {
   storyReply: (name) => `${name} a répondu à votre story.`,
   missedCall: (name) => `Appel manqué de ${name}.`,
   missedVideoCall: (name) => `Appel vidéo manqué de ${name}.`,
+  anonMessage: "Vous avez reçu un message anonyme.",
 };
 
 const mg: typeof en = {
@@ -38,6 +40,7 @@ const mg: typeof en = {
   storyReply: (name) => `Namaly ny story-nao i ${name}.`,
   missedCall: (name) => `Antso tsy voaray avy amin'i ${name}.`,
   missedVideoCall: (name) => `Antso video tsy voaray avy amin'i ${name}.`,
+  anonMessage: "Nahazo hafatra tsy fantatra ny mpandefa ianao.",
 };
 
 export default { en, fr, mg };

@@ -21238,8 +21238,8 @@ export interface paths {
                             items: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call";
-                                /** @description Who did it */
+                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call" | "anon_message";
+                                /** @description Who did it; null for anon_message, which never says who sent it */
                                 user: {
                                     id: string;
                                     displayName: string;
@@ -21247,7 +21247,7 @@ export interface paths {
                                     avatarUrl: string | null;
                                     /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
                                     alias?: string;
-                                };
+                                } | null;
                                 /** @description The direct chat with them, to open on tap */
                                 chatId: string | null;
                                 /** @description For story_reaction and note_reaction */

@@ -749,8 +749,9 @@ model StoryView {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  actorId   String
-  /// joined, added, story_reaction, note_reaction, story_reply or missed_call.
+  /// Null for an anonymous message: nobody is named.
+  actorId   String?
+  /// joined, added, story_reaction, note_reaction, story_reply, missed_call or anon_message.
   kind      String
   chatId    String?
   emoji     String?
@@ -760,7 +761,7 @@ model Notification {
   createdAt DateTime @default(now())
 
   user  User @relation("notified", fields: [userId], references: [id], onDelete: Cascade)
-  actor User @relation("notifier", fields: [actorId], references: [id], onDelete: Cascade)
+  actor User? @relation("notifier", fields: [actorId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([createdAt])
