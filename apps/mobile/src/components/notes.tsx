@@ -8,6 +8,9 @@ import {
   STORY_DURATIONS,
   STORY_DURATION_UNITS,
   STORY_LIMITS,
+  STORY_REACTIONS,
+  type StoryReaction,
+  countReactions,
   durationLabel,
   inkOn,
 } from "@six/shared";
@@ -17,6 +20,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { Ban, Eye, SendHorizontal, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import Animated, { BounceIn } from "react-native-reanimated";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useChats } from "@/lib/chats";
@@ -143,6 +147,12 @@ function NoteViewers({ count }: { count: number }) {
                 {v.user.displayName}
               </Text>
               <Text style={{ color: t.muted, fontSize: 12 }}>{timeAgo(v.viewedAt)}</Text>
+              {countReactions(v.reactions).map(([emoji, n]) => (
+                <Text key={emoji} style={{ fontSize: 20 }}>
+                  {emoji}
+                  {n > 1 && <Text style={{ color: t.muted, fontSize: 12, fontWeight: "600" }}>{n}</Text>}
+                </Text>
+              ))}
             </View>
           ))}
         </ScrollView>
@@ -281,7 +291,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
   );
 }
 
-/** A contact's note, with a box to answer it in your chat with them. */
+/** A contact's note, with quick reactions only they see and a box to answer it in your chat with them. */
 export function NoteReader({ user, note, onClose }: { user: PublicUser; note: NoteDTO; onClose: () => void }) {
   const t = useTheme();
   const tr = useT();
@@ -290,9 +300,15 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   const chats = [...(useChats().data ?? []), ...(useChats(true).data ?? [])];
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === user.id));
   const [text, setText] = useState("");
+  const [popped, setPopped] = useState({ emoji: "", n: 0 });
   useEffect(() => {
     void six.api.POST("/v1/notes/{id}/view", { params: { path: { id: note.id } } });
   }, [note.id]);
+
+  const react = (emoji: StoryReaction) => {
+    void six.api.POST("/v1/notes/{id}/react", { params: { path: { id: note.id } }, body: { emoji } });
+    setPopped((p) => ({ emoji, n: p.n + 1 }));
+  };
 
   function send() {
     if (!text.trim() || !chat || !realtime) return;
@@ -317,6 +333,15 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           <Text style={{ fontWeight: "700" }}>{user.displayName}</Text>
           <Text style={{ color: t.muted, fontSize: 13 }}> · {timeAgo(note.createdAt)}</Text>
         </Text>
+        <View style={styles.actions}>
+          {STORY_REACTIONS.map((emoji) => (
+            <Pressable key={emoji} onPress={() => react(emoji)} accessibilityLabel={emoji} hitSlop={4} style={styles.reaction}>
+              <Animated.View key={popped.emoji === emoji ? popped.n : 0} entering={popped.emoji === emoji ? BounceIn.duration(300) : undefined}>
+                <Text style={{ fontSize: 26 }}>{emoji}</Text>
+              </Animated.View>
+            </Pressable>
+          ))}
+        </View>
       </View>
       {chat && realtime && (
         <View style={styles.actions}>
@@ -358,6 +383,7 @@ const styles = StyleSheet.create({
   send: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: brand },
   bigBubble: { borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, maxWidth: "90%", alignItems: "center", gap: 4 },
   swatch: { width: 28, height: 28, borderRadius: 14 },
+  reaction: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   picked: { outlineWidth: 2, outlineOffset: 2, outlineColor: brand, outlineStyle: "solid" },
   gifs: { borderRadius: 16, backgroundColor: "rgba(0,0,0,0.75)", padding: 10 },
   removeGif: {

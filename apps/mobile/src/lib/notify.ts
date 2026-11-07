@@ -116,7 +116,7 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean) {
 /** Tells you a contact reacted to your story. */
 export function notifyStoryReaction(e: StoryReactedDTO) {
   const t = getT();
-  alert(`story-${e.storyId}-${e.user.id}`, "/", e.user.displayName, `${e.emoji} ${t.stories.reactedToYours}`, e.user.avatarUrl);
+  alert(`story-${e.storyId}-${e.user.id}`, "/", e.user.displayName, `${e.emoji} ${e.note ? t.stories.reactedToYourNote : t.stories.reactedToYours}`, e.user.avatarUrl);
 }
 
 function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null, sound?: number) {

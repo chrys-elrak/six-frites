@@ -172,7 +172,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     rt.socket.on("stories:changed", () => void qc.invalidateQueries({ queryKey: ["stories"] }));
     rt.socket.on("notifications:changed", () => void qc.invalidateQueries({ queryKey: ["notifications"] }));
     rt.socket.on("story:reacted", (e) => {
-      void qc.invalidateQueries({ queryKey: ["stories", e.storyId, "viewers"] });
+      void qc.invalidateQueries({ queryKey: ["stories", e.note ? "notes" : e.storyId, "viewers"] });
       notifyStoryReaction(e);
     });
     rt.socket.on("connect", () => {

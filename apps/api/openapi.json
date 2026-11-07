@@ -68805,6 +68805,73 @@
         }
       }
     },
+    "/v1/notes/{id}/react": {
+      "post": {
+        "summary": "React to a contact's note with an emoji",
+        "tags": [
+          "stories"
+        ],
+        "description": "Only the note's author sees it, in who opened the note. It is not sent as a message.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emoji": {
+                    "type": "string",
+                    "enum": [
+                      "❤️",
+                      "😂",
+                      "😮",
+                      "😢",
+                      "👏",
+                      "🔥"
+                    ]
+                  }
+                },
+                "required": [
+                  "emoji"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/notes/viewers": {
       "get": {
         "summary": "Who opened the note you have up, latest first",
@@ -68861,11 +68928,27 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "reactions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "❤️",
+                                "😂",
+                                "😮",
+                                "😢",
+                                "👏",
+                                "🔥"
+                              ]
+                            },
+                            "description": "Every emoji they reacted with, oldest first, at most the last 30"
                           }
                         },
                         "required": [
                           "user",
-                          "viewedAt"
+                          "viewedAt",
+                          "reactions"
                         ],
                         "additionalProperties": false
                       }
@@ -70561,6 +70644,7 @@
                               "joined",
                               "added",
                               "story_reaction",
+                              "note_reaction",
                               "story_reply",
                               "missed_call"
                             ]
@@ -70600,7 +70684,7 @@
                           },
                           "emoji": {
                             "nullable": true,
-                            "description": "For story_reaction",
+                            "description": "For story_reaction and note_reaction",
                             "type": "string"
                           },
                           "video": {

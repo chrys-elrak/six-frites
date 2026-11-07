@@ -19871,6 +19871,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/notes/{id}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * React to a contact's note with an emoji
+         * @description Only the note's author sees it, in who opened the note. It is not sent as a message.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        emoji: "❤️" | "😂" | "😮" | "😢" | "👏" | "🔥";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/notes/viewers": {
         parameters: {
             query?: never;
@@ -19907,6 +19955,8 @@ export interface paths {
                                 };
                                 /** Format: date-time */
                                 viewedAt: string;
+                                /** @description Every emoji they reacted with, oldest first, at most the last 30 */
+                                reactions: ("❤️" | "😂" | "😮" | "😢" | "👏" | "🔥")[];
                             }[];
                         };
                     };
@@ -20940,7 +20990,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "joined" | "added" | "story_reaction" | "story_reply" | "missed_call";
+                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call";
                                 /** @description Who did it */
                                 user: {
                                     id: string;
@@ -20952,7 +21002,7 @@ export interface paths {
                                 };
                                 /** @description The direct chat with them, to open on tap */
                                 chatId: string | null;
-                                /** @description For story_reaction */
+                                /** @description For story_reaction and note_reaction */
                                 emoji: string | null;
                                 /** @description For missed_call: whether it was a video call */
                                 video: boolean;

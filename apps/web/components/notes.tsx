@@ -10,6 +10,9 @@ import {
   STORY_DURATIONS,
   STORY_DURATION_UNITS,
   STORY_LIMITS,
+  STORY_REACTIONS,
+  type StoryReaction,
+  countReactions,
   durationLabel,
   inkOn,
 } from "@six/shared";
@@ -111,6 +114,12 @@ function NoteViewers({ count }: { count: number }) {
               <Avatar user={v.user} />
               <span className="min-w-0 flex-1 truncate">{v.user.displayName}</span>
               <span className="text-xs text-stone-500">{timeAgo(v.viewedAt)}</span>
+              {countReactions(v.reactions).map(([emoji, n]) => (
+                <span key={emoji} className="flex items-baseline text-xl leading-none">
+                  {emoji}
+                  {n > 1 && <span className="text-xs font-semibold text-stone-500">{n}</span>}
+                </span>
+              ))}
             </div>
           ))}
         </div>
@@ -278,7 +287,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
   );
 }
 
-/** A contact's note, with a box to answer it in your chat with them. */
+/** A contact's note, with quick reactions only they see and a box to answer it in your chat with them. */
 export function NoteReader({ user, note, onClose }: { user: PublicUser; note: NoteDTO; onClose: () => void }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -286,9 +295,15 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   const chats = [...(useChats().data ?? []), ...(useChats(true).data ?? [])];
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === user.id));
   const [text, setText] = useState("");
+  const [popped, setPopped] = useState({ emoji: "", n: 0 });
   useEffect(() => {
     void six.api.POST("/v1/notes/{id}/view", { params: { path: { id: note.id } } });
   }, [note.id]);
+
+  const react = (emoji: StoryReaction) => {
+    void six.api.POST("/v1/notes/{id}/react", { params: { path: { id: note.id } }, body: { emoji } });
+    setPopped((p) => ({ emoji, n: p.n + 1 }));
+  };
 
   function send() {
     if (!text.trim() || !chat || !realtime) return;
@@ -312,6 +327,21 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           <span className="font-semibold">{user.displayName}</span>
           <span className="text-sm text-stone-500"> · {timeAgo(note.createdAt)}</span>
         </p>
+        <div className="flex justify-center gap-1">
+          {STORY_REACTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => react(emoji)}
+              aria-label={emoji}
+              className="grid size-10 place-items-center rounded-full text-2xl transition hover:scale-125 active:scale-95"
+            >
+              <span key={popped.emoji === emoji ? popped.n : 0} className={popped.emoji === emoji ? "piece-pop" : undefined}>
+                {emoji}
+              </span>
+            </button>
+          ))}
+        </div>
         {chat && realtime && (
           <form
             onSubmit={(e) => {

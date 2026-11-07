@@ -708,9 +708,11 @@ model Note {
 }
 
 model NoteView {
-  noteId   String
-  userId   String
-  viewedAt DateTime @default(now())
+  noteId    String
+  userId    String
+  viewedAt  DateTime @default(now())
+  /// The emojis they reacted with, as on StoryView.
+  reactions String[] @default([])
 
   note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -738,7 +740,7 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   actorId   String
-  /// joined, added, story_reaction, story_reply or missed_call.
+  /// joined, added, story_reaction, note_reaction, story_reply or missed_call.
   kind      String
   chatId    String?
   emoji     String?

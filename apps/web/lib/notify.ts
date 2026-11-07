@@ -202,7 +202,7 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean, open: (href: str
 export function notifyStoryReaction(e: StoryReactedDTO, open: (href: string) => void) {
   const t = getT();
   alertUser(
-    { id: `story-${e.storyId}-${e.user.id}`, href: "/", title: e.user.displayName, body: `${e.emoji} ${t.stories.reactedToYours}` },
+    { id: `story-${e.storyId}-${e.user.id}`, href: "/", title: e.user.displayName, body: `${e.emoji} ${e.note ? t.stories.reactedToYourNote : t.stories.reactedToYours}` },
     e.user.avatarUrl,
     open,
   );

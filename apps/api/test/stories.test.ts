@@ -148,6 +148,23 @@ describe("stories", () => {
     expect((await get(host, "/v1/notes")).items).toEqual([]);
   });
 
+  it("keeps a contact's reactions to a note in who opened it, and tells the author", async () => {
+    const { host, guest } = await makeFriends();
+    const stranger = await signUp("stranger");
+    const note = (await call(host, "PUT", "/v1/notes", { text: "Beach at 5" })).json();
+
+    expect((await call(guest, "POST", `/v1/notes/${note.id}/react`, { emoji: "🔥" })).statusCode).toBe(204);
+    expect((await call(guest, "POST", `/v1/notes/${note.id}/react`, { emoji: "🔥" })).statusCode).toBe(204);
+    expect((await call(guest, "POST", `/v1/notes/${note.id}/react`, { emoji: "🍕" })).statusCode).toBe(400);
+    expect((await call(host, "POST", `/v1/notes/${note.id}/react`, { emoji: "❤️" })).statusCode).toBe(404);
+    expect((await call(stranger, "POST", `/v1/notes/${note.id}/react`, { emoji: "❤️" })).statusCode).toBe(404);
+
+    const [seen] = (await get(host, "/v1/notes/viewers")).items;
+    expect(seen).toMatchObject({ user: { id: guest.user.id }, reactions: ["🔥", "🔥"] });
+    const notified = await prisma.notification.findMany({ where: { userId: host.user.id, kind: "note_reaction" } });
+    expect(notified).toMatchObject([{ actorId: guest.user.id, emoji: "🔥" }]);
+  });
+
   it("tells the author which contacts opened their note, and starts over with a new note", async () => {
     const { host, guest } = await makeFriends();
     const stranger = await signUp("stranger");

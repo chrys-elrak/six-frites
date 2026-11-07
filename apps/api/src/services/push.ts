@@ -204,11 +204,11 @@ export async function deliverAnonPush(userId: string, text: string, kind: "image
 }
 
 /** Tells someone a contact reacted to their story, on the devices they aren't using right now. */
-export async function deliverStoryReactionPush(userId: string, from: PublicUser, emoji: string) {
+export async function deliverStoryReactionPush(userId: string, from: PublicUser, emoji: string, note = false) {
   const targets = await targetsFor(userId);
   return sendToAll(targets, (t) => ({
     title: from.displayName,
-    body: `${emoji} ${t.stories.reactedToYours}`,
+    body: `${emoji} ${note ? t.stories.reactedToYourNote : t.stories.reactedToYours}`,
     icon: from.avatarUrl,
     chatId: null,
     messageId: null,

@@ -1,0 +1,1 @@
+ALTER TABLE "NoteView" ADD COLUMN "reactions" TEXT[] DEFAULT ARRAY[]::TEXT[];

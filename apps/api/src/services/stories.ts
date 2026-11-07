@@ -336,6 +336,27 @@ export async function markNoteViewed(viewerId: string, noteId: string) {
   });
 }
 
+/** Adds an emoji to someone's reactions on a contact's note, the way `reactToStory` does for a story. */
+export async function reactToNote(viewerId: string, noteId: string, emoji: StoryReaction) {
+  const note = await prisma.note.findUnique({ where: { id: noteId } });
+  if (!note || note.expiresAt <= new Date() || note.userId === viewerId) throw new AppError("STORY_NOT_FOUND");
+  if (!(await contactIds(prisma, viewerId)).includes(note.userId)) throw new AppError("STORY_NOT_FOUND");
+  const [row] = await prisma.$queryRaw<{ reactions: string[] }[]>`
+    INSERT INTO "NoteView" ("noteId", "userId", "reactions") VALUES (${noteId}, ${viewerId}, ARRAY[${emoji}::text])
+    ON CONFLICT ("noteId", "userId") DO UPDATE SET "reactions" =
+      ("NoteView"."reactions" || ${emoji}::text)[greatest(1, cardinality("NoteView"."reactions") + 2 - ${MAX_REACTIONS}::int):]
+    RETURNING "reactions"`;
+  if (row!.reactions.filter((r) => r === emoji).length > 1) return;
+  const viewer = await prisma.user.findUniqueOrThrow({ where: { id: viewerId } });
+  const user = (await profilesFor(prisma, note.userId, [viewerId]))(viewer);
+  broadcaster().to(rooms.user(note.userId)).emit("story:reacted", { storyId: noteId, user, emoji, note: true });
+  void deliverStoryReactionPush(note.userId, user, emoji, true).catch(() => null);
+  const chat = await prisma.chat.findUnique({ where: { directKey: [viewerId, note.userId].sort().join(":") }, select: { id: true } });
+  await withEvents((tx, emit) =>
+    notify(tx, emit, { userId: note.userId, actorId: viewerId, kind: "note_reaction", chatId: chat?.id, emoji }),
+  );
+}
+
 /** Who opened the note I have up, latest first. */
 export async function listNoteViewers(userId: string): Promise<{ items: NoteViewerDTO[] }> {
   const views = await prisma.noteView.findMany({
@@ -344,7 +365,9 @@ export async function listNoteViewers(userId: string): Promise<{ items: NoteView
     orderBy: { viewedAt: "desc" },
   });
   const profile = await profilesFor(prisma, userId, views.map((v) => v.userId));
-  return { items: views.map((v) => ({ user: profile(v.user), viewedAt: v.viewedAt.toISOString() })) };
+  return {
+    items: views.map((v) => ({ user: profile(v.user), viewedAt: v.viewedAt.toISOString(), reactions: v.reactions as StoryReaction[] })),
+  };
 }
 
 export async function deleteNote(userId: string) {

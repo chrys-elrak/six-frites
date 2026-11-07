@@ -3,7 +3,7 @@ import { IsoDate } from "./common.js";
 import { PublicUser } from "./invites.js";
 import type { Dict } from "./i18n/index.js";
 
-export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "story_reply", "missed_call"] as const;
+export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "missed_call"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 export const NotificationDTO = z.object({
@@ -11,7 +11,7 @@ export const NotificationDTO = z.object({
   kind: z.enum(NOTIFICATION_KINDS),
   user: PublicUser.describe("Who did it"),
   chatId: z.string().nullable().describe("The direct chat with them, to open on tap"),
-  emoji: z.string().nullable().describe("For story_reaction"),
+  emoji: z.string().nullable().describe("For story_reaction and note_reaction"),
   video: z.boolean().describe("For missed_call: whether it was a video call"),
   unread: z.boolean().describe("New since you last looked, or marked unread"),
   createdAt: IsoDate,
@@ -36,6 +36,8 @@ export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
       return t.added(name);
     case "story_reaction":
       return t.storyReaction(name, n.emoji ?? "");
+    case "note_reaction":
+      return t.noteReaction(name, n.emoji ?? "");
     case "story_reply":
       return t.storyReply(name);
     case "missed_call":

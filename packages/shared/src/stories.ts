@@ -311,6 +311,8 @@ export interface StoryReactedDTO {
   storyId: string;
   user: PublicUser;
   emoji: StoryReaction;
+  /** Set when it was their note, whose id `storyId` holds. */
+  note?: boolean;
 }
 
 export const StoryViewerDTO = z.object({
@@ -320,5 +322,5 @@ export const StoryViewerDTO = z.object({
 });
 export type StoryViewerDTO = z.infer<typeof StoryViewerDTO>;
 
-export const NoteViewerDTO = StoryViewerDTO.omit({ reactions: true });
+export const NoteViewerDTO = StoryViewerDTO;
 export type NoteViewerDTO = z.infer<typeof NoteViewerDTO>;

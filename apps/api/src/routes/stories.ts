@@ -11,6 +11,7 @@ import {
   listStoryViewers,
   markNoteViewed,
   markStoryViewed,
+  reactToNote,
   reactToStory,
   setNote,
 } from "../services/stories.js";
@@ -72,6 +73,26 @@ const storyRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       await markNoteViewed(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.post(
+    "/notes/:id/react",
+    {
+      config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["stories"],
+        summary: "React to a contact's note with an emoji",
+        description: "Only the note's author sees it, in who opened the note. It is not sent as a message.",
+        security,
+        params: Params,
+        body: ReactStoryInput,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await reactToNote(req.auth.userId, req.params.id, req.body.emoji);
       return reply.status(204).send(null);
     },
   );
