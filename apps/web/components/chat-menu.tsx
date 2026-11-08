@@ -102,7 +102,7 @@ export function ChatMenu({
   onGroupInfo,
   at,
   start,
-  muteIcon,
+  headerIcons,
 }: {
   chat: ChatDTO;
   peerName: string;
@@ -113,9 +113,9 @@ export function ChatMenu({
   onSharedMedia?: (tab: "search" | "media") => void;
   at?: { x: number; y: number };
   /** Opens straight on a sub-menu, like the mute durations from the header's bell. */
-  start?: "mute";
-  /** The header shows mute as an icon, so the menu leaves it out. */
-  muteIcon?: boolean;
+  start?: "mute" | "autoDelete" | "theme";
+  /** The header shows mute, blur, auto-delete and background as icons, so the menu leaves them out. */
+  headerIcons?: boolean;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -344,30 +344,8 @@ export function ChatMenu({
               { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
             ]
           : []),
-        ...(chat.withSupport
-          ? []
-          : [
-              {
-                label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
-                onSelect: () => settings({ safeView: !chat.safeView }),
-              },
-              ...(frozen
-                ? []
-                : [
-                    {
-                      label: tr.chat.autoDelete(chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs, tr) : null),
-                      keepOpen: true,
-                      onSelect: () => setView("autoDelete"),
-                    },
-                    {
-                      label: tr.summary.background(chat.theme ? themeName(chat.theme, tr) : tr.chat.defaultBackground),
-                      keepOpen: true,
-                      onSelect: () => setView("theme"),
-                    },
-                  ]),
-            ]),
         { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-        ...(muteIcon
+        ...(headerIcons
           ? []
           : [
               isMuted(chat)
@@ -387,6 +365,28 @@ export function ChatMenu({
         ...(chat.withSupport
           ? []
           : [
+              ...(headerIcons
+                ? []
+                : [
+              {
+                label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
+                onSelect: () => settings({ safeView: !chat.safeView }),
+              },
+              ...(frozen
+                ? []
+                : [
+                    {
+                      label: tr.chat.autoDelete(chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs, tr) : null),
+                      keepOpen: true,
+                      onSelect: () => setView("autoDelete"),
+                    },
+                    {
+                      label: tr.summary.background(chat.theme ? themeName(chat.theme, tr) : tr.chat.defaultBackground),
+                      keepOpen: true,
+                      onSelect: () => setView("theme"),
+                    },
+                  ]),
+                  ]),
               ...(chat.type !== "direct" || chat.peerDeleted || frozen
                 ? []
                 : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),

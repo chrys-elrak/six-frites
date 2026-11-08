@@ -1,8 +1,8 @@
 "use client";
 
-import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
+import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup, themeName } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, ChevronLeft, ChevronsUpDown, Images, Lock, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react";
+import { Bell, BellOff, ChevronLeft, ChevronsUpDown, EyeOff, Images, Lock, MoreVertical, Palette, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -91,7 +91,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
-  const [muting, setMuting] = useState(false);
+  const [sheet, setSheet] = useState<"mute" | "autoDelete" | "theme" | null>(null);
   const [editing, setEditing] = useState(false);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("info")) return;
@@ -288,6 +288,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                     )}
                   </span>
                 </button>
+                <div className="flex min-w-0 shrink items-center overflow-x-auto [scrollbar-width:none]">
                 {!isBotChat(c) && (
                   <>
                     <button
@@ -313,13 +314,46 @@ function OpenConversation({ chatId }: { chatId: string }) {
                       <Images className="size-5" />
                     </button>
                     <button
-                      onClick={() => (muted ? void updateChatSettings(qc, chatId, { muted: false }).catch(() => null) : setMuting(true))}
+                      onClick={() => (muted ? void updateChatSettings(qc, chatId, { muted: false }).catch(() => null) : setSheet("mute"))}
                       aria-label={muted ? tr.common.unmute : tr.common.mute}
                       title={muted ? tr.common.unmute : tr.common.mute}
                       className={iconButton}
                     >
                       {muted ? <BellOff className="size-5" /> : <Bell className="size-5" />}
                     </button>
+                    {!c.withSupport && (
+                      <>
+                        <button
+                          onClick={() => void updateChatSettings(qc, chatId, { safeView: !c.safeView }).catch(() => null)}
+                          aria-label={c.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn}
+                          title={c.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn}
+                          aria-pressed={c.safeView}
+                          className={iconButton}
+                        >
+                          <EyeOff className={`size-5 ${c.safeView ? "text-brand" : ""}`} />
+                        </button>
+                        {!frozen && (
+                          <>
+                            <button
+                              onClick={() => setSheet("autoDelete")}
+                              aria-label={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
+                              title={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
+                              className={iconButton}
+                            >
+                              <Timer className={`size-5 ${c.autoDeleteSecs ? "text-brand" : ""}`} />
+                            </button>
+                            <button
+                              onClick={() => setSheet("theme")}
+                              aria-label={tr.summary.background(c.theme ? themeName(c.theme, tr) : tr.chat.defaultBackground)}
+                              title={tr.summary.background(c.theme ? themeName(c.theme, tr) : tr.chat.defaultBackground)}
+                              className={iconButton}
+                            >
+                              <Palette className={`size-5 ${c.theme ? "text-brand" : ""}`} />
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
                   </>
                 )}
                 {!frozen && !c.group && !c.support && !c.withSupport && !isBotChat(c) && (
@@ -345,6 +379,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                 <button onClick={() => setMenu(true)} aria-label={tr.chat.options} className={iconButton}>
                   <MoreVertical className="size-5" />
                 </button>
+                </div>
               </header>
             )}
             {!selecting && pin && (
@@ -449,14 +484,14 @@ function OpenConversation({ chatId }: { chatId: string }) {
         <ChatMenu
           chat={c}
           peerName={peer.displayName}
-          muteIcon={!isBotChat(c)}
+          headerIcons={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
         />
       )}
-      {muting && <ChatMenu chat={c} peerName={peer.displayName} start="mute" onClose={() => setMuting(false)} />}
+      {sheet && <ChatMenu chat={c} peerName={peer.displayName} start={sheet} onClose={() => setSheet(null)} />}
       {shared && (
         <SharedMedia
           chat={c}

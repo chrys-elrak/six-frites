@@ -37,7 +37,8 @@ export function ChatMenu({
   onDeleted,
   onChooseMessages,
   onSharedMedia,
-  muteIcon,
+  headerIcons,
+  start,
   onGroupInfo,
 }: {
   chat: ChatDTO;
@@ -48,8 +49,10 @@ export function ChatMenu({
   onDeleted?: (scope: DeleteScope) => void;
   onChooseMessages?: () => void;
   onSharedMedia?: (tab: "search" | "media") => void;
-  /** The header shows mute as an icon, so the menu leaves it out. */
-  muteIcon?: boolean;
+  /** The header shows mute, blur, auto-delete and background as icons, so the menu leaves them out. */
+  headerIcons?: boolean;
+  /** Opens straight on a sub-menu, like the auto-delete or background choices from the header's icons. */
+  start?: "autoDelete" | "theme";
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -65,7 +68,7 @@ export function ChatMenu({
     | "customTheme"
     | "removeContact"
     | "poke"
-  >("menu");
+  >(start ?? "menu");
   const [range, setRange] = useState<Range | undefined>(undefined);
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
@@ -260,9 +263,21 @@ export function ChatMenu({
               { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
             ]
           : []),
+        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+        ...(headerIcons ? [] : [{ label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) }]),
+        {
+          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
+          onSelect: () => settings({ archived: !chat.archived }),
+        },
+        ...(chat.supportDesk && !chat.supportClosedAt
+          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
+          : []),
         ...(chat.withSupport
           ? []
           : [
+              ...(headerIcons
+                ? []
+                : [
               {
                 label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
                 onSelect: () => settings({ safeView: !chat.safeView }),
@@ -281,19 +296,7 @@ export function ChatMenu({
                       onSelect: () => setView("theme"),
                     },
                   ]),
-            ]),
-        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-        ...(muteIcon ? [] : [{ label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) }]),
-        {
-          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
-          onSelect: () => settings({ archived: !chat.archived }),
-        },
-        ...(chat.supportDesk && !chat.supportClosedAt
-          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
-          : []),
-        ...(chat.withSupport
-          ? []
-          : [
+                  ]),
               ...(chat.type !== "direct" || chat.peerDeleted || isFrozen(chat)
                 ? []
                 : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),

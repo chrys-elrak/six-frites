@@ -1,9 +1,9 @@
-import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
+import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup, themeName } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { Bell, BellOff, ChevronLeft, ChevronsUpDown, Images, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
+import { Bell, BellOff, ChevronLeft, ChevronsUpDown, EyeOff, Images, MoreVertical, Palette, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, BackHandler, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { AppState, BackHandler, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
@@ -98,6 +98,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const narrow = useWindowDimensions().width < 480;
+  const [sheet, setSheet] = useState<"autoDelete" | "theme" | null>(null);
   const { info } = useLocalSearchParams<{ info?: string }>();
   const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
@@ -277,6 +278,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
               )}
             </View>
           </Pressable>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 1 }} contentContainerStyle={{ alignItems: "center" }}>
           {!isBotChat(c) && (
             <>
               <IconButton
@@ -300,6 +302,30 @@ function OpenConversation({ chatId }: { chatId: string }) {
                 label={c.muted ? tr.common.unmute : tr.common.mute}
                 onPress={() => void updateChatSettings(qc, chatId, { muted: !c.muted }).catch(() => null)}
               />
+              {!c.withSupport && (
+                <IconButton
+                  Icon={EyeOff}
+                  label={c.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn}
+                  color={c.safeView ? brand : undefined}
+                  onPress={() => void updateChatSettings(qc, chatId, { safeView: !c.safeView }).catch(() => null)}
+                />
+              )}
+              {!c.withSupport && !frozen && (
+                <>
+                  <IconButton
+                    Icon={Timer}
+                    label={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
+                    color={c.autoDeleteSecs ? brand : undefined}
+                    onPress={() => setSheet("autoDelete")}
+                  />
+                  <IconButton
+                    Icon={Palette}
+                    label={tr.summary.background(c.theme ? themeName(c.theme, tr) : tr.chat.defaultBackground)}
+                    color={c.theme ? brand : undefined}
+                    onPress={() => setSheet("theme")}
+                  />
+                </>
+              )}
             </>
           )}
           {c.encrypted && !frozen && !c.withSupport && !c.group && (
@@ -309,6 +335,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
             </>
           )}
           <IconButton Icon={MoreVertical} label={tr.chat.options} onPress={() => setMenu(true)} />
+          </ScrollView>
         </ScreenHeader>
       )}
 
@@ -376,13 +403,14 @@ function OpenConversation({ chatId }: { chatId: string }) {
           chat={c}
           peerName={peer.displayName}
           peerId={peer.id}
-          muteIcon={!isBotChat(c)}
+          headerIcons={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
         />
       )}
+      {sheet && <ChatMenu chat={c} peerName={peer.displayName} peerId={peer.id} start={sheet} onClose={() => setSheet(null)} />}
       {shared && (
         <SharedMedia
           chat={c}
