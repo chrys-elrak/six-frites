@@ -55,16 +55,47 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
     tabs.current?.querySelector(`[data-tab="${id}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
-  function onTouchEnd(e: React.TouchEvent) {
+  /** Eases the list back into place from where it is drawn now, or from `from`. */
+  function settle(from?: string) {
+    const el = list.current!;
+    const start = { transform: from ?? (el.style.transform || "none"), opacity: from ? 0.3 : Number(el.style.opacity || 1) };
+    el.style.transform = "";
+    el.style.opacity = "";
+    el.animate([start, { transform: "none", opacity: 1 }], { duration: 240, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
+  }
+
+  /** Jumps to a category, sliding it in from the side it comes from. */
+  function go(id: string) {
+    const cats = [...list.current!.querySelectorAll<HTMLElement>("[data-cat]")];
+    const from = cats.indexOf(current()!);
+    const to = cats.findIndex((c) => c.dataset.cat === id);
+    if (to < 0 || to === from) return settle();
+    cats[to]!.scrollIntoView({ block: "start" });
+    settle(`translateX(${to > from ? 48 : -48}px)`);
+  }
+
+  function horizontal(t: { clientX: number; clientY: number } | undefined, min: number) {
     const start = touch.current;
-    touch.current = null;
-    const t = e.changedTouches[0];
-    if (!start || !t || q) return;
+    if (!start || !t || q) return 0;
     const dx = t.clientX - start.x;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(t.clientY - start.y) * 1.5) return;
+    return Math.abs(dx) >= min && Math.abs(dx) >= Math.abs(t.clientY - start.y) * 1.5 ? dx : 0;
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    const dx = horizontal(e.touches[0], 12);
+    if (!dx) return;
+    list.current!.style.transform = `translateX(${dx * 0.35}px)`;
+    list.current!.style.opacity = String(1 - Math.min(Math.abs(dx) / 400, 0.4));
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    const dx = horizontal(e.changedTouches[0], 50);
+    touch.current = null;
+    if (!dx) return list.current!.style.transform && settle();
     const cats = [...list.current!.querySelectorAll<HTMLElement>("[data-cat]")];
     const to = cats[cats.indexOf(current()!) + (dx < 0 ? 1 : -1)];
-    to?.scrollIntoView({ block: "start" });
+    if (to) go(to.dataset.cat!);
+    else settle();
   }
 
   function pick(emoji: string) {
@@ -94,7 +125,7 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
               type="button"
               data-tab={s.id}
               onMouseDown={(e) => e.preventDefault()}
-              onClick={() => list.current?.querySelector(`[data-cat="${s.id}"]`)?.scrollIntoView({ block: "start" })}
+              onClick={() => go(s.id)}
               aria-label={s.label ?? undefined}
               title={s.label ?? undefined}
               className={`grid size-8 shrink-0 place-items-center rounded-lg text-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 ${
@@ -111,7 +142,9 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
         ref={list}
         onScroll={onScroll}
         onTouchStart={(e) => (touch.current = { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY })}
+        onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
         className="relative min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-1.5 pb-1.5 select-none"
       >
         {sections.map((s) => (

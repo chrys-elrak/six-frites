@@ -4,6 +4,7 @@ import { Search, X } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
@@ -65,7 +66,27 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
     ...(categories as { title: string; data: Emoji[] }[]).map((c) => ({ id: c.title, icon: c.data[0]?.e ?? "" })),
   ];
   const moved = useRef(0);
+  const dx = useSharedValue(0);
+  const sliding = useAnimatedStyle(() => ({
+    transform: [{ translateX: dx.value }],
+    opacity: 1 - Math.min(Math.abs(dx.value) / 200, 0.5),
+  }));
   const latest = useLatest({ tabs, tab });
+
+  /** Shows another category, sliding it in from the side it comes from. */
+  function go(id: string) {
+    const { tabs, tab } = latest.current;
+    const from = tabs.findIndex((x) => x.id === tab);
+    const to = tabs.findIndex((x) => x.id === id);
+    if (to < 0 || to === from) {
+      dx.set(withTiming(0, { duration: 200 }));
+      return;
+    }
+    setTab(id);
+    dx.set(to > from ? 60 : -60);
+    dx.set(withTiming(0, { duration: 240 }));
+  }
+
   const swipe = usePanGesture({
     enabled: !query,
     runOnJS: true,
@@ -73,13 +94,14 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
     failOffsetY: [-12, 12],
     onUpdate: (e) => {
       moved.current = e.translationX;
+      dx.set(e.translationX * 0.4);
     },
     onFinalize: () => {
       const { tabs, tab } = latest.current;
       const at = tabs.findIndex((x) => x.id === tab);
       const to = tabs[moved.current <= -50 ? at + 1 : moved.current >= 50 ? at - 1 : -1];
       moved.current = 0;
-      if (to) setTab(to.id);
+      go(to?.id ?? tab);
     },
   });
 
@@ -111,7 +133,7 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
           style={{ flexGrow: 0 }}
           renderItem={({ item }) => (
             <Pressable
-              onPress={() => setTab(item.id)}
+              onPress={() => go(item.id)}
               accessibilityLabel={labels[item.id] ?? tr.composer.recent}
               style={[styles.tab, tab === item.id && { borderBottomColor: brand }]}
             >
@@ -122,28 +144,30 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
       )}
 
       <GestureDetector gesture={swipe}>
-        <FlatList
-          key={query ? "search" : tab}
-          data={data}
-          numColumns={COLUMNS}
-          keyExtractor={(e, i) => `${e}:${i}`}
-          keyboardShouldPersistTaps="handled"
-          initialNumToRender={64}
-          style={{ height }}
-          contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
-          ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => pick(item)}
-              style={({ pressed }) => [
-                { width: cell, height: cell, alignItems: "center", justifyContent: "center", borderRadius: 8 },
-                pressed && { backgroundColor: t.pressed },
-              ]}
-            >
-              <Text style={{ fontSize: cell * 0.6 }}>{item}</Text>
-            </Pressable>
-          )}
-        />
+        <Animated.View style={sliding}>
+          <FlatList
+            key={query ? "search" : tab}
+            data={data}
+            numColumns={COLUMNS}
+            keyExtractor={(e, i) => `${e}:${i}`}
+            keyboardShouldPersistTaps="handled"
+            initialNumToRender={64}
+            style={{ height }}
+            contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
+            ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => pick(item)}
+                style={({ pressed }) => [
+                  { width: cell, height: cell, alignItems: "center", justifyContent: "center", borderRadius: 8 },
+                  pressed && { backgroundColor: t.pressed },
+                ]}
+              >
+                <Text style={{ fontSize: cell * 0.6 }}>{item}</Text>
+              </Pressable>
+            )}
+          />
+        </Animated.View>
       </GestureDetector>
     </View>
   );
