@@ -125,7 +125,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {rail && brand}
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex ${wide ? "md:flex-1" : `md:shrink-0 ${rail ? "md:w-20" : "md:w-100 md:border-r lg:w-116"}`} dark:border-white/10 ${glass}`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex ${wide ? "md:flex-1" : `md:shrink-0 ${rail ? "md:w-20" : "md:w-100 md:shadow-[inset_-1px_0_0_rgb(0_0_0/0.05)] lg:w-116 md:dark:shadow-[inset_-1px_0_0_rgb(255_255_255/0.1)]"}`} dark:border-white/10 ${glass}`}
           >
             {!rail && brand}
             <div className="flex min-h-0 flex-1 flex-col md:flex-row">

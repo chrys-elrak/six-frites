@@ -4,6 +4,8 @@ import {
   type ChatDTO,
   type ContactDTO,
   CHAT_FILTERS,
+  DEFAULT_CHAT_THEME,
+  chatTheme,
   type ChatFilter,
   inChatFilter,
   isFrozen,
@@ -189,6 +191,8 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   const frozen = isFrozen(chat);
   const online = usePresence(chat.group || peer.id === meId || frozen ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
+  const look = active ? chatTheme(chat.theme) : null;
+  const wash = look && chat.theme && chat.theme !== DEFAULT_CHAT_THEME ? look : null;
   const badge = unread && (
     <span
       className={`grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold ${
@@ -216,10 +220,37 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
           href={`/chats/${chat.id}`}
           {...press}
           title={rail ? chat.title : undefined}
-          className={`flex items-center gap-3 transition ${rail ? "justify-center py-2" : "px-4 py-3"} [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
-            active ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/[0.03] dark:hover:bg-white/5"
+          style={
+            look
+              ? ({
+                  "--wash": `linear-gradient(135deg, ${look.light.colors.join(", ")})`,
+                  "--wash-dark": `linear-gradient(135deg, ${look.dark.colors.join(", ")})`,
+                  "--notch": look.light.colors[0],
+                  "--notch-dark": look.dark.colors[0],
+                  "--accent": look.light.bubble,
+                  "--accent-dark": look.dark.bubble,
+                } as React.CSSProperties)
+              : undefined
+          }
+          className={`relative flex items-center gap-3 transition ${rail ? "justify-center py-2" : "px-4 py-3"} [-webkit-touch-callout:none] active:bg-black/5 pointer-coarse:select-none dark:active:bg-white/10 ${
+            wash
+              ? "bg-(image:--wash) dark:bg-(image:--wash-dark)"
+              : active
+                ? "bg-black/5 dark:bg-white/10"
+                : "hover:bg-black/[0.03] dark:hover:bg-white/5"
           }`}
         >
+          {look && (
+            <>
+              <span className="absolute inset-y-3 left-0 hidden w-1 rounded-r-full bg-(--accent) md:block dark:bg-(--accent-dark)" />
+              {!rail && (
+                <svg viewBox="0 0 14 28" aria-hidden className="absolute top-1/2 right-0 hidden h-7 w-3.5 -translate-y-1/2 text-black/15 md:block dark:text-white/25">
+                  <path d="M14 0 L1 14 L14 28 Z" className="fill-(--notch) dark:fill-(--notch-dark)" />
+                  <path d="M14 0 L1 14 L14 28" fill="none" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+                </svg>
+              )}
+            </>
+          )}
           <span className="relative shrink-0">
             {chat.group ? (
               <Avatar user={peer} size={rail ? "sm" : "md"} />
