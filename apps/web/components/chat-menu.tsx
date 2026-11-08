@@ -344,7 +344,7 @@ export function ChatMenu({
               ...(chat.withSupport
                 ? []
                 : [{ label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn, onSelect: () => settings({ safeView: !chat.safeView }) }]),
-              ...(chat.withSupport || frozen
+              ...(chat.withSupport || frozen || chat.group?.myRole === "member"
                 ? []
                 : [
                     {

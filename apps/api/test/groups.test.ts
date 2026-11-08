@@ -242,6 +242,18 @@ describe("groups", () => {
     ]);
   });
 
+  it("leaves the background and auto-delete to admins", async () => {
+    const owner = await signUp("owner");
+    const group = await newGroup(owner, { maxMembers: 10 });
+    const ana = await signUp("ana");
+    await join(ana, group.group.inviteCode, "#A0A0A0");
+    for (const body of [{ theme: "ketchup" }, { autoDeleteSecs: 86400 }]) {
+      expect((await call(ana, "PATCH", `/v1/chats/${group.id}`, body)).json().error.code).toBe("NOT_GROUP_ADMIN");
+    }
+    expect((await call(ana, "PATCH", `/v1/chats/${group.id}`, { muted: true })).statusCode).toBe(200);
+    expect((await call(owner, "PATCH", `/v1/chats/${group.id}`, { autoDeleteSecs: 86400 })).json().autoDeleteSecs).toBe(86400);
+  });
+
   it("lets admins keep the link to themselves", async () => {
     const owner = await signUp("owner");
     const group = await newGroup(owner, { maxMembers: 10 });

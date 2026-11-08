@@ -342,6 +342,9 @@ export async function updateChat(
     }
     if (vanish !== undefined && vanish !== chat.vanish) actions.push({ type: "vanish", on: vanish });
     if (theme !== undefined && theme !== chat.theme) actions.push({ type: "theme", theme });
+    if (chat.type === "group" && me.role === "member" && actions.length) {
+      throw new AppError("NOT_GROUP_ADMIN", "Only a group's owner and admins can change its background or auto-delete");
+    }
     const pinning = pin
       ? await tx.message.findFirst({
           where: {
