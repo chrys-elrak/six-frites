@@ -217,6 +217,7 @@ const albumItem = (r: Pick<MsgRow, "key" | "message" | "attachment" | "spoiler">
 type Row =
   | { kind: "day"; key: string; at: string }
   | { kind: "unread"; key: string }
+  | { kind: "comments"; key: string; count: number }
   | { kind: "service"; key: string; message: MessageDTO }
   | MsgRow;
 
@@ -1367,10 +1368,12 @@ export const MessageList = forwardRef<
       ),
     );
     const ordered = useMemo(() => shown.slice().reverse(), [shown]);
-    const rows = useMemo(
-      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish).reverse(),
-      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish],
-    );
+    const rows = useMemo(() => {
+      const built = buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish).reverse();
+      const at = root ? built.findIndex((r) => r.kind === "msg" && r.id === root.id) : -1;
+      if (at >= 0) built.splice(at, 0, { kind: "comments", key: "comments", count: root!.thread?.count ?? 0 });
+      return built;
+    }, [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish, root]);
     useEffect(() => {
       pickOrder.current = rows.flatMap((r) => (r.kind === "msg" && r.message && r.id ? [r.id] : []));
     }, [rows]);
@@ -1642,6 +1645,16 @@ export const MessageList = forwardRef<
                 <View style={styles.day}>
                   <Text style={[styles.dayText, styles.onWallpaper]}>{dayLabel(row.at)}</Text>
                 </View>
+              ) : row.kind === "comments" ? (
+                <View style={styles.commentsDivider}>
+                  <View style={styles.commentsLine} />
+                  <View style={[styles.serviceChip, styles.onWallpaper]}>
+                    <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
+                      {row.count ? tr.groups.comments(row.count) : tr.groups.noComments}
+                    </Text>
+                  </View>
+                  <View style={styles.commentsLine} />
+                </View>
               ) : row.kind === "unread" ? (
                 <View style={styles.service}>
                   <View style={[styles.serviceChip, styles.onWallpaper]}>
@@ -1853,6 +1866,8 @@ export const MessageList = forwardRef<
 );
 
 const styles = StyleSheet.create({
+  commentsDivider: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingVertical: 10 },
+  commentsLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(0,0,0,0.25)" },
   commentsLink: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingTop: 2 },
   roleBadge: {
     color: brand,

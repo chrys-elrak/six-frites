@@ -206,6 +206,7 @@ const albumItem = (r: Pick<MsgRow, "key" | "message" | "attachment" | "spoiler">
 type Row =
   | { kind: "day"; key: string; at: string }
   | { kind: "unread"; key: string }
+  | { kind: "comments"; key: string; count: number }
   | { kind: "service"; key: string; message: MessageDTO }
   | MsgRow;
 
@@ -1314,10 +1315,12 @@ export const MessageList = forwardRef<
       () => [...(root ? [root] : []), ...(messages.data?.pages.flatMap((p) => p.items) ?? []).slice().reverse()],
       [messages.data, root],
     );
-    const rows = useMemo(
-      () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish),
-      [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish],
-    );
+    const rows = useMemo(() => {
+      const built = buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish);
+      const at = root ? built.findIndex((r) => r.kind === "msg" && r.id === root.id) : -1;
+      if (at >= 0) built.splice(at + 1, 0, { kind: "comments", key: "comments", count: root!.thread?.count ?? 0 });
+      return built;
+    }, [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish, root]);
     useEffect(() => {
       pickOrder.current = rows.flatMap((r) => (r.kind === "msg" && r.message && r.id ? [r.id] : []));
     }, [rows]);
@@ -1631,6 +1634,14 @@ export const MessageList = forwardRef<
                 <span className="rounded-full bg-black/25 px-3 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
                   {dayLabel(row.at)}
                 </span>
+              </div>
+            ) : row.kind === "comments" ? (
+              <div key={row.key} className="flex items-center gap-3 px-4 py-3">
+                <span className="h-px flex-1 bg-black/15 dark:bg-white/15" />
+                <span className="rounded-full bg-black/25 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                  {row.count ? tr.groups.comments(row.count) : tr.groups.noComments}
+                </span>
+                <span className="h-px flex-1 bg-black/15 dark:bg-white/15" />
               </div>
             ) : row.kind === "unread" ? (
               <div key={row.key} className="flex justify-center py-2">

@@ -40,6 +40,7 @@ export function ThreadScreen({
     .data?.pages.flatMap((p) => p.items)
     .find((m) => m.id === threadId);
   const closed = root?.thread?.closed ?? false;
+  const count = root?.thread?.count ?? 0;
 
   return (
     <Modal animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
@@ -47,7 +48,13 @@ export function ThreadScreen({
         <ChatBackground themeId={chat.theme} />
         <ScreenHeader background={t.bar}>
           <IconButton Icon={ChevronLeft} label={tr.common.close} size={26} onPress={onClose} />
-          <Text style={[styles.title, { color: t.text }]}>{tr.groups.commentsTitle}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.title, { color: t.text }]}>{tr.groups.commentsTitle}</Text>
+            <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12 }}>
+              {closed ? "🔒 " : ""}
+              {count ? tr.groups.comments(count) : tr.groups.noComments} · {chat.title}
+            </Text>
+          </View>
         </ScreenHeader>
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <View style={{ flex: 1 }}>
@@ -77,7 +84,7 @@ export function ThreadScreen({
 }
 
 const styles = StyleSheet.create({
-  title: { flex: 1, fontSize: 18, fontWeight: "700" },
+  title: { fontSize: 18, fontWeight: "700" },
   closed: {
     flexDirection: "row",
     alignItems: "center",
