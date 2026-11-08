@@ -2,7 +2,7 @@
 
 import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronsUpDown, Images, Lock, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react";
+import { Bell, BellOff, ChevronLeft, ChevronsUpDown, Images, Lock, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -91,6 +91,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
+  const [muting, setMuting] = useState(false);
   const [editing, setEditing] = useState(false);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("info")) return;
@@ -252,7 +253,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                   aria-label={app || c.group ? c.title : tr.chat.editContact(c.title)}
                 >
                   <Avatar user={peer} online={shownPresence?.online} />
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0 flex-1 max-sm:hidden">
                     <span className="flex items-center gap-1 font-semibold">
                       <span className="truncate">{c.title}</span>
                       {c.supportDesk && (
@@ -310,6 +311,14 @@ function OpenConversation({ chatId }: { chatId: string }) {
                       className={iconButton}
                     >
                       <Images className="size-5" />
+                    </button>
+                    <button
+                      onClick={() => (muted ? void updateChatSettings(qc, chatId, { muted: false }).catch(() => null) : setMuting(true))}
+                      aria-label={muted ? tr.common.unmute : tr.common.mute}
+                      title={muted ? tr.common.unmute : tr.common.mute}
+                      className={iconButton}
+                    >
+                      {muted ? <BellOff className="size-5" /> : <Bell className="size-5" />}
                     </button>
                   </>
                 )}
@@ -430,12 +439,14 @@ function OpenConversation({ chatId }: { chatId: string }) {
         <ChatMenu
           chat={c}
           peerName={peer.displayName}
+          muteIcon={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
         />
       )}
+      {muting && <ChatMenu chat={c} peerName={peer.displayName} start="mute" onClose={() => setMuting(false)} />}
       {shared && (
         <SharedMedia
           chat={c}

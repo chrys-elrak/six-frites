@@ -101,6 +101,8 @@ export function ChatMenu({
   onSharedMedia,
   onGroupInfo,
   at,
+  start,
+  muteIcon,
 }: {
   chat: ChatDTO;
   peerName: string;
@@ -110,6 +112,10 @@ export function ChatMenu({
   onChooseMessages?: () => void;
   onSharedMedia?: (tab: "search" | "media") => void;
   at?: { x: number; y: number };
+  /** Opens straight on a sub-menu, like the mute durations from the header's bell. */
+  start?: "mute";
+  /** The header shows mute as an icon, so the menu leaves it out. */
+  muteIcon?: boolean;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -126,7 +132,7 @@ export function ChatMenu({
     | "block"
     | "removeContact"
     | "poke"
-  >("menu");
+  >(start ?? "menu");
   const [range, setRange] = useState<Range | undefined>(undefined);
   const meId = useSession((s) => s.user?.id);
   const peerId = chat.members.find((m) => m.user.id !== meId)?.user.id;
@@ -339,12 +345,16 @@ export function ChatMenu({
             ]
           : []),
         { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-        isMuted(chat)
-          ? {
-              label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
-              onSelect: () => settings({ muted: false }),
-            }
-          : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") },
+        ...(muteIcon
+          ? []
+          : [
+              isMuted(chat)
+                ? {
+                    label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
+                    onSelect: () => settings({ muted: false }),
+                  }
+                : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") },
+            ]),
         {
           label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
           onSelect: () => settings({ archived: !chat.archived }),

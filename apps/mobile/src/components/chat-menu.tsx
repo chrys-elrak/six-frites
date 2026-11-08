@@ -37,6 +37,7 @@ export function ChatMenu({
   onDeleted,
   onChooseMessages,
   onSharedMedia,
+  muteIcon,
   onGroupInfo,
 }: {
   chat: ChatDTO;
@@ -47,6 +48,8 @@ export function ChatMenu({
   onDeleted?: (scope: DeleteScope) => void;
   onChooseMessages?: () => void;
   onSharedMedia?: (tab: "search" | "media") => void;
+  /** The header shows mute as an icon, so the menu leaves it out. */
+  muteIcon?: boolean;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -258,7 +261,7 @@ export function ChatMenu({
             ]
           : []),
         { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-        { label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) },
+        ...(muteIcon ? [] : [{ label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) }]),
         {
           label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
           onSelect: () => settings({ archived: !chat.archived }),

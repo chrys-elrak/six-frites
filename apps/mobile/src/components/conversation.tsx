@@ -1,9 +1,9 @@
 import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, ChevronsUpDown, Images, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
+import { Bell, BellOff, ChevronLeft, ChevronsUpDown, Images, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
+import { AppState, BackHandler, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
@@ -96,6 +96,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
+  const narrow = useWindowDimensions().width < 480;
   const { info } = useLocalSearchParams<{ info?: string }>();
   const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
@@ -243,7 +244,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
             style={({ pressed }) => [styles.peer, pressed && { backgroundColor: t.pressed }]}
           >
             <Avatar user={peer} online={!!presence?.online} />
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, display: narrow ? "none" : "flex" }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Text numberOfLines={1} style={[styles.title, { color: t.text, flexShrink: 1 }]}>
                   {c.title}
@@ -292,6 +293,11 @@ function OpenConversation({ chatId }: { chatId: string }) {
                   setSearchFor("");
                   setShared("media");
                 }}
+              />
+              <IconButton
+                Icon={c.muted ? BellOff : Bell}
+                label={c.muted ? tr.common.unmute : tr.common.mute}
+                onPress={() => void updateChatSettings(qc, chatId, { muted: !c.muted }).catch(() => null)}
               />
             </>
           )}
@@ -368,6 +374,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
           chat={c}
           peerName={peer.displayName}
           peerId={peer.id}
+          muteIcon={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
