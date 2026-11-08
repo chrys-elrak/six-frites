@@ -23,6 +23,7 @@ import { Referrals } from "./invites";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
 import { QuickReactionsSettings } from "./reactions";
+import { AllTips } from "./tip-card";
 import { TourAgain } from "./tour";
 import { WhatsNew } from "./whats-new";
 import { Card, SectionTitle, Toggle } from "./ui";
@@ -195,6 +196,7 @@ export function SettingsPanel() {
           <AndroidDownload />
           <WhatsNew />
           <TourAgain />
+          <AllTips />
           <LanguagePicker />
           <ThemePicker />
           <FontPicker />

@@ -1,6 +1,8 @@
 const en = {
   title: "Tip",
   next: "Got it",
+  all: "All tips",
+  allHint: (n: number) => `${n} little things that make Six Frites easier.`,
   list: [
     "Swipe a chat to the right to pin it on top, or to the left to archive it.",
     "Pull the chat list down to find the chats you archived.",
@@ -63,6 +65,8 @@ const en = {
 const fr: typeof en = {
   title: "Astuce",
   next: "Compris",
+  all: "Toutes les astuces",
+  allHint: (n) => `${n} petites choses qui rendent Six Frites plus simple.`,
   list: [
     "Glissez une discussion vers la droite pour l'épingler en haut, ou vers la gauche pour l'archiver.",
     "Tirez la liste des discussions vers le bas pour retrouver celles que vous avez archivées.",
@@ -125,6 +129,8 @@ const fr: typeof en = {
 const mg: typeof en = {
   title: "Torohevitra",
   next: "Azoko",
+  all: "Torohevitra rehetra",
+  allHint: (n) => `Zavatra kely ${n} manamora ny Six Frites.`,
   list: [
     "Ataovy miankavanana ny resaka iray mba hametrahana azy eo ambony, na miankavia mba hanafenana azy.",
     "Sintony midina ny lisitry ny resaka mba hahitana ireo nafeninao.",

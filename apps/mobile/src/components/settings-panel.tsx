@@ -41,6 +41,7 @@ import { Sheet } from "./sheet";
 import { Card, Divider, Notice, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
 import { BrandBar } from "./brand-bar";
+import { AllTips } from "./tip-card";
 import { TourAgain } from "./tour";
 import { WhatsNew } from "./whats-new";
 
@@ -669,6 +670,7 @@ export function SettingsPanel() {
         <ProfileCard />
         <WhatsNew />
         <TourAgain />
+        <AllTips />
         <LanguagePicker />
         <ThemePicker />
         <FontPicker />
