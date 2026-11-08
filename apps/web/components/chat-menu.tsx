@@ -373,7 +373,9 @@ export function ChatMenu({
                       ? []
                       : chat.blockedByMe
                         ? [{ label: tr.common.unblock, onSelect: () => block(false) }]
-                        : [{ label: tr.common.block, destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+                        : chat.blockedByThem
+                          ? []
+                          : [{ label: tr.common.block, destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
                     { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
                   ]),
             ]
