@@ -1,8 +1,9 @@
 "use client";
 
 import type { ChatDTO } from "@six/shared";
-import { ChevronLeft, Lock } from "lucide-react";
+import { ChevronLeft, Lock, LockOpen } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
+import { setCommentsClosed } from "@/lib/actions";
 import { useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { BubbleColors, ChatBackground } from "./chat-background";
@@ -40,6 +41,7 @@ export function ThreadPanel({
     .find((m) => m.id === threadId);
   const count = root?.thread?.count ?? 0;
   const closed = root?.thread?.closed ?? false;
+  const admin = !!chat.group && chat.group.myRole !== "member";
 
   useEffect(() => {
     panel.current?.animate([{ transform: away() }, { transform: "none" }], { duration: 260, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
@@ -85,6 +87,17 @@ export function ThreadPanel({
             {count ? tr.groups.comments(count) : tr.groups.noComments} · {chat.title}
           </p>
         </div>
+        {admin && root && (
+          <button
+            type="button"
+            onClick={() => void setCommentsClosed(threadId, !closed).catch(() => null)}
+            aria-label={closed ? tr.groups.reopenComments : tr.groups.closeComments}
+            title={closed ? tr.groups.reopenComments : tr.groups.closeComments}
+            className={`grid size-10 shrink-0 place-items-center rounded-full hover:bg-stone-200 dark:hover:bg-stone-800 ${closed ? "text-brand" : "text-stone-600 dark:text-stone-300"}`}
+          >
+            {closed ? <LockOpen className="size-5" /> : <Lock className="size-5" />}
+          </button>
+        )}
       </header>
       <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
         <MessageList ref={list} chat={chat} meId={meId} onSeen={noop} threadId={threadId} />

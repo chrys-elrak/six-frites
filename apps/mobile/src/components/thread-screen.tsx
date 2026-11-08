@@ -1,13 +1,14 @@
 import type { ChatDTO } from "@six/shared";
-import { ChevronLeft, Lock } from "lucide-react-native";
+import { ChevronLeft, Lock, LockOpen } from "lucide-react-native";
 import { useRef } from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type BubbleColors, BubbleColorsContext } from "@/lib/bubble-colors";
+import { setCommentsClosed } from "@/lib/actions";
 import { useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
-import { useTheme } from "@/lib/theme";
+import { brand, useTheme } from "@/lib/theme";
 import { ChatBackground } from "./chat-background";
 import { Composer } from "./composer";
 import { MessageList, type MessageListHandle } from "./message-list";
@@ -41,6 +42,7 @@ export function ThreadScreen({
     .find((m) => m.id === threadId);
   const closed = root?.thread?.closed ?? false;
   const count = root?.thread?.count ?? 0;
+  const admin = !!chat.group && chat.group.myRole !== "member";
 
   return (
     <Modal animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
@@ -55,6 +57,14 @@ export function ThreadScreen({
               {count ? tr.groups.comments(count) : tr.groups.noComments} · {chat.title}
             </Text>
           </View>
+          {admin && root && (
+            <IconButton
+              Icon={closed ? LockOpen : Lock}
+              label={closed ? tr.groups.reopenComments : tr.groups.closeComments}
+              color={closed ? brand : undefined}
+              onPress={() => void setCommentsClosed(threadId, !closed).catch(() => null)}
+            />
+          )}
         </ScreenHeader>
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <View style={{ flex: 1 }}>
