@@ -3,7 +3,7 @@ import { unwrap } from "@six/sdk";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { insertMessage } from "@/lib/chats";
 import { getLocale, useT } from "@/lib/i18n";
@@ -14,14 +14,32 @@ import { HowToPlay } from "./how-to-play";
 import { playHref } from "./live";
 import { Text } from "./text";
 
-function GameCard({ game, emoji, title, onPress }: { game: BotGame | LiveGame; emoji: string; title: string; onPress: () => void }) {
+/** As tall as the emoji panel, where a phone's keyboard would be. */
+const HEIGHT = 300;
+const PAD = 12;
+const GAP = 8;
+const MIN_CARD = 100;
+
+function GameCard({
+  game,
+  emoji,
+  title,
+  width,
+  onPress,
+}: {
+  game: BotGame | LiveGame;
+  emoji: string;
+  title: string;
+  width: number;
+  onPress: () => void;
+}) {
   const t = useTheme();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={title}
-      style={({ pressed }) => [styles.card, { borderColor: t.border }, pressed && { backgroundColor: t.pressed }]}
+      style={({ pressed }) => [styles.card, { width, borderColor: t.border }, pressed && { backgroundColor: t.pressed }]}
     >
       <Text style={styles.emoji}>{emoji}</Text>
       <Text numberOfLines={2} style={[styles.title, { color: t.text }]}>
@@ -43,6 +61,9 @@ export function BotGames() {
   const tr = useT();
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const columns = Math.max(1, Math.floor((width - PAD * 2 + GAP) / (MIN_CARD + GAP)));
+  const cardWidth = (width - PAD * 2 - GAP * (columns - 1)) / columns;
   const { realtime } = useRealtime();
   const [mine, setMine] = useState<Omit<LiveInviteDTO, "from">[]>([]);
 
@@ -69,21 +90,17 @@ export function BotGames() {
     if (res?.ok) router.push(playHref(res.data.id));
   }
 
-  const heading = (text: string) => (
-    <View style={styles.heading}>
-      <Text style={[styles.headingText, { color: t.muted }]}>{text}</Text>
-    </View>
-  );
+  const heading = (text: string) => <Text style={[styles.heading, { color: t.muted }]}>{text}</Text>;
 
   return (
     <View style={{ backgroundColor: t.surface, borderTopColor: t.border, borderTopWidth: StyleSheet.hairlineWidth, paddingBottom: insets.bottom }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+      <ScrollView style={{ height: HEIGHT }} contentContainerStyle={styles.grid}>
         {mine.map((r) => (
           <Pressable
             key={r.roomId}
             onPress={() => router.push(playHref(r.roomId))}
             accessibilityRole="button"
-            style={[styles.card, styles.resume]}
+            style={[styles.card, styles.resume, { width: cardWidth }]}
           >
             <Text style={styles.emoji}>{LIVE_EMOJI[r.game]}</Text>
             <Text numberOfLines={1} style={[styles.title, { color: t.text }]}>
@@ -94,11 +111,11 @@ export function BotGames() {
         ))}
         {heading(tr.common.games)}
         {BOT_GAMES.map((g) => (
-          <GameCard key={g} game={g} emoji={GAME_EMOJI[g]} title={tr.calls[g]} onPress={() => start(g)} />
+          <GameCard key={g} game={g} emoji={GAME_EMOJI[g]} title={tr.calls[g]} width={cardWidth} onPress={() => start(g)} />
         ))}
         {heading(tr.live.title)}
         {LIVE_GAMES.map((g) => (
-          <GameCard key={g} game={g} emoji={LIVE_EMOJI[g]} title={tr.live.games[g]} onPress={() => void play(g)} />
+          <GameCard key={g} game={g} emoji={LIVE_EMOJI[g]} title={tr.live.games[g]} width={cardWidth} onPress={() => void play(g)} />
         ))}
       </ScrollView>
     </View>
@@ -106,9 +123,8 @@ export function BotGames() {
 }
 
 const styles = StyleSheet.create({
-  row: { padding: 12, gap: 8, alignItems: "stretch" },
+  grid: { flexDirection: "row", flexWrap: "wrap", padding: PAD, gap: GAP },
   card: {
-    width: 104,
     alignItems: "center",
     gap: 4,
     paddingHorizontal: 8,
@@ -131,15 +147,12 @@ const styles = StyleSheet.create({
   emoji: { fontSize: 30 },
   title: { fontSize: 12, fontWeight: "700", textAlign: "center" },
   help: { position: "absolute", top: -4, right: -4 },
-  heading: { justifyContent: "center", width: 18 },
-  headingText: {
-    width: 120,
-    marginLeft: -51,
+  heading: {
+    width: "100%",
+    paddingTop: 4,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    textAlign: "center",
-    transform: [{ rotate: "-90deg" }],
   },
 });

@@ -13,7 +13,7 @@ import { six } from "@/lib/six";
 import { HowToPlay } from "./how-to-play";
 
 const card =
-  "relative flex w-28 shrink-0 flex-col items-center gap-1 rounded-2xl p-2.5 pt-3 text-center ring-1 transition active:scale-[0.97]";
+  "relative flex w-28 shrink-0 flex-col max-sm:w-auto items-center gap-1 rounded-2xl p-2.5 pt-3 text-center ring-1 transition active:scale-[0.97]";
 
 function GameCard({ game, emoji, title, onPick }: { game: BotGame | LiveGame; emoji: string; title: string; onPick: () => void }) {
   return (
@@ -26,7 +26,8 @@ function GameCard({ game, emoji, title, onPick }: { game: BotGame | LiveGame; em
   );
 }
 
-const heading = "shrink-0 self-center px-1 text-[11px] font-semibold tracking-wide text-stone-500 uppercase [writing-mode:vertical-rl] rotate-180 dark:text-stone-400";
+const heading =
+  "shrink-0 self-center px-1 text-[11px] font-semibold tracking-wide text-stone-500 uppercase [writing-mode:vertical-rl] rotate-180 dark:text-stone-400 max-sm:col-span-full max-sm:self-start max-sm:rotate-0 max-sm:pt-1 max-sm:[writing-mode:horizontal-tb]";
 
 /**
  * What the chat with Six Frites Game shows instead of a message box: live games you're in, the games it plays with
@@ -63,8 +64,8 @@ export function BotGames() {
   }
 
   return (
-    <div className="border-t border-black/5 bg-stone-50/45 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
-      <div className="flex gap-2 overflow-x-auto p-3">
+    <div className="border-t border-black/5 bg-stone-50/45 pb-[env(safe-area-inset-bottom)] max-sm:h-[min(22rem,45dvh)] max-sm:overflow-y-auto backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
+      <div className="flex gap-2 overflow-x-auto p-3 max-sm:grid max-sm:grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] max-sm:overflow-x-visible">
         {mine.map((r) => (
           <Link key={r.roomId} href={`/play/${r.roomId}`} className={`${card} bg-brand/15 ring-brand`}>
             <span className="text-3xl">{LIVE_EMOJI[r.game]}</span>
