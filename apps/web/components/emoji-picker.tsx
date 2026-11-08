@@ -19,13 +19,19 @@ function loadRecent(): string[] {
   }
 }
 
-/** Every emoji, drawn in Noto like the rest of the app: search, recently used first, then each category. */
+/**
+ * Every emoji, drawn in Noto like the rest of the app: search, recently used first, then each category. Swiping the
+ * list sideways jumps to the next or previous category, and the category in view is lit up in the row above.
+ */
 export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
   const tr = useT();
   const labels: Record<string, string> = tr.composer.emojiCategories;
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
   const list = useRef<HTMLDivElement>(null);
+  const tabs = useRef<HTMLDivElement>(null);
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const [active, setActive] = useState<string | null>(null);
   useEffect(() => setRecent(loadRecent()), []);
 
   const q = query.trim().toLowerCase();
@@ -35,6 +41,31 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
         ...(recent.length ? [{ id: "recent", label: tr.composer.recent, items: recent }] : []),
         ...CATEGORIES.map((c) => ({ id: c.title, label: labels[c.title] ?? c.title, items: c.data.map((x) => x.e) })),
       ];
+
+  function current() {
+    const el = list.current!;
+    const cats = [...el.querySelectorAll<HTMLElement>("[data-cat]")];
+    return [...cats].reverse().find((c) => c.offsetTop <= el.scrollTop + 1) ?? cats[0];
+  }
+
+  function onScroll() {
+    const id = current()?.dataset.cat ?? null;
+    if (id === active) return;
+    setActive(id);
+    tabs.current?.querySelector(`[data-tab="${id}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    const start = touch.current;
+    touch.current = null;
+    const t = e.changedTouches[0];
+    if (!start || !t || q) return;
+    const dx = t.clientX - start.x;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(t.clientY - start.y) * 1.5) return;
+    const cats = [...list.current!.querySelectorAll<HTMLElement>("[data-cat]")];
+    const to = cats[cats.indexOf(current()!) + (dx < 0 ? 1 : -1)];
+    to?.scrollIntoView({ block: "start" });
+  }
 
   function pick(emoji: string) {
     onPick(emoji);
@@ -56,16 +87,19 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
         className="mx-2 mt-2 appearance-none rounded-lg bg-stone-100 px-3 py-2 text-[16px] outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-stone-800"
       />
       {!q && (
-        <div className="flex shrink-0 gap-0.5 overflow-x-auto px-1.5 pt-1.5">
+        <div ref={tabs} className="flex shrink-0 gap-0.5 overflow-x-auto px-1.5 pt-1.5">
           {sections.map((s) => (
             <button
               key={s.id}
               type="button"
+              data-tab={s.id}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => list.current?.querySelector(`[data-cat="${s.id}"]`)?.scrollIntoView({ block: "start" })}
               aria-label={s.label ?? undefined}
               title={s.label ?? undefined}
-              className="grid size-8 shrink-0 place-items-center rounded-lg text-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+              className={`grid size-8 shrink-0 place-items-center rounded-lg text-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                (active ?? sections[0]?.id) === s.id ? "bg-stone-100 dark:bg-stone-800" : "opacity-70"
+              }`}
               style={NOTO}
             >
               {s.id === "recent" ? <Clock className="size-4.5" /> : s.items[0]}
@@ -73,7 +107,13 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
           ))}
         </div>
       )}
-      <div ref={list} className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-1.5 select-none">
+      <div
+        ref={list}
+        onScroll={onScroll}
+        onTouchStart={(e) => (touch.current = { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY })}
+        onTouchEnd={onTouchEnd}
+        className="relative min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-1.5 pb-1.5 select-none"
+      >
         {sections.map((s) => (
           <section key={s.id} data-cat={s.id}>
             {s.label && (

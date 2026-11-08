@@ -1,11 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import categories from "@six/shared/emojis.json";
 import { Search, X } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { GestureDetector, GestureHandlerRootView, usePanGesture } from "react-native-gesture-handler";
 import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
+import { useLatest } from "@/lib/latest";
 import { brand, useTheme } from "@/lib/theme";
 import { IconButton } from "./ui";
 
@@ -20,7 +22,10 @@ const COLUMNS = 8;
 
 const all = (categories as { title: string; data: Emoji[] }[]).flatMap((c) => c.data);
 
-/** Search, category tabs and the grid of emoji, remembering the recent ones; with `onClose`, a close button too. */
+/**
+ * Search, category tabs and the grid of emoji, remembering the recent ones; swiping the grid sideways moves to the next
+ * or previous category. With `onClose`, a close button too.
+ */
 export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: string) => void; onClose?: () => void; height?: number }) {
   const t = useTheme();
   const tr = useT();
@@ -59,6 +64,24 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
     ...(recent.length ? [{ id: "recent", icon: "🕘" }] : []),
     ...(categories as { title: string; data: Emoji[] }[]).map((c) => ({ id: c.title, icon: c.data[0]?.e ?? "" })),
   ];
+  const moved = useRef(0);
+  const latest = useLatest({ tabs, tab });
+  const swipe = usePanGesture({
+    enabled: !query,
+    runOnJS: true,
+    activeOffsetX: [-20, 20],
+    failOffsetY: [-12, 12],
+    onUpdate: (e) => {
+      moved.current = e.translationX;
+    },
+    onFinalize: () => {
+      const { tabs, tab } = latest.current;
+      const at = tabs.findIndex((x) => x.id === tab);
+      const to = tabs[moved.current <= -50 ? at + 1 : moved.current >= 50 ? at - 1 : -1];
+      moved.current = 0;
+      if (to) setTab(to.id);
+    },
+  });
 
   return (
     <View>
@@ -98,28 +121,30 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
         />
       )}
 
-      <FlatList
-        key={query ? "search" : tab}
-        data={data}
-        numColumns={COLUMNS}
-        keyExtractor={(e, i) => `${e}:${i}`}
-        keyboardShouldPersistTaps="handled"
-        initialNumToRender={64}
-        style={{ height }}
-        contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
-        ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => pick(item)}
-            style={({ pressed }) => [
-              { width: cell, height: cell, alignItems: "center", justifyContent: "center", borderRadius: 8 },
-              pressed && { backgroundColor: t.pressed },
-            ]}
-          >
-            <Text style={{ fontSize: cell * 0.6 }}>{item}</Text>
-          </Pressable>
-        )}
-      />
+      <GestureDetector gesture={swipe}>
+        <FlatList
+          key={query ? "search" : tab}
+          data={data}
+          numColumns={COLUMNS}
+          keyExtractor={(e, i) => `${e}:${i}`}
+          keyboardShouldPersistTaps="handled"
+          initialNumToRender={64}
+          style={{ height }}
+          contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
+          ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => pick(item)}
+              style={({ pressed }) => [
+                { width: cell, height: cell, alignItems: "center", justifyContent: "center", borderRadius: 8 },
+                pressed && { backgroundColor: t.pressed },
+              ]}
+            >
+              <Text style={{ fontSize: cell * 0.6 }}>{item}</Text>
+            </Pressable>
+          )}
+        />
+      </GestureDetector>
     </View>
   );
 }
@@ -151,10 +176,12 @@ export function EmojiPicker({
       navigationBarTranslucent
       onRequestClose={onClose}
     >
-      <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.3)" }]} onPress={onClose} />
-      <View style={styles.wrap} pointerEvents="box-none">
-        {panel}
-      </View>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.3)" }]} onPress={onClose} />
+        <View style={styles.wrap} pointerEvents="box-none">
+          {panel}
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
