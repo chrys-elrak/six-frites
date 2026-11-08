@@ -91,6 +91,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const messages = useMessages(chatId);
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
+  const [sidebar, setSidebar] = useState<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState(false);
   const [thread, setThread] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -401,6 +402,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                   nameOf={nameOf}
                   scheduledCount={c.scheduledCount}
                   limited={c.support || c.withSupport}
+                  sidebar={sidebar}
                   onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
                   onSearch={(q) => {
                     setSearchFor(q);
@@ -411,6 +413,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
             )}
           </div>
         </div>
+        <div ref={setSidebar} className="chat-colors contents" />
       </div>
 
       {menu && (

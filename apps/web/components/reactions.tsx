@@ -203,7 +203,7 @@ export function ReactionPicker({
           </div>
           {media ? (
             <ExpressionPanel
-              docked
+              place="docked"
               onEmoji={(emoji) => {
                 onPick(emoji);
                 onClose();

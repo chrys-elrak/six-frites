@@ -115,7 +115,7 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
         onChange={(e) => setQuery(e.target.value)}
         autoFocus={window.matchMedia("(pointer: fine)").matches}
         placeholder={tr.composer.searchEmoji}
-        className="mx-2 mt-2 appearance-none rounded-lg bg-stone-100 px-3 py-2 text-[16px] outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-stone-800"
+        className="mx-2 mt-2 appearance-none rounded-lg bg-black/5 px-3 py-2 text-[16px] outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-white/10"
       />
       {!q && (
         <div ref={tabs} className="flex shrink-0 gap-0.5 overflow-x-auto px-1.5 pt-1.5">
@@ -128,8 +128,8 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
               onClick={() => go(s.id)}
               aria-label={s.label ?? undefined}
               title={s.label ?? undefined}
-              className={`grid size-8 shrink-0 place-items-center rounded-lg text-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 ${
-                (active ?? sections[0]?.id) === s.id ? "bg-stone-100 dark:bg-stone-800" : "opacity-70"
+              className={`grid size-8 shrink-0 place-items-center rounded-lg text-lg text-stone-500 hover:bg-black/5 dark:hover:bg-white/10 ${
+                (active ?? sections[0]?.id) === s.id ? "bg-brand/20 text-brand" : "opacity-70"
               }`}
               style={NOTO}
             >
@@ -150,7 +150,7 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
         {sections.map((s) => (
           <section key={s.id} data-cat={s.id}>
             {s.label && (
-              <div className="sticky top-0 z-10 bg-white/80 px-1.5 pt-2 pb-1 text-xs font-medium text-stone-500 backdrop-blur-xl dark:bg-stone-900/80">
+              <div className="sticky top-0 z-10 bg-stone-50/90 px-1.5 pt-2 pb-1 text-xs font-medium text-stone-500 backdrop-blur-xl dark:bg-stone-950/85">
                 {s.label}
               </div>
             )}

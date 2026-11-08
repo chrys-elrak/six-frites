@@ -54,6 +54,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { editMessage, updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
 import { useIsAdmin } from "@/lib/admin";
@@ -144,6 +145,7 @@ export function Composer({
   onSearch,
   limited = false,
   threadId,
+  sidebar,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
@@ -154,6 +156,8 @@ export function Composer({
   limited?: boolean;
   /** Writes comments on this group message instead of in the chat; its draft and reply mode are its own. */
   threadId?: string;
+  /** Where the emoji, sticker and GIF panel opens on a large screen, beside the chat. */
+  sidebar?: HTMLElement | null;
 }) {
   const slot = threadId ? `${chatId}:${threadId}` : chatId;
   const tr = useT();
@@ -176,6 +180,7 @@ export function Composer({
   const [caret, setCaret] = useState(0);
   const [expressions, setExpressions] = useState(false);
   const narrow = useMedia("(width < 48rem)");
+  const beside = useMedia("(width >= 80rem)") && !!sidebar;
   const ref = useRef<RichInputHandle>(null);
   const commands = useRef<CommandBarHandle>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -893,16 +898,26 @@ export function Composer({
               />
             )}
             <EmojiSuggestions {...emoji} className="absolute bottom-full left-0 z-30 mb-2" />
-            {expressions && !narrow && !editing && !limited && (
+            {expressions && !narrow && !editing && !limited && (beside && sidebar ? createPortal(
               <ExpressionPanel
                 onEmoji={insertEmoji}
                 onSticker={(sticker) => sendGifOrSticker({ sticker })}
                 onFoundSticker={(found) => void sendFoundSticker(found)}
                 onGif={(gif) => sendGifOrSticker({ gif })}
                 onClose={() => setExpressions(false)}
-                docked={false}
+                place="side"
+              />,
+              sidebar,
+            ) : (
+              <ExpressionPanel
+                onEmoji={insertEmoji}
+                onSticker={(sticker) => sendGifOrSticker({ sticker })}
+                onFoundSticker={(found) => void sendFoundSticker(found)}
+                onGif={(gif) => sendGifOrSticker({ gif })}
+                onClose={() => setExpressions(false)}
+                place="popover"
               />
-            )}
+            ))}
             <RichInput
               ref={ref}
               value={text}
@@ -1087,7 +1102,7 @@ export function Composer({
           onFoundSticker={(found) => void sendFoundSticker(found)}
           onGif={(gif) => sendGifOrSticker({ gif })}
           onClose={() => setExpressions(false)}
-          docked
+          place="docked"
         />
       )}
       {capture?.kind === "video" && (

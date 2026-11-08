@@ -16,7 +16,7 @@ import { StickerView } from "./sticker";
 
 type Tab = "emoji" | "sticker" | "gif";
 
-const search = "block w-full rounded-xl bg-stone-100 px-3 py-2 text-[16px] outline-none placeholder:text-stone-400 md:text-sm dark:bg-stone-800";
+const search = "block w-full rounded-xl bg-black/5 px-3 py-2 text-[16px] outline-none placeholder:text-stone-400 md:text-sm dark:bg-white/10";
 
 function useDebounced(value: string) {
   const [q, setQ] = useState(value);
@@ -200,15 +200,15 @@ export function ExpressionPanel({
   onFoundSticker,
   onGif,
   onClose,
-  docked,
+  place,
 }: {
   onEmoji: (emoji: string) => void;
   onSticker: (sticker: StickerDTO) => void;
   onFoundSticker: (sticker: GifDTO) => void;
   onGif: (gif: GifDTO) => void;
   onClose: () => void;
-  /** At the bottom of the screen, full width, where a phone's keyboard would be; otherwise a window above the message box. */
-  docked: boolean;
+  /** `docked` at the bottom of the screen, where a phone's keyboard would be; `popover` above the message box; `side` as a sidebar beside the chat. */
+  place: "docked" | "popover" | "side";
 }) {
   const tr = useT();
   const [picked, setPicked] = useState<Tab>("emoji");
@@ -232,9 +232,11 @@ export function ExpressionPanel({
       role="dialog"
       aria-label={tr.composer.expressions}
       className={
-        docked
+        place === "docked"
           ? "relative flex h-[min(22rem,45dvh)] shrink-0 flex-col border-t border-stone-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-stone-800 dark:bg-stone-900"
-          : "absolute right-0 bottom-full z-30 mb-2 flex h-[min(26rem,60dvh)] w-96 flex-col overflow-hidden rounded-2xl bg-white/90 shadow-lg ring-1 ring-stone-200 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/90 dark:ring-stone-800"
+          : place === "side"
+            ? "relative z-10 flex w-96 shrink-0 flex-col border-l border-black/5 bg-stone-50/45 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40"
+            : "absolute right-0 bottom-full z-30 mb-2 flex h-[min(26rem,60dvh)] w-96 flex-col overflow-hidden rounded-2xl bg-white/90 shadow-lg ring-1 ring-stone-200 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/90 dark:ring-stone-800"
       }
     >
       <div role="tablist" className="mx-auto flex w-full max-w-md shrink-0 items-center gap-1 p-2">
@@ -252,6 +254,17 @@ export function ExpressionPanel({
             {t.icon}
           </button>
         ))}
+        {place === "side" && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={tr.common.close}
+            title={tr.common.close}
+            className="grid size-9 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-black/5 dark:hover:bg-white/10"
+          >
+            <X className="size-5" />
+          </button>
+        )}
       </div>
       {tab === "emoji" && <Emojis onPick={onEmoji} />}
       {tab === "sticker" && <Stickers onSticker={onSticker} />}
