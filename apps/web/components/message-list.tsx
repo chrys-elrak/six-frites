@@ -981,7 +981,7 @@ function Bubble({
               {...press}
               onClick={onTap}
               onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
-              className={`${fx ? "relative " : ""}${radius} ${tone} ${dashes} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${fx || (visual && !hasText) ? "relative " : ""}${radius} ${tone} ${dashes} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -1095,6 +1095,12 @@ function Bubble({
                     {row.delivery && <Ticks delivery={row.delivery} pill />}
                   </span>
                 </div>
+              ) : visual && !hasText ? (
+                <span className="pointer-events-none absolute right-2.5 bottom-2.5 flex items-center gap-1 rounded-full bg-stone-900/45 px-2 py-0.5 text-[11px] leading-none text-white">
+                  {row.edited && <span>{tr.messages.edited}</span>}
+                  {clockTime(row.createdAt)}
+                  {row.delivery && <Ticks delivery={row.delivery} pill />}
+                </span>
               ) : inlineVoice ? null : (
                 <p
                   className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""} ${
