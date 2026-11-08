@@ -69,6 +69,7 @@ import { NewGroup } from "./groups";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
+import { TipCard } from "./tip-card";
 import { NewInvite } from "./invites";
 import { FindMe, Invites } from "./settings-panel";
 import { StoriesBar, StoryAvatar } from "./stories";
@@ -444,6 +445,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
     <>
       {!archived && <UpdateBanner />}
       {!archived && <BackupPinBanner />}
+      {!archived && <TipCard />}
       {pulled && view === "chats" && !needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}

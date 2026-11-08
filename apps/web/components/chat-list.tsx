@@ -72,6 +72,7 @@ import { StoriesBar, StoryAvatar } from "./stories";
 import { ChatMenu, PokeDialog } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
 import { InstallCard } from "./install-card";
+import { TipCard } from "./tip-card";
 import { FindMe } from "./find-me";
 import { Invites, NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
@@ -581,6 +582,11 @@ export function ChatList({
       {!archived && !rail && (
         <div className="mx-3 mt-3 empty:hidden">
           <InstallCard dismissible />
+        </div>
+      )}
+      {!archived && !rail && (
+        <div className="mx-3 mt-3 empty:hidden">
+          <TipCard />
         </div>
       )}
 
