@@ -11,6 +11,7 @@ import {
   WIN_BURST,
   dotsScores,
   fanoronaCounts,
+  marketScores,
   memoryScores,
   parseCommand,
 } from "@six/shared";
@@ -49,6 +50,7 @@ import { FanoronaBoard, STONES } from "./fanorona-board";
 import { HowToPlay } from "./how-to-play";
 import { type Play, useMyTurn, useSecondsLeft } from "./live";
 import { LudoBoard } from "./ludo-board";
+import { MarketBoard } from "./market-board";
 import { MemoryBoard } from "./memory-board";
 import { ReflexBoard } from "./reflex-board";
 import { ReactionChips, ReactionPopover } from "./reactions";
@@ -115,11 +117,13 @@ function Seats({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) => 
                     ? tr.live.pairs(memoryScores(view.state)[i] ?? 0)
                     : view?.game === "reflex"
                       ? tr.live.points(view.state.scores[i] ?? 0)
-                      : null;
+                      : view?.game === "market"
+                        ? tr.live.marketFound(marketScores(view.state)[i] ?? 0)
+                        : null;
         const color =
           view?.game === "ludo"
             ? SEAT_COLORS[view.state.colors[i]!]
-            : view?.game === "dots" || view?.game === "memory"
+            : view?.game === "dots" || view?.game === "memory" || view?.game === "market"
               ? SEAT_COLORS[i]
               : view?.game === "fanorona"
                 ? STONES[i]
@@ -641,6 +645,7 @@ export function LiveRoom({ id }: { id: string }) {
                 )}
                 {view?.game === "dots" && <DotsBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
                 {view?.game === "memory" && <MemoryBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
+                {view?.game === "market" && <MarketBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
                 {view?.game === "reflex" && <ReflexBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
               </>
             )}

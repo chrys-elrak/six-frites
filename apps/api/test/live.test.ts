@@ -337,12 +337,12 @@ describe("live rooms", () => {
     await b.ask("live:leave", { roomId: ludo.id });
   });
 
-  it("plays Fanorona, Dots and Boxes and Memory against Frite Bot, two at most for Fanorona", async () => {
+  it("plays Fanorona, Dots and Boxes, Memory and Market Memory against Frite Bot, two at most for Fanorona", async () => {
     const { host, guest } = await makeFriends();
     const p = await player(host);
     const tooMany = await p.ask("live:create", { game: "fanorona", invite: [guest.user.id, host.user.id, "x"], locale: "en" });
     expect(tooMany.ok).toBe(false);
-    for (const game of ["fanorona", "dots", "memory"] as const) {
+    for (const game of ["fanorona", "dots", "memory", "market"] as const) {
       const { data } = await p.ask<LiveRoomDTO>("live:create", { game, invite: [], locale: "en" });
       await p.ask("live:bot", { roomId: data!.id, add: true });
       if (game === "fanorona") expect((await p.ask("live:bot", { roomId: data!.id, add: true })).error!.code).toBe("ROOM_FULL");
@@ -354,7 +354,9 @@ describe("live rooms", () => {
           ? (({ from, to, approach }) => ({ from, to, take: approach.length ? "approach" : "withdraw" }))(fanoronaOptions(view.state, 0)[0]!)
           : game === "dots"
             ? { line: 0 }
-            : { card: 0 };
+            : game === "market"
+              ? { roll: true }
+              : { card: 0 };
       expect((await p.ask("live:move", { roomId: data!.id, move })).ok).toBe(true);
       await p.ask("live:leave", { roomId: data!.id });
     }

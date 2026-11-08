@@ -4282,14 +4282,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -4699,14 +4699,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -5180,14 +5180,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -5658,14 +5658,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -6075,14 +6075,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -6590,14 +6590,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -7007,14 +7007,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -7520,14 +7520,14 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -7937,14 +7937,14 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -8451,14 +8451,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -8868,14 +8868,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -9435,14 +9435,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -9852,14 +9852,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -10430,14 +10430,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -10876,14 +10876,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -11321,14 +11321,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -11762,14 +11762,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -12206,14 +12206,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -12673,14 +12673,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -13113,14 +13113,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -13558,14 +13558,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -13997,14 +13997,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -14436,14 +14436,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -14906,14 +14906,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -15355,14 +15355,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -15846,14 +15846,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -16437,14 +16437,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -17523,14 +17523,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -18549,14 +18549,14 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -18953,14 +18953,14 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -19427,14 +19427,14 @@ export interface paths {
                                             /** @enum {string} */
                                             type: "live_invite";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                             roomId: string;
                                             from: string;
                                         } | {
                                             /** @enum {string} */
                                             type: "live_result";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                             /** @enum {string} */
                                             result: "won" | "lost" | "draw";
                                             /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -19844,14 +19844,14 @@ export interface paths {
                                             /** @enum {string} */
                                             type: "live_invite";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                             roomId: string;
                                             from: string;
                                         } | {
                                             /** @enum {string} */
                                             type: "live_result";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                             /** @enum {string} */
                                             result: "won" | "lost" | "draw";
                                             /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -21274,14 +21274,14 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -24620,14 +24620,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -25037,14 +25037,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -25593,14 +25593,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -26010,14 +26010,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -26544,14 +26544,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -26961,14 +26961,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -27472,14 +27472,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -27889,14 +27889,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -28413,14 +28413,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -28830,14 +28830,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -29379,14 +29379,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -29796,14 +29796,14 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */

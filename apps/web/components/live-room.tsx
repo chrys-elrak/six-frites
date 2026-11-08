@@ -12,6 +12,7 @@ import {
   WIN_BURST,
   dotsScores,
   fanoronaCounts,
+  marketScores,
   memoryScores,
   parseCommand,
 } from "@six/shared";
@@ -35,6 +36,7 @@ import { FanoronaBoard } from "./fanorona-board";
 import { useGifs } from "./gif-picker";
 import { HowToPlay } from "./how-to-play";
 import { LudoBoard } from "./ludo-board";
+import { MarketBoard } from "./market-board";
 import { MemoryBoard } from "./memory-board";
 import { ReflexBoard } from "./reflex-board";
 import { ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
@@ -78,7 +80,9 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
                       ? tr.live.pairs(memoryScores(view.state)[i]!)
                       : view?.game === "reflex"
                         ? tr.live.points(view.state.scores[i]!)
-                        : null;
+                        : view?.game === "market"
+                          ? tr.live.marketFound(marketScores(view.state)[i]!)
+                          : null;
         return (
           <div
             key={i}
@@ -88,7 +92,7 @@ function Players({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) =
           >
             <span className="relative">
               <Face room={room} seat={i} />
-              {(view?.game === "ludo" || view?.game === "dots" || view?.game === "memory") && (
+              {(view?.game === "ludo" || view?.game === "dots" || view?.game === "memory" || view?.game === "market") && (
                 <span
                   className="absolute -right-0.5 -bottom-0.5 size-3.5 rounded-full ring-2 ring-white"
                   style={{ background: SEAT_COLORS[view.game === "ludo" ? view.state.colors[i]! : i] }}
@@ -682,6 +686,13 @@ export function LiveRoom({ roomId }: { roomId: string }) {
                 />
               ) : room.view?.game === "memory" ? (
                 <MemoryBoard
+                  state={room.view.state}
+                  mySeat={room.mySeat}
+                  nameOf={nameOf}
+                  play={(move) => void ask("live:move", { move })}
+                />
+              ) : room.view?.game === "market" ? (
+                <MarketBoard
                   state={room.view.state}
                   mySeat={room.mySeat}
                   nameOf={nameOf}

@@ -99,6 +99,12 @@ const en = {
       "First to tap it wins the point. Tap a wrong one and you're out until the next round.",
       "Inventories shuffle every round. First to 10 points wins.",
     ],
+    market: [
+      "Everyone gets the same 6 foods on cards, face down and in their own order.",
+      "On your turn, roll the die: it shows one of the 6 foods. Then turn over one of your cards.",
+      "Right food? It stays face up and you roll again. Wrong one? It turns back over and it's the next player's turn. Already found that food? Your turn passes.",
+      "Remember where your cards are. The first to find all 6 wins.",
+    ],
     words: [
       "Everyone gets the same 16 letters for 2 minutes.",
       "Make words of 3 letters or more by sliding across touching letters, sideways, up, down or diagonally, each letter once.",
@@ -209,6 +215,12 @@ const fr: typeof en = {
       "Le premier à le toucher gagne le point. Touche le mauvais et tu es éliminé jusqu'à la manche suivante.",
       "Les inventaires sont mélangés à chaque manche. Le premier à 10 points gagne.",
     ],
+    market: [
+      "Chacun a les mêmes 6 aliments sur des cartes, face cachée et dans son propre ordre.",
+      "À ton tour, lance le dé : il montre un des 6 aliments. Puis retourne une de tes cartes.",
+      "Le bon aliment ? Il reste visible et tu relances. Le mauvais ? Il se retourne et c'est au suivant. Déjà trouvé cet aliment ? Ton tour passe.",
+      "Retiens où sont tes cartes. Le premier à trouver les 6 gagne.",
+    ],
     words: [
       "Tout le monde a les mêmes 16 lettres pendant 2 minutes.",
       "Forme des mots de 3 lettres ou plus en glissant sur des lettres voisines, sur les côtés, en haut, en bas ou en diagonale, chaque lettre une seule fois.",
@@ -318,6 +330,12 @@ const mg: typeof en = {
       "Ao amin'ny entanao koa izy: tadiavo ary tsindrio alohan'ny hafa.",
       "Izay voalohany manindry azy no mahazo ny isa. Raha diso no tsindrianao dia miala ianao mandra-pahatongan'ny fihodinana manaraka.",
       "Afangaro isaky ny fihodinana ny entana. Izay mahazo isa 10 voalohany no mandresy.",
+    ],
+    market: [
+      "Samy manana sakafo 6 mitovy eo amin'ny karatra, mitodika ary samy manana ny filaharany.",
+      "Rehefa anjaranao, ario ny dia: sakafo iray amin'ireo 6 no asehony. Avy eo avadiho ny karatrao iray.",
+      "Marina ny sakafo? Mijanona miseho izy ary manary indray ianao. Diso? Miverina mitodika izy ary anjaran'ny manaraka. Efa hitanao io sakafo io? Mandalo ny anjaranao.",
+      "Tadidio ny toeran'ny karatrao. Izay mahita ireo 6 voalohany no mandresy.",
     ],
     words: [
       "Samy mahazo litera 16 mitovy avokoa mandritra ny 2 minitra.",

@@ -6,13 +6,14 @@ import type { EightsView } from "./eights.js";
 import type { FanoronaState } from "./fanorona.js";
 import { LOCALES, type Locale } from "./i18n/index.js";
 import type { LudoState } from "./ludo.js";
+import type { MarketView } from "./market.js";
 import type { MemoryView } from "./memory.js";
 import type { PublicUser } from "./invites.js";
 import type { ReflexState } from "./reflex.js";
 import type { WordsView } from "./word-hunt.js";
 
 /** Games played live in a room, everyone at once, with the server dealing, rolling and keeping time. */
-export const LIVE_GAMES = ["fanorona", "ludo", "eights", "words", "dots", "memory", "reflex"] as const;
+export const LIVE_GAMES = ["fanorona", "ludo", "eights", "words", "dots", "memory", "reflex", "market"] as const;
 export type LiveGame = (typeof LIVE_GAMES)[number];
 
 export const LIVE_EMOJI: Record<LiveGame, string> = {
@@ -23,6 +24,7 @@ export const LIVE_EMOJI: Record<LiveGame, string> = {
   dots: "🔳",
   memory: "🎴",
   reflex: "⚡",
+  market: "🥕",
 };
 
 /** Each seat's colour, the same in every game: red, green, yellow, blue. */
@@ -52,6 +54,7 @@ export const LIVE_SEATS: Record<LiveGame, { min: number; max: number }> = {
   eights: { min: 2, max: 4 },
   words: { min: 1, max: 4 },
   reflex: { min: 2, max: 4 },
+  market: { min: 2, max: 4 },
 };
 
 /** How long someone has for their turn before it's played for them. */
@@ -123,7 +126,8 @@ export type LiveView =
   | { game: "fanorona"; state: FanoronaState }
   | { game: "dots"; state: DotsState }
   | { game: "memory"; state: MemoryView }
-  | { game: "reflex"; state: ReflexState };
+  | { game: "reflex"; state: ReflexState }
+  | { game: "market"; state: MarketView };
 
 /** A room as one person sees it: hidden cards and other people's words stay hidden until the end. */
 export interface LiveRoomDTO {
