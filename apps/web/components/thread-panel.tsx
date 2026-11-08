@@ -67,7 +67,9 @@ export function ThreadPanel({
       aria-label={tr.groups.commentsTitle}
       className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-stone-50 shadow-2xl md:inset-y-0 md:right-0 md:left-auto md:w-[28rem] md:border-l md:border-stone-200 dark:bg-stone-950 md:dark:border-stone-800"
     >
-      <header className="flex items-center gap-1 border-b border-black/5 bg-white/80 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-900/80">
+      <ChatBackground themeId={chat.theme} />
+      <BubbleColors themeId={chat.theme} scope="chat-colors" />
+      <header className="relative flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur-xl backdrop-saturate-150 md:h-16 md:py-0 dark:border-white/10 dark:bg-stone-950/40">
         <button
           type="button"
           onClick={close}
@@ -84,19 +86,15 @@ export function ThreadPanel({
           </p>
         </div>
       </header>
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        <ChatBackground themeId={chat.theme} />
-        <BubbleColors themeId={chat.theme} scope="chat-colors" />
-        <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
-          <MessageList ref={list} chat={chat} meId={meId} onSeen={noop} threadId={threadId} />
-        </div>
+      <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
+        <MessageList ref={list} chat={chat} meId={meId} onSeen={noop} threadId={threadId} />
       </div>
       {closed ? (
-        <p className="flex items-center justify-center gap-2 border-t border-black/5 bg-white/80 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm text-stone-500 backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/80">
+        <p className="relative flex items-center justify-center gap-2 border-t border-black/5 bg-stone-50/45 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm text-stone-500 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
           <Lock className="size-4" /> {tr.groups.commentsClosedHint}
         </p>
       ) : (
-        <div className="chat-colors contents">
+        <div className="chat-colors relative">
           <Composer
             chatId={chat.id}
             threadId={threadId}
