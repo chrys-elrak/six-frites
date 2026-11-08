@@ -21,7 +21,7 @@ export function UpdatePrompt() {
       role="status"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="pointer-events-auto flex w-full max-w-sm animate-[toast-in_180ms_ease-out] items-center gap-3 rounded-2xl bg-white/95 p-3 shadow-lg ring-1 ring-stone-200 backdrop-blur dark:bg-stone-900/95 dark:ring-stone-800">
+      <div className="pointer-events-auto flex w-full max-w-sm animate-[toast-in_180ms_ease-out] items-center gap-3 rounded-2xl bg-white/95 p-3 shadow-lg ring-1 ring-surface-line backdrop-blur dark:bg-stone-900/95">
         <RefreshCw className="size-5 shrink-0 text-brand" />
         <span className="min-w-0 flex-1 text-sm font-medium">{tr.common.newWebVersion}</span>
         <button

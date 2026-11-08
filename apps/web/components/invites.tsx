@@ -225,7 +225,7 @@ export function Invites() {
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.inviteFriends}</SectionTitle>
-      <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+      <Card className="divide-y divide-surface-line overflow-hidden">
         <div className="flex items-center gap-3 p-4">
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm text-stone-600 dark:text-stone-300">{tr.settings.inviteHint}</p>
@@ -234,7 +234,7 @@ export function Invites() {
           </div>
         </div>
         {items.length > 0 && (
-          <div className="divide-y divide-stone-200 lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
+          <div className="divide-y divide-surface-line lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain">
             {items.map((i) => (
               <InviteRow key={i.code} invite={i} onRevoke={() => setRevoking(i.code)} onDelete={() => remove.mutate(i.code)} />
             ))}
@@ -274,7 +274,7 @@ export function Referrals() {
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.joinedWithLinks}</SectionTitle>
-      <Card className="divide-y divide-stone-200 overflow-hidden lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
+      <Card className="divide-y divide-surface-line overflow-hidden lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain">
         {items.map((r) => (
           <div key={r.id} className="flex items-center gap-3 p-4">
             <Avatar user={r.user} />

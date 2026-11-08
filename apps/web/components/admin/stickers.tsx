@@ -96,7 +96,7 @@ function Importer() {
 
   return (
     <form
-      className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800"
+      className="space-y-3 rounded-2xl bg-surface backdrop-blur-md p-4 shadow-sm ring-1 ring-surface-line"
       onSubmit={(e) => {
         e.preventDefault();
         void run();
@@ -258,7 +258,7 @@ export function OfficialStickers() {
       {packs.isPending ? (
         <p className="py-12 text-center text-sm text-stone-500">Loading…</p>
       ) : (
-        <ul className="divide-y divide-stone-100 rounded-2xl bg-white shadow-sm ring-1 ring-stone-200 dark:divide-stone-800 dark:bg-stone-900 dark:ring-stone-800">
+        <ul className="divide-y divide-surface-line rounded-2xl bg-surface backdrop-blur-md shadow-sm ring-1 ring-surface-line">
           {packs.data?.items
             .filter((p) => !p.bannedAt)
             .map((p) => (

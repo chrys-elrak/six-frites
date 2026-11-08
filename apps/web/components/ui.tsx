@@ -4,7 +4,7 @@ import type { Dict } from "@six/shared";
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-2xl bg-white shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800 ${className}`}
+      className={`rounded-2xl bg-surface backdrop-blur-md shadow-sm ring-1 ring-surface-line ${className}`}
     >
       {children}
     </div>

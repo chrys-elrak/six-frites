@@ -30,7 +30,7 @@ export function AndroidDownload({ compact = false }: { compact?: boolean }) {
       href={downloadUrl}
       target="_blank"
       rel="noreferrer"
-      className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-stone-200 hover:bg-stone-50 dark:bg-stone-900 dark:ring-stone-800 dark:hover:bg-stone-800"
+      className="flex items-center gap-3 rounded-2xl bg-surface backdrop-blur-md px-4 py-3 shadow-sm ring-1 ring-surface-line hover:bg-white/80 dark:hover:bg-stone-800/70"
     >
       <Smartphone className="size-5 text-brand" />
       <span className="min-w-0 flex-1">

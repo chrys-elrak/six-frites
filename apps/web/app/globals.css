@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-line: var(--surface-line);
+}
+
 @theme {
   --color-brand: oklch(0.72 0.17 65);
   --color-brand-ink: oklch(0.28 0.06 60);
@@ -7,12 +12,16 @@
 }
 
 :root {
+  --surface: oklch(0.995 0.012 85 / 0.72);
+  --surface-line: oklch(0.55 0.09 60 / 0.16);
   --bubble-their: var(--color-white);
   --bubble-their-ink: var(--color-stone-900);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --surface: oklch(0.216 0.006 56 / 0.72);
+    --surface-line: oklch(1 0 0 / 0.1);
     --bubble-their: var(--color-stone-900);
     --bubble-their-ink: var(--color-stone-100);
   }

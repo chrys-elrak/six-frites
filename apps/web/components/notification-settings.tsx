@@ -54,7 +54,7 @@ export function NotificationSettings() {
   return (
     <section className="space-y-3">
       <SectionTitle>{tr.settings.notifications}</SectionTitle>
-      <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+      <Card className="divide-y divide-surface-line overflow-hidden">
         <Toggle
           label={tr.settings.sound}
           hint={tr.settings.soundHint}

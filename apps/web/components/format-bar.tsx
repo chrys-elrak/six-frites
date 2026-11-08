@@ -46,7 +46,7 @@ export function formatShortcut(e: React.KeyboardEvent): EntityType | undefined {
 }
 
 const glass =
-  "flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl bg-white/70 p-1 shadow-lg ring-1 ring-stone-200 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/70 dark:ring-stone-800";
+  "flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl bg-white/70 p-1 shadow-lg ring-1 ring-surface-line backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/70";
 const item = "grid h-10 min-w-10 shrink-0 place-items-center rounded-lg px-2 text-stone-700 hover:bg-brand/20 dark:text-stone-200";
 const HUES = "linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)";
 const gradientCss = ([a, b]: readonly [string, string]) => `linear-gradient(135deg, ${a}, ${b})`;

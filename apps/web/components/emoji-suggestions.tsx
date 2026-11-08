@@ -69,7 +69,7 @@ export function EmojiSuggestions({
     <div
       role="listbox"
       aria-label={tr.composer.emojiSuggestions}
-      className={`flex max-w-full gap-0.5 overflow-x-auto rounded-xl bg-white/70 p-1 shadow-lg ring-1 ring-stone-200 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/70 dark:ring-stone-800 ${className}`}
+      className={`flex max-w-full gap-0.5 overflow-x-auto rounded-xl bg-white/70 p-1 shadow-lg ring-1 ring-surface-line backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/70 ${className}`}
     >
       {items.map((x, i) => (
         <button

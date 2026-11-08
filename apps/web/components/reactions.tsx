@@ -139,7 +139,7 @@ export function ReactionPopover({
         ref={root}
         data-dismissable
         style={{ top, left, width }}
-        className="reaction-pop chat-colors fixed z-[60] rounded-full bg-white/70 backdrop-blur-xl backdrop-saturate-150 px-1.5 py-1 shadow-xl ring-1 ring-stone-200 dark:bg-stone-900/70 dark:ring-stone-800"
+        className="reaction-pop chat-colors fixed z-[60] rounded-full bg-white/70 backdrop-blur-xl backdrop-saturate-150 px-1.5 py-1 shadow-xl ring-1 ring-surface-line dark:bg-stone-900/70"
       >
         <ReactionBar message={message} meId={meId} onReact={onReact} onMore={onMore} />
       </div>
@@ -271,7 +271,7 @@ function MediaPreview({
         role="dialog"
         aria-label={reactionGlyph(r)}
         style={{ top, left, width }}
-        className="reaction-pop chat-colors fixed z-[60] flex flex-col gap-2 rounded-2xl bg-white/80 p-2 shadow-xl ring-1 ring-stone-200 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/80 dark:ring-stone-800"
+        className="reaction-pop chat-colors fixed z-[60] flex flex-col gap-2 rounded-2xl bg-white/80 p-2 shadow-xl ring-1 ring-surface-line backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/80"
       >
         <div className="grid h-52 place-items-center overflow-hidden rounded-xl bg-black/5 dark:bg-white/5">
           {r.gif || r.sticker ? <ReactionFace r={r} size={208} /> : <AnimatedEmoji emoji={r.emoji} size={160} />}
@@ -427,7 +427,7 @@ function ReactionList({
         role="menu"
         aria-label={tr.messages.allReactions}
         style={{ top, left, width, maxHeight: height }}
-        className="reaction-pop chat-colors fixed z-[60] overflow-y-auto overscroll-contain rounded-2xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-2 shadow-xl ring-1 ring-stone-200 dark:bg-stone-900/70 dark:ring-stone-800"
+        className="reaction-pop chat-colors fixed z-[60] overflow-y-auto overscroll-contain rounded-2xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-2 shadow-xl ring-1 ring-surface-line dark:bg-stone-900/70"
       >
         {reactions.map((r) => {
           const own = r.userIds.includes(meId);

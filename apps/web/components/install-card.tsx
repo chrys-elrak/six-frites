@@ -25,7 +25,7 @@ export function InstallCard({ dismissible = false }: { dismissible?: boolean }) 
   if (!way || hidden) return null;
 
   return (
-    <div className="relative flex gap-3 rounded-2xl bg-white p-4 pr-10 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+    <div className="relative flex gap-3 rounded-2xl bg-surface backdrop-blur-md p-4 pr-10 shadow-sm ring-1 ring-surface-line">
       <img src="/icon-192.png" alt="" className="size-11 shrink-0 rounded-xl" />
       <div className="min-w-0 flex-1 text-sm">
         <p className="font-semibold">{t.installTitle}</p>

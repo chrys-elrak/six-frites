@@ -367,7 +367,7 @@ export function Users() {
         />
       </div>
       {selected.size > 0 && (
-        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-2xl bg-white px-4 py-2.5 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-2xl bg-surface backdrop-blur-md px-4 py-2.5 shadow-sm ring-1 ring-surface-line">
           <span className="flex-1 text-sm font-medium">{selected.size} selected</span>
           <button
             type="button"
@@ -392,7 +392,7 @@ export function Users() {
           </button>
         </div>
       )}
-      <ul className="divide-y divide-stone-100 rounded-2xl bg-white shadow-sm ring-1 ring-stone-200 dark:divide-stone-800 dark:bg-stone-900 dark:ring-stone-800">
+      <ul className="divide-y divide-surface-line rounded-2xl bg-surface backdrop-blur-md shadow-sm ring-1 ring-surface-line">
         {users.isPending && <li className="p-6 text-center text-sm text-stone-500">Loading…</li>}
         {!users.isPending && items.length === 0 && (
           <li className="p-6 text-center text-sm text-stone-500">Nobody matches.</li>

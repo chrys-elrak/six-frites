@@ -100,7 +100,7 @@ function ReportCard({ report }: { report: ReportDTO }) {
     setConfirm([{ label, destructive: true, onSelect: () => void resolve(input) }]);
 
   return (
-    <article className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+    <article className="space-y-3 rounded-2xl bg-surface backdrop-blur-md p-4 shadow-sm ring-1 ring-surface-line">
       <header className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-950 dark:text-red-300">
           {reasonLabel(report.reason)}

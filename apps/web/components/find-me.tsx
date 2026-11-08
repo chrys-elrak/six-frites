@@ -176,10 +176,10 @@ export function FindMe() {
 
       <section className="space-y-3">
         <SectionTitle>{tr.settings.reusableCodes}</SectionTitle>
-        <Card className="divide-y divide-stone-200 overflow-hidden dark:divide-stone-800">
+        <Card className="divide-y divide-surface-line overflow-hidden">
           <p className="p-4 text-sm text-stone-500 dark:text-stone-400">{tr.settings.reusableHint}</p>
           {items.length > 0 && (
-            <div className="divide-y divide-stone-200 lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain dark:divide-stone-800">
+            <div className="divide-y divide-surface-line lg:max-h-80 lg:overflow-y-auto lg:overscroll-contain">
               {items.map((l) => (
                 <CodeRow
                   key={l.code}

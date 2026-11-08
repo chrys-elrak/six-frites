@@ -53,7 +53,7 @@ export function AnonMessages() {
 
   return (
     <section className="space-y-3">
-      <label className="flex items-center gap-2 rounded-xl bg-white px-3 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+      <label className="flex items-center gap-2 rounded-xl bg-surface backdrop-blur-md px-3 ring-1 ring-surface-line">
         <Search className="size-4 text-stone-400" />
         <input
           value={input}
@@ -67,7 +67,7 @@ export function AnonMessages() {
       {items.map((m) => {
         const link = askUrl(window.location.origin, m.recipientAskCode);
         return (
-          <article key={m.id} className="space-y-2 rounded-2xl bg-white p-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+          <article key={m.id} className="space-y-2 rounded-2xl bg-surface backdrop-blur-md p-4 ring-1 ring-surface-line">
             <div className="flex flex-wrap items-center gap-2">
               <Person user={m.sender} />
               <ArrowRight className="size-4 shrink-0 text-stone-400" />

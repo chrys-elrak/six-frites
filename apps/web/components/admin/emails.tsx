@@ -61,7 +61,7 @@ export function Emails() {
     <section className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
         {MAIL_STATUSES.map((s) => (
-          <div key={s} className="rounded-2xl bg-white p-3 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+          <div key={s} className="rounded-2xl bg-surface backdrop-blur-md p-3 ring-1 ring-surface-line">
             <p className="text-2xl font-semibold tabular-nums">{stats.data?.[s] ?? "–"}</p>
             <p className="text-xs text-stone-500 capitalize">{s} today</p>
           </div>
@@ -79,7 +79,7 @@ export function Emails() {
           options={[{ value: "all" as const, label: "Any" }, ...MAIL_STATUSES.map((s) => ({ value: s, label: s[0]!.toUpperCase() + s.slice(1) }))]}
         />
       </div>
-      <label className="flex items-center gap-2 rounded-xl bg-white px-3 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+      <label className="flex items-center gap-2 rounded-xl bg-surface backdrop-blur-md px-3 ring-1 ring-surface-line">
         <Search className="size-4 text-stone-400" />
         <input
           value={input}
@@ -91,7 +91,7 @@ export function Emails() {
       </label>
       {log.isSuccess && !items.length && <p className="py-8 text-center text-sm text-stone-500">No emails yet.</p>}
       {items.map((m) => (
-        <article key={m.id} className="space-y-1.5 rounded-2xl bg-white p-4 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+        <article key={m.id} className="space-y-1.5 rounded-2xl bg-surface backdrop-blur-md p-4 ring-1 ring-surface-line">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-stone-100 px-2 py-0.5 font-medium dark:bg-stone-800">{KIND_LABELS[m.kind]}</span>
             <span className={`rounded-full px-2 py-0.5 font-semibold capitalize ${STATUS_STYLES[m.status]}`}>{m.status}</span>

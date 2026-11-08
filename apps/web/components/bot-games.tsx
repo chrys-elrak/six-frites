@@ -17,7 +17,7 @@ const card =
 
 function GameCard({ game, emoji, title, onPick }: { game: BotGame | LiveGame; emoji: string; title: string; onPick: () => void }) {
   return (
-    <div className={`${card} ring-stone-200 hover:ring-brand dark:ring-stone-800`}>
+    <div className={`${card} bg-surface shadow-sm ring-surface-line hover:ring-brand`}>
       <button type="button" onClick={onPick} className="absolute inset-0 rounded-2xl" aria-label={title} />
       <span className="pointer-events-none text-3xl">{emoji}</span>
       <span className="pointer-events-none line-clamp-2 text-xs leading-tight font-semibold">{title}</span>
@@ -63,7 +63,7 @@ export function BotGames() {
   }
 
   return (
-    <div className="border-t border-stone-200 bg-stone-50/90 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-stone-800 dark:bg-stone-950/90">
+    <div className="border-t border-black/5 bg-stone-50/45 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
       <div className="flex gap-2 overflow-x-auto p-3">
         {mine.map((r) => (
           <Link key={r.roomId} href={`/play/${r.roomId}`} className={`${card} bg-brand/15 ring-brand`}>

@@ -12,7 +12,7 @@ const dayFormat = (day: string) =>
 
 function Tile({ label, value, note }: { label: string; value: number; note?: string }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+    <div className="rounded-2xl bg-surface backdrop-blur-md p-4 shadow-sm ring-1 ring-surface-line">
       <p className="text-sm text-stone-500">{label}</p>
       <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{value.toLocaleString()}</p>
       {note && <p className="mt-0.5 text-xs text-stone-500">{note}</p>}
@@ -24,7 +24,7 @@ function SignupsChart({ data }: { data: AdminStatsDTO["signups"] }) {
   const max = Math.max(1, ...data.map((d) => d.count));
   const total = data.reduce((n, d) => n + d.count, 0);
   return (
-    <figure className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+    <figure className="rounded-2xl bg-surface backdrop-blur-md p-4 shadow-sm ring-1 ring-surface-line">
       <figcaption className="flex items-baseline justify-between">
         <span className="text-sm font-medium">Sign-ups, last 30 days</span>
         <span className="text-sm text-stone-500 tabular-nums">{total.toLocaleString()} total</span>
@@ -90,7 +90,7 @@ export function Overview() {
 function Storage({ stats }: { stats: AdminStatsDTO }) {
   const max = Math.max(1, ...stats.topStorage.map((t) => t.bytes));
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+    <section className="rounded-2xl bg-surface backdrop-blur-md p-4 shadow-sm ring-1 ring-surface-line">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-medium">Storage</h2>
         <p className="text-sm text-stone-500">{formatBytes(stats.gifCacheBytes)} of shared GIFs on top</p>
