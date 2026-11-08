@@ -7,6 +7,16 @@ const { signUp, get, call, send, makeFriends } = chatHelpers(ctx);
 const kinds = (list: { items: { kind: string; user: { id: string } }[] }) => list.items.map((n) => `${n.kind}:${n.user.id}`);
 
 describe("notifications", () => {
+  it("tells someone once when they're unblocked", async () => {
+    const { host, guest } = await makeFriends();
+    await call(host, "POST", `/v1/users/${guest.user.id}/block`);
+    await call(host, "DELETE", `/v1/users/${guest.user.id}/block`);
+    await call(host, "DELETE", `/v1/users/${guest.user.id}/block`);
+
+    const unblocked = (await get(guest, "/v1/notifications")).items.filter((n: { kind: string }) => n.kind === "unblocked");
+    expect(unblocked).toMatchObject([{ user: { id: host.user.id } }]);
+  });
+
   it("tells me about an anonymous message without saying who sent it", async () => {
     const [me, fan] = await Promise.all([signUp("me"), signUp("fan")]);
     const { askCode } = await get(me, "/v1/me");

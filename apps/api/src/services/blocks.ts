@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { getChat } from "./chats.js";
 import { profilesFor } from "./contacts.js";
+import { notify } from "./notifications.js";
 
 const directKey = (a: string, b: string) => [a, b].sort().join(":");
 
@@ -74,7 +75,9 @@ async function setBlocked(userId: string, otherId: string, blocked: boolean) {
     const chatId = await directChatWith(tx, userId, otherId);
     const key = { blockerId: userId, blockedId: otherId };
     if (blocked) await tx.block.upsert({ where: { blockerId_blockedId: key }, create: key, update: {} });
-    else await tx.block.deleteMany({ where: key });
+    else if ((await tx.block.deleteMany({ where: key })).count) {
+      await notify(tx, emit, { userId: otherId, actorId: userId, kind: "unblocked", chatId });
+    }
     for (const id of [userId, otherId]) emit(id, "chat.updated", await getChat(id, chatId, tx));
   });
   if (blocked) {
@@ -87,6 +90,7 @@ async function setBlocked(userId: string, otherId: string, blocked: boolean) {
 /** Blocks someone you share a chat with. They see that they were blocked. */
 export const blockUser = (userId: string, otherId: string) => setBlocked(userId, otherId, true);
 
+/** Unblocks someone, and tells them they can write again. */
 export const unblockUser = (userId: string, otherId: string) => setBlocked(userId, otherId, false);
 
 export async function listBlocked(userId: string): Promise<{ items: BlockedUserDTO[] }> {

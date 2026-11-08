@@ -23357,7 +23357,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call" | "anon_message";
+                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call" | "anon_message" | "unblocked";
                                 /** @description Who did it; null for anon_message, which never says who sent it */
                                 user: {
                                     id: string;

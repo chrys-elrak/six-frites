@@ -11,6 +11,7 @@ const en = {
   missedCall: (name: string) => `You missed a call from ${name}.`,
   missedVideoCall: (name: string) => `You missed a video call from ${name}.`,
   anonMessage: "You got an anonymous message.",
+  unblocked: (name: string) => `${name} unblocked you. You can write to each other again.`,
 };
 
 const fr: typeof en = {
@@ -26,6 +27,7 @@ const fr: typeof en = {
   missedCall: (name) => `Appel manqué de ${name}.`,
   missedVideoCall: (name) => `Appel vidéo manqué de ${name}.`,
   anonMessage: "Vous avez reçu un message anonyme.",
+  unblocked: (name) => `${name} vous a débloqué. Vous pouvez à nouveau vous écrire.`,
 };
 
 const mg: typeof en = {
@@ -41,6 +43,7 @@ const mg: typeof en = {
   missedCall: (name) => `Antso tsy voaray avy amin'i ${name}.`,
   missedVideoCall: (name) => `Antso video tsy voaray avy amin'i ${name}.`,
   anonMessage: "Nahazo hafatra tsy fantatra ny mpandefa ianao.",
+  unblocked: (name) => `Nesorin'i ${name} ny sakana anao. Afaka mifandefa hafatra indray ianareo.`,
 };
 
 export default { en, fr, mg };

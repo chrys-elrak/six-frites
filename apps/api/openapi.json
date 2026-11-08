@@ -78946,7 +78946,8 @@
                               "note_reaction",
                               "story_reply",
                               "missed_call",
-                              "anon_message"
+                              "anon_message",
+                              "unblocked"
                             ]
                           },
                           "user": {
