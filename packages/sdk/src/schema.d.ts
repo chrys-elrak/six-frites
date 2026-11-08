@@ -30843,45 +30843,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/emoji/{key}/emoji.svg": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * An emoji drawn by Noto as SVG, by its code points (like 1f600 or 2764_fe0f)
-         * @description For browsers that can't draw the Noto Color Emoji font, like Safari.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    key: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

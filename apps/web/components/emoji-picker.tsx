@@ -5,7 +5,6 @@ import categories from "@six/shared/emojis.json";
 import { Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
-import { NotoEmoji } from "./noto-emoji";
 
 const CATEGORIES = categories as { title: string; data: EmojiEntry[] }[];
 const ALL = CATEGORIES.flatMap((c) => c.data);
@@ -134,7 +133,7 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
               }`}
               style={NOTO}
             >
-              {s.id === "recent" ? <Clock className="size-4.5" /> : <NotoEmoji emoji={s.items[0]!} />}
+              {s.id === "recent" ? <Clock className="size-4.5" /> : s.items[0]}
             </button>
           ))}
         </div>
@@ -165,7 +164,7 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
                   className="grid aspect-square place-items-center rounded-lg text-2xl leading-none hover:bg-stone-100 dark:hover:bg-stone-800"
                   style={NOTO}
                 >
-                  <NotoEmoji emoji={e} />
+                  {e}
                 </button>
               ))}
             </div>
