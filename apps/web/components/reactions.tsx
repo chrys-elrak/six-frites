@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
+import { NotoEmoji } from "./noto-emoji";
 import { Emojis } from "./emoji-picker";
 import { ExpressionPanel } from "./expression-panel";
 import { AnimatedEmoji } from "./animated-emoji";
@@ -50,7 +51,7 @@ export function ReactionBar({
               mine ? "bg-brand/20" : ""
             }`}
           >
-            {emoji}
+            <NotoEmoji emoji={emoji} />
           </button>
         );
       })}
@@ -510,7 +511,7 @@ export function QuickReactionsSettings() {
                 aria-label={tr.messages.changeQuickReaction(emoji)}
                 className="grid size-12 place-items-center rounded-full bg-stone-100 text-2xl transition hover:scale-105 disabled:opacity-50 dark:bg-stone-800"
               >
-                {emoji}
+                <NotoEmoji emoji={emoji} />
               </button>
             ))}
           </div>

@@ -107213,6 +107213,31 @@
           }
         }
       }
+    },
+    "/v1/emoji/{key}/emoji.svg": {
+      "get": {
+        "summary": "An emoji drawn by Noto as SVG, by its code points (like 1f600 or 2764_fe0f)",
+        "tags": [
+          "stickers"
+        ],
+        "description": "For browsers that can't draw the Noto Color Emoji font, like Safari.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{2,6}(_[0-9a-f]{2,6}){0,9}$"
+            },
+            "in": "path",
+            "name": "key",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [

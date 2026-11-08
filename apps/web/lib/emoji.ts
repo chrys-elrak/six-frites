@@ -35,6 +35,12 @@ function animatedSet() {
 
 const toKey = (emoji: string) => [...emoji].map((c) => c.codePointAt(0)!.toString(16)).join("_");
 
+/** Whether this browser draws the Noto Color Emoji font; Safari can't, so it gets Noto's pictures instead. */
+export const drawsNotoFont = () => typeof CSS !== "undefined" && CSS.supports("font-tech(color-COLRv1)");
+
+/** Noto's picture of this emoji, served by our API. */
+export const notoPictureUrl = (emoji: string) => `${API_URL}/v1/emoji/${toKey(emoji)}/emoji.svg`;
+
 /** The Noto Animated Emoji Lottie URL for this emoji, served by our API, or null when there is no animation for it. */
 export async function animatedEmojiUrl(emoji: string): Promise<string | null> {
   const set = await animatedSet();
