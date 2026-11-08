@@ -110,8 +110,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     >
       <Link href="/" className="flex items-center gap-3">
         <Logo className="size-9" />
-        <span className="text-lg font-bold tracking-tight">Six Frites</span>
+        <span className="text-lg font-bold tracking-tight whitespace-nowrap short:md:hidden">Six Frites</span>
       </Link>
+      <TabBar active={tab} top />
       <div ref={setBrandSlot} className="-my-1 ml-auto flex items-center gap-1" />
     </div>
   );
