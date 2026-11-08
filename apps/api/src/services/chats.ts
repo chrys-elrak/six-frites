@@ -94,7 +94,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
   }));
   const others = members.filter((m) => m.userId !== viewerId);
   const peer = group ? undefined : others[0];
-  const blocks = peer ? await blockState(db, viewerId, peer.userId) : { byMe: false, byThem: false };
+  const blocks = peer && !chat.supportUserId ? await blockState(db, viewerId, peer.userId) : { byMe: false, byThem: false };
 
   const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
   const readFloor = [me.lastReadAt, me.clearedAt].filter((d): d is Date => d !== null).sort((a, b) => +b - +a)[0];

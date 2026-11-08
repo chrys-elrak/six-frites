@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
 import { pairAlias } from "../src/services/users.js";
-import { type Auth, chatHelpers, loginAs, uniqueSub, useApp } from "./helpers.js";
+import { type Auth, chatHelpers, loginAs, prisma, uniqueSub, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, send } = chatHelpers(ctx);
@@ -144,5 +144,23 @@ describe("support chat", () => {
 
     await send(guest, chat.id, "Actually, one more thing");
     expect(await get(boss, `/v1/chats/${chat.id}`)).toMatchObject({ archived: false, supportClosedAt: null });
+  });
+
+  it("stays open even when one of them blocked the other", async () => {
+    const boss = await admin();
+    const guest = await walkIn("blocker");
+    const chat = await openSupport(guest);
+    await prisma.block.createMany({
+      data: [
+        { blockerId: guest.user.id, blockedId: boss.user.id },
+        { blockerId: boss.user.id, blockedId: guest.user.id },
+      ],
+      skipDuplicates: true,
+    });
+
+    expect(await openSupport(guest)).toMatchObject({ id: chat.id, blockedByMe: false, blockedByThem: false });
+    expect((await send(guest, chat.id, "Still there?")).statusCode).toBe(201);
+    expect((await send(boss, chat.id, "Always")).statusCode).toBe(201);
+    await prisma.block.deleteMany({ where: { blockerId: { in: [guest.user.id, boss.user.id] }, blockedId: { in: [guest.user.id, boss.user.id] } } });
   });
 });
