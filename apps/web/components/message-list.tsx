@@ -1122,6 +1122,16 @@ function Bubble({
                 <SmilePlus className="size-4" />
               </button>
             )}
+            {comments && !comments.closed && !row.deleted && (
+              <button
+                onClick={onOpenThread}
+                aria-label={tr.groups.comment}
+                title={tr.groups.comment}
+                className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
+              >
+                <MessageCircle className="size-4" />
+              </button>
+            )}
             <button
               onClick={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
