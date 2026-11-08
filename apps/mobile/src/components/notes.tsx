@@ -240,28 +240,30 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
         />
         <Text style={[styles.count, { color: background ? ink : t.muted, opacity: background ? 0.7 : 1 }]}>{NOTE_LIMIT - text.length}</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={[styles.actions, { padding: 3 }]}>
-        <Pressable
-          onPress={() => setBackground(null)}
-          accessibilityRole="radio"
-          accessibilityState={{ checked: !background }}
-          accessibilityLabel={tr.stories.noColour}
-          style={[styles.swatch, { backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, alignItems: "center", justifyContent: "center" }, !background && styles.picked]}
-        >
-          <Ban size={16} color={stone[400]} />
-        </Pressable>
-        {NOTE_BACKGROUNDS.map((c) => (
+      <View style={styles.actions}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" style={{ flex: 1 }} contentContainerStyle={[styles.actions, { padding: 3 }]}>
           <Pressable
-            key={c}
-            onPress={() => setBackground(c)}
+            onPress={() => setBackground(null)}
             accessibilityRole="radio"
-            accessibilityState={{ checked: background === c }}
-            accessibilityLabel={c}
-            style={[styles.swatch, { backgroundColor: c }, background === c && styles.picked]}
-          />
-        ))}
+            accessibilityState={{ checked: !background }}
+            accessibilityLabel={tr.stories.noColour}
+            style={[styles.swatch, { backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, alignItems: "center", justifyContent: "center" }, !background && styles.picked]}
+          >
+            <Ban size={16} color={stone[400]} />
+          </Pressable>
+          {NOTE_BACKGROUNDS.map((c) => (
+            <Pressable
+              key={c}
+              onPress={() => setBackground(c)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: background === c }}
+              accessibilityLabel={c}
+              style={[styles.swatch, { backgroundColor: c }, background === c && styles.picked]}
+            />
+          ))}
+        </ScrollView>
         {chip(pickingGif, tr.stories.gif, () => setPickingGif(!pickingGif))}
-      </ScrollView>
+      </View>
       {pickingGif && (
         <View style={styles.gifs}>
           <GifSearch

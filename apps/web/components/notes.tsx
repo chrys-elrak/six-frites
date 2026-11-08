@@ -206,8 +206,8 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             {NOTE_LIMIT - text.length}
           </span>
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto p-1">
-          <div role="radiogroup" aria-label={tr.stories.background} className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <div role="radiogroup" aria-label={tr.stories.background} className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto p-1">
             <button
               type="button"
               role="radio"
@@ -235,7 +235,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             type="button"
             aria-pressed={pickingGif}
             onClick={() => setPickingGif(!pickingGif)}
-            className={`ml-auto shrink-0 rounded-full px-3 py-1 text-sm font-bold ${pickingGif ? "bg-brand text-brand-ink" : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"}`}
+            className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${pickingGif ? "bg-brand text-brand-ink" : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"}`}
           >
             {tr.stories.gif}
           </button>
