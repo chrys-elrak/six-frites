@@ -10,6 +10,7 @@ import { useDataSaver } from "@/lib/data-saver";
 import { signOut } from "@/lib/e2ee";
 import { useLocale, useT } from "@/lib/i18n";
 import { relinkPush } from "@/lib/push";
+import { THEMES, type ThemePref, readTheme, setTheme } from "@/lib/theme";
 import { BlockedPeople, DeleteAccount } from "./account-settings";
 import { AppLockSettings } from "./app-lock";
 import { AdminLink } from "./admin/admin-link";
@@ -52,6 +53,37 @@ function LanguagePicker() {
             ))}
           </select>
         </label>
+      </Card>
+    </section>
+  );
+}
+
+function ThemePicker() {
+  const tr = useT();
+  const [theme, pick] = useState<ThemePref>(() => readTheme(document.documentElement.dataset.theme));
+  return (
+    <section className="space-y-3">
+      <SectionTitle>{tr.settings.theme}</SectionTitle>
+      <Card>
+        <div role="radiogroup" aria-label={tr.settings.theme} className="flex gap-1 p-2">
+          {THEMES.map((t) => (
+            <button
+              key={t}
+              type="button"
+              role="radio"
+              aria-checked={theme === t}
+              onClick={() => {
+                setTheme(t);
+                pick(t);
+              }}
+              className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                theme === t ? "bg-brand text-brand-ink" : "text-stone-600 hover:bg-black/5 dark:text-stone-300 dark:hover:bg-white/10"
+              }`}
+            >
+              {tr.settings.themes[t]}
+            </button>
+          ))}
+        </div>
       </Card>
     </section>
   );
@@ -164,6 +196,7 @@ export function SettingsPanel() {
           <WhatsNew />
           <TourAgain />
           <LanguagePicker />
+          <ThemePicker />
           <FontPicker />
           <QuickReactionsSettings />
           <DataSaverSettings />

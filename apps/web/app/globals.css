@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme="light"], [data-theme="light"] *)) {
+      @slot;
+    }
+  }
+}
+
 @theme inline {
   --color-surface: var(--surface);
   --color-surface-line: var(--surface-line);
@@ -18,8 +29,24 @@
   --bubble-their-ink: var(--color-stone-900);
 }
 
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: oklch(0.216 0.006 56 / 0.72);
+  --surface-line: oklch(1 0 0 / 0.1);
+  --bubble-their: var(--color-stone-900);
+  --bubble-their-ink: var(--color-stone-100);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --surface: oklch(0.216 0.006 56 / 0.72);
     --surface-line: oklch(1 0 0 / 0.1);
     --bubble-their: var(--color-stone-900);

@@ -1,4 +1,27 @@
-import { useColorScheme } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Appearance, useColorScheme } from "react-native";
+import { create } from "zustand";
+
+export const THEMES = ["system", "light", "dark"] as const;
+export type ThemePref = (typeof THEMES)[number];
+
+const THEME_KEY = "six:theme";
+
+export const useThemePref = create<{ theme: ThemePref }>(() => ({ theme: "system" }));
+
+function apply(theme: ThemePref) {
+  useThemePref.setState({ theme });
+  Appearance.setColorScheme(theme === "system" ? "unspecified" : theme);
+}
+
+void AsyncStorage.getItem(THEME_KEY)
+  .then((saved) => (saved === "light" || saved === "dark" ? apply(saved) : null))
+  .catch(() => null);
+
+export function setThemePref(theme: ThemePref) {
+  apply(theme);
+  void AsyncStorage.setItem(THEME_KEY, theme).catch(() => null);
+}
 
 export const stone = {
   50: "#fafaf9",

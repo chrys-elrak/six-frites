@@ -26,7 +26,7 @@ import { playTone, useNotifyPrefs } from "@/lib/notify";
 import { registerPush } from "@/lib/push";
 import { logout, useSession } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
-import { brand, brandInk, useTheme } from "@/lib/theme";
+import { THEMES, brand, brandInk, setThemePref, useTheme, useThemePref } from "@/lib/theme";
 import { AccountCard, BlockedPeople } from "./account-settings";
 import { EncryptionSettings } from "./encryption-settings";
 import { AppLockSettings } from "./app-lock";
@@ -191,6 +191,33 @@ function LanguagePicker() {
             >
               <Text style={{ flex: 1, color: t.text, fontWeight: "500", fontSize: 15 }}>{LOCALE_NAMES[l]}</Text>
               {l === current && <Check size={18} color={brand} />}
+            </Pressable>
+          </View>
+        ))}
+      </Card>
+    </View>
+  );
+}
+
+function ThemePicker() {
+  const t = useTheme();
+  const tr = useT();
+  const current = useThemePref((s) => s.theme);
+  return (
+    <View>
+      <SectionTitle>{tr.settings.theme}</SectionTitle>
+      <Card>
+        {THEMES.map((th, i) => (
+          <View key={th}>
+            {i > 0 && <Divider />}
+            <Pressable
+              onPress={() => setThemePref(th)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: th === current }}
+              style={styles.cardRow}
+            >
+              <Text style={{ flex: 1, color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.themes[th]}</Text>
+              {th === current && <Check size={18} color={brand} />}
             </Pressable>
           </View>
         ))}
@@ -643,6 +670,7 @@ export function SettingsPanel() {
         <WhatsNew />
         <TourAgain />
         <LanguagePicker />
+        <ThemePicker />
         <FontPicker />
         <QuickReactionsSettings />
         <DataSaverSettings />

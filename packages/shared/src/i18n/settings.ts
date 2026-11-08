@@ -4,6 +4,8 @@ type ByCode<K extends string> = Record<K, string> & Partial<Record<string, strin
 const en = {
   languageHint: "For the app and notifications on this device.",
   font: "Font",
+  theme: "Appearance",
+  themes: { system: "Follow system", light: "Light", dark: "Dark" },
   installTitle: "Install Six Frites",
   installHint: "Open it like an app, full screen and with notifications.",
   install: "Install",
@@ -227,6 +229,8 @@ const en = {
 const fr: typeof en = {
   languageHint: "Pour l'application et les notifications sur cet appareil.",
   font: "Police",
+  theme: "Apparence",
+  themes: { system: "Suivre le système", light: "Clair", dark: "Sombre" },
   installTitle: "Installer Six Frites",
   installHint: "Ouvrez-le comme une app, en plein écran et avec les notifications.",
   install: "Installer",
@@ -454,6 +458,8 @@ const fr: typeof en = {
 const mg: typeof en = {
   languageHint: "Ho an'ny fampiharana sy ny fampandrenesana amin'ity fitaovana ity.",
   font: "Endritsoratra",
+  theme: "Endrika",
+  themes: { system: "Araka ny fitaovana", light: "Mazava", dark: "Maizina" },
   installTitle: "Apetraho ny Six Frites",
   installHint: "Sokafy toy ny app, feno efijery ary misy fampandrenesana.",
   install: "Apetraho",

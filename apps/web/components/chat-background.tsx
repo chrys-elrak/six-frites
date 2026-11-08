@@ -99,7 +99,7 @@ export function BubbleColors({ themeId, scope }: { themeId: string | null; scope
   const vars = (w: WallpaperColors) =>
     `--color-brand:${w.bubble};--color-brand-ink:${w.bubbleInk};--bubble-their:${w.theirBubble};--bubble-their-ink:${w.theirBubbleInk};`;
   return (
-    <style>{`.${scope}{${vars(theme.light)}}@media (prefers-color-scheme: dark){.${scope}{${vars(theme.dark)}}}`}</style>
+    <style>{`.${scope}{${vars(theme.light)}}:root[data-theme="dark"] .${scope}{${vars(theme.dark)}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .${scope}{${vars(theme.dark)}}}`}</style>
   );
 }
 

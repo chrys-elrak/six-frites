@@ -2,6 +2,7 @@ import { type AnonMessageDTO, type AskColors, type EntityType, doodleTileSvg } f
 import { formatDuration } from "./format";
 import { getT } from "./i18n";
 import { type Segment, segments } from "./markup";
+import { isDark } from "./theme";
 
 const W = 1080;
 const H = 1920;
@@ -227,7 +228,7 @@ export async function askCardPng(
   ]);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d")!;
-  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = isDark();
   const photoH = photo ? PHOTO_H : 0;
   const voiceH = voice ? PAD + VOICE_H : 0;
   const textRoom = MAX_TEXT_H - photoH - voiceH;
