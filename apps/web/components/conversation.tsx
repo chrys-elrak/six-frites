@@ -390,6 +390,16 @@ function OpenConversation({ chatId }: { chatId: string }) {
             </div>
           </div>
           <div ref={foot} className="absolute inset-x-0 bottom-0 z-20">
+            {typing && !selecting && (
+              <div className="pointer-events-none absolute bottom-full left-3 mb-2 flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-medium text-stone-600 shadow ring-1 ring-black/5 dark:bg-stone-800 dark:text-stone-300 dark:ring-white/10">
+                <span className="flex items-center gap-[3px]" aria-hidden>
+                  {[0, 0.15, 0.3].map((d) => (
+                    <span key={d} className="size-1.5 animate-bounce rounded-full bg-stone-400" style={{ animationDelay: `${d}s` }} />
+                  ))}
+                </span>
+                <span role="status">{tr.chats.typing[typing]}</span>
+              </div>
+            )}
             {!selecting && <AdBanner />}
             {!selecting && keysChanged && !c.withSupport && (
               <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">

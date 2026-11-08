@@ -24,6 +24,7 @@ import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
+import { TypingBubble } from "./typing-bubble";
 import { ChatMenu } from "./chat-menu";
 import { BotGames } from "./bot-games";
 import { Composer } from "./composer";
@@ -343,6 +344,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
           <BubbleColorsContext.Provider value={bubble}>
             <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
           </BubbleColorsContext.Provider>
+          {typing && !selecting && <TypingBubble kind={typing} />}
         </View>
         {!selecting && c.supportClosedAt && (
           <Text style={[styles.closed, { color: t.muted, borderColor: t.border }]}>
