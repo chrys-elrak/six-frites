@@ -11,6 +11,7 @@ import type {
   StickerDTO,
   UploadKind,
   StoryReply,
+  CommentRule,
 } from "@six/shared";
 import { useMemo } from "react";
 import { create } from "zustand";
@@ -48,9 +49,9 @@ export interface PendingMessage {
   checklist?: Checklist;
   game?: ChatGame;
   groupId?: string;
-  /** In a group: the message this one comments on, and whether an admin posts it with comments closed. */
+  /** In a group: the message this one comments on, and what an admin set for its comments. */
   threadId?: string;
-  commentsClosed?: boolean;
+  comments?: CommentRule;
   sendAt?: string;
   createdAt: string;
   /** `waiting` for the network: it goes out by itself when the connection is back. */

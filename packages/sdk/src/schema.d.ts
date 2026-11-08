@@ -4195,8 +4195,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -4622,8 +4629,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -5108,8 +5122,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -5591,8 +5612,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -6018,8 +6046,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -6538,8 +6573,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -6965,8 +7007,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -7483,8 +7532,15 @@ export interface paths {
                                     thread: {
                                         /** @description How many comments it has */
                                         count: number;
-                                        /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                        /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                         closed: boolean;
+                                        /** @description Comments close once this many come from people other than its author */
+                                        limit: number | null;
+                                        /**
+                                         * Format: date-time
+                                         * @description Comments close at this time
+                                         */
+                                        closesAt: string | null;
                                     } | null;
                                     replyTo: {
                                         id: string;
@@ -7910,8 +7966,15 @@ export interface paths {
                                     thread: {
                                         /** @description How many comments it has */
                                         count: number;
-                                        /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                        /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                         closed: boolean;
+                                        /** @description Comments close once this many come from people other than its author */
+                                        limit: number | null;
+                                        /**
+                                         * Format: date-time
+                                         * @description Comments close at this time
+                                         */
+                                        closesAt: string | null;
                                     } | null;
                                     replyTo: {
                                         id: string;
@@ -8429,8 +8492,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -8856,8 +8926,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -9428,8 +9505,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -9855,8 +9939,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -10438,8 +10529,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -10758,7 +10856,7 @@ export interface paths {
         head?: never;
         /**
          * Close or reopen a group message's comments
-         * @description For the group's owner and admins (NOT_GROUP_ADMIN otherwise). While closed, nobody can comment (THREAD_CLOSED) and the comments already there stay. Every member gets message.edited.
+         * @description For the group's owner and admins (NOT_GROUP_ADMIN otherwise). While closed, nobody can comment (THREAD_CLOSED) and the comments already there stay. Closing or reopening also drops any automatic close (`commentsLimit`, `commentsCloseIn`). Every member gets message.edited.
          */
         patch: {
             parameters: {
@@ -10889,8 +10987,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -11339,8 +11444,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -11785,8 +11897,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -12234,8 +12353,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -12706,8 +12832,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -13151,8 +13284,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -13601,8 +13741,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -14045,8 +14192,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -14489,8 +14643,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -14964,8 +15125,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -15418,8 +15586,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -15914,8 +16089,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -16344,6 +16526,10 @@ export interface paths {
                         threadId?: string;
                         /** @description In a group, for its owner and admins: post with comments closed */
                         commentsClosed?: boolean;
+                        /** @description In a group, for its owner and admins: comments close after this many from other people */
+                        commentsLimit?: number;
+                        /** @description In a group, for its owner and admins: comments close this many seconds after posting */
+                        commentsCloseIn?: number;
                         spoiler?: boolean;
                         /**
                          * @description Only with text
@@ -16510,8 +16696,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -17087,6 +17280,10 @@ export interface paths {
                         threadId?: string;
                         /** @description In a group, for its owner and admins: post with comments closed */
                         commentsClosed?: boolean;
+                        /** @description In a group, for its owner and admins: comments close after this many from other people */
+                        commentsLimit?: number;
+                        /** @description In a group, for its owner and admins: comments close this many seconds after posting */
+                        commentsCloseIn?: number;
                         spoiler?: boolean;
                         /**
                          * @description Only with text
@@ -17616,8 +17813,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -18647,8 +18851,15 @@ export interface paths {
                                     thread: {
                                         /** @description How many comments it has */
                                         count: number;
-                                        /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                        /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                         closed: boolean;
+                                        /** @description Comments close once this many come from people other than its author */
+                                        limit: number | null;
+                                        /**
+                                         * Format: date-time
+                                         * @description Comments close at this time
+                                         */
+                                        closesAt: string | null;
                                     } | null;
                                     replyTo: {
                                         id: string;
@@ -19056,8 +19267,15 @@ export interface paths {
                                     thread: {
                                         /** @description How many comments it has */
                                         count: number;
-                                        /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                        /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                         closed: boolean;
+                                        /** @description Comments close once this many come from people other than its author */
+                                        limit: number | null;
+                                        /**
+                                         * Format: date-time
+                                         * @description Comments close at this time
+                                         */
+                                        closesAt: string | null;
                                     } | null;
                                     replyTo: {
                                         id: string;
@@ -19535,8 +19753,15 @@ export interface paths {
                                         thread: {
                                             /** @description How many comments it has */
                                             count: number;
-                                            /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                            /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                             closed: boolean;
+                                            /** @description Comments close once this many come from people other than its author */
+                                            limit: number | null;
+                                            /**
+                                             * Format: date-time
+                                             * @description Comments close at this time
+                                             */
+                                            closesAt: string | null;
                                         } | null;
                                         replyTo: {
                                             id: string;
@@ -19962,8 +20187,15 @@ export interface paths {
                                         thread: {
                                             /** @description How many comments it has */
                                             count: number;
-                                            /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                            /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                             closed: boolean;
+                                            /** @description Comments close once this many come from people other than its author */
+                                            limit: number | null;
+                                            /**
+                                             * Format: date-time
+                                             * @description Comments close at this time
+                                             */
+                                            closesAt: string | null;
                                         } | null;
                                         replyTo: {
                                             id: string;
@@ -21397,8 +21629,15 @@ export interface paths {
                             thread: {
                                 /** @description How many comments it has */
                                 count: number;
-                                /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                 closed: boolean;
+                                /** @description Comments close once this many come from people other than its author */
+                                limit: number | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Comments close at this time
+                                 */
+                                closesAt: string | null;
                             } | null;
                             replyTo: {
                                 id: string;
@@ -24748,8 +24987,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -25175,8 +25421,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -25736,8 +25989,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -26163,8 +26423,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -26702,8 +26969,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -27129,8 +27403,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -27645,8 +27926,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -28072,8 +28360,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -28601,8 +28896,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -29028,8 +29330,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -29582,8 +29891,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;
@@ -30009,8 +30325,15 @@ export interface paths {
                                 thread: {
                                     /** @description How many comments it has */
                                     count: number;
-                                    /** @description An admin closed its comments: nobody can add one until they reopen them */
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
                                     closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
                                 } | null;
                                 replyTo: {
                                     id: string;

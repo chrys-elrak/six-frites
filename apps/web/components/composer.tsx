@@ -18,6 +18,7 @@ import {
   parseCommand,
   silentMessage,
   stripAudio,
+  type CommentRule,
 } from "@six/shared";
 import { unwrap } from "@six/sdk";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,7 +52,6 @@ import {
   type LucideIcon,
   VenetianMask,
   X,
-  MessageSquareOff,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage, updateChatSettings } from "@/lib/actions";
@@ -69,6 +69,7 @@ import { ChecklistDialog } from "./checklist";
 import { GameDialog } from "./game";
 import { currentPosition } from "./location-card";
 import { EmojiSuggestions, useEmojiSuggestions } from "./emoji-suggestions";
+import { CommentsPicker } from "./comments-picker";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { FormatBar, formatShortcut, keepSelection } from "./format-bar";
 import { DraftText, RichInput, type RichInputHandle } from "./rich-input";
@@ -170,7 +171,7 @@ export function Composer({
   const parked = parkedMarkup ? parseMarkup(parkedMarkup) : null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [commentsOff, setCommentsOff] = useState(false);
+  const [comments, setComments] = useState<CommentRule | null>(null);
   const [hasSelection, setHasSelection] = useState(false);
   const [caret, setCaret] = useState(0);
   const [expressions, setExpressions] = useState(false);
@@ -235,11 +236,11 @@ export function Composer({
     void queueMessage(qc, realtime, chatId, {
       ...draft,
       threadId,
-      commentsClosed: commentsOff || undefined,
+      comments: comments ?? undefined,
       sendAt: draft.sendAt ?? sendAt,
     });
     setSendAt(null);
-    setCommentsOff(false);
+    setComments(null);
   }
 
   function sendVideoNote(file: File, chosen: EphemeralInput | null, spoiler = false) {
@@ -978,17 +979,7 @@ export function Composer({
               </button>
             )}
             {!editing && !threadId && chat?.group && chat.group.myRole !== "member" && (
-              <button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => setCommentsOff(!commentsOff)}
-                aria-pressed={commentsOff}
-                aria-label={tr.groups.postCommentsClosed}
-                title={tr.groups.postCommentsClosed}
-                className={`grid size-10 shrink-0 place-items-center rounded-full ${commentsOff ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"}`}
-              >
-                <MessageSquareOff className="size-5" />
-              </button>
+              <CommentsPicker value={comments} onChange={setComments} />
             )}
             {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
           </div>

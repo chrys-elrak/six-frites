@@ -403,6 +403,9 @@ model Message {
   /// On a group message: how many comments it has, and whether an admin closed them.
   threadCount       Int       @default(0)
   threadClosed      Boolean   @default(false)
+  /// Comments close by themselves after this many from people other than the author, or at this time.
+  threadLimit       Int?
+  threadClosesAt    DateTime?
   action            Json?
   location          Json?
   checklist         Json?

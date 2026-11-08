@@ -257,7 +257,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["messages"],
         summary: "Close or reopen a group message's comments",
         description:
-          "For the group's owner and admins (NOT_GROUP_ADMIN otherwise). While closed, nobody can comment (THREAD_CLOSED) and the comments already there stay. Every member gets message.edited.",
+          "For the group's owner and admins (NOT_GROUP_ADMIN otherwise). While closed, nobody can comment (THREAD_CLOSED) and the comments already there stay. Closing or reopening also drops any automatic close (`commentsLimit`, `commentsCloseIn`). Every member gets message.edited.",
         security,
         params: MessageParams,
         body: ThreadInput,

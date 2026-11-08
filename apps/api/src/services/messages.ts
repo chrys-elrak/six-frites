@@ -50,29 +50,40 @@ export const messageInclude = {
   attachment: true,
   views: true,
   sticker: { include: { upload: true } },
-  reactions: { orderBy: { createdAt: "asc" }, include: { sticker: { include: { upload: true } } } },
+  reactions: {
+    orderBy: { createdAt: "asc" },
+    include: { sticker: { include: { upload: true } } },
+  },
   envelopes: { include: { device: { select: { userId: true } } } },
   backups: true,
   marks: { orderBy: { item: "asc" } },
   moves: { orderBy: [{ createdAt: "asc" }, { id: "asc" }] },
 } satisfies Prisma.MessageInclude;
-export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
+export type MessageRow = Prisma.MessageGetPayload<{
+  include: typeof messageInclude;
+}>;
 
 const SNIPPET = 200;
 
-export const entitiesOf = (m: { entities: Prisma.JsonValue }) => (m.entities as MessageEntity[] | null) ?? [];
+export const entitiesOf = (m: { entities: Prisma.JsonValue }) =>
+  (m.entities as MessageEntity[] | null) ?? [];
 export const storedEntities = (entities: MessageEntity[] | undefined) =>
   entities?.length ? (entities as Prisma.InputJsonValue) : Prisma.DbNull;
 
-const isEphemeral = (m: { maxViews: number | null; ttlSeconds: number | null }) =>
-  m.maxViews !== null || m.ttlSeconds !== null;
+const isEphemeral = (m: {
+  maxViews: number | null;
+  ttlSeconds: number | null;
+}) => m.maxViews !== null || m.ttlSeconds !== null;
 
 /** How long download links for opened self-destructing media stay valid. */
 export const EPHEMERAL_LINK_SECONDS = 5 * 60;
 
 /** One entry per emoji, sticker or GIF, with whoever used it and, for stickers and GIFs, what to show. */
 function groupReactions(reactions: MessageRow["reactions"]) {
-  const byEmoji = new Map<string, { first: MessageRow["reactions"][number]; userIds: string[] }>();
+  const byEmoji = new Map<
+    string,
+    { first: MessageRow["reactions"][number]; userIds: string[] }
+  >();
   for (const r of reactions) {
     const seen = byEmoji.get(r.emoji);
     if (seen) seen.userIds.push(r.userId);
@@ -81,13 +92,27 @@ function groupReactions(reactions: MessageRow["reactions"]) {
   return [...byEmoji].map(([emoji, { first, userIds }]) => ({
     emoji,
     userIds,
-    ...(first.stickerId && { sticker: first.sticker && !first.sticker.removedAt ? toStickerDTO(first.sticker) : null }),
-    ...(first.gifKey && { gif: { url: presignGet(first.gifKey), width: first.gifWidth, height: first.gifHeight } }),
+    ...(first.stickerId && {
+      sticker:
+        first.sticker && !first.sticker.removedAt
+          ? toStickerDTO(first.sticker)
+          : null,
+    }),
+    ...(first.gifKey && {
+      gif: {
+        url: presignGet(first.gifKey),
+        width: first.gifWidth,
+        height: first.gifHeight,
+      },
+    }),
   }));
 }
 
-const hideEarlier = (p: ReplyPreview, sent: Date, cutoff: Date | null | undefined): ReplyPreview =>
-  cutoff && sent <= cutoff ? { ...p, text: null } : p;
+const hideEarlier = (
+  p: ReplyPreview,
+  sent: Date,
+  cutoff: Date | null | undefined,
+): ReplyPreview => (cutoff && sent <= cutoff ? { ...p, text: null } : p);
 
 export function toReplyPreview(r: Message): ReplyPreview {
   return {
@@ -107,18 +132,34 @@ export function toReplyPreview(r: Message): ReplyPreview {
 }
 
 /** The viewer's own envelopes and backup copy of an encrypted message, or nothing while it is hidden. */
-function encryptionFor(m: MessageRow, viewerId: string, hidden: boolean): EncryptionDTO | null {
+function encryptionFor(
+  m: MessageRow,
+  viewerId: string,
+  hidden: boolean,
+): EncryptionDTO | null {
   if (!m.encrypted) return null;
   const reseal = m.resealRequestedBy
-    ? { state: m.resealFailedAt ? ("failed" as const) : ("requested" as const), by: m.resealRequestedBy }
+    ? {
+        state: m.resealFailedAt ? ("failed" as const) : ("requested" as const),
+        by: m.resealRequestedBy,
+      }
     : null;
-  if (hidden) return { senderDeviceId: m.senderDevice, envelopes: [], backup: null, reseal };
+  if (hidden)
+    return {
+      senderDeviceId: m.senderDevice,
+      envelopes: [],
+      backup: null,
+      reseal,
+    };
   return {
     senderDeviceId: m.senderDevice,
     reseal,
     envelopes: m.envelopes
       .filter((e) => e.device.userId === viewerId)
-      .map((e) => ({ deviceId: e.deviceId, envelope: e.envelope as EncryptionDTO["envelopes"][number]["envelope"] })),
+      .map((e) => ({
+        deviceId: e.deviceId,
+        envelope: e.envelope as EncryptionDTO["envelopes"][number]["envelope"],
+      })),
     backup: m.backups.find((b) => b.userId === viewerId)?.sealed ?? null,
   };
 }
@@ -135,18 +176,25 @@ function toStoryReply({ imageKey, ...story }: StoredStoryReply): StoryReply {
  * A message as `viewerId` sees it. With `hiddenBefore`, the viewer's own cutoff (in a group, when they joined), a
  * quote of something older keeps its place but not its text.
  */
-export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: boolean; hiddenBefore?: Date | null } = {}): MessageDTO {
+export function toMessageDTO(
+  m: MessageRow,
+  viewerId: string,
+  opts: { reveal?: boolean; hiddenBefore?: Date | null } = {},
+): MessageDTO {
   const r = m.replyTo;
   const ephemeral = isEphemeral(m);
   const isSender = viewerId === m.senderId;
   const expired = m.expiredAt !== null;
   const purged = m.purgedAt !== null;
   const locked = ephemeral && !expired && !isSender && !opts.reveal;
-  const hideContent = m.deletedAt !== null || purged || locked || (expired && !isSender);
+  const hideContent =
+    m.deletedAt !== null || purged || locked || (expired && !isSender);
   const others = m.views.filter((v) => v.userId !== m.senderId);
   const mine = m.views.find((v) => v.userId === viewerId);
   const firstView =
-    viewerId === m.senderId ? others.map((v) => v.firstViewedAt).sort((a, b) => +a - +b)[0] : mine?.firstViewedAt;
+    viewerId === m.senderId
+      ? others.map((v) => v.firstViewedAt).sort((a, b) => +a - +b)[0]
+      : mine?.firstViewedAt;
 
   return {
     id: m.id,
@@ -164,38 +212,72 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     attachment:
       hideContent || !m.attachment
         ? null
-        : toAttachmentDTO(m.attachment, ephemeral && opts.reveal ? EPHEMERAL_LINK_SECONDS : undefined),
+        : toAttachmentDTO(
+            m.attachment,
+            ephemeral && opts.reveal ? EPHEMERAL_LINK_SECONDS : undefined,
+          ),
     sticker: hideContent || !m.sticker ? null : toStickerDTO(m.sticker),
     ephemeral: ephemeral
       ? {
           maxViews: m.maxViews,
           ttlSeconds: m.ttlSeconds,
-          views: viewerId === m.senderId ? others.reduce((n, v) => n + v.count, 0) : (mine?.count ?? 0),
+          views:
+            viewerId === m.senderId
+              ? others.reduce((n, v) => n + v.count, 0)
+              : (mine?.count ?? 0),
           firstViewedAt: firstView?.toISOString() ?? null,
           locked,
           expired,
           purged,
           resent: m.resendCount > 0,
-          resendsLeft: isSender && !purged ? Math.max(0, EPHEMERAL_RESEND.max - m.resendCount) : 0,
+          resendsLeft:
+            isSender && !purged
+              ? Math.max(0, EPHEMERAL_RESEND.max - m.resendCount)
+              : 0,
           resendUntil:
             isSender && m.expiredAt && !purged
-              ? new Date(m.expiredAt.getTime() + EPHEMERAL_RESEND.windowSeconds * 1000).toISOString()
+              ? new Date(
+                  m.expiredAt.getTime() + EPHEMERAL_RESEND.windowSeconds * 1000,
+                ).toISOString()
               : null,
         }
       : null,
     groupId: m.groupId,
     threadId: m.threadId,
-    thread: m.threadId || m.type === "service" ? null : { count: m.threadCount, closed: m.threadClosed },
-    replyTo: r ? hideEarlier(toReplyPreview(r), r.createdAt, opts.hiddenBefore) : null,
-    story: hideContent || !m.story ? null : toStoryReply(m.story as StoredStoryReply),
+    thread:
+      m.threadId || m.type === "service"
+        ? null
+        : {
+            count: m.threadCount,
+            closed: threadIsClosed(m),
+            limit: m.threadLimit,
+            closesAt: m.threadClosesAt?.toISOString() ?? null,
+          },
+    replyTo: r
+      ? hideEarlier(toReplyPreview(r), r.createdAt, opts.hiddenBefore)
+      : null,
+    story:
+      hideContent || !m.story
+        ? null
+        : toStoryReply(m.story as StoredStoryReply),
     action: (m.action as ServiceAction | null) ?? null,
     location: hideContent ? null : ((m.location as GeoPoint | null) ?? null),
     checklist: hideContent ? null : ((m.checklist as Checklist | null) ?? null),
-    checks: hideContent ? [] : m.marks.map((k) => ({ item: k.item, userId: k.userId, at: k.createdAt.toISOString() })),
+    checks: hideContent
+      ? []
+      : m.marks.map((k) => ({
+          item: k.item,
+          userId: k.userId,
+          at: k.createdAt.toISOString(),
+        })),
     game: hideContent ? null : ((m.game as ChatGame | null) ?? null),
     moves: hideContent
       ? []
-      : m.moves.map((g) => ({ userId: g.userId, move: g.move as GameMove, at: g.createdAt.toISOString() })),
+      : m.moves.map((g) => ({
+          userId: g.userId,
+          move: g.move as GameMove,
+          at: g.createdAt.toISOString(),
+        })),
     createdAt: m.createdAt.toISOString(),
     editedAt: m.editedAt?.toISOString() ?? null,
     deletedAt: m.deletedAt?.toISOString() ?? null,
@@ -207,22 +289,39 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
 }
 
 export async function assertMember(db: Tx, chatId: string, userId: string) {
-  const member = await db.chatMember.findUnique({ where: { chatId_userId: { chatId, userId } } });
+  const member = await db.chatMember.findUnique({
+    where: { chatId_userId: { chatId, userId } },
+  });
   if (!member) throw new AppError("CHAT_NOT_FOUND");
   return member;
 }
 
-export function visibleTo(userId: string, clearedAt: Date | null): Prisma.MessageWhereInput {
-  return { hidden: { none: { userId } }, ...(clearedAt && { createdAt: { gt: clearedAt } }) };
+export function visibleTo(
+  userId: string,
+  clearedAt: Date | null,
+): Prisma.MessageWhereInput {
+  return {
+    hidden: { none: { userId } },
+    ...(clearedAt && { createdAt: { gt: clearedAt } }),
+  };
 }
 
 async function memberIds(tx: Tx, chatId: string) {
-  const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
+  const members = await tx.chatMember.findMany({
+    where: { chatId },
+    select: { userId: true },
+  });
   return members.map((m) => m.userId);
 }
 
-const SHARED: Record<NonNullable<MessageListQuery["only"]>, Prisma.MessageWhereInput> = {
-  media: { type: { in: ["image", "video"] }, attachment: { status: { not: "removed" } } },
+const SHARED: Record<
+  NonNullable<MessageListQuery["only"]>,
+  Prisma.MessageWhereInput
+> = {
+  media: {
+    type: { in: ["image", "video"] },
+    attachment: { status: { not: "removed" } },
+  },
   files: { type: "file", attachment: { status: { not: "removed" } } },
   links: {
     type: "text",
@@ -237,33 +336,62 @@ const SHARED: Record<NonNullable<MessageListQuery["only"]>, Prisma.MessageWhereI
 
 const UNTIL_MAX = 2000;
 
-export async function listMessages(userId: string, chatId: string, q: MessageListQuery) {
+export async function listMessages(
+  userId: string,
+  chatId: string,
+  q: MessageListQuery,
+) {
   const member = await assertMember(prisma, chatId, userId);
-  if (q.thread && !(await prisma.message.count({ where: { id: q.thread, chatId, threadId: null } }))) {
+  if (
+    q.thread &&
+    !(await prisma.message.count({
+      where: { id: q.thread, chatId, threadId: null },
+    }))
+  ) {
     throw new AppError("MESSAGE_NOT_FOUND");
   }
   const where: Prisma.MessageWhereInput = {
     chatId,
     threadId: q.thread ?? null,
     ...visibleTo(userId, member.clearedAt),
-    ...(q.only && { ...SHARED[q.only], deletedAt: null, maxViews: null, ttlSeconds: null }),
+    ...(q.only && {
+      ...SHARED[q.only],
+      deletedAt: null,
+      maxViews: null,
+      ttlSeconds: null,
+    }),
     ...((q.from || q.to) && { createdAt: { gte: q.from, lt: q.to } }),
   };
-  const target = q.until ? await prisma.message.findFirst({ where: { id: q.until, chatId } }) : null;
+  const target = q.until
+    ? await prisma.message.findFirst({ where: { id: q.until, chatId } })
+    : null;
   const upTo = target
-    ? await prisma.message.count({ where: { AND: [where, { createdAt: { gte: target.createdAt } }] } })
+    ? await prisma.message.count({
+        where: { AND: [where, { createdAt: { gte: target.createdAt } }] },
+      })
     : 0;
   const page = { ...q, limit: Math.min(Math.max(q.limit, upTo), UNTIL_MAX) };
-  const rows = await prisma.message.findMany({ where, include: messageInclude, ...pageArgs(page) });
-  return toPage(rows, page, (m) => toMessageDTO(m, userId, { hiddenBefore: member.clearedAt }));
+  const rows = await prisma.message.findMany({
+    where,
+    include: messageInclude,
+    ...pageArgs(page),
+  });
+  return toPage(rows, page, (m) =>
+    toMessageDTO(m, userId, { hiddenBefore: member.clearedAt }),
+  );
 }
 
-async function findByClientId(senderId: string, chatId: string, clientId: string) {
+async function findByClientId(
+  senderId: string,
+  chatId: string,
+  clientId: string,
+) {
   const existing = await prisma.message.findUnique({
     where: { senderId_clientId: { senderId, clientId } },
     include: messageInclude,
   });
-  if (existing && existing.chatId !== chatId) throw new AppError("CONFLICT", "clientId already used in another chat");
+  if (existing && existing.chatId !== chatId)
+    throw new AppError("CONFLICT", "clientId already used in another chat");
   return existing;
 }
 
@@ -283,11 +411,18 @@ export function checkEncryption(
 ) {
   if (content.encrypted) {
     if (upload && !fitsEncrypted(upload)) {
-      throw new AppError("VALIDATION_FAILED", "Encrypted messages carry encrypted files");
+      throw new AppError(
+        "VALIDATION_FAILED",
+        "Encrypted messages carry encrypted files",
+      );
     }
     return;
   }
-  if (upload?.encrypted) throw new AppError("VALIDATION_FAILED", "This file is encrypted; send it in encrypted content");
+  if (upload?.encrypted)
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "This file is encrypted; send it in encrypted content",
+    );
   if (
     chat.encryptedAt &&
     (content.text !== undefined ||
@@ -296,25 +431,58 @@ export function checkEncryption(
       content.game ||
       (upload && upload.kind !== "gif"))
   ) {
-    throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
+    throw new AppError(
+      "ENCRYPTION_REQUIRED",
+      "Messages in this chat are end-to-end encrypted",
+    );
   }
 }
 
-const SUPPORT_FIELDS = new Set(["clientId", "text", "entities", "replyToId", "silent", "sentAt", "attachmentId"]);
+const SUPPORT_FIELDS = new Set([
+  "clientId",
+  "text",
+  "entities",
+  "replyToId",
+  "silent",
+  "sentAt",
+  "attachmentId",
+]);
 
 /** A chat with a guest from the support page takes text, photos (screenshots of a bug, say) and replies: what that page shows. */
-function checkSupport(content: SendMessageInput, upload: { kind: string } | null) {
-  const extra = Object.entries(content).some(([k, v]) => v !== undefined && v !== false && !SUPPORT_FIELDS.has(k));
+function checkSupport(
+  content: SendMessageInput,
+  upload: { kind: string } | null,
+) {
+  const extra = Object.entries(content).some(
+    ([k, v]) => v !== undefined && v !== false && !SUPPORT_FIELDS.has(k),
+  );
   const photo = upload?.kind === "image";
   if ((content.text === undefined && !photo) || (upload && !photo) || extra) {
-    throw new AppError("VALIDATION_FAILED", "Support chats only take text and photos");
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "Support chats only take text and photos",
+    );
   }
 }
 
 /** Keeps the envelopes of a scheduled message whose devices are still signed in. */
-async function liveEnvelopes(tx: Tx, chatId: string, envelopes: EncryptedInput["envelopes"]) {
-  const members = await tx.chatMember.findMany({ where: { chatId }, select: { userId: true } });
-  const live = new Set((await activeDevices(tx, members.map((m) => m.userId))).map((d) => d.id));
+async function liveEnvelopes(
+  tx: Tx,
+  chatId: string,
+  envelopes: EncryptedInput["envelopes"],
+) {
+  const members = await tx.chatMember.findMany({
+    where: { chatId },
+    select: { userId: true },
+  });
+  const live = new Set(
+    (
+      await activeDevices(
+        tx,
+        members.map((m) => m.userId),
+      )
+    ).map((d) => d.id),
+  );
   return envelopes.filter((e) => live.has(e.deviceId));
 }
 
@@ -326,46 +494,119 @@ export interface CreateOptions {
 }
 
 /** What a message keeps of a story it answers: the story's picture as a storage key, signed when it is read. */
-type StoredStoryReply = Omit<StoryReply, "imageUrl"> & { imageKey: string | null };
+type StoredStoryReply = Omit<StoryReply, "imageUrl"> & {
+  imageKey: string | null;
+};
 
 /** What a message keeps of the other person's story or note it answers, which must be theirs and in this chat. */
-async function storyReplyFor(tx: Tx, chatId: string, userId: string, storyId: string): Promise<StoredStoryReply> {
+async function storyReplyFor(
+  tx: Tx,
+  chatId: string,
+  userId: string,
+  storyId: string,
+): Promise<StoredStoryReply> {
   const story = await tx.story.findFirst({
     where: { id: storyId, userId: { not: userId } },
     include: { upload: { select: { kind: true, key: true, thumbKey: true } } },
   });
   if (!story) {
-    const note = await tx.note.findFirst({ where: { id: storyId, userId: { not: userId } } });
-    if (note && (await tx.chatMember.count({ where: { chatId, userId: note.userId } }))) {
-      return { id: note.id, ownerId: note.userId, kind: "note", text: note.text || null, background: note.background, imageKey: null };
+    const note = await tx.note.findFirst({
+      where: { id: storyId, userId: { not: userId } },
+    });
+    if (
+      note &&
+      (await tx.chatMember.count({ where: { chatId, userId: note.userId } }))
+    ) {
+      return {
+        id: note.id,
+        ownerId: note.userId,
+        kind: "note",
+        text: note.text || null,
+        background: note.background,
+        imageKey: null,
+      };
     }
   }
-  if (!story || !(await tx.chatMember.count({ where: { chatId, userId: story.userId } }))) {
-    throw new AppError("STORY_NOT_FOUND", "That story is gone or isn't from this chat");
+  if (
+    !story ||
+    !(await tx.chatMember.count({ where: { chatId, userId: story.userId } }))
+  ) {
+    throw new AppError(
+      "STORY_NOT_FOUND",
+      "That story is gone or isn't from this chat",
+    );
   }
-  const kind = story.upload?.kind === "video" ? "video" : story.upload ? "image" : "text";
-  const imageKey = story.upload?.thumbKey ?? (kind === "image" ? story.upload!.key : null);
-  return { id: story.id, ownerId: story.userId, kind, text: story.text?.slice(0, 120) ?? null, background: story.background, imageKey };
+  const kind =
+    story.upload?.kind === "video" ? "video" : story.upload ? "image" : "text";
+  const imageKey =
+    story.upload?.thumbKey ?? (kind === "image" ? story.upload!.key : null);
+  return {
+    id: story.id,
+    ownerId: story.userId,
+    kind,
+    text: story.text?.slice(0, 120) ?? null,
+    background: story.background,
+    imageKey,
+  };
 }
 
+const threadIsClosed = (m: {
+  threadClosed: boolean;
+  threadClosesAt: Date | null;
+}) =>
+  m.threadClosed ||
+  (!!m.threadClosesAt && m.threadClosesAt.getTime() <= Date.now());
+
 /** The group message a comment goes under: one of the chat's own messages, still there, with its comments open. */
-async function threadToCommentOn(tx: Tx, chat: { id: string; type: string }, id: string) {
-  if (chat.type !== "group") throw new AppError("NOT_IN_GROUPS", "Comments are only in groups");
-  const root = await tx.message.findFirst({ where: { id, chatId: chat.id, threadId: null, deletedAt: null, type: { not: "service" } } });
+async function threadToCommentOn(
+  tx: Tx,
+  chat: { id: string; type: string },
+  id: string,
+) {
+  if (chat.type !== "group")
+    throw new AppError("NOT_IN_GROUPS", "Comments are only in groups");
+  const root = await tx.message.findFirst({
+    where: {
+      id,
+      chatId: chat.id,
+      threadId: null,
+      deletedAt: null,
+      type: { not: "service" },
+    },
+  });
   if (!root) throw new AppError("MESSAGE_NOT_FOUND");
-  if (root.threadClosed) throw new AppError("THREAD_CLOSED", "Comments on this message are closed");
+  if (threadIsClosed(root))
+    throw new AppError("THREAD_CLOSED", "Comments on this message are closed");
   return root;
 }
 
 /** Closes or reopens a group message's comments; only the group's owner and admins can. */
-export async function setThreadClosed(userId: string, messageId: string, closed: boolean) {
+export async function setThreadClosed(
+  userId: string,
+  messageId: string,
+  closed: boolean,
+) {
   return withEvents(async (tx, emit) => {
-    const root = await tx.message.findFirst({ where: { id: messageId, threadId: null, type: { not: "service" } }, select: { chatId: true } });
-    const me = root && (await tx.chatMember.findUnique({ where: { chatId_userId: { chatId: root.chatId, userId } }, include: { chat: true } }));
+    const root = await tx.message.findFirst({
+      where: { id: messageId, threadId: null, type: { not: "service" } },
+      select: { chatId: true },
+    });
+    const me =
+      root &&
+      (await tx.chatMember.findUnique({
+        where: { chatId_userId: { chatId: root.chatId, userId } },
+        include: { chat: true },
+      }));
     if (!root || !me) throw new AppError("MESSAGE_NOT_FOUND");
-    if (me.chat.type !== "group" || me.role === "member") throw new AppError("NOT_GROUP_ADMIN");
-    const updated = await tx.message.update({ where: { id: messageId }, data: { threadClosed: closed }, include: messageInclude });
-    for (const id of await memberIds(tx, root.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    if (me.chat.type !== "group" || me.role === "member")
+      throw new AppError("NOT_GROUP_ADMIN");
+    const updated = await tx.message.update({
+      where: { id: messageId },
+      data: { threadClosed: closed, threadLimit: null, threadClosesAt: null },
+      include: messageInclude,
+    });
+    for (const id of await memberIds(tx, root.chatId))
+      emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
   });
 }
@@ -381,29 +622,62 @@ export async function createMessage(
   emit: Emit,
   userId: string,
   chatId: string,
-  input: SendMessageInput | { clientId: string; action: ServiceAction; silent?: boolean },
+  input:
+    | SendMessageInput
+    | { clientId: string; action: ServiceAction; silent?: boolean },
   opts: CreateOptions = {},
 ) {
   const member = await assertMember(tx, chatId, userId);
   const content = "action" in input ? null : input;
   await assertCanMessage(tx, chatId, userId, !!content && !content.threadId);
   if (content?.replyToId) {
-    const original = await tx.message.findFirst({ where: { id: content.replyToId, chatId }, select: { id: true } });
-    if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
+    const original = await tx.message.findFirst({
+      where: { id: content.replyToId, chatId },
+      select: { id: true },
+    });
+    if (!original)
+      throw new AppError(
+        "MESSAGE_NOT_FOUND",
+        "The message you replied to is not in this chat",
+      );
   }
-  const story = content?.storyId ? await storyReplyFor(tx, chatId, userId, content.storyId) : null;
-  const upload = content?.attachmentId ? await claimForMessage(tx, userId, content.attachmentId) : null;
-  if (content?.stickerId && !(await tx.sticker.findFirst({ where: { id: content.stickerId, removedAt: null } }))) {
+  const story = content?.storyId
+    ? await storyReplyFor(tx, chatId, userId, content.storyId)
+    : null;
+  const upload = content?.attachmentId
+    ? await claimForMessage(tx, userId, content.attachmentId)
+    : null;
+  if (
+    content?.stickerId &&
+    !(await tx.sticker.findFirst({
+      where: { id: content.stickerId, removedAt: null },
+    }))
+  ) {
     throw new AppError("STICKER_NOT_FOUND");
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
-  if ((content?.game || content?.type === "game") && chat.type === "group") throw new AppError("NOT_IN_GROUPS", "Games aren't available in groups");
-  const thread = content?.threadId ? await threadToCommentOn(tx, chat, content.threadId) : null;
-  if (content?.commentsClosed && (chat.type !== "group" || member.role === "member" || thread)) {
-    throw new AppError("NOT_GROUP_ADMIN", "Only a group's owner and admins can post with comments closed");
+  if ((content?.game || content?.type === "game") && chat.type === "group")
+    throw new AppError("NOT_IN_GROUPS", "Games aren't available in groups");
+  const thread = content?.threadId
+    ? await threadToCommentOn(tx, chat, content.threadId)
+    : null;
+  if (
+    (content?.commentsClosed ||
+      content?.commentsLimit ||
+      content?.commentsCloseIn) &&
+    (chat.type !== "group" || member.role === "member" || thread)
+  ) {
+    throw new AppError(
+      "NOT_GROUP_ADMIN",
+      "Only a group's owner and admins can post with comments closed",
+    );
   }
   if (content) checkEncryption(chat, content, upload);
-  if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content, upload);
+  if (
+    content &&
+    (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))
+  )
+    checkSupport(content, upload);
 
   const encrypted = content?.encrypted;
   let envelopes = encrypted?.envelopes ?? [];
@@ -411,8 +685,14 @@ export async function createMessage(
   let createdAt = new Date();
   let started = false;
   if (content && chat.supportClosedAt) {
-    await tx.chat.update({ where: { id: chatId }, data: { supportClosedAt: null } });
-    await tx.chatMember.updateMany({ where: { chatId, userId: { not: chat.supportUserId! } }, data: { archived: false } });
+    await tx.chat.update({
+      where: { id: chatId },
+      data: { supportClosedAt: null },
+    });
+    await tx.chatMember.updateMany({
+      where: { chatId, userId: { not: chat.supportUserId! } },
+      data: { archived: false },
+    });
     started = true;
   }
   if (encrypted) {
@@ -421,15 +701,25 @@ export async function createMessage(
       senderDevice = opts.scheduled.senderDevice;
     } else {
       if (!opts.sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
-      senderDevice = await checkEnvelopes(tx, chatId, opts.sessionId, envelopes);
+      senderDevice = await checkEnvelopes(
+        tx,
+        chatId,
+        opts.sessionId,
+        envelopes,
+      );
     }
     if (!chat.encryptedAt) {
-      await tx.chat.update({ where: { id: chatId }, data: { encryptedAt: new Date() } });
+      await tx.chat.update({
+        where: { id: chatId },
+        data: { encryptedAt: new Date() },
+      });
       const notice = await createMessage(tx, emit, userId, chatId, {
         clientId: `e2ee:${chatId}`,
         action: { type: "e2ee" },
       });
-      createdAt = new Date(Math.max(Date.now(), notice.message.createdAt.getTime() + 1));
+      createdAt = new Date(
+        Math.max(Date.now(), notice.message.createdAt.getTime() + 1),
+      );
       started = true;
     }
   }
@@ -439,7 +729,11 @@ export async function createMessage(
       chatId,
       senderId: userId,
       clientId: input.clientId,
-      type: content ? (content.stickerId ? "sticker" : (upload?.kind ?? kindOf(content))) : "service",
+      type: content
+        ? content.stickerId
+          ? "sticker"
+          : (upload?.kind ?? kindOf(content))
+        : "service",
       text: content?.text ?? null,
       entities: storedEntities(content?.entities),
       attachmentId: upload?.id ?? null,
@@ -456,6 +750,10 @@ export async function createMessage(
       groupId: content?.groupId ?? null,
       threadId: thread?.id ?? null,
       threadClosed: content?.commentsClosed ?? false,
+      threadLimit: content?.commentsLimit ?? null,
+      threadClosesAt: content?.commentsCloseIn
+        ? new Date(createdAt.getTime() + content.commentsCloseIn * 1000)
+        : null,
       ...("action" in input && { action: input.action }),
       ...(content?.location && { location: content.location }),
       ...(content?.checklist && { checklist: content.checklist }),
@@ -463,60 +761,126 @@ export async function createMessage(
       encrypted: !!encrypted,
       senderDevice,
       ...(envelopes.length && {
-        envelopes: { create: envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
+        envelopes: {
+          create: envelopes.map((e) => ({
+            deviceId: e.deviceId,
+            envelope: e.envelope,
+          })),
+        },
       }),
-      ...(encrypted?.backup && { backups: { create: { userId, sealed: encrypted.backup } } }),
-      sentAt: content?.sentAt && !opts.scheduled ? new Date(Math.min(Date.parse(content.sentAt), createdAt.getTime())) : null,
+      ...(encrypted?.backup && {
+        backups: { create: { userId, sealed: encrypted.backup } },
+      }),
+      sentAt:
+        content?.sentAt && !opts.scheduled
+          ? new Date(Math.min(Date.parse(content.sentAt), createdAt.getTime()))
+          : null,
       createdAt,
-      expiresAt: content && chat.autoDeleteSecs ? new Date(createdAt.getTime() + chat.autoDeleteSecs * 1000) : null,
+      expiresAt:
+        content && chat.autoDeleteSecs
+          ? new Date(createdAt.getTime() + chat.autoDeleteSecs * 1000)
+          : null,
     },
     include: messageInclude,
   });
   const cutoffs = new Map(
-    (await tx.chatMember.findMany({ where: { chatId }, select: { userId: true, clearedAt: true } })).map((c) => [c.userId, c.clearedAt]),
+    (
+      await tx.chatMember.findMany({
+        where: { chatId },
+        select: { userId: true, clearedAt: true },
+      })
+    ).map((c) => [c.userId, c.clearedAt]),
   );
   const members = [...cutoffs.keys()];
-  const shownTo = (id: string) => toMessageDTO(message, id, { hiddenBefore: cutoffs.get(id) });
+  const shownTo = (id: string) =>
+    toMessageDTO(message, id, { hiddenBefore: cutoffs.get(id) });
   if (thread) {
+    // ponytail: two comments landing together can both slip in past the limit; a row lock if that ever matters
+    const full =
+      !!thread.threadLimit &&
+      userId !== thread.senderId &&
+      (await tx.message.count({
+        where: { threadId: thread.id, senderId: { not: thread.senderId } },
+      })) >= thread.threadLimit;
     const root = await tx.message.update({
       where: { id: thread.id },
-      data: { threadCount: { increment: 1 } },
+      data: {
+        threadCount: { increment: 1 },
+        ...(full && { threadClosed: true }),
+      },
       include: messageInclude,
     });
     for (const id of members) emit(id, "message.new", shownTo(id));
-    for (const id of members) emit(id, "message.edited", toMessageDTO(root, id));
-    const earlier = await tx.message.findMany({ where: { threadId: thread.id }, select: { senderId: true }, distinct: ["senderId"] });
-    const following = new Set([thread.senderId, ...earlier.map((m) => m.senderId)]);
-    return { message, recipients: members.filter((id) => id !== userId && following.has(id)) };
+    for (const id of members)
+      emit(id, "message.edited", toMessageDTO(root, id));
+    const earlier = await tx.message.findMany({
+      where: { threadId: thread.id },
+      select: { senderId: true },
+      distinct: ["senderId"],
+    });
+    const following = new Set([
+      thread.senderId,
+      ...earlier.map((m) => m.senderId),
+    ]);
+    return {
+      message,
+      recipients: members.filter((id) => id !== userId && following.has(id)),
+    };
   }
-  await tx.chat.update({ where: { id: chatId }, data: { lastMessageAt: message.createdAt } });
-  await tx.chatMember.updateMany({ where: { chatId, hidden: true }, data: { hidden: false } });
+  await tx.chat.update({
+    where: { id: chatId },
+    data: { lastMessageAt: message.createdAt },
+  });
+  await tx.chatMember.updateMany({
+    where: { chatId, hidden: true },
+    data: { hidden: false },
+  });
   const fromTheChat = content && !story && !opts.scheduled;
   await tx.chatMember.update({
     where: { chatId_userId: { chatId, userId } },
     data: {
-      ...(fromTheChat && { lastReadMessageId: message.id, lastReadAt: message.createdAt }),
+      ...(fromTheChat && {
+        lastReadMessageId: message.id,
+        lastReadAt: message.createdAt,
+      }),
       lastDeliveredMessageId: message.id,
       lastDeliveredAt: message.createdAt,
     },
   });
 
   if (story && story.kind !== "note") {
-    await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "story_reply", chatId });
+    await notify(tx, emit, {
+      userId: story.ownerId,
+      actorId: userId,
+      kind: "story_reply",
+      chatId,
+    });
   }
   for (const id of members) emit(id, "message.new", shownTo(id));
   if (started) {
     const { getChat } = await import("./chats.js");
-    for (const id of members) emit(id, "chat.updated", await getChat(id, chatId, tx));
+    for (const id of members)
+      emit(id, "chat.updated", await getChat(id, chatId, tx));
   }
   return { message, recipients: members.filter((id) => id !== userId) };
 }
 
 const kindOf = (c: SendMessageInput) =>
-  c.type ?? (c.location ? "location" : c.checklist ? "checklist" : c.game ? "game" : "text");
+  c.type ??
+  (c.location
+    ? "location"
+    : c.checklist
+      ? "checklist"
+      : c.game
+        ? "game"
+        : "text");
 
 /** Swaps a `gifId` for a stored copy of that GIF, checking membership first so only members trigger downloads. */
-export async function resolveGif<T extends SendMessageInput>(userId: string, chatId: string, input: T): Promise<T> {
+export async function resolveGif<T extends SendMessageInput>(
+  userId: string,
+  chatId: string,
+  input: T,
+): Promise<T> {
   if (!input.gifId) return input;
   await assertMember(prisma, chatId, userId);
   const upload = await saveGif(userId, input.gifId);
@@ -537,10 +901,14 @@ export async function sendMessage(
     const { message, recipients } = await withEvents((tx, emit) =>
       createMessage(tx, emit, userId, chatId, ready, { sessionId }),
     );
-    await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
+    await queuePush(message.id, recipients).catch((err) =>
+      console.error("could not queue push:", err.message),
+    );
     if (recipients.includes(FRITE_BOT_ID) && message.type === "text") {
       const { botReply } = await import("./bot.js");
-      await botReply(userId, chatId).catch((err) => console.error("Frite Bot could not answer:", err.message));
+      await botReply(userId, chatId).catch((err) =>
+        console.error("Frite Bot could not answer:", err.message),
+      );
     }
     return toMessageDTO(message, userId);
   } catch (err) {
@@ -551,26 +919,48 @@ export async function sendMessage(
   }
 }
 
-export async function editMessage(userId: string, messageId: string, input: EditMessageInput, sessionId?: string) {
+export async function editMessage(
+  userId: string,
+  messageId: string,
+  input: EditMessageInput,
+  sessionId?: string,
+) {
   const { dto, replaced } = await withEvents(async (tx, emit) => {
-    const message = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    const message = await tx.message.findUnique({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     if (!message) throw new AppError("MESSAGE_NOT_FOUND");
     await assertMember(tx, message.chatId, userId).catch(() => {
       throw new AppError("MESSAGE_NOT_FOUND");
     });
-    if (message.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can edit a message");
+    if (message.senderId !== userId)
+      throw new AppError(
+        "NOT_MESSAGE_SENDER",
+        "Only the sender can edit a message",
+      );
     await assertCanMessage(tx, message.chatId, userId);
     if (
       message.deletedAt ||
       isEphemeral(message) ||
-      ["service", "sticker", "location", "checklist", "game"].includes(message.type)
+      ["service", "sticker", "location", "checklist", "game"].includes(
+        message.type,
+      )
     ) {
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
-    const chat = await tx.chat.findUniqueOrThrow({ where: { id: message.chatId }, select: { encryptedAt: true } });
-    const photo = input.attachmentId ? await claimForMessage(tx, userId, input.attachmentId) : null;
+    const chat = await tx.chat.findUniqueOrThrow({
+      where: { id: message.chatId },
+      select: { encryptedAt: true },
+    });
+    const photo = input.attachmentId
+      ? await claimForMessage(tx, userId, input.attachmentId)
+      : null;
     if (photo && (message.type !== "image" || photo.kind !== "image")) {
-      throw new AppError("MESSAGE_NOT_EDITABLE", "Only a photo message can get a new photo");
+      throw new AppError(
+        "MESSAGE_NOT_EDITABLE",
+        "Only a photo message can get a new photo",
+      );
     }
     const attachment = photo ?? message.attachment;
     const swap = photo ? { attachmentId: photo.id } : {};
@@ -578,11 +968,19 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     let updated: MessageRow;
     if (input.encrypted) {
       if (attachment && !fitsEncrypted(attachment)) {
-        throw new AppError("MESSAGE_NOT_EDITABLE", "A plain file can't get an encrypted caption");
+        throw new AppError(
+          "MESSAGE_NOT_EDITABLE",
+          "A plain file can't get an encrypted caption",
+        );
       }
       if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
       const { envelopes, backup } = input.encrypted;
-      const senderDevice = await checkEnvelopes(tx, message.chatId, sessionId, envelopes);
+      const senderDevice = await checkEnvelopes(
+        tx,
+        message.chatId,
+        sessionId,
+        envelopes,
+      );
       await tx.messageEnvelope.deleteMany({ where: { messageId } });
       await tx.messageBackup.deleteMany({ where: { messageId } });
       updated = await tx.message.update({
@@ -595,30 +993,60 @@ export async function editMessage(userId: string, messageId: string, input: Edit
           spoiler: false,
           editedAt: new Date(),
           ...swap,
-          envelopes: { create: envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
+          envelopes: {
+            create: envelopes.map((e) => ({
+              deviceId: e.deviceId,
+              envelope: e.envelope,
+            })),
+          },
           ...(backup && { backups: { create: { userId, sealed: backup } } }),
         },
         include: messageInclude,
       });
     } else {
       if (message.encrypted || chat.encryptedAt) {
-        throw new AppError("ENCRYPTION_REQUIRED", "Messages in this chat are end-to-end encrypted");
+        throw new AppError(
+          "ENCRYPTION_REQUIRED",
+          "Messages in this chat are end-to-end encrypted",
+        );
       }
-      if (photo?.encrypted) throw new AppError("VALIDATION_FAILED", "Encrypted files go in encrypted messages");
+      if (photo?.encrypted)
+        throw new AppError(
+          "VALIDATION_FAILED",
+          "Encrypted files go in encrypted messages",
+        );
       const entities = input.entities ?? [];
-      if (!input.text && !attachment) throw new AppError("VALIDATION_FAILED", "A message without a file needs text");
-      if (!photo && message.text === input.text && JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)) {
+      if (!input.text && !attachment)
+        throw new AppError(
+          "VALIDATION_FAILED",
+          "A message without a file needs text",
+        );
+      if (
+        !photo &&
+        message.text === input.text &&
+        JSON.stringify(entitiesOf(message)) === JSON.stringify(entities)
+      ) {
         return { dto: toMessageDTO(message, userId), replaced: null };
       }
       updated = await tx.message.update({
         where: { id: messageId },
-        data: { text: input.text || null, entities: storedEntities(entities), editedAt: new Date(), ...swap },
+        data: {
+          text: input.text || null,
+          entities: storedEntities(entities),
+          editedAt: new Date(),
+          ...swap,
+        },
         include: messageInclude,
       });
     }
-    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    for (const id of await memberIds(tx, message.chatId))
+      emit(id, "message.edited", toMessageDTO(updated, id));
     const replaced =
-      photo && message.attachmentId && !(await tx.message.count({ where: { attachmentId: message.attachmentId } }))
+      photo &&
+      message.attachmentId &&
+      !(await tx.message.count({
+        where: { attachmentId: message.attachmentId },
+      }))
         ? message.attachmentId
         : null;
     return { dto: toMessageDTO(updated, userId), replaced };
@@ -627,10 +1055,21 @@ export async function editMessage(userId: string, messageId: string, input: Edit
   return dto;
 }
 
-export async function messageTiming(userId: string, messageId: string): Promise<MessageTimingDTO> {
+export async function messageTiming(
+  userId: string,
+  messageId: string,
+): Promise<MessageTimingDTO> {
   const message = await prisma.message.findUnique({ where: { id: messageId } });
-  const member = message && (await prisma.chatMember.findUnique({ where: { chatId_userId: { chatId: message.chatId, userId } } }));
-  const visible = member && (await prisma.message.count({ where: { id: messageId, ...visibleTo(userId, member.clearedAt) } }));
+  const member =
+    message &&
+    (await prisma.chatMember.findUnique({
+      where: { chatId_userId: { chatId: message.chatId, userId } },
+    }));
+  const visible =
+    member &&
+    (await prisma.message.count({
+      where: { id: messageId, ...visibleTo(userId, member.clearedAt) },
+    }));
   if (!message || !visible) throw new AppError("MESSAGE_NOT_FOUND");
   return {
     sentAt: message.sentAt?.toISOString() ?? null,
@@ -640,11 +1079,23 @@ export async function messageTiming(userId: string, messageId: string): Promise<
 }
 
 async function reactableMessage(tx: Tx, userId: string, messageId: string) {
-  const message = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
-  const member = message && (await tx.chatMember.findUnique({ where: { chatId_userId: { chatId: message.chatId, userId } } }));
-  const visible = member && (await tx.message.count({ where: { id: messageId, ...visibleTo(userId, member.clearedAt) } }));
+  const message = await tx.message.findUnique({
+    where: { id: messageId },
+    include: messageInclude,
+  });
+  const member =
+    message &&
+    (await tx.chatMember.findUnique({
+      where: { chatId_userId: { chatId: message.chatId, userId } },
+    }));
+  const visible =
+    member &&
+    (await tx.message.count({
+      where: { id: messageId, ...visibleTo(userId, member.clearedAt) },
+    }));
   if (!message || !visible) throw new AppError("MESSAGE_NOT_FOUND");
-  if (message.deletedAt || message.purgedAt || message.type === "service") throw new AppError("REACTION_NOT_ALLOWED");
+  if (message.deletedAt || message.purgedAt || message.type === "service")
+    throw new AppError("REACTION_NOT_ALLOWED");
   await assertCanMessage(tx, message.chatId, userId, false);
   return message;
 }
@@ -661,13 +1112,20 @@ export async function setReaction(
   on: boolean,
 ) {
   let emoji: string;
-  let media: { stickerId?: string; gifKey?: string; gifWidth?: number | null; gifHeight?: number | null } = {};
+  let media: {
+    stickerId?: string;
+    gifKey?: string;
+    gifWidth?: number | null;
+    gifHeight?: number | null;
+  } = {};
   let glyph: string;
   if (typeof with_ === "string") {
     emoji = with_;
     glyph = with_;
   } else if ("stickerId" in with_) {
-    const sticker = await prisma.sticker.findFirst({ where: { id: with_.stickerId, removedAt: null, bannedAt: null } });
+    const sticker = await prisma.sticker.findFirst({
+      where: { id: with_.stickerId, removedAt: null, bannedAt: null },
+    });
     if (!sticker) throw new AppError("STICKER_NOT_FOUND");
     emoji = `sticker:${sticker.id}`;
     media = { stickerId: sticker.id };
@@ -681,22 +1139,44 @@ export async function setReaction(
 
   const result = await withEvents(async (tx, emit) => {
     const message = await reactableMessage(tx, userId, messageId);
-    const mine = message.reactions.filter((r) => r.userId === userId).map((r) => r.emoji);
-    if (mine.includes(emoji) === on) return { dto: toMessageDTO(message, userId), authorId: null };
-    if (on && mine.length >= MAX_REACTIONS_PER_USER) throw new AppError("REACTION_LIMIT_REACHED");
+    const mine = message.reactions
+      .filter((r) => r.userId === userId)
+      .map((r) => r.emoji);
+    if (mine.includes(emoji) === on)
+      return { dto: toMessageDTO(message, userId), authorId: null };
+    if (on && mine.length >= MAX_REACTIONS_PER_USER)
+      throw new AppError("REACTION_LIMIT_REACHED");
 
     const key = { messageId_userId_emoji: { messageId, userId, emoji } };
-    if (on) await tx.messageReaction.create({ data: { ...key.messageId_userId_emoji, ...media } });
+    if (on)
+      await tx.messageReaction.create({
+        data: { ...key.messageId_userId_emoji, ...media },
+      });
     else await tx.messageReaction.delete({ where: key });
 
-    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
-    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    const updated = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
+    for (const id of await memberIds(tx, message.chatId))
+      emit(id, "message.edited", toMessageDTO(updated, id));
     if (on && message.senderId !== userId) {
-      emit(message.senderId, "message.reacted", { chatId: message.chatId, messageId, userId, emoji: glyph });
+      emit(message.senderId, "message.reacted", {
+        chatId: message.chatId,
+        messageId,
+        userId,
+        emoji: glyph,
+      });
     }
-    return { dto: toMessageDTO(updated, userId), authorId: on ? message.senderId : null };
+    return {
+      dto: toMessageDTO(updated, userId),
+      authorId: on ? message.senderId : null,
+    };
   });
-  if (result.authorId) await queueReactionPush(messageId, result.authorId, userId, glyph).catch(() => null);
+  if (result.authorId)
+    await queueReactionPush(messageId, result.authorId, userId, glyph).catch(
+      () => null,
+    );
   return result.dto;
 }
 
@@ -704,18 +1184,34 @@ export async function setReaction(
  * Ticks (`done`) or unticks one checklist item for both people. Encrypted checklists keep their
  * items in the envelopes, so the server only bounds the index by the largest checklist.
  */
-export async function checkItem(userId: string, messageId: string, item: number, done: boolean) {
+export async function checkItem(
+  userId: string,
+  messageId: string,
+  item: number,
+  done: boolean,
+) {
   return withEvents(async (tx, emit) => {
     const message = await reactableMessage(tx, userId, messageId);
-    const items = (message.checklist as Checklist | null)?.items.length ?? CHECKLIST.items;
-    if (message.type !== "checklist" || item >= items) throw new AppError("NOT_FOUND", "No such checklist item");
+    const items =
+      (message.checklist as Checklist | null)?.items.length ?? CHECKLIST.items;
+    if (message.type !== "checklist" || item >= items)
+      throw new AppError("NOT_FOUND", "No such checklist item");
 
     const key = { messageId_item: { messageId, item } };
-    if (done) await tx.checklistMark.upsert({ where: key, create: { messageId, item, userId }, update: {} });
+    if (done)
+      await tx.checklistMark.upsert({
+        where: key,
+        create: { messageId, item, userId },
+        update: {},
+      });
     else await tx.checklistMark.deleteMany({ where: { messageId, item } });
 
-    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
-    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    const updated = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
+    for (const id of await memberIds(tx, message.chatId))
+      emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
   });
 }
@@ -725,25 +1221,44 @@ export async function checkItem(userId: string, messageId: string, item: number,
  * envelopes, so the server only checks it's someone else's game, or a board move; the apps settle it
  * from the moves that fit.
  */
-export async function playGame(userId: string, messageId: string, move: GameMove) {
+export async function playGame(
+  userId: string,
+  messageId: string,
+  move: GameMove,
+) {
   return withEvents(async (tx, emit) => {
     await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
     const message = await reactableMessage(tx, userId, messageId);
-    if (message.type !== "game") throw new AppError("NOT_FOUND", "No such game");
-    if (message.senderId === userId && !isTurnMove(move)) throw new AppError("FORBIDDEN", "You can't answer your own game");
-    if (message.moves.length >= MAX_GAME_MOVES) throw new AppError("CONFLICT", "This game is over");
+    if (message.type !== "game")
+      throw new AppError("NOT_FOUND", "No such game");
+    if (message.senderId === userId && !isTurnMove(move))
+      throw new AppError("FORBIDDEN", "You can't answer your own game");
+    if (message.moves.length >= MAX_GAME_MOVES)
+      throw new AppError("CONFLICT", "This game is over");
 
     await tx.gameMove.create({ data: { messageId, userId, move } });
-    let updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    let updated = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     const game = toMessageDTO(updated, userId);
-    if (message.senderId === FRITE_BOT_ID && (game.game?.game === "ttt" || game.game?.game === "four")) {
+    if (
+      message.senderId === FRITE_BOT_ID &&
+      (game.game?.game === "ttt" || game.game?.game === "four")
+    ) {
       const answer = botBoardMove(game.game, game.moves, FRITE_BOT_ID);
       if (answer) {
-        await tx.gameMove.create({ data: { messageId, userId: FRITE_BOT_ID, move: answer } });
-        updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+        await tx.gameMove.create({
+          data: { messageId, userId: FRITE_BOT_ID, move: answer },
+        });
+        updated = await tx.message.findUniqueOrThrow({
+          where: { id: messageId },
+          include: messageInclude,
+        });
       }
     }
-    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    for (const id of await memberIds(tx, message.chatId))
+      emit(id, "message.edited", toMessageDTO(updated, id));
     return toMessageDTO(updated, userId);
   });
 }
@@ -766,38 +1281,72 @@ export async function scrubMessageEvents(tx: Tx, messageIds: string[]) {
 /** Deletes every copy of encrypted content: the envelopes for each device and everyone's backups. */
 async function dropEncryptedContent(tx: Tx, messageIds: string[]) {
   if (!messageIds.length) return;
-  await tx.messageEnvelope.deleteMany({ where: { messageId: { in: messageIds } } });
-  await tx.messageBackup.deleteMany({ where: { messageId: { in: messageIds } } });
+  await tx.messageEnvelope.deleteMany({
+    where: { messageId: { in: messageIds } },
+  });
+  await tx.messageBackup.deleteMany({
+    where: { messageId: { in: messageIds } },
+  });
 }
 
-export async function deleteMessages(userId: string, { ids, scope }: DeleteMessagesQuery) {
+export async function deleteMessages(
+  userId: string,
+  { ids, scope }: DeleteMessagesQuery,
+) {
   const detached = await withEvents(async (tx, emit): Promise<string[]> => {
     const messages = await tx.message.findMany({ where: { id: { in: ids } } });
     const chatIds = [...new Set(messages.map((m) => m.chatId))];
-    const memberships = await tx.chatMember.count({ where: { userId, chatId: { in: chatIds } } });
-    if (messages.length !== ids.length || memberships !== chatIds.length) throw new AppError("MESSAGE_NOT_FOUND");
+    const memberships = await tx.chatMember.count({
+      where: { userId, chatId: { in: chatIds } },
+    });
+    if (messages.length !== ids.length || memberships !== chatIds.length)
+      throw new AppError("MESSAGE_NOT_FOUND");
 
     if (scope === "all") {
       const canDeleteAny = new Set(
-        (await tx.chat.findMany({ where: { id: { in: chatIds }, type: "direct" }, select: { id: true } })).map(
-          (c) => c.id,
-        ),
+        (
+          await tx.chat.findMany({
+            where: { id: { in: chatIds }, type: "direct" },
+            select: { id: true },
+          })
+        ).map((c) => c.id),
       );
       const moderated = await tx.chatMember.findMany({
-        where: { userId, chatId: { in: chatIds }, role: { in: ["owner", "admin"] }, chat: { type: "group" } },
+        where: {
+          userId,
+          chatId: { in: chatIds },
+          role: { in: ["owner", "admin"] },
+          chat: { type: "group" },
+        },
         select: { chatId: true },
       });
       for (const m of moderated) canDeleteAny.add(m.chatId);
-      if (messages.some((m) => m.senderId !== userId && !canDeleteAny.has(m.chatId))) {
-        throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can delete this message for everyone");
+      if (
+        messages.some(
+          (m) => m.senderId !== userId && !canDeleteAny.has(m.chatId),
+        )
+      ) {
+        throw new AppError(
+          "NOT_MESSAGE_SENDER",
+          "Only the sender can delete this message for everyone",
+        );
       }
       const live = messages.filter((m) => !m.deletedAt);
       const tombstones = messages.filter((m) => m.deletedAt);
       await tx.message.updateMany({
         where: { id: { in: live.map((m) => m.id) } },
-        data: { deletedAt: new Date(), deletedById: userId, text: null, entities: Prisma.DbNull, attachmentId: null },
+        data: {
+          deletedAt: new Date(),
+          deletedById: userId,
+          text: null,
+          entities: Prisma.DbNull,
+          attachmentId: null,
+        },
       });
-      await dropEncryptedContent(tx, live.map((m) => m.id));
+      await dropEncryptedContent(
+        tx,
+        live.map((m) => m.id),
+      );
       await scrubMessageEvents(
         tx,
         live.map((m) => m.id),
@@ -805,25 +1354,51 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
 
       for (const chatId of chatIds) {
         const members = await memberIds(tx, chatId);
-        const deleted = live.filter((m) => m.chatId === chatId).map((m) => m.id);
-        const removed = tombstones.filter((m) => m.chatId === chatId).map((m) => m.id);
+        const deleted = live
+          .filter((m) => m.chatId === chatId)
+          .map((m) => m.id);
+        const removed = tombstones
+          .filter((m) => m.chatId === chatId)
+          .map((m) => m.id);
         if (removed.length) {
           await tx.messageHidden.createMany({
-            data: members.flatMap((memberId) => removed.map((messageId) => ({ userId: memberId, messageId }))),
+            data: members.flatMap((memberId) =>
+              removed.map((messageId) => ({ userId: memberId, messageId })),
+            ),
             skipDuplicates: true,
           });
         }
         for (const id of members) {
-          if (deleted.length) emit(id, "message.deleted", { chatId, messageIds: deleted, scope: "all", by: userId });
-          if (removed.length) emit(id, "message.deleted", { chatId, messageIds: removed, scope: "me" });
+          if (deleted.length)
+            emit(id, "message.deleted", {
+              chatId,
+              messageIds: deleted,
+              scope: "all",
+              by: userId,
+            });
+          if (removed.length)
+            emit(id, "message.deleted", {
+              chatId,
+              messageIds: removed,
+              scope: "me",
+            });
         }
       }
       return live.map((m) => m.attachmentId).filter((a): a is string => !!a);
     }
 
-    await tx.messageHidden.createMany({ data: ids.map((messageId) => ({ userId, messageId })), skipDuplicates: true });
+    await tx.messageHidden.createMany({
+      data: ids.map((messageId) => ({ userId, messageId })),
+      skipDuplicates: true,
+    });
     for (const chatId of chatIds) {
-      const data = { chatId, messageIds: messages.filter((m) => m.chatId === chatId).map((m) => m.id), scope };
+      const data = {
+        chatId,
+        messageIds: messages
+          .filter((m) => m.chatId === chatId)
+          .map((m) => m.id),
+        scope,
+      };
       emit(userId, "message.deleted", data);
     }
     return [];
@@ -832,13 +1407,21 @@ export async function deleteMessages(userId: string, { ids, scope }: DeleteMessa
 }
 
 /** Deletes the messages of one chat sent between `from` and `to` (either may be open), like deleteMessages. */
-export async function deleteMessagesBetween(userId: string, chatId: string, { scope, from, to }: DeleteChatQuery) {
+export async function deleteMessagesBetween(
+  userId: string,
+  chatId: string,
+  { scope, from, to }: DeleteChatQuery,
+) {
   await assertMember(prisma, chatId, userId);
   const inRange = await prisma.message.findMany({
-    where: { chatId, createdAt: { gte: from && new Date(from), lte: to && new Date(to) } },
+    where: {
+      chatId,
+      createdAt: { gte: from && new Date(from), lte: to && new Date(to) },
+    },
     select: { id: true },
   });
-  if (inRange.length) await deleteMessages(userId, { ids: inRange.map((m) => m.id), scope });
+  if (inRange.length)
+    await deleteMessages(userId, { ids: inRange.map((m) => m.id), scope });
 }
 
 /** Permanently deletes, for everyone, messages whose chat auto-delete deadline has passed. */
@@ -853,34 +1436,57 @@ export async function deleteExpiredMessages(batch = 500) {
     await scrubMessageEvents(tx, ids);
     await tx.message.deleteMany({ where: { id: { in: ids } } });
     for (const chatId of new Set(rows.map((m) => m.chatId))) {
-      const messageIds = rows.filter((m) => m.chatId === chatId).map((m) => m.id);
-      for (const id of await memberIds(tx, chatId)) emit(id, "message.deleted", { chatId, messageIds, scope: "me" });
+      const messageIds = rows
+        .filter((m) => m.chatId === chatId)
+        .map((m) => m.id);
+      for (const id of await memberIds(tx, chatId))
+        emit(id, "message.deleted", { chatId, messageIds, scope: "me" });
     }
     return rows;
   });
-  await purgeUploads(doomed.map((m) => m.attachmentId).filter((a): a is string => !!a));
+  await purgeUploads(
+    doomed.map((m) => m.attachmentId).filter((a): a is string => !!a),
+  );
   return doomed.length;
 }
 
 async function notifyMembers(tx: Tx, emit: Emit, messageId: string) {
-  const m = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
-  for (const id of await memberIds(tx, m.chatId)) emit(id, "message.edited", toMessageDTO(m, id));
+  const m = await tx.message.findUniqueOrThrow({
+    where: { id: messageId },
+    include: messageInclude,
+  });
+  for (const id of await memberIds(tx, m.chatId))
+    emit(id, "message.edited", toMessageDTO(m, id));
 }
 
 /**
  * Permanently deletes a self-destructing message's content: its text, its place in the sync log,
  * and (after `filesAfterMs`, so a link just handed out can still load) its file.
  */
-async function wipeContent(tx: Tx, emit: Emit, m: MessageRow, filesAfterMs: number) {
+async function wipeContent(
+  tx: Tx,
+  emit: Emit,
+  m: MessageRow,
+  filesAfterMs: number,
+) {
   await tx.message.update({
     where: { id: m.id },
-    data: { purgedAt: new Date(), text: null, entities: Prisma.DbNull, attachmentId: null },
+    data: {
+      purgedAt: new Date(),
+      text: null,
+      entities: Prisma.DbNull,
+      attachmentId: null,
+    },
   });
   await dropEncryptedContent(tx, [m.id]);
   await scrubMessageEvents(tx, [m.id]);
   await notifyMembers(tx, emit, m.id);
   if (m.attachmentId) {
-    await timersQueue().add("purge-uploads", { uploadIds: [m.attachmentId] }, { delay: filesAfterMs });
+    await timersQueue().add(
+      "purge-uploads",
+      { uploadIds: [m.attachmentId] },
+      { delay: filesAfterMs },
+    );
   }
 }
 
@@ -889,8 +1495,16 @@ async function wipeContent(tx: Tx, emit: Emit, m: MessageRow, filesAfterMs: numb
  * EPHEMERAL_RESEND.windowSeconds so they can resend it; once that window passes, or straight away
  * when no resends are left, its content is wiped for good.
  */
-async function markExpired(tx: Tx, emit: Emit, m: MessageRow, filesAfterMs: number) {
-  await tx.message.update({ where: { id: m.id }, data: { expiredAt: new Date() } });
+async function markExpired(
+  tx: Tx,
+  emit: Emit,
+  m: MessageRow,
+  filesAfterMs: number,
+) {
+  await tx.message.update({
+    where: { id: m.id },
+    data: { expiredAt: new Date() },
+  });
   await scrubMessageEvents(tx, [m.id]);
   if (m.resendCount >= EPHEMERAL_RESEND.max) {
     await wipeContent(tx, emit, m, filesAfterMs);
@@ -900,14 +1514,27 @@ async function markExpired(tx: Tx, emit: Emit, m: MessageRow, filesAfterMs: numb
   await timersQueue().add(
     "purge-message",
     { purgeMessageId: m.id, cycle: m.resendCount },
-    { delay: EPHEMERAL_RESEND.windowSeconds * 1000, jobId: `purge-${m.id}-${m.resendCount}` },
+    {
+      delay: EPHEMERAL_RESEND.windowSeconds * 1000,
+      jobId: `purge-${m.id}-${m.resendCount}`,
+    },
   );
 }
 
 export async function expireMessage(messageId: string, cycle: number) {
   await withEvents(async (tx, emit) => {
-    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
-    if (!m || m.expiredAt || m.deletedAt || !isEphemeral(m) || m.resendCount !== cycle) return;
+    const m = await tx.message.findUnique({
+      where: { id: messageId },
+      include: messageInclude,
+    });
+    if (
+      !m ||
+      m.expiredAt ||
+      m.deletedAt ||
+      !isEphemeral(m) ||
+      m.resendCount !== cycle
+    )
+      return;
     await markExpired(tx, emit, m, 0);
   });
 }
@@ -915,7 +1542,10 @@ export async function expireMessage(messageId: string, cycle: number) {
 /** Wipes an expired message whose resend window has passed, unless it was resent since. */
 export async function purgeMessage(messageId: string, cycle: number) {
   await withEvents(async (tx, emit) => {
-    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    const m = await tx.message.findUnique({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     if (!m || !m.expiredAt || m.purgedAt || m.resendCount !== cycle) return;
     await wipeContent(tx, emit, m, 0);
   });
@@ -926,27 +1556,52 @@ export async function purgeMessage(messageId: string, cycle: number) {
  * until they open it, then goes like any other. Their backup copy and the sync log's copies go, so
  * the old content can't come back from there.
  */
-export async function makeEphemeral(userId: string, messageId: string, rule: EphemeralInput): Promise<MessageDTO> {
+export async function makeEphemeral(
+  userId: string,
+  messageId: string,
+  rule: EphemeralInput,
+): Promise<MessageDTO> {
   return withEvents(async (tx, emit) => {
     await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
-    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    const m = await tx.message.findUnique({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
     await assertMember(tx, m.chatId, userId).catch(() => {
       throw new AppError("MESSAGE_NOT_FOUND");
     });
-    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can make it self-destruct");
-    if (isEphemeral(m) || ["service", "sticker", "location", "checklist", "game"].includes(m.type)) {
-      throw new AppError("MESSAGE_NOT_EDITABLE", "This message can't be made to self-destruct");
+    if (m.senderId !== userId)
+      throw new AppError(
+        "NOT_MESSAGE_SENDER",
+        "Only the sender can make it self-destruct",
+      );
+    if (
+      isEphemeral(m) ||
+      ["service", "sticker", "location", "checklist", "game"].includes(m.type)
+    ) {
+      throw new AppError(
+        "MESSAGE_NOT_EDITABLE",
+        "This message can't be made to self-destruct",
+      );
     }
 
     await tx.message.update({
       where: { id: messageId },
-      data: { maxViews: rule.maxViews ?? null, ttlSeconds: rule.ttlSeconds ?? null },
+      data: {
+        maxViews: rule.maxViews ?? null,
+        ttlSeconds: rule.ttlSeconds ?? null,
+      },
     });
-    await tx.messageBackup.deleteMany({ where: { messageId, userId: { not: userId } } });
+    await tx.messageBackup.deleteMany({
+      where: { messageId, userId: { not: userId } },
+    });
     await scrubMessageEvents(tx, [messageId]);
     await notifyMembers(tx, emit, messageId);
-    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    const updated = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     return toMessageDTO(updated, userId);
   });
 }
@@ -954,12 +1609,16 @@ export async function makeEphemeral(userId: string, messageId: string, rule: Eph
 /** An encrypted message whose content still exists, for asking for it again or sealing it again. */
 async function resealable(tx: Tx, userId: string, messageId: string) {
   await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
-  const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+  const m = await tx.message.findUnique({
+    where: { id: messageId },
+    include: messageInclude,
+  });
   if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
   await assertMember(tx, m.chatId, userId).catch(() => {
     throw new AppError("MESSAGE_NOT_FOUND");
   });
-  if (!m.encrypted || m.purgedAt || m.expiredAt) throw new AppError("MESSAGE_NOT_EDITABLE");
+  if (!m.encrypted || m.purgedAt || m.expiredAt)
+    throw new AppError("MESSAGE_NOT_EDITABLE");
   return m;
 }
 
@@ -967,19 +1626,33 @@ async function resealable(tx: Tx, userId: string, messageId: string) {
  * Asks the sender to seal an encrypted message again, for someone whose device has no way to open it,
  * and tells the sender's devices they aren't using. Asking after it failed asks again.
  */
-export async function requestReseal(userId: string, messageId: string): Promise<MessageDTO> {
+export async function requestReseal(
+  userId: string,
+  messageId: string,
+): Promise<MessageDTO> {
   const { dto, asked } = await withEvents(async (tx, emit) => {
     const m = await resealable(tx, userId, messageId);
-    if (m.resealRequestedBy && !m.resealFailedAt) return { dto: toMessageDTO(m, userId), asked: null };
+    if (m.resealRequestedBy && !m.resealFailedAt)
+      return { dto: toMessageDTO(m, userId), asked: null };
     await tx.message.update({
       where: { id: messageId },
-      data: { resealRequestedAt: new Date(), resealRequestedBy: userId, resealFailedAt: null },
+      data: {
+        resealRequestedAt: new Date(),
+        resealRequestedBy: userId,
+        resealFailedAt: null,
+      },
     });
     await notifyMembers(tx, emit, messageId);
-    const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    const fresh = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     return { dto: toMessageDTO(fresh, userId), asked: fresh };
   });
-  if (asked && asked.senderId !== userId) void deliverResealPush(asked, asked.senderId, userId, "requested").catch(() => null);
+  if (asked && asked.senderId !== userId)
+    void deliverResealPush(asked, asked.senderId, userId, "requested").catch(
+      () => null,
+    );
   return dto;
 }
 
@@ -987,18 +1660,37 @@ export async function requestReseal(userId: string, messageId: string): Promise<
  * The sender's device couldn't read the message either, so it can't be sealed again from there: everyone sees
  * it failed, and whoever asked is told on the devices they aren't using.
  */
-export async function failReseal(userId: string, messageId: string): Promise<MessageDTO> {
+export async function failReseal(
+  userId: string,
+  messageId: string,
+): Promise<MessageDTO> {
   const { dto, failed } = await withEvents(async (tx, emit) => {
     const m = await resealable(tx, userId, messageId);
-    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can encrypt it again");
-    if (!m.resealRequestedBy || m.resealFailedAt) return { dto: toMessageDTO(m, userId), failed: null };
-    await tx.message.update({ where: { id: messageId }, data: { resealFailedAt: new Date() } });
+    if (m.senderId !== userId)
+      throw new AppError(
+        "NOT_MESSAGE_SENDER",
+        "Only the sender can encrypt it again",
+      );
+    if (!m.resealRequestedBy || m.resealFailedAt)
+      return { dto: toMessageDTO(m, userId), failed: null };
+    await tx.message.update({
+      where: { id: messageId },
+      data: { resealFailedAt: new Date() },
+    });
     await notifyMembers(tx, emit, messageId);
-    const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    const fresh = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     return { dto: toMessageDTO(fresh, userId), failed: fresh };
   });
   if (failed?.resealRequestedBy && failed.resealRequestedBy !== userId) {
-    void deliverResealPush(failed, failed.resealRequestedBy, userId, "failed").catch(() => null);
+    void deliverResealPush(
+      failed,
+      failed.resealRequestedBy,
+      userId,
+      "failed",
+    ).catch(() => null);
   }
   return dto;
 }
@@ -1007,12 +1699,26 @@ export async function failReseal(userId: string, messageId: string): Promise<Mes
  * Replaces an encrypted message's envelopes with ones sealed again by one of the sender's devices, for
  * every device signed in now. It isn't an edit: the content and editedAt stay the same.
  */
-export async function resealMessage(userId: string, messageId: string, input: EncryptedInput, sessionId?: string) {
+export async function resealMessage(
+  userId: string,
+  messageId: string,
+  input: EncryptedInput,
+  sessionId?: string,
+) {
   if (!sessionId) throw new AppError("DEVICE_NOT_REGISTERED");
   return withEvents(async (tx, emit) => {
     const m = await resealable(tx, userId, messageId);
-    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can encrypt it again");
-    const senderDevice = await checkEnvelopes(tx, m.chatId, sessionId, input.envelopes);
+    if (m.senderId !== userId)
+      throw new AppError(
+        "NOT_MESSAGE_SENDER",
+        "Only the sender can encrypt it again",
+      );
+    const senderDevice = await checkEnvelopes(
+      tx,
+      m.chatId,
+      sessionId,
+      input.envelopes,
+    );
     await tx.messageEnvelope.deleteMany({ where: { messageId } });
     await tx.message.update({
       where: { id: messageId },
@@ -1021,41 +1727,86 @@ export async function resealMessage(userId: string, messageId: string, input: En
         resealRequestedAt: null,
         resealRequestedBy: null,
         resealFailedAt: null,
-        envelopes: { create: input.envelopes.map((e) => ({ deviceId: e.deviceId, envelope: e.envelope })) },
+        envelopes: {
+          create: input.envelopes.map((e) => ({
+            deviceId: e.deviceId,
+            envelope: e.envelope,
+          })),
+        },
       },
     });
     await notifyMembers(tx, emit, messageId);
-    return toMessageDTO(await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude }), userId);
+    return toMessageDTO(
+      await tx.message.findUniqueOrThrow({
+        where: { id: messageId },
+        include: messageInclude,
+      }),
+      userId,
+    );
   });
 }
 
 /** Re-arms an opened self-destructing message so its recipient can open it again. */
-export async function resendMessage(userId: string, messageId: string): Promise<MessageDTO> {
+export async function resendMessage(
+  userId: string,
+  messageId: string,
+): Promise<MessageDTO> {
   const { dto, recipients, round } = await withEvents(async (tx, emit) => {
     await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
-    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    const m = await tx.message.findUnique({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
     await assertMember(tx, m.chatId, userId).catch(() => {
       throw new AppError("MESSAGE_NOT_FOUND");
     });
-    if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can resend it");
-    if (!isEphemeral(m)) throw new AppError("RESEND_NOT_ALLOWED", "Only self-destructing messages can be resent");
-    if (!m.expiredAt) throw new AppError("RESEND_NOT_ALLOWED", "It has not been opened yet");
-    if (m.purgedAt) throw new AppError("MESSAGE_EXPIRED", "It was destroyed for good");
+    if (m.senderId !== userId)
+      throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can resend it");
+    if (!isEphemeral(m))
+      throw new AppError(
+        "RESEND_NOT_ALLOWED",
+        "Only self-destructing messages can be resent",
+      );
+    if (!m.expiredAt)
+      throw new AppError("RESEND_NOT_ALLOWED", "It has not been opened yet");
+    if (m.purgedAt)
+      throw new AppError("MESSAGE_EXPIRED", "It was destroyed for good");
     if (m.resendCount >= EPHEMERAL_RESEND.max) {
-      throw new AppError("RESEND_NOT_ALLOWED", `It can only be resent ${EPHEMERAL_RESEND.max} times`);
+      throw new AppError(
+        "RESEND_NOT_ALLOWED",
+        `It can only be resent ${EPHEMERAL_RESEND.max} times`,
+      );
     }
-    if (Date.now() > m.expiredAt.getTime() + EPHEMERAL_RESEND.windowSeconds * 1000) {
+    if (
+      Date.now() >
+      m.expiredAt.getTime() + EPHEMERAL_RESEND.windowSeconds * 1000
+    ) {
       throw new AppError("RESEND_NOT_ALLOWED", "It is too late to resend it");
     }
 
     await tx.messageView.deleteMany({ where: { messageId } });
-    await tx.message.update({ where: { id: messageId }, data: { expiredAt: null, resendCount: { increment: 1 } } });
-    await tx.chat.update({ where: { id: m.chatId }, data: { lastMessageAt: new Date() } });
+    await tx.message.update({
+      where: { id: messageId },
+      data: { expiredAt: null, resendCount: { increment: 1 } },
+    });
+    await tx.chat.update({
+      where: { id: m.chatId },
+      data: { lastMessageAt: new Date() },
+    });
     await notifyMembers(tx, emit, messageId);
-    const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
-    const recipients = (await memberIds(tx, m.chatId)).filter((id) => id !== userId);
-    return { dto: toMessageDTO(fresh, userId), recipients, round: fresh.resendCount };
+    const fresh = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
+    const recipients = (await memberIds(tx, m.chatId)).filter(
+      (id) => id !== userId,
+    );
+    return {
+      dto: toMessageDTO(fresh, userId),
+      recipients,
+      round: fresh.resendCount,
+    };
   });
   await queuePush(messageId, recipients, `r${round}`).catch((err) =>
     console.error("could not queue push:", err.message),
@@ -1064,17 +1815,26 @@ export async function resendMessage(userId: string, messageId: string): Promise<
 }
 
 /** Opens a message for its recipient, counting the view and starting any self-destruct timer. */
-export async function viewMessage(userId: string, messageId: string): Promise<ViewMessageResult> {
+export async function viewMessage(
+  userId: string,
+  messageId: string,
+): Promise<ViewMessageResult> {
   return withEvents(async (tx, emit) => {
     await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
-    const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
+    const m = await tx.message.findUnique({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     if (!m || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
     await assertMember(tx, m.chatId, userId).catch(() => {
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (m.expiredAt) throw new AppError("MESSAGE_EXPIRED");
     if (!isEphemeral(m) || m.senderId === userId) {
-      return { message: toMessageDTO(m, userId, { reveal: true }), expiresAt: null };
+      return {
+        message: toMessageDTO(m, userId, { reveal: true }),
+        expiresAt: null,
+      };
     }
 
     const view = await tx.messageView.upsert({
@@ -1082,9 +1842,14 @@ export async function viewMessage(userId: string, messageId: string): Promise<Vi
       create: { messageId, userId, count: 1 },
       update: { count: { increment: 1 } },
     });
-    const opened = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    const opened = await tx.message.findUniqueOrThrow({
+      where: { id: messageId },
+      include: messageInclude,
+    });
     const message = toMessageDTO(opened, userId, { reveal: true });
-    const expiresAt = m.ttlSeconds ? new Date(view.firstViewedAt.getTime() + m.ttlSeconds * 1000) : null;
+    const expiresAt = m.ttlSeconds
+      ? new Date(view.firstViewedAt.getTime() + m.ttlSeconds * 1000)
+      : null;
 
     if (m.maxViews !== null && view.count >= m.maxViews) {
       await markExpired(tx, emit, opened, EPHEMERAL_LINK_SECONDS * 1000);

@@ -8407,12 +8407,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -10238,12 +10254,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -12194,12 +12226,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -14144,12 +14192,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -15975,12 +16039,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -18051,12 +18131,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -19882,12 +19978,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -21985,12 +22097,28 @@
                                   },
                                   "closed": {
                                     "type": "boolean",
-                                    "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                    "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                                  },
+                                  "limit": {
+                                    "nullable": true,
+                                    "description": "Comments close once this many come from people other than its author",
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "closesAt": {
+                                    "nullable": true,
+                                    "description": "Comments close at this time",
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   }
                                 },
                                 "required": [
                                   "count",
-                                  "closed"
+                                  "closed",
+                                  "limit",
+                                  "closesAt"
                                 ],
                                 "additionalProperties": false
                               },
@@ -23816,12 +23944,28 @@
                                     },
                                     "closed": {
                                       "type": "boolean",
-                                      "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                      "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                                    },
+                                    "limit": {
+                                      "nullable": true,
+                                      "description": "Comments close once this many come from people other than its author",
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "closesAt": {
+                                      "nullable": true,
+                                      "description": "Comments close at this time",
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                     }
                                   },
                                   "required": [
                                     "count",
-                                    "closed"
+                                    "closed",
+                                    "limit",
+                                    "closesAt"
                                   ],
                                   "additionalProperties": false
                                 },
@@ -25903,12 +26047,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -27734,12 +27894,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -29896,12 +30072,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -31727,12 +31919,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -33975,12 +34183,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -35405,7 +35629,7 @@
         "tags": [
           "messages"
         ],
-        "description": "For the group's owner and admins (NOT_GROUP_ADMIN otherwise). While closed, nobody can comment (THREAD_CLOSED) and the comments already there stay. Every member gets message.edited.",
+        "description": "For the group's owner and admins (NOT_GROUP_ADMIN otherwise). While closed, nobody can comment (THREAD_CLOSED) and the comments already there stay. Closing or reopening also drops any automatic close (`commentsLimit`, `commentsCloseIn`). Every member gets message.edited.",
         "requestBody": {
           "required": true,
           "content": {
@@ -35809,12 +36033,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -37651,12 +37891,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -39484,12 +39740,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -41327,12 +41599,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -43313,12 +43601,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -45131,12 +45435,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -46960,12 +47280,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -48775,12 +49111,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -50590,12 +50942,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -52524,12 +52892,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -54363,12 +54747,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -56313,12 +56713,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -58268,6 +58684,18 @@
                     "description": "In a group, for its owner and admins: post with comments closed",
                     "type": "boolean"
                   },
+                  "commentsLimit": {
+                    "description": "In a group, for its owner and admins: comments close after this many from other people",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "commentsCloseIn": {
+                    "description": "In a group, for its owner and admins: comments close this many seconds after posting",
+                    "type": "integer",
+                    "minimum": 60,
+                    "maximum": 2592000
+                  },
                   "spoiler": {
                     "type": "boolean"
                   },
@@ -58816,12 +59244,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -61263,6 +61707,18 @@
                     "description": "In a group, for its owner and admins: post with comments closed",
                     "type": "boolean"
                   },
+                  "commentsLimit": {
+                    "description": "In a group, for its owner and admins: comments close after this many from other people",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "commentsCloseIn": {
+                    "description": "In a group, for its owner and admins: comments close this many seconds after posting",
+                    "type": "integer",
+                    "minimum": 60,
+                    "maximum": 2592000
+                  },
                   "spoiler": {
                     "type": "boolean"
                   },
@@ -63007,12 +63463,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -65819,12 +66291,28 @@
                                       },
                                       "closed": {
                                         "type": "boolean",
-                                        "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                        "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                                      },
+                                      "limit": {
+                                        "nullable": true,
+                                        "description": "Comments close once this many come from people other than its author",
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "closesAt": {
+                                        "nullable": true,
+                                        "description": "Comments close at this time",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       }
                                     },
                                     "required": [
                                       "count",
-                                      "closed"
+                                      "closed",
+                                      "limit",
+                                      "closesAt"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -67624,12 +68112,28 @@
                                       },
                                       "closed": {
                                         "type": "boolean",
-                                        "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                        "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                                      },
+                                      "limit": {
+                                        "nullable": true,
+                                        "description": "Comments close once this many come from people other than its author",
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "closesAt": {
+                                        "nullable": true,
+                                        "description": "Comments close at this time",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       }
                                     },
                                     "required": [
                                       "count",
-                                      "closed"
+                                      "closed",
+                                      "limit",
+                                      "closesAt"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -69687,12 +70191,28 @@
                                           },
                                           "closed": {
                                             "type": "boolean",
-                                            "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                            "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                                          },
+                                          "limit": {
+                                            "nullable": true,
+                                            "description": "Comments close once this many come from people other than its author",
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "closesAt": {
+                                            "nullable": true,
+                                            "description": "Comments close at this time",
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                           }
                                         },
                                         "required": [
                                           "count",
-                                          "closed"
+                                          "closed",
+                                          "limit",
+                                          "closesAt"
                                         ],
                                         "additionalProperties": false
                                       },
@@ -71518,12 +72038,28 @@
                                             },
                                             "closed": {
                                               "type": "boolean",
-                                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                                            },
+                                            "limit": {
+                                              "nullable": true,
+                                              "description": "Comments close once this many come from people other than its author",
+                                              "type": "integer",
+                                              "minimum": -9007199254740991,
+                                              "maximum": 9007199254740991
+                                            },
+                                            "closesAt": {
+                                              "nullable": true,
+                                              "description": "Comments close at this time",
+                                              "type": "string",
+                                              "format": "date-time",
+                                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                             }
                                           },
                                           "required": [
                                             "count",
-                                            "closed"
+                                            "closed",
+                                            "limit",
+                                            "closesAt"
                                           ],
                                           "additionalProperties": false
                                         },
@@ -75371,12 +75907,28 @@
                         },
                         "closed": {
                           "type": "boolean",
-                          "description": "An admin closed its comments: nobody can add one until they reopen them"
+                          "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                        },
+                        "limit": {
+                          "nullable": true,
+                          "description": "Comments close once this many come from people other than its author",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "closesAt": {
+                          "nullable": true,
+                          "description": "Comments close at this time",
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
                       "required": [
                         "count",
-                        "closed"
+                        "closed",
+                        "limit",
+                        "closesAt"
                       ],
                       "additionalProperties": false
                     },
@@ -83062,12 +83614,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -84893,12 +85461,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -87074,12 +87658,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -88905,12 +89505,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -91022,12 +91638,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -92853,12 +93485,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -94929,12 +95577,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -96760,12 +97424,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -98857,12 +99537,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -100688,12 +101384,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },
@@ -102795,12 +103507,28 @@
                             },
                             "closed": {
                               "type": "boolean",
-                              "description": "An admin closed its comments: nobody can add one until they reopen them"
+                              "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                            },
+                            "limit": {
+                              "nullable": true,
+                              "description": "Comments close once this many come from people other than its author",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "closesAt": {
+                              "nullable": true,
+                              "description": "Comments close at this time",
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                             }
                           },
                           "required": [
                             "count",
-                            "closed"
+                            "closed",
+                            "limit",
+                            "closesAt"
                           ],
                           "additionalProperties": false
                         },
@@ -104626,12 +105354,28 @@
                               },
                               "closed": {
                                 "type": "boolean",
-                                "description": "An admin closed its comments: nobody can add one until they reopen them"
+                                "description": "Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them"
+                              },
+                              "limit": {
+                                "nullable": true,
+                                "description": "Comments close once this many come from people other than its author",
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "closesAt": {
+                                "nullable": true,
+                                "description": "Comments close at this time",
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               }
                             },
                             "required": [
                               "count",
-                              "closed"
+                              "closed",
+                              "limit",
+                              "closesAt"
                             ],
                             "additionalProperties": false
                           },

@@ -15,6 +15,7 @@ import {
   type UploadKind,
   maskSpoilers,
   type StoryReply,
+  type CommentRule,
 } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
@@ -56,7 +57,7 @@ export interface Draft {
   game?: ChatGame;
   groupId?: string;
   threadId?: string;
-  commentsClosed?: boolean;
+  comments?: CommentRule;
   sendAt?: Date | null;
 }
 
@@ -126,7 +127,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       ephemeral: pending.ephemeral ?? undefined,
       groupId: pending.groupId,
       threadId: pending.threadId,
-      commentsClosed: pending.commentsClosed || undefined,
+      ...pending.comments,
       silent: pending.silent,
       bump: pending.bump,
     };
@@ -259,7 +260,7 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
     game: draft.game,
     groupId: draft.groupId,
     threadId: draft.threadId,
-    commentsClosed: draft.commentsClosed,
+    comments: draft.comments,
     sendAt: draft.sendAt?.toISOString(),
     createdAt: new Date().toISOString(),
     status: "sending",

@@ -64,29 +64,29 @@ describe("resending self-destructing messages", () => {
 describe("self-destructing messages", () => {
   it("view once: hidden until opened, then gone for both, with no trace in sync", async () => {
     const { host, guest, chatId } = await makeFriends();
-    const sent = (await send(host, chatId, "the code is 4242", { ephemeral: { maxViews: 1 } })).json();
-    expect(sent).toMatchObject({ text: "the code is 4242", ephemeral: { maxViews: 1, views: 0, locked: false } });
+    const sent = (await send(host, chatId, "the code is TANGERINE", { ephemeral: { maxViews: 1 } })).json();
+    expect(sent).toMatchObject({ text: "the code is TANGERINE", ephemeral: { maxViews: 1, views: 0, locked: false } });
 
     const locked = await latest(guest, chatId);
     expect(locked).toMatchObject({ text: null, ephemeral: { locked: true, views: 0, expired: false } });
-    expect(JSON.stringify(await get(guest, "/v1/sync?since=0"))).not.toContain("4242");
-    expect(JSON.stringify(await get(guest, `/v1/chats/${chatId}`))).not.toContain("4242");
+    expect(JSON.stringify(await get(guest, "/v1/sync?since=0"))).not.toContain("TANGERINE");
+    expect(JSON.stringify(await get(guest, `/v1/chats/${chatId}`))).not.toContain("TANGERINE");
 
     const opened = (await view(guest, sent.id)).json();
-    expect(opened).toMatchObject({ message: { text: "the code is 4242", ephemeral: { views: 1 } }, expiresAt: null });
+    expect(opened).toMatchObject({ message: { text: "the code is TANGERINE", ephemeral: { views: 1 } }, expiresAt: null });
 
     expect(await latest(guest, chatId)).toMatchObject({ text: null, ephemeral: { expired: true } });
     expect(await latest(host, chatId)).toMatchObject({
-      text: "the code is 4242",
+      text: "the code is TANGERINE",
       ephemeral: { expired: true, purged: false, views: 1, resendsLeft: 3 },
     });
     expect((await view(guest, sent.id)).json().error.code).toBe("MESSAGE_EXPIRED");
-    expect(JSON.stringify(await get(guest, "/v1/sync?since=0"))).not.toContain("4242");
+    expect(JSON.stringify(await get(guest, "/v1/sync?since=0"))).not.toContain("TANGERINE");
 
     await purgeMessage(sent.id, 0);
     for (const who of [guest, host]) {
       expect(await latest(who, chatId)).toMatchObject({ text: null, ephemeral: { expired: true, purged: true } });
-      expect(JSON.stringify(await get(who, "/v1/sync?since=0"))).not.toContain("4242");
+      expect(JSON.stringify(await get(who, "/v1/sync?since=0"))).not.toContain("TANGERINE");
     }
   });
 

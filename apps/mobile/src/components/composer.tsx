@@ -24,6 +24,7 @@ import {
   TEXT_GRADIENTS,
   type TextColor,
   type TextGradient,
+  type CommentRule,
 } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
 import { unwrap } from "@six/sdk";
@@ -76,7 +77,6 @@ import {
   type LucideIcon,
   Underline,
   X,
-  MessageSquareOff,
 } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { randomUUID } from "expo-crypto";
@@ -106,6 +106,7 @@ import { NewChecklist } from "./checklist";
 import { NewGame } from "./game";
 import { currentPosition } from "./location-card";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
+import { CommentsPicker } from "./comments-picker";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { ExpressionPanel } from "./expression-panel";
 import { ScheduleDialog, ScheduledPanel } from "./scheduled";
@@ -203,7 +204,7 @@ export function Composer({
   const { realtime } = useRealtime();
   const mode = useComposerMode((s) => s.byChat[slot]);
   const setMode = useComposerMode((s) => s.set);
-  const [commentsOff, setCommentsOff] = useState(false);
+  const [comments, setComments] = useState<CommentRule | null>(null);
   const [text, setText] = useState(() => useDrafts.getState().byChat[slot] ?? "");
   const draftsReady = useDrafts((s) => s.ready);
   const parkedMarkup = useDrafts((s) => s.parked[slot]);
@@ -271,11 +272,11 @@ export function Composer({
     queueMessage(qc, realtime, chatId, {
       ...draft,
       threadId,
-      commentsClosed: commentsOff || undefined,
+      comments: comments ?? undefined,
       sendAt: draft.sendAt ?? sendAt,
     });
     setSendAt(null);
-    setCommentsOff(false);
+    setComments(null);
   }
 
   const editing = mode?.kind === "edit" ? mode.message : null;
@@ -1014,14 +1015,7 @@ export function Composer({
               </Pressable>
             )}
             {!editing && !threadId && chat?.group && chat.group.myRole !== "member" && (
-              <Pressable
-                onPress={() => setCommentsOff(!commentsOff)}
-                accessibilityLabel={tr.groups.postCommentsClosed}
-                accessibilityState={{ selected: commentsOff }}
-                style={styles.round40}
-              >
-                <MessageSquareOff size={22} color={commentsOff ? brand : t.faint} />
-              </Pressable>
+              <CommentsPicker value={comments} onChange={setComments} />
             )}
             {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}
           </View>

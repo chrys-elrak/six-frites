@@ -1,4 +1,4 @@
-import type { ChatDTO } from "@six/shared";
+import { type ChatDTO, commentsClosedNow } from "@six/shared";
 import { ChevronLeft, Lock, LockOpen } from "lucide-react-native";
 import { useRef } from "react";
 import { Modal, StyleSheet, View } from "react-native";
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type BubbleColors, BubbleColorsContext } from "@/lib/bubble-colors";
 import { setCommentsClosed } from "@/lib/actions";
 import { useMessages } from "@/lib/chats";
+import { listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 import { ChatBackground } from "./chat-background";
@@ -40,42 +41,82 @@ export function ThreadScreen({
   const root = useMessages(chat.id)
     .data?.pages.flatMap((p) => p.items)
     .find((m) => m.id === threadId);
-  const closed = root?.thread?.closed ?? false;
+  const closed = !!root?.thread && commentsClosedNow(root.thread);
   const count = root?.thread?.count ?? 0;
+  const ends =
+    root?.thread &&
+    !closed &&
+    (root.thread.closesAt
+      ? tr.groups.closesAt(listTime(root.thread.closesAt))
+      : root.thread.limit && tr.groups.closesAfter(root.thread.limit));
   const admin = !!chat.group && chat.group.myRole !== "member";
 
   return (
-    <Modal animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+    <Modal
+      animationType="slide"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onClose}
+    >
       <View style={{ flex: 1, backgroundColor: t.bg }}>
         <ChatBackground themeId={chat.theme} />
         <ScreenHeader background={t.bar}>
-          <IconButton Icon={ChevronLeft} label={tr.common.close} size={26} onPress={onClose} />
+          <IconButton
+            Icon={ChevronLeft}
+            label={tr.common.close}
+            size={26}
+            onPress={onClose}
+          />
           <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: t.text }]}>{tr.groups.commentsTitle}</Text>
+            <Text style={[styles.title, { color: t.text }]}>
+              {tr.groups.commentsTitle}
+            </Text>
             <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12 }}>
               {closed ? "🔒 " : ""}
-              {count ? tr.groups.comments(count) : tr.groups.noComments} · {chat.title}
+              {count ? tr.groups.comments(count) : tr.groups.noComments}
+              {ends ? ` · ${ends}` : ""} · {chat.title}
             </Text>
           </View>
           {admin && root && (
             <IconButton
               Icon={closed ? LockOpen : Lock}
-              label={closed ? tr.groups.reopenComments : tr.groups.closeComments}
+              label={
+                closed ? tr.groups.reopenComments : tr.groups.closeComments
+              }
               color={closed ? brand : undefined}
-              onPress={() => void setCommentsClosed(threadId, !closed).catch(() => null)}
+              onPress={() =>
+                void setCommentsClosed(threadId, !closed).catch(() => null)
+              }
             />
           )}
         </ScreenHeader>
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <View style={{ flex: 1 }}>
             <BubbleColorsContext.Provider value={bubble}>
-              <MessageList ref={list} chat={chat} meId={meId} onSeen={noop} threadId={threadId} />
+              <MessageList
+                ref={list}
+                chat={chat}
+                meId={meId}
+                onSeen={noop}
+                threadId={threadId}
+              />
             </BubbleColorsContext.Provider>
           </View>
           {closed ? (
-            <View style={[styles.closed, { backgroundColor: t.bar, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
+            <View
+              style={[
+                styles.closed,
+                {
+                  backgroundColor: t.bar,
+                  borderColor: t.border,
+                  paddingBottom: Math.max(insets.bottom, 12),
+                },
+              ]}
+            >
               <Lock size={16} color={t.muted} />
-              <Text style={{ color: t.muted, fontSize: 14 }}>{tr.groups.commentsClosedHint}</Text>
+              <Text style={{ color: t.muted, fontSize: 14 }}>
+                {tr.groups.commentsClosedHint}
+              </Text>
             </View>
           ) : (
             <Composer

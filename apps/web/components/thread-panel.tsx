@@ -1,10 +1,11 @@
 "use client";
 
-import type { ChatDTO } from "@six/shared";
+import { type ChatDTO, commentsClosedNow } from "@six/shared";
 import { ChevronLeft, Lock, LockOpen } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 import { setCommentsClosed } from "@/lib/actions";
 import { useMessages } from "@/lib/chats";
+import { listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { BubbleColors, ChatBackground } from "./chat-background";
 import { Composer } from "./composer";
@@ -40,11 +41,20 @@ export function ThreadPanel({
     .data?.pages.flatMap((p) => p.items)
     .find((m) => m.id === threadId);
   const count = root?.thread?.count ?? 0;
-  const closed = root?.thread?.closed ?? false;
+  const closed = !!root?.thread && commentsClosedNow(root.thread);
+  const ends =
+    root?.thread &&
+    !closed &&
+    (root.thread.closesAt
+      ? tr.groups.closesAt(listTime(root.thread.closesAt))
+      : root.thread.limit && tr.groups.closesAfter(root.thread.limit));
   const admin = !!chat.group && chat.group.myRole !== "member";
 
   useEffect(() => {
-    panel.current?.animate([{ transform: away() }, { transform: "none" }], { duration: 260, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
+    panel.current?.animate([{ transform: away() }, { transform: "none" }], {
+      duration: 260,
+      easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+    });
   }, []);
 
   const close = useCallback(() => {
@@ -52,7 +62,11 @@ export function ThreadPanel({
     if (closing.current) return;
     closing.current = true;
     if (!el) return onClose();
-    const out = el.animate([{ transform: "none" }, { transform: away() }], { duration: 200, easing: "ease-in", fill: "forwards" });
+    const out = el.animate([{ transform: "none" }, { transform: away() }], {
+      duration: 200,
+      easing: "ease-in",
+      fill: "forwards",
+    });
     out.onfinish = onClose;
   }, [onClose]);
 
@@ -81,26 +95,43 @@ export function ThreadPanel({
           <ChevronLeft className="size-6" />
         </button>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate leading-tight font-semibold">{tr.groups.commentsTitle}</h2>
+          <h2 className="truncate leading-tight font-semibold">
+            {tr.groups.commentsTitle}
+          </h2>
           <p className="flex items-center gap-1 truncate text-xs text-stone-500">
             {closed && <Lock className="size-3 shrink-0" />}
-            {count ? tr.groups.comments(count) : tr.groups.noComments} · {chat.title}
+            {count ? tr.groups.comments(count) : tr.groups.noComments}
+            {ends ? ` · ${ends}` : ""} · {chat.title}
           </p>
         </div>
         {admin && root && (
           <button
             type="button"
-            onClick={() => void setCommentsClosed(threadId, !closed).catch(() => null)}
-            aria-label={closed ? tr.groups.reopenComments : tr.groups.closeComments}
+            onClick={() =>
+              void setCommentsClosed(threadId, !closed).catch(() => null)
+            }
+            aria-label={
+              closed ? tr.groups.reopenComments : tr.groups.closeComments
+            }
             title={closed ? tr.groups.reopenComments : tr.groups.closeComments}
             className={`grid size-10 shrink-0 place-items-center rounded-full hover:bg-stone-200 dark:hover:bg-stone-800 ${closed ? "text-brand" : "text-stone-600 dark:text-stone-300"}`}
           >
-            {closed ? <LockOpen className="size-5" /> : <Lock className="size-5" />}
+            {closed ? (
+              <LockOpen className="size-5" />
+            ) : (
+              <Lock className="size-5" />
+            )}
           </button>
         )}
       </header>
       <div className="chat-colors relative flex min-h-0 flex-1 flex-col">
-        <MessageList ref={list} chat={chat} meId={meId} onSeen={noop} threadId={threadId} />
+        <MessageList
+          ref={list}
+          chat={chat}
+          meId={meId}
+          onSeen={noop}
+          threadId={threadId}
+        />
       </div>
       {closed ? (
         <p className="relative flex items-center justify-center gap-2 border-t border-black/5 bg-stone-50/45 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm text-stone-500 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
@@ -113,7 +144,9 @@ export function ThreadPanel({
             threadId={threadId}
             nameOf={nameOf}
             scheduledCount={0}
-            onSent={() => requestAnimationFrame(() => list.current?.scrollToBottom())}
+            onSent={() =>
+              requestAnimationFrame(() => list.current?.scrollToBottom())
+            }
             onSearch={noop}
           />
         </div>

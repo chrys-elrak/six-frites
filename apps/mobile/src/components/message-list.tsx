@@ -24,6 +24,7 @@ import {
   isGroupAction,
   type GroupRole,
   type PublicUser,
+  commentsClosedNow,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -879,7 +880,7 @@ function Bubble({
   autoPlay: boolean;
   onVoiceStop: (finished: boolean) => void;
   /** A group message's comments, for the link under it; null where there's none to show. */
-  comments?: { count: number; closed: boolean } | null;
+  comments?: MessageDTO["thread"];
   onOpenThread?: () => void;
   quoteEarlier?: boolean;
 }) {
@@ -1196,9 +1197,9 @@ function Bubble({
             onReact={frozen ? () => {} : onReact}
           />
         )}
-        {comments && !row.deleted && (comments.count > 0 || comments.closed) && (
+        {comments && !row.deleted && (comments.count > 0 || commentsClosedNow(comments)) && (
           <Pressable onPress={onOpenThread} hitSlop={6} style={styles.commentsLink}>
-            {comments.closed ? <Lock size={14} color={brand} /> : <MessageCircle size={14} color={brand} />}
+            {commentsClosedNow(comments) ? <Lock size={14} color={brand} /> : <MessageCircle size={14} color={brand} />}
             <Text style={{ color: brand, fontSize: 12, fontWeight: "700" }}>
               {comments.count > 0 ? tr.groups.comments(comments.count) : tr.groups.commentsClosed}
             </Text>
@@ -1500,14 +1501,14 @@ export const MessageList = forwardRef<
         ];
       }
       return [
-        ...(!threadId && chat.group && onOpenThread && m.thread && !m.ephemeral && (m.thread.count > 0 || !m.thread.closed)
+        ...(!threadId && chat.group && onOpenThread && m.thread && !m.ephemeral && (m.thread.count > 0 || !commentsClosedNow(m.thread))
           ? [{ label: m.thread.count ? tr.groups.viewComments : tr.groups.comment, icon: MessageCircle, onSelect: () => onOpenThread(m) }]
           : []),
         ...(!threadId && groupAdmin && m.thread
           ? [
               {
-                label: m.thread.closed ? tr.groups.reopenComments : tr.groups.closeComments,
-                icon: m.thread.closed ? LockOpen : Lock,
+                label: commentsClosedNow(m.thread) ? tr.groups.reopenComments : tr.groups.closeComments,
+                icon: commentsClosedNow(m.thread) ? LockOpen : Lock,
                 onSelect: () => void setCommentsClosed(m.id, !m.thread!.closed).catch(() => null),
               },
             ]

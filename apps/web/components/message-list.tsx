@@ -28,6 +28,7 @@ import {
   type StoryReply,
   storyBackground,
   inkOn,
+  commentsClosedNow,
 } from "@six/shared";
 import { Avatar } from "./avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -834,7 +835,7 @@ function Bubble({
   autoPlay: boolean;
   onVoiceStop: (finished: boolean) => void;
   /** A group message's comments, for the link under it; null where there's none to show. */
-  comments?: { count: number; closed: boolean } | null;
+  comments?: MessageDTO["thread"];
   onOpenThread?: () => void;
   quoteEarlier?: boolean;
 }) {
@@ -1132,7 +1133,7 @@ function Bubble({
                 <SmilePlus className="size-4" />
               </button>
             )}
-            {comments && !comments.closed && !row.deleted && (
+            {comments && !commentsClosedNow(comments) && !row.deleted && (
               <button
                 onClick={onOpenThread}
                 aria-label={tr.groups.comment}
@@ -1157,13 +1158,13 @@ function Bubble({
             {row.message && !row.deleted && (
               <ReactionChips message={row.message} meId={meId} mine={mine} nameOf={nameOf} onReact={onReact} />
             )}
-            {comments && !row.deleted && (comments.count > 0 || comments.closed) && (
+            {comments && !row.deleted && (comments.count > 0 || commentsClosedNow(comments)) && (
               <button
                 type="button"
                 onClick={onOpenThread}
                 className="flex items-center gap-1 px-2 text-xs font-semibold text-brand hover:underline"
               >
-                {comments.closed ? <Lock className="size-3.5" /> : <MessageCircle className="size-3.5" />}
+                {commentsClosedNow(comments) ? <Lock className="size-3.5" /> : <MessageCircle className="size-3.5" />}
                 {comments.count > 0 ? tr.groups.comments(comments.count) : tr.groups.commentsClosed}
               </button>
             )}
@@ -1475,14 +1476,14 @@ export const MessageList = forwardRef<
         ];
       }
       return [
-        ...(!threadId && chat.group && onOpenThread && m.thread && !m.ephemeral && (m.thread.count > 0 || !m.thread.closed)
+        ...(!threadId && chat.group && onOpenThread && m.thread && !m.ephemeral && (m.thread.count > 0 || !commentsClosedNow(m.thread))
           ? [{ label: m.thread.count ? tr.groups.viewComments : tr.groups.comment, icon: MessageCircle, onSelect: () => onOpenThread(m) }]
           : []),
         ...(!threadId && groupAdmin && m.thread
           ? [
               {
-                label: m.thread.closed ? tr.groups.reopenComments : tr.groups.closeComments,
-                icon: m.thread.closed ? LockOpen : Lock,
+                label: commentsClosedNow(m.thread) ? tr.groups.reopenComments : tr.groups.closeComments,
+                icon: commentsClosedNow(m.thread) ? LockOpen : Lock,
                 onSelect: () => void setCommentsClosed(m.id, !m.thread!.closed).catch(() => null),
               },
             ]
