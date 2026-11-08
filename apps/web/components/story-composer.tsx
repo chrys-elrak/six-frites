@@ -1,6 +1,6 @@
 "use client";
 
-import { kindFor, unwrap } from "@six/sdk";
+import { kindFor } from "@six/sdk";
 import {
   type AnonMessageDTO,
   EDIT_COLORS,
@@ -27,12 +27,13 @@ import { isTouch } from "@/lib/camera";
 import { getLocale, useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
 import { six } from "@/lib/six";
+import { postStory } from "@/lib/story-post";
 import { CameraDialog } from "./camera-dialog";
 import { GifSearch } from "./gif-picker";
 import { currentPosition } from "./location-card";
 import { Portal } from "./portal";
 import { Sheet } from "./sheet";
-import { StoryStickers, storiesKey } from "./stories";
+import { StoryStickers } from "./stories";
 import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
 import { VideoTrimmer } from "./video-trimmer";
@@ -87,12 +88,10 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const drawn = drawing.strokes.length > 0 || drawing.texts.length > 0;
   const card = useRef<HTMLDivElement>(null);
   const placeField = useRef<HTMLInputElement>(null);
-  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const kind = file ? kindFor(file.type) : null;
   const tooLong = kind === "video" && (videoMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
-  const busy = progress !== null;
-  const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong && !busy;
+  const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong;
 
   useEffect(() => {
     if (!file) return setUrl(undefined);
@@ -161,38 +160,25 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
     }
   }
 
-  async function share() {
+  function share() {
     if (!ready) return;
-    setProgress(0);
-    setError(null);
-    try {
-      const upload =
-        file && kind
-          ? await six.upload(file, { kind, name: file.name, mime: file.type, onProgress: setProgress })
-          : null;
-      unwrap(
-        await six.api.POST("/v1/stories", {
-          body: {
-            text: text.trim() || undefined,
-            background: upload ? undefined : background,
-            uploadId: upload?.id,
-            gifId: gif?.id,
-            askId: ask?.id,
-            location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
-            showDate,
-            showTime,
-            positions,
-            drawing: drawn ? drawing : undefined,
-            durationSecs,
-          },
-        }),
-      );
-      void qc.invalidateQueries({ queryKey: storiesKey });
-      onClose();
-    } catch {
-      setError(tr.stories.couldNotPost);
-      setProgress(null);
-    }
+    void postStory(
+      qc,
+      {
+        text: text.trim() || undefined,
+        background,
+        gifId: gif?.id,
+        askId: ask?.id,
+        location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
+        showDate,
+        showTime,
+        positions,
+        drawing: drawn ? drawing : undefined,
+        durationSecs,
+      },
+      file && kind ? { blob: file, kind, name: file.name, mime: file.type } : undefined,
+    );
+    onClose();
   }
 
   const stickers = {
@@ -416,12 +402,12 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
               </button>
               <button
                 type="button"
-                onClick={() => void share()}
+                onClick={share}
                 disabled={!ready}
                 className="ml-auto flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-semibold text-brand-ink transition active:scale-[0.97] disabled:opacity-50"
               >
-                {busy ? `${tr.stories.posting} ${Math.round((progress ?? 0) * 100)}%` : tr.stories.post}
-                {!busy && <SendHorizontal className="size-4" />}
+                {tr.stories.post}
+                <SendHorizontal className="size-4" />
               </button>
             </div>
           </div>

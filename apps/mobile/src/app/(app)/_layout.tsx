@@ -5,6 +5,7 @@ import { LockScreen } from "@/components/app-lock";
 import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer, useMiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
+import { StoryPostBar } from "@/components/story-post-bar";
 import { Toasts } from "@/components/toasts";
 import { LiveInvites } from "@/components/live";
 import { WhatsNewPrompt } from "@/components/whats-new";
@@ -30,6 +31,7 @@ export default function AppLayout() {
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }} />
         </SafeAreaInsetsContext.Provider>
         {!locked && <Toasts />}
+        {!locked && <StoryPostBar />}
         {!locked && <LiveInvites />}
         {!locked && <BackupPinPrompt />}
         {!locked && <WhatsNewPrompt />}

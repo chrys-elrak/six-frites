@@ -50,6 +50,11 @@ async function register(ask: boolean) {
     importance: AndroidImportance.HIGH,
     sound: null,
   });
+  await Notifications.setNotificationChannelAsync("uploads", {
+    name: getT().settings.uploadsChannel,
+    importance: AndroidImportance.LOW,
+    sound: null,
+  });
   const permission = ask ? await Notifications.requestPermissionsAsync() : await Notifications.getPermissionsAsync();
   if (!permission.granted) return;
   await saveToken((await Notifications.getDevicePushTokenAsync()).data);

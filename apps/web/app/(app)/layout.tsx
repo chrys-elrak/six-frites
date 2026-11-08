@@ -18,6 +18,7 @@ import { useSession } from "@/lib/session";
 import { primeAudio, useNotifyPrefs } from "@/lib/notify";
 import { relinkPush } from "@/lib/push";
 import { useAppHeight } from "@/lib/viewport";
+import { StoryPostBar } from "@/components/story-post-bar";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { WhatsNewPrompt } from "@/components/whats-new";
@@ -147,6 +148,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       {!locked && <Toasts />}
+      {!locked && <StoryPostBar />}
       {!locked && <UpdatePrompt />}
       {!locked && <BackupPinPrompt />}
       {!locked && <WhatsNewPrompt />}

@@ -16,6 +16,7 @@ const en = {
   deviceFontHint: "Use your phone's font instead of the app's. Some phone fonts get cut off in chats.",
   messagesChannel: "Messages",
   inAppChannel: "Messages while the app is open",
+  uploadsChannel: "Uploads",
   signOut: "Sign out",
   signOutWithKey:
     "Sign out? Your encrypted messages are removed from this browser. You'll get them back with your backup PIN.",
@@ -241,6 +242,7 @@ const fr: typeof en = {
   deviceFontHint: "Utiliser la police du téléphone au lieu de celle de l'app. Certaines sont coupées dans les discussions.",
   messagesChannel: "Messages",
   inAppChannel: "Messages pendant que l'application est ouverte",
+  uploadsChannel: "Envois",
   signOut: "Se déconnecter",
   signOutWithKey:
     "Se déconnecter ? Vos messages chiffrés seront supprimés de ce navigateur. Vous les retrouverez avec votre code PIN de sauvegarde.",
@@ -470,6 +472,7 @@ const mg: typeof en = {
   deviceFontHint: "Ampiasao ny endritsoratry ny findainao fa tsy ny an'ny app. Misy tapaka ao amin'ny resaka ny sasany.",
   messagesChannel: "Hafatra",
   inAppChannel: "Hafatra raha misokatra ny app",
+  uploadsChannel: "Fandefasana",
   signOut: "Hivoaka",
   signOutWithKey:
     "Hivoaka? Hofafana amin'ity navigateur ity ny hafatrao voaaro. Hamerina azy ireo ny kaody PIN fitahirizanao.",

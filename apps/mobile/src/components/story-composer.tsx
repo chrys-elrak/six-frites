@@ -28,10 +28,11 @@ import { getLocale, useT } from "@/lib/i18n";
 import { cutVideo, pickMedia, recordVideo, takePhoto } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
 import { six } from "@/lib/six";
+import { postStory } from "@/lib/story-post";
 import { brand, brandInk } from "@/lib/theme";
 import { currentPosition } from "./location-card";
 import { Sheet } from "./sheet";
-import { StoryStickers, storiesKey, storyFill } from "./stories";
+import { StoryStickers, storyFill } from "./stories";
 import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
 import { Text, TextInput } from "./text";
@@ -200,11 +201,9 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const drawn = drawing.strokes.length > 0 || drawing.texts.length > 0;
   const card = useRef<ComponentRef<typeof View>>(null);
   const placeField = useRef<ComponentRef<typeof TextInput>>(null);
-  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const tooLong = file?.kind === "video" && (file.durationMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
-  const busy = progress !== null;
-  const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong && !busy;
+  const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong;
 
   const keep = () => setUndos((u) => [...u, drawing]);
   function finishWriting() {
@@ -261,42 +260,25 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
     }
   }
 
-  async function share() {
+  function share() {
     if (!ready) return;
-    setProgress(0);
-    setError(null);
-    try {
-      const upload = file
-        ? await six.upload(await (await fetch(file.uri)).blob(), {
-            kind: file.kind,
-            name: file.name,
-            mime: file.mime,
-            onProgress: setProgress,
-          })
-        : null;
-      unwrap(
-        await six.api.POST("/v1/stories", {
-          body: {
-            text: text.trim() || undefined,
-            background: upload ? undefined : background,
-            uploadId: upload?.id,
-            gifId: gif?.id,
-            askId: ask?.id,
-            location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
-            showDate,
-            showTime,
-            positions,
-            drawing: drawn ? drawing : undefined,
-            durationSecs,
-          },
-        }),
-      );
-      void qc.invalidateQueries({ queryKey: storiesKey });
-      onClose();
-    } catch {
-      setError(tr.stories.couldNotPost);
-      setProgress(null);
-    }
+    void postStory(
+      qc,
+      {
+        text: text.trim() || undefined,
+        background,
+        gifId: gif?.id,
+        askId: ask?.id,
+        location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
+        showDate,
+        showTime,
+        positions,
+        drawing: drawn ? drawing : undefined,
+        durationSecs,
+      },
+      file ? { uri: file.uri, kind: file.kind, name: file.name, mime: file.mime } : undefined,
+    );
+    onClose();
   }
 
   const stickers = {
@@ -516,15 +498,15 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
               <ChevronDown size={16} color="rgba(255,255,255,0.7)" />
             </Pressable>
             <Pressable
-              onPress={() => void share()}
+              onPress={share}
               disabled={!ready}
               accessibilityRole="button"
               style={({ pressed }) => [styles.share, { opacity: !ready ? 0.5 : pressed ? 0.85 : 1 }]}
             >
               <Text style={{ color: brandInk, fontSize: 16, fontWeight: "700" }}>
-                {busy ? `${tr.stories.posting} ${Math.round((progress ?? 0) * 100)}%` : tr.stories.post}
+                {tr.stories.post}
               </Text>
-              {!busy && <SendHorizontal size={18} color={brandInk} />}
+              <SendHorizontal size={18} color={brandInk} />
             </Pressable>
           </View>
         </View>
