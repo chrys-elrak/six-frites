@@ -96,7 +96,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
   const peer = group ? undefined : others[0];
   const blocks = peer && !chat.supportUserId ? await blockState(db, viewerId, peer.userId) : { byMe: false, byThem: false };
 
-  const visible = { chatId: chat.id, ...visibleTo(viewerId, me.clearedAt) };
+  const visible = { chatId: chat.id, threadId: null, ...visibleTo(viewerId, me.clearedAt) };
   const readFloor = [me.lastReadAt, me.clearedAt].filter((d): d is Date => d !== null).sort((a, b) => +b - +a)[0];
   const [lastMessage, pinnedMessages, unreadCount, scheduledCount] = await Promise.all([
     db.message.findFirst({ where: visible, orderBy: newestFirst, include: messageInclude }),

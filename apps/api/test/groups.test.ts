@@ -128,6 +128,37 @@ describe("groups", () => {
     expect((await call(ana, "POST", `/v1/groups/${group.id}/link`)).statusCode).toBe(403);
   });
 
+  it("keeps comments under a message, out of the chat, and lets admins close them", async () => {
+    const owner = await signUp("owner");
+    const group = await newGroup(owner, { maxMembers: 10 });
+    const ana = await signUp("ana");
+    await join(ana, group.group.inviteCode, "#A0A0A0");
+    await call(owner, "PATCH", `/v1/groups/${group.id}`, { membersCanWrite: false });
+
+    const news = (await send(owner, group.id, "Big news")).json();
+    expect(news.thread).toEqual({ count: 0, closed: false });
+    expect((await send(ana, group.id, "me too")).json().error.code).toBe("GROUP_ADMINS_ONLY");
+    const comment = await send(ana, group.id, "Congrats!", { threadId: news.id });
+    expect(comment.statusCode, comment.body).toBe(201);
+    expect(comment.json()).toMatchObject({ threadId: news.id, thread: null });
+    expect((await send(ana, group.id, "deeper", { threadId: comment.json().id })).json().error.code).toBe("MESSAGE_NOT_FOUND");
+
+    expect(await texts(owner, group.id)).not.toContain("Congrats!");
+    const thread = await get(owner, `/v1/chats/${group.id}/messages?thread=${news.id}`);
+    expect(thread.items.map((m: { text: string }) => m.text)).toEqual(["Congrats!"]);
+    expect(await get(owner, `/v1/chats/${group.id}`)).toMatchObject({ lastMessage: { id: news.id, thread: { count: 1 } }, unreadCount: 0 });
+
+    expect((await call(ana, "PATCH", `/v1/messages/${news.id}/thread`, { closed: true })).json().error.code).toBe("NOT_GROUP_ADMIN");
+    expect((await call(owner, "PATCH", `/v1/messages/${news.id}/thread`, { closed: true })).json().thread).toEqual({ count: 1, closed: true });
+    expect((await send(ana, group.id, "again", { threadId: news.id })).json().error.code).toBe("THREAD_CLOSED");
+    await call(owner, "PATCH", `/v1/messages/${news.id}/thread`, { closed: false });
+    expect((await send(ana, group.id, "again", { threadId: news.id })).statusCode).toBe(201);
+
+    expect((await send(owner, group.id, "Read only", { commentsClosed: true })).json().thread).toEqual({ count: 0, closed: true });
+    await call(owner, "PATCH", `/v1/groups/${group.id}`, { membersCanWrite: true });
+    expect((await send(ana, group.id, "Mine", { commentsClosed: true })).json().error.code).toBe("NOT_GROUP_ADMIN");
+  });
+
   it("hands the group on when the owner leaves and deletes it when the last one does", async () => {
     const owner = await signUp("owner");
     const group = await newGroup(owner);

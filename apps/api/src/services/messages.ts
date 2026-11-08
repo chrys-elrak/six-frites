@@ -176,6 +176,8 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
         }
       : null,
     groupId: m.groupId,
+    threadId: m.threadId,
+    thread: m.threadId || m.type === "service" ? null : { count: m.threadCount, closed: m.threadClosed },
     replyTo: r ? toReplyPreview(r) : null,
     story: hideContent || !m.story ? null : toStoryReply(m.story as StoredStoryReply),
     action: (m.action as ServiceAction | null) ?? null,
@@ -229,8 +231,12 @@ const UNTIL_MAX = 2000;
 
 export async function listMessages(userId: string, chatId: string, q: MessageListQuery) {
   const member = await assertMember(prisma, chatId, userId);
+  if (q.thread && !(await prisma.message.count({ where: { id: q.thread, chatId, threadId: null } }))) {
+    throw new AppError("MESSAGE_NOT_FOUND");
+  }
   const where: Prisma.MessageWhereInput = {
     chatId,
+    threadId: q.thread ?? null,
     ...visibleTo(userId, member.clearedAt),
     ...(q.only && { ...SHARED[q.only], deletedAt: null, maxViews: null, ttlSeconds: null }),
     ...((q.from || q.to) && { createdAt: { gte: q.from, lt: q.to } }),
@@ -334,6 +340,28 @@ async function storyReplyFor(tx: Tx, chatId: string, userId: string, storyId: st
   return { id: story.id, ownerId: story.userId, kind, text: story.text?.slice(0, 120) ?? null, background: story.background, imageKey };
 }
 
+/** The group message a comment goes under: one of the chat's own messages, still there, with its comments open. */
+async function threadToCommentOn(tx: Tx, chat: { id: string; type: string }, id: string) {
+  if (chat.type !== "group") throw new AppError("NOT_IN_GROUPS", "Comments are only in groups");
+  const root = await tx.message.findFirst({ where: { id, chatId: chat.id, threadId: null, deletedAt: null, type: { not: "service" } } });
+  if (!root) throw new AppError("MESSAGE_NOT_FOUND");
+  if (root.threadClosed) throw new AppError("THREAD_CLOSED", "Comments on this message are closed");
+  return root;
+}
+
+/** Closes or reopens a group message's comments; only the group's owner and admins can. */
+export async function setThreadClosed(userId: string, messageId: string, closed: boolean) {
+  return withEvents(async (tx, emit) => {
+    const root = await tx.message.findFirst({ where: { id: messageId, threadId: null, type: { not: "service" } }, select: { chatId: true } });
+    const me = root && (await tx.chatMember.findUnique({ where: { chatId_userId: { chatId: root.chatId, userId } }, include: { chat: true } }));
+    if (!root || !me) throw new AppError("MESSAGE_NOT_FOUND");
+    if (me.chat.type !== "group" || me.role === "member") throw new AppError("NOT_GROUP_ADMIN");
+    const updated = await tx.message.update({ where: { id: messageId }, data: { threadClosed: closed }, include: messageInclude });
+    for (const id of await memberIds(tx, root.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    return toMessageDTO(updated, userId);
+  });
+}
+
 /**
  * Stores a new message, bumps the chat and tells every member. Messages get the chat's auto-delete
  * deadline, except service messages, which announce changes to it. The first encrypted message in
@@ -348,9 +376,9 @@ export async function createMessage(
   input: SendMessageInput | { clientId: string; action: ServiceAction; silent?: boolean },
   opts: CreateOptions = {},
 ) {
-  await assertMember(tx, chatId, userId);
-  await assertCanMessage(tx, chatId, userId, !("action" in input));
+  const member = await assertMember(tx, chatId, userId);
   const content = "action" in input ? null : input;
+  await assertCanMessage(tx, chatId, userId, !!content && !content.threadId);
   if (content?.replyToId) {
     const original = await tx.message.findFirst({ where: { id: content.replyToId, chatId }, select: { id: true } });
     if (!original) throw new AppError("MESSAGE_NOT_FOUND", "The message you replied to is not in this chat");
@@ -362,6 +390,10 @@ export async function createMessage(
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
   if ((content?.game || content?.type === "game") && chat.type === "group") throw new AppError("NOT_IN_GROUPS", "Games aren't available in groups");
+  const thread = content?.threadId ? await threadToCommentOn(tx, chat, content.threadId) : null;
+  if (content?.commentsClosed && (chat.type !== "group" || member.role === "member" || thread)) {
+    throw new AppError("NOT_GROUP_ADMIN", "Only a group's owner and admins can post with comments closed");
+  }
   if (content) checkEncryption(chat, content, upload);
   if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content, upload);
 
@@ -414,6 +446,8 @@ export async function createMessage(
       replyToId: content?.replyToId ?? null,
       ...(story && { story }),
       groupId: content?.groupId ?? null,
+      threadId: thread?.id ?? null,
+      threadClosed: content?.commentsClosed ?? false,
       ...("action" in input && { action: input.action }),
       ...(content?.location && { location: content.location }),
       ...(content?.checklist && { checklist: content.checklist }),
@@ -430,6 +464,19 @@ export async function createMessage(
     },
     include: messageInclude,
   });
+  const members = await memberIds(tx, chatId);
+  if (thread) {
+    const root = await tx.message.update({
+      where: { id: thread.id },
+      data: { threadCount: { increment: 1 } },
+      include: messageInclude,
+    });
+    for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
+    for (const id of members) emit(id, "message.edited", toMessageDTO(root, id));
+    const earlier = await tx.message.findMany({ where: { threadId: thread.id }, select: { senderId: true }, distinct: ["senderId"] });
+    const following = new Set([thread.senderId, ...earlier.map((m) => m.senderId)]);
+    return { message, recipients: members.filter((id) => id !== userId && following.has(id)) };
+  }
   await tx.chat.update({ where: { id: chatId }, data: { lastMessageAt: message.createdAt } });
   await tx.chatMember.updateMany({ where: { chatId, hidden: true }, data: { hidden: false } });
   const fromTheChat = content && !story && !opts.scheduled;
@@ -445,7 +492,6 @@ export async function createMessage(
   if (story && story.kind !== "note") {
     await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "story_reply", chatId });
   }
-  const members = await memberIds(tx, chatId);
   for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
   if (started) {
     const { getChat } = await import("./chats.js");

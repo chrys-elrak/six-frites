@@ -3,6 +3,7 @@ import { openBotChat, startBotGame } from "../services/bot.js";
 import { z } from "zod";
 import {
   BOT_GAMES,
+  ThreadInput,
   LOCALES,
   ChatDTO,
   ChatDeliveredDTO,
@@ -65,6 +66,7 @@ import {
   messageTiming,
   playGame,
   setReaction,
+  setThreadClosed,
   failReseal,
   requestReseal,
   resealMessage,
@@ -246,6 +248,23 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => editMessage(req.auth.userId, req.params.id, req.body, req.auth.sessionId),
+  );
+
+  app.patch(
+    "/messages/:id/thread",
+    {
+      schema: {
+        tags: ["messages"],
+        summary: "Close or reopen a group message's comments",
+        description:
+          "For the group's owner and admins (NOT_GROUP_ADMIN otherwise). While closed, nobody can comment (THREAD_CLOSED) and the comments already there stay. Every member gets message.edited.",
+        security,
+        params: MessageParams,
+        body: ThreadInput,
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => setThreadClosed(req.auth.userId, req.params.id, req.body.closed),
   );
 
   app.post(

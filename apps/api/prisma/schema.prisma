@@ -398,6 +398,11 @@ model Message {
   stickerId         String?
   replyToId         String?
   groupId           String?
+  /// In a group, the message this one comments on; comments stay out of the chat's own list.
+  threadId          String?
+  /// On a group message: how many comments it has, and whether an admin closed them.
+  threadCount       Int       @default(0)
+  threadClosed      Boolean   @default(false)
   action            Json?
   location          Json?
   checklist         Json?
@@ -438,6 +443,7 @@ model Message {
 
   @@unique([senderId, clientId])
   @@index([chatId, createdAt])
+  @@index([threadId, createdAt])
   @@index([expiresAt])
 }
 

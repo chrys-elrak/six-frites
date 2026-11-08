@@ -354,6 +354,7 @@ export const MessageListQuery = PageQuery.extend({
   until: Id.optional().describe(
     "Ignore `limit` and keep going until this message is in the page (up to 2000 messages), to jump to it",
   ),
+  thread: Id.optional().describe("In a group, the comments on this message instead of the chat's own messages"),
 });
 export type MessageListQuery = z.infer<typeof MessageListQuery>;
 
@@ -386,6 +387,14 @@ export const MessageDTO = z.object({
   sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
   groupId: z.string().nullable().describe("Photos and videos sent together share it and show as one album"),
+  threadId: Id.nullable().describe("In a group, the message this one comments on; it then shows only in that message's comments"),
+  thread: z
+    .object({
+      count: z.number().int().describe("How many comments it has"),
+      closed: z.boolean().describe("An admin closed its comments: nobody can add one until they reopen them"),
+    })
+    .nullable()
+    .describe("A group message's comments; null on comments themselves and on service messages"),
   replyTo: ReplyPreview.nullable(),
   story: StoryReply.nullable(),
   action: ServiceAction.nullable(),
@@ -489,6 +498,8 @@ export const SendMessageInput = z
       .regex(/^[\w-]{1,64}$/)
       .optional()
       .describe("The same id on photos and videos sent together, so they show as one album"),
+    threadId: Id.optional().describe("In a group, comments on this message rather than posting in the chat"),
+    commentsClosed: z.boolean().optional().describe("In a group, for its owner and admins: post with comments closed"),
     spoiler: z.boolean().optional(),
     effect: MessageEffect.optional().describe("Only with text"),
     silent: z.boolean().optional().describe("Deliver it without a notification or sound"),
@@ -912,3 +923,6 @@ export const EditScheduledInput = z
     path: ["entities"],
   });
 export type EditScheduledInput = z.infer<typeof EditScheduledInput>;
+
+export const ThreadInput = z.object({ closed: z.boolean().describe("Close the comments, or reopen them") });
+export type ThreadInput = z.infer<typeof ThreadInput>;
