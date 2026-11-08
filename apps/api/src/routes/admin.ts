@@ -30,6 +30,7 @@ import {
   AdminMailStats,
   ImportStickersInput,
   StickerImportDTO,
+  UnfinishedZipDTO,
 } from "@six/shared";
 import {
   addOfficialSticker,
@@ -53,7 +54,7 @@ import {
 } from "../services/admin.js";
 import { adminTwoFactor } from "../plugins/auth.js";
 import { listAnonForAdmin } from "../services/ask.js";
-import { cancelStickerImport, latestStickerImport, startStickerImport, stickerImportProgress } from "../services/sticker-import.js";
+import { cancelStickerImport, dropUnfinishedZip, latestStickerImport, startStickerImport, stickerImportProgress } from "../services/sticker-import.js";
 import { createReport, listReports, resolveReport } from "../services/reports.js";
 import { listMailLog, mailStats } from "../services/emails.js";
 
@@ -353,11 +354,23 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags,
         summary: "Your latest sticker zip import, running or finished in the last day",
+        description: "`unfinished` lists your zip uploads that never finished; drop them with DELETE /v1/admin/sticker-packs/uploads/{id}.",
         security,
-        response: { 200: z.object({ import: StickerImportDTO.nullable() }) },
+        response: { 200: z.object({ import: StickerImportDTO.nullable(), unfinished: z.array(UnfinishedZipDTO) }) },
       },
     },
     (req) => latestStickerImport(req.auth.userId),
+  );
+
+  app.delete(
+    "/admin/sticker-packs/uploads/:id",
+    {
+      schema: { tags, summary: "Throw away a sticker zip upload that never finished", security, params: Params, response: { 204: z.null() } },
+    },
+    async (req, reply) => {
+      await dropUnfinishedZip(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
   );
 
   app.post(

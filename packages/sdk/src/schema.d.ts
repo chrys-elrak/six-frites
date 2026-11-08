@@ -2060,7 +2060,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Your latest sticker zip import, running or finished in the last day */
+        /**
+         * Your latest sticker zip import, running or finished in the last day
+         * @description `unfinished` lists your zip uploads that never finished; drop them with DELETE /v1/admin/sticker-packs/uploads/{id}.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -2097,6 +2100,13 @@ export interface paths {
                                 finished: boolean;
                                 error: string | null;
                             } | null;
+                            unfinished: {
+                                id: string;
+                                name: string;
+                                size: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
                         };
                     };
                 };
@@ -2154,6 +2164,44 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/sticker-packs/uploads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Throw away a sticker zip upload that never finished */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;

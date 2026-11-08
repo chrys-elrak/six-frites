@@ -7,6 +7,7 @@ import { prisma } from "../lib/prisma.js";
 import { mediaQueue, redisConnection } from "../lib/queue.js";
 import { deleteObjects, objectStream, putObject } from "../lib/storage.js";
 import { processUpload } from "../media/process.js";
+import { purgeUploads } from "./uploads.js";
 import { attachSticker, emojiForFileName } from "./stickers.js";
 
 const TYPES: Record<string, string> = {
@@ -43,10 +44,31 @@ async function read(uploadId: string) {
   return raw ? (JSON.parse(raw) as StickerImportDTO) : null;
 }
 
-/** The admin's latest import, running or done in the last day, so the page can pick it up again after a reload. */
+/**
+ * The admin's latest import, running or done in the last day, so the page can pick it up again after a reload,
+ * and the zips they started uploading that never finished, which no import will ever pick up.
+ */
 export async function latestStickerImport(adminId: string) {
   const uploadId = await redis().get(activeKey(adminId));
-  return { import: uploadId ? await read(uploadId) : null };
+  const unfinished = await prisma.upload.findMany({
+    where: { ownerId: adminId, kind: "sticker_zip", status: "pending" },
+    select: { id: true, name: true, size: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  });
+  return {
+    import: uploadId ? await read(uploadId) : null,
+    unfinished: unfinished.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() })),
+  };
+}
+
+/** Throws away a zip upload of the admin's that never finished. */
+export async function dropUnfinishedZip(adminId: string, uploadId: string) {
+  const upload = await prisma.upload.findUnique({ where: { id: uploadId } });
+  if (!upload || upload.ownerId !== adminId || upload.kind !== "sticker_zip" || upload.status !== "pending") {
+    throw new AppError("UPLOAD_NOT_FOUND");
+  }
+  await purgeUploads([uploadId]);
 }
 
 /**

@@ -270,3 +270,8 @@ export const StickerImportDTO = z.object({
   error: z.string().nullable(),
 });
 export type StickerImportDTO = z.infer<typeof StickerImportDTO>;
+
+export const UnfinishedZipDTO = z
+  .object({ id: Id, name: z.string(), size: z.number().int(), createdAt: IsoDate })
+  .describe("A sticker zip whose upload never finished, so it was never imported");
+export type UnfinishedZipDTO = z.infer<typeof UnfinishedZipDTO>;

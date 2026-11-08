@@ -8,6 +8,7 @@ import { adminKeys, refreshAdmin } from "@/lib/admin";
 import { formatBytes } from "@/lib/format";
 import { six } from "@/lib/six";
 import { addStickers } from "@/lib/stickers";
+import { uploadAndImport, useZipUpload } from "@/lib/zip-import";
 import { UploadForm } from "../pack-dialog";
 import { Sheet } from "../sheet";
 import { StickerView } from "../sticker";
@@ -17,7 +18,7 @@ function Importer() {
   const [title, setTitle] = useState("");
   const [zip, setZip] = useState<File | null>(null);
   const [over, setOver] = useState(false);
-  const [uploaded, setUploaded] = useState<number | null>(null);
+  const up = useZipUpload();
   const [importing, setImporting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const status = useQuery({
@@ -29,17 +30,25 @@ function Importer() {
   });
   const latest = useQuery({
     queryKey: ["admin", "sticker-import", "latest"],
-    queryFn: async () => unwrap(await six.api.GET("/v1/admin/sticker-packs/import")).import,
+    queryFn: async () => unwrap(await six.api.GET("/v1/admin/sticker-packs/import")),
+    refetchInterval: up.progress !== null ? 15_000 : false,
   });
-  const s = status.data ?? latest.data ?? null;
+  const s = status.data ?? latest.data?.import ?? null;
   const running = !!s && !s.finished;
-  const busy = uploaded !== null || running;
+  const busy = up.progress !== null || running;
+  const unfinished = (latest.data?.unfinished ?? []).filter((u) => up.progress === null || u.name !== up.name);
   const [now, setNow] = useState(() => Date.now());
   const stuck = running && now - Date.parse(s.updatedAt) > 60_000;
 
   useEffect(() => {
-    if (latest.data && !latest.data.finished && !importing) setImporting(latest.data.uploadId);
+    const last = latest.data?.import;
+    if (last && !last.finished && last.uploadId !== importing) setImporting(last.uploadId);
   }, [latest.data, importing]);
+
+  async function drop(id: string) {
+    await six.api.DELETE("/v1/admin/sticker-packs/uploads/{id}", { params: { path: { id } } }).catch(() => null);
+    void latest.refetch();
+  }
 
   useEffect(() => {
     if (!running) return;
@@ -67,15 +76,13 @@ function Importer() {
         setTitle("");
         return;
       }
-      setUploaded(0);
-      const upload = await six.upload(zip, { kind: "sticker_zip", name: zip.name, mime: zip.type || "application/zip", onProgress: setUploaded });
-      unwrap(await six.api.POST("/v1/admin/sticker-packs/import", { body: { uploadId: upload.id } }));
-      setImporting(upload.id);
-      setZip(null);
+      const id = await uploadAndImport(qc, zip);
+      if (id) {
+        setImporting(id);
+        setZip(null);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "The upload failed");
-    } finally {
-      setUploaded(null);
+      setError(err instanceof Error ? err.message : "That didn't work");
     }
   }
 
@@ -83,6 +90,7 @@ function Importer() {
     if (!file) return;
     if (!/\.zip$/i.test(file.name)) return setError("Pick a .zip file");
     setError(null);
+    useZipUpload.setState({ error: null });
     setZip(file);
   };
 
@@ -137,6 +145,38 @@ function Importer() {
           }}
         />
       </label>
+      {up.progress !== null && (
+        <div role="progressbar" aria-label="Upload progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(up.progress * 100)} className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
+              <div className="h-full rounded-full bg-sky-500 transition-[width] duration-500" style={{ width: `${Math.max(2, up.progress * 100)}%` }} />
+            </div>
+            <span className="w-11 text-right text-sm font-semibold tabular-nums">{Math.floor(up.progress * 100)}%</span>
+          </div>
+          <p className="text-sm text-stone-500">
+            Uploading {up.name} ({formatBytes(up.size)}). You can switch tabs, but keep this page open until it's up; the import starts then.
+          </p>
+        </div>
+      )}
+      {up.error && <p className="text-sm text-red-600 dark:text-red-400">{up.error}</p>}
+      {unfinished.length > 0 && (
+        <ul className="space-y-1.5">
+          {unfinished.map((u) => (
+            <li key={u.id} className="flex items-center gap-3 rounded-xl bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/30">
+              <span className="min-w-0 flex-1">
+                <span className="font-medium">{u.name}</span>
+                <span className="text-stone-500">
+                  {" "}
+                  · {formatBytes(u.size)} · started {new Date(u.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}, never finished uploading, so it wasn't imported. Pick it again to retry.
+                </span>
+              </span>
+              <button type="button" onClick={() => void drop(u.id)} className="shrink-0 font-medium text-red-600 hover:underline dark:text-red-400">
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       {s && running && (
         <div
           role="progressbar"
@@ -181,7 +221,7 @@ function Importer() {
         disabled={busy || (!zip && !title.trim())}
         className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-brand-ink disabled:opacity-50"
       >
-        {uploaded !== null ? `Uploading ${Math.round(uploaded * 100)}%` : zip ? "Upload and import" : "Create"}
+        {up.progress !== null ? `Uploading ${Math.floor(up.progress * 100)}%` : zip ? "Upload and import" : "Create"}
       </button>
     </form>
   );

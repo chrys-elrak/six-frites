@@ -4699,6 +4699,7 @@
         "tags": [
           "admin"
         ],
+        "description": "`unfinished` lists your zip uploads that never finished; drop them with DELETE /v1/admin/sticker-packs/uploads/{id}.",
         "security": [
           {
             "bearer": []
@@ -4776,12 +4777,86 @@
                         "error"
                       ],
                       "additionalProperties": false
+                    },
+                    "unfinished": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "size",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false,
+                        "description": "A sticker zip whose upload never finished, so it was never imported"
+                      }
                     }
                   },
                   "required": [
-                    "import"
+                    "import",
+                    "unfinished"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/sticker-packs/uploads/{id}": {
+      "delete": {
+        "summary": "Throw away a sticker zip upload that never finished",
+        "tags": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
