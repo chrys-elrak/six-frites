@@ -23,9 +23,9 @@ const ONE_TO_ONE: readonly CommandName[] = ["game", "play", "vanish"];
 /** The commands that still make sense in a group: no games, live games or vanish mode. */
 export const groupCommands = (commands: readonly CommandName[]) => commands.filter((c) => !ONE_TO_ONE.includes(c));
 
-const HAVE_BUTTONS: readonly CommandName[] = ["location", "game", "schedule"];
+const HAVE_BUTTONS: readonly CommandName[] = ["location", "game", "schedule", "giphy", "emoji"];
 
-/** The commands to offer in the attach menu, leaving out the ones it already has as its own buttons. */
+/** The commands to offer in the attach menu, leaving out the ones the attach menu or the emoji button already offer. */
 export const attachCommands = (group: boolean) =>
   (group ? groupCommands(COMMANDS) : COMMANDS).filter((c) => !HAVE_BUTTONS.includes(c));
 

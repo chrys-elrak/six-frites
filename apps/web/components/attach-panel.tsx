@@ -65,15 +65,8 @@ export function AttachPanel({ attach, commands, onClose }: { attach: PanelItem[]
             onClick={onClose}
             className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
           />
-          <div className="chat-colors fixed inset-x-0 bottom-0 divide-y divide-black/5 bg-(--bubble-their)/80 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl backdrop-saturate-150 dark:divide-white/10">
-            <div className="pb-1.5">
-              <Row items={attach} onSelect={select} />
-            </div>
-            {commands.length > 0 && (
-              <div className="pt-1.5">
-                <Row items={commands} onSelect={select} />
-              </div>
-            )}
+          <div className="chat-colors fixed inset-x-0 bottom-0 bg-(--bubble-their)/80 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl backdrop-saturate-150">
+            <Row items={[...attach, ...commands]} onSelect={select} />
           </div>
         </div>
       </Portal>
