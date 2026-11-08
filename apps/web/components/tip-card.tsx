@@ -1,9 +1,9 @@
 "use client";
 
-import { ChevronRight, Lightbulb, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lightbulb } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
-import { Dialog } from "./dialog";
 
 const KEY = "six:tip";
 const today = () => new Date().toDateString();
@@ -55,48 +55,50 @@ export function TipCard() {
   );
 }
 
-/** A row in Settings that opens every tip at once, for whoever doesn't want to wait for them one a day. */
+/** A row in Settings that opens every tip on their own page, for whoever doesn't want to wait for them one a day. */
 export function AllTips() {
   const tr = useT();
-  const [open, setOpen] = useState(false);
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-3 rounded-2xl bg-surface backdrop-blur-md px-4 py-3 text-left shadow-sm ring-1 ring-surface-line hover:bg-white/80 dark:hover:bg-stone-800/70"
-      >
-        <Lightbulb className="size-5 text-brand" />
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium">{tr.tips.all}</span>
-          <span className="block text-xs text-stone-500">{tr.tips.allHint(tr.tips.list.length)}</span>
-        </span>
-        <ChevronRight className="size-5 text-stone-400" />
-      </button>
-      {open && (
-        <Dialog onClose={() => setOpen(false)}>
-          <div className="flex items-center gap-2 border-b border-black/5 px-5 py-4 dark:border-white/10">
-            <Lightbulb className="size-5 text-brand" />
-            <h2 className="flex-1 text-lg font-semibold">{tr.tips.all}</h2>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label={tr.common.close}
-              className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-900/5 dark:hover:bg-white/10"
-            >
-              <X className="size-5" />
-            </button>
-          </div>
-          <ol className="divide-y divide-black/5 px-5 dark:divide-white/10">
-            {tr.tips.list.map((tip, i) => (
-              <li key={i} className="flex gap-3 py-3 text-sm">
-                <span className="w-5 shrink-0 text-right font-semibold text-brand tabular-nums">{i + 1}</span>
-                <span className="text-stone-700 dark:text-stone-300">{tip}</span>
-              </li>
-            ))}
-          </ol>
-        </Dialog>
-      )}
-    </>
+    <Link
+      href="/tips"
+      className="flex w-full items-center gap-3 rounded-2xl bg-surface backdrop-blur-md px-4 py-3 text-left shadow-sm ring-1 ring-surface-line hover:bg-white/80 dark:hover:bg-stone-800/70"
+    >
+      <Lightbulb className="size-5 text-brand" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">{tr.tips.all}</span>
+        <span className="block text-xs text-stone-500">{tr.tips.allHint(tr.tips.list.length)}</span>
+      </span>
+      <ChevronRight className="size-5 text-stone-400" />
+    </Link>
+  );
+}
+
+/** Every tip, numbered, as a page of its own. */
+export function TipsPage() {
+  const tr = useT();
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 py-2 backdrop-blur-xl md:h-16 md:py-0 dark:border-white/10 dark:bg-stone-950/40">
+        <Link
+          href="/settings"
+          aria-label={tr.common.back}
+          className="grid size-10 shrink-0 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
+        >
+          <ChevronLeft className="size-6" />
+        </Link>
+        <Lightbulb className="size-5 shrink-0 text-brand" />
+        <h1 className="min-w-0 flex-1 truncate px-2 font-semibold">{tr.tips.all}</h1>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <ol className="mx-auto max-w-2xl divide-y divide-black/5 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:divide-white/10">
+          {tr.tips.list.map((tip, i) => (
+            <li key={i} className="flex gap-3 py-3.5 text-[15px]">
+              <span className="w-6 shrink-0 text-right font-semibold text-brand tabular-nums">{i + 1}</span>
+              <span className="text-stone-700 dark:text-stone-300">{tip}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
   );
 }

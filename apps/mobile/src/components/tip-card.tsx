@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ChevronLeft, ChevronRight, Lightbulb } from "lucide-react-native";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
@@ -70,15 +71,13 @@ const styles = StyleSheet.create({
   button: { backgroundColor: brand, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
 });
 
-/** A row in Settings that opens every tip at once, for whoever doesn't want to wait for them one a day. */
+/** A row in Settings that opens every tip on their own screen, for whoever doesn't want to wait for them one a day. */
 export function AllTips() {
   const t = useTheme();
   const tr = useT();
-  const insets = useSafeAreaInsets();
-  const [open, setOpen] = useState(false);
   return (
     <Card>
-      <Pressable onPress={() => setOpen(true)} accessibilityRole="button" style={styles.row}>
+      <Pressable onPress={() => router.push("/tips")} accessibilityRole="button" style={styles.row}>
         <Lightbulb size={20} color={brand} />
         <View style={{ flex: 1 }}>
           <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.tips.all}</Text>
@@ -86,24 +85,30 @@ export function AllTips() {
         </View>
         <ChevronRight size={18} color={t.faint} />
       </Pressable>
-      {open && (
-        <Modal animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={() => setOpen(false)}>
-          <View style={{ flex: 1, backgroundColor: t.bg }}>
-            <ScreenHeader background={t.bar}>
-              <IconButton Icon={ChevronLeft} label={tr.common.close} size={26} onPress={() => setOpen(false)} />
-              <Text style={{ flex: 1, color: t.text, fontSize: 18, fontWeight: "700" }}>{tr.tips.all}</Text>
-            </ScreenHeader>
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 16 }}>
-              {tr.tips.list.map((tip, i) => (
-                <View key={i} style={[styles.tip, { borderColor: t.border }, i === 0 && { borderTopWidth: 0 }]}>
-                  <Text style={{ width: 24, textAlign: "right", color: brand, fontWeight: "700", fontSize: 14 }}>{i + 1}</Text>
-                  <Text style={{ flex: 1, color: t.textSoft, fontSize: 15, lineHeight: 21 }}>{tip}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </Modal>
-      )}
     </Card>
+  );
+}
+
+/** Every tip, numbered, as a screen of its own. */
+export function TipsScreen() {
+  const t = useTheme();
+  const tr = useT();
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <ScreenHeader background={t.bar}>
+        <IconButton Icon={ChevronLeft} label={tr.common.back} size={26} onPress={() => router.back()} />
+        <Lightbulb size={20} color={brand} />
+        <Text style={{ flex: 1, color: t.text, fontSize: 18, fontWeight: "700" }}>{tr.tips.all}</Text>
+      </ScreenHeader>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 16 }}>
+        {tr.tips.list.map((tip, i) => (
+          <View key={i} style={[styles.tip, { borderColor: t.border }, i === 0 && { borderTopWidth: 0 }]}>
+            <Text style={{ width: 24, textAlign: "right", color: brand, fontWeight: "700", fontSize: 14 }}>{i + 1}</Text>
+            <Text style={{ flex: 1, color: t.textSoft, fontSize: 15, lineHeight: 21 }}>{tip}</Text>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
