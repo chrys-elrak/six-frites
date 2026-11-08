@@ -4439,6 +4439,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -4875,6 +4879,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -5370,6 +5378,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -5862,6 +5874,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -6298,6 +6314,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -6827,6 +6847,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -7263,6 +7287,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -7790,6 +7818,10 @@ export interface paths {
                                         /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                         emoji: string;
                                         userIds: string[];
+                                        /** @description When each of them reacted, by user id */
+                                        reactedAt?: {
+                                            [key: string]: string;
+                                        };
                                         /** @description For a sticker reaction; null once the sticker is gone */
                                         sticker?: {
                                             id: string;
@@ -8226,6 +8258,10 @@ export interface paths {
                                         /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                         emoji: string;
                                         userIds: string[];
+                                        /** @description When each of them reacted, by user id */
+                                        reactedAt?: {
+                                            [key: string]: string;
+                                        };
                                         /** @description For a sticker reaction; null once the sticker is gone */
                                         sticker?: {
                                             id: string;
@@ -8754,6 +8790,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -9190,6 +9230,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -9771,6 +9815,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -10207,6 +10255,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -10356,6 +10408,11 @@ export interface paths {
                              * @description When it first reached a recipient's device; null until then
                              */
                             arrivedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When someone else in the chat first opened it; null until then
+                             */
+                            readAt: string | null;
                         };
                     };
                 };
@@ -10799,6 +10856,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -11263,6 +11324,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -11722,6 +11787,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -12177,6 +12246,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -12635,6 +12708,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -13116,6 +13193,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -13570,6 +13651,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -14029,6 +14114,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -14482,6 +14571,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -14935,6 +15028,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -15419,6 +15516,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -15882,6 +15983,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -16387,6 +16492,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -16996,6 +17105,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -18115,6 +18228,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -19175,6 +19292,10 @@ export interface paths {
                                         /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                         emoji: string;
                                         userIds: string[];
+                                        /** @description When each of them reacted, by user id */
+                                        reactedAt?: {
+                                            [key: string]: string;
+                                        };
                                         /** @description For a sticker reaction; null once the sticker is gone */
                                         sticker?: {
                                             id: string;
@@ -19593,6 +19714,10 @@ export interface paths {
                                         /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                         emoji: string;
                                         userIds: string[];
+                                        /** @description When each of them reacted, by user id */
+                                        reactedAt?: {
+                                            [key: string]: string;
+                                        };
                                         /** @description For a sticker reaction; null once the sticker is gone */
                                         sticker?: {
                                             id: string;
@@ -20081,6 +20206,10 @@ export interface paths {
                                             /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                             emoji: string;
                                             userIds: string[];
+                                            /** @description When each of them reacted, by user id */
+                                            reactedAt?: {
+                                                [key: string]: string;
+                                            };
                                             /** @description For a sticker reaction; null once the sticker is gone */
                                             sticker?: {
                                                 id: string;
@@ -20517,6 +20646,10 @@ export interface paths {
                                             /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                             emoji: string;
                                             userIds: string[];
+                                            /** @description When each of them reacted, by user id */
+                                            reactedAt?: {
+                                                [key: string]: string;
+                                            };
                                             /** @description For a sticker reaction; null once the sticker is gone */
                                             sticker?: {
                                                 id: string;
@@ -21961,6 +22094,10 @@ export interface paths {
                                 /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                 emoji: string;
                                 userIds: string[];
+                                /** @description When each of them reacted, by user id */
+                                reactedAt?: {
+                                    [key: string]: string;
+                                };
                                 /** @description For a sticker reaction; null once the sticker is gone */
                                 sticker?: {
                                     id: string;
@@ -25321,6 +25458,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -25757,6 +25898,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -26327,6 +26472,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -26763,6 +26912,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -27311,6 +27464,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -27747,6 +27904,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -28272,6 +28433,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -28708,6 +28873,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -29246,6 +29415,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -29682,6 +29855,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -30245,6 +30422,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;
@@ -30681,6 +30862,10 @@ export interface paths {
                                     /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
                                     emoji: string;
                                     userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
                                     /** @description For a sticker reaction; null once the sticker is gone */
                                     sticker?: {
                                         id: string;

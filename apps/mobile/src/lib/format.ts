@@ -41,6 +41,14 @@ export function calendarDate(iso: string) {
   return d.toLocaleDateString(getLocale(), { day: "numeric", month: "short", year });
 }
 
+/** "20:57" today, "Yesterday at 20:57", or "3 Nov at 20:57". */
+export function momentLabel(iso: string) {
+  const days = Math.round((startOfDay(new Date()) - startOfDay(new Date(iso))) / 864e5);
+  if (days === 0) return clockTime(iso);
+  const t = getT().time;
+  return t.dayAt(days === 1 ? t.yesterday : calendarDate(iso), clockTime(iso));
+}
+
 export function dayLabel(iso: string) {
   const d = new Date(iso);
   const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 864e5);

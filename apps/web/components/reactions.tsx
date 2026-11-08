@@ -3,6 +3,7 @@
 import { type MessageDTO, QUICK_REACTIONS, type ReactionGif, type StickerDTO, reactionGlyph } from "@six/shared";
 import { Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { momentLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -248,7 +249,7 @@ function MediaPreview({
   anchor,
   alignEnd,
   own,
-  names,
+  nameOf,
   onToggle,
   onClose,
 }: {
@@ -256,14 +257,14 @@ function MediaPreview({
   anchor: DOMRect;
   alignEnd: boolean;
   own: boolean;
-  names: string;
+  nameOf: (userId: string) => string;
   onToggle: () => void;
   onClose: () => void;
 }) {
   const tr = useT();
   const root = useRef<HTMLDivElement>(null);
   useDismiss(root, onClose);
-  const { top, left, width } = placeNear(anchor, 240, 300, alignEnd, "above");
+  const { top, left, width } = placeNear(anchor, 240, 300 + Math.min(r.userIds.length - 1, 3) * 20, alignEnd, "above");
   return (
     <Portal>
       <div
@@ -276,7 +277,16 @@ function MediaPreview({
         <div className="grid h-52 place-items-center overflow-hidden rounded-xl bg-black/5 dark:bg-white/5">
           {r.gif || r.sticker ? <ReactionFace r={r} size={208} /> : <AnimatedEmoji emoji={r.emoji} size={160} />}
         </div>
-        <p className="truncate px-1 text-sm">{names}</p>
+        <ul className="max-h-28 space-y-0.5 overflow-y-auto px-1 text-sm">
+          {r.userIds.map((id) => (
+            <li key={id} className="flex items-baseline gap-2">
+              <span className="min-w-0 flex-1 truncate">{nameOf(id)}</span>
+              {r.reactedAt?.[id] && (
+                <span className="shrink-0 text-xs text-stone-500 tabular-nums dark:text-stone-400">{momentLabel(r.reactedAt[id])}</span>
+              )}
+            </li>
+          ))}
+        </ul>
         <button
           type="button"
           onClick={() => {
@@ -375,7 +385,7 @@ export function ReactionChips({
                 anchor={gifAt.anchor}
                 alignEnd={mine}
                 own={r.userIds.includes(meId)}
-                names={names(r)}
+                nameOf={(id) => (id === meId ? tr.common.you : nameOf(id))}
                 onToggle={() => onReact(r.emoji)}
                 onClose={closeGif}
               />

@@ -8,6 +8,7 @@ import { AnimatedEmoji } from "./animated-emoji";
 import { Text } from "./text";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { momentLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -117,13 +118,13 @@ export function ReactionBar({
 function MediaPreview({
   r,
   own,
-  names,
+  nameOf,
   onToggle,
   onClose,
 }: {
   r: Reaction;
   own: boolean;
-  names: string;
+  nameOf: (id: string) => string;
   onToggle: () => void;
   onClose: () => void;
 }) {
@@ -136,9 +137,18 @@ function MediaPreview({
       <View style={{ flex: 1, justifyContent: "flex-end", padding: 12, paddingBottom: Math.max(insets.bottom, 12) }} pointerEvents="box-none">
         <View style={{ backgroundColor: t.surface, borderRadius: 24, padding: 12, gap: 10, alignItems: "center" }}>
           {r.gif || r.sticker ? <ReactionFace r={r} size={240} /> : <AnimatedEmoji emoji={r.emoji} size={180} />}
-          <Text numberOfLines={2} style={{ color: t.textSoft, fontSize: 14, textAlign: "center" }}>
-            {names}
-          </Text>
+          <ScrollView style={{ alignSelf: "stretch", maxHeight: 112 }} contentContainerStyle={{ gap: 4, paddingHorizontal: 4 }}>
+            {r.userIds.map((id) => (
+              <View key={id} style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+                <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 14 }}>
+                  {nameOf(id)}
+                </Text>
+                {!!r.reactedAt?.[id] && (
+                  <Text style={{ color: t.muted, fontSize: 13, fontVariant: ["tabular-nums"] }}>{momentLabel(r.reactedAt[id])}</Text>
+                )}
+              </View>
+            ))}
+          </ScrollView>
           <Pressable
             onPress={() => {
               onToggle();
@@ -300,7 +310,7 @@ export function ReactionChips({
               <MediaPreview
                 r={r}
                 own={r.userIds.includes(meId)}
-                names={r.userIds.map(nameOf).join(", ")}
+                nameOf={nameOf}
                 onToggle={() => onReact(r.emoji)}
                 onClose={() => setGifFor(null)}
               />

@@ -2,6 +2,7 @@ import { unwrap } from "@six/sdk";
 import { latencyLabel, messageTrip } from "@six/shared";
 import { useQuery } from "@tanstack/react-query";
 import { View } from "react-native";
+import { momentLabel } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
@@ -14,7 +15,7 @@ export function MessageTiming({ messageId, onClose }: { messageId: string; onClo
   const timing = useQuery({
     queryKey: ["timing", messageId],
     queryFn: async () => unwrap(await six.api.GET("/v1/messages/{id}/timing", { params: { path: { id: messageId } } })),
-    refetchInterval: (q) => (q.state.data && !q.state.data.arrivedAt ? 2000 : false),
+    refetchInterval: (q) => (q.state.data && !(q.state.data.arrivedAt && q.state.data.readAt) ? 2000 : false),
   });
   const data = timing.data;
   const trip = data && messageTrip(data);
@@ -32,6 +33,7 @@ export function MessageTiming({ messageId, onClose }: { messageId: string; onClo
           [tr.messages.timingUp, trip.up === null ? tr.messages.timingUnknown : latencyLabel(trip.up)],
           [tr.messages.timingDown, trip.down === null ? tr.messages.timingWaiting : latencyLabel(trip.down)],
           ...(trip.total === null ? [] : [[tr.messages.timingTotal, latencyLabel(trip.total)] as [string, string]]),
+          [tr.messages.timingSeen, data.readAt ? momentLabel(data.readAt) : tr.messages.timingNotSeen],
         ]
       : [];
 

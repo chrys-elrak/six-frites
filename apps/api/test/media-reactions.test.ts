@@ -29,7 +29,7 @@ describe("sticker and GIF reactions", () => {
 
     const reacted = (await react(guest, m.id, { stickerId: "noto-1f602" })).json();
     expect(reacted.reactions).toEqual([
-      { emoji: "sticker:noto-1f602", userIds: [guest.user.id], sticker: expect.objectContaining({ emoji: "😂" }) },
+      { emoji: "sticker:noto-1f602", userIds: [guest.user.id], reactedAt: { [guest.user.id]: expect.any(String) }, sticker: expect.objectContaining({ emoji: "😂" }) },
     ]);
     const again = (await react(host, m.id, { stickerId: "noto-1f602" })).json();
     expect(again.reactions[0].userIds).toEqual([guest.user.id, host.user.id]);
@@ -64,7 +64,7 @@ describe("sticker and GIF reactions", () => {
       const m = (await send(host, chatId, "dance?")).json();
       const reacted = (await react(guest, m.id, { gifId: "cat1" })).json();
       expect(reacted.reactions).toEqual([
-        { emoji: "gif:cat1", userIds: [guest.user.id], gif: { url: expect.stringContaining("cat1"), width: 480, height: 360 } },
+        { emoji: "gif:cat1", userIds: [guest.user.id], reactedAt: { [guest.user.id]: expect.any(String) }, gif: { url: expect.stringContaining("cat1"), width: 480, height: 360 } },
       ]);
       expect(await prisma.messageReaction.count({ where: { messageId: m.id, gifKey: { not: null } } })).toBe(1);
     } finally {

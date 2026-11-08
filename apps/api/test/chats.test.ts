@@ -151,9 +151,11 @@ describe("delivery receipts", () => {
     const sentAt = new Date(Date.now() - 300).toISOString();
     const m = (await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: `c-${Math.random()}`, text: "hi", sentAt })).json();
 
-    expect(await get(guest, `/v1/messages/${m.id}/timing`)).toEqual({ sentAt, serverAt: m.createdAt, arrivedAt: null });
+    expect(await get(guest, `/v1/messages/${m.id}/timing`)).toEqual({ sentAt, serverAt: m.createdAt, arrivedAt: null, readAt: null });
 
     await call(guest, "POST", `/v1/chats/${chatId}/read`, {});
+    const { readAt } = await get(host, `/v1/messages/${m.id}/timing`);
+    expect(Date.parse(readAt)).toBeGreaterThanOrEqual(Date.parse(m.createdAt));
     const at = new Date(Date.parse(m.createdAt) + 1).toISOString();
     expect((await call(guest, "POST", `/v1/chats/${chatId}/delivered`, { messageId: m.id, at })).body).toBe("null");
 
