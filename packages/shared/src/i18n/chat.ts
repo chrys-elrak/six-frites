@@ -64,7 +64,7 @@ const en = {
     `Block ${name}? Neither of you will be able to send messages here, and ${name} will see that you blocked them.`,
   removeContact: (name: string) => `Remove ${name} from contacts`,
   poke: {
-    action: (name: string) => `Poke ${name}…`,
+    action: "Poke…",
     title: (name: string) => `Poke ${name}?`,
     hint: (name: string) => `${name} gets an email asking them to come and talk to you.`,
     placeholder: "Add a few words (optional)",
@@ -218,7 +218,7 @@ const fr: typeof en = {
     `Bloquer ${name} ? Aucun de vous deux ne pourra envoyer de messages ici, et ${name} verra que vous l'avez bloqué(e).`,
   removeContact: (name) => `Retirer ${name} des contacts`,
   poke: {
-    action: (name) => `Faire coucou à ${name}…`,
+    action: "Faire coucou…",
     title: (name) => `Faire coucou à ${name} ?`,
     hint: (name) => `${name} recevra un e-mail l'invitant à venir vous parler.`,
     placeholder: "Ajouter quelques mots (facultatif)",
@@ -372,7 +372,7 @@ const mg: typeof en = {
     `Hosakanana ve i ${name}? Samy tsy afaka handefa hafatra eto intsony ianareo roa, ary ho hitan'i ${name} fa nosakananao izy.`,
   removeContact: (name) => `Esory amin'ny mpifandray i ${name}`,
   poke: {
-    action: (name) => `Antsoy i ${name}…`,
+    action: "Antsoy…",
     title: (name) => `Hiantso an'i ${name}?`,
     hint: (name) => `Hahazo mailaka i ${name} manasa azy hiresaka aminao.`,
     placeholder: "Manampia teny vitsivitsy (raha tianao)",

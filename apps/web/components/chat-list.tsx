@@ -337,7 +337,7 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
           actions={[
             { label: tr.contacts.openChat, onSelect: () => router.push(`/chats/${contact.chatId}`) },
             { label: tr.contacts.editContact, onSelect: () => setEditing(true) },
-            { label: tr.chat.poke.action(contact.user.displayName), onSelect: () => setPoking(true) },
+            { label: tr.chat.poke.action, onSelect: () => setPoking(true) },
             { label: tr.chat.removeContact(contact.user.displayName), destructive: true, onSelect: () => setRemoving(true) },
           ]}
         />

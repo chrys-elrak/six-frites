@@ -368,7 +368,7 @@ export function ChatMenu({
               ...(chat.withSupport
                 ? []
                 : [
-                    ...(!direct || frozen ? [] : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),
+                    ...(!direct || frozen ? [] : [{ label: tr.chat.poke.action, keepOpen: true, onSelect: () => setView("poke") }]),
                     ...(!direct
                       ? []
                       : chat.blockedByMe
