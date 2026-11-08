@@ -10,10 +10,11 @@ import type { MarketView } from "./market.js";
 import type { MemoryView } from "./memory.js";
 import type { PublicUser } from "./invites.js";
 import type { ReflexState } from "./reflex.js";
+import type { SnackState } from "./snack.js";
 import type { WordsView } from "./word-hunt.js";
 
 /** Games played live in a room, everyone at once, with the server dealing, rolling and keeping time. */
-export const LIVE_GAMES = ["fanorona", "ludo", "eights", "words", "dots", "memory", "reflex", "market"] as const;
+export const LIVE_GAMES = ["fanorona", "ludo", "eights", "words", "dots", "memory", "reflex", "market", "snack"] as const;
 export type LiveGame = (typeof LIVE_GAMES)[number];
 
 export const LIVE_EMOJI: Record<LiveGame, string> = {
@@ -25,6 +26,7 @@ export const LIVE_EMOJI: Record<LiveGame, string> = {
   memory: "🎴",
   reflex: "⚡",
   market: "🥕",
+  snack: "🍬",
 };
 
 /** Each seat's colour, the same in every game: red, green, yellow, blue. */
@@ -55,6 +57,7 @@ export const LIVE_SEATS: Record<LiveGame, { min: number; max: number }> = {
   words: { min: 1, max: 4 },
   reflex: { min: 2, max: 4 },
   market: { min: 2, max: 4 },
+  snack: { min: 2, max: 2 },
 };
 
 /** How long someone has for their turn before it's played for them. */
@@ -127,7 +130,8 @@ export type LiveView =
   | { game: "dots"; state: DotsState }
   | { game: "memory"; state: MemoryView }
   | { game: "reflex"; state: ReflexState }
-  | { game: "market"; state: MarketView };
+  | { game: "market"; state: MarketView }
+  | { game: "snack"; state: SnackState };
 
 /** A room as one person sees it: hidden cards and other people's words stay hidden until the end. */
 export interface LiveRoomDTO {

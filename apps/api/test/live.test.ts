@@ -366,7 +366,7 @@ describe("live rooms", () => {
     const p = await player(host);
     const tooMany = await p.ask("live:create", { game: "fanorona", invite: [guest.user.id, host.user.id, "x"], locale: "en" });
     expect(tooMany.ok).toBe(false);
-    for (const game of ["fanorona", "dots", "memory", "market"] as const) {
+    for (const game of ["fanorona", "dots", "memory", "market", "snack"] as const) {
       const { data } = await p.ask<LiveRoomDTO>("live:create", { game, invite: [], locale: "en" });
       await p.ask("live:bot", { roomId: data!.id, add: true });
       if (game === "fanorona") expect((await p.ask("live:bot", { roomId: data!.id, add: true })).error!.code).toBe("ROOM_FULL");
@@ -380,6 +380,8 @@ describe("live rooms", () => {
             ? { line: 0 }
             : game === "market"
               ? { roll: true }
+              : game === "snack"
+                ? { draw: true }
               : { card: 0 };
       expect((await p.ask("live:move", { roomId: data!.id, move })).ok).toBe(true);
       await p.ask("live:end", { roomId: data!.id });

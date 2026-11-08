@@ -422,6 +422,7 @@ export const MessageDTO = z.object({
       z.object({
         emoji: z.string().describe("The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it"),
         userIds: z.array(Id),
+        reactedAt: z.record(Id, IsoDate).optional().describe("When each of them reacted, by user id"),
         sticker: StickerDTO.nullish().describe("For a sticker reaction; null once the sticker is gone"),
         gif: ReactionGif.nullish().describe("For a GIF reaction, as an MP4 to play muted on a loop"),
       }),
@@ -745,6 +746,7 @@ export const MessageTimingDTO = z.object({
   sentAt: IsoDate.nullable().describe("When the sender pressed send; null from older apps"),
   serverAt: IsoDate.describe("When the server stored it"),
   arrivedAt: IsoDate.nullable().describe("When it first reached a recipient's device; null until then"),
+  readAt: IsoDate.nullable().describe("When someone else in the chat first opened it; null until then"),
 });
 export type MessageTimingDTO = z.infer<typeof MessageTimingDTO>;
 

@@ -28,6 +28,8 @@ import {
   type MarketState,
   MemoryMove,
   type MemoryState,
+  SnackMove,
+  type SnackState,
   type PublicUser,
   WORDS_SECONDS,
   WordsMove,
@@ -57,6 +59,10 @@ import {
   marketScores,
   marketStart,
   marketView,
+  snackAuto,
+  snackPlay,
+  snackScores,
+  snackStart,
   memoryAuto,
   memoryScores,
   memoryPlay,
@@ -95,7 +101,8 @@ type GameState =
   | { game: "dots"; s: DotsState }
   | { game: "memory"; s: MemoryState }
   | { game: "reflex"; s: ReflexState }
-  | { game: "market"; s: MarketState };
+  | { game: "market"; s: MarketState }
+  | { game: "snack"; s: SnackState };
 
 interface Seat {
   /** null for Frite Bot. */
@@ -141,7 +148,7 @@ interface Room {
  */
 const live = new Map<string, Room>();
 
-const BOT_MS = { ludo: 900, eights: 1300, fanorona: 1200, dots: 800, memory: 1100, words: 0, reflex: 0, market: 1000 };
+const BOT_MS = { ludo: 900, eights: 1300, fanorona: 1200, dots: 800, memory: 1100, words: 0, reflex: 0, market: 1000, snack: 1000 };
 const IDLE_MS = 30 * 60 * 1000;
 
 setInterval(() => {
@@ -158,6 +165,7 @@ function scoresOf(state: GameState) {
   if (state.game === "words") return wordsView(state.s, null).scores;
   if (state.game === "reflex") return state.s.scores;
   if (state.game === "market") return marketScores(state.s);
+  if (state.game === "snack") return snackScores(state.s);
   return null;
 }
 
@@ -170,6 +178,7 @@ function startState(room: Room): GameState {
   if (room.game === "memory") return { game: "memory", s: memoryStart(n, Math.random) };
   if (room.game === "reflex") return { game: "reflex", s: reflexStart(n, Math.random) };
   if (room.game === "market") return { game: "market", s: marketStart(n, Math.random) };
+  if (room.game === "snack") return { game: "snack", s: snackStart(n, Math.random) };
   return { game: "words", s: wordsStart(n, lexicon(room.locale), Math.random) };
 }
 
@@ -209,6 +218,11 @@ function apply(state: GameState, seat: number, move: unknown): GameState | null 
     const s = m.success && marketPlay(state.s, seat, m.data, Math.random);
     return s ? { game: "market", s } : null;
   }
+  if (state.game === "snack") {
+    const m = SnackMove.safeParse(move);
+    const s = m.success && snackPlay(state.s, seat, m.data, Math.random);
+    return s ? { game: "snack", s } : null;
+  }
   const m = WordsMove.safeParse(move);
   const s = m.success && wordsPlay(state.s, seat, m.data);
   return s ? { game: "words", s } : null;
@@ -222,6 +236,7 @@ function autoMove(state: GameState, seat: number) {
   if (state.game === "memory") return memoryAuto(state.s, seat, Math.random);
   if (state.game === "reflex") return reflexAuto(state.s, seat, Math.random);
   if (state.game === "market") return marketAuto(state.s, seat, Math.random);
+  if (state.game === "snack") return snackAuto(state.s, seat);
   return wordsAuto(state.s, seat, Math.random);
 }
 
@@ -229,7 +244,7 @@ const turnOf = (state: GameState) => (state.game === "words" || state.game === "
 
 function winnersOf(state: GameState) {
   if (state.game === "words") return state.s.over ? wordsWinners(state.s) : null;
-  if (state.game === "fanorona" || state.game === "dots" || state.game === "memory" || state.game === "reflex" || state.game === "market")
+  if (state.game === "fanorona" || state.game === "dots" || state.game === "memory" || state.game === "reflex" || state.game === "market" || state.game === "snack")
     return state.s.winners;
   return state.s.winner === null ? null : [state.s.winner];
 }
@@ -241,6 +256,7 @@ function viewOf(state: GameState, seat: number | null): LiveView {
   if (state.game === "memory") return { game: "memory", state: memoryView(state.s) };
   if (state.game === "reflex") return { game: "reflex", state: state.s };
   if (state.game === "market") return { game: "market", state: marketView(state.s) };
+  if (state.game === "snack") return { game: "snack", state: state.s };
   return state.game === "fanorona" ? { game: "fanorona", state: state.s } : { game: "dots", state: state.s };
 }
 

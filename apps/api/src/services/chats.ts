@@ -287,6 +287,15 @@ export async function markRead(userId: string, chatId: string, input: MarkReadIn
     const target = await findTarget(tx, chatId, input.messageId);
     if (!target || (member.lastReadAt && member.lastReadAt >= target.createdAt)) return null;
 
+    await tx.message.updateMany({
+      where: {
+        chatId,
+        senderId: { not: userId },
+        readAt: null,
+        createdAt: { lte: target.createdAt, gte: new Date(target.createdAt.getTime() - 7 * 86_400_000) },
+      },
+      data: { readAt: new Date() },
+    });
     const deliveredBehind = !member.lastDeliveredAt || member.lastDeliveredAt < target.createdAt;
     await tx.chatMember.update({
       where: { chatId_userId: { chatId, userId } },

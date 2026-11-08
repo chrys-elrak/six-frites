@@ -73,15 +73,17 @@ export const EPHEMERAL_LINK_SECONDS = 5 * 60;
 
 /** One entry per emoji, sticker or GIF, with whoever used it and, for stickers and GIFs, what to show. */
 function groupReactions(reactions: MessageRow["reactions"]) {
-  const byEmoji = new Map<string, { first: MessageRow["reactions"][number]; userIds: string[] }>();
+  const byEmoji = new Map<string, { first: MessageRow["reactions"][number]; userIds: string[]; reactedAt: Record<string, string> }>();
   for (const r of reactions) {
-    const seen = byEmoji.get(r.emoji);
-    if (seen) seen.userIds.push(r.userId);
-    else byEmoji.set(r.emoji, { first: r, userIds: [r.userId] });
+    const seen = byEmoji.get(r.emoji) ?? { first: r, userIds: [], reactedAt: {} };
+    seen.userIds.push(r.userId);
+    seen.reactedAt[r.userId] = r.createdAt.toISOString();
+    byEmoji.set(r.emoji, seen);
   }
-  return [...byEmoji].map(([emoji, { first, userIds }]) => ({
+  return [...byEmoji].map(([emoji, { first, userIds, reactedAt }]) => ({
     emoji,
     userIds,
+    reactedAt,
     ...(first.stickerId && { sticker: first.sticker && !first.sticker.removedAt ? toStickerDTO(first.sticker) : null }),
     ...(first.gifKey && { gif: { url: presignGet(first.gifKey), width: first.gifWidth, height: first.gifHeight } }),
   }));
@@ -691,6 +693,7 @@ export async function messageTiming(userId: string, messageId: string): Promise<
     sentAt: message.sentAt?.toISOString() ?? null,
     serverAt: message.createdAt.toISOString(),
     arrivedAt: message.arrivedAt?.toISOString() ?? null,
+    readAt: message.readAt?.toISOString() ?? null,
   };
 }
 

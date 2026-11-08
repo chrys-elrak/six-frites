@@ -4294,7 +4294,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -4303,7 +4303,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -4730,7 +4730,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -4739,7 +4739,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -5225,7 +5225,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -5234,7 +5234,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -5717,7 +5717,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -5726,7 +5726,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -6153,7 +6153,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -6162,7 +6162,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -6682,7 +6682,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -6691,7 +6691,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -7118,7 +7118,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -7127,7 +7127,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -7645,7 +7645,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         roomId: string;
                                         from: string;
                                         /** @description The game is over and its room closed, so there is nothing to join */
@@ -7654,7 +7654,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -8081,7 +8081,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         roomId: string;
                                         from: string;
                                         /** @description The game is over and its room closed, so there is nothing to join */
@@ -8090,7 +8090,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -8609,7 +8609,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -8618,7 +8618,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -9045,7 +9045,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -9054,7 +9054,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -9626,7 +9626,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -9635,7 +9635,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -10062,7 +10062,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -10071,7 +10071,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -10654,7 +10654,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -10663,7 +10663,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -11118,7 +11118,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -11127,7 +11127,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -11577,7 +11577,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -11586,7 +11586,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -12032,7 +12032,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -12041,7 +12041,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -12490,7 +12490,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -12499,7 +12499,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -12971,7 +12971,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -12980,7 +12980,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -13425,7 +13425,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -13434,7 +13434,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -13884,7 +13884,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -13893,7 +13893,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -14337,7 +14337,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -14346,7 +14346,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -14790,7 +14790,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -14799,7 +14799,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -15274,7 +15274,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -15283,7 +15283,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -15737,7 +15737,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -15746,7 +15746,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -16242,7 +16242,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -16251,7 +16251,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -16851,7 +16851,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -16860,7 +16860,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -17970,7 +17970,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -17979,7 +17979,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -19030,7 +19030,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         roomId: string;
                                         from: string;
                                         /** @description The game is over and its room closed, so there is nothing to join */
@@ -19039,7 +19039,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -19448,7 +19448,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_invite";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         roomId: string;
                                         from: string;
                                         /** @description The game is over and its room closed, so there is nothing to join */
@@ -19457,7 +19457,7 @@ export interface paths {
                                         /** @enum {string} */
                                         type: "live_result";
                                         /** @enum {string} */
-                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                        game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                         /** @enum {string} */
                                         result: "won" | "lost" | "draw";
                                         /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -19936,7 +19936,7 @@ export interface paths {
                                             /** @enum {string} */
                                             type: "live_invite";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                             roomId: string;
                                             from: string;
                                             /** @description The game is over and its room closed, so there is nothing to join */
@@ -19945,7 +19945,7 @@ export interface paths {
                                             /** @enum {string} */
                                             type: "live_result";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                             /** @enum {string} */
                                             result: "won" | "lost" | "draw";
                                             /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -20372,7 +20372,7 @@ export interface paths {
                                             /** @enum {string} */
                                             type: "live_invite";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                             roomId: string;
                                             from: string;
                                             /** @description The game is over and its room closed, so there is nothing to join */
@@ -20381,7 +20381,7 @@ export interface paths {
                                             /** @enum {string} */
                                             type: "live_result";
                                             /** @enum {string} */
-                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                            game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                             /** @enum {string} */
                                             result: "won" | "lost" | "draw";
                                             /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -21816,7 +21816,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_invite";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 roomId: string;
                                 from: string;
                                 /** @description The game is over and its room closed, so there is nothing to join */
@@ -21825,7 +21825,7 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "live_result";
                                 /** @enum {string} */
-                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                 /** @enum {string} */
                                 result: "won" | "lost" | "draw";
                                 /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -25176,7 +25176,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -25185,7 +25185,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -25612,7 +25612,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -25621,7 +25621,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -26182,7 +26182,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -26191,7 +26191,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -26618,7 +26618,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -26627,7 +26627,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -27166,7 +27166,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -27175,7 +27175,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -27602,7 +27602,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -27611,7 +27611,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -28127,7 +28127,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -28136,7 +28136,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -28563,7 +28563,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -28572,7 +28572,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -29101,7 +29101,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -29110,7 +29110,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -29537,7 +29537,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -29546,7 +29546,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -30100,7 +30100,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -30109,7 +30109,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
@@ -30536,7 +30536,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_invite";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     roomId: string;
                                     from: string;
                                     /** @description The game is over and its room closed, so there is nothing to join */
@@ -30545,7 +30545,7 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "live_result";
                                     /** @enum {string} */
-                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
                                     /** @enum {string} */
                                     result: "won" | "lost" | "draw";
                                     /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */

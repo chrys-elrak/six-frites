@@ -19,14 +19,17 @@ export const CHANGELOG: Release[] = [
       en: [
         "New live game, Reflex: something pops up, and the first to tap it in their own inventory wins the point. Inventories shuffle every round, a wrong tap puts you out until the next one, and the first to 10 wins. Play it with friends or against Six Frites Game.",
         "New live game, Market Memory: everyone has 6 food cards face down. Roll the food die, then turn over the card you think it is. Right? It stays up and you roll again. Wrong? It turns back and the next player goes. The first to find all 6 wins.",
+        "New live game, Snack Race: 5 treats wait in the middle of the board. Draw a card: a number moves you one step up that column, Stop does nothing. The first to reach the middle takes the treat, and whoever has the most wins. Play it with a friend or against Six Frites Game.",
       ],
       fr: [
         "Nouveau jeu en direct, Réflexe : un objet apparaît, et le premier à le toucher dans son inventaire gagne le point. Les inventaires sont mélangés à chaque manche, une erreur t'élimine jusqu'à la suivante, et le premier à 10 gagne. À jouer entre amis ou contre Six Frites Game.",
         "Nouveau jeu en direct, Mémoire du marché : chacun a 6 cartes d'aliments face cachée. Lance le dé des aliments, puis retourne la carte où tu penses qu'il est. Bonne carte ? Elle reste visible et tu relances. Mauvaise ? Elle se retourne et c'est au suivant. Le premier à trouver les 6 gagne.",
+        "Nouveau jeu en direct, Course au goûter : 5 goûters attendent au milieu du plateau. Tire une carte : un chiffre te fait avancer d'un pas dans cette colonne, Stop ne fait rien. Le premier à arriver au milieu prend le goûter, et celui qui en a le plus gagne. À deux ou contre Six Frites Game.",
       ],
       mg: [
         "Lalao mivantana vaovao, Haingana: misy zavatra miseho, ary izay voalohany manindry azy ao amin'ny entany no mahazo ny isa. Afangaro isaky ny fihodinana ny entana, miala mandra-pahatongan'ny manaraka izay diso, ary izay mahazo 10 voalohany no mandresy. Lalaovy amin'ny namana na amin'i Six Frites Game.",
         "Lalao mivantana vaovao, Tadidy an-tsena: samy manana karatra sakafo 6 mitodika. Ario ny dian'ny sakafo, avy eo avadiho ilay karatra heverinao fa izy. Marina? Mijanona miseho izy ary manary indray ianao. Diso? Miverina mitodika izy ary anjaran'ny manaraka. Izay mahita ireo 6 voalohany no mandresy.",
+        "Lalao mivantana vaovao, Hazakazaka tsakitsaky: tsakitsaky 5 no miandry eo afovoan'ny takelaka. Misintona karatra: ny isa no mampandroso anao dingana iray amin'io tsanganana io, tsy manao na inona na inona ny Stop. Izay tonga voalohany eo afovoany no maka ny tsakitsaky, ary izay manana betsaka indrindra no mandresy. Lalaovy amin'ny namana na amin'i Six Frites Game.",
       ],
     },
   },

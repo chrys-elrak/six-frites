@@ -105,6 +105,12 @@ const en = {
       "Right food? It stays face up and you roll again. Wrong one? It turns back over and it's the next player's turn. Already found that food? Your turn passes.",
       "Remember where your cards are. The first to find all 6 wins.",
     ],
+    snack: [
+      "5 treats wait in the middle of the board, one per column. Each player starts from their own edge, 3 steps away from each.",
+      "On your turn, draw a card. A number from 1 to 5 moves you one step up that column. Stop does nothing.",
+      "The step that reaches the middle takes the treat. A column already eaten does nothing.",
+      "Whoever takes the most treats wins.",
+    ],
     words: [
       "Everyone gets the same 16 letters for 2 minutes.",
       "Make words of 3 letters or more by sliding across touching letters, sideways, up, down or diagonally, each letter once.",
@@ -221,6 +227,12 @@ const fr: typeof en = {
       "Le bon aliment ? Il reste visible et tu relances. Le mauvais ? Il se retourne et c'est au suivant. Déjà trouvé cet aliment ? Ton tour passe.",
       "Retiens où sont tes cartes. Le premier à trouver les 6 gagne.",
     ],
+    snack: [
+      "5 goûters attendent au milieu du plateau, un par colonne. Chaque joueur part de son bord, à 3 pas de chacun.",
+      "À ton tour, tire une carte. Un chiffre de 1 à 5 te fait avancer d'un pas dans cette colonne. Stop ne fait rien.",
+      "Le pas qui arrive au milieu prend le goûter. Une colonne déjà mangée ne fait rien.",
+      "Celui qui prend le plus de goûters gagne.",
+    ],
     words: [
       "Tout le monde a les mêmes 16 lettres pendant 2 minutes.",
       "Forme des mots de 3 lettres ou plus en glissant sur des lettres voisines, sur les côtés, en haut, en bas ou en diagonale, chaque lettre une seule fois.",
@@ -336,6 +348,12 @@ const mg: typeof en = {
       "Rehefa anjaranao, ario ny dia: sakafo iray amin'ireo 6 no asehony. Avy eo avadiho ny karatrao iray.",
       "Marina ny sakafo? Mijanona miseho izy ary manary indray ianao. Diso? Miverina mitodika izy ary anjaran'ny manaraka. Efa hitanao io sakafo io? Mandalo ny anjaranao.",
       "Tadidio ny toeran'ny karatrao. Izay mahita ireo 6 voalohany no mandresy.",
+    ],
+    snack: [
+      "Tsakitsaky 5 no miandry eo afovoan'ny takelaka, iray isaky ny tsanganana. Samy manomboka amin'ny sisiny avy ny mpilalao, dingana 3 miala amin'izy tsirairay.",
+      "Rehefa anjaranao, misintona karatra. Isa 1 ka hatramin'ny 5 no mampandroso anao dingana iray amin'io tsanganana io. Tsy manao na inona na inona ny Stop.",
+      "Ny dingana tonga eo afovoany no maka ny tsakitsaky. Tsy manao na inona na inona ny tsanganana efa lany.",
+      "Izay maka tsakitsaky betsaka indrindra no mandresy.",
     ],
     words: [
       "Samy mahazo litera 16 mitovy avokoa mandritra ny 2 minitra.",

@@ -14,6 +14,7 @@ import {
   marketScores,
   memoryScores,
   parseCommand,
+  snackScores,
 } from "@six/shared";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -53,6 +54,7 @@ import { LudoBoard } from "./ludo-board";
 import { MarketBoard } from "./market-board";
 import { MemoryBoard } from "./memory-board";
 import { ReflexBoard } from "./reflex-board";
+import { SnackBoard } from "./snack-board";
 import { ReactionChips, ReactionPopover } from "./reactions";
 import { Sheet } from "./sheet";
 import { Text, TextInput } from "./text";
@@ -119,11 +121,13 @@ function Seats({ room, nameOf }: { room: LiveRoomDTO; nameOf: (seat: number) => 
                       ? tr.live.points(view.state.scores[i] ?? 0)
                       : view?.game === "market"
                         ? tr.live.marketFound(marketScores(view.state)[i] ?? 0)
-                        : null;
+                        : view?.game === "snack"
+                          ? `🍬 ${snackScores(view.state)[i] ?? 0}`
+                          : null;
         const color =
           view?.game === "ludo"
             ? SEAT_COLORS[view.state.colors[i]!]
-            : view?.game === "dots" || view?.game === "memory" || view?.game === "market"
+            : view?.game === "dots" || view?.game === "memory" || view?.game === "market" || view?.game === "snack"
               ? SEAT_COLORS[i]
               : view?.game === "fanorona"
                 ? STONES[i]
@@ -702,6 +706,7 @@ export function LiveRoom({ id }: { id: string }) {
                 {view?.game === "dots" && <DotsBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
                 {view?.game === "memory" && <MemoryBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
                 {view?.game === "market" && <MarketBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
+                {view?.game === "snack" && <SnackBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
                 {view?.game === "reflex" && <ReflexBoard room={room} state={view.state} nameOf={nameOf} play={play} />}
               </>
             )}
