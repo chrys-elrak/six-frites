@@ -16,7 +16,7 @@ import {
   memoryScores,
   parseCommand,
 } from "@six/shared";
-import { Bot, ChevronLeft, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
+import { Bot, ChevronLeft, MessageCircle, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -330,9 +330,28 @@ function ChatLine({
   );
 }
 
+const POP_MS = 6000;
+
+/** Ids of the chat lines that came in since the room opened, each kept for a few seconds so it pops up over the game. */
+function usePopups(chat: LiveChatLineDTO[]) {
+  const known = useRef<Set<string> | null>(null);
+  const [popped, setPopped] = useState<string[]>([]);
+  useEffect(() => {
+    const ids = chat.map((l) => l.id);
+    if (!known.current) return void (known.current = new Set(ids));
+    const seen = known.current;
+    const fresh = ids.filter((id) => !seen.has(id));
+    if (!fresh.length) return;
+    fresh.forEach((id) => seen.add(id));
+    setPopped((p) => [...p, ...fresh].slice(-3));
+    setTimeout(() => setPopped((p) => p.filter((id) => !fresh.includes(id))), POP_MS);
+  }, [chat]);
+  return popped;
+}
+
 /**
- * What the players said, when, and their reactions, with a box to say something, `/giphy` for a GIF, emoji and
- * voice notes, under the game.
+ * A box to say something, `/giphy` for a GIF, emoji and voice notes, under the game. New lines pop up over the
+ * game for a few seconds; the history button shows them all, with their reactions.
  */
 function RoomChat({
   room,
@@ -350,6 +369,9 @@ function RoomChat({
   const [reacting, setReacting] = useState<{ id: string; at: DOMRect } | null>(null);
   const [picking, setPicking] = useState<string | null>(null);
   const [replying, setReplying] = useState<LiveChatLineDTO | null>(null);
+  const [history, setHistory] = useState(false);
+  const popped = usePopups(room.chat);
+  const shown = history ? room.chat : room.chat.filter((l) => popped.includes(l.id));
   const input = useRef<HTMLInputElement>(null);
   const nameOf = (id: string) => room.seats.find((s) => s.user?.id === id)?.user?.displayName ?? "";
   const lines = useRef<HTMLDivElement>(null);
@@ -363,7 +385,7 @@ function RoomChat({
 
   useEffect(() => {
     lines.current?.scrollTo({ top: lines.current.scrollHeight });
-  }, [newest]);
+  }, [newest, history]);
 
   useEffect(() => {
     const t = setTimeout(() => setQ(search ?? ""), 400);
@@ -409,21 +431,32 @@ function RoomChat({
       className="relative z-10 border-t border-black/5 bg-stone-50/45 backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/40"
       style={{ transform: "translateY(calc(-1 * env(keyboard-inset-height, 0px)))" }}
     >
-      {room.chat.length > 0 && (
-        <div ref={lines} className="mx-auto max-h-56 w-full max-w-2xl space-y-2.5 overflow-y-auto px-4 pt-4 pb-2 text-sm">
-          {room.chat.map((l) => (
-            <ChatLine
+      {shown.length > 0 && (
+        <div
+          ref={lines}
+          className={`absolute inset-x-0 bottom-full mx-auto w-full max-w-2xl text-sm ${
+            history
+              ? "max-h-[min(16rem,calc((var(--app-height,100dvh)_-_env(keyboard-inset-height,0px))_*_0.4))] space-y-2.5 overflow-y-auto overscroll-contain rounded-t-2xl bg-stone-50/90 px-4 pt-4 pb-2 shadow-lg dark:bg-stone-900/90"
+              : "pointer-events-none space-y-1.5 px-3 pb-2"
+          }`}
+        >
+          {shown.map((l) => (
+            <div
               key={l.id}
-              line={l}
-              meId={meId}
-              nameOf={nameOf}
-              onReact={(e) => react(l.id, e)}
-              onPickReaction={(at) => setReacting({ id: l.id, at })}
-              onReply={() => {
-                setReplying(l);
-                input.current?.focus();
-              }}
-            />
+              className={history ? "" : "reaction-pop pointer-events-auto rounded-2xl bg-stone-50/90 px-3 py-2 shadow-lg dark:bg-stone-900/90"}
+            >
+              <ChatLine
+                line={l}
+                meId={meId}
+                nameOf={nameOf}
+                onReact={(e) => react(l.id, e)}
+                onPickReaction={(at) => setReacting({ id: l.id, at })}
+                onReply={() => {
+                  setReplying(l);
+                  input.current?.focus();
+                }}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -525,6 +558,18 @@ function RoomChat({
           </>
         ) : (
           <>
+            {room.chat.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setHistory((on) => !on)}
+                aria-label={tr.live.messages}
+                title={tr.live.messages}
+                aria-pressed={history}
+                className={`grid size-10 shrink-0 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 ${history ? "text-brand" : "text-stone-500"}`}
+              >
+                <MessageCircle className="size-5" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setEmoji((on) => !on)}

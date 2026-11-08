@@ -26,12 +26,12 @@ import {
 import { File } from "expo-file-system";
 import { Image } from "expo-image";
 import { type Href, router } from "expo-router";
-import { ArrowLeft, Gamepad2, Mic, MoreVertical, Reply, SendHorizontal, Smile, X } from "lucide-react-native";
+import { ArrowLeft, Gamepad2, MessageCircle, Mic, MoreVertical, Reply, SendHorizontal, Smile, X } from "lucide-react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { type ComponentRef, useEffect, useEffectEvent, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text as Emoji, useWindowDimensions, View } from "react-native";
 import Animated, { type CSSAnimationKeyframes, ZoomIn } from "react-native-reanimated";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
+import { KeyboardStickyView, useKeyboardState } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { clockTime, formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -275,9 +275,28 @@ function ChatLine({
 
 const VOICE_NOTE = { ...RecordingPresets.HIGH_QUALITY, numberOfChannels: 1, bitRate: 32_000 };
 
+const POP_MS = 6000;
+
+/** Ids of the chat lines that came in since the room opened, each kept for a few seconds so it pops up over the game. */
+function usePopups(chat: LiveChatLineDTO[]) {
+  const known = useRef<Set<string> | null>(null);
+  const [popped, setPopped] = useState<string[]>([]);
+  useEffect(() => {
+    const ids = chat.map((l) => l.id);
+    if (!known.current) return void (known.current = new Set(ids));
+    const seen = known.current;
+    const fresh = ids.filter((id) => !seen.has(id));
+    if (!fresh.length) return;
+    fresh.forEach((id) => seen.add(id));
+    setPopped((p) => [...p, ...fresh].slice(-3));
+    setTimeout(() => setPopped((p) => p.filter((id) => !fresh.includes(id))), POP_MS);
+  }, [chat]);
+  return popped;
+}
+
 /**
- * What the players said, when, and their reactions, with a box to say something, `/giphy` for a GIF, emoji and
- * voice notes, under the game. Long-press a line to react to it.
+ * A box to say something, `/giphy` for a GIF, emoji and voice notes, under the game. New lines pop up over the
+ * game for a few seconds; the history button shows them all, with their reactions. Long-press a line to react to it.
  */
 function RoomChat({
   room,
@@ -291,13 +310,18 @@ function RoomChat({
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const keyboard = useKeyboardState((k) => (k.isVisible ? k.height : 0));
   const meId = useSession((s) => s.user!.id);
   const [text, setText] = useState("");
   const [emoji, setEmoji] = useState(false);
   const [reacting, setReacting] = useState<{ id: string; y: number } | null>(null);
   const [picking, setPicking] = useState<string | null>(null);
   const [replying, setReplying] = useState<LiveChatLineDTO | null>(null);
+  const [history, setHistory] = useState(false);
+  const [barHeight, setBarHeight] = useState(0);
+  const popped = usePopups(room.chat);
+  const shown = history ? room.chat : room.chat.filter((l) => popped.includes(l.id));
   const input = useRef<ComponentRef<typeof TextInput>>(null);
   const nameOf = (id: string) => room.seats.find((s) => s.user?.id === id)?.user?.displayName ?? "";
   const mineOn = (lineId: string) =>
@@ -367,137 +391,164 @@ function RoomChat({
     if (!(await answer({ text: line }))) setText(line);
   }
 
+  const offset = { opened: Math.max(insets.bottom, 12) - 12 };
+  const line = (l: LiveChatLineDTO) => (
+    <ChatLine
+      line={l}
+      meId={meId}
+      nameOf={nameOf}
+      onReact={(e) => react(l.id, e)}
+      onHold={(y) => setReacting({ id: l.id, y })}
+      onReply={() => {
+        setReplying(l);
+        input.current?.focus();
+      }}
+    />
+  );
+
   return (
-    <KeyboardStickyView offset={{ opened: Math.max(insets.bottom, 12) - 12 }}>
-      <View style={[styles.chat, { borderColor: t.border, backgroundColor: t.bar, paddingBottom: Math.max(insets.bottom, 12) }]}>
-        {room.chat.length > 0 && (
-          <ScrollView
-            ref={lines}
-            style={{ maxHeight: 200 }}
-            contentContainerStyle={styles.lines}
-            onContentSizeChange={() => lines.current?.scrollToEnd({ animated: false })}
-          >
-            {room.chat.map((l) => (
-              <ChatLine
-                key={l.id}
-                line={l}
-                meId={meId}
-                nameOf={nameOf}
-                onReact={(e) => react(l.id, e)}
-                onHold={(y) => setReacting({ id: l.id, y })}
-                onReply={() => {
-                  setReplying(l);
-                  input.current?.focus();
-                }}
-              />
-            ))}
-          </ScrollView>
-        )}
-        {reacting && (
-          <Sheet
-            floating={(sheetTop) => (
-              <ReactionPopover
-                anchor={{ x: 0, y: reacting.y - 24, width, height: 48 }}
-                sheetTop={sheetTop}
-                alignRight={false}
-                mine={mineOn(reacting.id)}
-                onPick={(e) => {
-                  react(reacting.id, e);
-                  setReacting(null);
-                }}
-                onMore={() => {
-                  setPicking(reacting.id);
-                  setReacting(null);
-                }}
-              />
-            )}
-            actions={[]}
-            onClose={() => setReacting(null)}
+    <>
+      <KeyboardStickyView offset={offset}>
+        <View
+          onLayout={(e) => setBarHeight(e.nativeEvent.layout.height)}
+          style={[styles.chat, { borderColor: t.border, backgroundColor: t.bar, paddingBottom: Math.max(insets.bottom, 12) }]}
+        >
+          {reacting && (
+            <Sheet
+              floating={(sheetTop) => (
+                <ReactionPopover
+                  anchor={{ x: 0, y: reacting.y - 24, width, height: 48 }}
+                  sheetTop={sheetTop}
+                  alignRight={false}
+                  mine={mineOn(reacting.id)}
+                  onPick={(e) => {
+                    react(reacting.id, e);
+                    setReacting(null);
+                  }}
+                  onMore={() => {
+                    setPicking(reacting.id);
+                    setReacting(null);
+                  }}
+                />
+              )}
+              actions={[]}
+              onClose={() => setReacting(null)}
+            />
+          )}
+          <EmojiPicker
+            open={picking !== null}
+            onClose={() => setPicking(null)}
+            onPick={(e) => {
+              if (picking) react(picking, e);
+              setPicking(null);
+            }}
           />
-        )}
-        <EmojiPicker
-          open={picking !== null}
-          onClose={() => setPicking(null)}
-          onPick={(e) => {
-            if (picking) react(picking, e);
-            setPicking(null);
-          }}
-        />
-        {command?.kind === "names" && (
-          <Pressable onPress={() => setText("/giphy ")} style={styles.hint}>
-            <Text style={{ color: t.text, fontWeight: "700" }}>/giphy</Text>
-            <Text style={{ color: t.muted, flexShrink: 1 }}>{tr.composer.commandHints.giphy}</Text>
-          </Pressable>
-        )}
-        {search !== null &&
-          (found.length ? (
-            <ScrollView horizontal keyboardShouldPersistTaps="handled" contentContainerStyle={styles.gifRow}>
-              {found.map((g) => (
-                <Pressable key={g.id} onPress={() => sendGif(g)} accessibilityLabel={g.title}>
-                  <Image
-                    source={g.previewUrl}
-                    style={{ height: 96, width: (96 * g.width) / g.height, borderRadius: 8, backgroundColor: t.chip }}
+          {command?.kind === "names" && (
+            <Pressable onPress={() => setText("/giphy ")} style={styles.hint}>
+              <Text style={{ color: t.text, fontWeight: "700" }}>/giphy</Text>
+              <Text style={{ color: t.muted, flexShrink: 1 }}>{tr.composer.commandHints.giphy}</Text>
+            </Pressable>
+          )}
+          {search !== null &&
+            (found.length ? (
+              <ScrollView horizontal keyboardShouldPersistTaps="handled" contentContainerStyle={styles.gifRow}>
+                {found.map((g) => (
+                  <Pressable key={g.id} onPress={() => sendGif(g)} accessibilityLabel={g.title}>
+                    <Image
+                      source={g.previewUrl}
+                      style={{ height: 96, width: (96 * g.width) / g.height, borderRadius: 8, backgroundColor: t.chip }}
+                    />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : (
+              <Text style={[styles.hint, { color: t.muted }]}>
+                {gifs.isError ? tr.composer.couldNotLoadGifs : gifs.data ? tr.composer.noGifs : tr.common.loading}
+              </Text>
+            ))}
+          {replying && (
+            <View style={styles.replying}>
+              <View style={{ flex: 1 }}>
+                <Quote reply={{ ...replying, kind: replying.gif ? "gif" : replying.voice ? "voice" : "text" }} meId={meId} />
+              </View>
+              <IconButton Icon={X} size={18} label={tr.common.cancel} onPress={() => setReplying(null)} />
+            </View>
+          )}
+          {error && <Text style={[styles.hint, { color: t.danger, fontSize: 12 }]}>{error}</Text>}
+          <View style={styles.chatRow}>
+            {recording ? (
+              <>
+                <IconButton Icon={X} label={tr.common.cancel} onPress={() => void stopVoice(false)} />
+                <View style={styles.timer}>
+                  <View style={styles.dotRec} />
+                  <Text style={{ color: t.text, fontVariant: ["tabular-nums"] }}>
+                    {formatDuration(rec.durationMillis)} / {formatDuration(LIVE_VOICE_MS)}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <>
+                {room.chat.length > 0 && (
+                  <IconButton
+                    Icon={MessageCircle}
+                    color={history ? brand : t.muted}
+                    label={tr.live.messages}
+                    onPress={() => setHistory((on) => !on)}
                   />
-                </Pressable>
+                )}
+                <IconButton Icon={Smile} color={t.muted} label={tr.composer.commandHints.emoji} onPress={() => setEmoji(true)} />
+                <TextInput
+                  ref={input}
+                  value={text}
+                  onChangeText={setText}
+                  onSubmitEditing={() => void send()}
+                  submitBehavior="submit"
+                  returnKeyType="send"
+                  maxLength={200}
+                  placeholder={tr.live.saySomething}
+                  placeholderTextColor={t.muted}
+                  accessibilityLabel={tr.live.saySomething}
+                  style={[styles.chatInput, { backgroundColor: t.chip, color: t.text }]}
+                />
+              </>
+            )}
+            {text.trim() || recording ? (
+              <IconButton
+                Icon={SendHorizontal}
+                color={brand}
+                label={recording ? tr.composer.sendVoice : tr.common.send}
+                onPress={() => void send()}
+              />
+            ) : (
+              <IconButton Icon={Mic} color={brand} label={tr.composer.recordVoice} onPress={() => void startVoice()} />
+            )}
+          </View>
+          <EmojiPicker open={emoji} onClose={() => setEmoji(false)} onPick={(e) => setText((x) => x + e)} />
+        </View>
+      </KeyboardStickyView>
+      {shown.length > 0 && (
+        <KeyboardStickyView offset={offset} pointerEvents="box-none" style={[styles.popups, { bottom: barHeight }]}>
+          {history ? (
+            <ScrollView
+              ref={lines}
+              style={[styles.history, { maxHeight: Math.min(256, (height - keyboard) * 0.4), backgroundColor: t.bg, borderColor: t.border }]}
+              contentContainerStyle={styles.lines}
+              onContentSizeChange={() => lines.current?.scrollToEnd({ animated: false })}
+            >
+              {shown.map((l) => (
+                <View key={l.id}>{line(l)}</View>
               ))}
             </ScrollView>
           ) : (
-            <Text style={[styles.hint, { color: t.muted }]}>
-              {gifs.isError ? tr.composer.couldNotLoadGifs : gifs.data ? tr.composer.noGifs : tr.common.loading}
-            </Text>
-          ))}
-        {replying && (
-          <View style={styles.replying}>
-            <View style={{ flex: 1 }}>
-              <Quote reply={{ ...replying, kind: replying.gif ? "gif" : replying.voice ? "voice" : "text" }} meId={meId} />
-            </View>
-            <IconButton Icon={X} size={18} label={tr.common.cancel} onPress={() => setReplying(null)} />
-          </View>
-        )}
-        {error && <Text style={[styles.hint, { color: t.danger, fontSize: 12 }]}>{error}</Text>}
-        <View style={styles.chatRow}>
-          {recording ? (
-            <>
-              <IconButton Icon={X} label={tr.common.cancel} onPress={() => void stopVoice(false)} />
-              <View style={styles.timer}>
-                <View style={styles.dotRec} />
-                <Text style={{ color: t.text, fontVariant: ["tabular-nums"] }}>
-                  {formatDuration(rec.durationMillis)} / {formatDuration(LIVE_VOICE_MS)}
-                </Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <IconButton Icon={Smile} color={t.muted} label={tr.composer.commandHints.emoji} onPress={() => setEmoji(true)} />
-              <TextInput
-                ref={input}
-                value={text}
-                onChangeText={setText}
-                onSubmitEditing={() => void send()}
-                submitBehavior="submit"
-                returnKeyType="send"
-                maxLength={200}
-                placeholder={tr.live.saySomething}
-                placeholderTextColor={t.muted}
-                accessibilityLabel={tr.live.saySomething}
-                style={[styles.chatInput, { backgroundColor: t.chip, color: t.text }]}
-              />
-            </>
+            shown.map((l) => (
+              <Animated.View key={l.id} entering={ZoomIn.duration(180)} style={[styles.popup, { backgroundColor: t.bg }]}>
+                {line(l)}
+              </Animated.View>
+            ))
           )}
-          {text.trim() || recording ? (
-            <IconButton
-              Icon={SendHorizontal}
-              color={brand}
-              label={recording ? tr.composer.sendVoice : tr.common.send}
-              onPress={() => void send()}
-            />
-          ) : (
-            <IconButton Icon={Mic} color={brand} label={tr.composer.recordVoice} onPress={() => void startVoice()} />
-          )}
-        </View>
-        <EmojiPicker open={emoji} onClose={() => setEmoji(false)} onPick={(e) => setText((x) => x + e)} />
-      </View>
-    </KeyboardStickyView>
+        </KeyboardStickyView>
+      )}
+    </>
   );
 }
 
@@ -704,7 +755,16 @@ const styles = StyleSheet.create({
   body: { flexGrow: 1, justifyContent: "center", padding: 16, gap: 16 },
   seats: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 },
   chat: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, gap: 10 },
-  lines: { paddingHorizontal: 16, gap: 10 },
+  lines: { paddingHorizontal: 16, paddingVertical: 12, gap: 10 },
+  popups: { position: "absolute", left: 0, right: 0, gap: 6, paddingHorizontal: 12, paddingBottom: 8 },
+  popup: { borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, elevation: 4 },
+  history: {
+    marginHorizontal: -12,
+    marginBottom: -8,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   line: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   quote: { fontSize: 12, borderLeftWidth: 2, borderColor: brand, paddingLeft: 8, marginBottom: 2 },
   replying: { flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 16, paddingRight: 8 },
