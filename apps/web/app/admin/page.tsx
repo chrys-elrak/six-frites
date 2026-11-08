@@ -72,35 +72,37 @@ export default function AdminPage() {
   ];
 
   return (
-    <main className="mx-auto min-h-dvh max-w-4xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-12">
-      <header className="mb-4 flex items-center gap-2">
-        <Link
-          href="/settings"
-          aria-label="Back to the app"
-          className="grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
-        >
-          <ChevronLeft className="size-6" />
-        </Link>
-        <ShieldCheck className="size-6 text-brand" />
-        <h1 className="text-xl font-semibold tracking-tight">Moderation</h1>
-      </header>
-      <nav className="mb-5 flex gap-1 overflow-x-auto border-b border-stone-200 dark:border-stone-800">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => pick(t.id)}
-            aria-current={tab === t.id ? "page" : undefined}
-            className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-medium ${
-              tab === t.id
-                ? "border-brand text-stone-900 dark:text-stone-100"
-                : "border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
-            }`}
+    <main className="mx-auto min-h-dvh max-w-4xl px-4 pb-12">
+      <div className="sticky top-0 z-20 mb-5 bg-stone-50 pt-[max(1rem,env(safe-area-inset-top))] dark:bg-stone-950">
+        <header className="mb-4 flex items-center gap-2">
+          <Link
+            href="/settings"
+            aria-label="Back to the app"
+            className="grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
           >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+            <ChevronLeft className="size-6" />
+          </Link>
+          <ShieldCheck className="size-6 text-brand" />
+          <h1 className="text-xl font-semibold tracking-tight">Moderation</h1>
+        </header>
+        <nav className="flex gap-1 overflow-x-auto border-b border-stone-200 dark:border-stone-800">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => pick(t.id)}
+              aria-current={tab === t.id ? "page" : undefined}
+              className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-medium ${
+                tab === t.id
+                  ? "border-brand text-stone-900 dark:text-stone-100"
+                  : "border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      </div>
       {tab === "overview" && <Overview />}
       {tab === "reports" && <Reports />}
       {tab === "anon" && <AnonMessages />}

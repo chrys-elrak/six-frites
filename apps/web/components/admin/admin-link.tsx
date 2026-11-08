@@ -1,19 +1,20 @@
 "use client";
 
 import { ShieldCheck } from "lucide-react";
-import Link from "next/link";
 import { useIsAdmin } from "@/lib/admin";
 
 export function AdminLink() {
   const admin = useIsAdmin();
   if (!admin.data) return null;
   return (
-    <Link
+    <a
       href="/admin"
-      className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-medium shadow-sm ring-1 ring-stone-200 hover:bg-stone-50 dark:bg-stone-900 dark:ring-stone-800 dark:hover:bg-stone-800"
+      target="_blank"
+      rel="noopener"
+      className="flex items-center gap-3 rounded-2xl bg-surface backdrop-blur-md px-4 py-3 text-sm font-medium shadow-sm ring-1 ring-surface-line hover:bg-white/80 dark:hover:bg-stone-800/70"
     >
       <ShieldCheck className="size-5 text-brand" />
       Moderation
-    </Link>
+    </a>
   );
 }
