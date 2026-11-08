@@ -19,7 +19,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { CalendarDays, Camera, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, Video, X } from "lucide-react-native";
+import { CalendarDays, Camera, CaseSensitive, ClipboardPaste, ChevronDown, Clock, Hourglass, ImagePlus, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, Video, X } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, type GestureResponderEvent, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -27,6 +27,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getLocale, useT } from "@/lib/i18n";
 import { cutVideo, pickMedia, recordVideo, takePhoto } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
+import * as Clipboard from "expo-clipboard";
+import { File, Paths } from "expo-file-system";
 import { six } from "@/lib/six";
 import { postStory } from "@/lib/story-post";
 import { brand, brandInk } from "@/lib/theme";
@@ -235,6 +237,27 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
     }
   }
 
+  const [canPaste, setCanPaste] = useState(false);
+  useEffect(() => {
+    const check = () => void Clipboard.hasImageAsync().then(setCanPaste, () => null);
+    check();
+    const sub = Clipboard.addClipboardListener(check);
+    return () => sub.remove();
+  }, []);
+
+  async function paste() {
+    setError(null);
+    try {
+      const img = await Clipboard.getImageAsync({ format: "png" });
+      if (!img) return setCanPaste(false);
+      const out = new File(Paths.cache, `pasted-${Date.now()}.png`);
+      out.write(img.data.slice(img.data.indexOf(",") + 1), { encoding: "base64" });
+      setFile({ uri: out.uri, kind: "image", name: out.name, mime: "image/png", size: out.size, width: img.size.width, height: img.size.height });
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   async function cut(from: number, to: number) {
     setCutting(false);
     const out = file && (await cutVideo(file, from, to));
@@ -362,6 +385,7 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
             <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
             <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
             <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
+            {canPaste && <Tool on={false} Icon={ClipboardPaste} label={tr.stories.pasteImage} onPress={() => void paste()} />}
             <Tool on={!!gif || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => (gif ? setGif(null) : setPickingGif(!pickingGif))} />
             <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
             <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />

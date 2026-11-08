@@ -109,6 +109,17 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, cutting, pickingDuration, customDuration, writing, drawingOn]);
 
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const media = [...(e.clipboardData?.files ?? [])].find((f) => /^(image|video)\//.test(f.type));
+      if (!media) return;
+      e.preventDefault();
+      void pickRef.current(media);
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, []);
+
   const keep = () => setUndos((u) => [...u, drawing]);
   function finishWriting() {
     const w = writing!;
@@ -132,6 +143,10 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
     setFile(picked);
     setVideoMs(k === "video" ? ((await mediaMeta(picked, "video")).durationMs ?? null) : null);
   }
+  const pickRef = useRef(pick);
+  useEffect(() => {
+    pickRef.current = pick;
+  });
 
   async function cut(from: number, to: number) {
     setCutting(false);
