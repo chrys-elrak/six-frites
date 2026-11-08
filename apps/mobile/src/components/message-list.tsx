@@ -22,6 +22,7 @@ import {
   type StoryReply,
   inkOn,
   isGroupAction,
+  type GroupRole,
   type PublicUser,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -839,7 +840,7 @@ function Bubble({
 }: {
   row: MsgRow;
   /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
-  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias">;
+  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias"> & { role?: GroupRole | null };
   highlighted: boolean;
   selecting: boolean;
   selected: boolean;
@@ -1014,9 +1015,12 @@ function Bubble({
       {sender && <View style={{ width: 36, alignSelf: "flex-end" }}>{groupEnd && <Avatar user={sender} />}</View>}
       <Animated.View style={[styles.side, { alignItems: mine ? "flex-end" : "flex-start" }, swipe.moving]}>
         {sender && groupStart && (
-          <Text style={{ color: brand, fontSize: 12, fontWeight: "700", marginBottom: 2, marginHorizontal: 4 }}>
-            {sender.displayName}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2, marginHorizontal: 12 }}>
+            <Text style={{ color: brand, fontSize: 12, fontWeight: "700" }}>{sender.displayName}</Text>
+            {sender.role && sender.role !== "member" && (
+              <Text style={styles.roleBadge}>{sender.role === "owner" ? tr.groups.owner : tr.groups.admin}</Text>
+            )}
+          </View>
         )}
         <View
           ref={bubbleRef}
@@ -1286,10 +1290,11 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
     const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? (chat.group ? tr.groups.formerMember : tr.common.someone)));
-    const senderOf = (row: MsgRow) =>
-      chat.group && !row.mine && row.message
-        ? (chat.members.find((m) => m.user.id === row.message!.senderId)?.user ?? { displayName: tr.groups.formerMember, avatarUrl: null })
-        : undefined;
+    const senderOf = (row: MsgRow) => {
+      if (!chat.group || row.mine || !row.message) return undefined;
+      const member = chat.members.find((m) => m.user.id === row.message!.senderId);
+      return member ? { ...member.user, role: member.role } : { displayName: tr.groups.formerMember, avatarUrl: null };
+    };
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {
       const peers = chat.members.filter((m) => m.user.id !== meId);
@@ -1785,6 +1790,18 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
 );
 
 const styles = StyleSheet.create({
+  roleBadge: {
+    color: brand,
+    backgroundColor: "rgba(235,138,0,0.15)",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
   latest: {
     position: "absolute",
     right: 12,

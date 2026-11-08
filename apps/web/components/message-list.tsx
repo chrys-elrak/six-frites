@@ -15,6 +15,7 @@ import {
   type MessageEffect,
   type MessageEntity,
   type MessageType,
+  type GroupRole,
   type PublicUser,
   type ReplyPreview,
   type StickerDTO,
@@ -792,7 +793,7 @@ function Bubble({
 }: {
   row: MsgRow;
   /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
-  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias">;
+  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias"> & { role?: GroupRole | null };
   highlighted: boolean;
   selecting: boolean;
   selected: boolean;
@@ -947,7 +948,14 @@ function Bubble({
           {sender && <span className="w-9 shrink-0 self-end">{groupEnd && <Avatar user={sender} />}</span>}
           <div className="flex min-w-0 flex-col items-end gap-1">
             {sender && groupStart && (
-              <span className="self-start px-1 text-xs font-semibold text-brand">{sender.displayName}</span>
+              <span className="flex items-center gap-1.5 self-start px-3 text-xs font-semibold text-brand">
+                {sender.displayName}
+                {sender.role && sender.role !== "member" && (
+                  <span className="rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide uppercase">
+                    {sender.role === "owner" ? tr.groups.owner : tr.groups.admin}
+                  </span>
+                )}
+              </span>
             )}
             <div
               ref={bubble}
@@ -1226,10 +1234,11 @@ export const MessageList = forwardRef<
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
     const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? (chat.group ? tr.groups.formerMember : tr.common.someone)));
-    const senderOf = (row: MsgRow) =>
-      chat.group && !row.mine && row.message
-        ? (chat.members.find((m) => m.user.id === row.message!.senderId)?.user ?? { displayName: tr.groups.formerMember, avatarUrl: null })
-        : undefined;
+    const senderOf = (row: MsgRow) => {
+      if (!chat.group || row.mine || !row.message) return undefined;
+      const member = chat.members.find((m) => m.user.id === row.message!.senderId);
+      return member ? { ...member.user, role: member.role } : { displayName: tr.groups.formerMember, avatarUrl: null };
+    };
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {
       const peers = chat.members.filter((m) => m.user.id !== meId);
