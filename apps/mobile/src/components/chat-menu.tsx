@@ -260,15 +260,6 @@ export function ChatMenu({
               { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
             ]
           : []),
-        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-        ...(muteIcon ? [] : [{ label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) }]),
-        {
-          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
-          onSelect: () => settings({ archived: !chat.archived }),
-        },
-        ...(chat.supportDesk && !chat.supportClosedAt
-          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
-          : []),
         ...(chat.withSupport
           ? []
           : [
@@ -290,6 +281,19 @@ export function ChatMenu({
                       onSelect: () => setView("theme"),
                     },
                   ]),
+            ]),
+        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+        ...(muteIcon ? [] : [{ label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) }]),
+        {
+          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
+          onSelect: () => settings({ archived: !chat.archived }),
+        },
+        ...(chat.supportDesk && !chat.supportClosedAt
+          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
+          : []),
+        ...(chat.withSupport
+          ? []
+          : [
               ...(chat.type !== "direct" || chat.peerDeleted || isFrozen(chat)
                 ? []
                 : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),

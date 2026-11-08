@@ -344,24 +344,6 @@ export function ChatMenu({
               { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
             ]
           : []),
-        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-        ...(muteIcon
-          ? []
-          : [
-              isMuted(chat)
-                ? {
-                    label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
-                    onSelect: () => settings({ muted: false }),
-                  }
-                : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") },
-            ]),
-        {
-          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
-          onSelect: () => settings({ archived: !chat.archived }),
-        },
-        ...(chat.supportDesk && !chat.supportClosedAt
-          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
-          : []),
         ...(chat.withSupport
           ? []
           : [
@@ -383,6 +365,28 @@ export function ChatMenu({
                       onSelect: () => setView("theme"),
                     },
                   ]),
+            ]),
+        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+        ...(muteIcon
+          ? []
+          : [
+              isMuted(chat)
+                ? {
+                    label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
+                    onSelect: () => settings({ muted: false }),
+                  }
+                : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") },
+            ]),
+        {
+          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
+          onSelect: () => settings({ archived: !chat.archived }),
+        },
+        ...(chat.supportDesk && !chat.supportClosedAt
+          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
+          : []),
+        ...(chat.withSupport
+          ? []
+          : [
               ...(chat.type !== "direct" || chat.peerDeleted || frozen
                 ? []
                 : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),
