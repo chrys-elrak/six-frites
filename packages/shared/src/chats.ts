@@ -281,7 +281,13 @@ export const ServiceAction = z
       video: z.boolean(),
       secs: z.number().int().nullable().describe("How long it lasted; null if it was missed or declined"),
     }),
-    z.object({ type: z.literal("live_invite"), game: z.enum(LIVE_GAMES), roomId: z.string(), from: z.string() }),
+    z.object({
+      type: z.literal("live_invite"),
+      game: z.enum(LIVE_GAMES),
+      roomId: z.string(),
+      from: z.string(),
+      ended: z.boolean().optional().describe("The game is over and its room closed, so there is nothing to join"),
+    }),
     z.object({
       type: z.literal("live_result"),
       game: z.enum(LIVE_GAMES),

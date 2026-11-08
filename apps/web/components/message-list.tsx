@@ -1671,7 +1671,7 @@ export const MessageList = forwardRef<
                         row.message.senderId === meId ? null : nameOf(row.message.senderId),
                         tr,
                       )}
-                  {row.message.action?.type === "live_invite" && (
+                  {row.message.action?.type === "live_invite" && !row.message.action.ended && (
                     <Link href={`/play/${row.message.action.roomId}`} className="ml-1 font-semibold underline underline-offset-2">
                       {tr.live.join}
                     </Link>

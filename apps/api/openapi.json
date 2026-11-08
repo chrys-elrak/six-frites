@@ -8807,6 +8807,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -10654,6 +10658,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -12626,6 +12634,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -14592,6 +14604,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -16439,6 +16455,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -18531,6 +18551,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -20378,6 +20402,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -22497,6 +22525,10 @@
                                       },
                                       "from": {
                                         "type": "string"
+                                      },
+                                      "ended": {
+                                        "description": "The game is over and its room closed, so there is nothing to join",
+                                        "type": "boolean"
                                       }
                                     },
                                     "required": [
@@ -24344,6 +24376,10 @@
                                         },
                                         "from": {
                                           "type": "string"
+                                        },
+                                        "ended": {
+                                          "description": "The game is over and its room closed, so there is nothing to join",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -26447,6 +26483,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -28294,6 +28334,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -30472,6 +30516,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -32319,6 +32367,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -34583,6 +34635,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -36445,6 +36501,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -38303,6 +38363,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -40152,6 +40216,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -42011,6 +42079,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -44013,6 +44085,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -45847,6 +45923,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -47692,6 +47772,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -49523,6 +49607,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -51354,6 +51442,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -53304,6 +53396,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -55159,6 +55255,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -57125,6 +57225,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -59656,6 +59760,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -63875,6 +63983,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -66703,6 +66815,10 @@
                                           },
                                           "from": {
                                             "type": "string"
+                                          },
+                                          "ended": {
+                                            "description": "The game is over and its room closed, so there is nothing to join",
+                                            "type": "boolean"
                                           }
                                         },
                                         "required": [
@@ -68524,6 +68640,10 @@
                                           },
                                           "from": {
                                             "type": "string"
+                                          },
+                                          "ended": {
+                                            "description": "The game is over and its room closed, so there is nothing to join",
+                                            "type": "boolean"
                                           }
                                         },
                                         "required": [
@@ -70603,6 +70723,10 @@
                                               },
                                               "from": {
                                                 "type": "string"
+                                              },
+                                              "ended": {
+                                                "description": "The game is over and its room closed, so there is nothing to join",
+                                                "type": "boolean"
                                               }
                                             },
                                             "required": [
@@ -72450,6 +72574,10 @@
                                                 },
                                                 "from": {
                                                   "type": "string"
+                                                },
+                                                "ended": {
+                                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                                  "type": "boolean"
                                                 }
                                               },
                                               "required": [
@@ -76319,6 +76447,10 @@
                             },
                             "from": {
                               "type": "string"
+                            },
+                            "ended": {
+                              "description": "The game is over and its room closed, so there is nothing to join",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -84026,6 +84158,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -85873,6 +86009,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -88070,6 +88210,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -89917,6 +90061,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -92050,6 +92198,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -93897,6 +94049,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -95989,6 +96145,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -97836,6 +97996,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -99949,6 +100113,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -101796,6 +101964,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -103919,6 +104091,10 @@
                                 },
                                 "from": {
                                   "type": "string"
+                                },
+                                "ended": {
+                                  "description": "The game is over and its room closed, so there is nothing to join",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -105766,6 +105942,10 @@
                                   },
                                   "from": {
                                     "type": "string"
+                                  },
+                                  "ended": {
+                                    "description": "The game is over and its room closed, so there is nothing to join",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [

@@ -4297,6 +4297,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -4731,6 +4733,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -5224,6 +5228,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -5714,6 +5720,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -6148,6 +6156,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -6675,6 +6685,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -7109,6 +7121,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -7634,6 +7648,8 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
+                                        /** @description The game is over and its room closed, so there is nothing to join */
+                                        ended?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
@@ -8068,6 +8084,8 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
+                                        /** @description The game is over and its room closed, so there is nothing to join */
+                                        ended?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
@@ -8594,6 +8612,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -9028,6 +9048,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -9607,6 +9629,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -10041,6 +10065,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -10631,6 +10657,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -11093,6 +11121,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -11550,6 +11580,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -12003,6 +12035,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -12459,6 +12493,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -12938,6 +12974,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -13390,6 +13428,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -13847,6 +13887,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -14298,6 +14340,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -14749,6 +14793,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -15231,6 +15277,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -15692,6 +15740,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -16195,6 +16245,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -16802,6 +16854,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -17919,6 +17973,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -18957,6 +19013,8 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
+                                        /** @description The game is over and its room closed, so there is nothing to join */
+                                        ended?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
@@ -19373,6 +19431,8 @@ export interface paths {
                                         game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                         roomId: string;
                                         from: string;
+                                        /** @description The game is over and its room closed, so there is nothing to join */
+                                        ended?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "live_result";
@@ -19859,6 +19919,8 @@ export interface paths {
                                             game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                             roomId: string;
                                             from: string;
+                                            /** @description The game is over and its room closed, so there is nothing to join */
+                                            ended?: boolean;
                                         } | {
                                             /** @enum {string} */
                                             type: "live_result";
@@ -20293,6 +20355,8 @@ export interface paths {
                                             game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                             roomId: string;
                                             from: string;
+                                            /** @description The game is over and its room closed, so there is nothing to join */
+                                            ended?: boolean;
                                         } | {
                                             /** @enum {string} */
                                             type: "live_result";
@@ -21735,6 +21799,8 @@ export interface paths {
                                 game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                 roomId: string;
                                 from: string;
+                                /** @description The game is over and its room closed, so there is nothing to join */
+                                ended?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "live_result";
@@ -25093,6 +25159,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -25527,6 +25595,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -26095,6 +26165,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -26529,6 +26601,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -27075,6 +27149,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -27509,6 +27585,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -28032,6 +28110,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -28466,6 +28546,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -29002,6 +29084,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -29436,6 +29520,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -29997,6 +30083,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";
@@ -30431,6 +30519,8 @@ export interface paths {
                                     game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market";
                                     roomId: string;
                                     from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "live_result";

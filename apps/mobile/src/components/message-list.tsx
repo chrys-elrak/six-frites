@@ -1701,7 +1701,7 @@ export const MessageList = forwardRef<
                               tr,
                             )}
                     </Text>
-                    {row.message.action?.type === "live_invite" && (
+                    {row.message.action?.type === "live_invite" && !row.message.action.ended && (
                       <Link
                         href={playHref(row.message.action.roomId)}
                         style={{ color: "#fff", fontSize: 12, fontWeight: "700", textDecorationLine: "underline" }}

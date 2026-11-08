@@ -71,6 +71,7 @@ export function serviceText(m: Pick<MessageDTO, "action">, t: Dict, mine = false
 
 function liveText(a: Extract<ServiceAction, { type: "live_invite" }>, t: Dict, mine: boolean) {
   const game = t.live.games[a.game];
+  if (a.ended) return t.live.inviteEnded(game);
   return mine ? t.live.youInvited(game) : t.live.invites(a.from, game);
 }
 

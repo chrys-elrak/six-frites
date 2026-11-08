@@ -225,6 +225,35 @@ async function memberIds(tx: Tx, chatId: string) {
   return members.map((m) => m.userId);
 }
 
+/**
+ * Marks the chat invites to a live game as ended, so they lose their Join link. Without a room, marks them all:
+ * rooms only live in memory, so none survive a restart.
+ */
+export async function endLiveInvites(roomId?: string) {
+  await withEvents(async (tx, emit) => {
+    const invites = await tx.message.findMany({
+      where: {
+        type: "service",
+        AND: [
+          { action: { path: ["type"], equals: "live_invite" } },
+          ...(roomId ? [{ action: { path: ["roomId"], equals: roomId } }] : []),
+        ],
+      },
+      include: messageInclude,
+    });
+    for (const m of invites) {
+      const action = m.action as Prisma.JsonObject;
+      if (action.ended) continue;
+      const updated = await tx.message.update({
+        where: { id: m.id },
+        data: { action: { ...action, ended: true } },
+        include: messageInclude,
+      });
+      for (const id of await memberIds(tx, m.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    }
+  });
+}
+
 const SHARED: Record<NonNullable<MessageListQuery["only"]>, Prisma.MessageWhereInput> = {
   media: { type: { in: ["image", "video"] }, attachment: { status: { not: "removed" } } },
   files: { type: "file", attachment: { status: { not: "removed" } } },

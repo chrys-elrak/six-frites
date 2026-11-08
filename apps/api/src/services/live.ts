@@ -84,7 +84,7 @@ import { storeVoice } from "./ask.js";
 import { blockedWith } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
 import { sharedGif } from "./gifs.js";
-import { createMessage } from "./messages.js";
+import { createMessage, endLiveInvites } from "./messages.js";
 import { deliverLiveInvitePush } from "./push.js";
 
 type GameState =
@@ -299,6 +299,9 @@ function close(room: Room) {
   clearTimers(room);
   live.delete(room.id);
   void deleteObjects(room.voiceKeys).catch(() => null);
+  void Promise.resolve(room.posted)
+    .then(() => endLiveInvites(room.id))
+    .catch((err) => console.error("could not end the live game invites:", err.message));
   const out = broadcaster();
   const seated = room.seats.flatMap((s) => (s.userId ? [s.userId] : []));
   for (const id of [...seated, ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
