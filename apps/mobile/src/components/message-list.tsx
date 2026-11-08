@@ -73,6 +73,7 @@ import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHan
 import {
   ActivityIndicator,
   FlatList,
+  type GestureResponderEvent,
   Linking,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -184,6 +185,7 @@ interface MsgRow {
 }
 
 const VIEWABILITY = { itemVisiblePercentThreshold: 1 };
+const VANISH_PULL = 120;
 
 interface AlbumItem {
   key: string;
@@ -1277,6 +1279,9 @@ export const MessageList = forwardRef<
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
     const [away, setAway] = useState(false);
+    const offset = useRef(0);
+    const pullFrom = useRef<number | null>(null);
+    const [pulled, setPulled] = useState(0);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [anchor, setAnchor] = useState<Anchor | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
@@ -1415,11 +1420,31 @@ export const MessageList = forwardRef<
     }, [highlight]);
 
     function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+      offset.current = e.nativeEvent.contentOffset.y;
       picker.onScroll(e.nativeEvent.contentOffset.y);
       const wasAtBottom = atBottom.current;
       atBottom.current = e.nativeEvent.contentOffset.y < 80;
       if (atBottom.current && !wasAtBottom) onSeen();
       setAway(e.nativeEvent.contentOffset.y > e.nativeEvent.layoutMeasurement.height);
+    }
+
+    /** Pulling up past the latest message turns vanish mode on or off, like Instagram. */
+    function pullStart(e: GestureResponderEvent) {
+      const end = offset.current <= 1;
+      pullFrom.current = chat.type === "direct" && !frozen && !threadId && !selecting && end ? e.nativeEvent.pageY : null;
+    }
+
+    function pullMove(e: GestureResponderEvent) {
+      if (pullFrom.current === null) return;
+      const next = Math.max(0, pullFrom.current - e.nativeEvent.pageY);
+      if (next >= VANISH_PULL && pulled < VANISH_PULL) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setPulled(next);
+    }
+
+    function pullEnd() {
+      if (pulled >= VANISH_PULL) void updateChatSettings(qc, chat.id, { vanish: !chat.vanish }).catch(() => null);
+      pullFrom.current = null;
+      setPulled(0);
     }
 
     function rowIndex(id: string) {
@@ -1612,7 +1637,14 @@ export const MessageList = forwardRef<
     const maxWidth = Math.round(width * (selecting ? 0.72 : 0.8));
 
     return (
-      <View ref={listFrame} style={{ flex: 1 }}>
+      <View
+        ref={listFrame}
+        style={{ flex: 1 }}
+        onTouchStart={pullStart}
+        onTouchMove={pullMove}
+        onTouchEnd={pullEnd}
+        onTouchCancel={pullEnd}
+      >
         {rows.length === 0 ? (
           <View style={styles.empty}>
             <Text style={[styles.onWallpaper, styles.emptyChip]}>
@@ -1847,6 +1879,16 @@ export const MessageList = forwardRef<
             ]}
           />
         )}
+        {pulled > 0 && (
+          <View pointerEvents="none" style={[styles.vanishPull, { opacity: Math.min(1, pulled / VANISH_PULL) }]}>
+            <View style={[styles.vanishChip, pulled >= VANISH_PULL ? { backgroundColor: brand } : styles.onWallpaper]}>
+              <Ghost size={16} color={pulled >= VANISH_PULL ? brandInk : "#fff"} />
+              <Text style={{ color: pulled >= VANISH_PULL ? brandInk : "#fff", fontSize: 14, fontWeight: "700" }}>
+                {chat.vanish ? tr.composer.turnOffVanish : tr.composer.turnOnVanish}
+              </Text>
+            </View>
+          </View>
+        )}
         {away && (
           <Pressable
             onPress={() => list.current?.scrollToOffset({ offset: 0, animated: true })}
@@ -1882,6 +1924,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: "hidden",
   },
+  vanishPull: { position: "absolute", left: 0, right: 0, bottom: 12, alignItems: "center" },
+  vanishChip: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
   latest: {
     position: "absolute",
     right: 12,
