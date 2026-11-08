@@ -51,6 +51,7 @@ import {
   type LucideIcon,
   VenetianMask,
   X,
+  MessageSquareOff,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editMessage, updateChatSettings } from "@/lib/actions";
@@ -141,6 +142,7 @@ export function Composer({
   onSent,
   onSearch,
   limited = false,
+  threadId,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
@@ -149,22 +151,26 @@ export function Composer({
   onSearch: (q: string) => void;
   /** A support chat: text and photos only, plus a button for admins to send an invite link. */
   limited?: boolean;
+  /** Writes comments on this group message instead of in the chat; its draft and reply mode are its own. */
+  threadId?: string;
 }) {
+  const slot = threadId ? `${chatId}:${threadId}` : chatId;
   const tr = useT();
   const admin = useIsAdmin().data;
   const meId = useSession((s) => s.user?.id);
   const qc = useQueryClient();
   const chat = useChat(qc, chatId).data;
   const { realtime } = useRealtime();
-  const mode = useComposerMode((s) => s.byChat[chatId]);
+  const mode = useComposerMode((s) => s.byChat[slot]);
   const setMode = useComposerMode((s) => s.set);
-  const [text, setText] = useState(() => useDrafts.getState().byChat[chatId] ?? "");
+  const [text, setText] = useState(() => useDrafts.getState().byChat[slot] ?? "");
   const draftsReady = useDrafts((s) => s.ready);
-  const parkedMarkup = useDrafts((s) => s.parked[chatId]);
+  const parkedMarkup = useDrafts((s) => s.parked[slot]);
   const effect = useVoiceEffect((s) => s.effect);
   const parked = parkedMarkup ? parseMarkup(parkedMarkup) : null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [commentsOff, setCommentsOff] = useState(false);
   const [hasSelection, setHasSelection] = useState(false);
   const [caret, setCaret] = useState(0);
   const [expressions, setExpressions] = useState(false);
@@ -196,14 +202,14 @@ export function Composer({
   >(null);
   const [picked, setPicked] = useState<File[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
-  const handed = useComposerMode((s) => s.handed[chatId]);
+  const handed = useComposerMode((s) => s.handed[slot]);
   const resent = useRef<File[] | null>(null);
   useEffect(() => {
     if (!handed) return;
     resent.current = [handed];
     setPicked(resent.current);
-    useComposerMode.getState().hand(chatId, undefined);
-  }, [handed, chatId]);
+    useComposerMode.getState().hand(slot, undefined);
+  }, [handed, slot]);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
   const [messageEffect, setMessageEffect] = useState<MessageEffect | null>(null);
   const closeCamera = useCallback(() => setCamera(false), []);
@@ -226,8 +232,14 @@ export function Composer({
   function queue(draft: Draft) {
     if (!realtime) return;
     if (draft.game) return void queueMessage(qc, realtime, chatId, draft);
-    void queueMessage(qc, realtime, chatId, { ...draft, sendAt: draft.sendAt ?? sendAt });
+    void queueMessage(qc, realtime, chatId, {
+      ...draft,
+      threadId,
+      commentsClosed: commentsOff || undefined,
+      sendAt: draft.sendAt ?? sendAt,
+    });
     setSendAt(null);
+    setCommentsOff(false);
   }
 
   function sendVideoNote(file: File, chosen: EphemeralInput | null, spoiler = false) {
@@ -291,10 +303,10 @@ export function Composer({
   const editing = mode?.kind === "edit" ? mode.message : null;
 
   useEffect(() => {
-    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (useDrafts.getState().byChat[chatId] ?? ""));
+    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : (useDrafts.getState().byChat[slot] ?? ""));
   }, [editing, chatId, draftsReady]);
 
-  const stored = useDrafts((s) => s.byChat[chatId] ?? "");
+  const stored = useDrafts((s) => s.byChat[slot] ?? "");
   useEffect(() => {
     if (!editing && stored.trim() !== text.trim()) setText(stored);
   }, [stored]);
@@ -309,12 +321,12 @@ export function Composer({
 
   function change(value: string) {
     setText(value);
-    if (!editing) useDrafts.getState().set(chatId, value);
+    if (!editing) useDrafts.getState().set(slot, value);
   }
 
   function swapDraft() {
     const back = parkedMarkup ?? "";
-    useDrafts.getState().park(chatId, text);
+    useDrafts.getState().park(slot, text);
     change(back);
     ref.current?.focus();
   }
@@ -415,7 +427,7 @@ export function Composer({
 
   function cancel() {
     setError(null);
-    setMode(chatId, undefined);
+    setMode(slot, undefined);
   }
 
   async function submit() {
@@ -457,7 +469,7 @@ export function Composer({
     });
     setEphemeral(null);
     if (!file) setMessageEffect(null);
-    useDrafts.getState().set(chatId, "");
+    useDrafts.getState().set(slot, "");
     setText("");
     if (mode) cancel();
     onSent();
@@ -524,7 +536,7 @@ export function Composer({
         file: { blob: file, kind, name: file.name || "file", mime: file.type || "application/octet-stream" },
       });
     });
-    useDrafts.getState().set(chatId, "");
+    useDrafts.getState().set(slot, "");
     setText("");
     setEphemeral(null);
     if (mode) cancel();
@@ -963,6 +975,19 @@ export function Composer({
                 className={`grid size-10 shrink-0 place-items-center rounded-full ${expressions ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"}`}
               >
                 <Smile className="size-5" />
+              </button>
+            )}
+            {!editing && !threadId && chat?.group && chat.group.myRole !== "member" && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setCommentsOff(!commentsOff)}
+                aria-pressed={commentsOff}
+                aria-label={tr.groups.postCommentsClosed}
+                title={tr.groups.postCommentsClosed}
+                className={`grid size-10 shrink-0 place-items-center rounded-full ${commentsOff ? "text-brand" : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"}`}
+              >
+                <MessageSquareOff className="size-5" />
               </button>
             )}
             {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}

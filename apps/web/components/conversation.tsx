@@ -31,6 +31,7 @@ import { Composer } from "./composer";
 import { ContactEditor } from "./contact-editor";
 import { GroupInfo } from "./groups";
 import { MessageList, type MessageListHandle } from "./message-list";
+import { ThreadPanel } from "./thread-panel";
 import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 
@@ -91,6 +92,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
+  const [thread, setThread] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("info")) return;
@@ -351,6 +353,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                 onSeen={onSeen}
                 insetTop={headHeight}
                 insetBottom={footHeight}
+                onOpenThread={(m) => setThread(m.id)}
               />
             </div>
           </div>
@@ -425,6 +428,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
           }}
         />
       )}
+      {thread && <ThreadPanel chat={c} meId={meId} threadId={thread} nameOf={nameOf} onClose={() => setThread(null)} />}
       {shared && (
         <SharedMedia
           chat={c}

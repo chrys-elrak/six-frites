@@ -35,6 +35,8 @@ import {
   ArrowUp,
   Ban,
   Check,
+  LockOpen,
+  MessageCircle,
   ChevronDown,
   CheckCheck,
   CheckCircle2,
@@ -95,6 +97,7 @@ import {
   requestReseal,
   resealMessage,
   selfDestruct,
+  setCommentsClosed,
   updateChatSettings,
 } from "@/lib/actions";
 import { type Hydrated, hydrate, messageFile } from "@/lib/e2ee";
@@ -790,6 +793,8 @@ function Bubble({
   autoPlay,
   onVoiceStop,
   sender,
+  comments,
+  onOpenThread,
 }: {
   row: MsgRow;
   /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
@@ -820,6 +825,9 @@ function Bubble({
   frozen: boolean;
   autoPlay: boolean;
   onVoiceStop: (finished: boolean) => void;
+  /** A group message's comments, for the link under it; null where there's none to show. */
+  comments?: { count: number; closed: boolean } | null;
+  onOpenThread?: () => void;
 }) {
   const tr = useT();
   const selectable = selecting && row.message !== null;
@@ -1129,6 +1137,16 @@ function Bubble({
             {row.message && !row.deleted && (
               <ReactionChips message={row.message} meId={meId} mine={mine} nameOf={nameOf} onReact={onReact} />
             )}
+            {comments && !row.deleted && (comments.count > 0 || comments.closed) && (
+              <button
+                type="button"
+                onClick={onOpenThread}
+                className="flex items-center gap-1 px-2 text-xs font-semibold text-brand hover:underline"
+              >
+                {comments.closed ? <Lock className="size-3.5" /> : <MessageCircle className="size-3.5" />}
+                {comments.count > 0 ? tr.groups.comments(comments.count) : tr.groups.commentsClosed}
+              </button>
+            )}
             {row.message && !row.deleted && <ResealPrompt message={row.message} mine={mine} locked={row.locked} meId={meId} />}
             {row.delivery === "waiting" && <p className="px-1 text-xs text-stone-500">{tr.chats.waitingForNetwork}</p>}
             {row.delivery === "failed" && (
@@ -1154,19 +1172,31 @@ export interface MessageListHandle {
 
 export const MessageList = forwardRef<
   MessageListHandle,
-  { chat: ChatDTO; meId: string; onSeen: () => void; insetTop?: number; insetBottom?: number }
+  {
+    chat: ChatDTO;
+    meId: string;
+    onSeen: () => void;
+    insetTop?: number;
+    insetBottom?: number;
+    /** Shows the comments on this group message, with the message itself on top, instead of the chat. */
+    threadId?: string;
+    onOpenThread?: (m: MessageDTO) => void;
+  }
 >(
-  function MessageList({ chat, meId, onSeen, insetTop = 0, insetBottom = 0 }, handle) {
+  function MessageList({ chat, meId, onSeen, insetTop = 0, insetBottom = 0, threadId, onOpenThread }, handle) {
     const frozen = isFrozen(chat);
     const tr = useT();
     const qc = useQueryClient();
     const { realtime } = useRealtime();
     const router = useRouter();
-    const messages = useMessages(chat.id);
-    const pending = usePending(chat.id);
+    const messages = useMessages(chat.id, threadId);
+    const main = useMessages(chat.id);
+    const pending = usePending(chat.id, threadId);
+    const slot = threadId ? `${chat.id}:${threadId}` : chat.id;
+    const groupAdmin = !!chat.group && chat.group.myRole !== "member";
     const setMode = useComposerMode((s) => s.set);
     useEffect(() => () => useSpoilers.getState().forget(), [chat.id]);
-    const selecting = useSelection((s) => s.chatId === chat.id);
+    const selecting = useSelection((s) => !threadId && s.chatId === chat.id);
     const selectedIds = useSelection((s) => s.ids);
     const startSelection = useSelection((s) => s.start);
     const toggleSelected = useSelection((s) => s.toggle);
@@ -1253,14 +1283,16 @@ export const MessageList = forwardRef<
       return { peerDeliveredAt: earliest((m) => m.lastDeliveredAt), peerReadAt: earliest((m) => m.lastReadAt) };
     }, [chat.members, meId]);
     const [unreadAfter] = useState(() => {
+      if (threadId) return null;
       if (!chat.unreadCount) return null;
       const read = chat.members.find((m) => m.user.id === meId)?.lastReadAt;
       return read ? Date.parse(read) : 0;
     });
 
+    const root = threadId ? main.data?.pages.flatMap((p) => p.items).find((m) => m.id === threadId) : undefined;
     const ordered = useMemo(
-      () => (messages.data?.pages.flatMap((p) => p.items) ?? []).slice().reverse(),
-      [messages.data],
+      () => [...(root ? [root] : []), ...(messages.data?.pages.flatMap((p) => p.items) ?? []).slice().reverse()],
+      [messages.data, root],
     );
     const rows = useMemo(
       () => buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish),
@@ -1391,7 +1423,7 @@ export const MessageList = forwardRef<
         (m.file?.mime ?? m.attachment.mime) !== "image/gif";
       if (row.deleted) {
         return [
-          { label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) },
+          ...(threadId ? [] : [{ label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) }]),
           ...(chat.type === "direct" || row.mine
             ? [
                 {
@@ -1411,7 +1443,19 @@ export const MessageList = forwardRef<
         ];
       }
       return [
-        ...(frozen ? [] : [{ label: tr.messages.reply, icon: Reply, onSelect: () => setMode(chat.id, { kind: "reply", message: m }) }]),
+        ...(!threadId && chat.group && onOpenThread && m.thread && !m.ephemeral && (m.thread.count > 0 || !m.thread.closed)
+          ? [{ label: m.thread.count ? tr.groups.viewComments : tr.groups.comment, icon: MessageCircle, onSelect: () => onOpenThread(m) }]
+          : []),
+        ...(!threadId && groupAdmin && m.thread
+          ? [
+              {
+                label: m.thread.closed ? tr.groups.reopenComments : tr.groups.closeComments,
+                icon: m.thread.closed ? LockOpen : Lock,
+                onSelect: () => void setCommentsClosed(m.id, !m.thread!.closed).catch(() => null),
+              },
+            ]
+          : []),
+        ...(frozen ? [] : [{ label: tr.messages.reply, icon: Reply, onSelect: () => setMode(slot, { kind: "reply", message: m }) }]),
         ...(frozen || m.ephemeral || m.bump || m.undecryptable || m.type === "service" || !realtime
           ? []
           : [
@@ -1433,7 +1477,7 @@ export const MessageList = forwardRef<
                 onSelect: () => setForwarding(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
               },
             ]),
-        { label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) },
+        ...(threadId ? [] : [{ label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) }]),
         ...(frozen || m.ephemeral || m.undecryptable || m.type === "service"
           ? []
           : [
@@ -1464,9 +1508,9 @@ export const MessageList = forwardRef<
                   photo
                     ? void messageFile(m).then(
                         (file) => setMarkingUp({ message: m, file }),
-                        () => setMode(chat.id, { kind: "edit", message: m }),
+                        () => setMode(slot, { kind: "edit", message: m }),
                       )
-                    : setMode(chat.id, { kind: "edit", message: m }),
+                    : setMode(slot, { kind: "edit", message: m }),
               },
             ]
           : []),
@@ -1478,7 +1522,7 @@ export const MessageList = forwardRef<
                 onSelect: () =>
                   void messageFile(m).then(
                     (file) => {
-                      setMode(chat.id, { kind: "reply", message: m });
+                      setMode(slot, { kind: "reply", message: m });
                       useComposerMode.getState().hand(chat.id, file);
                     },
                     () => null,
@@ -1601,7 +1645,7 @@ export const MessageList = forwardRef<
                   setMenuAt(at);
                   setMenuRect(rect ?? null);
                 }}
-                onReply={() => row.message && setMode(chat.id, { kind: "reply", message: row.message })}
+                onReply={() => row.message && setMode(slot, { kind: "reply", message: row.message })}
                 onQuote={jumpTo}
                 onToggle={() => row.id && toggleSelected(row.id)}
                 onDragPick={(mouse) =>
@@ -1630,6 +1674,8 @@ export const MessageList = forwardRef<
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
                 autoPlay={autoplay === row.key}
                 onVoiceStop={(finished) => (finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k)))}
+                comments={!threadId && chat.group ? (row.message?.thread ?? null) : null}
+                onOpenThread={() => row.message && onOpenThread?.(row.message)}
               />
             )
           }
@@ -1718,11 +1764,11 @@ export const MessageList = forwardRef<
           <PhotoEditor
             file={markingUp.file}
             onCancel={() => {
-              setMode(chat.id, { kind: "edit", message: markingUp.message });
+              setMode(slot, { kind: "edit", message: markingUp.message });
               setMarkingUp(null);
             }}
             onDone={(file) => {
-              setMode(chat.id, { kind: "edit", message: markingUp.message, photo: file });
+              setMode(slot, { kind: "edit", message: markingUp.message, photo: file });
               setMarkingUp(null);
             }}
           />

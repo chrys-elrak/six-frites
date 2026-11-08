@@ -38,7 +38,9 @@ export const chatKeys = {
   list: (archived: boolean) => ["chats", archived] as const,
   lists: ["chats"] as const,
   chat: (chatId: string) => ["chat", chatId] as const,
-  messages: (chatId: string) => ["messages", chatId] as const,
+  /** A chat's own messages, or with `threadId` the comments on one of them; both sit under ["messages", chatId]. */
+  messages: (chatId: string, threadId?: string) =>
+    (threadId ? ["messages", chatId, "thread", threadId] : ["messages", chatId]) as readonly string[],
 };
 
 export function sortChats(chats: ChatDTO[]) {
@@ -102,24 +104,24 @@ const arrived = new Map<string, { at: number; m: MessageDTO }[]>();
  * Adds the messages that came in live after `started` to a freshly fetched first page. The fetch saw the chat
  * as it was when it left, and the live copy went into the cache it then replaces, or nowhere on a first load.
  */
-function withArrived<P extends { items: MessageDTO[] }>(chatId: string, page: P, started: number): P {
-  const late = (arrived.get(chatId) ?? []).filter((x) => x.at >= started && !page.items.some((m) => m.id === x.m.id));
+function withArrived<P extends { items: MessageDTO[] }>(slot: string, page: P, started: number): P {
+  const late = (arrived.get(slot) ?? []).filter((x) => x.at >= started && !page.items.some((m) => m.id === x.m.id));
   return late.length ? { ...page, items: [...late.map((x) => x.m).reverse(), ...page.items] } : page;
 }
 
-export function useMessages(chatId: string) {
+export function useMessages(chatId: string, threadId?: string) {
   return useInfiniteQuery({
-    queryKey: chatKeys.messages(chatId),
+    queryKey: chatKeys.messages(chatId, threadId),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
       const started = Date.now();
       const page = unwrap(
         await six.api.GET("/v1/chats/{id}/messages", {
-          params: { path: { id: chatId }, query: { limit: PAGE, cursor: pageParam } },
+          params: { path: { id: chatId }, query: { limit: PAGE, cursor: pageParam, thread: threadId } },
         }),
       );
       const hydrated = { ...page, items: await hydrateAll(page.items) };
-      return pageParam ? hydrated : withArrived(chatId, hydrated, started);
+      return pageParam ? hydrated : withArrived(`${chatId}:${threadId ?? ""}`, hydrated, started);
     },
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: Infinity,
@@ -157,8 +159,9 @@ export async function loadUntil(qc: QueryClient, chatId: string, messageId: stri
 
 export function insertMessage(qc: QueryClient, m: MessageDTO) {
   const now = Date.now();
-  arrived.set(m.chatId, [...(arrived.get(m.chatId) ?? []).filter((x) => now - x.at < 60_000), { at: now, m }]);
-  qc.setQueryData<Messages>(chatKeys.messages(m.chatId), (data) => {
+  const slot = `${m.chatId}:${m.threadId ?? ""}`;
+  arrived.set(slot, [...(arrived.get(slot) ?? []).filter((x) => now - x.at < 60_000), { at: now, m }]);
+  qc.setQueryData<Messages>(chatKeys.messages(m.chatId, m.threadId ?? undefined), (data) => {
     if (!data) return data;
     if (data.pages.some((p) => p.items.some((x) => x.id === m.id))) return data;
     const [first, ...rest] = data.pages;
@@ -169,13 +172,14 @@ export function insertMessage(qc: QueryClient, m: MessageDTO) {
 
 export function findMessage(qc: QueryClient, chatId: string, messageId: string) {
   return qc
-    .getQueryData<Messages>(chatKeys.messages(chatId))
-    ?.pages.flatMap((p) => p.items)
+    .getQueriesData<Messages>({ queryKey: chatKeys.messages(chatId) })
+    .flatMap(([, data]) => data?.pages.flatMap((p) => p.items) ?? [])
     .find((m) => m.id === messageId);
 }
 
+/** Rewrites a chat's messages wherever they're loaded: its own list and any comments open on its messages. */
 export function mapMessages(qc: QueryClient, chatId: string, fn: (m: MessageDTO) => MessageDTO | null) {
-  qc.setQueryData<Messages>(chatKeys.messages(chatId), (data) =>
+  qc.setQueriesData<Messages>({ queryKey: chatKeys.messages(chatId) }, (data) =>
     data
       ? {
           ...data,

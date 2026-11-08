@@ -76,6 +76,7 @@ import {
   type LucideIcon,
   Underline,
   X,
+  MessageSquareOff,
 } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { randomUUID } from "expo-crypto";
@@ -170,6 +171,7 @@ export function Composer({
   onSent,
   onSearch,
   limited = false,
+  threadId,
 }: {
   chatId: string;
   nameOf: (userId: string) => string;
@@ -178,7 +180,10 @@ export function Composer({
   onSearch: (q: string) => void;
   /** A support chat: text only, plus a button for admins to send an invite link. */
   limited?: boolean;
+  /** Writes comments on this group message instead of in the chat; its draft and reply mode are its own. */
+  threadId?: string;
 }) {
+  const slot = threadId ? `${chatId}:${threadId}` : chatId;
   const t = useTheme();
   const tr = useT();
   const admin = useQuery({
@@ -196,11 +201,12 @@ export function Composer({
   const qc = useQueryClient();
   const chat = useChat(qc, chatId).data;
   const { realtime } = useRealtime();
-  const mode = useComposerMode((s) => s.byChat[chatId]);
+  const mode = useComposerMode((s) => s.byChat[slot]);
   const setMode = useComposerMode((s) => s.set);
-  const [text, setText] = useState(() => useDrafts.getState().byChat[chatId] ?? "");
+  const [commentsOff, setCommentsOff] = useState(false);
+  const [text, setText] = useState(() => useDrafts.getState().byChat[slot] ?? "");
   const draftsReady = useDrafts((s) => s.ready);
-  const parkedMarkup = useDrafts((s) => s.parked[chatId]);
+  const parkedMarkup = useDrafts((s) => s.parked[slot]);
   const parked = parkedMarkup ? parseMarkup(parkedMarkup) : null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -232,14 +238,14 @@ export function Composer({
   );
   const [picked, setPicked] = useState<LocalFile[] | null>(null);
   const closePicker = useCallback(() => setPicked(null), []);
-  const handed = useComposerMode((s) => s.handed[chatId]);
+  const handed = useComposerMode((s) => s.handed[slot]);
   const resent = useRef<LocalFile[] | null>(null);
   useEffect(() => {
     if (!handed) return;
     resent.current = [handed];
     setPicked(resent.current);
-    useComposerMode.getState().hand(chatId, undefined);
-  }, [handed, chatId]);
+    useComposerMode.getState().hand(slot, undefined);
+  }, [handed, slot]);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
@@ -262,13 +268,19 @@ export function Composer({
   function queue(draft: Draft) {
     if (!realtime) return;
     if (draft.game) return queueMessage(qc, realtime, chatId, draft);
-    queueMessage(qc, realtime, chatId, { ...draft, sendAt: draft.sendAt ?? sendAt });
+    queueMessage(qc, realtime, chatId, {
+      ...draft,
+      threadId,
+      commentsClosed: commentsOff || undefined,
+      sendAt: draft.sendAt ?? sendAt,
+    });
     setSendAt(null);
+    setCommentsOff(false);
   }
 
   const editing = mode?.kind === "edit" ? mode.message : null;
 
-  const stored = useDrafts((s) => s.byChat[chatId] ?? "");
+  const stored = useDrafts((s) => s.byChat[slot] ?? "");
   const [shownFor, setShownFor] = useState({ editing: null as typeof editing, chatId, draftsReady, stored });
   if (shownFor.editing !== editing || shownFor.chatId !== chatId || shownFor.draftsReady !== draftsReady) {
     setShownFor({ editing, chatId, draftsReady, stored });
@@ -336,12 +348,12 @@ export function Composer({
 
   function change(value: string) {
     setText(value);
-    if (!editing) useDrafts.getState().set(chatId, value);
+    if (!editing) useDrafts.getState().set(slot, value);
   }
 
   function swapDraft() {
     const back = parkedMarkup ?? "";
-    useDrafts.getState().park(chatId, text);
+    useDrafts.getState().park(slot, text);
     change(back);
     input.current?.focus();
   }
@@ -386,7 +398,7 @@ export function Composer({
 
   function cancel() {
     setError(null);
-    setMode(chatId, undefined);
+    setMode(slot, undefined);
   }
 
   function runCommand(name: MenuCommand) {
@@ -443,7 +455,7 @@ export function Composer({
   }
 
   function reset() {
-    useDrafts.getState().set(chatId, "");
+    useDrafts.getState().set(slot, "");
     setText("");
     setEphemeral(null);
     setMessageEffect(null);
@@ -999,6 +1011,16 @@ export function Composer({
                 style={styles.round40}
               >
                 <Smile size={22} color={expressions ? brand : t.faint} />
+              </Pressable>
+            )}
+            {!editing && !threadId && chat?.group && chat.group.myRole !== "member" && (
+              <Pressable
+                onPress={() => setCommentsOff(!commentsOff)}
+                accessibilityLabel={tr.groups.postCommentsClosed}
+                accessibilityState={{ selected: commentsOff }}
+                style={styles.round40}
+              >
+                <MessageSquareOff size={22} color={commentsOff ? brand : t.faint} />
               </Pressable>
             )}
             {!editing && !limited && <EphemeralPicker value={ephemeral} onChange={setEphemeral} compact />}

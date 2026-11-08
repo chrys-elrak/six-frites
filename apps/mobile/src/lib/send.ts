@@ -55,6 +55,8 @@ export interface Draft {
   checklist?: Checklist;
   game?: ChatGame;
   groupId?: string;
+  threadId?: string;
+  commentsClosed?: boolean;
   sendAt?: Date | null;
 }
 
@@ -123,6 +125,8 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       storyId: pending.story?.id,
       ephemeral: pending.ephemeral ?? undefined,
       groupId: pending.groupId,
+      threadId: pending.threadId,
+      commentsClosed: pending.commentsClosed || undefined,
       silent: pending.silent,
       bump: pending.bump,
     };
@@ -253,6 +257,8 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
     checklist: draft.checklist,
     game: draft.game,
     groupId: draft.groupId,
+    threadId: draft.threadId,
+    commentsClosed: draft.commentsClosed,
     sendAt: draft.sendAt?.toISOString(),
     createdAt: new Date().toISOString(),
     status: "sending",

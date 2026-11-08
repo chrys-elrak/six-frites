@@ -38,8 +38,9 @@ function save() {
   }, 500);
 }
 
-/** Sends this chat's draft to my other devices a moment after typing stops. */
+/** Sends this chat's draft to my other devices a moment after typing stops; a comment's draft (`chatId:threadId`) stays here. */
 function share(chatId: string, text: string) {
+  if (chatId.includes(":")) return;
   const pending = uploads.get(chatId);
   if (pending) clearTimeout(pending);
   const t: Timer = setTimeout(() => void upload(chatId, text, t), 1500);

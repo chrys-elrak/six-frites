@@ -315,3 +315,8 @@ export async function deleteChat(
   unwrap(await six.api.DELETE("/v1/chats/{id}", { params: { path: { id: chatId }, query: { scope, ...range } } }));
   if (!range) applyChatDeleted(qc, chatId, scope);
 }
+
+/** Closes or reopens a group message's comments; every member hears of it through message.edited. */
+export async function setCommentsClosed(messageId: string, closed: boolean) {
+  unwrap(await six.api.PATCH("/v1/messages/{id}/thread", { params: { path: { id: messageId } }, body: { closed } }));
+}

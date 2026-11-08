@@ -24,6 +24,7 @@ import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
 import { ChatBlocked } from "./chat-blocked";
+import { ThreadScreen } from "./thread-screen";
 import { TypingBubble } from "./typing-bubble";
 import { ChatMenu } from "./chat-menu";
 import { BotGames } from "./bot-games";
@@ -97,6 +98,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
+  const [thread, setThread] = useState<string | null>(null);
   const { info } = useLocalSearchParams<{ info?: string }>();
   const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
@@ -316,7 +318,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
           <BubbleColorsContext.Provider value={bubble}>
-            <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} />
+            <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} onOpenThread={(m) => setThread(m.id)} />
           </BubbleColorsContext.Provider>
           {typing && !selecting && <TypingBubble kind={typing} />}
         </View>
@@ -360,6 +362,9 @@ function OpenConversation({ chatId }: { chatId: string }) {
             setShared(tab);
           }}
         />
+      )}
+      {thread && (
+        <ThreadScreen chat={c} meId={meId} threadId={thread} nameOf={nameOf} bubble={bubble} onClose={() => setThread(null)} />
       )}
       {shared && (
         <SharedMedia

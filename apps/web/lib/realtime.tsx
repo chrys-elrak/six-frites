@@ -66,6 +66,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO, open: (hre
       insertMessage(qc, m);
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
       else useTypingStore.getState().set(m.chatId, m.senderId, null);
+      if (m.threadId) break;
       const viewing = activeChatId === m.chatId && looking();
       const found = patchChat(qc, m.chatId, (c) => ({
         ...c,

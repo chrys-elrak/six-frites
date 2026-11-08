@@ -50,6 +50,9 @@ export interface PendingMessage {
   checklist?: Checklist;
   game?: ChatGame;
   groupId?: string;
+  /** In a group: the message this one comments on, and whether an admin posts it with comments closed. */
+  threadId?: string;
+  commentsClosed?: boolean;
   sendAt?: string;
   createdAt: string;
   /** `waiting` for the network: it goes out by itself when the connection is back. */
@@ -91,7 +94,11 @@ export const useOutbox = create<OutboxState>((set) => ({
 
 const EMPTY: PendingMessage[] = [];
 /** Pending messages to show in the chat; a scheduled one only shows once it's stuck, to retry it. */
-export function usePending(chatId: string) {
+/** What's still on its way to a chat, or with `threadId` to the comments on one of its messages. */
+export function usePending(chatId: string, threadId?: string) {
   const all = useOutbox((s) => s.byChat[chatId] ?? EMPTY);
-  return useMemo(() => all.filter((m) => !m.sendAt || m.status !== "sending"), [all]);
+  return useMemo(
+    () => all.filter((m) => (!m.sendAt || m.status !== "sending") && m.threadId === threadId),
+    [all, threadId],
+  );
 }

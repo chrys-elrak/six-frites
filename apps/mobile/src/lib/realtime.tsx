@@ -54,6 +54,7 @@ function applyEvent(qc: QueryClient, meId: string, e: ChangeEventDTO) {
       insertMessage(qc, m);
       if (m.senderId === meId) useOutbox.getState().remove(m.chatId, m.clientId);
       else useTypingStore.getState().set(m.chatId, m.senderId, null);
+      if (m.threadId) break;
       const viewing = activeChatId === m.chatId && AppState.currentState === "active";
       if (m.senderId !== meId) {
         const chat = cachedChat(qc, m.chatId);
