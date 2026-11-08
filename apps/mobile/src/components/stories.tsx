@@ -359,6 +359,8 @@ export function StoriesBar() {
   const groups = (stories.data ?? []).filter((g) => !hidden.has(g.user.id));
   const noteItems = (notes?.items ?? []).filter((n) => !hidden.has(n.user.id));
   const mineAt = groups.findIndex((g) => g.user.id === me.id);
+  const latest = groups[mineAt]?.stories[groups[mineAt]!.stories.length - 1];
+  const cover = latest && (latest.media?.thumbUrl ?? (latest.type === "image" ? latest.media?.url : null));
   const noteOf = new Map(noteItems.map((n) => [n.user.id, n]));
   const people = [
     ...groups.flatMap((g, i) => (g.user.id === me.id ? [] : [{ user: g.user, at: i as number | null, unseen: g.stories.some((s) => !s.seen) }])),
@@ -382,7 +384,13 @@ export function StoriesBar() {
             accessibilityLabel={mineAt >= 0 ? tr.stories.open(tr.stories.yours) : tr.stories.add}
           >
             <Ring unseen={false}>
-              <Avatar user={me} size="md" />
+              {cover ? (
+                <Image source={cover} style={styles.cover} />
+              ) : latest ? (
+                <View style={[styles.cover, storyFill(latest.background ?? "#eb8a00")]} />
+              ) : (
+                <Avatar user={me} size="md" />
+              )}
             </Ring>
           </Pressable>
           <Pressable
@@ -800,6 +808,7 @@ function StoryGif({ url }: { url: string }) {
 }
 
 const styles = StyleSheet.create({
+  cover: { width: 56, height: 56, borderRadius: 28 },
   askCard: { width: 256, borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", elevation: 4 },
   askPrompt: { color: "#fff", fontSize: 14, fontWeight: "700", paddingHorizontal: 16, paddingVertical: 10, backgroundColor: brand },
   askMedia: { width: 256, height: 220 },

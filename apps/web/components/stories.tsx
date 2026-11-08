@@ -323,6 +323,8 @@ export function StoriesBar() {
   const groups = (stories.data ?? []).filter((g) => !hidden.has(g.user.id));
   const noteItems = (notes?.items ?? []).filter((n) => !hidden.has(n.user.id));
   const mineAt = groups.findIndex((g) => g.user.id === me.id);
+  const latest = groups[mineAt]?.stories[groups[mineAt]!.stories.length - 1];
+  const cover = latest && (latest.media?.thumbUrl ?? (latest.type === "image" ? latest.media?.url : null));
   const noteOf = new Map(noteItems.map((n) => [n.user.id, n]));
   const people = [
     ...groups.flatMap((g, i) => (g.user.id === me.id ? [] : [{ user: g.user, at: i as number | null, unseen: g.stories.some((s) => !s.seen) }])),
@@ -348,7 +350,13 @@ export function StoriesBar() {
             aria-label={mineAt >= 0 ? tr.stories.open(tr.stories.yours) : tr.stories.add}
           >
             <Ring unseen={false}>
-              <Avatar user={me} size="md" />
+              {cover ? (
+                <img src={cover} alt="" className="size-14 rounded-full object-cover" />
+              ) : latest ? (
+                <span className="block size-14 rounded-full" style={{ background: storyBackground(latest.background ?? "#eb8a00") }} />
+              ) : (
+                <Avatar user={me} size="md" />
+              )}
             </Ring>
           </button>
           <button
