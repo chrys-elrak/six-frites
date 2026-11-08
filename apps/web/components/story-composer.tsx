@@ -23,7 +23,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Camera, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, Loader2, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { isTouch } from "@/lib/camera";
 import { getLocale, useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
 import { six } from "@/lib/six";
@@ -69,7 +68,6 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const [gif, setGif] = useState<GifDTO | null>(null);
   const [ask, setAsk] = useState(anon ?? null);
   const [pickingGif, setPickingGif] = useState(false);
-  const cameraInput = useRef<HTMLInputElement>(null);
   const [camera, setCamera] = useState(false);
   const [location, setLocation] = useState<StoryLocation | null>(null);
   const [locating, setLocating] = useState(false);
@@ -214,7 +212,7 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const tools = [
     ...(file ? [{ label: tr.stories.text, icon: Type, on: false, onClick: () => setFile(null) }] : []),
     { label: `${tr.stories.photo} / ${tr.stories.video}`, icon: ImagePlus, on: !!file, onClick: () => picker.current?.click() },
-    { label: tr.composer.camera, icon: Camera, on: false, onClick: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
+    { label: tr.composer.camera, icon: Camera, on: false, onClick: () => setCamera(true) },
     { label: tr.stories.gif, icon: Sticker, on: !!gif || pickingGif, onClick: () => (gif ? setGif(null) : setPickingGif(!pickingGif)) },
     { label: tr.stories.location, icon: locating ? Loader2 : MapPin, on: !!location, onClick: () => void locate() },
     { label: tr.stories.date, icon: CalendarDays, on: showDate, onClick: () => setShowDate(!showDate) },
@@ -457,19 +455,9 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
             e.target.value = "";
           }}
         />
-        <input
-          ref={cameraInput}
-          type="file"
-          accept="image/*,video/*"
-          capture="environment"
-          hidden
-          onChange={(e) => {
-            void pick(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
         {camera && (
           <CameraDialog
+            videoMs={STORY_LIMITS.videoMs}
             onClose={() => setCamera(false)}
             onCapture={(photo) => {
               setCamera(false);
