@@ -10872,6 +10872,10 @@ export interface paths {
                     "application/json": {
                         /** @description Close the comments, or reopen them */
                         closed: boolean;
+                        /** @description Reopening: close again once this many comments in all come from people other than the author */
+                        commentsLimit?: number;
+                        /** @description Reopening: close again this many seconds from now */
+                        commentsCloseIn?: number;
                     };
                 };
             };

@@ -1509,7 +1509,7 @@ export const MessageList = forwardRef<
               {
                 label: commentsClosedNow(m.thread) ? tr.groups.reopenComments : tr.groups.closeComments,
                 icon: commentsClosedNow(m.thread) ? LockOpen : Lock,
-                onSelect: () => void setCommentsClosed(m.id, !m.thread!.closed).catch(() => null),
+                onSelect: () => void setCommentsClosed(m.id, { closed: !m.thread!.closed }).catch(() => null),
               },
             ]
           : []),

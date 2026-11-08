@@ -264,7 +264,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: MessageDTO },
       },
     },
-    (req) => setThreadClosed(req.auth.userId, req.params.id, req.body.closed),
+    (req) => setThreadClosed(req.auth.userId, req.params.id, req.body),
   );
 
   app.post(

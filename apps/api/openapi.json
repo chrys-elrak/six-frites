@@ -35640,6 +35640,18 @@
                   "closed": {
                     "type": "boolean",
                     "description": "Close the comments, or reopen them"
+                  },
+                  "commentsLimit": {
+                    "description": "Reopening: close again once this many comments in all come from people other than the author",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "commentsCloseIn": {
+                    "description": "Reopening: close again this many seconds from now",
+                    "type": "integer",
+                    "minimum": 3600,
+                    "maximum": 2592000
                   }
                 },
                 "required": [
