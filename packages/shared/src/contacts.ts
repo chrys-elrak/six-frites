@@ -8,6 +8,7 @@ export const ContactDTO = z.object({
   originalName: z.string().describe("Their alias, or the name of an account like Frite Bot that shows its own"),
   customName: z.string().nullable(),
   hasCustomPhoto: z.boolean(),
+  addedAt: IsoDate.describe("When you two first got a chat together"),
 });
 export type ContactDTO = z.infer<typeof ContactDTO>;
 
@@ -94,3 +95,24 @@ export const BlockedUserDTO = z.object({
   createdAt: IsoDate.describe("When you blocked them"),
 });
 export type BlockedUserDTO = z.infer<typeof BlockedUserDTO>;
+
+export const CONTACT_SORTS = ["name", "active", "added"] as const;
+export type ContactSort = (typeof CONTACT_SORTS)[number];
+
+/**
+ * Contacts in the chosen order, from a list that comes A to Z: by who's been active lately (online first, then the
+ * most recently seen, from `seen`), or by who you got a chat with most recently.
+ */
+export function sortContacts<T extends { user: { id: string }; addedAt: string }>(
+  list: T[],
+  sort: ContactSort,
+  seen: (userId: string) => { online: boolean; lastSeenAt: string | null } | undefined,
+) {
+  if (sort === "name") return list;
+  const at = (c: T) => {
+    if (sort === "added") return Date.parse(c.addedAt);
+    const p = seen(c.user.id);
+    return p?.online ? Number.MAX_SAFE_INTEGER : p?.lastSeenAt ? Date.parse(p.lastSeenAt) : 0;
+  };
+  return [...list].sort((a, b) => at(b) - at(a));
+}

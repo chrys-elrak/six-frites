@@ -18387,6 +18387,11 @@ export interface paths {
                                 originalName: string;
                                 customName: string | null;
                                 hasCustomPhoto: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When you two first got a chat together
+                                 */
+                                addedAt: string;
                             }[];
                             nextCursor: string | null;
                         };
@@ -18436,6 +18441,11 @@ export interface paths {
                             originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When you two first got a chat together
+                             */
+                            addedAt: string;
                         };
                     };
                 };
@@ -18604,6 +18614,11 @@ export interface paths {
                             originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When you two first got a chat together
+                             */
+                            addedAt: string;
                         };
                     };
                 };
@@ -18682,6 +18697,11 @@ export interface paths {
                             originalName: string;
                             customName: string | null;
                             hasCustomPhoto: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When you two first got a chat together
+                             */
+                            addedAt: string;
                         };
                     };
                 };

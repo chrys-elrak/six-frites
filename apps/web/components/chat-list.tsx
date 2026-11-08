@@ -16,6 +16,9 @@ import {
   serviceSentence,
   serviceText,
   shownType,
+  CONTACT_SORTS,
+  type ContactSort,
+  sortContacts,
 } from "@six/shared";
 import {
   AlertCircle,
@@ -51,7 +54,7 @@ import { useHiddenByArchive } from "@/lib/archive-lock";
 import { ensureBotChat, useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
-import { usePresence, useWatchPresence } from "@/lib/presence";
+import { usePresence, usePresenceStore, useWatchPresence } from "@/lib/presence";
 import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
 import { ContactEditor } from "./contact-editor";
@@ -392,24 +395,58 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
   );
 }
 
+const SORT_KEY = "six:contact-sort";
+
 /**
- * Everyone I share a direct chat with, A to Z, even the chats I deleted for me, and opens our chat.
- * Below them, my contact codes and invite links, for adding more.
+ * Everyone I share a direct chat with, A to Z, by last active or by newest, even the chats I deleted for me, and
+ * opens our chat. Below them, my contact codes and invite links, for adding more.
  */
 function ContactRows({ needle, query }: { needle: string; query: string }) {
   const tr = useT();
   const pathname = usePathname();
+  const [sort, setSort] = useState<ContactSort>("name");
+  const presence = usePresenceStore((s) => s.byUser);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SORT_KEY) as ContactSort | null;
+      if (saved && CONTACT_SORTS.includes(saved)) setSort(saved);
+    } catch {}
+  }, []);
+  function pickSort(next: ContactSort) {
+    setSort(next);
+    try {
+      localStorage.setItem(SORT_KEY, next);
+    } catch {}
+  }
   const contacts = useQuery({
     queryKey: ["contacts"],
     staleTime: 0,
     queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
   });
   const hidden = useHiddenByArchive().chatIds;
-  const shown = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
-  useWatchPresence(shown.map((c) => c.user.id));
+  const matching = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
+  useWatchPresence(matching.map((c) => c.user.id));
+  const shown = sortContacts(matching, sort, (id) => presence[id]);
 
   return (
     <>
+      {shown.length > 1 && (
+        <div className="flex items-center justify-end gap-2 px-4 pt-2 text-xs text-stone-500">
+          <label htmlFor="contact-sort">{tr.contacts.sortBy}</label>
+          <select
+            id="contact-sort"
+            value={sort}
+            onChange={(e) => pickSort(e.target.value as ContactSort)}
+            className="rounded-lg bg-black/5 px-2 py-1 font-medium text-stone-700 outline-none focus:ring-2 focus:ring-brand dark:bg-white/10 dark:text-stone-200"
+          >
+            {CONTACT_SORTS.map((s) => (
+              <option key={s} value={s}>
+                {tr.contacts.sorts[s]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       {contacts.isPending ? (
         <p className="p-4 text-sm text-stone-500">{tr.common.loading}</p>
       ) : contacts.isError ? (

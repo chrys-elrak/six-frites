@@ -11,7 +11,11 @@ import {
   serviceSentence,
   serviceText,
   shownType,
+  CONTACT_SORTS,
+  type ContactSort,
+  sortContacts,
 } from "@six/shared";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { unwrap } from "@six/sdk";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -22,6 +26,7 @@ import {
   Ban,
   AlertCircle,
   BellOff,
+  ChevronDown,
   ChevronLeft,
   Clock,
   EyeOff,
@@ -60,7 +65,7 @@ import { useRealtime } from "@/lib/realtime";
 import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
-import { usePresence, useWatchPresence } from "@/lib/presence";
+import { usePresence, usePresenceStore, useWatchPresence } from "@/lib/presence";
 import { useTyping } from "@/lib/typing";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { useOutbox } from "@/lib/outbox";
@@ -337,55 +342,88 @@ function ContactRow({ contact }: { contact: ContactDTO }) {
   );
 }
 
+const SORT_KEY = "six:contact-sort";
+
 /**
- * Everyone I share a direct chat with, A to Z, even the chats I deleted for me, and opens our chat.
- * Below them, my contact codes and invite links, for adding more.
+ * Everyone I share a direct chat with, A to Z, by last active or by newest, even the chats I deleted for me, and
+ * opens our chat. Below them, my contact codes and invite links, for adding more.
  */
 function ContactList({ needle, query }: { needle: string; query: string }) {
   const t = useTheme();
   const tr = useT();
+  const [sort, setSort] = useState<ContactSort>("name");
+  const [sorting, setSorting] = useState(false);
+  const presence = usePresenceStore((s) => s.byUser);
+  useEffect(() => {
+    void AsyncStorage.getItem(SORT_KEY)
+      .then((saved) => saved && (CONTACT_SORTS as readonly string[]).includes(saved) && setSort(saved as ContactSort))
+      .catch(() => null);
+  }, []);
+  function pickSort(next: ContactSort) {
+    setSort(next);
+    void AsyncStorage.setItem(SORT_KEY, next).catch(() => null);
+  }
   const contacts = useQuery({
     queryKey: ["contacts"],
     staleTime: 0,
     queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
   });
   const hidden = useHiddenByArchive().chatIds;
-  const shown = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
-  useWatchPresence(shown.map((c) => c.user.id));
+  const matching = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
+  useWatchPresence(matching.map((c) => c.user.id));
+  const shown = sortContacts(matching, sort, (id) => presence[id]);
 
   return (
-    <FlatList
-      data={shown}
-      keyExtractor={(c) => c.user.id}
-      keyboardShouldPersistTaps="handled"
-      renderItem={({ item }) => <ContactRow contact={item} />}
-      ListFooterComponent={
-        needle ? undefined : (
-          <View style={{ padding: 16 }}>
-            <Invites />
-          </View>
-        )
-      }
-      refreshControl={
-        <RefreshControl
-          refreshing={contacts.isRefetching}
-          onRefresh={() => void contacts.refetch()}
-          colors={[brand]}
-          progressBackgroundColor={t.surface}
+    <>
+      <FlatList
+        data={shown}
+        ListHeaderComponent={
+          shown.length > 1 ? (
+            <Pressable onPress={() => setSorting(true)} accessibilityRole="button" style={styles.sortRow}>
+              <Text style={{ color: t.muted, fontSize: 13 }}>{tr.contacts.sortBy}</Text>
+              <Text style={{ color: t.text, fontSize: 13, fontWeight: "600" }}>{tr.contacts.sorts[sort]}</Text>
+              <ChevronDown size={14} color={t.muted} />
+            </Pressable>
+          ) : undefined
+        }
+        keyExtractor={(c) => c.user.id}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item }) => <ContactRow contact={item} />}
+        ListFooterComponent={
+          needle ? undefined : (
+            <View style={{ padding: 16 }}>
+              <Invites />
+            </View>
+          )
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={contacts.isRefetching}
+            onRefresh={() => void contacts.refetch()}
+            colors={[brand]}
+            progressBackgroundColor={t.surface}
+          />
+        }
+        ListEmptyComponent={
+          <Text style={[styles.note, { color: contacts.isError ? t.danger : t.muted, textAlign: "center" }]}>
+            {contacts.isPending
+              ? tr.common.loading
+              : contacts.isError
+                ? tr.common.somethingWrong
+                : needle
+                  ? tr.contacts.noMatch(query)
+                  : tr.contacts.none}
+          </Text>
+        }
+      />
+      {sorting && (
+        <Sheet
+          title={tr.contacts.sortBy}
+          onClose={() => setSorting(false)}
+          actions={CONTACT_SORTS.map((s) => ({ label: `${tr.contacts.sorts[s]}${s === sort ? " ✓" : ""}`, onSelect: () => pickSort(s) }))}
         />
-      }
-      ListEmptyComponent={
-        <Text style={[styles.note, { color: contacts.isError ? t.danger : t.muted, textAlign: "center" }]}>
-          {contacts.isPending
-            ? tr.common.loading
-            : contacts.isError
-              ? tr.common.somethingWrong
-              : needle
-                ? tr.contacts.noMatch(query)
-                : tr.contacts.none}
-        </Text>
-      }
-    />
+      )}
+    </>
   );
 }
 
@@ -608,6 +646,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
 }
 
 const styles = StyleSheet.create({
+  sortRow: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 4, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   title: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
   rowBody: { flex: 1, minWidth: 0, gap: 2 },

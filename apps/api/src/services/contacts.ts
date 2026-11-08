@@ -92,6 +92,7 @@ interface ContactRow {
   customName: string | null;
   photoKey: string | null;
   name: string;
+  addedAt: Date;
 }
 
 function toContactDTO(r: ContactRow): ContactDTO {
@@ -102,6 +103,7 @@ function toContactDTO(r: ContactRow): ContactDTO {
     originalName: r.originalName,
     customName: r.customName,
     hasCustomPhoto: r.photoKey !== null,
+    addedAt: r.addedAt.toISOString(),
   };
 }
 
@@ -114,7 +116,7 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
              CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END AS "originalName",
              CASE WHEN cm."showProfile" THEN u."avatarUrl" END AS "avatarUrl",
              CASE WHEN cm."showProfile" THEN u."avatarKey" END AS "avatarKey",
-             o."displayName" AS "customName", o."photoKey", me.archived,
+             o."displayName" AS "customName", o."photoKey", me.archived, c."createdAt" AS "addedAt",
              COALESCE(o."displayName", CASE WHEN cm."showProfile" THEN u."displayName" ELSE pair_alias(${userId}, u.id) END) AS name
       FROM "ChatMember" cm
       JOIN "Chat" c ON c.id = cm."chatId" AND c.type = 'direct' AND c."supportUserId" IS NULL
