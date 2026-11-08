@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Id, IsoDate } from "./common.js";
+import { Id, IsoDate, NAME_MAX } from "./common.js";
 import { PublicUser } from "./invites.js";
 
 export const ContactDTO = z.object({
@@ -39,7 +39,7 @@ export const ContactPhoto = z
 
 export const UpdateContactInput = z
   .object({
-    displayName: z.string().trim().min(1).max(64).nullable().optional(),
+    displayName: z.string().trim().min(1).max(NAME_MAX).nullable().optional(),
     photo: ContactPhoto.nullable().optional(),
   })
   .refine((v) => v.displayName !== undefined || v.photo !== undefined, "Provide displayName and/or photo");

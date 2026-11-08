@@ -54,7 +54,7 @@ import { formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
 import { ContactEditor } from "./contact-editor";
 import { Sheet } from "./sheet";
-import { updateChatSettings } from "@/lib/actions";
+import { removeContact, updateChatSettings } from "@/lib/actions";
 import { useSwipeRow } from "@/lib/swipe";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
@@ -312,6 +312,8 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
   const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
   const [editing, setEditing] = useState(false);
   const [poking, setPoking] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const qc = useQueryClient();
   const press = useLongPress((at) => setMenu({ at }));
   return (
     <>
@@ -336,6 +338,20 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
             { label: tr.contacts.openChat, onSelect: () => router.push(`/chats/${contact.chatId}`) },
             { label: tr.contacts.editContact, onSelect: () => setEditing(true) },
             { label: tr.chat.poke.action(contact.user.displayName), onSelect: () => setPoking(true) },
+            { label: tr.chat.removeContact(contact.user.displayName), destructive: true, onSelect: () => setRemoving(true) },
+          ]}
+        />
+      )}
+      {removing && (
+        <Sheet
+          title={tr.chat.removeContactConfirm(contact.user.displayName)}
+          onClose={() => setRemoving(false)}
+          actions={[
+            {
+              label: tr.chat.removeContact(contact.user.displayName),
+              destructive: true,
+              onSelect: () => void removeContact(qc, contact.chatId, contact.user.id).catch(() => null),
+            },
           ]}
         />
       )}

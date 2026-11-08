@@ -1,7 +1,7 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import type { UpdateMeInput } from "@six/shared";
+import { NAME_MAX, type UpdateMeInput } from "@six/shared";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
@@ -40,10 +40,11 @@ export function ProfileCard() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              maxLength={64}
+              maxLength={NAME_MAX}
               aria-label={tr.settings.displayName}
               className="min-w-0 flex-1 rounded-lg bg-transparent px-2 py-1 text-lg font-medium outline-none ring-stone-300 focus:ring-2 dark:ring-stone-700"
             />
+            {dirty && <span className="self-center text-xs text-stone-400 tabular-nums">{name.length}/{NAME_MAX}</span>}
             {dirty && (
               <button
                 disabled={save.isPending}

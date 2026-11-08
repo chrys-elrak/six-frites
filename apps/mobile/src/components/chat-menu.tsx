@@ -14,7 +14,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { View } from "react-native";
-import { closeSupportChat, deleteChat, removeContact, setBlocked, updateChatSettings } from "@/lib/actions";
+import { closeSupportChat, deleteChat, setBlocked, updateChatSettings } from "@/lib/actions";
 import { isBotChat, isFrozen } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
@@ -69,7 +69,6 @@ export function ChatMenu({
     | "custom"
     | "theme"
     | "customTheme"
-    | "removeContact"
     | "poke"
   >(start ?? "menu");
   const [range, setRange] = useState<Range | undefined>(undefined);
@@ -85,26 +84,7 @@ export function ChatMenu({
     }
   }
 
-  async function removeFromContacts() {
-    try {
-      await removeContact(qc, chat.id, peerId);
-      onDeleted?.("me");
-    } catch {
-      void qc.invalidateQueries({ queryKey: ["chats"] });
-    }
-  }
-
   if (view === "poke") return <PokeSheet peerId={peerId} peerName={peerName} onClose={onClose} />;
-
-  if (view === "removeContact") {
-    return (
-      <Sheet
-        title={tr.chat.removeContactConfirm(peerName)}
-        onClose={onClose}
-        actions={[{ label: tr.chat.removeContact(peerName), destructive: true, onSelect: () => void removeFromContacts() }]}
-      />
-    );
-  }
 
   if (view === "custom") {
     return (
@@ -311,9 +291,6 @@ export function ChatMenu({
                       : chat.blockedByMe
                         ? [{ label: tr.chat.unblockName(peerName), onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
                         : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
-                    ...(!direct
-                      ? []
-                      : [{ label: tr.chat.removeContact(peerName), destructive: true, keepOpen: true, onSelect: () => setView("removeContact") }]),
                     { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
                   ]),
             ]

@@ -1,6 +1,7 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
+import { LABEL_MAX, NAME_MAX } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react";
@@ -208,11 +209,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                   value={name ?? ""}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={tr.contacts.name}
-                  maxLength={64}
+                  maxLength={NAME_MAX}
                   className="w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-800"
                 />
-                <span className="flex items-center justify-between text-xs text-stone-500">
-                  {tr.contacts.onlyYouSee}
+                <span className="flex items-center justify-between gap-2 text-xs text-stone-500">
+                  <span className="flex-1">{tr.contacts.onlyYouSee}</span>
+                  <span className="tabular-nums">
+                    {(name ?? "").length}/{NAME_MAX}
+                  </span>
                   {name && (
                     <button type="button" onClick={() => setName("")} className="font-medium text-brand">
                       {tr.contacts.useTheirName}
@@ -238,9 +242,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                     value={label.text}
                     onChange={(e) => setLabel({ ...label, text: e.target.value })}
                     placeholder={tr.contacts.labelPlaceholder}
-                    maxLength={200}
+                    maxLength={LABEL_MAX}
                     className="w-full rounded-xl bg-white px-3 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-brand dark:bg-stone-900"
                   />
+                ) : null}
+                {label ? (
+                  <p className="text-right text-xs text-stone-500 tabular-nums">
+                    {label.text.length}/{LABEL_MAX}
+                  </p>
                 ) : (
                   <>
                     <p className="text-xs text-stone-500">{hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}</p>

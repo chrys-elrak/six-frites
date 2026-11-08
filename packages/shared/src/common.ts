@@ -14,3 +14,8 @@ export const page = <T extends z.ZodTypeAny>(item: T) =>
 
 export const Platform = z.enum(["web", "ios", "android"]);
 export type Platform = z.infer<typeof Platform>;
+
+/** The longest your display name, or the name you give a contact, can be. */
+export const NAME_MAX = 32;
+/** The longest a private label on a contact can be. */
+export const LABEL_MAX = 60;

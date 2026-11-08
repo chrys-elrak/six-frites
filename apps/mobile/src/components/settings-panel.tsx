@@ -6,6 +6,7 @@ import {
   LOCALE_NAMES,
   quotaSummary,
   MAX_CONTACT_LINKS,
+  NAME_MAX,
   type SessionDTO,
   TONES,
   type UpdateMeInput,
@@ -68,7 +69,7 @@ function ProfileCard() {
             <TextInput
               value={name}
               onChangeText={setName}
-              maxLength={64}
+              maxLength={NAME_MAX}
               accessibilityLabel={tr.settings.displayName}
               returnKeyType="done"
               onSubmitEditing={() => dirty && save.mutate({ displayName: name.trim() })}

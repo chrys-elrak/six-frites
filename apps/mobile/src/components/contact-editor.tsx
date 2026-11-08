@@ -1,4 +1,5 @@
 import { SixApiError, unwrap } from "@six/sdk";
+import { LABEL_MAX, NAME_MAX } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react-native";
@@ -176,11 +177,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                   onChangeText={setName}
                   placeholder={tr.contacts.name}
                   placeholderTextColor={t.muted}
-                  maxLength={64}
+                  maxLength={NAME_MAX}
                   style={[styles.input, { backgroundColor: t.field, color: t.text }]}
                 />
                 <View style={styles.suggestHead}>
-                  <Text style={{ color: t.muted, fontSize: 12 }}>{tr.contacts.onlyYouSee}</Text>
+                  <Text style={{ color: t.muted, fontSize: 12, flex: 1 }}>{tr.contacts.onlyYouSee}</Text>
+                  <Text style={{ color: t.muted, fontSize: 12, fontVariant: ["tabular-nums"] }}>
+                    {(name ?? "").length}/{NAME_MAX}
+                  </Text>
                   {!!name && (
                     <Pressable onPress={() => setName("")} hitSlop={6}>
                       <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.contacts.useTheirName}</Text>
@@ -210,9 +214,14 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                     onChangeText={(text) => setLabel({ ...label, text })}
                     placeholder={tr.contacts.labelPlaceholder}
                     placeholderTextColor={t.muted}
-                    maxLength={200}
+                    maxLength={LABEL_MAX}
                     style={[styles.input, { backgroundColor: t.surface, color: t.text }]}
                   />
+                ) : null}
+                {label ? (
+                  <Text style={{ color: t.muted, fontSize: 12, textAlign: "right", fontVariant: ["tabular-nums"] }}>
+                    {label.text.length}/{LABEL_MAX}
+                  </Text>
                 ) : (
                   <>
                     <Text style={{ color: t.muted, fontSize: 12 }}>

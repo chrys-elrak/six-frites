@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Id, IsoDate } from "./common.js";
+import { Id, IsoDate, LABEL_MAX, NAME_MAX } from "./common.js";
 import { QUICK_REACTIONS, ReactionEmoji } from "./chats.js";
 import { ContactPhoto } from "./contacts.js";
 
@@ -44,7 +44,7 @@ export const DeleteAccountInput = z.object({
 export type DeleteAccountInput = z.infer<typeof DeleteAccountInput>;
 
 export const UpdateMeInput = z.object({
-  displayName: z.string().trim().min(1).max(64).optional(),
+  displayName: z.string().trim().min(1).max(NAME_MAX).optional(),
   avatarUrl: z.string().url().nullable().optional(),
   photo: ContactPhoto.nullable()
     .optional()
@@ -63,7 +63,7 @@ export type UpdateMeInput = z.infer<typeof UpdateMeInput>;
 export const AppLockInput = z.object({ code: z.string().regex(/^\d{4,8}$/, "Use 4 to 8 digits") });
 export type AppLockInput = z.infer<typeof AppLockInput>;
 
-export const ContactLabelInput = AppLockInput.extend({ label: z.string().trim().max(200).nullable() });
+export const ContactLabelInput = AppLockInput.extend({ label: z.string().trim().max(LABEL_MAX).nullable() });
 export type ContactLabelInput = z.infer<typeof ContactLabelInput>;
 
 export const ContactLabelDTO = z.object({ label: z.string().nullable() });

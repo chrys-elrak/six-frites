@@ -48,7 +48,8 @@ import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { updateChatSettings } from "@/lib/actions";
+import { removeContact, updateChatSettings } from "@/lib/actions";
+import { Sheet } from "./sheet";
 import { useSwipeRow } from "@/lib/swipe";
 import { Text, TextInput } from "./text";
 import { ensureBotChat, isFrozen, useChats } from "@/lib/chats";
@@ -287,19 +288,52 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
 
 function ContactRow({ contact }: { contact: ContactDTO }) {
   const t = useTheme();
+  const tr = useT();
+  const qc = useQueryClient();
   const online = usePresence(contact.user.id)?.online;
+  const [menu, setMenu] = useState<"menu" | "remove" | null>(null);
+  const name = contact.user.displayName;
   return (
-    <Pressable
-      onPress={() => router.push(`/chats/${contact.chatId}`)}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
-    >
-      <StoryAvatar userId={contact.user.id} name={contact.user.displayName}>
-        <Avatar user={contact.user} size="md" online={!!online} />
-      </StoryAvatar>
-      <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
-        {contact.user.displayName}
-      </Text>
-    </Pressable>
+    <>
+      <Pressable
+        onPress={() => router.push(`/chats/${contact.chatId}`)}
+        onLongPress={() => {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setMenu("menu");
+        }}
+        style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
+      >
+        <StoryAvatar userId={contact.user.id} name={name}>
+          <Avatar user={contact.user} size="md" online={!!online} />
+        </StoryAvatar>
+        <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
+          {name}
+        </Text>
+      </Pressable>
+      {menu === "menu" && (
+        <Sheet
+          title={name}
+          onClose={() => setMenu(null)}
+          actions={[
+            { label: tr.contacts.openChat, onSelect: () => router.push(`/chats/${contact.chatId}`) },
+            { label: tr.chat.removeContact(name), destructive: true, keepOpen: true, onSelect: () => setMenu("remove") },
+          ]}
+        />
+      )}
+      {menu === "remove" && (
+        <Sheet
+          title={tr.chat.removeContactConfirm(name)}
+          onClose={() => setMenu(null)}
+          actions={[
+            {
+              label: tr.chat.removeContact(name),
+              destructive: true,
+              onSelect: () => void removeContact(qc, contact.chatId, contact.user.id).catch(() => null),
+            },
+          ]}
+        />
+      )}
+    </>
   );
 }
 

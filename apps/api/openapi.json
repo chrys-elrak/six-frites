@@ -5738,7 +5738,7 @@
                   "displayName": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 64
+                    "maxLength": 32
                   },
                   "avatarUrl": {
                     "nullable": true,
@@ -62069,7 +62069,7 @@
                     "nullable": true,
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 64
+                    "maxLength": 32
                   },
                   "photo": {
                     "nullable": true,
@@ -62288,7 +62288,7 @@
                   "label": {
                     "nullable": true,
                     "type": "string",
-                    "maxLength": 200
+                    "maxLength": 60
                   }
                 },
                 "required": [
