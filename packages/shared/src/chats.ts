@@ -681,12 +681,18 @@ export const COMMENT_RULES = [
   { commentsLimit: 50 },
   { commentsCloseIn: 3600 },
   { commentsCloseIn: 86400 },
+  { commentsCloseIn: 7 * 86400 },
 ] as const;
 export type CommentRule = {
   commentsClosed?: boolean;
   commentsLimit?: number;
   commentsCloseIn?: number;
 };
+/** The limits a custom rule can pick from, in comments and seconds. */
+export const COMMENT_RULE_RANGE = {
+  count: { min: 1, max: 1000 },
+  delay: { min: 3600, max: 30 * 86400 },
+} as const;
 
 /** Whether a message's comments are closed now, counting a `closesAt` that has passed since it loaded. */
 export const commentsClosedNow = (t: {
@@ -755,8 +761,8 @@ export const SendMessageInput = z
     commentsCloseIn: z
       .number()
       .int()
-      .min(60)
-      .max(30 * 86400)
+      .min(COMMENT_RULE_RANGE.delay.min)
+      .max(COMMENT_RULE_RANGE.delay.max)
       .optional()
       .describe(
         "In a group, for its owner and admins: comments close this many seconds after posting",

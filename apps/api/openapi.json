@@ -58693,7 +58693,7 @@
                   "commentsCloseIn": {
                     "description": "In a group, for its owner and admins: comments close this many seconds after posting",
                     "type": "integer",
-                    "minimum": 60,
+                    "minimum": 3600,
                     "maximum": 2592000
                   },
                   "spoiler": {
@@ -61716,7 +61716,7 @@
                   "commentsCloseIn": {
                     "description": "In a group, for its owner and admins: comments close this many seconds after posting",
                     "type": "integer",
-                    "minimum": 60,
+                    "minimum": 3600,
                     "maximum": 2592000
                   },
                   "spoiler": {
