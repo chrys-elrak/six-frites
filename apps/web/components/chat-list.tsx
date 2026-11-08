@@ -54,8 +54,8 @@ import { useHiddenByArchive } from "@/lib/archive-lock";
 import { ensureBotChat, useChats } from "@/lib/chats";
 import type { Hydrated } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
-import { usePresence, usePresenceStore, useWatchPresence } from "@/lib/presence";
-import { formatDuration, listTime } from "@/lib/format";
+import { presenceLabel, usePresence, usePresenceStore, useWatchPresence } from "@/lib/presence";
+import { calendarDate, formatDuration, listTime } from "@/lib/format";
 import { useLongPress } from "@/lib/long-press";
 import { ContactEditor } from "./contact-editor";
 import { Sheet } from "./sheet";
@@ -339,10 +339,14 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   );
 }
 
-function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean }) {
+function ContactRow({ contact, active, sort }: { contact: ContactDTO; active: boolean; sort: ContactSort }) {
   const tr = useT();
   const router = useRouter();
-  const online = usePresence(contact.user.id)?.online;
+  const presence = usePresence(contact.user.id);
+  const online = presence?.online;
+  const seen = presenceLabel(presence);
+  const added = tr.contacts.addedOn(calendarDate(contact.addedAt));
+  const details = (sort === "added" ? [added, seen] : [seen, added]).filter(Boolean).join(" · ");
   const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
   const [editing, setEditing] = useState(false);
   const [poking, setPoking] = useState(false);
@@ -361,7 +365,10 @@ function ContactRow({ contact, active }: { contact: ContactDTO; active: boolean 
         <StoryAvatar userId={contact.user.id} name={contact.user.displayName}>
           <Avatar user={contact.user} size="md" online={online} />
         </StoryAvatar>
-        <p className="min-w-0 flex-1 truncate font-semibold">{contact.user.displayName}</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold">{contact.user.displayName}</p>
+          <p className={`truncate text-xs ${online ? "text-green-600 dark:text-green-500" : "text-stone-500"}`}>{details}</p>
+        </div>
       </Link>
       {menu && (
         <Sheet
@@ -454,7 +461,7 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
       ) : !shown.length ? (
         <p className="p-8 text-center text-sm text-stone-500">{needle ? tr.contacts.noMatch(query) : tr.contacts.none}</p>
       ) : (
-        shown.map((c) => <ContactRow key={c.user.id} contact={c} active={pathname === `/chats/${c.chatId}`} />)
+        shown.map((c) => <ContactRow key={c.user.id} contact={c} sort={sort} active={pathname === `/chats/${c.chatId}`} />)
       )}
       {!needle && (
         <div className="p-4">

@@ -32,6 +32,13 @@ export function shortDate(iso: string) {
   return new Date(iso).toLocaleDateString(getLocale(), { day: "numeric", month: "short" });
 }
 
+/** "3 Nov", or "3 Nov 2025" for another year. */
+export function calendarDate(iso: string) {
+  const d = new Date(iso);
+  const year = d.getFullYear() === new Date().getFullYear() ? undefined : "numeric";
+  return d.toLocaleDateString(getLocale(), { day: "numeric", month: "short", year });
+}
+
 export function dayLabel(iso: string) {
   const d = new Date(iso);
   const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 864e5);

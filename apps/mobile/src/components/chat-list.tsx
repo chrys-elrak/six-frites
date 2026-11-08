@@ -59,13 +59,13 @@ import { useSwipeRow } from "@/lib/swipe";
 import { Text, TextInput } from "./text";
 import { ensureBotChat, isFrozen, useChats } from "@/lib/chats";
 import { useHydratedMessage } from "@/lib/e2ee";
-import { formatDuration, listTime } from "@/lib/format";
+import { calendarDate, formatDuration, listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
-import { usePresence, usePresenceStore, useWatchPresence } from "@/lib/presence";
+import { presenceLabel, usePresence, usePresenceStore, useWatchPresence } from "@/lib/presence";
 import { useTyping } from "@/lib/typing";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { useOutbox } from "@/lib/outbox";
@@ -291,11 +291,15 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   );
 }
 
-function ContactRow({ contact }: { contact: ContactDTO }) {
+function ContactRow({ contact, sort }: { contact: ContactDTO; sort: ContactSort }) {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
-  const online = usePresence(contact.user.id)?.online;
+  const presence = usePresence(contact.user.id);
+  const online = presence?.online;
+  const seen = presenceLabel(presence);
+  const added = tr.contacts.addedOn(calendarDate(contact.addedAt));
+  const details = (sort === "added" ? [added, seen] : [seen, added]).filter(Boolean).join(" · ");
   const [menu, setMenu] = useState<"menu" | "remove" | null>(null);
   const name = contact.user.displayName;
   return (
@@ -311,9 +315,14 @@ function ContactRow({ contact }: { contact: ContactDTO }) {
         <StoryAvatar userId={contact.user.id} name={name}>
           <Avatar user={contact.user} size="md" online={!!online} />
         </StoryAvatar>
-        <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
-          {name}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
+            {name}
+          </Text>
+          <Text numberOfLines={1} style={{ color: online ? "#16a34a" : t.muted, fontSize: 13 }}>
+            {details}
+          </Text>
+        </View>
       </Pressable>
       {menu === "menu" && (
         <Sheet
@@ -388,7 +397,7 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
         }
         keyExtractor={(c) => c.user.id}
         keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => <ContactRow contact={item} />}
+        renderItem={({ item }) => <ContactRow contact={item} sort={sort} />}
         ListFooterComponent={
           needle ? undefined : (
             <View style={{ padding: 16 }}>
